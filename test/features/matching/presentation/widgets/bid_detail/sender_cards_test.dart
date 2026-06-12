@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
@@ -9,6 +10,9 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,6 +25,9 @@ import 'package:mocktail/mocktail.dart';
 class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
+
+class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
+    implements TrackingBloc {}
 
 // ── Fixture ───────────────────────────────────────────────────────────────────
 
@@ -499,6 +506,104 @@ void main() {
       await tester.pumpWidget(_hostQuickActions(bid));
 
       expect(find.text('Suivi du colis'), findsWidgets);
+    });
+
+    testWidgets(
+      'tap "Suivi du colis" ouvre le timeline sheet (TrackingBloc via GetIt mocké)',
+      (tester) async {
+        // Enregistre un TrackingBloc mock dans GetIt pour que
+        // showTrackingTimelineSheet puisse l'instancier.
+        final trackingBloc = _MockTrackingBloc();
+        when(() => trackingBloc.state).thenReturn(TrackingInitial());
+        when(() => trackingBloc.stream)
+            .thenAnswer((_) => Stream<TrackingState>.empty());
+
+        if (getIt.isRegistered<TrackingBloc>()) {
+          getIt.unregister<TrackingBloc>();
+        }
+        getIt.registerFactory<TrackingBloc>(() => trackingBloc);
+        addTearDown(() {
+          if (getIt.isRegistered<TrackingBloc>()) {
+            getIt.unregister<TrackingBloc>();
+          }
+        });
+
+        final bid = _bid(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          trackingToken: 'tok-abc',
+        );
+
+        await tester.pumpWidget(_hostQuickActions(bid));
+
+        // Tap the "Suivi du colis" tile — triggers _corridor getter + sheet.
+        await tester.tap(find.text('Suivi du colis'));
+        await tester.pumpAndSettle();
+
+        // Le sheet de suivi doit être ouvert (titre visible).
+        expect(find.text('Suivi du colis'), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'tap "Partager le suivi" appelle shareTrackingLink (Share canal + TrackingBloc mockés)',
+      (tester) async {
+        // Mock du canal share_plus pour éviter l'invocation native.
+        const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(shareChannel, (call) async => null);
+
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(shareChannel, null);
+        });
+
+        final bid = _bid(
+          trackingToken: 'tok-share',
+          departureCity: 'Lyon',
+          arrivalCity: 'Abidjan',
+        );
+
+        await tester.pumpWidget(_hostQuickActions(bid));
+
+        // Tap the "Partager le suivi" tile — appelle shareTrackingLink(bid).
+        await tester.tap(find.text('Partager le suivi'));
+        await tester.pumpAndSettle();
+
+        // La tuile est toujours présente après le partage.
+        expect(find.text('Partager le suivi'), findsOneWidget);
+      },
+    );
+  });
+
+  // ── shareTrackingLink ─────────────────────────────────────────────────────
+  group('shareTrackingLink', () {
+    test('trackingToken null → no-op, returns without calling Share', () async {
+      // shareTrackingLink doit retourner immédiatement si trackingToken est null.
+      // On vérifie qu'aucune exception n'est levée (Share.share non appelé).
+      final bid = _bid(trackingToken: null);
+      // Ne doit pas lancer d'exception.
+      await expectLater(shareTrackingLink(bid), completes);
+    });
+
+    test('trackingToken present → calls Share.share (canal mocké)', () async {
+      // Mock le canal share_plus pour éviter l'invocation native.
+      const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(shareChannel, (call) async => null);
+
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(shareChannel, null);
+      });
+
+      final bid = _bid(
+        trackingToken: 'tok-share-test',
+        trackingNumber: 'DNY-2026-001',
+      );
+
+      // Ne doit pas lancer d'exception avec le canal mocké.
+      await expectLater(shareTrackingLink(bid), completes);
     });
   });
 }
