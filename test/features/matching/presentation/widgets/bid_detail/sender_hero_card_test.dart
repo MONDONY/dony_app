@@ -235,7 +235,7 @@ void main() {
   // ── Test 8: IN_TRANSIT with confirmationCode ─────────────────────────────────
 
   testWidgets(
-    '8 · IN_TRANSIT avec confirmationCode → "Colis en vol" + "code retrait"',
+    '8 · IN_TRANSIT avec confirmationCode → "Colis en vol" + renvoi au billet',
     (tester) async {
       final bid = _bid(
         status: 'IN_TRANSIT',
@@ -248,7 +248,10 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('Colis en vol'), findsOneWidget);
-      expect(find.textContaining('code retrait'), findsOneWidget);
+      // La hero renvoie au talon (« CODE DE RETRAIT ») sans dire « à qui » —
+      // l'instruction de transmission fait autorité sur le talon.
+      expect(find.textContaining('code de retrait'), findsOneWidget);
+      expect(find.textContaining('billet'), findsOneWidget);
     },
   );
 

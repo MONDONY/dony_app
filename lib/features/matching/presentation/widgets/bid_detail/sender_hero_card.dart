@@ -231,8 +231,9 @@ String _buildInTransitSubtitle(BidModel bid) {
       : 'En route vers $arrivalCity.';
 
   if (bid.confirmationCode != null) {
-    final recipient = bid.recipientName ?? 'votre destinataire';
-    return '$timePart Communiquez le code retrait à $recipient.';
+    // Pas de mention « à qui » ici : l'instruction de transmission fait
+    // autorité sur le talon (carte « CODE DE RETRAIT »), juste au-dessus.
+    return '$timePart Le code de retrait figure sur votre billet.';
   }
   return timePart;
 }

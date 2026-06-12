@@ -58,33 +58,31 @@ class BilletTalon extends StatelessWidget {
         'PENDING' ||
         'AWAITING_PAYMENT' ||
         'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
-        'ACCEPTED' || 'HANDED_OVER' => _QrTalonButton(bid: bid),
-        'IN_TRANSIT' when bid.confirmationCode != null => IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: _QrTalonButton(bid: bid, compact: true)),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(
-                child: TalonRetraitCodeView(
-                  bidId: bid.id,
-                  initialCode: bid.confirmationCode!,
-                  refreshCount: bid.confirmationCodeRefreshCount,
-                  refreshWindowStart: bid.confirmationCodeRefreshWindowStart,
-                ),
-              ),
-            ],
-          ),
+        'ACCEPTED' => _QrTalonButton(bid: bid),
+        // Le code de retrait existe dès la remise (HANDED_OVER) : on l'affiche
+        // en pleine largeur sous le bouton QR (carte riche : digits + copier +
+        // régénérer + explication), le QR restant accessible jusqu'au retrait.
+        'HANDED_OVER' ||
+        'IN_TRANSIT' when bid.confirmationCode != null => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _QrTalonButton(bid: bid, compact: true),
+            const SizedBox(height: DonySpacing.base),
+            TalonRetraitCodeView(
+              bidId: bid.id,
+              initialCode: bid.confirmationCode!,
+              refreshCount: bid.confirmationCodeRefreshCount,
+              refreshWindowStart: bid.confirmationCodeRefreshWindowStart,
+            ),
+          ],
         ),
-        'IN_TRANSIT' => IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: _QrTalonButton(bid: bid, compact: true)),
-              const SizedBox(width: DonySpacing.sm),
-              const Expanded(child: _InTransitWaitingPlaceholder()),
-            ],
-          ),
+        'HANDED_OVER' || 'IN_TRANSIT' => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _QrTalonButton(bid: bid, compact: true),
+            const SizedBox(height: DonySpacing.base),
+            const _InTransitWaitingPlaceholder(),
+          ],
         ),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'REJECTED' || 'CANCELLED' => const _TerminalBlock(),

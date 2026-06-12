@@ -1,9 +1,23 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_traveler_action_view.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
+    implements TrackingBloc {}
+
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 BidModel _bid({
   required String status,
@@ -27,11 +41,24 @@ BidModel _bid({
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
+  // TrackingBloc/BidBloc sont consommés par TalonRetraitCodeView (statuts
+  // HANDED_OVER/IN_TRANSIT avec code) ; fournis pour tous les cas, inoffensif
+  // pour les autres.
+  final t = _MockTrackingBloc();
+  final b = _MockBidBloc();
+  when(() => t.state).thenReturn(TrackingInitial());
+  when(() => b.state).thenReturn(BidInitial());
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light,
       home: Scaffold(
-        body: BilletTalon(bid: bid, isSender: isSender),
+        body: MultiBlocProvider(
+          providers: [
+            BlocProvider<TrackingBloc>.value(value: t),
+            BlocProvider<BidBloc>.value(value: b),
+          ],
+          child: BilletTalon(bid: bid, isSender: isSender),
+        ),
       ),
     ),
   );
@@ -50,11 +77,25 @@ void main() {
   });
 
   testWidgets(
-    'sender + HANDED_OVER → bouton QR du colis',
+    'sender + HANDED_OVER sans confirmationCode → bouton QR + placeholder',
     (tester) async {
       await _pump(tester, _bid(status: 'HANDED_OVER'), true);
       expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
       expect(find.textContaining('QR du colis'), findsOneWidget);
+      expect(find.text('Colis en route'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'sender + HANDED_OVER avec confirmationCode → bouton QR + code de retrait',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'HANDED_OVER', confirmationCode: '4729'),
+        true,
+      );
+      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+      expect(find.text('CODE DE RETRAIT'), findsOneWidget);
     },
   );
 
@@ -64,6 +105,19 @@ void main() {
       await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
       expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
       expect(find.text('Colis en route'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'sender + IN_TRANSIT avec confirmationCode → bouton QR + code de retrait',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'IN_TRANSIT', confirmationCode: '4729'),
+        true,
+      );
+      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+      expect(find.text('CODE DE RETRAIT'), findsOneWidget);
     },
   );
 
