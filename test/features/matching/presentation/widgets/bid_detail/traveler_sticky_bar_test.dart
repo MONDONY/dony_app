@@ -167,4 +167,135 @@ void main() {
     expect(find.text('Scanner le colis'), findsNothing);
     expect(find.text('Confirmer ma présence'), findsNothing);
   });
+
+  testWidgets('CANCELLED → barre vide (SizedBox)', (tester) async {
+    await _pump(tester, _bid(status: 'CANCELLED'));
+    expect(find.text('Accepter'), findsNothing);
+    expect(find.text('Annuler'), findsNothing);
+    expect(find.text('Scanner le colis'), findsNothing);
+    expect(find.text('Valider la remise'), findsNothing);
+    expect(find.text('Supprimer cette demande'), findsNothing);
+  });
+
+  testWidgets('ACCEPTED non confirmé avec fenêtre future → ConfirmPresenceBar',
+      (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        windowEnd: DateTime.now().add(const Duration(hours: 2)),
+      ),
+    );
+    expect(find.text('Confirmer ma présence'), findsOneWidget);
+  });
+
+  group('TravelerStickyBar.hasAction — cas supplémentaires', () {
+    test('DELIVERED → false', () {
+      expect(TravelerStickyBar.hasAction(_bid(status: 'DELIVERED')), isFalse);
+    });
+    test('EXPIRED → false', () {
+      expect(TravelerStickyBar.hasAction(_bid(status: 'EXPIRED')), isFalse);
+    });
+    test('ACCEPTED confirmé → true (scan)', () {
+      expect(
+        TravelerStickyBar.hasAction(
+            _bid(status: 'ACCEPTED', voyageurConfirmed: true)),
+        isTrue,
+      );
+    });
+  });
+
+  testWidgets('tap Scanner le colis → GoRouter push déclenché', (tester) async {
+    final bidBloc = _MockBidBloc();
+    final acceptBloc = _MockAcceptBloc();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    when(() => acceptBloc.state).thenReturn(BidAcceptanceInitial());
+
+    final List<String> pushedRoutes = [];
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => Scaffold(
+            bottomNavigationBar: MultiBlocProvider(
+              providers: [
+                BlocProvider<BidBloc>.value(value: bidBloc),
+                BlocProvider<BidAcceptanceBloc>.value(value: acceptBloc),
+              ],
+              child: TravelerStickyBar(
+                bid: _bid(status: 'ACCEPTED', voyageurConfirmed: true),
+                isLoading: false,
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/tracking/scan',
+          builder: (context, state) {
+            pushedRoutes.add('/tracking/scan');
+            return const Scaffold();
+          },
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light,
+        routerConfig: router,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Scanner le colis'));
+    await tester.pumpAndSettle();
+    expect(pushedRoutes, contains('/tracking/scan'));
+  });
+
+  testWidgets('tap Valider la remise → GoRouter push déclenché', (tester) async {
+    final bidBloc = _MockBidBloc();
+    final acceptBloc = _MockAcceptBloc();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    when(() => acceptBloc.state).thenReturn(BidAcceptanceInitial());
+
+    final List<String> pushedRoutes = [];
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => Scaffold(
+            bottomNavigationBar: MultiBlocProvider(
+              providers: [
+                BlocProvider<BidBloc>.value(value: bidBloc),
+                BlocProvider<BidAcceptanceBloc>.value(value: acceptBloc),
+              ],
+              child: TravelerStickyBar(
+                bid: _bid(status: 'IN_TRANSIT'),
+                isLoading: false,
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/tracking/confirm',
+          builder: (context, state) {
+            pushedRoutes.add('/tracking/confirm');
+            return const Scaffold();
+          },
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        theme: AppTheme.light,
+        routerConfig: router,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Valider la remise'));
+    await tester.pumpAndSettle();
+    expect(pushedRoutes, contains('/tracking/confirm'));
+  });
 }
