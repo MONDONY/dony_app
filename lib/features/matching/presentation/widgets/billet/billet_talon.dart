@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/billet/talon_retrait_code_view.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_traveler_action_view.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +13,10 @@ import 'package:flutter/material.dart';
 /// Si [bid.trackingNumber] est non-null, la [TalonTrackingStrip] est
 /// toujours ajoutée en bas, quelle que soit l'action.
 ///
-/// NOTE : les cases [_QrTalonButton] (ouvre la [QrSheet]) et
-/// [TalonRetraitCodeView] consomment des BLoCs ambiants (TrackingBloc /
-/// BidBloc) fournis par l'écran parent. Ce widget n'injecte aucun
-/// [BlocProvider].
+/// NOTE : les boutons [_QrTalonButton] et [_RetraitTalonButton] ouvrent
+/// respectivement la [QrSheet] et la [RetraitCodeSheet] ; les BLoCs ambiants
+/// (TrackingBloc / BidBloc) sont fournis par l'écran parent. Ce widget
+/// n'injecte aucun [BlocProvider].
 class BilletTalon extends StatelessWidget {
   final BidModel bid;
   final bool isSender;
@@ -59,31 +59,19 @@ class BilletTalon extends StatelessWidget {
         'AWAITING_PAYMENT' ||
         'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
         'ACCEPTED' => _QrTalonButton(bid: bid),
-        // Le code de retrait existe dès la remise (HANDED_OVER) : on l'affiche
-        // en pleine largeur sous le bouton QR (carte riche : digits + copier +
-        // régénérer + explication), le QR restant accessible jusqu'au retrait.
+        // Le code de retrait existe dès la remise (HANDED_OVER). Comme le QR,
+        // il s'ouvre dans un bottom sheet : deux boutons côte à côte dans le
+        // talon, le QR restant accessible jusqu'au retrait.
         'HANDED_OVER' ||
-        'IN_TRANSIT' when bid.confirmationCode != null => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        'IN_TRANSIT' when bid.confirmationCode != null => Row(
           children: [
-            _QrTalonButton(bid: bid, compact: true),
-            const SizedBox(height: DonySpacing.base),
-            TalonRetraitCodeView(
-              bidId: bid.id,
-              initialCode: bid.confirmationCode!,
-              refreshCount: bid.confirmationCodeRefreshCount,
-              refreshWindowStart: bid.confirmationCodeRefreshWindowStart,
-            ),
+            Expanded(child: _QrTalonButton(bid: bid, compact: true)),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(child: _RetraitTalonButton(bid: bid)),
           ],
         ),
-        'HANDED_OVER' || 'IN_TRANSIT' => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _QrTalonButton(bid: bid, compact: true),
-            const SizedBox(height: DonySpacing.base),
-            const _InTransitWaitingPlaceholder(),
-          ],
-        ),
+        // Code pas encore disponible → bouton QR seul, pleine largeur.
+        'HANDED_OVER' || 'IN_TRANSIT' => _QrTalonButton(bid: bid, compact: true),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'REJECTED' || 'CANCELLED' => const _TerminalBlock(),
         _ => const SizedBox.shrink(),
@@ -147,6 +135,34 @@ class _QrTalonButton extends StatelessWidget {
   }
 }
 
+/// Bouton talon « Code de retrait » — ouvre la [RetraitCodeSheet].
+///
+/// Même comportement que [_QrTalonButton] : un bottom sheet porte le contenu
+/// (digits, copier, régénérer, explication).
+class _RetraitTalonButton extends StatelessWidget {
+  final BidModel bid;
+
+  const _RetraitTalonButton({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return OutlinedButton.icon(
+      onPressed: () => RetraitCodeSheet.show(context, bid: bid),
+      icon: Icon(Icons.pin_rounded, size: 20, color: cs.primary),
+      label: const Text('Code de retrait', textAlign: TextAlign.center),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: cs.primary,
+        side: BorderSide(color: cs.primary),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+      ),
+    );
+  }
+}
+
 /// sender / PENDING — Hourglass + "En attente de confirmation du voyageur".
 class _PendingPlaceholder extends StatelessWidget {
   const _PendingPlaceholder();
@@ -163,31 +179,6 @@ class _PendingPlaceholder extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         Text(
           'En attente de confirmation du voyageur',
-          textAlign: TextAlign.center,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-      ],
-    );
-  }
-}
-
-/// sender / HANDED_OVER or IN_TRANSIT without confirmationCode.
-class _InTransitWaitingPlaceholder extends StatelessWidget {
-  const _InTransitWaitingPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: DonySpacing.sm),
-        Icon(Icons.local_shipping_rounded, size: 32, color: cs.primary),
-        const SizedBox(height: DonySpacing.sm),
-        Text(
-          'Colis en route',
           textAlign: TextAlign.center,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),

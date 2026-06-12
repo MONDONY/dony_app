@@ -77,17 +77,18 @@ void main() {
   });
 
   testWidgets(
-    'sender + HANDED_OVER sans confirmationCode → bouton QR + placeholder',
+    'sender + HANDED_OVER sans confirmationCode → bouton QR seul',
     (tester) async {
       await _pump(tester, _bid(status: 'HANDED_OVER'), true);
       expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
       expect(find.textContaining('QR du colis'), findsOneWidget);
-      expect(find.text('Colis en route'), findsOneWidget);
+      // Pas de bouton code de retrait tant que le code n'existe pas.
+      expect(find.text('Code de retrait'), findsNothing);
     },
   );
 
   testWidgets(
-    'sender + HANDED_OVER avec confirmationCode → bouton QR + code de retrait',
+    'sender + HANDED_OVER avec confirmationCode → boutons QR + Code de retrait',
     (tester) async {
       await _pump(
         tester,
@@ -95,21 +96,24 @@ void main() {
         true,
       );
       expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
-      expect(find.text('CODE DE RETRAIT'), findsOneWidget);
+      expect(find.text('Code de retrait'), findsOneWidget);
+      expect(find.byIcon(Icons.pin_rounded), findsOneWidget);
+      // La carte du code n'est PAS inline : elle vit dans le bottom sheet.
+      expect(find.text('CODE DE RETRAIT'), findsNothing);
     },
   );
 
   testWidgets(
-    'sender + IN_TRANSIT sans confirmationCode → bouton QR + placeholder en transit',
+    'sender + IN_TRANSIT sans confirmationCode → bouton QR seul',
     (tester) async {
       await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
       expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
-      expect(find.text('Colis en route'), findsOneWidget);
+      expect(find.text('Code de retrait'), findsNothing);
     },
   );
 
   testWidgets(
-    'sender + IN_TRANSIT avec confirmationCode → bouton QR + code de retrait',
+    'sender + IN_TRANSIT avec confirmationCode → boutons QR + Code de retrait',
     (tester) async {
       await _pump(
         tester,
@@ -117,7 +121,26 @@ void main() {
         true,
       );
       expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+      expect(find.text('Code de retrait'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'sender + tap "Code de retrait" → bottom sheet avec la carte du code',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'IN_TRANSIT', confirmationCode: '4729'),
+        true,
+      );
+      await tester.tap(find.text('Code de retrait'));
+      await tester.pumpAndSettle();
+      // La carte riche apparaît maintenant dans le sheet.
       expect(find.text('CODE DE RETRAIT'), findsOneWidget);
+      expect(find.text('Copier le code'), findsOneWidget);
+      // Ferme le sheet pour drainer les timers d'animation.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
     },
   );
 
