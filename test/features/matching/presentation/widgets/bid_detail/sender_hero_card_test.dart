@@ -284,4 +284,250 @@ void main() {
     expect(find.textContaining('Absence signalée'), findsNothing);
     expect(find.textContaining('Fenêtre de remise'), findsNothing);
   });
+
+  // ── Test 11: AWAITING_PAYMENT ────────────────────────────────────────────────
+
+  testWidgets('11 · AWAITING_PAYMENT → "Payez pour confirmer" + amount', (
+    tester,
+  ) async {
+    final bid = _bid(status: 'AWAITING_PAYMENT', totalAmountEur: 120.50);
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining("Payez pour confirmer"), findsOneWidget);
+    expect(find.textContaining("120.50"), findsOneWidget);
+  });
+
+  // ── Test 12: IN_TRANSIT sans confirmationCode ─────────────────────────────────
+
+  testWidgets('12 · IN_TRANSIT sans confirmationCode → "En route vers"', (
+    tester,
+  ) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      arrivalCity: 'Dakar',
+      arrivalTime: '',
+      confirmationCode: null,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Colis en vol'), findsOneWidget);
+    expect(find.textContaining('En route vers Dakar'), findsOneWidget);
+  });
+
+  // ── Test 13: HANDED_OVER departureDate null → "Colis remis." ──────────────────
+
+  testWidgets('13 · HANDED_OVER departureDate=null → "Colis remis."', (
+    tester,
+  ) async {
+    final bid = _bid(
+      status: 'HANDED_OVER',
+      travelerName: 'Amadou',
+      departureDate: null,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Colis remis.'), findsOneWidget);
+  });
+
+  // ── Test 14: DELIVERED → "Livré à" ───────────────────────────────────────────
+
+  testWidgets('14 · DELIVERED → "Livré à"', (tester) async {
+    final bid = _bid(status: 'DELIVERED', recipientName: 'Karim');
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Livré à Karim'), findsOneWidget);
+  });
+
+  // ── Test 15a: REJECTED → shrink (no hero text) ───────────────────────────────
+
+  testWidgets('15a · REJECTED → shrink (no hero text)', (tester) async {
+    final bid = _bid(status: 'REJECTED');
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('En attente'), findsNothing);
+    expect(find.textContaining('Paiement'), findsNothing);
+    expect(find.textContaining('Remise'), findsNothing);
+    expect(find.textContaining('Colis'), findsNothing);
+    expect(find.textContaining('Livré'), findsNothing);
+  });
+
+  // ── Test 15b: NO_SHOW → shrink (no hero text) ────────────────────────────────
+
+  testWidgets('15b · NO_SHOW → shrink (no hero text)', (tester) async {
+    final bid = _bid(status: 'NO_SHOW');
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('En attente'), findsNothing);
+    expect(find.textContaining('Paiement'), findsNothing);
+    expect(find.textContaining('Remise'), findsNothing);
+    expect(find.textContaining('Colis'), findsNothing);
+    expect(find.textContaining('Livré'), findsNothing);
+  });
+
+  // ── Test 15c: EXPIRED → shrink (no hero text) ────────────────────────────────
+
+  testWidgets('15c · EXPIRED → shrink (no hero text)', (tester) async {
+    final bid = _bid(status: 'EXPIRED');
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('En attente'), findsNothing);
+    expect(find.textContaining('Paiement'), findsNothing);
+    expect(find.textContaining('Remise'), findsNothing);
+    expect(find.textContaining('Colis'), findsNothing);
+    expect(find.textContaining('Livré'), findsNothing);
+  });
+
+  // ── Test 15d: PARCEL_REFUSED → shrink (no hero text) ─────────────────────────
+
+  testWidgets('15d · PARCEL_REFUSED → shrink (no hero text)', (tester) async {
+    final bid = _bid(status: 'PARCEL_REFUSED');
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('En attente'), findsNothing);
+    expect(find.textContaining('Paiement'), findsNothing);
+    expect(find.textContaining('Remise'), findsNothing);
+    expect(find.textContaining('Colis'), findsNothing);
+    expect(find.textContaining('Livré'), findsNothing);
+  });
+
+  // ── Test 16: PENDING_CONFIRMATION deadline null → pas de countdown ────────────
+
+  testWidgets(
+    '16 · PENDING_CONFIRMATION deadline=null → "Absence signalée" sans "Temps pour contester"',
+    (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        contestationDeadline: null,
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      expect(find.textContaining('Absence signalée'), findsOneWidget);
+      expect(find.textContaining('Temps pour contester'), findsNothing);
+
+      // Kill timer
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    },
+  );
+
+  // ── Test 17: PENDING_CONFIRMATION deadline passée → "Délai expiré" ───────────
+
+  testWidgets(
+    '17 · PENDING_CONFIRMATION deadline passée → "Délai expiré" affiché',
+    (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        contestationDeadline: DateTime.now().subtract(const Duration(hours: 1)),
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      expect(find.textContaining('Délai expiré'), findsOneWidget);
+
+      // Kill timer
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    },
+  );
+
+  // ── Test 18: tap "Je conteste" → sheet → annuler (no dispatch) ───────────────
+
+  testWidgets(
+    '18 · tap "Je conteste" → sheet s\'ouvre → appuyer barrière → aucun dispatch',
+    (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        contestationDeadline: DateTime.now().add(const Duration(hours: 47)),
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      await tester.tap(find.textContaining('Je conteste'));
+      await tester.pumpAndSettle();
+
+      // Sheet is open — close by tapping outside
+      await tester.tapAt(const Offset(200, 100));
+      await tester.pumpAndSettle();
+
+      // NoShowContestRequested must NOT have been dispatched
+      verifyNever(
+        () => cancellationBloc.add(any(that: isA<NoShowContestRequested>())),
+      );
+
+      // Kill timer
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    },
+  );
+
+  // ── Test 19: tap "Je conteste" → confirmer → NoShowContestRequested ──────────
+
+  testWidgets(
+    '19 · tap "Je conteste" → "Confirmer la contestation" → NoShowContestRequested dispatched',
+    (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        contestationDeadline: DateTime.now().add(const Duration(hours: 47)),
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      await tester.tap(find.textContaining('Je conteste'));
+      await tester.pumpAndSettle();
+
+      final confirmBtn = find.descendant(
+        of: find.byKey(const Key('donyBottomSheetFooter')),
+        matching: find.textContaining('Confirmer la contestation'),
+      );
+      await tester.tap(confirmBtn.last);
+      await tester.pumpAndSettle();
+
+      verify(
+        () => cancellationBloc.add(any(that: isA<NoShowContestRequested>())),
+      ).called(1);
+
+      // Kill timer
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    },
+  );
+
+  // ── Test 20: tap "Je confirme" → sheet informatif → "Compris" ferme ──────────
+
+  testWidgets(
+    '20 · tap "Je confirme" → sheet s\'ouvre → "Compris" ferme le sheet',
+    (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        contestationDeadline: DateTime.now().add(const Duration(hours: 47)),
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      await tester.tap(find.textContaining('Je confirme'));
+      await tester.pumpAndSettle();
+
+      // "Compris" button should be in the sheet
+      expect(find.textContaining('Compris'), findsOneWidget);
+
+      await tester.tap(find.textContaining('Compris'));
+      await tester.pumpAndSettle();
+
+      // Sheet should be closed
+      expect(find.textContaining('Confirmer votre absence'), findsNothing);
+
+      // Kill timer
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    },
+  );
 }
