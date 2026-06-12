@@ -10,6 +10,12 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/bloc/rating_event.dart';
+import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -28,6 +34,13 @@ class _MockConversationOpenBloc
 
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
+
+class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
+    implements RatingBloc {}
+
+class _MockTravelerSubscribeBloc
+    extends MockBloc<TravelerSubscribeEvent, TravelerSubscribeState>
+    implements TravelerSubscribeBloc {}
 
 // ── Fixture ───────────────────────────────────────────────────────────────────
 
@@ -211,6 +224,122 @@ void main() {
       expect(captured.length, 1);
       final event = captured.first as ConversationOpenRequested;
       expect(event.bidId, 'bid-test');
+    });
+
+    testWidgets(
+        'travelerId non-null → chevron visible et tap ouvre le sheet profil',
+        (tester) async {
+      // Register mock blocs that showTravelerProfileSheet needs from GetIt.
+      final ratingBloc = _MockRatingBloc();
+      final subscribeBloc = _MockTravelerSubscribeBloc();
+      whenListen(
+        ratingBloc,
+        const Stream<RatingState>.empty(),
+        initialState: const UserRatingsLoaded(
+          averageRating: 0,
+          ratingCount: 0,
+          distribution: {},
+          ratings: [],
+          page: 0,
+          totalPages: 1,
+        ),
+      );
+      whenListen(
+        subscribeBloc,
+        const Stream<TravelerSubscribeState>.empty(),
+        initialState: const TravelerSubscribeState(
+          status: TravelerSubscribeStatus.loading,
+        ),
+      );
+
+      if (getIt.isRegistered<RatingBloc>()) getIt.unregister<RatingBloc>();
+      if (getIt.isRegistered<TravelerSubscribeBloc>()) {
+        getIt.unregister<TravelerSubscribeBloc>();
+      }
+      getIt.registerFactory<RatingBloc>(() => ratingBloc);
+      getIt.registerFactory<TravelerSubscribeBloc>(() => subscribeBloc);
+
+      addTearDown(() {
+        if (getIt.isRegistered<RatingBloc>()) getIt.unregister<RatingBloc>();
+        if (getIt.isRegistered<TravelerSubscribeBloc>()) {
+          getIt.unregister<TravelerSubscribeBloc>();
+        }
+      });
+
+      final bidWithId = BidModel(
+        id: 'bid-test',
+        announcementId: 'ann-test',
+        senderId: 'sender-test',
+        status: 'ACCEPTED',
+        createdAt: DateTime(2026, 1, 15),
+        updatedAt: DateTime(2026, 1, 15),
+        travelerName: 'Ibrahima Diallo',
+        travelerId: 'traveler-uuid-001',
+        travelerPhone: '+33611223344',
+        travelerAverageRating: 4.5,
+        travelerTotalTrips: 8,
+        travelerKycVerified: true,
+      );
+
+      await tester.pumpWidget(_hostVoyageur(bidWithId, bloc));
+      await tester.pumpAndSettle();
+
+      // Chevron should be visible when travelerId is non-null.
+      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+
+      // Tap the card to open traveler profile sheet.
+      await tester.tap(find.byType(InkWell).first);
+      await tester.pumpAndSettle();
+
+      // Profile sheet should be open — abbreviated name visible.
+      expect(find.text('Ibrahima D.'), findsOneWidget);
+    });
+
+    testWidgets('travelerId null → pas de chevron', (tester) async {
+      final bidNoId = BidModel(
+        id: 'bid-test',
+        announcementId: 'ann-test',
+        senderId: 'sender-test',
+        status: 'ACCEPTED',
+        createdAt: DateTime(2026, 1, 15),
+        updatedAt: DateTime(2026, 1, 15),
+        travelerName: 'Inconnu',
+        // travelerId deliberately null
+      );
+
+      await tester.pumpWidget(_hostVoyageur(bidNoId, bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+    });
+
+    testWidgets(
+        '_call canLaunchUrl=true et launchUrl=true → aucun snackbar erreur',
+        (tester) async {
+      const channel = MethodChannel('plugins.flutter.io/url_launcher');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+        if (call.method == 'canLaunch') return true;
+        if (call.method == 'launch') return true;
+        return null;
+      });
+
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null);
+      });
+
+      final bid = _bid(travelerPhone: '+33600000001', status: 'ACCEPTED');
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.phone_rounded));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // No error snackbar should appear.
+      expect(
+          find.textContaining("Impossible d'ouvrir le composeur"), findsNothing);
     });
   });
 
