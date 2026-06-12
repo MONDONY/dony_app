@@ -289,7 +289,8 @@ void main() {
 
       // Tap the card to open traveler profile sheet.
       await tester.tap(find.byType(InkWell).first);
-      await tester.pumpAndSettle();
+      await tester.pump(); // start animation
+      await tester.pump(const Duration(milliseconds: 400)); // advance past 300ms fadeIn
 
       // Profile sheet should be open — abbreviated name visible.
       expect(find.text('Ibrahima D.'), findsOneWidget);
