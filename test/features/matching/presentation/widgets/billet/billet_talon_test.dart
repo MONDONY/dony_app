@@ -166,14 +166,19 @@ void main() {
 
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
-  testWidgets('voyageur + ACCEPTED → action de scan', (tester) async {
+  testWidgets('voyageur + ACCEPTED → talon passif (pas de scan)', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
       false,
     );
-    expect(find.byType(TalonTravelerActionView), findsOneWidget);
-    expect(find.text('Scanner le colis'), findsOneWidget);
+    // Le scan vit désormais dans la barre collante, pas dans le talon.
+    expect(find.byType(TalonTravelerActionView), findsNothing);
+    expect(find.text('Scanner le colis'), findsNothing);
+    // La bande de suivi reste.
+    expect(find.text('N° DE SUIVI'), findsOneWidget);
   });
 
   testWidgets(
@@ -205,20 +210,19 @@ void main() {
     expect(find.text('—'), findsWidgets);
   });
 
-  testWidgets('voyageur + HANDED_OVER → action de confirmation de livraison', (
+  testWidgets('voyageur + HANDED_OVER → talon passif (pas de confirmation)', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
-    expect(find.byType(TalonTravelerActionView), findsOneWidget);
-    expect(find.text('Confirmer la livraison'), findsOneWidget);
+    expect(find.byType(TalonTravelerActionView), findsNothing);
+    expect(find.text('Confirmer la livraison'), findsNothing);
   });
 
-  testWidgets('voyageur + IN_TRANSIT → action de confirmation de livraison', (
+  testWidgets('voyageur + IN_TRANSIT → talon passif (pas de confirmation)', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'IN_TRANSIT'), false);
-    expect(find.byType(TalonTravelerActionView), findsOneWidget);
-    expect(find.text('Confirmer la livraison'), findsOneWidget);
+    expect(find.byType(TalonTravelerActionView), findsNothing);
   });
 
   testWidgets('voyageur + COMPLETED → bloc vert "Colis livré"', (tester) async {

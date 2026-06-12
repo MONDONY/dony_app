@@ -3,7 +3,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
-import 'package:dony/features/matching/presentation/widgets/billet/talon_traveler_action_view.dart';
 import 'package:flutter/material.dart';
 
 /// Zone action + bande de suivi du talon bas du billet de colis.
@@ -78,19 +77,13 @@ class BilletTalon extends StatelessWidget {
       };
     }
 
-    // ── Traveler dispatch ─────────────────────────────────────────────────────
+    // ── Traveler dispatch (passif — l'action vit dans la barre collante) ────────
     return switch (status) {
       'PENDING' => _TravelerDecisionSummary(bid: bid),
-      'ACCEPTED' => TalonTravelerActionView(
-        bidId: bid.id,
-        action: TalonTravelerAction.scan,
-        travelerName: bid.travelerName,
-      ),
-      'HANDED_OVER' || 'IN_TRANSIT' => TalonTravelerActionView(
-        bidId: bid.id,
-        action: TalonTravelerAction.confirmDelivery,
-        travelerName: bid.travelerName,
-      ),
+      // ACCEPTED / HANDED_OVER / IN_TRANSIT : plus d'action dans le talon.
+      // Seule la bande de suivi (TalonTrackingStrip) subsiste, ajoutée par
+      // le parent quand trackingNumber != null.
+      'ACCEPTED' || 'HANDED_OVER' || 'IN_TRANSIT' => const SizedBox.shrink(),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'REJECTED' || 'CANCELLED' => const _TerminalBlock(),
       _ => const SizedBox.shrink(),
