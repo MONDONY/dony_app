@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
@@ -46,6 +48,10 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   /// affichera les cartes directement, sans rejouer l'animation.
   bool _playEntrance = true;
 
+  /// Timer utilisé pour désactiver le stagger après la durée totale.
+  /// Annulé dans [dispose] pour éviter les timers pendants en test.
+  Timer? _entranceTimer;
+
   /// Statuts où le voyageur est connu (carte voyageur affichée)
   /// et où le suivi est disponible (actions rapides affichées).
   static const _activeStatuses = <String>{
@@ -65,9 +71,15 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     // déclencher un rebuild ici, juste que le prochain rebuild (polling parent)
     // saute le stagger.
     const total = Duration(milliseconds: 60 * 7 + 300 + 50);
-    Future.delayed(total, () {
+    _entranceTimer = Timer(total, () {
       _playEntrance = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _entranceTimer?.cancel();
+    super.dispose();
   }
 
   @override

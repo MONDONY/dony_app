@@ -4,11 +4,13 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -335,6 +337,168 @@ void main() {
 
       // Disclaimer
       expect(find.textContaining('Disclaimer'), findsOneWidget);
+    });
+  });
+
+  // ── trackingPublicUrl ─────────────────────────────────────────────────────
+  group('trackingPublicUrl', () {
+    test('returns default base https://track.dony.app with token appended', () {
+      // TRACKING_PUBLIC_URL env var not set in test → default value used.
+      expect(
+        trackingPublicUrl('abc-token-123'),
+        equals('https://track.dony.app/abc-token-123'),
+      );
+    });
+
+    test('token with slashes is preserved as-is', () {
+      expect(
+        trackingPublicUrl('tok/2026/xyz'),
+        equals('https://track.dony.app/tok/2026/xyz'),
+      );
+    });
+  });
+
+  // ── VoyageurContactCard._call error path ─────────────────────────────────
+  group('VoyageurContactCard._call', () {
+    late _MockConversationOpenBloc bloc;
+
+    setUp(() {
+      bloc = _MockConversationOpenBloc();
+      when(() => bloc.state).thenReturn(const ConversationOpenInitial());
+    });
+
+    testWidgets(
+      'canLaunchUrl returns false → snackbar "Impossible d\'ouvrir le composeur" visible',
+      (tester) async {
+        // Mock the url_launcher platform channel so canLaunchUrl returns false.
+        const channel = MethodChannel('plugins.flutter.io/url_launcher');
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'canLaunch') return false;
+          if (call.method == 'launch') return false;
+          return null;
+        });
+
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null);
+        });
+
+        final bid = _bid(
+          travelerPhone: '+33600000000',
+          status: 'ACCEPTED',
+        );
+
+        await tester.pumpWidget(_hostVoyageur(bid, bloc));
+        await tester.pump();
+
+        // Tap the phone button
+        await tester.tap(find.byIcon(Icons.phone_rounded));
+        // Pump twice: once for the async _call to resolve, once for the snackbar
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(
+          find.textContaining('Impossible d\'ouvrir le composeur'),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  // ── VoyageurContactCard — badges KYC / Kilo Pro ───────────────────────────
+  group('VoyageurContactCard badges', () {
+    late _MockConversationOpenBloc bloc;
+
+    setUp(() {
+      bloc = _MockConversationOpenBloc();
+      when(() => bloc.state).thenReturn(const ConversationOpenInitial());
+    });
+
+    testWidgets('travelerKycVerified=true → badge KYC visible', (tester) async {
+      final bid = _bid(
+        travelerKycVerified: true,
+        travelerName: 'Ibrahima',
+      );
+
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+
+      expect(find.text('KYC'), findsOneWidget);
+    });
+
+    testWidgets('travelerKiloPro=true → badge Kilo Pro visible', (tester) async {
+      final bid = _bid(
+        travelerKiloPro: true,
+        travelerName: 'Oumar',
+      );
+
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+
+      expect(find.text('Kilo Pro'), findsOneWidget);
+    });
+
+    testWidgets('chat button shows loading spinner when ConversationOpenLoading',
+        (tester) async {
+      final loadingBloc = _MockConversationOpenBloc();
+      when(() => loadingBloc.state)
+          .thenReturn(const ConversationOpenLoading());
+      when(() => loadingBloc.stream)
+          .thenAnswer((_) => Stream<ConversationOpenState>.empty());
+
+      final bid = _bid();
+
+      await tester.pumpWidget(_hostVoyageur(bid, loadingBloc));
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('travelerAverageRating null → shows "★ —"', (tester) async {
+      final bid = _bid(travelerAverageRating: null, travelerTotalTrips: null);
+
+      await tester.pumpWidget(_hostVoyageur(bid, bloc));
+
+      expect(find.text('★ —'), findsOneWidget);
+    });
+  });
+
+  // ── QuickActionsRow ───────────────────────────────────────────────────────
+  group('QuickActionsRow', () {
+    Widget _hostQuickActions(BidModel bid) => MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: QuickActionsRow(bid: bid),
+          ),
+        );
+
+    testWidgets('trackingToken null → only "Suivi du colis" tile', (tester) async {
+      final bid = _bid(trackingToken: null);
+
+      await tester.pumpWidget(_hostQuickActions(bid));
+
+      expect(find.text('Suivi du colis'), findsOneWidget);
+      expect(find.text('Partager le suivi'), findsNothing);
+    });
+
+    testWidgets('trackingToken present → both tiles visible', (tester) async {
+      final bid = _bid(trackingToken: 'tok-abc123');
+
+      await tester.pumpWidget(_hostQuickActions(bid));
+
+      expect(find.text('Suivi du colis'), findsOneWidget);
+      expect(find.text('Partager le suivi'), findsOneWidget);
+    });
+
+    testWidgets('corridor shows "Suivi du colis" when cities are both empty',
+        (tester) async {
+      final bid = _bid(
+        departureCity: null,
+        arrivalCity: null,
+        trackingToken: 'tok-xyz',
+      );
+
+      await tester.pumpWidget(_hostQuickActions(bid));
+
+      expect(find.text('Suivi du colis'), findsWidgets);
     });
   });
 }
