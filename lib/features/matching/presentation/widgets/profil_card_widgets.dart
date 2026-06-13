@@ -27,6 +27,9 @@ class MiniChip extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.clip,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: FontWeight.w700,

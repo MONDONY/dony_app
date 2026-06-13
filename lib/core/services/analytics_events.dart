@@ -86,6 +86,15 @@ abstract final class AnalyticsEvents {
   static const annoncesTripsOpened = 'annonces_trips_opened';
   static const annoncesSendOpened  = 'annonces_send_opened';
 
+  // Détail d'envoi (vue expéditeur)
+  static const bidQrSheetOpened       = 'bid_qr_sheet_opened';
+  static const bidQrDownloaded        = 'bid_qr_downloaded';
+  static const bidRetraitCodeOpened   = 'bid_retrait_code_opened';
+  static const travelerCallInitiated  = 'traveler_call_initiated';
+  static const senderCallInitiated    = 'sender_call_initiated';
+  static const trackingLinkShared     = 'tracking_link_shared';
+  static const screenFeedbackSubmitted = 'screen_feedback_submitted';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }

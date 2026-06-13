@@ -61,6 +61,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -151,6 +152,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       remote: getIt<AnalyticsConsentRemote>(),
     ),
   );
+  DonyFeedbackButton.registerAnalyticsResolver(() => getIt<AnalyticsService>());
   getIt.registerLazySingleton<ActiveRoleCubit>(
     () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );
