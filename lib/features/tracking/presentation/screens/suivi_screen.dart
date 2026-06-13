@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
 import 'package:dony/features/tracking/presentation/suivi_layout.dart';
@@ -31,24 +32,39 @@ class SuiviScreen extends StatelessWidget {
     );
 
     switch (layout) {
+      // TrackingSearchScreen consomme TrackingBloc (recherche par numéro).
+      // En in-shell il n'y a pas de provider de route (contrairement à la
+      // route poussée /tracking/search) → on le fournit ici.
       case SuiviLayout.senderOnly:
-        return const TrackingSearchScreen(showBackButton: false);
+        return BlocProvider(
+          create: (_) => getIt<TrackingBloc>(),
+          child: const TrackingSearchScreen(showBackButton: false),
+        );
 
       case SuiviLayout.occasionalTraveler:
-        return TrackingSearchScreen(
-          showBackButton: false,
-          onScanTrip: () {
-            unawaited(getIt<AnalyticsService>()
-                .logEvent(AnalyticsEvents.suiviScanOpened));
-            context.push('/tracking/scan-hub');
-          },
+        return BlocProvider(
+          create: (_) => getIt<TrackingBloc>(),
+          child: TrackingSearchScreen(
+            showBackButton: false,
+            onScanTrip: () {
+              unawaited(
+                getIt<AnalyticsService>().logEvent(
+                  AnalyticsEvents.suiviScanOpened,
+                ),
+              );
+              context.push('/tracking/scan-hub');
+            },
+          ),
         );
 
       case SuiviLayout.proTraveler:
         return ScanHubScreen(
           onTrackParcel: () {
-            unawaited(getIt<AnalyticsService>()
-                .logEvent(AnalyticsEvents.suiviTrackOpened));
+            unawaited(
+              getIt<AnalyticsService>().logEvent(
+                AnalyticsEvents.suiviTrackOpened,
+              ),
+            );
             context.push('/tracking/search');
           },
         );
