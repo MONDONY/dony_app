@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:pinput/pinput.dart';
 
 /// Sheets « code de retour » (annulation après remise, D7).
@@ -355,9 +356,5 @@ class _ReturnEntryBodyState extends State<_ReturnEntryBody> {
   }
 }
 
-String _fmtDate(DateTime d) {
-  final local = d.toLocal();
-  final dd = local.day.toString().padLeft(2, '0');
-  final mm = local.month.toString().padLeft(2, '0');
-  return '$dd/$mm';
-}
+// Pattern numérique (dd/MM) : pas de données de locale requises.
+String _fmtDate(DateTime d) => DateFormat('dd/MM').format(d.toLocal());

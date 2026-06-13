@@ -652,7 +652,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           ],
           // Annulation après remise (D5) — colis déjà chez le voyageur, avant le
           // départ. L'expéditeur récupère son colis via le code de retour.
-          if (bid.status == 'HANDED_OVER' && _canCancelAfterHandover(bid)) ...[
+          if (bid.canCancelAfterHandover) ...[
             _OptionTile(
               icon: Icons.block_rounded,
               iconColor: cs.error,
@@ -821,13 +821,6 @@ class _SenderOptionsSheet extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  /// Annulation après remise possible tant que le départ canonique n'est pas
-  /// atteint (verrou D3 — le serveur renvoie 409 sinon).
-  static bool _canCancelAfterHandover(BidModel bid) {
-    final departure = bid.resolvedDepartureAt;
-    return departure == null || DateTime.now().isBefore(departure);
   }
 
   void _showAfterHandoverCancelDialog(BuildContext context) {

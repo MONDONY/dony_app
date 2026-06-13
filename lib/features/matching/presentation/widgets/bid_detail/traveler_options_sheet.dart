@@ -13,11 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Statuses pour lesquels le voyageur peut annuler.
-/// IN_TRANSIT exclu : une fois le colis en transit, l'annulation est impossible (D3).
-/// HANDED_OVER reste annulable tant que le départ n'est pas atteint (verrou D3 côté
-/// serveur ; on cache aussi l'option côté client une fois le départ passé).
-const _cancellableStatuses = {'ACCEPTED', 'HANDED_OVER'};
 
 /// Statuses for which the traveler can dismiss/delete the bid record.
 const _dismissableStatuses = {'REJECTED', 'CANCELLED'};
@@ -319,20 +314,11 @@ class _TravelerOptionsSheet extends StatelessWidget {
     );
   }
 
-  /// L'option d'annulation est visible si le statut est annulable ET, pour un colis
-  /// déjà remis, tant que le départ canonique n'est pas atteint (verrou D3).
-  static bool _canCancel(BidModel bid) {
-    if (!_cancellableStatuses.contains(bid.status)) {
-      return false;
-    }
-    if (bid.status == 'HANDED_OVER') {
-      final departure = bid.resolvedDepartureAt;
-      if (departure != null && !DateTime.now().isBefore(departure)) {
-        return false;
-      }
-    }
-    return true;
-  }
+  /// Option annulation visible : avant remise (ACCEPTED) toujours ; après remise
+  /// (HANDED_OVER) tant que le départ n'est pas atteint — règle portée par
+  /// [BidModel.canCancelAfterHandover]. IN_TRANSIT n'est jamais annulable (D3).
+  static bool _canCancel(BidModel bid) =>
+      bid.status == 'ACCEPTED' || bid.canCancelAfterHandover;
 
   Future<void> _showCancelDialog(BuildContext context, BidModel bid) async {
     final afterHandover = bid.status == 'HANDED_OVER';

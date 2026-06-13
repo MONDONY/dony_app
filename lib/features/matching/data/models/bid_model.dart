@@ -209,9 +209,14 @@ class BidModel {
   /// et le colis n'a pas encore été rendu.
   bool get isAwaitingReturn => returnDeadline != null && returnedAt == null;
 
-  /// Délai de retour dépassé (le colis aurait dû être restitué avant `returnDeadline`).
-  bool get isReturnOverdue =>
-      isAwaitingReturn && DateTime.now().isAfter(returnDeadline!);
+  /// Annulation après remise possible (D3) : colis remis ET départ canonique pas
+  /// encore atteint. Source unique du verrou côté client (le serveur via
+  /// CancellationGuard reste l'autorité). Consommé par les options sheets voyageur
+  /// et expéditeur.
+  bool get canCancelAfterHandover =>
+      status == 'HANDED_OVER' &&
+      (resolvedDepartureAt == null ||
+          DateTime.now().isBefore(resolvedDepartureAt!));
 
   /// Nom à afficher pour l'expéditeur (même logique que TravelerProfile.resolvedName).
   /// Si le nom est défini → retourne le nom (le téléphone est géré séparément dans l'UI).
