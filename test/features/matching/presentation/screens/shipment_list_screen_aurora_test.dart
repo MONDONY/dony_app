@@ -238,7 +238,7 @@ void main() {
   // ── Puces de filtre ───────────────────────────────────────────────────────
 
   testWidgets(
-    '4 puces de filtre visibles : Tous, En transit, En attente, Livrés',
+    '4 puces de filtre visibles : Tous, En cours, En attente, Livrés',
     (tester) async {
       // Need bids so filter bar is shown (rawEmpty = false).
       when(() => bidBloc.state)
@@ -250,7 +250,7 @@ void main() {
         authBloc: authBloc,
       );
       expect(find.text('Tous'), findsOneWidget);
-      expect(find.text('En transit'), findsOneWidget);
+      expect(find.text('En cours'), findsOneWidget);
       expect(find.text('En attente'), findsOneWidget);
       expect(find.text('Livrés'), findsOneWidget);
     },
@@ -376,7 +376,7 @@ void main() {
     await tester.pump();
     await tester.pump(_kSettle);
 
-    // ACCEPTED is shown under "Tous" / "En transit" chip (kEnvoisEnCours)
+    // ACCEPTED is shown under "Tous" / "En cours" chip (kEnvoisEnCours)
     expect(find.text('Remis'), findsOneWidget);
     expect(find.text('Embarqué'), findsOneWidget);
     expect(find.text('En vol'), findsOneWidget);
@@ -450,7 +450,7 @@ void main() {
 
   // ── Filtrage par puce rapide ──────────────────────────────────────────────
 
-  testWidgets('puce "En transit" n\'affiche que les ACCEPTED', (tester) async {
+  testWidgets('puce "En cours" n\'affiche que les ACCEPTED', (tester) async {
     final bids = [
       _makeBid(id: 'bid-00000001', status: 'ACCEPTED'),
       _makeBid(id: 'bid-00000002', status: 'PENDING'),
@@ -466,8 +466,8 @@ void main() {
     // Par défaut ("Tous"), les deux bids (même corridor) sont visibles.
     expect(find.text('Dakar'), findsNWidgets(2));
 
-    // La puce "En transit" ne garde que le bid ACCEPTED.
-    await tester.tap(find.text('En transit'));
+    // La puce "En cours" ne garde que le bid ACCEPTED.
+    await tester.tap(find.text('En cours'));
     await tester.pumpAndSettle();
     expect(find.text('Dakar'), findsOneWidget);
   });
@@ -713,7 +713,7 @@ void main() {
     );
     await tester.pump(_kSettle);
 
-    expect(find.text('En transit'), findsOneWidget);
+    expect(find.text('En cours'), findsOneWidget);
     expect(find.text('En attente'), findsOneWidget);
     expect(find.text('Livrés'), findsOneWidget);
   });
@@ -846,7 +846,7 @@ void main() {
 
   // ── Bascule entre puces rapides ───────────────────────────────────────────
 
-  testWidgets('puce "En transit" sélectionnable depuis "En attente"', (
+  testWidgets('puce "En cours" sélectionnable depuis "En attente"', (
     tester,
   ) async {
     final bids = [
@@ -866,9 +866,9 @@ void main() {
     // En attente → seul le PENDING reste : la card est encore "Paris → Dakar".
     expect(find.text('Dakar'), findsOneWidget);
 
-    await tester.tap(find.text('En transit'));
+    await tester.tap(find.text('En cours'));
     await tester.pumpAndSettle();
-    // En transit → seul l'ACCEPTED reste.
+    // En cours → seul l'ACCEPTED reste.
     expect(find.text('Dakar'), findsOneWidget);
   });
 
@@ -1064,7 +1064,7 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  // ── Embedded : puces En attente et En transit ─────────────────────────────
+  // ── Embedded : puces En attente et En cours ─────────────────────────────
 
   testWidgets('ShipmentListBody : puce "En attente" embedded fonctionne', (
     tester,
@@ -1097,8 +1097,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Aucun envoi ne correspond'), findsOneWidget);
 
-    // "En transit" correspond → la card réapparaît.
-    await tester.tap(find.text('En transit'));
+    // "En cours" correspond → la card réapparaît.
+    await tester.tap(find.text('En cours'));
     await tester.pumpAndSettle();
     expect(find.text('Dakar'), findsOneWidget);
   });
