@@ -43,6 +43,9 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       ? null
       : DateTime.parse(json['departureDate'] as String),
   departureTime: json['departureTime'] as String?,
+  departureAt: json['departureAt'] == null
+      ? null
+      : DateTime.parse(json['departureAt'] as String),
   arrivalTime: json['arrivalTime'] as String?,
   pricePerKg: (json['pricePerKg'] as num?)?.toDouble(),
   trackingNumber: json['trackingNumber'] as String?,
@@ -112,6 +115,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'arrivalCity': instance.arrivalCity,
   'departureDate': instance.departureDate?.toIso8601String(),
   'departureTime': instance.departureTime,
+  'departureAt': instance.departureAt?.toIso8601String(),
   'arrivalTime': instance.arrivalTime,
   'pricePerKg': instance.pricePerKg,
   'trackingNumber': instance.trackingNumber,

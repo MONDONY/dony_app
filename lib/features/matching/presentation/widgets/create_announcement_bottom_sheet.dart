@@ -789,6 +789,11 @@ class _CreateAnnouncementContentState
       _showError('Date de départ obligatoire');
       return;
     }
+    // D1 : l'heure de départ est obligatoire (backstop du verrou d'annulation).
+    if (departureTimeVal == null) {
+      _showError('Heure de départ obligatoire');
+      return;
+    }
 
     _formKey.currentState!.save();
 

@@ -68,6 +68,9 @@ class BidModel {
   final String? arrivalCity;
   final DateTime? departureDate;
   final String? departureTime;
+  // Instant canonique de départ (date + heure, fuseau ville de départ).
+  // Référence du verrou d'annulation après remise.
+  final DateTime? departureAt;
   final String? arrivalTime;
   final double? pricePerKg;
   final String? trackingNumber;
@@ -128,6 +131,7 @@ class BidModel {
     this.arrivalCity,
     this.departureDate,
     this.departureTime,
+    this.departureAt,
     this.arrivalTime,
     this.pricePerKg,
     this.trackingNumber,
@@ -159,6 +163,19 @@ class BidModel {
       _$BidModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$BidModelToJson(this);
+
+  /// Instant de départ canonique. Le backend l'envoie (`departureAt`) ; fallback
+  /// par fusion `departureDate` + `departureTime` ("HH:mm") pour les anciens payloads.
+  DateTime? get resolvedDepartureAt {
+    if (departureAt != null) return departureAt;
+    if (departureDate == null || departureTime == null) return null;
+    final parts = departureTime!.split(':');
+    if (parts.length < 2) return departureDate;
+    final h = int.tryParse(parts[0]) ?? 0;
+    final m = int.tryParse(parts[1]) ?? 0;
+    return DateTime(
+        departureDate!.year, departureDate!.month, departureDate!.day, h, m);
+  }
 
   /// Minimal placeholder used when navigating from a deep-link (no BidModel in extra).
   /// The screen fetches the real data immediately via BidDetailRequested.

@@ -185,4 +185,35 @@ void main() {
       expect(model.resolvedSenderName, 'Expéditeur');
     });
   });
+
+  group('BidModel.departureAt / resolvedDepartureAt', () {
+    test('parses departureAt ISO string from JSON', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'departureAt': '2026-07-01T10:00:00.000+02:00',
+      });
+      expect(model.departureAt, DateTime.parse('2026-07-01T10:00:00.000+02:00'));
+      expect(model.resolvedDepartureAt,
+          DateTime.parse('2026-07-01T10:00:00.000+02:00'));
+    });
+
+    test('resolvedDepartureAt fuses date + time when departureAt absent', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'departureDate': '2026-07-01',
+        'departureTime': '10:30',
+      });
+      expect(model.departureAt, isNull);
+      expect(model.resolvedDepartureAt, DateTime(2026, 7, 1, 10, 30));
+    });
+
+    test('resolvedDepartureAt is null when no departureAt and no departureTime',
+        () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'departureDate': '2026-07-01',
+      });
+      expect(model.resolvedDepartureAt, isNull);
+    });
+  });
 }
