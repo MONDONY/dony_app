@@ -147,37 +147,6 @@ String _formatDate(DateTime date) {
   return DateFormat('d MMMM yyyy', 'fr').format(date);
 }
 
-/// Scale-on-press tactile (0.96) — même feedback que [DonyButton].
-class _Pressable extends StatefulWidget {
-  const _Pressable({required this.onTap, required this.child});
-
-  final VoidCallback onTap;
-  final Widget child;
-
-  @override
-  State<_Pressable> createState() => _PressableState();
-}
-
-class _PressableState extends State<_Pressable> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        child: widget.child,
-      ),
-    );
-  }
-}
-
 class _TripHeroCard extends StatelessWidget {
   const _TripHeroCard({
     required this.corridor,
@@ -373,7 +342,7 @@ class _EtapeChip extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return _Pressable(
+    return DonyPressable(
       onTap: () => context.push(
         '/tracking/scan/identify',
         extra: <String, dynamic>{'etape': etape.code, 'focusNumber': false},
@@ -517,7 +486,7 @@ class _QuickBtn extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return _Pressable(
+    return DonyPressable(
       onTap: onTap,
       child: DonyCard(
         padding: const EdgeInsets.all(DonySpacing.md),
