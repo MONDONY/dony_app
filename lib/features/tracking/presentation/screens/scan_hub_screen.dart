@@ -96,6 +96,10 @@ class ScanHubView extends StatelessWidget {
             case ScanHubEmpty():
               return const _NoTripState();
             case ScanHubLoaded(:final trip, :final progress):
+              // Animation d'entrée jouée une fois : ScanHubLoaded est un état
+              // terminal (le cubit charge une seule fois, pas de refresh). Si un
+              // rafraîchissement de progression est ajouté un jour, sortir le
+              // `.animate()` du sous-arbre piloté par l'état pour éviter le replay.
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
                   DonySpacing.lg,
@@ -374,15 +378,10 @@ class _EtapeChip extends StatelessWidget {
         '/tracking/scan/identify',
         extra: <String, dynamic>{'etape': etape.code, 'focusNumber': false},
       ),
-      child: Container(
+      child: DonyCard(
         padding: const EdgeInsets.symmetric(
           vertical: DonySpacing.md,
           horizontal: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -520,13 +519,8 @@ class _QuickBtn extends StatelessWidget {
 
     return _Pressable(
       onTap: onTap,
-      child: Container(
+      child: DonyCard(
         padding: const EdgeInsets.all(DonySpacing.md),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
-        ),
         child: Column(
           children: [
             Container(
