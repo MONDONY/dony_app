@@ -78,6 +78,13 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   contestationDeadline: json['contestationDeadline'] == null
       ? null
       : DateTime.parse(json['contestationDeadline'] as String),
+  returnCode: json['returnCode'] as String?,
+  returnDeadline: json['returnDeadline'] == null
+      ? null
+      : DateTime.parse(json['returnDeadline'] as String),
+  returnedAt: json['returnedAt'] == null
+      ? null
+      : DateTime.parse(json['returnedAt'] as String),
   pricingMode:
       $enumDecodeNullable(_$BidPricingModeEnumMap, json['pricingMode']) ??
       BidPricingMode.kg,
@@ -139,6 +146,9 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'commissionStatus': _$CommissionStatusEnumMap[instance.commissionStatus],
   'cancellationNoShowStatus': instance.cancellationNoShowStatus,
   'contestationDeadline': instance.contestationDeadline?.toIso8601String(),
+  'returnCode': instance.returnCode,
+  'returnDeadline': instance.returnDeadline?.toIso8601String(),
+  'returnedAt': instance.returnedAt?.toIso8601String(),
   'pricingMode': _$BidPricingModeEnumMap[instance.pricingMode]!,
   'totalAmountEur': instance.totalAmountEur,
   'promoCode': instance.promoCode,

@@ -92,6 +92,14 @@ class BidModel {
   final CommissionStatus? commissionStatus;
   final String? cancellationNoShowStatus;
   final DateTime? contestationDeadline;
+
+  // Annulation après remise (D5/D7) : code de retour détenu par l'expéditeur, saisi
+  // par le voyageur pour confirmer la restitution physique du colis.
+  // `returnCode` n'est renseigné par le backend que pour l'expéditeur (sender-gated).
+  final String? returnCode;
+  final DateTime? returnDeadline;
+  final DateTime? returnedAt;
+
   final BidPricingMode pricingMode;
   final double? totalAmountEur;
 
@@ -153,6 +161,9 @@ class BidModel {
     this.commissionStatus,
     this.cancellationNoShowStatus,
     this.contestationDeadline,
+    this.returnCode,
+    this.returnDeadline,
+    this.returnedAt,
     this.pricingMode = BidPricingMode.kg,
     this.totalAmountEur,
     this.promoCode,
@@ -190,6 +201,17 @@ class BidModel {
       );
 
   bool get isSkeleton => senderId.isEmpty;
+
+  /// Le colis a été restitué (le voyageur a saisi le code de retour).
+  bool get isParcelReturned => returnedAt != null;
+
+  /// Annulation après remise en attente de restitution : un délai de retour existe
+  /// et le colis n'a pas encore été rendu.
+  bool get isAwaitingReturn => returnDeadline != null && returnedAt == null;
+
+  /// Délai de retour dépassé (le colis aurait dû être restitué avant `returnDeadline`).
+  bool get isReturnOverdue =>
+      isAwaitingReturn && DateTime.now().isAfter(returnDeadline!);
 
   /// Nom à afficher pour l'expéditeur (même logique que TravelerProfile.resolvedName).
   /// Si le nom est défini → retourne le nom (le téléphone est géré séparément dans l'UI).

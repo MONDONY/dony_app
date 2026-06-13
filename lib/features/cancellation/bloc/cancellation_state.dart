@@ -21,6 +21,21 @@ class NoShowReported extends CancellationState {}
 
 class NoShowContested extends CancellationState {}
 
+/// Annulation après remise réussie (l'écran rafraîchit le bid via BidBloc).
+class CancelledAfterHandover extends CancellationState {}
+
+/// Le voyageur a confirmé la restitution du colis (code de retour valide).
+class ReturnConfirmed extends CancellationState {
+  final ReturnCodeModel result;
+  ReturnConfirmed(this.result);
+}
+
+/// Le code de retour de l'expéditeur (+ état de la restitution) a été chargé.
+class ReturnCodeLoaded extends CancellationState {
+  final ReturnCodeModel result;
+  ReturnCodeLoaded(this.result);
+}
+
 class CancellationError extends CancellationState {
   final AppException error;
   CancellationError(this.error);
