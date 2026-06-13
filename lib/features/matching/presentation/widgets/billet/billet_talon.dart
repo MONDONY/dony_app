@@ -5,6 +5,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_c
 import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Zone action + bande de suivi du talon bas du billet de colis.
 ///
@@ -62,8 +63,7 @@ class BilletTalon extends StatelessWidget {
         // Le code de retrait existe dès la remise (HANDED_OVER). Comme le QR,
         // il s'ouvre dans un bottom sheet : deux boutons côte à côte dans le
         // talon, le QR restant accessible jusqu'au retrait.
-        'HANDED_OVER' ||
-        'IN_TRANSIT' when bid.confirmationCode != null => Row(
+        'HANDED_OVER' || 'IN_TRANSIT' when bid.confirmationCode != null => Row(
           children: [
             Expanded(child: _QrTalonButton(bid: bid, compact: true)),
             const SizedBox(width: DonySpacing.sm),
@@ -71,7 +71,8 @@ class BilletTalon extends StatelessWidget {
           ],
         ),
         // Code pas encore disponible → bouton QR seul, pleine largeur.
-        'HANDED_OVER' || 'IN_TRANSIT' => _QrTalonButton(bid: bid, compact: true),
+        'HANDED_OVER' ||
+        'IN_TRANSIT' => _QrTalonButton(bid: bid, compact: true),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
         'REJECTED' => const _TerminalBlock(),
@@ -79,13 +80,16 @@ class BilletTalon extends StatelessWidget {
       };
     }
 
-    // ── Traveler dispatch (passif — l'action vit dans la barre collante) ────────
+    // ── Traveler dispatch ───────────────────────────────────────────────────────
     return switch (status) {
       'PENDING' => _TravelerDecisionSummary(bid: bid),
-      // ACCEPTED / HANDED_OVER / IN_TRANSIT : plus d'action dans le talon.
-      // Seule la bande de suivi (TalonTrackingStrip) subsiste, ajoutée par
-      // le parent quand trackingNumber != null.
-      'ACCEPTED' || 'HANDED_OVER' || 'IN_TRANSIT' => const SizedBox.shrink(),
+      // ACCEPTED : le scan du départ vit dans la barre collante (présence
+      // confirmée) → talon passif ici.
+      'ACCEPTED' => const SizedBox.shrink(),
+      // HANDED_OVER / IN_TRANSIT : le colis voyage, le voyageur scanne les
+      // étapes (transit/arrivée) depuis le détail → lien vers les étapes du
+      // Suivi (ScanHub). La barre collante garde « Valider la remise ».
+      'HANDED_OVER' || 'IN_TRANSIT' => const _TravelerScanStepsButton(),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
       'REJECTED' => const _TerminalBlock(),
@@ -220,6 +224,31 @@ class _RetraitTalonButton extends StatelessWidget {
       onPressed: () => RetraitCodeSheet.show(context, bid: bid),
       icon: Icon(Icons.pin_rounded, size: 20, color: cs.primary),
       label: const Text('Code de retrait', textAlign: TextAlign.center),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: cs.primary,
+        side: BorderSide(color: cs.primary),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+      ),
+    );
+  }
+}
+
+/// traveler / HANDED_OVER · IN_TRANSIT — lien vers les étapes de scan du Suivi
+/// (ScanHub : Départ / Transit / Arrivée). Redirige simplement vers le hub
+/// d'étapes déjà établi, où le voyageur scanne (QR) ou identifie par numéro.
+class _TravelerScanStepsButton extends StatelessWidget {
+  const _TravelerScanStepsButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return OutlinedButton.icon(
+      onPressed: () => context.push('/tracking/scan-hub'),
+      icon: Icon(Icons.qr_code_scanner_rounded, size: 20, color: cs.primary),
+      label: const Text('Scanner les étapes', textAlign: TextAlign.center),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),

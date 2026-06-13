@@ -82,16 +82,15 @@ void main() {
     expect(find.text('N° DE SUIVI'), findsNothing);
   });
 
-  testWidgets(
-    'sender + HANDED_OVER sans confirmationCode → bouton QR seul',
-    (tester) async {
-      await _pump(tester, _bid(status: 'HANDED_OVER'), true);
-      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
-      expect(find.textContaining('QR du colis'), findsOneWidget);
-      // Pas de bouton code de retrait tant que le code n'existe pas.
-      expect(find.text('Code de retrait'), findsNothing);
-    },
-  );
+  testWidgets('sender + HANDED_OVER sans confirmationCode → bouton QR seul', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'HANDED_OVER'), true);
+    expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+    expect(find.textContaining('QR du colis'), findsOneWidget);
+    // Pas de bouton code de retrait tant que le code n'existe pas.
+    expect(find.text('Code de retrait'), findsNothing);
+  });
 
   testWidgets(
     'sender + HANDED_OVER avec confirmationCode → boutons QR + Code de retrait',
@@ -109,14 +108,13 @@ void main() {
     },
   );
 
-  testWidgets(
-    'sender + IN_TRANSIT sans confirmationCode → bouton QR seul',
-    (tester) async {
-      await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
-      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
-      expect(find.text('Code de retrait'), findsNothing);
-    },
-  );
+  testWidgets('sender + IN_TRANSIT sans confirmationCode → bouton QR seul', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
+    expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+    expect(find.text('Code de retrait'), findsNothing);
+  });
 
   testWidgets(
     'sender + IN_TRANSIT avec confirmationCode → boutons QR + Code de retrait',
@@ -187,8 +185,9 @@ void main() {
     },
   );
 
-  testWidgets('sender + CANCELLED + colis restitué → bloc "Colis restitué"',
-      (tester) async {
+  testWidgets('sender + CANCELLED + colis restitué → bloc "Colis restitué"', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(
@@ -247,19 +246,20 @@ void main() {
     expect(find.text('—'), findsWidgets);
   });
 
-  testWidgets('voyageur + HANDED_OVER → talon passif (pas de confirmation)', (
+  testWidgets('voyageur + HANDED_OVER → lien "Scanner les étapes" (Suivi)', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
-    expect(find.byType(TalonTravelerActionView), findsNothing);
-    expect(find.text('Confirmer la livraison'), findsNothing);
+    // Redirige vers les étapes du Suivi (ScanHub).
+    expect(find.text('Scanner les étapes'), findsOneWidget);
+    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
   });
 
-  testWidgets('voyageur + IN_TRANSIT → talon passif (pas de confirmation)', (
+  testWidgets('voyageur + IN_TRANSIT → lien "Scanner les étapes" (Suivi)', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'IN_TRANSIT'), false);
-    expect(find.byType(TalonTravelerActionView), findsNothing);
+    expect(find.text('Scanner les étapes'), findsOneWidget);
   });
 
   testWidgets('voyageur + COMPLETED → bloc vert "Colis livré"', (tester) async {
@@ -293,8 +293,9 @@ void main() {
     },
   );
 
-  testWidgets('voyageur + CANCELLED + colis restitué → bloc "Colis restitué"',
-      (tester) async {
+  testWidgets('voyageur + CANCELLED + colis restitué → bloc "Colis restitué"', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(
