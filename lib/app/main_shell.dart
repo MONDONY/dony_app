@@ -50,7 +50,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // montage (home reste vivant dans le nav shell). Si un voyageur refuse une
       // demande à distance, le cache reste sur « en attente ». Force un refresh à
       // chaque (ré)sélection de l'onglet pour refléter le vrai statut.
-      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
+      context.read<BidBloc>().add(
+        const BidMyListAutoRefreshRequested(force: true),
+      );
     }
     widget.navigationShell.goBranch(
       index,
@@ -71,7 +73,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       context.read<StripeAccountBloc>().add(const StripeAccountStatusLoaded());
       _fcmSub = getIt<NotificationService>().newNotificationStream.listen((_) {
         if (mounted) {
-          context.read<NotificationBloc>().add(const NotificationsLoadRequested());
+          context.read<NotificationBloc>().add(
+            const NotificationsLoadRequested(),
+          );
         }
       });
     });
@@ -80,7 +84,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      context.read<StripeAccountBloc>().add(const StripeAccountStatusRefreshed());
+      context.read<StripeAccountBloc>().add(
+        const StripeAccountStatusRefreshed(),
+      );
     }
   }
 
@@ -115,7 +121,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
         buildWhen: (prev, curr) {
           if (prev is StripeAccountReady && curr is StripeAccountReady) {
-            return prev.accountStatus.isDisabled != curr.accountStatus.isDisabled ||
+            return prev.accountStatus.isDisabled !=
+                    curr.accountStatus.isDisabled ||
                 prev.accountStatus.isRejected != curr.accountStatus.isRejected;
           }
           return prev.runtimeType != curr.runtimeType;
@@ -148,10 +155,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 }
 
 class _DonyBottomNav extends StatelessWidget {
-  const _DonyBottomNav({
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const _DonyBottomNav({required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -162,8 +166,9 @@ class _DonyBottomNav extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       buildWhen: (p, c) =>
           (p is AuthAuthenticated) != (c is AuthAuthenticated) ||
-          (c is AuthAuthenticated && (p as AuthAuthenticated?)?.user.isProAccount !=
-              c.user.isProAccount) ||
+          (c is AuthAuthenticated &&
+              (p as AuthAuthenticated?)?.user.isProAccount !=
+                  c.user.isProAccount) ||
           (c is AuthProfileUpdated),
       builder: (context, authState) {
         UserModel? authUser;
@@ -172,120 +177,127 @@ class _DonyBottomNav extends StatelessWidget {
         final isProAccount = authUser?.isProAccount ?? false;
 
         return BlocBuilder<ActiveRoleCubit, ActiveRole>(
-      builder: (context, activeRole) {
-        final isTraveler = activeRole == ActiveRole.traveler;
+          builder: (context, activeRole) {
+            final isTraveler = activeRole == ActiveRole.traveler;
 
-        // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
-        // dans MatchingManagementScreen — Phase 2)
-        const tab1Label = 'Activités';
-        const tab1Icon = Icons.bolt_rounded;
-        const tab1IconOutlined = Icons.bolt_outlined;
+            // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
+            // dans MatchingManagementScreen — Phase 2)
+            const tab1Label = 'Activités';
+            const tab1Icon = Icons.bolt_rounded;
+            const tab1IconOutlined = Icons.bolt_outlined;
 
-        // Tab 2 — Suivi (libellé + icône figés ; contenu adapté au profil
-        // dans SuiviScreen — voir spec Phase 3)
-        const tab2Icon = Icons.local_shipping_rounded;
+            // Tab 2 — Suivi (libellé + icône figés ; contenu adapté au profil
+            // dans SuiviScreen — voir spec Phase 3). Icône « cible/radar » =
+            // sens suivi/tracking neutre (ni scan ni colis).
+            const tab2Icon = Icons.track_changes_rounded;
 
-        return ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xB8FFFFFF),
-            border: Border(top: BorderSide(color: Color(0x99FFFFFF), width: 1)),
-          ),
-          child: Padding(
-        padding: EdgeInsets.only(bottom: bottomPadding),
-        child: SizedBox(
-          height: 68,
-          child: Row(
-            children: [
-              // 0 — Accueil
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.home_rounded,
-                  outlinedIcon: Icons.home_outlined,
-                  label: 'Accueil',
-                  index: 0,
-                  currentIndex: currentIndex,
-                  onTap: () => onTap(0),
+            return ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xB8FFFFFF),
+                    border: Border(
+                      top: BorderSide(color: Color(0x99FFFFFF), width: 1),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: bottomPadding),
+                    child: SizedBox(
+                      height: 68,
+                      child: Row(
+                        children: [
+                          // 0 — Accueil
+                          Expanded(
+                            child: _NavItem(
+                              icon: Icons.home_rounded,
+                              outlinedIcon: Icons.home_outlined,
+                              label: 'Accueil',
+                              index: 0,
+                              currentIndex: currentIndex,
+                              onTap: () => onTap(0),
+                            ),
+                          ),
+                          // 1 — Envoyer (sender) | Trajets (traveler)
+                          Expanded(
+                            child: _NavItem(
+                              icon: tab1Icon,
+                              outlinedIcon: tab1IconOutlined,
+                              label: tab1Label,
+                              index: 1,
+                              currentIndex: currentIndex,
+                              onTap: () => onTap(1),
+                            ),
+                          ),
+                          // 2 — Suivi (toujours in-shell ; SuiviScreen adapte le contenu au profil)
+                          Expanded(
+                            child: _NavItem(
+                              icon: tab2Icon,
+                              outlinedIcon: tab2Icon,
+                              label: 'Suivi',
+                              index: 2,
+                              currentIndex: currentIndex,
+                              onTap: () => onTap(2),
+                            ),
+                          ),
+                          // 3 — Messages
+                          Expanded(
+                            child: Builder(
+                              builder: (context) {
+                                final uid =
+                                    FirebaseAuth.instance.currentUser?.uid;
+                                final messagesItem = _NavItem(
+                                  icon: Icons.chat_bubble_rounded,
+                                  outlinedIcon:
+                                      Icons.chat_bubble_outline_rounded,
+                                  label: 'Messages',
+                                  index: 3,
+                                  currentIndex: currentIndex,
+                                  onTap: () => onTap(3),
+                                );
+                                if (uid == null || uid.isEmpty) {
+                                  // Pendant le sign-out : pas de stream Firestore (path vide invalide).
+                                  return messagesItem;
+                                }
+                                return StreamBuilder<int>(
+                                  stream: getIt<FirestoreChatRepository>()
+                                      .totalUnreadStream(uid),
+                                  builder: (context, snapshot) {
+                                    return _NavItem(
+                                      icon: Icons.chat_bubble_rounded,
+                                      outlinedIcon:
+                                          Icons.chat_bubble_outline_rounded,
+                                      label: 'Messages',
+                                      index: 3,
+                                      currentIndex: currentIndex,
+                                      onTap: () => onTap(3),
+                                      badgeCount: snapshot.data ?? 0,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                          // 4 — Moi
+                          Expanded(
+                            child: _NavItem(
+                              icon: Icons.person_rounded,
+                              outlinedIcon: Icons.person_outline_rounded,
+                              label: 'Moi',
+                              index: 4,
+                              currentIndex: currentIndex,
+                              onTap: () => onTap(4),
+                              isPro: isProAccount,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              // 1 — Envoyer (sender) | Trajets (traveler)
-              Expanded(
-                child: _NavItem(
-                  icon: tab1Icon,
-                  outlinedIcon: tab1IconOutlined,
-                  label: tab1Label,
-                  index: 1,
-                  currentIndex: currentIndex,
-                  onTap: () => onTap(1),
-                ),
-              ),
-              // 2 — Suivi (toujours in-shell ; SuiviScreen adapte le contenu au profil)
-              Expanded(
-                child: _NavItem(
-                  icon: tab2Icon,
-                  outlinedIcon: tab2Icon,
-                  label: 'Suivi',
-                  index: 2,
-                  currentIndex: currentIndex,
-                  onTap: () => onTap(2),
-                ),
-              ),
-              // 3 — Messages
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final uid = FirebaseAuth.instance.currentUser?.uid;
-                    final messagesItem = _NavItem(
-                      icon: Icons.chat_bubble_rounded,
-                      outlinedIcon: Icons.chat_bubble_outline_rounded,
-                      label: 'Messages',
-                      index: 3,
-                      currentIndex: currentIndex,
-                      onTap: () => onTap(3),
-                    );
-                    if (uid == null || uid.isEmpty) {
-                      // Pendant le sign-out : pas de stream Firestore (path vide invalide).
-                      return messagesItem;
-                    }
-                    return StreamBuilder<int>(
-                      stream: getIt<FirestoreChatRepository>().totalUnreadStream(uid),
-                      builder: (context, snapshot) {
-                        return _NavItem(
-                          icon: Icons.chat_bubble_rounded,
-                          outlinedIcon: Icons.chat_bubble_outline_rounded,
-                          label: 'Messages',
-                          index: 3,
-                          currentIndex: currentIndex,
-                          onTap: () => onTap(3),
-                          badgeCount: snapshot.data ?? 0,
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              // 4 — Moi
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.person_rounded,
-                  outlinedIcon: Icons.person_outline_rounded,
-                  label: 'Moi',
-                  index: 4,
-                  currentIndex: currentIndex,
-                  onTap: () => onTap(4),
-                  isPro: isProAccount,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-        ),
-      ),
-    );
-      },
+            );
+          },
         );
       },
     );
@@ -351,15 +363,21 @@ class _NavItem extends StatelessWidget {
                       ),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 220),
-                        transitionBuilder: (child, animation) => ScaleTransition(
-                          scale: animation,
-                          child: FadeTransition(opacity: animation, child: child),
-                        ),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(
+                              scale: animation,
+                              child: FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              ),
+                            ),
                         child: Icon(
                           _active ? icon : outlinedIcon,
                           key: ValueKey('${index}_${_active ? 'a' : 'i'}'),
                           size: 22,
-                          color: _active ? DonyColors.primary : DonyColors.textSubtle,
+                          color: _active
+                              ? DonyColors.primary
+                              : DonyColors.textSubtle,
                         ),
                       ),
                     ),

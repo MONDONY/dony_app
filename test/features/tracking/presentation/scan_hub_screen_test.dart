@@ -14,40 +14,42 @@ class _MockScanHubCubit extends MockCubit<ScanHubState>
     implements ScanHubCubit {}
 
 AnnouncementModel _trip() => AnnouncementModel(
-      id: 'trip-1',
-      travelerId: 'traveler-1',
-      status: 'IN_PROGRESS',
-      departureDate: DateTime(2026, 6, 22),
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      availableKg: 10,
-      totalKg: 20,
-      pricePerKg: 5,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+  id: 'trip-1',
+  travelerId: 'traveler-1',
+  status: 'IN_PROGRESS',
+  departureDate: DateTime(2026, 6, 22),
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  availableKg: 10,
+  totalKg: 20,
+  pricePerKg: 5,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+);
 
-GoRouter _router(ScanHubCubit cubit) => GoRouter(routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => BlocProvider<ScanHubCubit>.value(
-          value: cubit,
-          child: const ScanHubView(),
-        ),
+GoRouter _router(ScanHubCubit cubit) => GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (_, __) => BlocProvider<ScanHubCubit>.value(
+        value: cubit,
+        child: const ScanHubView(),
       ),
-      GoRoute(
-        path: '/tracking/scan/identify',
-        builder: (_, __) => const Scaffold(body: Text('identify')),
-      ),
-      GoRoute(
-        path: '/tracking/scan',
-        builder: (_, __) => const Scaffold(body: Text('qr-scan')),
-      ),
-      GoRoute(
-        path: '/announcements/trips',
-        builder: (_, __) => const Scaffold(body: Text('mes-trajets')),
-      ),
-    ]);
+    ),
+    GoRoute(
+      path: '/tracking/scan/identify',
+      builder: (_, __) => const Scaffold(body: Text('identify')),
+    ),
+    GoRoute(
+      path: '/tracking/scan',
+      builder: (_, __) => const Scaffold(body: Text('qr-scan')),
+    ),
+    GoRoute(
+      path: '/announcements/trips',
+      builder: (_, __) => const Scaffold(body: Text('mes-trajets')),
+    ),
+  ],
+);
 
 Widget _wrap(ScanHubCubit cubit) =>
     MaterialApp.router(routerConfig: _router(cubit));
@@ -63,8 +65,7 @@ void main() {
     cubit = _MockScanHubCubit();
   });
 
-  testWidgets('affiche titre et 3 étapes quand ScanHubLoaded',
-      (tester) async {
+  testWidgets('affiche titre et 3 étapes quand ScanHubLoaded', (tester) async {
     when(() => cubit.state).thenReturn(
       ScanHubLoaded(
         trip: _trip(),
@@ -72,14 +73,16 @@ void main() {
       ),
     );
     await tester.pumpWidget(_wrap(cubit));
+    await tester.pumpAndSettle(); // laisse l'animation d'entrée se terminer
     expect(find.text('Scan & Suivi'), findsOneWidget);
     expect(find.text('Départ'), findsOneWidget);
     expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Arrivée'), findsOneWidget);
   });
 
-  testWidgets('affiche corridor du trajet réel quand ScanHubLoaded',
-      (tester) async {
+  testWidgets('affiche corridor du trajet réel quand ScanHubLoaded', (
+    tester,
+  ) async {
     when(() => cubit.state).thenReturn(
       ScanHubLoaded(
         trip: _trip(),
@@ -87,6 +90,7 @@ void main() {
       ),
     );
     await tester.pumpWidget(_wrap(cubit));
+    await tester.pumpAndSettle(); // laisse l'animation d'entrée se terminer
     expect(find.textContaining('Paris'), findsOneWidget);
     expect(find.textContaining('Dakar'), findsOneWidget);
   });
@@ -130,7 +134,31 @@ void main() {
     expect(find.text('qr-scan'), findsOneWidget);
   });
 
-  testWidgets('affiche obligatoire pour Départ et Arrivée', (tester) async {
+  testWidgets(
+    'badge Photo seulement pour Départ et Arrivée (rien au Transit)',
+    (tester) async {
+      when(() => cubit.state).thenReturn(
+        ScanHubLoaded(
+          trip: _trip(),
+          progress: const ScanHubProgress(confirmedColis: 3, scannedDepart: 1),
+        ),
+      );
+      await tester.pumpWidget(_wrap(cubit));
+      await tester.pumpAndSettle(); // laisse l'animation d'entrée se terminer
+      // Badge « Photo » sur Départ + Arrivée uniquement ; Transit n'en a pas.
+      expect(find.text('Photo'), findsNWidgets(2));
+      // Plus de libellés « obligatoire »/« optionnelle » dans les chips.
+      expect(find.text('obligatoire'), findsNothing);
+      expect(find.text('optionnelle'), findsNothing);
+    },
+  );
+
+  testWidgets('aucun overflow sur petit écran (320 dp)', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     when(() => cubit.state).thenReturn(
       ScanHubLoaded(
         trip: _trip(),
@@ -138,16 +166,19 @@ void main() {
       ),
     );
     await tester.pumpWidget(_wrap(cubit));
-    expect(find.text('obligatoire'), findsNWidgets(2));
-    expect(find.text('optionnelle'), findsOneWidget);
+    await tester.pumpAndSettle();
+    // Un RenderFlex overflow lèverait une exception captée ici.
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('état vide — tap Voir mes trajets navigue vers /announcements/trips',
-      (tester) async {
-    when(() => cubit.state).thenReturn(const ScanHubEmpty());
-    await tester.pumpWidget(_wrap(cubit));
-    await tester.tap(find.text('Voir mes trajets'));
-    await tester.pumpAndSettle();
-    expect(find.text('mes-trajets'), findsOneWidget);
-  });
+  testWidgets(
+    'état vide — tap Voir mes trajets navigue vers /announcements/trips',
+    (tester) async {
+      when(() => cubit.state).thenReturn(const ScanHubEmpty());
+      await tester.pumpWidget(_wrap(cubit));
+      await tester.tap(find.text('Voir mes trajets'));
+      await tester.pumpAndSettle();
+      expect(find.text('mes-trajets'), findsOneWidget);
+    },
+  );
 }
