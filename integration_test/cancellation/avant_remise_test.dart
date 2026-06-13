@@ -40,8 +40,8 @@ void main() {
       await navigateToBid(tester, kBidAccepted);
       await openOptions(tester);
 
-      // 1. Option "Annuler le trajet" visible avec bon sous-titre
-      expect(find.text('Annuler le trajet'), findsOneWidget);
+      // 1. Option "Annuler ce transport" visible avec bon sous-titre
+      expect(find.text('Annuler ce transport'), findsOneWidget);
       expect(
         find.text("L'expéditeur sera remboursé automatiquement"),
         findsOneWidget,
@@ -49,7 +49,7 @@ void main() {
       );
 
       // 2. Taper → dialog annulation affiché
-      await tester.tap(find.text('Annuler le trajet'));
+      await tester.tap(find.text('Annuler ce transport'));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.text('Annuler cette demande ?'), findsOneWidget);

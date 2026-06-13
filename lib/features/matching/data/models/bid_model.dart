@@ -108,6 +108,12 @@ class BidModel {
   @JsonKey(name: 'totalNetAmountEur')
   final double? totalAmountEur;
 
+  /// Montant total payé par l'EXPÉDITEUR : net voyageur + commission Dony pour un
+  /// paiement Stripe, égal au net pour le cash (la commission est alors prélevée
+  /// au voyageur). À afficher côté expéditeur (« payé / séquestré / remboursé »)
+  /// au lieu de [totalAmountEur] qui est le net reçu par le voyageur.
+  final double? totalSenderAmountEur;
+
   /// Code promo entré par l'expéditeur à la création du bid (nullable).
   final String? promoCode;
 
@@ -171,6 +177,7 @@ class BidModel {
     this.returnedAt,
     this.pricingMode = BidPricingMode.kg,
     this.totalAmountEur,
+    this.totalSenderAmountEur,
     this.promoCode,
     this.promoCodeId,
   });

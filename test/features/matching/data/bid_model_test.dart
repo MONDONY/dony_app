@@ -125,6 +125,20 @@ void main() {
       expect(model.totalAmountEur, isNull);
     });
 
+    test('totalSenderAmountEur (total payé expéditeur = net + commission) parsé', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'totalNetAmountEur': 30.0,
+        'totalSenderAmountEur': 33.60, // net 30 + commission 12%
+      });
+      expect(model.totalAmountEur, 30.0);
+      expect(model.totalSenderAmountEur, 33.60);
+    });
+
+    test('totalSenderAmountEur null si absent', () {
+      expect(BidModel.fromJson(_minimalJson).totalSenderAmountEur, isNull);
+    });
+
     test('declaredValueEur parsed from int', () {
       final model = BidModel.fromJson({..._minimalJson, 'declaredValueEur': 100});
       expect(model.declaredValueEur, 100.0);

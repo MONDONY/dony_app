@@ -35,22 +35,25 @@ class PaiementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final amount = bid.totalAmountEur;
-    final amountLabel = amount != null ? '${amount.toStringAsFixed(2)} €' : '—';
+    // netLabel : ce que reçoit le voyageur (libéré / espèces).
+    // senderLabel : ce que paie l'expéditeur = net + commission (séquestré /
+    // remboursé). En cash, sender == net (la commission est prélevée au voyageur).
+    final netLabel = _fmt(bid.totalAmountEur);
+    final senderLabel = _fmt(bid.totalSenderAmountEur ?? bid.totalAmountEur);
 
     Widget body;
 
     if (bid.paymentMethod == BidPaymentMethod.stripe) {
-      body = _stripeBody(context, cs, tt, amountLabel);
+      body = _stripeBody(context, cs, tt, netLabel, senderLabel);
     } else {
-      // Cash / Wave / Orange Money — règlement en personne
+      // Cash / Wave / Orange Money — règlement en personne (net voyageur)
       body = Row(
         children: [
           Icon(Icons.payments_outlined, color: cs.warning, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'À régler en espèces à la remise : $amountLabel',
+              'À régler en espèces à la remise : $netLabel',
               style: tt.bodySmall?.copyWith(color: cs.onSurface),
             ),
           ),
@@ -67,18 +70,20 @@ class PaiementCard extends StatelessWidget {
     BuildContext context,
     ColorScheme cs,
     TextTheme tt,
-    String amountLabel,
+    String netLabel,
+    String senderLabel,
   ) {
     final status = bid.status;
 
     if (_terminalStatuses.contains(status)) {
+      // Montant effectivement versé au voyageur = net.
       return Row(
         children: [
           Icon(Icons.check_circle_outline_rounded, color: cs.success, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              '$amountLabel libéré au voyageur ✓',
+              '$netLabel libéré au voyageur ✓',
               style: tt.bodySmall?.copyWith(color: cs.success),
             ),
           ),
@@ -87,6 +92,7 @@ class PaiementCard extends StatelessWidget {
     }
 
     if (_cancelledStatuses.contains(status)) {
+      // L'expéditeur récupère ce qu'il a payé = net + commission.
       return Row(
         children: [
           Icon(
@@ -97,7 +103,7 @@ class PaiementCard extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              '$amountLabel remboursé',
+              '$senderLabel remboursé',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -105,18 +111,20 @@ class PaiementCard extends StatelessWidget {
       );
     }
 
-    // Default — en séquestre
+    // Default — en séquestre : montant payé par l'expéditeur (net + commission).
     return Row(
       children: [
         Icon(Icons.lock_outline_rounded, color: cs.primary, size: 20),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
-            '$amountLabel séquestré — libéré à la livraison',
+            '$senderLabel séquestré — libéré à la livraison',
             style: tt.bodySmall?.copyWith(color: cs.onSurface),
           ),
         ),
       ],
     );
   }
+
+  static String _fmt(double? v) => v != null ? '${v.toStringAsFixed(2)} €' : '—';
 }

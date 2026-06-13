@@ -42,7 +42,7 @@ void main() {
       await openOptions(tester);
 
       // 1. Option visible + sous-titre restitution
-      expect(find.text('Annuler le trajet'), findsOneWidget);
+      expect(find.text('Annuler ce transport'), findsOneWidget);
       expect(
         find.text('Vous devrez restituer le colis sous 3 jours'),
         findsOneWidget,
@@ -50,7 +50,7 @@ void main() {
       );
 
       // 2. Dialog afterHandover : warning rouge
-      await tester.tap(find.text('Annuler le trajet'));
+      await tester.tap(find.text('Annuler ce transport'));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.text('Annuler cette demande ?'), findsOneWidget);

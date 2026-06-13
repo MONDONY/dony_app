@@ -127,13 +127,14 @@ class _TravelerOptionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
 
-            // ── Annuler le trajet (ACCEPTED / HANDED_OVER avant départ) ────
+            // ── Annuler ce transport (ACCEPTED / HANDED_OVER avant départ) ──
+            // Le voyageur renonce à transporter CE colis (pas tout son trajet).
             if (_canCancel(bid)) ...[
               _OptionTile(
                 icon: Icons.block_rounded,
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
-                label: 'Annuler le trajet',
+                label: 'Annuler ce transport',
                 subtitle: bid.status == 'HANDED_OVER'
                     ? 'Vous devrez restituer le colis sous 3 jours'
                     : 'L\'expéditeur sera remboursé automatiquement',

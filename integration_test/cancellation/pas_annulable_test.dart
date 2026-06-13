@@ -39,7 +39,7 @@ void main() {
       if (kBidInTransitT.isNotEmpty) {
         await navigateToBid(tester, kBidInTransitT);
         await openOptions(tester);
-        expect(find.text('Annuler le trajet'), findsNothing,
+        expect(find.text('Annuler ce transport'), findsNothing,
             reason: 'IN_TRANSIT n\'est jamais annulable côté voyageur (D3)');
         testedCount++;
       }
@@ -65,7 +65,7 @@ void main() {
       if (kBidCompletedT.isNotEmpty) {
         await navigateToBid(tester, kBidCompletedT);
         await openOptions(tester);
-        expect(find.text('Annuler le trajet'), findsNothing,
+        expect(find.text('Annuler ce transport'), findsNothing,
             reason: 'COMPLETED n\'est pas annulable');
         testedCount++;
       }
