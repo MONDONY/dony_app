@@ -88,7 +88,7 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   pricingMode:
       $enumDecodeNullable(_$BidPricingModeEnumMap, json['pricingMode']) ??
       BidPricingMode.kg,
-  totalAmountEur: (json['totalAmountEur'] as num?)?.toDouble(),
+  totalAmountEur: (json['totalNetAmountEur'] as num?)?.toDouble(),
   promoCode: json['promoCode'] as String?,
   promoCodeId: json['promoCodeId'] as String?,
 );
@@ -150,7 +150,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'returnDeadline': instance.returnDeadline?.toIso8601String(),
   'returnedAt': instance.returnedAt?.toIso8601String(),
   'pricingMode': _$BidPricingModeEnumMap[instance.pricingMode]!,
-  'totalAmountEur': instance.totalAmountEur,
+  'totalNetAmountEur': instance.totalAmountEur,
   'promoCode': instance.promoCode,
   'promoCodeId': instance.promoCodeId,
 };

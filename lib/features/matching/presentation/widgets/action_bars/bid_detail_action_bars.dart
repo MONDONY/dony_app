@@ -348,7 +348,10 @@ class SenderActionBar extends StatelessWidget {
                       onPressed: () =>
                           context.push('/payments/pay', extra: bid),
                       icon: const Icon(Icons.lock_rounded, size: 18),
-                      label: const Text('Payer mon envoi'),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Payer mon envoi', maxLines: 1),
+                      ),
                       style: FilledButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: DonyColors.white,

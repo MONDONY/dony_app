@@ -108,6 +108,23 @@ void main() {
       expect(model.weightKg, 5.0);
     });
 
+    test('totalAmountEur lit la clé backend totalNetAmountEur (net voyageur)', () {
+      // Régression : le backend expose le net sous `totalNetAmountEur`. Avant le
+      // mapping, le champ restait null → "0 €"/"—" en mode grille (pricePerKg=0).
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'pricingMode': 'MIXED',
+        'pricePerKg': 0,
+        'totalNetAmountEur': 45.5,
+      });
+      expect(model.totalAmountEur, 45.5);
+    });
+
+    test('totalAmountEur null si la clé backend absente', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.totalAmountEur, isNull);
+    });
+
     test('declaredValueEur parsed from int', () {
       final model = BidModel.fromJson({..._minimalJson, 'declaredValueEur': 100});
       expect(model.declaredValueEur, 100.0);

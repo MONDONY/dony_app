@@ -101,6 +101,11 @@ class BidModel {
   final DateTime? returnedAt;
 
   final BidPricingMode pricingMode;
+
+  /// Net reçu par le voyageur, calculé côté backend (somme des items de grille +
+  /// part au kilo). Le backend l'expose sous la clé `totalNetAmountEur` ; sans ce
+  /// mapping le champ restait null en mode grille (pricePerKg=0) → "0 €"/"—".
+  @JsonKey(name: 'totalNetAmountEur')
   final double? totalAmountEur;
 
   /// Code promo entré par l'expéditeur à la création du bid (nullable).

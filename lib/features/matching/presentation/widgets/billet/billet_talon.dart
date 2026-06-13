@@ -345,15 +345,18 @@ class _MiniStat extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            // Une seule ligne : une catégorie multi-valeurs (« Vêtements,
-            // Médicaments… ») ne doit pas wrapper sur 2-4 lignes et
-            // désaligner les 3 colonnes du talon.
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          // FittedBox scaleDown : une catégorie longue (« Médicaments »,
+          // « Électronique ») rétrécit au lieu de s'ellipser en « Médi… » ;
+          // une valeur courte garde sa taille. Une seule ligne pour ne pas
+          // désaligner les 3 colonnes du talon.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(

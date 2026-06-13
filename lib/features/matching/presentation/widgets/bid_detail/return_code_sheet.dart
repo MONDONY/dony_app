@@ -104,28 +104,42 @@ class _ReturnCodeContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Digits
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: display.split('').map((d) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-                width: 44,
-                height: 56,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: DonyColors.ink800,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                child: Text(
-                  d,
-                  style: tt.headlineLarge?.copyWith(
-                    color: DonyColors.neutral0,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+          // Digits — taille responsive pour ne jamais déborder (6 boxes à largeur
+          // fixe débordaient sur écran étroit / textScale élevé).
+          LayoutBuilder(
+            builder: (_, constraints) {
+              final digits = display.split('');
+              final n = digits.length;
+              const marginPerBox = DonySpacing.xs * 2.0;
+              final availableWidth = constraints.maxWidth - (n * marginPerBox);
+              final boxWidth = (availableWidth / n).clamp(24.0, 48.0);
+              final boxHeight = (boxWidth * 56.0 / 48.0).clamp(28.0, 56.0);
+              final fontSize = (boxWidth * 0.5).clamp(13.0, 22.0);
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: digits.map((d) {
+                  return Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
+                    width: boxWidth,
+                    height: boxHeight,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: DonyColors.ink800,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
+                    child: Text(
+                      d,
+                      style: tt.headlineLarge?.copyWith(
+                        color: DonyColors.neutral0,
+                        fontWeight: FontWeight.w800,
+                        fontSize: fontSize,
+                      ),
+                    ),
+                  );
+                }).toList(),
               );
-            }).toList(),
+            },
           ),
           const SizedBox(height: DonySpacing.md),
           if (code != null)
