@@ -23,13 +23,19 @@ class _MockConvBloc
 class _FakeConversationOpenEvent extends Fake implements ConversationOpenEvent {}
 class _FakeBidEvent extends Fake implements BidEvent {}
 
-BidModel _bid({String status = 'ACCEPTED', String? token = 'tok'}) => BidModel(
+BidModel _bid({
+  String status = 'ACCEPTED',
+  String? token = 'tok',
+  DateTime? departureAt,
+}) =>
+    BidModel(
       id: 'b1',
       announcementId: 'a1',
       senderId: 's1',
       status: status,
       weightKg: 5,
       trackingToken: token,
+      departureAt: departureAt,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
@@ -109,16 +115,38 @@ void main() {
     expect(find.text('Annuler le trajet'), findsNothing);
   });
 
-  testWidgets('IN_TRANSIT → annuler présent, pas supprimer', (tester) async {
+  testWidgets('IN_TRANSIT → annulation impossible (D3), pas supprimer',
+      (tester) async {
     await _open(tester, _bid(status: 'IN_TRANSIT', token: null));
+    expect(find.text('Annuler le trajet'), findsNothing);
+    expect(find.text('Supprimer cette demande'), findsNothing);
+  });
+
+  testWidgets('HANDED_OVER avant départ → annuler présent, pas supprimer',
+      (tester) async {
+    await _open(
+      tester,
+      _bid(
+        status: 'HANDED_OVER',
+        token: null,
+        departureAt: DateTime.now().add(const Duration(days: 2)),
+      ),
+    );
     expect(find.text('Annuler le trajet'), findsOneWidget);
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  testWidgets('HANDED_OVER → annuler présent, pas supprimer', (tester) async {
-    await _open(tester, _bid(status: 'HANDED_OVER', token: null));
-    expect(find.text('Annuler le trajet'), findsOneWidget);
-    expect(find.text('Supprimer cette demande'), findsNothing);
+  testWidgets('HANDED_OVER après départ → annulation impossible (D3)',
+      (tester) async {
+    await _open(
+      tester,
+      _bid(
+        status: 'HANDED_OVER',
+        token: null,
+        departureAt: DateTime.now().subtract(const Duration(hours: 1)),
+      ),
+    );
+    expect(find.text('Annuler le trajet'), findsNothing);
   });
 
   testWidgets('sans trackingToken → pas de Partager le suivi', (tester) async {

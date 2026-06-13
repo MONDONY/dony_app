@@ -277,6 +277,21 @@ class _BidDetailViewState extends State<_BidDetailView> {
               type: DonySnackbarType.success,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is CancelledAfterHandover) {
+            DonySnackbar.show(
+              context,
+              message:
+                  'Trajet annulé. Restituez le colis sous 3 jours avec le code de retour.',
+              type: DonySnackbarType.info,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is ReturnConfirmed) {
+            DonySnackbar.show(
+              context,
+              message: 'Retour confirmé. Le colis a bien été restitué.',
+              type: DonySnackbarType.success,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancellationError) {
             ErrorPresenter.show(context, state.error);
           }
