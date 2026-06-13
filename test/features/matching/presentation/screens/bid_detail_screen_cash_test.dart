@@ -227,10 +227,12 @@ void main() {
     }
   });
 
-  // ── Task 4 : Badge CASH ──────────────────────────────────────────────────────
+  // ── Task 4 : Badge CASH (redesign) ───────────────────────────────────────────
+  // Dans le redesign voyageur, le paiement en espèces est affiché via
+  // TravelerGainCard (label 'ESPÈCES'), et non plus via un badge 'CASH' inline.
 
   group('Badge CASH', () {
-    testWidgets('paymentMethod=cash → texte CASH visible', (tester) async {
+    testWidgets('paymentMethod=cash → label ESPÈCES visible (TravelerGainCard)', (tester) async {
       final authBloc = _MockAuthBloc();
       when(
         () => authBloc.state,
@@ -243,10 +245,11 @@ void main() {
         authBloc: authBloc,
       );
 
-      expect(find.text('CASH'), findsOneWidget);
+      // Dans le redesign, TravelerGainCard affiche 'ESPÈCES' pour les paiements cash.
+      expect(find.text('ESPÈCES'), findsOneWidget);
     });
 
-    testWidgets('paymentMethod=stripe → texte CASH absent', (tester) async {
+    testWidgets('paymentMethod=stripe → label ESPÈCES absent', (tester) async {
       final authBloc = _MockAuthBloc();
       when(
         () => authBloc.state,
@@ -262,11 +265,13 @@ void main() {
         authBloc: authBloc,
       );
 
-      expect(find.text('CASH'), findsNothing);
+      expect(find.text('ESPÈCES'), findsNothing);
     });
   });
 
   // ── Task 4 : Bouton no-show voyageur ─────────────────────────────────────────
+  // Dans le redesign, le bouton est dans TravelerHeroCard (_WindowExpiredHero).
+  // Le texte a changé : "Signaler l'absence de l'expéditeur".
 
   group('Bouton no-show (voyageur, CASH, ACCEPTED, fenêtre passée)', () {
     testWidgets(
@@ -290,8 +295,9 @@ void main() {
           authBloc: authBloc,
         );
 
+        // Dans le redesign TravelerHeroCard, le bouton a ce libellé.
         expect(
-          find.textContaining("L'expéditeur n'est pas venu"),
+          find.textContaining("Signaler l'absence de l'expéditeur"),
           findsOneWidget,
         );
       },
@@ -317,7 +323,7 @@ void main() {
         );
 
         expect(
-          find.textContaining("L'expéditeur n'est pas venu"),
+          find.textContaining("Signaler l'absence de l'expéditeur"),
           findsNothing,
         );
       },
@@ -348,7 +354,7 @@ void main() {
         );
 
         expect(
-          find.textContaining("L'expéditeur n'est pas venu"),
+          find.textContaining("Signaler l'absence de l'expéditeur"),
           findsOneWidget,
         );
       },
@@ -608,8 +614,11 @@ void main() {
     );
 
     testWidgets(
-      'voyageur + ACCEPTED + handoverWindowStart null → Confirmer ma présence absent',
+      'voyageur + ACCEPTED + handoverWindowStart null + handoverWindowEnd futur → Confirmer ma présence visible',
       (tester) async {
+        // Dans le redesign, TravelerStickyBar utilise uniquement handoverWindowEnd
+        // pour décider d'afficher ConfirmPresenceBar. handoverWindowStart null
+        // n'empêche plus l'affichage si la fenêtre de fin est dans le futur.
         final authBloc = _MockAuthBloc();
         when(
           () => authBloc.state,
@@ -627,7 +636,7 @@ void main() {
           authBloc: authBloc,
         );
 
-        expect(find.text('Confirmer ma présence'), findsNothing);
+        expect(find.text('Confirmer ma présence'), findsOneWidget);
       },
     );
   });

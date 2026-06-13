@@ -54,7 +54,10 @@ class TravelerPendingBar extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: isLoading ? null : () => _showRejectDialog(context),
               icon: const Icon(Icons.close_rounded),
-              label: const Text('Refuser'),
+              label: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Refuser', maxLines: 1),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: cs.error,
                 side: BorderSide(color: cs.error),
@@ -89,7 +92,10 @@ class TravelerPendingBar extends StatelessWidget {
                       ),
                     )
                   : const Icon(Icons.check_rounded),
-              label: const Text('Accepter'),
+              label: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Accepter', maxLines: 1),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: cs.success,
                 foregroundColor: DonyColors.white,
@@ -469,6 +475,7 @@ class EscrowBadge extends StatelessWidget {
             child: Text(
               label,
               style: tt.titleSmall?.copyWith(color: color),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -539,6 +546,7 @@ class _CashBadge extends StatelessWidget {
             child: Text(
               'Paiement en espèces à la remise',
               style: tt.titleSmall?.copyWith(color: color),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),

@@ -51,6 +51,8 @@ class InfoRow extends StatelessWidget {
           width: 120,
           child: Text(
             label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),

@@ -4,10 +4,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -15,31 +14,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Carte profil voyageur (vue expéditeur) — bouton 📞 conditionnel + 💬 chat.
+/// Carte profil expéditeur (vue voyageur) — bouton 📞 conditionnel + 💬 chat.
 ///
 /// Le bouton téléphone est affiché uniquement si :
-///   - `bid.travelerPhone` est non-null et non-vide,
+///   - `bid.senderPhone` est non-null et non-vide,
 ///   - ET le statut n'est pas COMPLETED ni DELIVERED.
 ///
 /// Requiert un [ConversationOpenBloc] dans le contexte.
-class VoyageurContactCard extends StatelessWidget {
+class ExpediteurContactCard extends StatelessWidget {
   final BidModel bid;
 
-  const VoyageurContactCard({super.key, required this.bid});
-
-  TravelerProfile _buildTravelerProfile() => TravelerProfile(
-        id: bid.travelerId ?? '',
-        displayName: bid.travelerName,
-        phoneNumber: bid.travelerPhone,
-        averageRating: bid.travelerAverageRating,
-        totalTrips: bid.travelerTotalTrips,
-        kycVerified: bid.travelerKycVerified,
-        isProAccount: bid.travelerIsProAccount,
-        kiloPro: bid.travelerKiloPro,
-      );
+  const ExpediteurContactCard({super.key, required this.bid});
 
   bool get _showPhoneButton {
-    final phone = bid.travelerPhone;
+    final phone = bid.senderPhone;
     if (phone == null || phone.isEmpty) {
       return false;
     }
@@ -49,10 +37,10 @@ class VoyageurContactCard extends StatelessWidget {
 
   Future<void> _call(BuildContext context) async {
     unawaited(getItSafe<AnalyticsService>()?.logEvent(
-      AnalyticsEvents.travelerCallInitiated,
+      AnalyticsEvents.senderCallInitiated,
       properties: {'status': bid.status},
     ));
-    final uri = Uri(scheme: 'tel', path: bid.travelerPhone);
+    final uri = Uri(scheme: 'tel', path: bid.senderPhone);
     final ok = await canLaunchUrl(uri) && await launchUrl(uri);
     if (!ok && context.mounted) {
       DonySnackbar.show(
@@ -67,19 +55,12 @@ class VoyageurContactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final name = bid.travelerName ?? 'Voyageur';
-    final canOpenProfile = bid.travelerId != null;
-
-    final ratingLabel = bid.travelerAverageRating != null
-        ? '★ ${bid.travelerAverageRating!.toStringAsFixed(1)}'
-        : '★ —';
-    final tripsLabel = bid.travelerTotalTrips != null
-        ? '· ${bid.travelerTotalTrips} trajet${bid.travelerTotalTrips! > 1 ? 's' : ''}'
-        : '';
+    final name = bid.resolvedSenderName;
+    final canOpenProfile = bid.senderId.isNotEmpty;
 
     return InkWell(
       onTap: canOpenProfile
-          ? () => showTravelerProfileSheet(context, _buildTravelerProfile())
+          ? () => showSenderProfileSheet(context, bid)
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
@@ -93,7 +74,7 @@ class VoyageurContactCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'VOYAGEUR',
+              'EXPÉDITEUR',
               style: tt.labelSmall?.copyWith(
                 color: cs.onSurfaceVariant,
                 letterSpacing: 0.8,
@@ -104,8 +85,8 @@ class VoyageurContactCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: name,
-                  verified: bid.travelerKycVerified,
-                  pro: bid.travelerIsProAccount,
+                  verified: bid.senderKycVerified,
+                  pro: bid.senderIsProAccount,
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -130,13 +111,13 @@ class VoyageurContactCard extends StatelessWidget {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          if (bid.travelerKycVerified)
+                          if (bid.senderKycVerified)
                             MiniChip(
                               label: 'KYC',
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),
-                          if (bid.travelerKiloPro)
+                          if (bid.senderKiloPro)
                             const MiniChip(
                               label: 'Kilo Pro',
                               color: DonyColors.amberDark,
@@ -144,13 +125,14 @@ class VoyageurContactCard extends StatelessWidget {
                             ),
                         ],
                       ),
-                      // Note + trajets
-                      Text(
-                        '$ratingLabel $tripsLabel'.trim(),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                      // Nombre d'envois
+                      if (bid.senderTotalShipments != null)
+                        Text(
+                          '· ${bid.senderTotalShipments} envoi${bid.senderTotalShipments! > 1 ? 's' : ''}',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

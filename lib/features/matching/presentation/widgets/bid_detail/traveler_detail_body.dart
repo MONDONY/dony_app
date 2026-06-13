@@ -4,42 +4,43 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/paiement_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_hero_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_contact_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
+    show RatingDoneBadge;
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-/// Corps de l'écran « Détail d'envoi » (vue expéditeur).
+/// Corps de l'écran « Détail d'envoi » (vue voyageur).
 ///
 /// Compose la nouvelle vue redesignée : billet de colis, hero contextuel,
-/// carte voyageur (si le voyageur est connu), carte colis & destinataire,
-/// carte paiement, actions rapides de suivi, accordéon de détails, et badge
-/// d'évaluation si déjà notée.
+/// carte expéditeur (si le bid est actif), carte colis & destinataire,
+/// carte gain voyageur, actions rapides de suivi, accordéon de détails, et
+/// badge d'évaluation si déjà notée.
 ///
 /// Requiert les BLoCs ambiants suivants (fournis par l'écran parent) :
-///   - [CancellationBloc] (via [SenderHeroCard]),
-///   - [ConversationOpenBloc] (via [VoyageurContactCard]),
-///   - [TrackingBloc] / [BidBloc] (via le talon QR du billet).
+///   - [CancellationBloc] (via [TravelerHeroCard]),
+///   - [ConversationOpenBloc] (via [ExpediteurContactCard]).
 ///
 /// ## Animations
 /// Le stagger d'entrée (fadeIn + slideY décalé de 60 ms × index) est joué
-/// **une seule fois** grâce au flag [_SenderDetailBodyState._playEntrance].
+/// **une seule fois** grâce au flag [_TravelerDetailBodyState._playEntrance].
 /// Les rebuilds suivants (polling toutes les 10 s du parent) rendent les
 /// cartes sans re-déclencher l'animation — flag passé à `false` après la
 /// durée totale du stagger, sans `setState` (pas de rebuild superflu).
-class SenderDetailBody extends StatefulWidget {
+class TravelerDetailBody extends StatefulWidget {
   final BidModel bid;
 
-  const SenderDetailBody({super.key, required this.bid});
+  const TravelerDetailBody({super.key, required this.bid});
 
   @override
-  State<SenderDetailBody> createState() => _SenderDetailBodyState();
+  State<TravelerDetailBody> createState() => _TravelerDetailBodyState();
 }
 
-class _SenderDetailBodyState extends State<SenderDetailBody> {
+class _TravelerDetailBodyState extends State<TravelerDetailBody> {
   /// `true` uniquement lors du premier build : déclenche le stagger d'entrée.
   ///
   /// Passé à `false` après la durée totale du stagger (sans [setState] pour
@@ -52,7 +53,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   /// Annulé dans [dispose] pour éviter les timers pendants en test.
   Timer? _entranceTimer;
 
-  /// Statuts où le voyageur est connu (carte voyageur affichée)
+  /// Statuts où l'expéditeur est connu (carte contact affichée)
   /// et où le suivi est disponible (actions rapides affichées).
   static const _activeStatuses = <String>{
     'ACCEPTED',
@@ -89,17 +90,17 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
 
     final children = <Widget>[
       // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
-      // en interne (colis_billet.dart:53). On ne lui applique PAS le stagger ici
+      // en interne (colis_billet.dart). On ne lui applique PAS le stagger ici
       // pour éviter une double animation (fade × fade + slide × slide).
-      ColisBillet(bid: widget.bid, isSender: true),
-      SenderHeroCard(bid: widget.bid),
+      ColisBillet(bid: widget.bid, isSender: false),
+      TravelerHeroCard(bid: widget.bid),
       if (_activeStatuses.contains(status))
-        VoyageurContactCard(bid: widget.bid),
+        ExpediteurContactCard(bid: widget.bid),
       ColisDestinataireCard(bid: widget.bid),
-      PaiementCard(bid: widget.bid),
+      TravelerGainCard(bid: widget.bid),
       if (_activeStatuses.contains(status)) QuickActionsRow(bid: widget.bid),
       DetailsAccordion(bid: widget.bid),
-      if (status == 'COMPLETED' && widget.bid.senderHasRated)
+      if (status == 'COMPLETED' && widget.bid.travelerHasRated)
         const RatingDoneBadge(),
     ];
 
@@ -138,51 +139,6 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: staggered,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Badge « Évaluation envoyée » ───────────────────────────────────────────────
-
-/// Pill affichée à l'expéditeur lorsque l'évaluation du voyageur a déjà été
-/// soumise (`bid.senderHasRated == true`, statut COMPLETED).
-class RatingDoneBadge extends StatelessWidget {
-  const RatingDoneBadge({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: cs.primaryContainer,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle_rounded, size: 16, color: cs.primary),
-            const SizedBox(width: DonySpacing.xs),
-            Flexible(
-              child: Text(
-                'Évaluation envoyée',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: tt.bodyMedium?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
