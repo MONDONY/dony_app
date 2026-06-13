@@ -5,7 +5,6 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
-import 'package:dony/features/matching/presentation/widgets/billet/talon_traveler_action_view.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -202,7 +201,7 @@ void main() {
 
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
-  testWidgets('voyageur + ACCEPTED → talon passif (pas de scan)', (
+  testWidgets('voyageur + ACCEPTED → lien "Scanner les étapes" (Suivi)', (
     tester,
   ) async {
     await _pump(
@@ -210,9 +209,9 @@ void main() {
       _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
       false,
     );
-    // Le scan vit désormais dans la barre collante, pas dans le talon.
-    expect(find.byType(TalonTravelerActionView), findsNothing);
-    expect(find.text('Scanner le colis'), findsNothing);
+    // Accès au scan depuis le détail → redirige vers les étapes du Suivi.
+    expect(find.text('Scanner les étapes'), findsOneWidget);
+    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
     // La bande de suivi reste.
     expect(find.text('N° DE SUIVI'), findsOneWidget);
   });

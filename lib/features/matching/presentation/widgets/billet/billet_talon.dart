@@ -83,13 +83,13 @@ class BilletTalon extends StatelessWidget {
     // ── Traveler dispatch ───────────────────────────────────────────────────────
     return switch (status) {
       'PENDING' => _TravelerDecisionSummary(bid: bid),
-      // ACCEPTED : le scan du départ vit dans la barre collante (présence
-      // confirmée) → talon passif ici.
-      'ACCEPTED' => const SizedBox.shrink(),
-      // HANDED_OVER / IN_TRANSIT : le colis voyage, le voyageur scanne les
-      // étapes (transit/arrivée) depuis le détail → lien vers les étapes du
-      // Suivi (ScanHub). La barre collante garde « Valider la remise ».
-      'HANDED_OVER' || 'IN_TRANSIT' => const _TravelerScanStepsButton(),
+      // ACCEPTED / HANDED_OVER / IN_TRANSIT : accès au scan depuis le détail →
+      // lien vers les étapes du Suivi (ScanHub : Départ/Transit/Arrivée + scan
+      // QR + identification par numéro). La barre collante garde son CTA
+      // contextuel (Scanner le colis / Valider la remise).
+      'ACCEPTED' ||
+      'HANDED_OVER' ||
+      'IN_TRANSIT' => const _TravelerScanStepsButton(),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
       'REJECTED' => const _TerminalBlock(),
