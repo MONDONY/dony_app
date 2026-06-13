@@ -331,7 +331,7 @@ class _ActiveCardContent extends StatelessWidget {
                 ],
               ),
               Text(
-                '${price(announcement.pricePerKg)} / kg',
+                _activePriceLabel(announcement, price),
                 style: tt.titleSmall?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w700,
@@ -343,6 +343,24 @@ class _ActiveCardContent extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Libellé prix du footer d'une card de trajet (vue voyageur, montant NET).
+/// En mode grille (MIXED) ou si le prix au kilo est absent, on n'affiche jamais
+/// « 0 € / kg » : on montre « dès X € » (item de grille le moins cher) ou
+/// « Grille tarifaire » à défaut.
+String _activePriceLabel(AnnouncementModel a, String Function(double) price) {
+  final usesGrid = a.pricingMode == 'MIXED' || a.pricePerKg <= 0;
+  if (usesGrid && a.priceGridItems.isNotEmpty) {
+    final minNet = a.priceGridItems
+        .map((e) => e.unitPriceNet)
+        .reduce((x, y) => x < y ? x : y);
+    return 'dès ${price(minNet)}';
+  }
+  if (usesGrid) {
+    return 'Grille tarifaire';
+  }
+  return '${price(a.pricePerKg)} / kg';
 }
 
 // ─────────────────────────────────────────────────────────────
