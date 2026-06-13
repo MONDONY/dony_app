@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -346,7 +348,10 @@ class SenderActionBar extends StatelessWidget {
                       onPressed: () =>
                           context.push('/payments/pay', extra: bid),
                       icon: const Icon(Icons.lock_rounded, size: 18),
-                      label: const Text('Payer mon envoi'),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Payer mon envoi', maxLines: 1),
+                      ),
                       style: FilledButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: DonyColors.white,
@@ -634,7 +639,7 @@ class _SenderOptionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
           ],
-          if (bid.status == 'PENDING') ...[
+          if (bid.canCancelBeforeHandover) ...[
             _OptionTile(
               icon: Icons.block_rounded,
               iconColor: cs.error,
@@ -644,6 +649,22 @@ class _SenderOptionsSheet extends StatelessWidget {
               onTap: () {
                 context.pop();
                 _showCancelDialog(outerContext);
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+          ],
+          // Annulation après remise (D5) — colis déjà chez le voyageur, avant le
+          // départ. L'expéditeur récupère son colis via le code de retour.
+          if (bid.canCancelAfterHandover) ...[
+            _OptionTile(
+              icon: Icons.block_rounded,
+              iconColor: cs.error,
+              iconBg: cs.errorLight,
+              label: 'Annuler la demande',
+              subtitle: 'Remboursement intégral · vous récupérez votre colis',
+              onTap: () {
+                context.pop();
+                _showAfterHandoverCancelDialog(outerContext);
               },
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -792,6 +813,49 @@ class _SenderOptionsSheet extends StatelessWidget {
             onPressed: () {
               ctx.pop();
               context.read<BidBloc>().add(BidCancelRequested(bid.id));
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: cs.error,
+              foregroundColor: DonyColors.white,
+              elevation: 0,
+            ),
+            child: Text('Oui, annuler', style: tt.labelLarge),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAfterHandoverCancelDialog(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        ),
+        title: Text('Annuler après remise ?', style: tt.headlineMedium),
+        content: Text(
+          'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé '
+          'et récupérerez votre colis : le voyageur confirmera la restitution en '
+          'saisissant votre code de retour.',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => ctx.pop(),
+            child: Text(
+              'Non',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              ctx.pop();
+              context.read<CancellationBloc>().add(
+                    CancelAfterHandoverRequested(bid.id, actor: 'sender'),
+                  );
             },
             style: FilledButton.styleFrom(
               backgroundColor: cs.error,

@@ -84,6 +84,60 @@ void main() {
     });
   });
 
+  group('cancelAfterHandover', () {
+    test('calls POST /bids/{bidId}/cancel-after-handover', () async {
+      when(() => mockDio.post('/bids/bid-9/cancel-after-handover'))
+          .thenAnswer((_) async => _ok(null, '/bids/bid-9/cancel-after-handover'));
+
+      await datasource.cancelAfterHandover('bid-9');
+
+      verify(() => mockDio.post('/bids/bid-9/cancel-after-handover')).called(1);
+    });
+  });
+
+  group('confirmReturn', () {
+    test('POST confirm-return with code body → ReturnCodeModel', () async {
+      when(() => mockDio.post(
+            '/cancellations/bids/bid-9/confirm-return',
+            data: any(named: 'data'),
+          )).thenAnswer((_) async => _ok(
+            {
+              'returnCode': null,
+              'returnDeadline': '2024-06-04T10:00:00.000Z',
+              'returnedAt': '2024-06-02T09:00:00.000Z',
+            },
+            '/cancellations/bids/bid-9/confirm-return',
+          ));
+
+      final result = await datasource.confirmReturn('bid-9', '123456');
+
+      expect(result.isReturned, true);
+      verify(() => mockDio.post(
+            '/cancellations/bids/bid-9/confirm-return',
+            data: {'returnCode': '123456'},
+          )).called(1);
+    });
+  });
+
+  group('getReturnCode', () {
+    test('GET return-code → ReturnCodeModel with code + deadline', () async {
+      when(() => mockDio.get('/cancellations/bids/bid-9/return-code'))
+          .thenAnswer((_) async => _ok(
+                {
+                  'returnCode': '654321',
+                  'returnDeadline': '2024-06-04T10:00:00.000Z',
+                  'returnedAt': null,
+                },
+                '/cancellations/bids/bid-9/return-code',
+              ));
+
+      final result = await datasource.getReturnCode('bid-9');
+
+      expect(result.returnCode, '654321');
+      expect(result.isReturned, false);
+    });
+  });
+
   group('getRematchSuggestions', () {
     test('returns list of suggestions', () async {
       when(() => mockDio.get('/cancellations/canc-1/rematch-suggestions'))

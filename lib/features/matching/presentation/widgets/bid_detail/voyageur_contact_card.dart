@@ -147,6 +147,8 @@ class VoyageurContactCard extends StatelessWidget {
                       // Note + trajets
                       Text(
                         '$ratingLabel $tripsLabel'.trim(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

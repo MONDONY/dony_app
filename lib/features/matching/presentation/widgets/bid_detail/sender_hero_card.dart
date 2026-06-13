@@ -95,7 +95,9 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
       );
 
     case 'AWAITING_PAYMENT':
-      final amount = bid.totalAmountEur?.toStringAsFixed(2) ?? '–';
+      // Montant payé par l'expéditeur = net + commission (totalSenderAmountEur).
+      final amount =
+          (bid.totalSenderAmountEur ?? bid.totalAmountEur)?.toStringAsFixed(2) ?? '–';
       return _HeroContent(
         variant: SenderHeroVariant.pay,
         title: "Payez pour confirmer l'envoi",
@@ -104,7 +106,8 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
       );
 
     case 'PAYMENT_ESCROWED':
-      final amount = bid.totalAmountEur?.toStringAsFixed(2) ?? '–';
+      final amount =
+          (bid.totalSenderAmountEur ?? bid.totalAmountEur)?.toStringAsFixed(2) ?? '–';
       return _HeroContent(
         variant: SenderHeroVariant.wait,
         title: '🔒 Paiement sécurisé',

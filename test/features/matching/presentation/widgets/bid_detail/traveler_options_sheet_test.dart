@@ -23,13 +23,19 @@ class _MockConvBloc
 class _FakeConversationOpenEvent extends Fake implements ConversationOpenEvent {}
 class _FakeBidEvent extends Fake implements BidEvent {}
 
-BidModel _bid({String status = 'ACCEPTED', String? token = 'tok'}) => BidModel(
+BidModel _bid({
+  String status = 'ACCEPTED',
+  String? token = 'tok',
+  DateTime? departureAt,
+}) =>
+    BidModel(
       id: 'b1',
       announcementId: 'a1',
       senderId: 's1',
       status: status,
       weightKg: 5,
       trackingToken: token,
+      departureAt: departureAt,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
@@ -92,33 +98,55 @@ void main() {
     expect(find.text('Détails du colis'), findsOneWidget);
     expect(find.text('Partager le suivi'), findsOneWidget);
     expect(find.text("Signaler l'expéditeur"), findsOneWidget);
-    expect(find.text('Annuler le trajet'), findsOneWidget);
+    expect(find.text('Annuler ce transport'), findsOneWidget);
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
   testWidgets("REJECTED → supprimer, pas d'annuler", (tester) async {
     await _open(tester, _bid(status: 'REJECTED', token: null));
     expect(find.text('Supprimer cette demande'), findsOneWidget);
-    expect(find.text('Annuler le trajet'), findsNothing);
+    expect(find.text('Annuler ce transport'), findsNothing);
     expect(find.text('Partager le suivi'), findsNothing);
   });
 
   testWidgets('CANCELLED → supprimer présent, pas annuler', (tester) async {
     await _open(tester, _bid(status: 'CANCELLED', token: null));
     expect(find.text('Supprimer cette demande'), findsOneWidget);
-    expect(find.text('Annuler le trajet'), findsNothing);
+    expect(find.text('Annuler ce transport'), findsNothing);
   });
 
-  testWidgets('IN_TRANSIT → annuler présent, pas supprimer', (tester) async {
+  testWidgets('IN_TRANSIT → annulation impossible (D3), pas supprimer',
+      (tester) async {
     await _open(tester, _bid(status: 'IN_TRANSIT', token: null));
-    expect(find.text('Annuler le trajet'), findsOneWidget);
+    expect(find.text('Annuler ce transport'), findsNothing);
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  testWidgets('HANDED_OVER → annuler présent, pas supprimer', (tester) async {
-    await _open(tester, _bid(status: 'HANDED_OVER', token: null));
-    expect(find.text('Annuler le trajet'), findsOneWidget);
+  testWidgets('HANDED_OVER avant départ → annuler présent, pas supprimer',
+      (tester) async {
+    await _open(
+      tester,
+      _bid(
+        status: 'HANDED_OVER',
+        token: null,
+        departureAt: DateTime.now().add(const Duration(days: 2)),
+      ),
+    );
+    expect(find.text('Annuler ce transport'), findsOneWidget);
     expect(find.text('Supprimer cette demande'), findsNothing);
+  });
+
+  testWidgets('HANDED_OVER après départ → annulation impossible (D3)',
+      (tester) async {
+    await _open(
+      tester,
+      _bid(
+        status: 'HANDED_OVER',
+        token: null,
+        departureAt: DateTime.now().subtract(const Duration(hours: 1)),
+      ),
+    );
+    expect(find.text('Annuler ce transport'), findsNothing);
   });
 
   testWidgets('sans trackingToken → pas de Partager le suivi', (tester) async {
@@ -230,9 +258,9 @@ void main() {
     // Just verify no crash; the bottom sheet closes (ACCEPTED tile is gone from sheet)
   });
 
-  testWidgets('tap Annuler le trajet → dialog affiché', (tester) async {
+  testWidgets('tap Annuler ce transport → dialog affiché', (tester) async {
     await _open(tester, _bid(status: 'ACCEPTED', token: null));
-    await tester.tap(find.text('Annuler le trajet'));
+    await tester.tap(find.text('Annuler ce transport'));
     await tester.pumpAndSettle();
     // CancellationDialog shows a button text (Garder or Confirmer)
     expect(

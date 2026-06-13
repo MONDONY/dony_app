@@ -234,34 +234,22 @@ class TrajetStep extends StatelessWidget {
                       ),
                     ),
               const SizedBox(height: DonySpacing.sm),
-              // ── Heure de départ (optionnel) — DonyTextField.tappable ───
+              // ── Heure de départ (obligatoire, D1) — DonyTextField.tappable ───
               DonyTextField.tappable(
                 key: const Key('departureTimeField'),
-                label: 'Heure de départ (optionnel)',
+                label: 'Heure de départ',
+                requiredLabel: true,
                 value: departureTimeNotifier.value != null
                     ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
                     : null,
                 prefixIcon: DonyIcons.time,
                 prefixIconColor: Theme.of(context).colorScheme.primary,
-                trailing: departureTimeNotifier.value != null
-                    ? IconButton(
-                        icon: Icon(
-                          DonyIcons.close,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        onPressed: () => departureTimeNotifier.value = null,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 44,
-                          minHeight: 44,
-                        ),
-                      )
-                    : Icon(
-                        DonyIcons.chevron,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                // Obligatoire (D1) : pas de bouton clear, on garde le chevron.
+                trailing: Icon(
+                  DonyIcons.chevron,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 onTap: () => onSelectDepartureTime(),
               ),
               const SizedBox(height: DonySpacing.sm),
