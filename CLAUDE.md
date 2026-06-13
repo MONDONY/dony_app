@@ -323,6 +323,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `rematch_accepted` | *(à implémenter)* |
 | `no_show_reported_by_sender` | CancellationBloc._onTravelerNoShowReport() — expéditeur signale le voyageur absent |
 | `no_show_reported_by_traveler` | CancellationBloc._onNoShowReport() — voyageur signale l'expéditeur absent |
+| `cancel_after_handover_initiated` | CancellationBloc._onCancelAfterHandover() — annulation après remise (propriété `actor`: sender/traveler, D5/D6) |
+| `return_code_viewed` | CancellationBloc._onReturnCodeRequested() — expéditeur consulte son code de retour (D7) |
+| `return_code_entry_opened` | ReturnEntrySheet.show() — voyageur ouvre la saisie du code de retour (propriété `status`) |
+| `return_confirmed` | CancellationBloc._onReturnConfirm() — voyageur confirme la restitution du colis (D7) |
 | `become_traveler_started` | BecomeTravelerScreen.initState |
 | `upgrade_to_pro_started` | UpgradeToProScreen.initState |
 | `referral_shared` | ReferralBloc._onShared() |
