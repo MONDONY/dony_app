@@ -64,7 +64,7 @@ class TravelerStickyBar extends StatelessWidget {
       case _TravelerAction.scan:
         return const _ScanBar();
       case _TravelerAction.deliver:
-        return _DeliverBar(bid: bid);
+        return const _DeliverBar();
     }
   }
 }
@@ -98,9 +98,7 @@ class _ScanBar extends StatelessWidget {
 // ── Deliver bar ───────────────────────────────────────────────────────────────
 
 class _DeliverBar extends StatelessWidget {
-  final BidModel bid;
-
-  const _DeliverBar({required this.bid});
+  const _DeliverBar();
 
   @override
   Widget build(BuildContext context) {
@@ -114,16 +112,16 @@ class _DeliverBar extends StatelessWidget {
         h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
+      // Redirige vers l'étape Arrivée du hub de scan (identify → confirm), qui
+      // dispatche ConfirmDeliveryRequested et libère le paiement — au lieu de
+      // l'écran de réception autonome (/tracking/confirm).
       child: DonyButton(
         label: 'Valider la remise',
         icon: Icons.verified_rounded,
         variant: DonyButtonVariant.success,
         onPressed: () => context.push(
-          '/tracking/confirm',
-          extra: <String, String>{
-            'bidId': bid.id,
-            'travelerName': bid.travelerName ?? 'Voyageur',
-          },
+          '/tracking/scan/identify',
+          extra: <String, dynamic>{'etape': 'ARRIVEE', 'focusNumber': false},
         ),
       ),
     );

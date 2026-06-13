@@ -24,19 +24,18 @@ BidModel _bid({
   bool voyageurConfirmed = false,
   DateTime? windowStart,
   DateTime? windowEnd,
-}) =>
-    BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: status,
-      weightKg: 5,
-      voyageurConfirmed: voyageurConfirmed,
-      handoverWindowStart: windowStart,
-      handoverWindowEnd: windowEnd,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
+}) => BidModel(
+  id: 'b1',
+  announcementId: 'a1',
+  senderId: 's1',
+  status: status,
+  weightKg: 5,
+  voyageurConfirmed: voyageurConfirmed,
+  handoverWindowStart: windowStart,
+  handoverWindowEnd: windowEnd,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+);
 
 Future<void> _pump(WidgetTester tester, BidModel bid) async {
   final bidBloc = _MockBidBloc();
@@ -62,10 +61,7 @@ Future<void> _pump(WidgetTester tester, BidModel bid) async {
   );
 
   await tester.pumpWidget(
-    MaterialApp.router(
-      theme: AppTheme.light,
-      routerConfig: router,
-    ),
+    MaterialApp.router(theme: AppTheme.light, routerConfig: router),
   );
   await tester.pumpAndSettle();
 }
@@ -87,15 +83,13 @@ void main() {
     test('ACCEPTED confirmé → true (scan)', () {
       expect(
         TravelerStickyBar.hasAction(
-            _bid(status: 'ACCEPTED', voyageurConfirmed: true)),
+          _bid(status: 'ACCEPTED', voyageurConfirmed: true),
+        ),
         isTrue,
       );
     });
     test('ACCEPTED non confirmé sans fenêtre → true (confirmPresence)', () {
-      expect(
-        TravelerStickyBar.hasAction(_bid(status: 'ACCEPTED')),
-        isTrue,
-      );
+      expect(TravelerStickyBar.hasAction(_bid(status: 'ACCEPTED')), isTrue);
     });
     test('ACCEPTED fenêtre dépassée non confirmé → false', () {
       expect(
@@ -155,8 +149,9 @@ void main() {
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  testWidgets('ACCEPTED fenêtre expirée non confirmé → barre vide',
-      (tester) async {
+  testWidgets('ACCEPTED fenêtre expirée non confirmé → barre vide', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(
@@ -177,17 +172,19 @@ void main() {
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  testWidgets('ACCEPTED non confirmé avec fenêtre future → ConfirmPresenceBar',
-      (tester) async {
-    await _pump(
-      tester,
-      _bid(
-        status: 'ACCEPTED',
-        windowEnd: DateTime.now().add(const Duration(hours: 2)),
-      ),
-    );
-    expect(find.text('Confirmer ma présence'), findsOneWidget);
-  });
+  testWidgets(
+    'ACCEPTED non confirmé avec fenêtre future → ConfirmPresenceBar',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'ACCEPTED',
+          windowEnd: DateTime.now().add(const Duration(hours: 2)),
+        ),
+      );
+      expect(find.text('Confirmer ma présence'), findsOneWidget);
+    },
+  );
 
   group('TravelerStickyBar.hasAction — cas supplémentaires', () {
     test('DELIVERED → false', () {
@@ -199,7 +196,8 @@ void main() {
     test('ACCEPTED confirmé → true (scan)', () {
       expect(
         TravelerStickyBar.hasAction(
-            _bid(status: 'ACCEPTED', voyageurConfirmed: true)),
+          _bid(status: 'ACCEPTED', voyageurConfirmed: true),
+        ),
         isTrue,
       );
     });
@@ -240,10 +238,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp.router(
-        theme: AppTheme.light,
-        routerConfig: router,
-      ),
+      MaterialApp.router(theme: AppTheme.light, routerConfig: router),
     );
     await tester.pumpAndSettle();
 
@@ -252,7 +247,9 @@ void main() {
     expect(pushedRoutes, contains('/tracking/scan'));
   });
 
-  testWidgets('tap Valider la remise → GoRouter push déclenché', (tester) async {
+  testWidgets('tap Valider la remise → GoRouter push déclenché', (
+    tester,
+  ) async {
     final bidBloc = _MockBidBloc();
     final acceptBloc = _MockAcceptBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
@@ -277,9 +274,9 @@ void main() {
           ),
         ),
         GoRoute(
-          path: '/tracking/confirm',
+          path: '/tracking/scan/identify',
           builder: (context, state) {
-            pushedRoutes.add('/tracking/confirm');
+            pushedRoutes.add('/tracking/scan/identify');
             return const Scaffold();
           },
         ),
@@ -287,15 +284,13 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp.router(
-        theme: AppTheme.light,
-        routerConfig: router,
-      ),
+      MaterialApp.router(theme: AppTheme.light, routerConfig: router),
     );
     await tester.pumpAndSettle();
 
+    // « Valider la remise » redirige vers l'étape Arrivée du hub de scan.
     await tester.tap(find.text('Valider la remise'));
     await tester.pumpAndSettle();
-    expect(pushedRoutes, contains('/tracking/confirm'));
+    expect(pushedRoutes, contains('/tracking/scan/identify'));
   });
 }
