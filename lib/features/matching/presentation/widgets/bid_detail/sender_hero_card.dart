@@ -365,7 +365,10 @@ class _HeroButton extends StatelessWidget {
                   color: white,
                 ),
               )
-            : Text(label),
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(label, maxLines: 1),
+              ),
       ),
     );
   }

@@ -171,11 +171,15 @@ class RatingDoneBadge extends StatelessWidget {
           children: [
             Icon(Icons.check_circle_rounded, size: 16, color: cs.primary),
             const SizedBox(width: DonySpacing.xs),
-            Text(
-              'Évaluation envoyée',
-              style: tt.bodyMedium?.copyWith(
-                color: cs.primary,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                'Évaluation envoyée',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

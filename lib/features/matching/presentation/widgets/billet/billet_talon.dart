@@ -272,6 +272,11 @@ class _MiniStat extends StatelessWidget {
           Text(
             value,
             textAlign: TextAlign.center,
+            // Une seule ligne : une catégorie multi-valeurs (« Vêtements,
+            // Médicaments… ») ne doit pas wrapper sur 2-4 lignes et
+            // désaligner les 3 colonnes du talon.
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.xs),

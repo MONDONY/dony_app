@@ -93,34 +93,36 @@ class ExpediteurContactCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Nom + badges
-                      Row(
+                      // Nom + badges — Wrap : un nom long + deux badges (KYC +
+                      // Kilo Pro) ne tiennent pas sur une ligne dans la colonne
+                      // étroite ; le Wrap fait passer les chips à la ligne au
+                      // lieu d'un RenderFlex overflow. Le nom (maxLines 1 +
+                      // ellipsis) est borné par la largeur du Wrap.
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: DonySpacing.xs,
+                        runSpacing: DonySpacing.xs,
                         children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              overflow: TextOverflow.ellipsis,
-                              style: tt.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          if (bid.senderKycVerified) ...[
-                            const SizedBox(width: DonySpacing.xs),
+                          if (bid.senderKycVerified)
                             MiniChip(
                               label: 'KYC',
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),
-                          ],
-                          if (bid.senderKiloPro) ...[
-                            const SizedBox(width: DonySpacing.xs),
+                          if (bid.senderKiloPro)
                             const MiniChip(
                               label: 'Kilo Pro',
                               color: DonyColors.amberDark,
                               bg: DonyColors.amberLight,
                             ),
-                          ],
                         ],
                       ),
                       // Nombre d'envois

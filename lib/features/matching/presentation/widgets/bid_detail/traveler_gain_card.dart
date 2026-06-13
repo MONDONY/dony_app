@@ -99,11 +99,20 @@ class TravelerGainCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: DonySpacing.xs),
-                Text(
-                  amountText,
-                  style: tt.titleLarge?.copyWith(
-                    color: amountColor,
-                    fontWeight: FontWeight.w800,
+                // FittedBox scaleDown : le montant (ex. « 1250.00 € en
+                // espèces ») reste sur une ligne et rétrécit au lieu de
+                // wrapper quand le _Pill comprime la colonne ou à textScale
+                // élevé — préserve la hiérarchie visuelle de la carte.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    amountText,
+                    maxLines: 1,
+                    style: tt.titleLarge?.copyWith(
+                      color: amountColor,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 if (note != null) ...[
