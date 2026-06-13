@@ -214,6 +214,16 @@ class BidModel {
   /// et le colis n'a pas encore été rendu.
   bool get isAwaitingReturn => returnDeadline != null && returnedAt == null;
 
+  /// Annulation AVANT remise possible côté expéditeur : offre soumise/payée
+  /// (en séquestre Stripe) ou acceptée par le voyageur, mais colis pas encore
+  /// remis. Couvre l'ancien statut `PENDING` (legacy, conservé par sécurité),
+  /// le statut Stripe `PAYMENT_ESCROWED` et `ACCEPTED`. Le serveur
+  /// (CancellationGuard) reste l'autorité — il rembourse l'expéditeur.
+  bool get canCancelBeforeHandover =>
+      status == 'PENDING' ||
+      status == 'PAYMENT_ESCROWED' ||
+      status == 'ACCEPTED';
+
   /// Annulation après remise possible (D3) : colis remis ET départ canonique pas
   /// encore atteint. Source unique du verrou côté client (le serveur via
   /// CancellationGuard reste l'autorité). Consommé par les options sheets voyageur

@@ -639,7 +639,7 @@ class _SenderOptionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
           ],
-          if (bid.status == 'PENDING') ...[
+          if (bid.canCancelBeforeHandover) ...[
             _OptionTile(
               icon: Icons.block_rounded,
               iconColor: cs.error,

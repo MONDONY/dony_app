@@ -233,4 +233,38 @@ void main() {
       expect(model.resolvedDepartureAt, isNull);
     });
   });
+
+  group('BidModel.canCancelBeforeHandover', () {
+    BidModel withStatus(String status) =>
+        BidModel.fromJson({..._minimalJson, 'status': status});
+
+    test('true pour PENDING (statut legacy)', () {
+      expect(withStatus('PENDING').canCancelBeforeHandover, isTrue);
+    });
+
+    test('true pour PAYMENT_ESCROWED (payé, avant acceptation voyageur)', () {
+      // Régression : après migration Stripe escrow, le statut post-paiement est
+      // PAYMENT_ESCROWED et non PENDING. L'expéditeur doit pouvoir annuler.
+      expect(withStatus('PAYMENT_ESCROWED').canCancelBeforeHandover, isTrue);
+    });
+
+    test('true pour ACCEPTED (voyageur a accepté, colis pas remis)', () {
+      expect(withStatus('ACCEPTED').canCancelBeforeHandover, isTrue);
+    });
+
+    test('false pour AWAITING_PAYMENT (pas encore payé)', () {
+      expect(withStatus('AWAITING_PAYMENT').canCancelBeforeHandover, isFalse);
+    });
+
+    test('false pour HANDED_OVER (relève de canCancelAfterHandover)', () {
+      expect(withStatus('HANDED_OVER').canCancelBeforeHandover, isFalse);
+    });
+
+    test('false pour IN_TRANSIT / COMPLETED / CANCELLED / REJECTED', () {
+      for (final status in ['IN_TRANSIT', 'COMPLETED', 'CANCELLED', 'REJECTED']) {
+        expect(withStatus(status).canCancelBeforeHandover, isFalse,
+            reason: '$status ne doit pas être annulable avant remise');
+      }
+    });
+  });
 }
