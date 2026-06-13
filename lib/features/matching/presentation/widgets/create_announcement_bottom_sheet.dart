@@ -789,6 +789,11 @@ class _CreateAnnouncementContentState
       _showError('Date de départ obligatoire');
       return;
     }
+    // D1 : l'heure de départ est obligatoire (backstop du verrou d'annulation).
+    if (departureTimeVal == null) {
+      _showError('Heure de départ obligatoire');
+      return;
+    }
 
     _formKey.currentState!.save();
 
@@ -805,8 +810,9 @@ class _CreateAnnouncementContentState
       return;
     }
 
-    final departureTime =
-        departureTimeVal != null ? _formatTime(departureTimeVal) : null;
+    // departureTimeVal est garanti non-null par le guard plus haut (heure de
+    // départ obligatoire — tranche A).
+    final departureTime = _formatTime(departureTimeVal);
     final arrivalTime =
         arrivalTimeVal != null ? _formatTime(arrivalTimeVal) : null;
 
@@ -863,10 +869,8 @@ class _CreateAnnouncementContentState
       _showError('La fin de la fenêtre doit être après le début');
       return;
     }
-    final departureBound = departureTimeVal != null
-        ? DateTime(departureDate.year, departureDate.month, departureDate.day,
-            departureTimeVal.hour, departureTimeVal.minute)
-        : DateTime(departureDate.year, departureDate.month, departureDate.day, 23, 59);
+    final departureBound = DateTime(departureDate.year, departureDate.month,
+        departureDate.day, departureTimeVal.hour, departureTimeVal.minute);
     if (handoverEnd.isAfter(departureBound)) {
       _showError('La fenêtre de remise doit se terminer avant le départ');
       return;

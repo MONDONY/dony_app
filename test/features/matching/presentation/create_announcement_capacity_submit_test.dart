@@ -90,6 +90,8 @@ final _testAnnouncement = AnnouncementModel(
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   departureDate: DateTime(2027, 8, 15),
+  // Après la fenêtre de remise (14h-16h) : départ à 18h pour rester valide.
+  departureTime: '18:00',
   availableKg: 10,
   totalKg: 10,
   pricePerKg: 6,

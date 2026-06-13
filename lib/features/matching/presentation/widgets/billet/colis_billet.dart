@@ -121,17 +121,24 @@ class _BilletCorridor extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  depCode,
-                  style: tt.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 28,
-                    letterSpacing: -0.5,
-                    color: cs.onSurface,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    depCode,
+                    maxLines: 1,
+                    style: tt.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 28,
+                      letterSpacing: -0.5,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
                 Text(
                   depCity,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -159,18 +166,25 @@ class _BilletCorridor extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  arrCode,
-                  style: tt.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 28,
-                    letterSpacing: -0.5,
-                    color: cs.onSurface,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    arrCode,
+                    maxLines: 1,
+                    style: tt.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 28,
+                      letterSpacing: -0.5,
+                      color: cs.onSurface,
+                    ),
+                    textAlign: TextAlign.end,
                   ),
-                  textAlign: TextAlign.end,
                 ),
                 Text(
                   arrCity,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   textAlign: TextAlign.end,
                 ),
@@ -239,26 +253,37 @@ class _BilletDates extends StatelessWidget {
         DonySpacing.base,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Départ
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Départ', style: labelStyle),
-              Text(
-                dateStr != null ? '$dateStr · $depTime' : depTime,
-                style: valueStyle,
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Départ', style: labelStyle),
+                Text(
+                  dateStr != null ? '$dateStr · $depTime' : depTime,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: valueStyle,
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: DonySpacing.sm),
           // Arrivée
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('Arrivée', style: labelStyle),
-              Text(arrTime, style: valueStyle),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('Arrivée', style: labelStyle),
+                Text(
+                  arrTime,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: valueStyle,
+                ),
+              ],
+            ),
           ),
         ],
       ),

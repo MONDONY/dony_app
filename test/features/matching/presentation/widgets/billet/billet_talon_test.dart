@@ -26,6 +26,9 @@ BidModel _bid({
   double? declaredValueEur,
   String? contentCategory,
   double weightKg = 5,
+  String? returnCode,
+  DateTime? returnDeadline,
+  DateTime? returnedAt,
 }) => BidModel(
   id: 'bid-1',
   announcementId: 'a-1',
@@ -38,6 +41,9 @@ BidModel _bid({
   confirmationCode: confirmationCode,
   declaredValueEur: declaredValueEur,
   contentCategory: contentCategory,
+  returnCode: returnCode,
+  returnDeadline: returnDeadline,
+  returnedAt: returnedAt,
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -164,6 +170,37 @@ void main() {
     expect(find.textContaining('Cette demande est terminée'), findsOneWidget);
   });
 
+  testWidgets(
+    'sender + CANCELLED + retour en attente → bouton "Code de retour"',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          returnCode: '123456',
+          returnDeadline: DateTime.now().add(const Duration(days: 2)),
+        ),
+        true,
+      );
+      expect(find.text('Code de retour'), findsOneWidget);
+      expect(find.byIcon(Icons.vpn_key_rounded), findsOneWidget);
+    },
+  );
+
+  testWidgets('sender + CANCELLED + colis restitué → bloc "Colis restitué"',
+      (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'CANCELLED',
+        returnDeadline: DateTime(2026, 5, 3),
+        returnedAt: DateTime(2026, 5, 2),
+      ),
+      true,
+    );
+    expect(find.text('Colis restitué'), findsOneWidget);
+  });
+
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
   testWidgets('voyageur + ACCEPTED → talon passif (pas de scan)', (
@@ -238,6 +275,36 @@ void main() {
   testWidgets('voyageur + CANCELLED → message terminal', (tester) async {
     await _pump(tester, _bid(status: 'CANCELLED'), false);
     expect(find.textContaining('Cette demande est terminée'), findsOneWidget);
+  });
+
+  testWidgets(
+    'voyageur + CANCELLED + retour en attente → bouton "Confirmer le retour"',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          returnDeadline: DateTime.now().add(const Duration(days: 2)),
+        ),
+        false,
+      );
+      expect(find.text('Confirmer le retour'), findsOneWidget);
+      expect(find.byIcon(Icons.assignment_turned_in_rounded), findsOneWidget);
+    },
+  );
+
+  testWidgets('voyageur + CANCELLED + colis restitué → bloc "Colis restitué"',
+      (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'CANCELLED',
+        returnDeadline: DateTime(2026, 5, 3),
+        returnedAt: DateTime(2026, 5, 2),
+      ),
+      false,
+    );
+    expect(find.text('Colis restitué'), findsOneWidget);
   });
 
   // ── Tracking strip ──────────────────────────────────────────────────────────

@@ -39,6 +39,8 @@ class TalonTrackingStrip extends StatelessWidget {
                 ),
                 Text(
                   trackingNumber,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: tt.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.5,

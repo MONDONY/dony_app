@@ -5,35 +5,39 @@ import 'package:go_router/go_router.dart';
 // DonyDialog retourne bool? — ce dialog retourne String? (le motif).
 // On ne peut pas réutiliser DonyDialog sans modifier son contrat.
 
+/// Nature de l'annulation côté voyageur.
+///
+/// - [accepted] : colis pas encore remis (status ACCEPTED). Motif optionnel,
+///   remboursement automatique, pas d'obligation de retour.
+/// - [afterHandover] : colis déjà remis (status HANDED_OVER), avant le départ
+///   (D3). Motif obligatoire + avertissement : le voyageur doit restituer le
+///   colis sous 3 jours via le code de retour détenu par l'expéditeur (D7).
+enum CancellationKind { accepted, afterHandover }
+
 /// Dialog de confirmation d'annulation pour le voyageur.
 ///
-/// Cas A — [isInTransit] = false (status ACCEPTED) :
-///   - Motif optionnel
-///   - Confirmer → retourne `""` (pas de motif) ou `"raison"`
-///
-/// Cas B — [isInTransit] = true (status IN_TRANSIT) :
-///   - Avertissement rouge : retourner le colis
-///   - Motif obligatoire
-///   - Confirmer → retourne une String non vide
+/// - [CancellationKind.accepted] : motif optionnel → confirme avec `""` ou `"raison"`.
+/// - [CancellationKind.afterHandover] : motif obligatoire + warning retour →
+///   confirme avec une String non vide.
 ///
 /// Dans les deux cas, "Garder" → retourne `null`.
 class CancellationDialog extends StatefulWidget {
-  /// `true` = status IN_TRANSIT (motif obligatoire + warning)
-  /// `false` = status ACCEPTED (motif optionnel)
-  final bool isInTransit;
+  final CancellationKind kind;
 
-  const CancellationDialog({super.key, required this.isInTransit});
+  const CancellationDialog({super.key, required this.kind});
+
+  bool get _isAfterHandover => kind == CancellationKind.afterHandover;
 
   /// Affiche le dialog et retourne le motif saisi, `""` si aucun motif
-  /// (cas ACCEPTED), ou `null` si l'utilisateur a appuyé sur "Garder".
+  /// (cas accepted), ou `null` si l'utilisateur a appuyé sur "Garder".
   static Future<String?> show(
     BuildContext context, {
-    required bool isInTransit,
+    required CancellationKind kind,
   }) {
     return showDialog<String>(
       context: context,
-      barrierDismissible: !isInTransit,
-      builder: (_) => CancellationDialog(isInTransit: isInTransit),
+      barrierDismissible: kind == CancellationKind.accepted,
+      builder: (_) => CancellationDialog(kind: kind),
     );
   }
 
@@ -54,8 +58,8 @@ class _CancellationDialogState extends State<CancellationDialog> {
   void _onConfirm() {
     final reason = _reasonCtrl.text.trim();
 
-    // IN_TRANSIT : motif obligatoire
-    if (widget.isInTransit && reason.isEmpty) {
+    // Après remise : motif obligatoire.
+    if (widget._isAfterHandover && reason.isEmpty) {
       setState(() => _showReasonError = true);
       return;
     }
@@ -90,8 +94,8 @@ class _CancellationDialogState extends State<CancellationDialog> {
             ),
             const SizedBox(height: DonySpacing.sm),
 
-            // ── Sous-titre (cas ACCEPTED) ──────────────────────────
-            if (!widget.isInTransit) ...[
+            // ── Sous-titre (cas accepted) ──────────────────────────
+            if (!widget._isAfterHandover) ...[
               Text(
                 "L'expéditeur sera remboursé automatiquement.",
                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -99,8 +103,8 @@ class _CancellationDialogState extends State<CancellationDialog> {
               const SizedBox(height: DonySpacing.base),
             ],
 
-            // ── Warning box (cas IN_TRANSIT) ───────────────────────
-            if (widget.isInTransit) ...[
+            // ── Warning box (cas afterHandover) ────────────────────
+            if (widget._isAfterHandover) ...[
               Container(
                 padding: const EdgeInsets.all(DonySpacing.md),
                 decoration: BoxDecoration(
@@ -120,12 +124,25 @@ class _CancellationDialogState extends State<CancellationDialog> {
                     ),
                     const SizedBox(width: DonySpacing.sm),
                     Expanded(
-                      child: Text(
-                        'Vous devez retourner le colis à l\'expéditeur avant de confirmer l\'annulation.',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.error,
-                          height: 1.4,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Le colis a déjà été remis. Vous devrez le restituer à l\'expéditeur sous 3 jours en saisissant le code de retour qu\'il vous communiquera.',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.error,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.sm),
+                          Text(
+                            "L'expéditeur sera intégralement remboursé. Si le paiement était en espèces, aucun mouvement d'argent n'a lieu.",
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -145,7 +162,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                 }
               },
               decoration: InputDecoration(
-                hintText: widget.isInTransit
+                hintText: widget._isAfterHandover
                     ? 'Motif de l\'annulation *'
                     : 'Motif (optionnel)',
                 hintStyle: tt.bodySmall?.copyWith(

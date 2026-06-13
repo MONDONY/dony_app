@@ -60,4 +60,31 @@ void main() {
 
     verify(() => mockDs.contestNoShow('bid-2')).called(1);
   });
+
+  test('cancelAfterHandover delegates to datasource', () async {
+    when(() => mockDs.cancelAfterHandover('bid-3')).thenAnswer((_) async {});
+
+    await repo.cancelAfterHandover('bid-3');
+
+    verify(() => mockDs.cancelAfterHandover('bid-3')).called(1);
+  });
+
+  test('confirmReturn delegates to datasource', () async {
+    when(() => mockDs.confirmReturn('bid-3', '123456')).thenAnswer(
+        (_) async => const ReturnCodeModel(returnedAt: null));
+
+    await repo.confirmReturn('bid-3', '123456');
+
+    verify(() => mockDs.confirmReturn('bid-3', '123456')).called(1);
+  });
+
+  test('getReturnCode delegates to datasource', () async {
+    when(() => mockDs.getReturnCode('bid-3'))
+        .thenAnswer((_) async => const ReturnCodeModel(returnCode: '654321'));
+
+    final result = await repo.getReturnCode('bid-3');
+
+    expect(result.returnCode, '654321');
+    verify(() => mockDs.getReturnCode('bid-3')).called(1);
+  });
 }

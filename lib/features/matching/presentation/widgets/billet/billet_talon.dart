@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/return_code_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:flutter/material.dart';
 
@@ -72,7 +73,8 @@ class BilletTalon extends StatelessWidget {
         // Code pas encore disponible → bouton QR seul, pleine largeur.
         'HANDED_OVER' || 'IN_TRANSIT' => _QrTalonButton(bid: bid, compact: true),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
-        'REJECTED' || 'CANCELLED' => const _TerminalBlock(),
+        'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
+        'REJECTED' => const _TerminalBlock(),
         _ => const SizedBox.shrink(),
       };
     }
@@ -85,9 +87,83 @@ class BilletTalon extends StatelessWidget {
       // le parent quand trackingNumber != null.
       'ACCEPTED' || 'HANDED_OVER' || 'IN_TRANSIT' => const SizedBox.shrink(),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
-      'REJECTED' || 'CANCELLED' => const _TerminalBlock(),
+      'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
+      'REJECTED' => const _TerminalBlock(),
       _ => const SizedBox.shrink(),
     };
+  }
+}
+
+/// any / CANCELLED — selon l'état de la restitution (annulation après remise, D7) :
+/// - colis restitué → bloc « Colis restitué » ;
+/// - retour en attente → action code de retour (afficher côté expéditeur, saisir
+///   côté voyageur) ;
+/// - sinon (annulation pré-remise classique) → message terminal neutre.
+class _CancelledBlock extends StatelessWidget {
+  final BidModel bid;
+  final bool isSender;
+
+  const _CancelledBlock({required this.bid, required this.isSender});
+
+  @override
+  Widget build(BuildContext context) {
+    if (bid.isParcelReturned) {
+      return const _ReturnedBlock();
+    }
+    if (!bid.isAwaitingReturn) {
+      return const _TerminalBlock();
+    }
+    final cs = Theme.of(context).colorScheme;
+    return OutlinedButton.icon(
+      onPressed: () => isSender
+          ? ReturnCodeSheet.show(context, bid: bid)
+          : ReturnEntrySheet.show(context, bid: bid),
+      icon: Icon(
+        isSender ? Icons.vpn_key_rounded : Icons.assignment_turned_in_rounded,
+        size: 20,
+        color: cs.primary,
+      ),
+      label: Text(
+        isSender ? 'Code de retour' : 'Confirmer le retour',
+        textAlign: TextAlign.center,
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: cs.primary,
+        side: BorderSide(color: cs.primary),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+      ),
+    );
+  }
+}
+
+/// any / CANCELLED + colis restitué — check vert + « Colis restitué ».
+class _ReturnedBlock extends StatelessWidget {
+  const _ReturnedBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: DonySpacing.sm),
+        Icon(Icons.check_circle_rounded, size: 40, color: cs.success),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          'Colis restitué',
+          textAlign: TextAlign.center,
+          style: tt.bodyMedium?.copyWith(
+            color: cs.success,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+      ],
+    );
   }
 }
 
@@ -269,15 +345,18 @@ class _MiniStat extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            // Une seule ligne : une catégorie multi-valeurs (« Vêtements,
-            // Médicaments… ») ne doit pas wrapper sur 2-4 lignes et
-            // désaligner les 3 colonnes du talon.
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          // FittedBox scaleDown : une catégorie longue (« Médicaments »,
+          // « Électronique ») rétrécit au lieu de s'ellipser en « Médi… » ;
+          // une valeur courte garde sa taille. Une seule ligne pour ne pas
+          // désaligner les 3 colonnes du talon.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(

@@ -26,6 +26,34 @@ class CancellationModel {
   }
 }
 
+/// Réponse des endpoints code de retour (D7) : `GET .../return-code` (expéditeur)
+/// et `POST .../confirm-return` (voyageur). `returnCode` peut être null côté voyageur.
+class ReturnCodeModel {
+  final String? returnCode;
+  final DateTime? returnDeadline;
+  final DateTime? returnedAt;
+
+  const ReturnCodeModel({
+    this.returnCode,
+    this.returnDeadline,
+    this.returnedAt,
+  });
+
+  bool get isReturned => returnedAt != null;
+
+  factory ReturnCodeModel.fromJson(Map<String, dynamic> json) {
+    return ReturnCodeModel(
+      returnCode: json['returnCode'] as String?,
+      returnDeadline: json['returnDeadline'] != null
+          ? DateTime.parse(json['returnDeadline'] as String)
+          : null,
+      returnedAt: json['returnedAt'] != null
+          ? DateTime.parse(json['returnedAt'] as String)
+          : null,
+    );
+  }
+}
+
 class RematchSuggestionModel {
   final String suggestionId;
   final String announcementId;

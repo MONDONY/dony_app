@@ -15,6 +15,9 @@ AnnouncementModel _announcement({
   String arrivalCity = 'Dakar',
   String? departureFlag,
   String? arrivalFlag,
+  String pricingMode = 'KG',
+  double pricePerKg = 8.0,
+  List<Map<String, dynamic>>? priceGridItems,
 }) {
   return AnnouncementModel.fromJson({
     'id': 'a1',
@@ -27,7 +30,9 @@ AnnouncementModel _announcement({
         DateTime.now().add(const Duration(days: 3)).toIso8601String(),
     'totalKg': totalKg,
     'availableKg': availableKg,
-    'pricePerKg': 8.0,
+    'pricePerKg': pricePerKg,
+    'pricingMode': pricingMode,
+    if (priceGridItems != null) 'priceGridItems': priceGridItems,
     'status': status,
     if (capacityUnit != null) 'capacityUnit': capacityUnit,
     'pendingBidCount': pendingBidCount,
@@ -58,6 +63,50 @@ void main() {
     expect(find.textContaining('13 kg'), findsWidgets);
     expect(find.textContaining('8 €'), findsOneWidget);
     expect(find.text('Actif'), findsOneWidget);
+  });
+
+  testWidgets('mode grille (MIXED) : affiche "dès X €", jamais "0 € / kg"',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(
+        pricingMode: 'MIXED',
+        pricePerKg: 0,
+        priceGridItems: const [
+          {
+            'id': 'g1',
+            'label': '1 valise 23kg',
+            'unitPriceNet': 25.0,
+            'unitPriceDisplay': 28.0,
+          },
+          {
+            'id': 'g2',
+            'label': '1 valise 32kg',
+            'unitPriceNet': 35.0,
+            'unitPriceDisplay': 39.0,
+          },
+        ],
+      ),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('dès 25 €'), findsOneWidget);
+    expect(find.textContaining('0 €'), findsNothing);
+    expect(find.textContaining('/ kg'), findsNothing);
+  });
+
+  testWidgets('mode grille sans items : libellé "Grille tarifaire"',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(pricingMode: 'MIXED', pricePerKg: 0),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Grille tarifaire'), findsOneWidget);
+    expect(find.textContaining('0 €'), findsNothing);
   });
 
   testWidgets('utilise le drapeau backend pour une ville hors map (New York)',

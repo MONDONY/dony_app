@@ -57,6 +57,11 @@ abstract final class AnalyticsEvents {
   static const rematchAccepted         = 'rematch_accepted';
   static const noShowReportedBySender  = 'no_show_reported_by_sender';
   static const noShowReportedByTraveler = 'no_show_reported_by_traveler';
+  // Annulation après remise (D5/D6/D7)
+  static const cancelAfterHandoverInitiated = 'cancel_after_handover_initiated';
+  static const returnCodeViewed            = 'return_code_viewed';
+  static const returnCodeEntryOpened       = 'return_code_entry_opened';
+  static const returnConfirmed             = 'return_confirmed';
 
   // Profile
   static const becomeTravelerStarted = 'become_traveler_started';

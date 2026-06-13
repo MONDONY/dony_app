@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -11,8 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Statuses for which the traveler can cancel the trip.
-const _cancellableStatuses = {'ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT'};
 
 /// Statuses for which the traveler can dismiss/delete the bid record.
 const _dismissableStatuses = {'REJECTED', 'CANCELLED'};
@@ -127,14 +127,17 @@ class _TravelerOptionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
 
-            // ── Annuler le trajet (ACCEPTED / HANDED_OVER / IN_TRANSIT) ────
-            if (_cancellableStatuses.contains(bid.status)) ...[
+            // ── Annuler ce transport (ACCEPTED / HANDED_OVER avant départ) ──
+            // Le voyageur renonce à transporter CE colis (pas tout son trajet).
+            if (_canCancel(bid)) ...[
               _OptionTile(
                 icon: Icons.block_rounded,
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
-                label: 'Annuler le trajet',
-                subtitle: 'L\'expéditeur sera remboursé automatiquement',
+                label: 'Annuler ce transport',
+                subtitle: bid.status == 'HANDED_OVER'
+                    ? 'Vous devrez restituer le colis sous 3 jours'
+                    : 'L\'expéditeur sera remboursé automatiquement',
                 onTap: () {
                   context.pop();
                   _showCancelDialog(outerContext, bid);
@@ -312,13 +315,30 @@ class _TravelerOptionsSheet extends StatelessWidget {
     );
   }
 
+  /// Option annulation visible : avant remise (ACCEPTED) toujours ; après remise
+  /// (HANDED_OVER) tant que le départ n'est pas atteint — règle portée par
+  /// [BidModel.canCancelAfterHandover]. IN_TRANSIT n'est jamais annulable (D3).
+  static bool _canCancel(BidModel bid) =>
+      bid.status == 'ACCEPTED' || bid.canCancelAfterHandover;
+
   Future<void> _showCancelDialog(BuildContext context, BidModel bid) async {
-    final isInTransit = bid.status == 'IN_TRANSIT';
+    final afterHandover = bid.status == 'HANDED_OVER';
     final reason = await CancellationDialog.show(
       context,
-      isInTransit: isInTransit,
+      kind: afterHandover
+          ? CancellationKind.afterHandover
+          : CancellationKind.accepted,
     );
-    if (reason != null && context.mounted) {
+    if (reason == null || !context.mounted) {
+      return;
+    }
+
+    if (afterHandover) {
+      // Annulation après remise → flux dédié (code de retour + remboursement).
+      context.read<CancellationBloc>().add(
+            CancelAfterHandoverRequested(bid.id, actor: 'traveler'),
+          );
+    } else {
       context.read<BidBloc>().add(
             BidCancelRequested(
               bid.id,

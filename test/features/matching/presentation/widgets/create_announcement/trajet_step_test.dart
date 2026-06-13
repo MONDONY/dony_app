@@ -114,7 +114,7 @@ void main() {
     );
 
     testWidgets(
-      'les labels des champs heure s\'affichent correctement (optionnel)',
+      'heure de départ requise (D1), heure d\'arrivée optionnelle',
       (tester) async {
         await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
@@ -122,8 +122,13 @@ void main() {
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Les labels optionnels sont présents
-        expect(find.text('Heure de départ (optionnel)'), findsOneWidget);
+        final depTime = tester.widget<DonyTextField>(
+          find.byKey(const Key('departureTimeField')),
+        );
+        expect(depTime.label, 'Heure de départ');
+        expect(depTime.requiredLabel, isTrue);
+
+        // L'heure d'arrivée reste optionnelle.
         expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
       },
     );
@@ -221,11 +226,11 @@ void main() {
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Exactement 3 champs requis : ville de départ, ville d'arrivée,
-        // date de départ. Chacun affiche un TextSpan " *" via Text.rich.
-        // find.textContaining(' *') matche chaque TextSpan séparément,
-        // donc on attend exactement 3 occurrences.
-        expect(find.textContaining(' *'), findsNWidgets(3));
+        // Exactement 4 champs requis : ville de départ, ville d'arrivée,
+        // date de départ, heure de départ (D1). Chacun affiche un TextSpan " *"
+        // via Text.rich. find.textContaining(' *') matche chaque TextSpan
+        // séparément, donc on attend exactement 4 occurrences.
+        expect(find.textContaining(' *'), findsNWidgets(4));
       },
     );
 
@@ -252,7 +257,7 @@ void main() {
     );
 
     testWidgets(
-      'les champs heure (optionnel) n\'ont pas d\'astérisque dans le label',
+      'seule l\'heure d\'arrivée est optionnelle (départ requis, D1)',
       (tester) async {
         await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
@@ -260,30 +265,31 @@ void main() {
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        // Les labels optionnels ne contiennent pas " *"
-        expect(find.text('Heure de départ (optionnel)'), findsOneWidget);
+        // L'heure d'arrivée reste le seul champ optionnel.
         expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
-        // Vérifier qu'aucun texte " * " n'est associé aux champs optionnels
-        // (les champs heure n'ont pas requiredLabel: true)
+
         final donyTextFields = tester.widgetList<DonyTextField>(
           find.byType(DonyTextField),
         ).toList();
         // 3 DonyTextField.tappable : 2 heures + 1 date
         expect(donyTextFields.length, 3);
-        // Les 2 champs heure n'ont pas requiredLabel
-        final timeFields = donyTextFields
+
+        // Un seul champ optionnel (heure d'arrivée), sans requiredLabel.
+        final optionalFields = donyTextFields
             .where((f) => f.label?.contains('optionnel') == true)
             .toList();
-        expect(timeFields.length, 2);
-        for (final f in timeFields) {
-          expect(f.requiredLabel, isFalse);
-        }
-        // Le champ date a requiredLabel: true
-        final dateFields = donyTextFields
-            .where((f) => f.label == 'Date de départ')
+        expect(optionalFields.length, 1);
+        expect(optionalFields.first.requiredLabel, isFalse);
+
+        // Date de départ ET heure de départ sont requis (requiredLabel: true).
+        final requiredTappables = donyTextFields
+            .where((f) =>
+                f.label == 'Date de départ' || f.label == 'Heure de départ')
             .toList();
-        expect(dateFields.length, 1);
-        expect(dateFields.first.requiredLabel, isTrue);
+        expect(requiredTappables.length, 2);
+        for (final f in requiredTappables) {
+          expect(f.requiredLabel, isTrue);
+        }
       },
     );
   });
