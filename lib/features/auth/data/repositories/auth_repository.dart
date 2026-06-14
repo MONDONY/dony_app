@@ -20,6 +20,9 @@ class AuthRepository {
     DateTime? birthDate,
     String? city,
     String? phoneNumber,
+    String? bio,
+    List<String>? languages,
+    String? transportMode,
   }) => _datasource.updateProfile(
     firstName: firstName,
     lastName: lastName,
@@ -27,7 +30,13 @@ class AuthRepository {
     birthDate: birthDate,
     city: city,
     phoneNumber: phoneNumber,
+    bio: bio,
+    languages: languages,
+    transportMode: transportMode,
   );
+
+  Future<UserModel> uploadAvatar(String filePath) =>
+      _datasource.uploadAvatar(filePath);
 
   Future<void> sendEmailOtp(String email) => _datasource.sendEmailOtp(email);
 

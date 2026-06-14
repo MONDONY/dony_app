@@ -62,6 +62,9 @@ class AuthUpdateProfileRequested extends AuthEvent {
   final DateTime? birthDate;
   final String? city;
   final String? phoneNumber;
+  final String? bio;
+  final List<String>? languages;
+  final String? transportMode;
 
   const AuthUpdateProfileRequested({
     this.firstName,
@@ -70,6 +73,9 @@ class AuthUpdateProfileRequested extends AuthEvent {
     this.birthDate,
     this.city,
     this.phoneNumber,
+    this.bio,
+    this.languages,
+    this.transportMode,
   });
 
   @override
@@ -80,7 +86,17 @@ class AuthUpdateProfileRequested extends AuthEvent {
     birthDate,
     city,
     phoneNumber,
+    bio,
+    languages,
+    transportMode,
   ];
+}
+
+class AuthAvatarUploadRequested extends AuthEvent {
+  final String filePath;
+  const AuthAvatarUploadRequested(this.filePath);
+  @override
+  List<Object?> get props => [filePath];
 }
 
 class OnboardingCompleted extends AuthEvent {

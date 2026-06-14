@@ -1715,4 +1715,88 @@ void main() {
       ],
     );
   });
+
+  // ─── AuthUpdateProfileRequested — champs étendus (bio/languages/transportMode) ──
+
+  group('AuthUpdateProfileRequested — champs étendus', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits AuthProfileUpdated with bio/languages/transport',
+      build: () {
+        const updatedUser = UserModel(
+          id: 'user-123',
+          roles: ['SENDER'],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+          bio: 'X',
+        );
+        when(() => mockRepo.updateProfile(
+              bio: any(named: 'bio'),
+              languages: any(named: 'languages'),
+              transportMode: any(named: 'transportMode'),
+              firstName: any(named: 'firstName'),
+              lastName: any(named: 'lastName'),
+              email: any(named: 'email'),
+              birthDate: any(named: 'birthDate'),
+              city: any(named: 'city'),
+              phoneNumber: any(named: 'phoneNumber'),
+            )).thenAnswer((_) async => updatedUser);
+        return buildBloc();
+      },
+      act: (b) => b.add(const AuthUpdateProfileRequested(
+        bio: 'X',
+        languages: ['FR'],
+        transportMode: 'AVION',
+      )),
+      expect: () => [isA<AuthLoading>(), isA<AuthProfileUpdated>()],
+      verify: (bloc) {
+        verify(() => mockRepo.updateProfile(
+              bio: 'X',
+              languages: ['FR'],
+              transportMode: 'AVION',
+              firstName: null,
+              lastName: null,
+              email: null,
+              birthDate: null,
+              city: null,
+              phoneNumber: null,
+            )).called(1);
+      },
+    );
+  });
+
+  // ─── AuthAvatarUploadRequested ────────────────────────────────────────────────
+
+  group('AuthAvatarUploadRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits AuthProfileUpdated on avatar upload',
+      build: () {
+        const updatedUser = UserModel(
+          id: 'user-123',
+          roles: ['SENDER'],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+          avatarUrl: 'https://cdn/a.jpg',
+        );
+        when(() => mockRepo.uploadAvatar(any()))
+            .thenAnswer((_) async => updatedUser);
+        return buildBloc();
+      },
+      act: (b) => b.add(const AuthAvatarUploadRequested('/tmp/a.jpg')),
+      expect: () => [isA<AuthLoading>(), isA<AuthProfileUpdated>()],
+      verify: (bloc) {
+        verify(() => mockRepo.uploadAvatar('/tmp/a.jpg')).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits AuthError on avatar upload failure',
+      build: () {
+        when(() => mockRepo.uploadAvatar(any()))
+            .thenThrow(Exception('Upload failed'));
+        return buildBloc();
+      },
+      act: (b) => b.add(const AuthAvatarUploadRequested('/tmp/a.jpg')),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+    );
+  });
 }

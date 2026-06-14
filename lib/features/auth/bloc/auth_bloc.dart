@@ -64,6 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthAddPhoneFromProfileRequested>(_onAddPhoneFromProfileRequested);
     on<AuthAddEmailFromProfileRequested>(_onAddEmailFromProfileRequested);
     on<AuthUserSynced>(_onUserSynced);
+    on<AuthAvatarUploadRequested>(_onAvatarUploadRequested);
   }
 
   @override
@@ -322,8 +323,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         birthDate: event.birthDate,
         city: event.city,
         phoneNumber: event.phoneNumber,
+        bio: event.bio,
+        languages: event.languages,
+        transportMode: event.transportMode,
       );
       emit(AuthProfileUpdated(updatedUser));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Upload avatar ────────────────────────────────────────────────────────
+
+  Future<void> _onAvatarUploadRequested(
+    AuthAvatarUploadRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final updated = await _authRepository.uploadAvatar(event.filePath);
+      emit(AuthProfileUpdated(updated));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }

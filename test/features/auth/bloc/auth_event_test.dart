@@ -65,12 +65,32 @@ void main() {
         birthDate: date,
         city: 'Paris',
       );
-      expect(e.props, ['Amadou', 'Diallo', 'a@d.com', date, 'Paris', null]);
+      expect(e.props, ['Amadou', 'Diallo', 'a@d.com', date, 'Paris', null, null, null, null]);
     });
 
     test('props with null fields', () {
       final e = AuthUpdateProfileRequested();
-      expect(e.props, [null, null, null, null, null, null]);
+      expect(e.props, [null, null, null, null, null, null, null, null, null]);
+    });
+
+    test('props with bio/languages/transportMode', () {
+      final e = AuthUpdateProfileRequested(
+        bio: 'Voyageur régulier',
+        languages: ['FR', 'EN'],
+        transportMode: 'AVION',
+      );
+      expect(e.props, [null, null, null, null, null, null, 'Voyageur régulier', ['FR', 'EN'], 'AVION']);
+    });
+  });
+
+  group('AuthAvatarUploadRequested', () {
+    test('props contains filePath', () {
+      final e = AuthAvatarUploadRequested('/tmp/a.jpg');
+      expect(e.props, ['/tmp/a.jpg']);
+    });
+
+    test('equality', () {
+      expect(AuthAvatarUploadRequested('/a'), AuthAvatarUploadRequested('/a'));
     });
   });
 
