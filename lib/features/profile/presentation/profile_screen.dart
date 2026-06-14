@@ -16,7 +16,6 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/coming_soon_bottom_sheet.dart';
-import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
@@ -231,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 profileCompletionPercent:
                                     profileCompletionPercent,
                                 onEditProfile: () =>
-                                    EditProfileBottomSheet.show(context),
+                                    context.push('/profile/edit'),
                               ),
                             ),
                           ),
@@ -409,7 +408,7 @@ class _ActivityTab extends StatelessWidget {
         if (user != null && !user!.isProfileComplete) ...[
           _ProfileCompletionBanner(
             user: user!,
-            onTap: () => EditProfileBottomSheet.show(context),
+            onTap: () => context.push('/profile/edit'),
             cs: cs,
             tt: tt,
           ).animate().fadeIn(delay: 80.ms),
