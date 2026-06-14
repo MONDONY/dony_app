@@ -68,8 +68,12 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
   String? _currentUserId(BuildContext context) {
     try {
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated) return authState.user.id;
-      if (authState is AuthProfileUpdated) return authState.user.id;
+      if (authState is AuthAuthenticated) {
+        return authState.user.id;
+      }
+      if (authState is AuthProfileUpdated) {
+        return authState.user.id;
+      }
       return null;
     } catch (_) {
       return null;
@@ -86,6 +90,20 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
 
     return BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
       builder: (context, state) {
+        // ── Contextual app bar title ──────────────────────────────────────────
+        // Own profile → "Ce que les autres voient"
+        // Other user, loaded → their displayName (or "Profil" as fallback)
+        // Other user, loading/error → "Profil"
+        final String appBarTitle;
+        if (isOwnProfile) {
+          appBarTitle = 'Ce que les autres voient';
+        } else if (state is ProfilePublicLoaded &&
+            state.profile.displayName.isNotEmpty) {
+          appBarTitle = state.profile.displayName;
+        } else {
+          appBarTitle = 'Profil';
+        }
+
         Widget body;
         if (state is ProfilePublicLoading || state is ProfilePublicInitial) {
           body = const Center(child: CircularProgressIndicator());
@@ -106,18 +124,50 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
           body = const SizedBox.shrink();
         }
 
-        return DonyPageScaffold(
-          title: 'Ce que les autres voient',
-          scrollable: false,
-          stickyBottom: showButton ? const _SubscribeButton() : null,
-          body: body,
+        // Use a raw Scaffold so the hero band can be truly edge-to-edge
+        // (DonyPageScaffold wraps the body in a Padding which would indent it).
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: DonyAppBar(title: appBarTitle),
+          body: showButton
+              ? Column(
+                  children: [
+                    Expanded(child: body),
+                    _StickySubscribeBar(),
+                  ],
+                )
+              : body,
         );
       },
     );
   }
 }
 
-// ─── Subscribe sticky button ─────────────────────────────────────────────────
+// ─── Sticky subscribe bar ─────────────────────────────────────────────────────
+
+class _StickySubscribeBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
+        boxShadow: DonyShadows.sticky,
+      ),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.md,
+        DonySpacing.lg,
+        DonySpacing.md + bottom,
+      ),
+      child: const _SubscribeButton(),
+    );
+  }
+}
+
+// ─── Subscribe button ─────────────────────────────────────────────────────────
 
 class _SubscribeButton extends StatelessWidget {
   const _SubscribeButton();
@@ -146,7 +196,6 @@ class _SubscribeButton extends StatelessWidget {
         return DonyButton(
           label: "S'abonner à ce voyageur",
           icon: Icons.notifications_active_rounded,
-          variant: DonyButtonVariant.primary,
           isLoading: isLoading,
           onPressed: isLoading
               ? null
@@ -181,7 +230,7 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
-// ─── Loaded view ─────────────────────────────────────────────────────────────
+// ─── Loaded view (flat / editorial layout) ────────────────────────────────────
 
 class _LoadedView extends StatelessWidget {
   const _LoadedView({
@@ -198,149 +247,116 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // Hero card
+        // ── Hero — full-bleed gradient band (NO horizontal margin) ────────────
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              DonySpacing.base,
-            ),
-            child: _HeroCard(profile: profile),
-          )
+          child: _HeroBand(profile: profile)
               .animate()
               .fadeIn(duration: 300.ms)
               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
-        // À propos card
-        if (profile.bio != null && profile.bio!.trim().isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.base,
-                DonySpacing.lg,
-                0,
-              ),
-              child: _AboutCard(bio: profile.bio!),
-            ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
-          ),
-
-        // Stats row
+        // ── Stats section ─────────────────────────────────────────────────────
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.base,
-              DonySpacing.lg,
-              0,
-            ),
+          child: _FlatSection(
+            topBorder: false,
             child: _StatsRow(profile: profile),
-          ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
+          ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
         ),
 
-        // Langues / Transport card
+        // ── À propos section ──────────────────────────────────────────────────
+        if (profile.bio != null && profile.bio!.trim().isNotEmpty)
+          SliverToBoxAdapter(
+            child: _FlatSection(
+              child: _AboutSection(bio: profile.bio!),
+            ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
+          ),
+
+        // ── Langues / Transport section ───────────────────────────────────────
         if (profile.languages.isNotEmpty || profile.transportMode != null)
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.base,
-                DonySpacing.lg,
-                0,
-              ),
-              child: _TravelerInfoCard(
+            child: _FlatSection(
+              child: _TravelerInfoSection(
                 languages: profile.languages,
                 transportMode: profile.transportMode,
               ),
             ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
           ),
 
-        // Badges section
+        // ── Badges section ────────────────────────────────────────────────────
         if (profile.badges.isNotEmpty)
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.xl,
-                DonySpacing.lg,
-                0,
-              ),
+            child: _FlatSection(
               child: _BadgesSection(badges: profile.badges),
             ).animate().fadeIn(delay: 160.ms, duration: 300.ms),
           ),
 
-        // Contact info chips
+        // ── Contact / Availability section ────────────────────────────────────
         if (profile.contactMode != null || profile.responseDelayHours != null)
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.xl,
-                DonySpacing.lg,
-                0,
-              ),
+            child: _FlatSection(
               child: _ContactInfoSection(profile: profile),
             ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
           ),
 
-        // Recent reviews section
+        // ── Avis récents section ──────────────────────────────────────────────
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              0,
+          child: _FlatSection(
+            child: _RecentReviewsSection(
+              summary: recentRatings,
+              userId: userId,
             ),
-            child: _RecentReviewsSection(summary: recentRatings),
           ).animate().fadeIn(delay: 240.ms, duration: 300.ms),
         ),
 
-        // "Voir tous les avis" — inline link button at bottom of reviews card
-        if (recentRatings.ratingCount > 0)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.base,
-                DonySpacing.lg,
-                DonySpacing.huge,
-              ),
-              child: DonyButton(
-                label: 'Voir tous les avis (${recentRatings.ratingCount})',
-                variant: DonyButtonVariant.secondary,
-                onPressed: () => AllReviewsBottomSheet.show(
-                  context,
-                  userId: userId,
-                  initialSummary: recentRatings,
-                ),
-              ),
-            ).animate().fadeIn(delay: 320.ms, duration: 300.ms),
-          ),
-
-        // Bottom safe-area padding (when no sticky button, give generous bottom)
-        const SliverToBoxAdapter(child: SizedBox(height: DonySpacing.xl)),
+        // Bottom safe-area padding
+        const SliverToBoxAdapter(child: SizedBox(height: DonySpacing.xxl)),
       ],
     );
   }
 }
 
-// ─── Hero card ───────────────────────────────────────────────────────────────
+// ─── Flat section wrapper — hairline top border, horizontal padding ───────────
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.profile});
+class _FlatSection extends StatelessWidget {
+  const _FlatSection({
+    required this.child,
+    this.topBorder = true,
+  });
+
+  final Widget child;
+  final bool topBorder;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: topBorder
+            ? Border(top: BorderSide(color: cs.outline.withValues(alpha: 0.6)))
+            : const Border(),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.lg,
+          vertical: DonySpacing.lg,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+// ─── Hero band — full-bleed gradient ─────────────────────────────────────────
+
+class _HeroBand extends StatelessWidget {
+  const _HeroBand({required this.profile});
 
   final ProfilePublicModel profile;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    // Formatted memberSince meta: "⭐ 4.8 · 12 avis · Membre depuis mars 2025"
     final ratingStr = profile.averageRating > 0
         ? profile.averageRating.toStringAsFixed(1)
         : '—';
@@ -348,105 +364,75 @@ class _HeroCard extends StatelessWidget {
         '⭐ $ratingStr · ${profile.ratingCount} avis · Membre depuis ${profile.memberSince}';
 
     return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: DonyShadows.card,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [DonyColors.blue500, Color(0xFF3F73F2)],
+        ),
       ),
-      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.xl,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Blue gradient cover strip
-          Container(
-            height: 64,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  cs.primary,
-                  cs.primary.withOpacity(0.7),
-                ],
+          // Avatar + name + pills in a row
+          Row(
+            children: [
+              // Avatar with white ring
+              _HeroAvatar(
+                name: profile.displayName,
+                imageUrl: profile.avatarUrl,
+                verified: profile.kycVerified,
               ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.xl,
-              0,
-              DonySpacing.xl,
-              DonySpacing.xl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar overlapping the gradient strip
-                Transform.translate(
-                  offset: const Offset(0, -28),
-                  child: DonyAvatar(
-                    name: profile.displayName,
-                    imageUrl: profile.avatarUrl,
-                    size: DonyAvatarSize.xl,
-                    verified: profile.kycVerified,
-                    pro: profile.isProAccount,
-                  ),
-                ),
-
-                // Name (pull up to compensate translated avatar space)
-                Transform.translate(
-                  offset: const Offset(0, -20),
-                  child: Text(
-                    profile.displayName,
-                    style: tt.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
+              const SizedBox(width: DonySpacing.base),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.displayName,
+                      style: tt.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
                     ),
-                  ),
-                ),
-
-                // Status pills
-                Transform.translate(
-                  offset: const Offset(0, -14),
-                  child: Wrap(
-                    spacing: DonySpacing.xs,
-                    runSpacing: DonySpacing.xs,
-                    children: [
-                      if (profile.kycVerified)
-                        _StatusChip(
-                          label: '✓ Vérifié',
-                          color: cs.success,
-                          bgColor: cs.successLight,
-                        ),
-                      if (profile.isProAccount)
-                        const _StatusChip(
-                          label: 'PRO',
-                          color: DonyColors.warning700,
-                          bgColor: DonyColors.amberLight,
-                        ),
-                      if (profile.isKiloPro)
-                        const _StatusChip(
-                          label: 'Kilo Pro',
-                          color: DonyColors.violet,
-                          bgColor: DonyColors.violetLight,
-                        ),
+                    if (profile.kycVerified ||
+                        profile.isProAccount ||
+                        profile.isKiloPro) ...[
+                      const SizedBox(height: DonySpacing.xs),
+                      Wrap(
+                        spacing: DonySpacing.xs,
+                        runSpacing: DonySpacing.xs,
+                        children: [
+                          if (profile.kycVerified)
+                            const _HeroPill(label: '✓ Vérifié'),
+                          if (profile.isProAccount)
+                            const _HeroPill(label: 'PRO'),
+                          if (profile.isKiloPro)
+                            const _HeroPill(label: 'Kilo Pro'),
+                        ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-
-                const SizedBox(height: DonySpacing.sm),
-
-                // Meta line: ⭐ rating · N avis · Membre depuis XXX
-                Text(
-                  metaLine,
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.md),
+          // Meta line
+          Text(
+            metaLine,
+            style: tt.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w600,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],
@@ -455,16 +441,124 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    required this.label,
-    required this.color,
-    required this.bgColor,
+class _HeroAvatar extends StatelessWidget {
+  const _HeroAvatar({
+    required this.name,
+    required this.verified,
+    this.imageUrl,
   });
 
+  final String name;
+  final bool verified;
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 64.0;
+    final initials = _initials(name);
+
+    Widget avatar;
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      avatar = ClipOval(
+        child: Image.network(
+          imageUrl!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _initialsCircle(initials, size),
+        ),
+      );
+    } else {
+      avatar = _initialsCircle(initials, size);
+    }
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // White ring (concentric: ring at 66px wraps 64px content)
+        Container(
+          width: size + 4,
+          height: size + 4,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.5),
+              width: 2,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(1),
+            child: ClipOval(child: avatar),
+          ),
+        ),
+        if (verified)
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: DonyColors.warning500,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                '✓',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  static String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts[0].isEmpty) {
+      return '?';
+    }
+    if (parts.length == 1) {
+      return parts[0][0].toUpperCase();
+    }
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  Widget _initialsCircle(String initials, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        // Use a warm gradient for initials avatar on the hero
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [DonyColors.terra400, DonyColors.terra600],
+        ),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroPill extends StatelessWidget {
+  const _HeroPill({required this.label});
+
   final String label;
-  final Color color;
-  final Color bgColor;
 
   @override
   Widget build(BuildContext context) {
@@ -472,24 +566,24 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xs,
+        vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: Colors.white.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         label,
-        style: tt.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
+        style: tt.labelSmall?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
   }
 }
 
-// ─── Stats row — 3 equal columns ─────────────────────────────────────────────
+// ─── Stats row — 3 equal columns, no box ─────────────────────────────────────
 
 class _StatsRow extends StatelessWidget {
   const _StatsRow({required this.profile});
@@ -500,55 +594,50 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // Response delay label
     final delayLabel = profile.responseDelayHours != null
         ? '~${profile.responseDelayHours}h'
         : '—';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: DonyShadows.card,
-      ),
-      padding: const EdgeInsets.symmetric(
-        vertical: DonySpacing.base,
-        horizontal: DonySpacing.sm,
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _StatItem(
-                value: profile.averageRating > 0
-                    ? profile.averageRating.toStringAsFixed(1)
-                    : '—',
-                label: 'Note',
-                icon: Icons.star_rounded,
-                iconColor: DonyColors.warning500,
-              ),
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          Expanded(
+            child: _StatItem(
+              value: profile.averageRating > 0
+                  ? profile.averageRating.toStringAsFixed(1)
+                  : '—',
+              label: 'Note',
+              icon: Icons.star_rounded,
+              iconColor: DonyColors.warning500,
             ),
-            VerticalDivider(color: cs.outline, width: 1),
-            Expanded(
-              child: _StatItem(
-                value: '${profile.completedBidsCount}',
-                label: 'Livraisons',
-                icon: Icons.inventory_2_rounded,
-                iconColor: cs.primary,
-              ),
+          ),
+          VerticalDivider(
+            color: cs.outline.withValues(alpha: 0.6),
+            width: 1,
+            thickness: 1,
+          ),
+          Expanded(
+            child: _StatItem(
+              value: '${profile.completedBidsCount}',
+              label: 'Livraisons',
+              icon: Icons.inventory_2_rounded,
+              iconColor: cs.primary,
             ),
-            VerticalDivider(color: cs.outline, width: 1),
-            Expanded(
-              child: _StatItem(
-                value: delayLabel,
-                label: 'Répond en',
-                icon: Icons.timer_rounded,
-                iconColor: cs.onSurfaceVariant,
-              ),
+          ),
+          VerticalDivider(
+            color: cs.outline.withValues(alpha: 0.6),
+            width: 1,
+            thickness: 1,
+          ),
+          Expanded(
+            child: _StatItem(
+              value: delayLabel,
+              label: 'Répond en',
+              icon: Icons.timer_rounded,
+              iconColor: cs.onSurfaceVariant,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -573,7 +662,7 @@ class _StatItem extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -582,14 +671,15 @@ class _StatItem extends StatelessWidget {
           Text(
             value,
             style: tt.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
+              fontSize: 19,
               color: cs.onSurface,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
           Text(
             label,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -600,11 +690,31 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-// ─── À propos card ───────────────────────────────────────────────────────────
+// ─── Section label helper ─────────────────────────────────────────────────────
 
-class _AboutCard extends StatelessWidget {
-  const _AboutCard({required this.bio});
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
 
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Text(
+      text,
+      style: tt.labelSmall?.copyWith(
+        color: cs.onSurfaceVariant,
+        letterSpacing: 0.7,
+        fontWeight: FontWeight.w800,
+      ),
+    );
+  }
+}
+
+// ─── À propos section ─────────────────────────────────────────────────────────
+
+class _AboutSection extends StatelessWidget {
+  const _AboutSection({required this.bio});
   final String bio;
 
   @override
@@ -612,42 +722,27 @@ class _AboutCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: DonyShadows.card,
-      ),
-      padding: const EdgeInsets.all(DonySpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'À PROPOS',
-            style: tt.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 1.2,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel('À PROPOS'),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          bio,
+          style: tt.bodyMedium?.copyWith(
+            color: cs.onSurface,
+            height: 1.55,
           ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            bio,
-            style: tt.bodyMedium?.copyWith(
-              color: cs.onSurface,
-              height: 1.55,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-// ─── Langues / Transport card ─────────────────────────────────────────────────
+// ─── Langues / Transport section ──────────────────────────────────────────────
 
-class _TravelerInfoCard extends StatelessWidget {
-  const _TravelerInfoCard({
+class _TravelerInfoSection extends StatelessWidget {
+  const _TravelerInfoSection({
     required this.languages,
     required this.transportMode,
   });
@@ -673,91 +768,70 @@ class _TravelerInfoCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: DonyShadows.card,
-      ),
-      padding: const EdgeInsets.all(DonySpacing.xl),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (languages.isNotEmpty)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'LANGUES',
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.sm),
-                  Wrap(
-                    spacing: DonySpacing.xs,
-                    runSpacing: DonySpacing.xs,
-                    children: languages
-                        .map(
-                          (lang) => Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.sm,
-                              vertical: DonySpacing.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.primaryContainer,
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.full),
-                            ),
-                            child: Text(
-                              lang,
-                              style: tt.labelMedium?.copyWith(
-                                color: cs.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (languages.isNotEmpty)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _SectionLabel('LANGUES'),
+                const SizedBox(height: DonySpacing.sm),
+                Wrap(
+                  spacing: DonySpacing.xs,
+                  runSpacing: DonySpacing.xs,
+                  children: languages
+                      .map(
+                        (lang) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.sm,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer,
+                            borderRadius:
+                                BorderRadius.circular(DonyRadius.full),
+                          ),
+                          child: Text(
+                            lang,
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.primary,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        )
-                        .toList(),
-                  ),
-                ],
-              ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
             ),
-          if (languages.isNotEmpty && transportMode != null)
-            const SizedBox(width: DonySpacing.base),
-          if (transportMode != null)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'TRANSPORT',
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      letterSpacing: 1.2,
-                    ),
+          ),
+        if (languages.isNotEmpty && transportMode != null)
+          const SizedBox(width: DonySpacing.xl),
+        if (transportMode != null)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _SectionLabel('TRANSPORT'),
+                const SizedBox(height: DonySpacing.sm),
+                Text(
+                  _transportLabel(transportMode!),
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: DonySpacing.sm),
-                  Text(
-                    _transportLabel(transportMode!),
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
 
-// ─── Badges section ──────────────────────────────────────────────────────────
+// ─── Badges section ───────────────────────────────────────────────────────────
 
 class _BadgesSection extends StatelessWidget {
   const _BadgesSection({required this.badges});
@@ -772,13 +846,7 @@ class _BadgesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'BADGES',
-          style: tt.labelMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            letterSpacing: 1.2,
-          ),
-        ),
+        const _SectionLabel('BADGES'),
         const SizedBox(height: DonySpacing.sm),
         Wrap(
           spacing: DonySpacing.sm,
@@ -810,269 +878,7 @@ class _BadgesSection extends StatelessWidget {
   }
 }
 
-// ─── Recent reviews section ──────────────────────────────────────────────────
-
-class _RecentReviewsSection extends StatelessWidget {
-  const _RecentReviewsSection({required this.summary});
-
-  final RatingSummary summary;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    final recentItems = summary.ratings.take(3).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'AVIS RÉCENTS',
-          style: tt.labelMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        if (recentItems.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
-            child: Text(
-              'Aucun avis pour le moment.',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          )
-        else
-          ...recentItems.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-              child: _MiniReviewCard(item: item),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _MiniReviewCard extends StatelessWidget {
-  const _MiniReviewCard({required this.item});
-
-  final RatingItem item;
-
-  /// Returns initials from a name (max 2 chars), e.g. "Fatou Diallo" → "FD".
-  static String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty) return '?';
-    if (parts.length == 1) return parts[0][0].toUpperCase();
-    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    final authorName = item.authorName?.isNotEmpty == true
-        ? item.authorName!
-        : 'Utilisateur';
-    final hasCorridor = item.departureCity != null && item.arrivalCity != null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: DonyShadows.card,
-      ),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Author row: avatar + name (left) + date (right)
-          Row(
-            children: [
-              // Author avatar
-              _AuthorAvatar(
-                name: authorName,
-                imageUrl: item.authorAvatarUrl,
-                initials: _initials(authorName),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              // Author name
-              Expanded(
-                child: Text(
-                  authorName,
-                  style: tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Date (tabular numbers)
-              Text(
-                DateFormat('dd/MM/yyyy').format(item.createdAt),
-                style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: DonySpacing.sm),
-
-          // Stars row
-          Row(
-            children: List.generate(5, (i) {
-              return Icon(
-                i < item.stars
-                    ? Icons.star_rounded
-                    : Icons.star_border_rounded,
-                size: 14,
-                color: i < item.stars
-                    ? DonyColors.warning500
-                    : cs.onSurfaceVariant,
-              );
-            }),
-          ),
-
-          // Comment
-          if (item.comment != null && item.comment!.isNotEmpty) ...[
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              item.comment!,
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onSurface,
-                height: 1.5,
-              ),
-            ),
-          ],
-
-          // Corridor chip
-          if (hasCorridor) ...[
-            const SizedBox(height: DonySpacing.sm),
-            _CorridorChip(
-              departure: item.departureCity!,
-              arrival: item.arrivalCity!,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _AuthorAvatar extends StatelessWidget {
-  const _AuthorAvatar({
-    required this.name,
-    required this.initials,
-    this.imageUrl,
-  });
-
-  final String name;
-  final String initials;
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const size = 36.0;
-
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return ClipOval(
-        child: Image.network(
-          imageUrl!,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _InitialsCircle(
-            initials: initials,
-            size: size,
-            cs: cs,
-          ),
-        ),
-      );
-    }
-
-    return _InitialsCircle(initials: initials, size: size, cs: cs);
-  }
-}
-
-class _InitialsCircle extends StatelessWidget {
-  const _InitialsCircle({
-    required this.initials,
-    required this.size,
-    required this.cs,
-  });
-
-  final String initials;
-  final double size;
-  final ColorScheme cs;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        initials,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: cs.primary,
-        ),
-      ),
-    );
-  }
-}
-
-class _CorridorChip extends StatelessWidget {
-  const _CorridorChip({required this.departure, required this.arrival});
-
-  final String departure;
-  final String arrival;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.flight_takeoff_rounded, size: 12, color: cs.primary),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            '$departure → $arrival',
-            style: tt.labelMedium?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Contact info section ─────────────────────────────────────────────────────
+// ─── Contact / availability section ──────────────────────────────────────────
 
 class _ContactInfoSection extends StatelessWidget {
   const _ContactInfoSection({required this.profile});
@@ -1082,7 +888,6 @@ class _ContactInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
     String? contactLabel;
     IconData? contactIcon;
@@ -1101,13 +906,7 @@ class _ContactInfoSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'DISPONIBILITÉ',
-          style: tt.labelMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            letterSpacing: 1.2,
-          ),
-        ),
+        const _SectionLabel('DISPONIBILITÉ'),
         const SizedBox(height: DonySpacing.sm),
         Wrap(
           spacing: DonySpacing.sm,
@@ -1160,6 +959,265 @@ class _InfoChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Avis récents section — flat rows with hairline dividers ─────────────────
+
+class _RecentReviewsSection extends StatelessWidget {
+  const _RecentReviewsSection({
+    required this.summary,
+    required this.userId,
+  });
+
+  final RatingSummary summary;
+  final String userId;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final recentItems = summary.ratings.take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel('AVIS RÉCENTS'),
+        const SizedBox(height: DonySpacing.sm),
+        if (recentItems.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
+            child: Text(
+              'Aucun avis pour le moment.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          )
+        else
+          ...List.generate(recentItems.length, (i) {
+            final item = recentItems[i];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (i > 0)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: cs.outline.withValues(alpha: 0.5),
+                  ),
+                _FlatReviewRow(item: item),
+              ],
+            );
+          }),
+
+        // "Voir tous les avis" — inline text link, not a boxed button
+        if (summary.ratingCount > 0) ...[
+          const SizedBox(height: DonySpacing.base),
+          GestureDetector(
+            onTap: () => AllReviewsBottomSheet.show(
+              context,
+              userId: userId,
+              initialSummary: summary,
+            ),
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              // Ensure min 44pt touch area
+              padding:
+                  const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+              child: Text(
+                'Voir tous les avis (${summary.ratingCount}) ›',
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _FlatReviewRow extends StatelessWidget {
+  const _FlatReviewRow({required this.item});
+
+  final RatingItem item;
+
+  static String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts[0].isEmpty) {
+      return '?';
+    }
+    if (parts.length == 1) {
+      return parts[0][0].toUpperCase();
+    }
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final authorName = item.authorName?.isNotEmpty == true
+        ? item.authorName!
+        : 'Utilisateur';
+    final hasCorridor = item.departureCity != null && item.arrivalCity != null;
+    final initials = _initials(authorName);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Author avatar
+          _ReviewAvatar(
+            name: authorName,
+            imageUrl: item.authorAvatarUrl,
+            initials: initials,
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Author + date row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        authorName,
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      DateFormat('dd/MM/yyyy').format(item.createdAt),
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                // Stars
+                Row(
+                  children: List.generate(5, (i) {
+                    return Icon(
+                      i < item.stars
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      size: 13,
+                      color: i < item.stars
+                          ? DonyColors.warning500
+                          : cs.onSurfaceVariant,
+                    );
+                  }),
+                ),
+                // Comment
+                if (item.comment != null && item.comment!.isNotEmpty) ...[
+                  const SizedBox(height: DonySpacing.xs),
+                  Text(
+                    item.comment!,
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+                // Corridor
+                if (hasCorridor) ...[
+                  const SizedBox(height: DonySpacing.xs),
+                  Text(
+                    '${item.departureCity} → ${item.arrivalCity}',
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewAvatar extends StatelessWidget {
+  const _ReviewAvatar({
+    required this.name,
+    required this.initials,
+    this.imageUrl,
+  });
+
+  final String name;
+  final String initials;
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const size = 36.0;
+
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          imageUrl!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) =>
+              _InitialsCircle(initials: initials, size: size, cs: cs),
+        ),
+      );
+    }
+
+    return _InitialsCircle(initials: initials, size: size, cs: cs);
+  }
+}
+
+class _InitialsCircle extends StatelessWidget {
+  const _InitialsCircle({
+    required this.initials,
+    required this.size,
+    required this.cs,
+  });
+
+  final String initials;
+  final double size;
+  final ColorScheme cs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: cs.primary,
+        ),
       ),
     );
   }

@@ -220,15 +220,83 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  // ── 2. Title ──────────────────────────────────────────────────────────────
+  // ── 2. Title — contextual ─────────────────────────────────────────────────
 
-  testWidgets('shows title "Ce que les autres voient"', (tester) async {
+  testWidgets(
+      'title is "Ce que les autres voient" when viewing own profile',
+      (tester) async {
+    // screenUserId == authUserId → own profile
     when(() => bloc.state).thenReturn(const ProfilePublicLoading());
 
-    await tester.pumpWidget(_wrap(bloc));
+    await tester.pumpWidget(
+      _wrap(
+        bloc,
+        screenUserId: _userId,
+        authUserId: _userId, // same → own profile
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Ce que les autres voient'), findsOneWidget);
+  });
+
+  testWidgets(
+      'title is displayName when viewing another user (loaded)',
+      (tester) async {
+    // Profile with displayName 'abou D.' viewed by a different user
+    const otherProfile = ProfilePublicModel(
+      userId: _userId,
+      displayName: 'abou D.',
+      kycVerified: false,
+      isProAccount: false,
+      isKiloPro: false,
+      completedBidsCount: 5,
+      averageRating: 0,
+      ratingCount: 0,
+      memberSince: 'janv. 2025',
+      badges: [],
+    );
+    final loadedState = ProfilePublicLoaded(
+      profile: otherProfile,
+      recentRatings: RatingSummary(
+        averageRating: 0,
+        ratingCount: 0,
+        distribution: const {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+        ratings: const [],
+        page: 0,
+        totalPages: 0,
+      ),
+    );
+    when(() => bloc.state).thenReturn(loadedState);
+    when(() => bloc.stream).thenAnswer((_) => Stream.value(loadedState));
+
+    await tester.pumpWidget(
+      _wrap(
+        bloc,
+        screenUserId: _userId, // viewing user-1
+        authUserId: _currentUserId, // logged-in = current-user-99 (different)
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('abou D.'), findsWidgets); // in app bar
+  });
+
+  testWidgets(
+      'title is "Profil" when viewing another user while loading',
+      (tester) async {
+    when(() => bloc.state).thenReturn(const ProfilePublicLoading());
+
+    await tester.pumpWidget(
+      _wrap(
+        bloc,
+        screenUserId: _userId, // viewing user-1
+        authUserId: _currentUserId, // logged-in = different
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Profil'), findsOneWidget);
   });
 
   // ── 3. Display name ───────────────────────────────────────────────────────
@@ -241,7 +309,9 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Fatou Diallo'), findsOneWidget);
+    // displayName appears in the hero band; when viewing another user it also
+    // appears in the app bar title — so we just verify it is present.
+    expect(find.text('Fatou Diallo'), findsWidgets);
   });
 
   // ── 4. KYC badge ─────────────────────────────────────────────────────────
