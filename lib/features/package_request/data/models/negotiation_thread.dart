@@ -54,6 +54,7 @@ class NegotiationThread extends Equatable {
     this.roundsRemaining = 0,
     this.linkedTrip,
     this.materializedBidId,
+    this.senderPhotoUrl,
   });
 
   final String id;
@@ -96,6 +97,9 @@ class NegotiationThread extends Equatable {
   // Sert d'entrée vers le détail de l'envoi (/bids/{id}).
   final String? materializedBidId;
 
+  /// URL de la photo de l'expéditeur (nullable, fourni par le backend).
+  final String? senderPhotoUrl;
+
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
@@ -136,6 +140,7 @@ class NegotiationThread extends Equatable {
             ? LinkedTripSummary.fromJson(json['linkedTrip'] as Map<String, dynamic>)
             : null,
         materializedBidId: json['materializedBidId'] as String?,
+        senderPhotoUrl: json['senderPhotoUrl'] as String?,
       );
 
   @override
@@ -147,6 +152,6 @@ class NegotiationThread extends Equatable {
         travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
         departureCity, arrivalCity, weightKg, senderName,
         isMyTurn, canAccept, canCounter, roundsRemaining,
-        linkedTrip, materializedBidId,
+        linkedTrip, materializedBidId, senderPhotoUrl,
       ];
 }

@@ -127,5 +127,31 @@ void main() {
       expect(p.resolvedName, 'Voyageur');
       expect(p.resolvedInitials, '?');
     });
+
+    test('parses avatarUrl when present', () {
+      final json = {
+        'id': 'tp-100',
+        'kiloPro': false,
+        'avatarUrl': 'https://cdn.dony.app/avatars/tp-100.jpg',
+      };
+      final p = TravelerProfile.fromJson(json);
+      expect(p.avatarUrl, 'https://cdn.dony.app/avatars/tp-100.jpg');
+    });
+
+    test('avatarUrl is null when absent', () {
+      final json = {'id': 'tp-101', 'kiloPro': false};
+      final p = TravelerProfile.fromJson(json);
+      expect(p.avatarUrl, isNull);
+    });
+
+    test('toJson includes avatarUrl', () {
+      final json = {
+        'id': 'tp-102',
+        'kiloPro': false,
+        'avatarUrl': 'https://cdn.dony.app/avatars/tp-102.jpg',
+      };
+      final p = TravelerProfile.fromJson(json);
+      expect(p.toJson()['avatarUrl'], 'https://cdn.dony.app/avatars/tp-102.jpg');
+    });
   });
 }

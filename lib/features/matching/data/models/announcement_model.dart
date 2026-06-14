@@ -49,6 +49,9 @@ class TravelerProfile {
   final bool isProAccount;
   final bool kycVerified;
 
+  /// URL de l'avatar du voyageur (nullable, fourni par le backend).
+  final String? avatarUrl;
+
   const TravelerProfile({
     required this.id,
     this.displayName,
@@ -58,6 +61,7 @@ class TravelerProfile {
     this.kiloPro = false,
     this.isProAccount = false,
     this.kycVerified = false,
+    this.avatarUrl,
   });
 
   factory TravelerProfile.fromJson(Map<String, dynamic> json) =>
