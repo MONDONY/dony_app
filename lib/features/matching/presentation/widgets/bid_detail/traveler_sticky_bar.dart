@@ -86,10 +86,15 @@ class _ScanBar extends StatelessWidget {
         h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
+      // Redirige vers l'étape Départ du hub de scan (identify → photo →
+      // confirm), cohérent avec le flux d'étapes du Suivi.
       child: DonyButton(
         label: 'Scanner le colis',
         icon: Icons.qr_code_scanner_rounded,
-        onPressed: () => context.push('/tracking/scan'),
+        onPressed: () => context.push(
+          '/tracking/scan/identify',
+          extra: <String, dynamic>{'etape': 'DEPART', 'focusNumber': false},
+        ),
       ),
     );
   }

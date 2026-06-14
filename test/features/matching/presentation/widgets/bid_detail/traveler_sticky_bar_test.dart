@@ -228,9 +228,9 @@ void main() {
           ),
         ),
         GoRoute(
-          path: '/tracking/scan',
+          path: '/tracking/scan/identify',
           builder: (context, state) {
-            pushedRoutes.add('/tracking/scan');
+            pushedRoutes.add('/tracking/scan/identify');
             return const Scaffold();
           },
         ),
@@ -242,9 +242,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // « Scanner le colis » redirige vers l'étape Départ du hub de scan.
     await tester.tap(find.text('Scanner le colis'));
     await tester.pumpAndSettle();
-    expect(pushedRoutes, contains('/tracking/scan'));
+    expect(pushedRoutes, contains('/tracking/scan/identify'));
   });
 
   testWidgets('tap Valider la remise → GoRouter push déclenché', (
