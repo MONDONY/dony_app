@@ -4,18 +4,30 @@ class RatingItem {
     this.comment,
     required this.createdAt,
     required this.excluded,
+    this.authorName,
+    this.authorAvatarUrl,
+    this.departureCity,
+    this.arrivalCity,
   });
 
   final int stars;
   final String? comment;
   final DateTime createdAt;
   final bool excluded;
+  final String? authorName;
+  final String? authorAvatarUrl;
+  final String? departureCity;
+  final String? arrivalCity;
 
   factory RatingItem.fromJson(Map<String, dynamic> json) => RatingItem(
         stars: json['stars'] as int,
         comment: json['comment'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
         excluded: json['excluded'] as bool? ?? false,
+        authorName: json['authorName'] as String?,
+        authorAvatarUrl: json['authorAvatarUrl'] as String?,
+        departureCity: json['departureCity'] as String?,
+        arrivalCity: json['arrivalCity'] as String?,
       );
 }
 
