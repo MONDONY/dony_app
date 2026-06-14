@@ -296,11 +296,14 @@ void main() {
     await controller.close();
   });
 
-  // ── Test 7 : désactive le bouton pendant AuthLoading ─────────────────────
+  // ── Test 7 : AuthLoading hors sauvegarde (upload photo) ──────────────────
 
-  testWidgets('désactive le bouton pendant AuthLoading', (tester) async {
-    // Start with AuthAuthenticated so the user is cached, then emit AuthLoading.
-    // The screen should keep showing (lastUser retained) but with isLoading=true.
+  testWidgets(
+      'pendant un AuthLoading hors save (upload photo), le bouton est désactivé sans spinner',
+      (tester) async {
+    // A bare AuthLoading on this screen = avatar upload in progress (_saving=false).
+    // The save button must NOT spin (the avatar overlay shows the spinner), but it
+    // stays disabled to avoid racing the in-flight upload with a save.
     whenListen<AuthState>(
       mockAuthBloc,
       Stream.value(const AuthLoading()),
@@ -308,18 +311,14 @@ void main() {
     );
 
     await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-    // First pump renders initial AuthAuthenticated state.
     await tester.pump();
-    // Second pump delivers the AuthLoading stream event.
     await tester.pump(const Duration(milliseconds: 100));
 
-    // When isLoading=true, DonyButton shows a spinner (no text label).
-    // Find by type and check its onPressed is null.
     final buttons = tester.widgetList<DonyButton>(find.byType(DonyButton));
     expect(buttons, isNotEmpty);
     for (final button in buttons) {
-      expect(button.isLoading, isTrue);
-      expect(button.onPressed, isNull);
+      expect(button.isLoading, isFalse); // avatar overlay owns the spinner
+      expect(button.onPressed, isNull); // still disabled during the upload
     }
   });
 

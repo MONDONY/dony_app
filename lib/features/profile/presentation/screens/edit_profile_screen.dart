@@ -220,6 +220,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         final isTraveler = user.isTraveler;
         final isLoading = state is AuthLoading;
+        // Distingue la sauvegarde (verrouille le form) de l'upload photo (overlay
+        // avatar uniquement — le reste du form reste éditable).
+        final isSaving = isLoading && _saving;
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -322,14 +325,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controller: _firstNameCtrl,
                   label: 'Prénom',
                   prefixIcon: Icons.person_outline_rounded,
-                  enabled: !isLoading,
+                  enabled: !isSaving,
                 ),
                 const SizedBox(height: DonySpacing.md),
                 DonyTextField(
                   controller: _lastNameCtrl,
                   label: 'Nom de famille',
                   prefixIcon: Icons.person_outline_rounded,
-                  enabled: !isLoading,
+                  enabled: !isSaving,
                 ),
                 const SizedBox(height: DonySpacing.xxl),
 
@@ -338,7 +341,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: DonySpacing.md),
                 TextFormField(
                   controller: _bioCtrl,
-                  enabled: !isLoading,
+                  enabled: !isSaving,
                   maxLines: 4,
                   maxLength: 280,
                   decoration: const InputDecoration(
@@ -359,7 +362,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   label: 'Email (optionnel)',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
-                  enabled: !isLoading,
+                  enabled: !isSaving,
                 ),
                 const SizedBox(height: DonySpacing.xxl),
 
@@ -368,7 +371,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: DonySpacing.md),
                 _BirthDatePicker(
                   birthDate: _birthDate,
-                  isLoading: isLoading,
+                  isLoading: isSaving,
                   onTap: _pickBirthDate,
                 ),
                 const SizedBox(height: DonySpacing.md),
@@ -376,7 +379,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controller: _cityCtrl,
                   label: "Ville / lieu d'habitation",
                   prefixIcon: Icons.location_city_outlined,
-                  enabled: !isLoading,
+                  enabled: !isSaving,
                 ),
                 const SizedBox(height: DonySpacing.xxl),
 
@@ -402,7 +405,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       return FilterChip(
                         label: Text(lang),
                         selected: selected,
-                        onSelected: isLoading ? null : (_) => _toggleLanguage(lang),
+                        onSelected: isSaving ? null : (_) => _toggleLanguage(lang),
                       );
                     }).toList(),
                   ),
@@ -421,7 +424,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     modes: _kTransportModes,
                     labels: _kTransportLabels,
                     selected: _selectedTransport,
-                    isLoading: isLoading,
+                    isLoading: isSaving,
                     onSelect: _selectTransport,
                   ),
                   const SizedBox(height: DonySpacing.xxl),
@@ -439,7 +442,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               child: DonyButton(
                 label: 'Enregistrer',
-                isLoading: isLoading,
+                isLoading: isSaving,
                 onPressed: isLoading ? null : () => _save(isTraveler),
               ),
             ),
