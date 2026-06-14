@@ -318,7 +318,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
             children: [
               // ── Poids par défaut ──────────────────────────────────────────
               DonyListTile(
-                icon: Icons.inventory_2_outlined,
+                iconAsset: 'package',
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Poids par défaut',

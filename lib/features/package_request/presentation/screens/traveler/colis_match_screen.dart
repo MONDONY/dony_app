@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -412,11 +413,7 @@ class _NoResultsEmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.inventory_2_rounded,
-              size: 64,
-              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
-            ),
+            const DonyEmoji.parcel(size: 64),
             const SizedBox(height: DonySpacing.base),
             Text(
               'Aucun colis ne correspond à ce trajet pour l\'instant.',

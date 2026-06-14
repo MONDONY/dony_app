@@ -201,7 +201,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.inventory_2_outlined,
+                          const DonyIcon('package',
                               color: DonyColors.neutral0, size: 13),
                           const SizedBox(width: DonySpacing.xs),
                           Text(

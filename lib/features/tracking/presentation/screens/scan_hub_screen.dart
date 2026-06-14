@@ -116,7 +116,8 @@ class ScanHubView extends StatelessWidget {
                       [
                             if (onTrackParcel != null) ...[
                               SecondaryActivityEntry(
-                                icon: Icons.inventory_2_rounded,
+                                icon: Icons.label_outline_rounded,
+                                iconAsset: 'package',
                                 label: 'Suivre un colis',
                                 onTap: onTrackParcel!,
                               ),

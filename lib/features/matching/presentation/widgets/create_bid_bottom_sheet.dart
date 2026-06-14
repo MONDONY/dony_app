@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -682,12 +683,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                             )
                           : Row(
                               children: [
-                                Icon(
-                                  Icons.inventory_2_outlined,
-                                  color:
-                                      Theme.of(context).colorScheme.warning,
-                                  size: 18,
-                                ),
+                                const DonyEmoji.parcel(size: 18),
                                 const SizedBox(width: DonySpacing.sm),
                                 Expanded(
                                   child: Column(

@@ -228,7 +228,7 @@ class _GlassHeroCard extends StatelessWidget {
                     child: _GlassTile(
                       label: 'Colis livrés',
                       value: parcels.toString(),
-                      icon: Icons.inventory_2_rounded,
+                      iconAsset: 'package',
                     ),
                   ),
                 ],
@@ -246,14 +246,12 @@ class _GlassTile extends StatelessWidget {
   const _GlassTile({
     required this.label,
     required this.value,
-    this.icon,
-    this.iconAsset,
+    required this.iconAsset,
   });
 
   final String label;
   final String value;
-  final IconData? icon;
-  final String? iconAsset;
+  final String iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -275,17 +273,11 @@ class _GlassTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              iconAsset != null
-                  ? DonyIcon(
-                      iconAsset!,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      size: 18,
-                    )
-                  : Icon(
-                      icon,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      size: 18,
-                    ),
+              DonyIcon(
+                iconAsset,
+                color: Colors.white.withValues(alpha: 0.8),
+                size: 18,
+              ),
               const SizedBox(height: DonySpacing.xs),
               Text(
                 value,

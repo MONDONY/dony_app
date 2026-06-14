@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
@@ -234,8 +235,8 @@ class PackageRequestCard extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Icon(
-          Icons.inventory_2_rounded,
+        child: DonyIcon(
+          'package',
           size: 56,
           color: DonyColors.neutral0.withValues(alpha: 0.4),
         ),

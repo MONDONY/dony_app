@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:flutter/material.dart';
@@ -313,11 +314,7 @@ class _ActiveCardContent extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 14,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  const DonyEmoji.parcel(size: 14),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     announcement.isKgFree

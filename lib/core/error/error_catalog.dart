@@ -108,7 +108,7 @@ abstract final class ErrorCatalog {
       title: 'Colis non livré',
       message: 'Cette action nécessite que le colis ait été livré.',
       severity: ErrorSeverity.warning,
-      icon: Icons.local_shipping_outlined,
+      icon: Icons.inventory_2_outlined,
     ),
     'invalid-bid-status': ErrorPresentation(
       title: 'État du colis invalide',

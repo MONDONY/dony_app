@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -2134,12 +2135,14 @@ class _SmallChip extends StatelessWidget {
     required this.isActive,
     required this.onTap,
     this.icon,
+    this.iconAsset,
   });
 
   final String label;
   final bool isActive;
   final VoidCallback onTap;
   final IconData? icon;
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -2168,7 +2171,14 @@ class _SmallChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
+            if (iconAsset != null) ...[
+              DonyIcon(
+                iconAsset!,
+                size: 15,
+                color: isActive ? Colors.white : cs.onSurfaceVariant,
+              ),
+              const SizedBox(width: DonySpacing.xxs),
+            ] else if (icon != null) ...[
               Icon(
                 icon,
                 size: 15,
@@ -3079,7 +3089,7 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
           _SmallChip(
             label: _sizeLabel,
             isActive: parcelSize != null,
-            icon: Icons.inventory_2_outlined,
+            iconAsset: 'package',
             onTap: parcelSize != null ? onSizeClear : onSizeTap,
           ),
         ],

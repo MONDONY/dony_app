@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
@@ -401,7 +402,9 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                 final isSelected = _contentTypeNotifier.value == type;
                 return _ContentTypeChip(
                   label: type,
-                  icon: _contentTypeIcons[type] ?? Icons.inventory_2_rounded,
+                  icon: _contentTypeIcons[type],
+                  iconAsset:
+                      _contentTypeIcons.containsKey(type) ? null : 'package',
                   selected: isSelected,
                   onTap: () {
                     _contentTypeNotifier.value = isSelected ? null : type;
@@ -776,13 +779,15 @@ class _TransportModeField extends StatelessWidget {
 class _ContentTypeChip extends StatelessWidget {
   const _ContentTypeChip({
     required this.label,
-    required this.icon,
     required this.selected,
     required this.onTap,
+    this.icon,
+    this.iconAsset,
   });
 
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final bool selected;
   final VoidCallback onTap;
 
@@ -805,9 +810,13 @@ class _ContentTypeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 14,
-                color: selected ? cs.primary : cs.onSurfaceVariant),
+            iconAsset != null
+                ? DonyIcon(iconAsset!,
+                    size: 14,
+                    color: selected ? cs.primary : cs.onSurfaceVariant)
+                : Icon(icon,
+                    size: 14,
+                    color: selected ? cs.primary : cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.xs),
             Text(
               label,

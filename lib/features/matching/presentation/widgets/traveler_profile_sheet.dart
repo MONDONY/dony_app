@@ -369,7 +369,7 @@ class _ProfileHeader extends StatelessWidget {
                       ),
                     if (traveler.kiloPro)
                       _ProfileBadge(
-                        icon: Icons.local_shipping_rounded,
+                        iconAsset: 'package',
                         label: 'Kilo Pro',
                         iconColor: cs.warning,
                       ),
@@ -394,12 +394,14 @@ class _ProfileHeader extends StatelessWidget {
 
 class _ProfileBadge extends StatelessWidget {
   const _ProfileBadge({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.label,
     required this.iconColor,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final Color iconColor;
 
@@ -420,7 +422,9 @@ class _ProfileBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: iconColor),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 11, color: iconColor)
+              : Icon(icon, size: 11, color: iconColor),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,

@@ -332,6 +332,7 @@ class _TrackingResultCard extends StatelessWidget {
                           switch (iconAsset) {
                             'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 22),
                             'plane-landing' => const DonyEmoji.planeLanding(size: 22),
+                            'package' => const DonyEmoji.parcel(size: 22),
                             _ => Icon(icon, color: color, size: 22),
                           },
                           const SizedBox(width: DonySpacing.md),
@@ -374,7 +375,7 @@ class _TrackingResultCard extends StatelessWidget {
   (IconData?, Color, String, String?) _stepVisuals(String step, ColorScheme cs) {
     return switch (step) {
       'DELIVERED' => (Icons.check_circle_rounded, cs.success, step, null),
-      'IN_TRANSIT' => (Icons.local_shipping_rounded, cs.primary, step, null),
+      'IN_TRANSIT' => (null, cs.primary, step, 'package'),
       'DEPARTED' => (null, cs.primary, step, 'plane-takeoff'),
       'PAYMENT_SECURED' => (Icons.lock_rounded, cs.primary, step, null),
       'ACCEPTED' => (Icons.handshake_outlined, cs.warning, step, null),

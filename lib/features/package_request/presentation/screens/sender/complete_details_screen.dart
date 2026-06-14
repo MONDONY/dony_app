@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -280,7 +281,7 @@ class _RecapCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.inventory_2_outlined, size: 16, color: cs.primary),
+              const DonyEmoji.parcel(size: 16),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 'Récapitulatif',

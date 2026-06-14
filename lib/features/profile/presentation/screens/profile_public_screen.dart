@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
@@ -621,7 +622,7 @@ class _StatsRow extends StatelessWidget {
             child: _StatItem(
               value: '${profile.completedBidsCount}',
               label: 'Livraisons',
-              icon: Icons.inventory_2_rounded,
+              iconAsset: 'package',
               iconColor: cs.primary,
             ),
           ),
@@ -648,13 +649,15 @@ class _StatItem extends StatelessWidget {
   const _StatItem({
     required this.value,
     required this.label,
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.iconColor,
   });
 
   final String value;
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color iconColor;
 
   @override
@@ -667,7 +670,9 @@ class _StatItem extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: iconColor),
+          iconAsset != null
+              ? const DonyEmoji.parcel(size: 18)
+              : Icon(icon, size: 18, color: iconColor),
           const SizedBox(height: DonySpacing.xs),
           Text(
             value,

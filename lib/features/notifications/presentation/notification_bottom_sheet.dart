@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
@@ -337,26 +338,29 @@ class _NotificationIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    final (icon, color) = switch (type) {
-      'BID_CREATED'        => (Icons.inbox_rounded,           cs.primary),
-      'BID_ACCEPTED'       => (Icons.check_circle_rounded,    cs.success),
-      'BID_REJECTED'       => (Icons.cancel_rounded,          cs.error),
-      'HANDOVER_DEFINED'   => (Icons.location_on_rounded,     cs.secondary),
-      'TRIP_CANCELLED'     => (Icons.block_rounded,           cs.error),
-      'PAYMENT_RELEASED'   => (Icons.payments_rounded,        cs.success),
-      'DELIVERY_CONFIRMED' => (Icons.local_shipping_rounded,  cs.success),
-      'DISPUTE_OPENED'     => (Icons.warning_amber_rounded,   cs.warning),
-      _                    => (Icons.notifications_rounded,   cs.onSurfaceVariant),
+    final (IconData? icon, Color color, String? iconAsset) = switch (type) {
+      'BID_CREATED'        => (null,                          cs.primary,          'package'),
+      'BID_ACCEPTED'       => (Icons.check_circle_rounded,    cs.success,          null),
+      'BID_REJECTED'       => (Icons.cancel_rounded,          cs.error,            null),
+      'HANDOVER_DEFINED'   => (Icons.location_on_rounded,     cs.secondary,        null),
+      'TRIP_CANCELLED'     => (Icons.block_rounded,           cs.error,            null),
+      'PAYMENT_RELEASED'   => (Icons.payments_rounded,        cs.success,          null),
+      'DELIVERY_CONFIRMED' => (null,                          cs.success,          'package'),
+      'DISPUTE_OPENED'     => (Icons.warning_amber_rounded,   cs.warning,          null),
+      _                    => (Icons.notifications_rounded,   cs.onSurfaceVariant, null),
     };
 
     return Container(
       width: DonySpacing.icon,
       height: DonySpacing.icon,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
-      child: Icon(icon, size: DonySpacing.iconSm, color: color),
+      child: iconAsset != null
+          ? const DonyEmoji.parcel(size: DonySpacing.iconSm)
+          : Icon(icon, size: DonySpacing.iconSm, color: color),
     );
   }
 }

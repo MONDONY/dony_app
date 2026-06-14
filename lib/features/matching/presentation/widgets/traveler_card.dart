@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -160,7 +161,7 @@ class TravelerCard extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xxs),
                 Text(dateStr, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                 const SizedBox(width: DonySpacing.md),
-                Icon(Icons.inventory_2_outlined, size: 13, color: cs.onSurfaceVariant),
+                const DonyEmoji.parcel(size: 13),
                 const SizedBox(width: DonySpacing.xxs),
                 Text(
                   announcement.capacityUnit == 'KG_FREE'

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -263,11 +264,18 @@ class ShipmentStepper extends StatelessWidget {
   /// Current step in the range 1..4.
   final int currentStep;
 
-  static const _icons = [
-    Icons.check_rounded,      // step 1 — handover
-    Icons.inventory_2_rounded, // step 2 — embarked
-    Icons.flight_rounded,      // step 3 — in transit
-    Icons.home_rounded,        // step 4 — delivered
+  static const _icons = <IconData?>[
+    Icons.check_rounded, // step 1 — handover
+    null,                // step 2 — embarked (uses _iconAssets[1])
+    Icons.flight_rounded, // step 3 — in transit
+    Icons.home_rounded,   // step 4 — delivered
+  ];
+
+  static const _iconAssets = <String?>[
+    null,        // step 1
+    'package',   // step 2 — embarked (colis)
+    null,        // step 3
+    null,        // step 4
   ];
 
   static const _labels = [
@@ -290,6 +298,7 @@ class ShipmentStepper extends StatelessWidget {
             stepNumber: i + 1,
             currentStep: currentStep,
             icon: _icons[i],
+            iconAsset: _iconAssets[i],
             label: _labels[i],
             cs: cs,
             tt: tt,
@@ -329,11 +338,13 @@ class _StepPastille extends StatelessWidget {
     required this.label,
     required this.cs,
     required this.tt,
-  });
+    this.iconAsset,
+  }) : assert(icon != null || iconAsset != null);
 
   final int stepNumber;
   final int currentStep;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final ColorScheme cs;
   final TextTheme tt;
@@ -348,13 +359,17 @@ class _StepPastille extends StatelessWidget {
 
     final Color bg;
     final Color iconColor;
+    // Done steps always show the check glyph; current/pending show this step's
+    // own icon (Material) or asset (e.g. 'package' for the colis step).
     final IconData displayIcon;
+    final String? displayAsset;
     BoxDecoration decoration;
 
     if (_isDone) {
       bg = cs.primary;
       iconColor = cs.onPrimary;
       displayIcon = Icons.check_rounded;
+      displayAsset = null;
       decoration = BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
@@ -362,7 +377,8 @@ class _StepPastille extends StatelessWidget {
     } else if (_isCurrent) {
       bg = cs.primary;
       iconColor = cs.onPrimary;
-      displayIcon = icon;
+      displayIcon = icon ?? Icons.check_rounded;
+      displayAsset = iconAsset;
       decoration = BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
@@ -375,7 +391,8 @@ class _StepPastille extends StatelessWidget {
       // Pending/future step
       bg = DonyColors.neutral100;
       iconColor = cs.onSurfaceVariant;
-      displayIcon = icon;
+      displayIcon = icon ?? Icons.check_rounded;
+      displayAsset = iconAsset;
       decoration = BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
@@ -390,11 +407,13 @@ class _StepPastille extends StatelessWidget {
           height: size,
           decoration: decoration,
           child: Center(
-            child: Icon(
-              displayIcon,
-              size: iconSize,
-              color: iconColor,
-            ),
+            child: displayAsset != null
+                ? DonyIcon(displayAsset, size: iconSize, color: iconColor)
+                : Icon(
+                    displayIcon,
+                    size: iconSize,
+                    color: iconColor,
+                  ),
           ),
         ),
         const SizedBox(height: 4),

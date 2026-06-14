@@ -3,6 +3,7 @@ import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
@@ -88,7 +89,7 @@ void showTravelerAnnouncementSheet(
               DonyButton(
                 key: const Key('see-my-parcel-btn'),
                 label: 'Voir mon colis',
-                icon: Icons.inventory_2_rounded,
+                iconAsset: 'package',
                 onPressed: resolvedBid == null
                     ? null
                     : () {
@@ -267,7 +268,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         _InfoRow(icon: Icons.calendar_today_outlined, label: dateStr),
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
-          icon: Icons.inventory_2_outlined,
+          iconAsset: 'package',
           label: announcement.isKgFree
               ? 'Kg libre'
               : '${announcement.availableKg.toStringAsFixed(0)} kg disponibles',
@@ -361,8 +362,9 @@ String _handoverRangeLabel(DateTime start, DateTime end) {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, this.labelStyle});
-  final IconData icon;
+  const _InfoRow({this.icon, this.iconAsset, required this.label, this.labelStyle});
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final TextStyle? labelStyle;
 
@@ -372,7 +374,9 @@ class _InfoRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 16, color: cs.onSurfaceVariant),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 16, color: cs.onSurfaceVariant)
+            : Icon(icon, size: 16, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(

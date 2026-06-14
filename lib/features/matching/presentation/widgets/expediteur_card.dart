@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:flutter/material.dart';
@@ -102,11 +103,7 @@ class ExpediteurCard extends StatelessWidget {
                       if (bid.senderTotalShipments != null)
                         Row(
                           children: [
-                            Icon(
-                              Icons.local_shipping_rounded,
-                              size: 12,
-                              color: cs.onSurfaceVariant,
-                            ),
+                            const DonyEmoji.parcel(size: 12),
                             const SizedBox(width: DonySpacing.xs),
                             Text(
                               '${bid.senderTotalShipments} envoi${(bid.senderTotalShipments ?? 0) > 1 ? 's' : ''}',

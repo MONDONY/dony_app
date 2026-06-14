@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -233,7 +234,7 @@ class _SenderProfileSheet extends StatelessWidget {
                                 ? '${bid.senderTotalShipments}'
                                 : '–',
                             label: 'Envois',
-                            icon: Icons.local_shipping_rounded,
+                            iconAsset: 'package',
                             iconColor: cs.primary,
                           ),
                         ],
@@ -364,13 +365,15 @@ class _SheetStat extends StatelessWidget {
   const _SheetStat({
     required this.value,
     required this.label,
-    required this.icon,
     required this.iconColor,
-  });
+    this.icon,
+    this.iconAsset,
+  }) : assert(icon != null || iconAsset != null);
 
   final String value;
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color iconColor;
 
   @override
@@ -379,7 +382,9 @@ class _SheetStat extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Column(
       children: [
-        Icon(icon, size: 16, color: iconColor),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 16, color: iconColor)
+            : Icon(icon, size: 16, color: iconColor),
         const SizedBox(height: DonySpacing.xs),
         Text(
           value,

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
@@ -196,7 +197,7 @@ class _LoadedProfileHeader extends StatelessWidget {
                         ),
                       if (profile.isKiloPro)
                         _ProfileBadge(
-                          icon: Icons.local_shipping_rounded,
+                          iconAsset: 'package',
                           label: 'Kilo Pro',
                           iconColor: cs.warning,
                         ),
@@ -220,12 +221,14 @@ class _LoadedProfileHeader extends StatelessWidget {
 
 class _ProfileBadge extends StatelessWidget {
   const _ProfileBadge({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.label,
     required this.iconColor,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final Color iconColor;
 
@@ -244,7 +247,9 @@ class _ProfileBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: iconColor),
+          iconAsset != null
+              ? const DonyEmoji.parcel(size: 11)
+              : Icon(icon, size: 11, color: iconColor),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -261,13 +266,15 @@ class _ProfileBadge extends StatelessWidget {
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.iconColor,
     required this.value,
     required this.label,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color iconColor;
   final String value;
   final String label;
@@ -288,7 +295,9 @@ class _StatCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: iconColor),
+          iconAsset != null
+              ? const DonyEmoji.parcel(size: 14)
+              : Icon(icon, size: 14, color: iconColor),
           Text(
             value,
             style: tt.titleSmall?.copyWith(
@@ -373,7 +382,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: _StatCard(
-                          icon: Icons.inventory_2_rounded,
+                          iconAsset: 'package',
                           iconColor: cs.primary,
                           value: '${profile.completedBidsCount}',
                           label: 'Livraisons',

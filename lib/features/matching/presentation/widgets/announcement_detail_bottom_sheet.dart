@@ -45,7 +45,7 @@ class AnnouncementDetailBottomSheet {
           final Widget? primaryBtn = a.status == 'ACTIVE'
               ? DonyButton(
                   label: 'Voir les demandes (${a.bidsCount ?? 0})',
-                  icon: Icons.inbox_rounded,
+                  iconAsset: 'package',
                   onPressed: () => context.push('/announcements/${a.id}/bids'),
                 )
               : null;

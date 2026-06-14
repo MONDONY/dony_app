@@ -435,7 +435,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                           HeaderPill(
                             key: const Key('send-parcel-btn'),
                             label: 'Envoyer',
-                            icon: Icons.inventory_2_rounded,
+                            iconAsset: 'package',
                             style: HeaderPillStyle.warm,
                             onTap: onSendParcel!,
                           ),

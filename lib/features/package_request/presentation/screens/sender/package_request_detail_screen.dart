@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -382,9 +383,7 @@ class _OffersSection extends StatelessWidget {
                 color: DonyColors.primarySoft,
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
               ),
-              child: const Center(
-                  child: Icon(Icons.inbox_outlined,
-                      size: 26, color: DonyColors.primary)),
+              child: const Center(child: DonyEmoji.parcel(size: 26)),
             ),
             const SizedBox(height: DonySpacing.base),
             Text(

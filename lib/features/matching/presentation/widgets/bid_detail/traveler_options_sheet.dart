@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -85,7 +86,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
 
             // ── Détails du colis (always) ───────────────────────────────────
             _OptionTile(
-              icon: Icons.inventory_2_outlined,
+              iconAsset: 'package',
               iconColor: cs.primary,
               iconBg: cs.primaryContainer,
               label: 'Détails du colis',
@@ -352,7 +353,8 @@ class _TravelerOptionsSheet extends StatelessWidget {
 // ── Shared tile widget ────────────────────────────────────────────────────────
 
 class _OptionTile extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color iconColor;
   final Color iconBg;
   final String label;
@@ -360,13 +362,14 @@ class _OptionTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _OptionTile({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.iconColor,
     required this.iconBg,
     required this.label,
     required this.subtitle,
     required this.onTap,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
   @override
   Widget build(BuildContext context) {
@@ -389,7 +392,9 @@ class _OptionTile extends StatelessWidget {
                 color: iconBg,
                 borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
-              child: Icon(icon, color: iconColor, size: 18),
+              child: iconAsset != null
+                  ? DonyIcon(iconAsset!, color: iconColor, size: 18)
+                  : Icon(icon, color: iconColor, size: 18),
             ),
             const SizedBox(width: DonySpacing.md),
             Expanded(

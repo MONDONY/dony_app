@@ -2,9 +2,10 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -523,27 +524,30 @@ class _BidStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = switch (status) {
+    final (IconData?, String, Color, String?)? config = switch (status) {
       'BID_ACCEPTED' => (
           Icons.check_circle_rounded,
           'Offre acceptée',
           cs.success,
+          null,
         ),
       'DELIVERY_CONFIRMED' => (
-          Icons.local_shipping_rounded,
+          null,
           'Livraison confirmée',
           cs.success,
+          'package',
         ),
       'TRIP_CANCELLED' => (
           Icons.cancel_rounded,
           'Trajet annulé',
           cs.error,
+          null,
         ),
       _ => null,
     };
     if (config == null) return const SizedBox.shrink();
 
-    final (icon, label, color) = config;
+    final (icon, label, color, iconAsset) = config;
     return Container(
       color: color.withValues(alpha: 0.08),
       padding: const EdgeInsets.symmetric(
@@ -552,7 +556,10 @@ class _BidStatusBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: color),
+          if (iconAsset == 'package')
+            const DonyEmoji.parcel(size: 14)
+          else
+            Icon(icon, size: 14, color: color),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,

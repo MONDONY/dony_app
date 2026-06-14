@@ -135,8 +135,7 @@ class _SearchViewState extends State<_SearchView> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.inbox_rounded,
-                              size: 64, color: kTextHint),
+                          const DonyEmoji.parcel(size: 64),
                           const SizedBox(height: DonySpacing.base),
                           Text(
                             'Aucune demande ne correspond à votre filtre',

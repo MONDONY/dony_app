@@ -245,8 +245,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                       letterSpacing: 1.5,
                       color: cs.onSurfaceVariant,
                     ),
-                    prefixIcon:
-                        Icon(Icons.local_shipping_outlined, color: cs.primary),
+                    prefixIcon: const DonyEmoji.parcel(size: 24),
                     filled: true,
                     fillColor: cs.surface,
                     border: OutlineInputBorder(
