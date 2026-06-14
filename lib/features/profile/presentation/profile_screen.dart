@@ -722,8 +722,8 @@ class _AccountTab extends StatelessWidget {
                 ),
                 DonyListTile(
                   icon: Icons.stars_rounded,
-                  iconColor: cs.tertiary,
-                  iconBgColor: cs.tertiaryContainer,
+                  iconColor: cs.secondary,
+                  iconBgColor: cs.secondaryContainer,
                   label: 'Mes avis reçus',
                   showDivider: false,
                   onTap: () => context.push('/profile/reviews'),
