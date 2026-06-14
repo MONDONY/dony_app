@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -9,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -30,19 +34,18 @@ final _senderUser = UserModel(
   roles: const ['SENDER'],
   kycStatus: 'NOT_STARTED',
   status: 'ACTIVE',
-  languages: const [],
 );
 
-final _travelerUser = UserModel(
+const _travelerUser = UserModel(
   id: 'user-traveler',
   firstName: 'Moussa',
   lastName: 'Koné',
   email: 'moussa@test.com',
   city: 'Lyon',
-  roles: const ['TRAVELER'],
+  roles: ['TRAVELER'],
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
-  languages: const ['Français', 'Wolof'],
+  languages: ['Français', 'Wolof'],
   transportMode: 'AVION',
 );
 
@@ -54,7 +57,7 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
     child: MaterialApp.router(
       routerConfig: GoRouter(
         routes: [
-          GoRoute(path: '/', builder: (_, __) => child),
+          GoRoute(path: '/', builder: (context, _) => child),
         ],
       ),
     ),
@@ -115,7 +118,7 @@ void main() {
     whenListen<AuthState>(
       mockAuthBloc,
       const Stream.empty(),
-      initialState: AuthAuthenticated(_travelerUser),
+      initialState: const AuthAuthenticated(_travelerUser),
     );
 
     await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
@@ -198,28 +201,74 @@ void main() {
     ).called(1);
   });
 
-  // ── Test 6 : pop(true) sur AuthProfileUpdated ─────────────────────────────
+  // ── Test 6 : AuthProfileUpdated seul (sans save) ne pop PAS ─────────────
+  //
+  // Avatar upload also produces AuthProfileUpdated. The screen must stay open.
 
-  testWidgets('pops (retourne) après AuthProfileUpdated', (tester) async {
-    // Start with AuthAuthenticated, then emit AuthProfileUpdated.
-    // The screen must pop, which causes it to be removed from the widget tree.
+  testWidgets(
+    'ne pop PAS sur AuthProfileUpdated sans save (avatar upload)',
+    (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        Stream.value(AuthProfileUpdated(_senderUser)),
+        initialState: AuthAuthenticated(_senderUser),
+      );
+
+      // Navigate to /edit on top of /, so there is something to pop back to.
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, _) => const Scaffold(body: Text('Home')),
+          ),
+          GoRoute(
+            path: '/edit',
+            builder: (context, _) => BlocProvider<AuthBloc>.value(
+              value: mockAuthBloc,
+              child: const EditProfileScreen(),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      unawaited(router.push('/edit'));
+      await tester.pumpAndSettle();
+
+      // AuthProfileUpdated was received but _saving is false (no save tap) →
+      // the screen must remain open.
+      expect(find.byType(EditProfileScreen), findsOneWidget);
+      expect(find.text('Home'), findsNothing);
+    },
+  );
+
+  // ── Test 6b : pop(true) sur AuthProfileUpdated après un save ─────────────
+
+  testWidgets('pops (retourne) après AuthProfileUpdated suite à un save', (
+    tester,
+  ) async {
+    // We need a controller so we can push AuthProfileUpdated after the tap.
+    final controller = StreamController<AuthState>();
+
     whenListen<AuthState>(
       mockAuthBloc,
-      Stream.value(AuthProfileUpdated(_senderUser)),
+      controller.stream,
       initialState: AuthAuthenticated(_senderUser),
     );
 
-    // Navigate to /edit on top of /, so there is something to pop back to.
     final router = GoRouter(
       initialLocation: '/',
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => const Scaffold(body: Text('Home')),
+          builder: (context, _) => const Scaffold(body: Text('Home')),
         ),
         GoRoute(
           path: '/edit',
-          builder: (_, __) => BlocProvider<AuthBloc>.value(
+          builder: (context, _) => BlocProvider<AuthBloc>.value(
             value: mockAuthBloc,
             child: const EditProfileScreen(),
           ),
@@ -230,14 +279,21 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
-    // Push /edit on top of /
-    router.push('/edit');
+    unawaited(router.push('/edit'));
     await tester.pumpAndSettle();
 
-    // The stream was set up to immediately emit AuthProfileUpdated →
-    // BlocListener calls context.pop(true) → navigates back.
+    // Tap "Enregistrer" — sets _saving = true.
+    await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
+    await tester.pump();
+
+    // Now emit AuthProfileUpdated → listener should pop because _saving is true.
+    controller.add(AuthProfileUpdated(_senderUser));
+    await tester.pumpAndSettle();
+
     expect(find.byType(EditProfileScreen), findsNothing);
     expect(find.text('Home'), findsOneWidget);
+
+    await controller.close();
   });
 
   // ── Test 7 : désactive le bouton pendant AuthLoading ─────────────────────
@@ -266,5 +322,43 @@ void main() {
       expect(button.onPressed, isNull);
     }
   });
-}
 
+  // ── Test 8 : tap avatar dispatche AuthAvatarUploadRequested ──────────────
+
+  testWidgets(
+    'tap sur l\'avatar dispatche AuthAvatarUploadRequested avec le path du fichier',
+    (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_senderUser),
+      );
+
+      // Write a small temp file (4 bytes) so XFile.length() succeeds ≤ 10 MB.
+      final tmpPath = '${Directory.systemTemp.path}/dony_test_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      File(tmpPath).writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0]);
+
+      // Use the pickImageOverride seam — no platform channel required.
+      final screen = EditProfileScreen(
+        pickImageOverride: () async => XFile(tmpPath),
+      );
+      await tester.pumpWidget(_wrap(screen, mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      // Ensure the avatar is on screen (top of scroll view, should already be).
+      await tester.ensureVisible(find.byKey(const ValueKey('avatar_pick_gesture')));
+      await tester.pump();
+
+      // Tap then allow all async work (pick → length() → dispatch) to complete.
+      await tester.tap(find.byKey(const ValueKey('avatar_pick_gesture')));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
+
+      verify(
+        () => mockAuthBloc.add(
+          any(that: isA<AuthAvatarUploadRequested>()),
+        ),
+      ).called(1);
+    },
+  );
+}

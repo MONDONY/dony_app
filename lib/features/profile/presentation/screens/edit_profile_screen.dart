@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 /// EditProfileScreen — full-screen replacement for EditProfileBottomSheet.
@@ -17,7 +18,14 @@ import 'package:intl/intl.dart';
 /// (loading, error, success) is driven by AuthBloc — no setState for
 /// business logic.
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  const EditProfileScreen({
+    super.key,
+    @visibleForTesting Future<XFile?> Function()? pickImageOverride,
+  }) : _pickImageOverride = pickImageOverride;
+
+  /// Seam for widget-testing: override the image-pick call without hitting
+  /// a real platform channel. Defaults to [ImagePicker.pickImage] from gallery.
+  final Future<XFile?> Function()? _pickImageOverride;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -36,6 +44,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _initialized = false;
   // Keeps the last known user so the form stays visible during AuthLoading.
   UserModel? _lastUser;
+
+  /// True when the user has tapped "Enregistrer" — used to distinguish a
+  /// profile-save update from an avatar-upload update (both emit
+  /// [AuthProfileUpdated]). Only pop the screen on a save, not on avatar upload.
+  bool _saving = false;
+
+  /// The real image picker (lazy-initialized, reused across calls).
+  late final ImagePicker _imagePicker = ImagePicker();
 
   static const _kAvailableLanguages = [
     'Français',
@@ -114,6 +130,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final bio = _bioCtrl.text.trim();
     final city = _cityCtrl.text.trim();
 
+    setState(() => _saving = true);
     context.read<AuthBloc>().add(
       AuthUpdateProfileRequested(
         firstName: firstName.isNotEmpty ? firstName : null,
@@ -128,14 +145,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  Future<void> _pickAndUploadAvatar() async {
+    final XFile? xfile;
+    if (widget._pickImageOverride != null) {
+      xfile = await widget._pickImageOverride!();
+    } else {
+      xfile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+    }
+    if (xfile == null) {
+      return;
+    }
+
+    final size = await xfile.length();
+    const maxBytes = 10 * 1024 * 1024; // 10 MB
+    if (size > maxBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('La photo est trop grande (max 10 Mo).'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (mounted) {
+      // _saving stays false — avatar upload must NOT close the screen.
+      context.read<AuthBloc>().add(AuthAvatarUploadRequested(xfile.path));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthProfileUpdated) {
-          context.pop(true);
+          // Pop only when the user explicitly tapped "Enregistrer".
+          // Avatar uploads also produce AuthProfileUpdated but must NOT close
+          // the screen — they just refresh the avatar in the builder.
+          if (_saving) {
+            _saving = false;
+            context.pop(true);
+          }
         }
         if (state is AuthError) {
+          _saving = false;
           ErrorPresenter.show(context, state.error);
         }
       },
@@ -178,10 +238,71 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Center(
                   child: Column(
                     children: [
-                      DonyAvatar(
-                        name: user.displayName,
-                        imageUrl: user.avatarUrl,
-                        size: DonyAvatarSize.xl,
+                      GestureDetector(
+                        key: const ValueKey('avatar_pick_gesture'),
+                        onTap: isLoading ? null : _pickAndUploadAvatar,
+                        child: SizedBox(
+                          // Enforce min 44pt touch target around the 72pt avatar.
+                          width: 88,
+                          height: 88,
+                          child: Center(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Avatar (possibly with loading overlay)
+                                Stack(
+                                  children: [
+                                    DonyAvatar(
+                                      name: user.displayName,
+                                      imageUrl: user.avatarUrl,
+                                      size: DonyAvatarSize.xl,
+                                    ),
+                                    if (isLoading && !_saving)
+                                      Positioned.fill(
+                                        child: ClipOval(
+                                          child: ColoredBox(
+                                            color: Colors.black38,
+                                            child: Center(
+                                              child: SizedBox(
+                                                width: 28,
+                                                height: 28,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2.5,
+                                                  color: Theme.of(context).colorScheme.onPrimary,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                // Camera badge at bottom-right
+                                Positioned(
+                                  right: -4,
+                                  bottom: -4,
+                                  child: Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Theme.of(context).colorScheme.surface,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.camera_alt_rounded,
+                                      size: 14,
+                                      color: Theme.of(context).colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       Text(
