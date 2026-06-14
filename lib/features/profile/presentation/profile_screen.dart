@@ -284,7 +284,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       // background (sinon il est agrandi puis
                                       // décalé → vide entre header et tabs).
                                       collapseMode: CollapseMode.none,
-                                      background: profileHeader,
+                                      // Le background est forcé à la taille de
+                                      // l'extent du sliver. Au 1er frame (avant
+                                      // mesure de la sonde) `expandedHeight` peut
+                                      // sous-estimer la hauteur réelle du header
+                                      // (nom 2 lignes, chips qui wrap…) → la
+                                      // Column déborderait. Le ScrollView non
+                                      // scrollable laisse le header prendre sa
+                                      // hauteur naturelle : box trop courte =
+                                      // clip silencieux (zéro overflow), box
+                                      // correcte = rendu identique (top-aligné).
+                                      background: SingleChildScrollView(
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        child: profileHeader,
+                                      ),
                                     ),
                                   ),
                                   // ── Tab bar sticky ────────────────────────
@@ -503,7 +517,6 @@ class _ActivityTab extends StatelessWidget {
                   iconColor: cs.secondary,
                   iconBgColor: cs.secondaryContainer,
                   label: 'Mes envois en cours',
-                  showDivider: activeBids > 0,
                   trailing: activeBids > 0
                       ? Text(
                           '$activeBids en cours',
@@ -515,15 +528,14 @@ class _ActivityTab extends StatelessWidget {
                       : null,
                   onTap: () => context.push('/announcements'),
                 ),
-                if (activeBids > 0)
-                  DonyListTile(
-                    icon: Icons.compare_arrows_rounded,
-                    iconColor: cs.tertiary,
-                    iconBgColor: cs.tertiaryContainer,
-                    label: 'Mes négociations',
-                    showDivider: false,
-                    onTap: () => context.push('/negotiations'),
-                  ),
+                DonyListTile(
+                  icon: Icons.compare_arrows_rounded,
+                  iconColor: cs.tertiary,
+                  iconBgColor: cs.tertiaryContainer,
+                  label: 'Mes négociations',
+                  showDivider: false,
+                  onTap: () => context.push('/negotiations'),
+                ),
               ],
             )
             .animate()

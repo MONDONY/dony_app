@@ -892,9 +892,9 @@ void main() {
     );
 
     testWidgets(
-      'tapping "Mes négociations" navigates to /negotiations (avec bids actifs)',
+      'tapping "Mes négociations" navigates to /negotiations',
       (tester) async {
-        // "Mes négociations" n'apparaît que si activeBids > 0.
+        // "Mes négociations" est toujours visible (commun aux deux rôles).
         final now = DateTime(2026, 6, 1);
         whenListen<BidState>(
           bidBloc,
@@ -1121,7 +1121,9 @@ void main() {
 
       // Ces labels voyageur ne doivent pas apparaître quand sender.
       expect(find.text('Colis sur mes trajets'), findsNothing);
-      expect(find.text('Mes négociations'), findsNothing);
+      // « Mes négociations » est commun aux deux rôles (section MON ACTIVITÉ)
+      // → présent même côté expéditeur.
+      expect(find.text('Mes négociations'), findsOneWidget);
     });
 
     testWidgets('tab Activité sender affiche MON ACTIVITÉ, MON CARNET, LITIGES', (
