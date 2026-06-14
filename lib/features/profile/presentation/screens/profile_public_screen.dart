@@ -360,8 +360,9 @@ class _HeroBand extends StatelessWidget {
     final ratingStr = profile.averageRating > 0
         ? profile.averageRating.toStringAsFixed(1)
         : '—';
+    // memberSince contient déjà « Membre depuis … » (côté back) — ne pas re-préfixer.
     final metaLine =
-        '⭐ $ratingStr · ${profile.ratingCount} avis · Membre depuis ${profile.memberSince}';
+        '⭐ $ratingStr · ${profile.ratingCount} avis · ${profile.memberSince}';
 
     return Container(
       width: double.infinity,
