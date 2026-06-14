@@ -5,6 +5,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
@@ -31,6 +32,24 @@ const _kSettle = Duration(milliseconds: 600);
 /// Finds the submit button (works even when animations cause duplicates).
 Finder get _submitBtn => find.text('Activer le compte PRO').last;
 
+UserModel _nonProUser() => const UserModel(
+  id: 'user-1',
+  roles: ['ROLE_TRAVELER'],
+  kycStatus: 'NONE',
+  status: 'ACTIVE',
+  isProAccount: false,
+);
+
+UserModel _proUser() => const UserModel(
+  id: 'user-2',
+  roles: ['ROLE_TRAVELER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+  isProAccount: true,
+  companyName: 'Diallo Transport SARL',
+  siret: '12345678901234',
+);
+
 Widget _wrap(MockProfileRepository repo, MockAuthBloc authBloc) {
   if (getIt.isRegistered<ProfileRepository>()) {
     getIt.unregister<ProfileRepository>();
@@ -53,11 +72,15 @@ Widget _wrap(MockProfileRepository repo, MockAuthBloc authBloc) {
   );
 }
 
+Widget _wrapWithUser(MockProfileRepository repo, MockAuthBloc authBloc) =>
+    _wrap(repo, authBloc);
+
 void main() {
   setUpAll(() {
     registerFallbackValue(
       const UpgradeToProSubmitted(companyName: '', siret: ''),
     );
+    registerFallbackValue(const DowngradeRequested());
     registerFallbackValue(const AuthCheckRequested());
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
@@ -363,6 +386,93 @@ void main() {
           ),
           findsOneWidget,
         );
+      },
+    );
+  });
+
+  // ── PRO / non-PRO state switching ─────────────────────────────────────────
+
+  group('UpgradeToProScreen — PRO vs non-PRO rendering', () {
+    late MockProfileRepository mockRepo;
+    late MockAuthBloc mockAuthBloc;
+
+    setUp(() {
+      mockRepo = MockProfileRepository();
+      mockAuthBloc = MockAuthBloc();
+    });
+
+    testWidgets('montre le formulaire si non PRO', (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_nonProUser()),
+      );
+
+      await tester.pumpWidget(_wrapWithUser(mockRepo, mockAuthBloc));
+      await tester.pump(_kSettle);
+
+      // Upgrade form is shown
+      expect(find.text('Numéro SIRET'), findsOneWidget);
+      expect(find.text('Activer le compte PRO'), findsOneWidget);
+      // Downgrade button is NOT shown
+      expect(find.text('Revenir en compte standard'), findsNothing);
+    });
+
+    testWidgets('montre downgrade si déjà PRO', (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_proUser()),
+      );
+
+      await tester.pumpWidget(_wrapWithUser(mockRepo, mockAuthBloc));
+      await tester.pump(_kSettle);
+
+      // Downgrade button is shown
+      expect(find.text('Revenir en compte standard'), findsOneWidget);
+      // Company info is shown
+      expect(find.text('Diallo Transport SARL'), findsOneWidget);
+      // Upgrade form is NOT shown
+      expect(find.text('Activer le compte PRO'), findsNothing);
+    });
+
+    testWidgets('PRO screen shows active badge', (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_proUser()),
+      );
+
+      await tester.pumpWidget(_wrapWithUser(mockRepo, mockAuthBloc));
+      await tester.pump(_kSettle);
+
+      expect(find.text('Compte PRO actif'), findsOneWidget);
+    });
+
+    testWidgets(
+      'downgrade triggers confirm dialog and dispatches DowngradeRequested on confirm',
+      (tester) async {
+        when(() => mockRepo.downgradePro()).thenAnswer((_) async {});
+
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: AuthAuthenticated(_proUser()),
+        );
+
+        await tester.pumpWidget(_wrapWithUser(mockRepo, mockAuthBloc));
+        await tester.pump(_kSettle);
+
+        await tester.tap(find.text('Revenir en compte standard'));
+        await tester.pumpAndSettle();
+
+        // Confirm dialog shown
+        expect(find.text('Désactiver le compte PRO'), findsOneWidget);
+
+        await tester.tap(find.text('Désactiver'));
+        await tester.pumpAndSettle();
+
+        verify(() => mockRepo.downgradePro()).called(1);
       },
     );
   });

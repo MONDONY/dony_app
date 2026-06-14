@@ -18,7 +18,6 @@ import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.da
 import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
-import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
@@ -760,7 +759,7 @@ class _AccountTab extends StatelessWidget {
                         : null,
                     showDivider: false,
                     onTap: user != null
-                        ? () => UpgradeProBottomSheet.show(context, user: user!)
+                        ? () => context.push('/profile/upgrade-to-pro')
                         : null,
                   ),
                 ],
