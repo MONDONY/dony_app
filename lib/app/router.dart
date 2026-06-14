@@ -106,6 +106,7 @@ import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
 import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/presentation/screens/become_traveler_screen.dart';
+import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
@@ -775,6 +776,12 @@ final appRouter = GoRouter(
         create: (_) => getIt<SubscriptionsBloc>(),
         child: const MesAbonnementsScreen(),
       ),
+    ),
+
+    // ── Edit Profile (hors shell) ────────────────────────────────────
+    GoRoute(
+      path: '/profile/edit',
+      builder: (context, state) => const EditProfileScreen(),
     ),
 
     // ── Upgrade PRO (hors shell) ──────────────────────────────────────
