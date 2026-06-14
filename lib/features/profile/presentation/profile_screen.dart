@@ -41,8 +41,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   final _scroll = ScrollController();
   late final _tabController = TabController(length: 3, vsync: this);
 
-  static const double _kContentHeightDual = 84.0;
-  static const double _kContentHeightSingle = 44.0;
+  final GlobalKey _headerKey = GlobalKey();
+  double? _measuredHeaderHeight;
+
+  // Estimations de repli — utilisées uniquement à la 1re frame, avant la
+  // mesure réelle du header (puis remplacées par la hauteur exacte).
+  static const double _kContentHeightDual = 124.0;
+  static const double _kContentHeightSingle = 74.0;
   static const double _kProgressBarSectionHeight = 38.0;
 
   @override
@@ -142,164 +147,207 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ? completionSteps / totalCompletionSteps
                         : 0.0;
                     final isProfileComplete = profileCompletionPercent >= 1.0;
-                    final expandedHeight =
+                    final fallbackHeight =
                         topPad +
                         56.0 +
                         contentHeight -
                         (isProfileComplete ? _kProgressBarSectionHeight : 0.0);
+                    final expandedHeight =
+                        _measuredHeaderHeight ?? fallbackHeight;
 
-                    return RefreshIndicator(
-                      color: cs.primary,
-                      onRefresh: () async {
-                        context.read<BidBloc>().add(BidMyListRequested());
-                        context.read<AnnouncementBloc>().add(
-                          AnnouncementListRequested(),
-                        );
-                      },
-                      child: NestedScrollView(
-                        controller: _scroll,
-                        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                          // ── AppBar avec ProfileHeader existant ────
-                          SliverAppBar(
-                            expandedHeight: expandedHeight,
-                            pinned: true,
-                            elevation: 0,
-                            scrolledUnderElevation: 0,
-                            automaticallyImplyLeading: false,
-                            centerTitle: false,
-                            forceElevated: innerBoxIsScrolled,
-                            backgroundColor: cs.surface,
-                            surfaceTintColor: Colors.transparent,
-                            title: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Opacity(
-                                  opacity: progress,
-                                  child: DonyAvatar(
-                                    name: displayName,
-                                    imageUrl: user?.avatarUrl,
-                                    size: DonyAvatarSize.xs,
-                                    verified: isKycVerified,
-                                    pro: isProAccount,
-                                  ),
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                                Flexible(
-                                  child: Opacity(
-                                    opacity: progress,
-                                    child: Text(
-                                      displayName,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                            color: cs.onSurface,
-                                            fontWeight: FontWeight.w700,
+                    final profileHeader = ProfileHeader(
+                      displayName: displayName,
+                      isTraveler: isTraveler,
+                      isSender: isSender,
+                      isKycVerified: isKycVerified,
+                      isProAccount: isProAccount,
+                      avatarUrl: user?.avatarUrl,
+                      phoneNumber: user?.phoneNumber,
+                      email: user?.email,
+                      city: user?.city,
+                      profileCompletionPercent: profileCompletionPercent,
+                      onEditProfile: () => context.push('/profile/edit'),
+                    );
+
+                    // Mesure la hauteur réelle du header (sonde hors-écran) pour
+                    // dimensionner l'AppBar exactement : zéro overflow, zéro gap,
+                    // quel que soit le wrap des chips / le rôle / la barre.
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final box =
+                          _headerKey.currentContext?.findRenderObject()
+                              as RenderBox?;
+                      final h = box?.size.height;
+                      if (h != null &&
+                          (_measuredHeaderHeight == null ||
+                              (_measuredHeaderHeight! - h).abs() > 0.5)) {
+                        setState(() => _measuredHeaderHeight = h);
+                      }
+                    });
+
+                    return Stack(
+                      children: [
+                        // Sonde de mesure invisible (même config que l'en-tête
+                        // visible) — ne peint rien, ne prend pas de place.
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Offstage(
+                            child: KeyedSubtree(
+                              key: _headerKey,
+                              child: profileHeader,
+                            ),
+                          ),
+                        ),
+                        RefreshIndicator(
+                          color: cs.primary,
+                          onRefresh: () async {
+                            context.read<BidBloc>().add(BidMyListRequested());
+                            context.read<AnnouncementBloc>().add(
+                              AnnouncementListRequested(),
+                            );
+                          },
+                          child: NestedScrollView(
+                            controller: _scroll,
+                            headerSliverBuilder:
+                                (context, innerBoxIsScrolled) => [
+                                  // ── AppBar avec ProfileHeader existant ────
+                                  SliverAppBar(
+                                    expandedHeight: expandedHeight,
+                                    pinned: true,
+                                    elevation: 0,
+                                    scrolledUnderElevation: 0,
+                                    automaticallyImplyLeading: false,
+                                    centerTitle: false,
+                                    forceElevated: innerBoxIsScrolled,
+                                    backgroundColor: cs.surface,
+                                    surfaceTintColor: Colors.transparent,
+                                    title: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Opacity(
+                                          opacity: progress,
+                                          child: DonyAvatar(
+                                            name: displayName,
+                                            imageUrl: user?.avatarUrl,
+                                            size: DonyAvatarSize.xs,
+                                            verified: isKycVerified,
+                                            pro: isProAccount,
                                           ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(width: DonySpacing.sm),
+                                        Flexible(
+                                          child: Opacity(
+                                            opacity: progress,
+                                            child: Text(
+                                              displayName,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleSmall!
+                                                  .copyWith(
+                                                    color: cs.onSurface,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        if (isKycVerified) ...[
+                                          const SizedBox(width: DonySpacing.xs),
+                                          Opacity(
+                                            opacity: progress,
+                                            child: Icon(
+                                              Icons.verified_rounded,
+                                              size: 13,
+                                              color: isProAccount
+                                                  ? DonyColors.kycBadgeGold
+                                                  : DonyColors.kycBadgeBlue,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    actions: const [],
+                                    flexibleSpace: FlexibleSpaceBar(
+                                      collapseMode: CollapseMode.parallax,
+                                      background: profileHeader,
                                     ),
                                   ),
-                                ),
-                                if (isKycVerified) ...[
-                                  const SizedBox(width: DonySpacing.xs),
-                                  Opacity(
-                                    opacity: progress,
-                                    child: Icon(
-                                      Icons.verified_rounded,
-                                      size: 13,
-                                      color: isProAccount
-                                          ? DonyColors.kycBadgeGold
-                                          : DonyColors.kycBadgeBlue,
+                                  // ── Tab bar sticky ────────────────────────
+                                  SliverPersistentHeader(
+                                    pinned: true,
+                                    delegate: _ProfileTabBarDelegate(
+                                      tabBar: TabBar(
+                                        controller: _tabController,
+                                        labelColor: cs.primary,
+                                        unselectedLabelColor:
+                                            cs.onSurfaceVariant,
+                                        indicatorColor: cs.primary,
+                                        indicatorSize: TabBarIndicatorSize.tab,
+                                        labelStyle: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                        unselectedLabelStyle: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                        dividerColor: cs.outline.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                        tabs: const [
+                                          Tab(
+                                            child: _TabItem(
+                                              icon: Icons.bolt_rounded,
+                                              label: 'Activité',
+                                            ),
+                                          ),
+                                          Tab(
+                                            child: _TabItem(
+                                              icon:
+                                                  Icons.manage_accounts_rounded,
+                                              label: 'Compte',
+                                            ),
+                                          ),
+                                          Tab(
+                                            child: _TabItem(
+                                              icon: Icons.tune_rounded,
+                                              label: 'Réglages',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      backgroundColor: cs.surface,
                                     ),
                                   ),
                                 ],
+                            body: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _ActivityTab(
+                                  user: user,
+                                  isTraveler: isTraveler,
+                                  upcomingAnnouncements: upcomingAnnouncements,
+                                  activeBids: activeBids,
+                                  bidState: bidState,
+                                  announcementState: announcementState,
+                                ),
+                                _AccountTab(
+                                  user: user,
+                                  isTraveler: isTraveler,
+                                  isProAccount: isProAccount,
+                                ),
+                                const _SettingsTab(),
                               ],
                             ),
-                            actions: const [],
-                            flexibleSpace: FlexibleSpaceBar(
-                              collapseMode: CollapseMode.parallax,
-                              background: ProfileHeader(
-                                displayName: displayName,
-                                isTraveler: isTraveler,
-                                isSender: isSender,
-                                isKycVerified: isKycVerified,
-                                isProAccount: isProAccount,
-                                avatarUrl: user?.avatarUrl,
-                                phoneNumber: user?.phoneNumber,
-                                email: user?.email,
-                                city: user?.city,
-                                profileCompletionPercent:
-                                    profileCompletionPercent,
-                                onEditProfile: () =>
-                                    context.push('/profile/edit'),
-                              ),
-                            ),
                           ),
-                          // ── Tab bar sticky ────────────────────────
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: _ProfileTabBarDelegate(
-                              tabBar: TabBar(
-                                controller: _tabController,
-                                labelColor: cs.primary,
-                                unselectedLabelColor: cs.onSurfaceVariant,
-                                indicatorColor: cs.primary,
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                labelStyle: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                                unselectedLabelStyle: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(fontWeight: FontWeight.w500),
-                                dividerColor: cs.outline.withValues(alpha: 0.4),
-                                tabs: const [
-                                  Tab(
-                                    child: _TabItem(
-                                      icon: Icons.bolt_rounded,
-                                      label: 'Activité',
-                                    ),
-                                  ),
-                                  Tab(
-                                    child: _TabItem(
-                                      icon: Icons.manage_accounts_rounded,
-                                      label: 'Compte',
-                                    ),
-                                  ),
-                                  Tab(
-                                    child: _TabItem(
-                                      icon: Icons.tune_rounded,
-                                      label: 'Réglages',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              backgroundColor: cs.surface,
-                            ),
-                          ),
-                        ],
-                        body: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _ActivityTab(
-                              user: user,
-                              isTraveler: isTraveler,
-                              upcomingAnnouncements: upcomingAnnouncements,
-                              activeBids: activeBids,
-                              bidState: bidState,
-                              announcementState: announcementState,
-                            ),
-                            _AccountTab(
-                              user: user,
-                              isTraveler: isTraveler,
-                              isProAccount: isProAccount,
-                            ),
-                            const _SettingsTab(),
-                          ],
                         ),
-                      ),
+                      ],
                     );
                   },
                 );
@@ -1473,4 +1521,3 @@ class DonyListSection extends StatelessWidget {
     );
   }
 }
-
