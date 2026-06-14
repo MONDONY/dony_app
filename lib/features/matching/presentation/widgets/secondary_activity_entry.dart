@@ -1,8 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Additive entry to the other activity (Mes trajets / Envoyer un colis).
+/// Additive entry to the other activity (Suivre un colis / Scanner un trajet).
 /// Shown only for profiles that need it (gated by caller).
+///
+/// Style « carte neutre » : surface + bordure douce + icône en pastille
+/// (primaryContainer) + libellé foncé + chevron discret.
 class SecondaryActivityEntry extends StatelessWidget {
   const SecondaryActivityEntry({
     super.key,
@@ -18,35 +21,61 @@ class SecondaryActivityEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(DonyRadius.md),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: DonyColors.primary, width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: DonyColors.primary),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+    final tt = Theme.of(context).textTheme;
+    final radius = BorderRadius.circular(DonyRadius.card);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: radius,
+        border: Border.all(color: cs.outline),
+        boxShadow: [
+          BoxShadow(
+            color: DonyColors.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Padding(
+            padding: const EdgeInsets.all(DonySpacing.md),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                  ),
+                  child: Icon(icon, size: 20, color: cs.primary),
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: tt.bodyMedium?.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.primary,
+                      color: cs.onSurface,
                     ),
-              ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
+              ],
             ),
-            Icon(Icons.chevron_right_rounded, size: 20, color: DonyColors.primary),
-          ],
+          ),
         ),
       ),
     );
