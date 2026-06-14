@@ -206,9 +206,7 @@ class TrajetStep extends StatelessWidget {
                       key: const Key('departureCityField'),
                       label: 'Ville de départ',
                       value: departureCityNotifier.value,
-                      prefixIcon: DonyIcons.departureCity,
-                      prefixIconColor:
-                          Theme.of(context).colorScheme.primary,
+                      prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
                       trailing: Icon(Icons.lock_rounded,
                           size: 16, color: cs.onSurfaceVariant),
                       onTap: () {},
@@ -256,9 +254,7 @@ class TrajetStep extends StatelessWidget {
                       key: const Key('arrivalCityField'),
                       label: 'Ville d\'arrivée',
                       value: arrivalCityNotifier.value,
-                      prefixIcon: DonyIcons.arrivalCity,
-                      prefixIconColor:
-                          Theme.of(context).colorScheme.secondary,
+                      prefixWidget: const DonyEmoji.planeLanding(size: 20),
                       trailing: Icon(Icons.lock_rounded,
                           size: 16, color: cs.onSurfaceVariant),
                       onTap: () {},
