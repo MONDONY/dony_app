@@ -131,9 +131,13 @@ void main() {
     expect(find.text('Valider la remise'), findsOneWidget);
   });
 
-  testWidgets('HANDED_OVER → Valider la remise', (tester) async {
+  testWidgets('HANDED_OVER → Scanner le transit (avant la remise)', (
+    tester,
+  ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'));
-    expect(find.text('Valider la remise'), findsOneWidget);
+    expect(find.text('Scanner le transit'), findsOneWidget);
+    // « Valider la remise » n'apparaît qu'une fois le transit scanné (IN_TRANSIT).
+    expect(find.text('Valider la remise'), findsNothing);
   });
 
   testWidgets('REJECTED → Supprimer cette demande', (tester) async {

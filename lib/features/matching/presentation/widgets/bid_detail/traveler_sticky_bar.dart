@@ -4,7 +4,7 @@ import 'package:dony/features/matching/presentation/widgets/action_bars/bid_deta
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-enum _TravelerAction { decide, confirmPresence, scan, deliver, delete }
+enum _TravelerAction { decide, confirmPresence, scan, transit, deliver, delete }
 
 /// Barre collante contextuelle voyageur — route vers le bon scanner/étape
 /// selon le statut de l'offre.
@@ -40,7 +40,11 @@ class TravelerStickyBar extends StatelessWidget {
           return null;
         }
         return _TravelerAction.confirmPresence;
+      // HANDED_OVER : colis récupéré (départ fait), transit pas encore scanné
+      // → étape Transit. Le scan transit fait passer le bid en IN_TRANSIT.
       case 'HANDED_OVER':
+        return _TravelerAction.transit;
+      // IN_TRANSIT : transit fait → dernière étape, validation de la remise.
       case 'IN_TRANSIT':
         return _TravelerAction.deliver;
       default:
@@ -63,6 +67,8 @@ class TravelerStickyBar extends StatelessWidget {
         return TravelerRejectedBar(bid: bid, isLoading: isLoading);
       case _TravelerAction.scan:
         return const _ScanBar();
+      case _TravelerAction.transit:
+        return const _TransitBar();
       case _TravelerAction.deliver:
         return const _DeliverBar();
     }
@@ -94,6 +100,37 @@ class _ScanBar extends StatelessWidget {
         onPressed: () => context.push(
           '/tracking/scan/identify',
           extra: <String, dynamic>{'etape': 'DEPART', 'focusNumber': false},
+        ),
+      ),
+    );
+  }
+}
+
+// ── Transit bar ───────────────────────────────────────────────────────────────
+
+class _TransitBar extends StatelessWidget {
+  const _TransitBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final h = DonyLayout.hPadding(context);
+    return Container(
+      color: cs.surface,
+      padding: EdgeInsets.fromLTRB(
+        h,
+        DonySpacing.base,
+        h,
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
+      // Étape Transit du hub de scan. Une fois scanné, le bid passe en
+      // IN_TRANSIT et la barre affiche « Valider la remise » (étape Arrivée).
+      child: DonyButton(
+        label: 'Scanner le transit',
+        icon: Icons.sync_alt_rounded,
+        onPressed: () => context.push(
+          '/tracking/scan/identify',
+          extra: <String, dynamic>{'etape': 'TRANSIT', 'focusNumber': false},
         ),
       ),
     );
