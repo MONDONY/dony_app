@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
@@ -636,7 +637,13 @@ class _AccountTab extends StatelessWidget {
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mon profil public',
-                  onTap: () => context.push('/profile/public', extra: user?.id),
+                  onTap: () => context.push(
+                    '/profile/public',
+                    extra: ProfilePublicArgs(
+                      userId: user?.id,
+                      showSubscribe: false,
+                    ),
+                  ),
                 ),
                 DonyListTile(
                   icon: Icons.stars_rounded,

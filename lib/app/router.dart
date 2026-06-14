@@ -73,6 +73,7 @@ import 'package:dony/features/matching/presentation/screens/mobile_money_awaitin
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/presentation/mes_abonnements_screen.dart';
 import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_screen.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
@@ -831,12 +832,23 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/public',
       builder: (context, state) {
-        final userId = state.extra as String?;
-        return BlocProvider(
-          create: (_) =>
-              getIt<ProfilePublicBloc>()
-                ..add(ProfilePublicRequested(userId ?? '')),
-          child: ProfilePublicScreen(userId: userId),
+        final extra = state.extra;
+        final args = extra is ProfilePublicArgs
+            ? extra
+            : ProfilePublicArgs(userId: extra as String?);
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) =>
+                  getIt<ProfilePublicBloc>()
+                    ..add(ProfilePublicRequested(args.userId ?? '')),
+            ),
+            BlocProvider(create: (_) => getIt<TravelerSubscribeBloc>()),
+          ],
+          child: ProfilePublicScreen(
+            userId: args.userId,
+            showSubscribe: args.showSubscribe,
+          ),
         );
       },
     ),
