@@ -15,7 +15,6 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
-import 'package:dony/features/profile/presentation/widgets/coming_soon_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
@@ -644,56 +643,6 @@ class _AccountTab extends StatelessWidget {
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.lg),
 
-        // ── PAIEMENTS & FACTURES (commun) ──────────────────────────────
-        _SectionLabel(label: 'PAIEMENTS & FACTURES', cs: cs),
-        DonyListSection(
-              tiles: [
-                DonyListTile(
-                  icon: Icons.credit_card_rounded,
-                  iconColor: DonyColors.purple,
-                  iconBgColor: DonyColors.violetLight,
-                  label: 'Moyens de paiement',
-                  onTap: () => ComingSoonBottomSheet.show(
-                    context,
-                    title: 'Moyens de paiement',
-                    description:
-                        'Gère tes cartes enregistrées, Apple Pay et Google Pay via Stripe.',
-                    icon: Icons.credit_card_rounded,
-                  ),
-                ),
-                DonyListTile(
-                  icon: Icons.receipt_long_rounded,
-                  iconColor: DonyColors.purple,
-                  iconBgColor: DonyColors.violetLight,
-                  label: 'Factures',
-                  onTap: () => ComingSoonBottomSheet.show(
-                    context,
-                    title: 'Factures',
-                    description: 'Télécharge les factures PDF de tes envois.',
-                    icon: Icons.receipt_long_rounded,
-                  ),
-                ),
-                DonyListTile(
-                  icon: Icons.local_offer_rounded,
-                  iconColor: cs.success,
-                  iconBgColor: cs.successLight,
-                  label: 'Crédits & codes promo',
-                  showDivider: false,
-                  onTap: () => ComingSoonBottomSheet.show(
-                    context,
-                    title: 'Crédits & codes promo',
-                    description:
-                        'Entre un code de réduction et suis ton solde de crédits dony.',
-                    icon: Icons.local_offer_rounded,
-                  ),
-                ),
-              ],
-            )
-            .animate()
-            .fadeIn(delay: 160.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
-
         // ── FIDÉLITÉ (commun, dédupliqué) ───────────────────────────────
         _SectionLabel(label: 'FIDÉLITÉ', cs: cs),
         DonyListSection(
@@ -768,21 +717,8 @@ class _AccountTab extends StatelessWidget {
                     iconBgColor: cs.primaryContainer,
                     label: 'Ma grille de prix',
                     subtitle: 'Tarifs par article pour vos trajets',
-                    onTap: () => context.push('/profile/price-grid'),
-                  ),
-                  DonyListTile(
-                    icon: Icons.receipt_rounded,
-                    iconColor: DonyColors.purple,
-                    iconBgColor: DonyColors.violetLight,
-                    label: 'Paiements & factures voyage',
                     showDivider: false,
-                    onTap: () => ComingSoonBottomSheet.show(
-                      context,
-                      title: 'Paiements & factures',
-                      description:
-                          'Retrouve ici tes paiements reçus et tes factures téléchargeables.',
-                      icon: Icons.receipt_rounded,
-                    ),
+                    onTap: () => context.push('/profile/price-grid'),
                   ),
                 ],
               )
@@ -850,9 +786,9 @@ class _AccountTab extends StatelessWidget {
           const SizedBox(height: DonySpacing.lg),
         ],
 
-        // ── MON PORTEFEUILLE (commun aux deux rôles) ────────────────────
+        // ── PAIEMENTS (commun aux deux rôles) ───────────────────────────
         const SizedBox(height: DonySpacing.lg),
-        _SectionLabel(label: 'MON PORTEFEUILLE', cs: cs),
+        _SectionLabel(label: 'PAIEMENTS', cs: cs),
         DonyListSection(
               tiles: [
                 DonyListTile(

@@ -517,8 +517,8 @@ void main() {
         await _goToCompteTab(tester);
 
         // Order matches the widget-tree order in _AccountTab (top → bottom):
-        // CONTACT & SÉCURITÉ → IDENTITÉ & CONFIANCE → PAIEMENTS & FACTURES →
-        // FIDÉLITÉ → REVENUS & PAIEMENTS → COMPTE PRO
+        // CONTACT & SÉCURITÉ → IDENTITÉ & CONFIANCE → FIDÉLITÉ →
+        // REVENUS & PAIEMENTS → COMPTE PRO → PAIEMENTS
         for (final label in [
           'CONTACT & SÉCURITÉ',
           'IDENTITÉ & CONFIANCE',
@@ -1011,7 +1011,7 @@ void main() {
       },
     );
 
-    testWidgets('onglet Compte affiche la section MON PORTEFEUILLE', (
+    testWidgets('onglet Compte affiche la section PAIEMENTS (ex-MON PORTEFEUILLE)', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1027,12 +1027,12 @@ void main() {
 
       await _goToCompteTab(tester);
       await tester.scrollUntilVisible(
-        find.text('MON PORTEFEUILLE'),
+        find.text('PAIEMENTS'),
         300,
         scrollable: _accountScrollable,
       );
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('MON PORTEFEUILLE'), findsOneWidget);
+      expect(find.text('PAIEMENTS'), findsOneWidget);
       expect(find.text('Mon portefeuille'), findsOneWidget);
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
@@ -1151,7 +1151,7 @@ void main() {
     });
 
     testWidgets(
-      'tab Compte sender affiche PAIEMENTS & FACTURES et DEVENIR VOYAGEUR',
+      'tab Compte sender affiche DEVENIR VOYAGEUR (PAIEMENTS & FACTURES supprimé)',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -1165,23 +1165,27 @@ void main() {
         await tester.pump(const Duration(milliseconds: 600));
 
         await _goToCompteTab(tester);
-        for (final label in ['PAIEMENTS & FACTURES', 'DEVENIR VOYAGEUR']) {
-          await tester.scrollUntilVisible(
-            find.text(label),
-            300,
-            scrollable: _accountScrollable,
-          );
-          expect(
-            find.text(label),
-            findsOneWidget,
-            reason: '$label manquant (sender Compte)',
-          );
-        }
+        // 'PAIEMENTS & FACTURES' a été supprimé — ses tuiles sont toutes Bientôt.
+        expect(find.text('PAIEMENTS & FACTURES'), findsNothing);
+        expect(find.text('Moyens de paiement'), findsNothing);
+        expect(find.text('Factures'), findsNothing);
+        expect(find.text('Crédits & codes promo'), findsNothing);
+
+        await tester.scrollUntilVisible(
+          find.text('DEVENIR VOYAGEUR'),
+          300,
+          scrollable: _accountScrollable,
+        );
+        expect(
+          find.text('DEVENIR VOYAGEUR'),
+          findsOneWidget,
+          reason: 'DEVENIR VOYAGEUR manquant (sender Compte)',
+        );
         await tester.pumpAndSettle(const Duration(seconds: 5));
       },
     );
 
-    testWidgets('tab Compte sender affiche aussi MON PORTEFEUILLE', (
+    testWidgets('tab Compte sender affiche aussi section PAIEMENTS (ex-MON PORTEFEUILLE)', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1197,14 +1201,14 @@ void main() {
 
       await _goToCompteTab(tester);
       await tester.scrollUntilVisible(
-        find.text('MON PORTEFEUILLE'),
+        find.text('PAIEMENTS'),
         300,
         scrollable: _accountScrollable,
       );
       expect(
-        find.text('MON PORTEFEUILLE'),
+        find.text('PAIEMENTS'),
         findsOneWidget,
-        reason: 'MON PORTEFEUILLE manquant (sender Compte)',
+        reason: 'section PAIEMENTS manquante (sender Compte)',
       );
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
@@ -1553,6 +1557,49 @@ void main() {
     await tester.pump();
 
     verify(() => deletionBloc.add(const ReactivateAccount())).called(1);
+  });
+
+  // ── E2 — Tuiles Bientôt masquées + renommage PAIEMENTS ──────────────────────
+
+  testWidgets('Tuiles Bientôt masquées + section PAIEMENTS', (tester) async {
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_activeUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(
+      _buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        referralBloc: referralBloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await _goToCompteTab(tester);
+
+    // Tuiles ComingSoon supprimées.
+    expect(find.text('Moyens de paiement'), findsNothing);
+    expect(find.text('Factures'), findsNothing);
+    expect(find.text('Crédits & codes promo'), findsNothing);
+
+    // Section renommée PAIEMENTS (anciennement MON PORTEFEUILLE).
+    await tester.scrollUntilVisible(
+      find.text('PAIEMENTS'),
+      300,
+      scrollable: _accountScrollable,
+    );
+    expect(find.text('PAIEMENTS'), findsOneWidget);
+    expect(find.text('Mon portefeuille'), findsOneWidget);
+    await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
   // ── Modèle additif (Phase 4) ─────────────────────────────────────────────────
