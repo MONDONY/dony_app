@@ -513,7 +513,7 @@ class _ActivityTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.local_shipping_rounded,
+                  icon: Icons.inventory_2_rounded,
                   iconColor: cs.secondary,
                   iconBgColor: cs.secondaryContainer,
                   label: 'Mes envois en cours',
