@@ -9,6 +9,7 @@ class ProfileHeader extends StatelessWidget {
     required this.isSender,
     required this.isKycVerified,
     required this.isProAccount,
+    this.avatarUrl,
     this.phoneNumber,
     this.email,
     this.city,
@@ -21,6 +22,7 @@ class ProfileHeader extends StatelessWidget {
   final bool isSender;
   final bool isKycVerified;
   final bool isProAccount;
+  final String? avatarUrl;
   final String? phoneNumber;
   final String? email;
   final String? city;
@@ -52,6 +54,7 @@ class ProfileHeader extends StatelessWidget {
             children: [
               DonyAvatar(
                 name: displayName,
+                imageUrl: avatarUrl,
                 size: DonyAvatarSize.xl,
                 verified: isKycVerified,
                 pro: isProAccount,

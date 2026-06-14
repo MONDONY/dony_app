@@ -177,6 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   opacity: progress,
                                   child: DonyAvatar(
                                     name: displayName,
+                                    imageUrl: user?.avatarUrl,
                                     size: DonyAvatarSize.xs,
                                     verified: isKycVerified,
                                     pro: isProAccount,
@@ -224,6 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 isSender: isSender,
                                 isKycVerified: isKycVerified,
                                 isProAccount: isProAccount,
+                                avatarUrl: user?.avatarUrl,
                                 phoneNumber: user?.phoneNumber,
                                 email: user?.email,
                                 city: user?.city,

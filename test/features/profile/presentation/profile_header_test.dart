@@ -1,4 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,7 @@ Widget _buildHeader({
   bool isSender = true,
   bool isKycVerified = false,
   bool isProAccount = false,
+  String? avatarUrl,
   String? phoneNumber,
   String? email,
   String? city,
@@ -23,6 +25,7 @@ Widget _buildHeader({
         isSender: isSender,
         isKycVerified: isKycVerified,
         isProAccount: isProAccount,
+        avatarUrl: avatarUrl,
         phoneNumber: phoneNumber,
         email: email,
         city: city,
@@ -165,6 +168,23 @@ void main() {
       await tester.pump();
       await tester.tap(find.byIcon(Icons.edit_rounded));
       expect(tapped, isTrue);
+    });
+
+    testWidgets('passes avatarUrl to DonyAvatar when non-null', (tester) async {
+      const url = 'https://example.com/photo.jpg';
+      await tester.pumpWidget(_buildHeader(avatarUrl: url));
+      await tester.pump();
+      final avatar = tester.widget<DonyAvatar>(find.byType(DonyAvatar));
+      expect(avatar.imageUrl, equals(url));
+    });
+
+    testWidgets('DonyAvatar imageUrl is null when avatarUrl not provided', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildHeader());
+      await tester.pump();
+      final avatar = tester.widget<DonyAvatar>(find.byType(DonyAvatar));
+      expect(avatar.imageUrl, isNull);
     });
   });
 }
