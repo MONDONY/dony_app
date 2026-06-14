@@ -529,7 +529,7 @@ class _ActivityTab extends StatelessWidget {
                   onTap: () => context.push('/announcements'),
                 ),
                 DonyListTile(
-                  icon: Icons.compare_arrows_rounded,
+                  icon: Icons.handshake_rounded,
                   iconColor: cs.tertiary,
                   iconBgColor: cs.tertiaryContainer,
                   label: 'Mes négociations',
