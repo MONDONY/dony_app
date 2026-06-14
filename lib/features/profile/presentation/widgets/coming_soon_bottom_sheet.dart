@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Bottom sheet "Bientôt disponible" réutilisable pour les entrées profil
@@ -12,18 +13,21 @@ class ComingSoonBottomSheet extends StatelessWidget {
     super.key,
     required this.title,
     required this.description,
-    this.icon = Icons.auto_awesome_rounded,
+    this.icon,
+    this.iconAsset = 'sparkles',
   });
 
   final String title;
   final String description;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
 
   static Future<void> show(
     BuildContext context, {
     required String title,
     required String description,
-    IconData icon = Icons.auto_awesome_rounded,
+    IconData? icon,
+    String? iconAsset = 'sparkles',
   }) {
     return showModalBottomSheet(
       context: context,
@@ -39,6 +43,7 @@ class ComingSoonBottomSheet extends StatelessWidget {
         title: title,
         description: description,
         icon: icon,
+        iconAsset: iconAsset,
       ),
     );
   }
@@ -78,7 +83,9 @@ class ComingSoonBottomSheet extends StatelessWidget {
                 color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(DonyRadius.card),
               ),
-              child: Icon(icon, color: cs.primary, size: 28),
+              child: iconAsset != null
+                  ? DonyIcon(iconAsset!, color: cs.primary, size: 28)
+                  : Icon(icon, color: cs.primary, size: 28),
             ),
             const SizedBox(height: DonySpacing.md),
             Text(
@@ -112,8 +119,8 @@ class ComingSoonBottomSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.schedule_rounded,
+                  DonyIcon(
+                    'clock',
                     color: cs.onSurfaceVariant,
                     size: 18,
                   ),

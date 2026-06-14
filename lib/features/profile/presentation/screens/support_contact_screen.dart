@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -157,7 +158,7 @@ class _InfoCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.support_agent_rounded, color: cs.primary, size: 28),
+          DonyIcon('headset', color: cs.primary, size: 28),
           const SizedBox(width: DonySpacing.base),
           Expanded(
             child: Text(

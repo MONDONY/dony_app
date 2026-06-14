@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -97,8 +98,8 @@ class TravelerAnnouncementCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
+                        DonyIcon(
+                          'calendar',
                           size: 13,
                           color: cs.onSurfaceVariant,
                         ),

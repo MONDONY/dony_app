@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -116,7 +117,7 @@ class _ConnectOnboardingPendingScreenState
                   // Info
                   const DonyStatusBanner(
                     type: DonyStatusBannerType.info,
-                    icon: Icons.info_outline_rounded,
+                    iconAsset: 'info',
                     message:
                         'Si tu as déjà terminé l\'inscription Stripe, la vérification se fait automatiquement.',
                   ).animate().fadeIn(delay: 200.ms),
@@ -160,7 +161,7 @@ class _PollingStatusRow extends StatelessWidget {
                   color: cs.primary,
                   strokeWidth: 2,
                 )
-              : Icon(Icons.radio_button_unchecked,
+              : DonyIcon('circle',
                   size: 16, color: cs.onSurfaceVariant),
         ),
         const SizedBox(width: DonySpacing.sm),

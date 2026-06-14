@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -84,7 +85,7 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
       title: 'Confirmer le passage en PRO',
       message:
           'Votre profil sera mis à jour avec le statut PRO. Vous pourrez modifier ces informations à tout moment.',
-      icon: Icons.verified_rounded,
+      iconAsset: 'badge-check',
     );
     return result ?? false;
   }
@@ -219,8 +220,8 @@ class _ProActiveScreen extends StatelessWidget {
                             color: cs.success.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(DonyRadius.md),
                           ),
-                          child: Icon(
-                            Icons.verified_rounded,
+                          child: DonyIcon(
+                            'badge-check',
                             color: cs.success,
                             size: 20,
                           ),
@@ -263,7 +264,7 @@ class _ProActiveScreen extends StatelessWidget {
                     const SizedBox(height: DonySpacing.md),
                     if (user?.companyName != null)
                       _InfoRow(
-                        icon: Icons.business_rounded,
+                        iconAsset: 'building-2',
                         label: "Nom de l'entreprise",
                         value: user!.companyName!,
                       ).animate().fadeIn(delay: 100.ms),
@@ -271,7 +272,7 @@ class _ProActiveScreen extends StatelessWidget {
                       const SizedBox(height: DonySpacing.sm),
                     if (user?.siret != null)
                       _InfoRow(
-                        icon: Icons.tag_rounded,
+                        iconAsset: 'tag',
                         label: 'SIRET',
                         value: _formatSiret(user!.siret!),
                       ).animate().fadeIn(delay: 140.ms),
@@ -335,12 +336,12 @@ class _ProActiveScreen extends StatelessWidget {
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.value,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final String value;
 
@@ -361,7 +362,7 @@ class _InfoRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: cs.onSurfaceVariant, size: 18),
+          DonyIcon(iconAsset, color: cs.onSurfaceVariant, size: 18),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
@@ -447,7 +448,7 @@ class _UpgradeFormScreen extends StatelessWidget {
               // Info
               const DonyStatusBanner(
                 type: DonyStatusBannerType.info,
-                icon: Icons.info_outline_rounded,
+                iconAsset: 'info',
                 message:
                     'Vos informations d\'entreprise seront visibles sur votre profil public.',
               ).animate().fadeIn(delay: 140.ms),
@@ -458,7 +459,11 @@ class _UpgradeFormScreen extends StatelessWidget {
                 controller: companyNameCtrl,
                 label: 'Nom de l\'entreprise',
                 hint: 'Ma Société SAS',
-                prefixIcon: Icons.business_rounded,
+                prefixWidget: DonyIcon(
+                  'building-2',
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
                 keyboardType: TextInputType.text,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
@@ -474,7 +479,11 @@ class _UpgradeFormScreen extends StatelessWidget {
                 controller: siretCtrl,
                 label: 'Numéro SIRET',
                 hint: '12345678901234',
-                prefixIcon: Icons.tag_rounded,
+                prefixWidget: DonyIcon(
+                  'tag',
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
@@ -502,7 +511,7 @@ class _UpgradeFormScreen extends StatelessWidget {
               // Submit button
               DonyButton(
                 label: 'Activer le compte PRO',
-                icon: Icons.verified_rounded,
+                iconAsset: 'badge-check',
                 onPressed: isLoading ? null : onSubmit,
                 isLoading: isLoading,
               ).animate().fadeIn(delay: 260.ms),
@@ -535,7 +544,7 @@ class _ProChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_rounded, color: cs.primary, size: 12),
+          DonyIcon('check', color: cs.primary, size: 12),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             label,

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
@@ -94,8 +95,7 @@ class _ConfirmationBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.check_circle_outline_rounded,
-                  color: cs.success, size: 20),
+              DonyIcon('circle-check', color: cs.success, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
                 'Trajet annulé',
@@ -157,21 +157,21 @@ class _SuggestionCard extends StatelessWidget {
           Row(
             children: [
               _Chip(
-                icon: Icons.calendar_today_outlined,
+                iconAsset: 'calendar',
                 label: DateFormat('dd MMM yyyy').format(suggestion.departureDate),
                 cs: cs,
                 tt: tt,
               ),
               const SizedBox(width: DonySpacing.md),
               _Chip(
-                icon: Icons.scale_outlined,
+                iconAsset: 'scale',
                 label: '${suggestion.availableKg} kg dispo',
                 cs: cs,
                 tt: tt,
               ),
               const SizedBox(width: DonySpacing.md),
               _Chip(
-                icon: Icons.euro_rounded,
+                iconAsset: 'euro',
                 label: '${formatKgPrice(netToSenderPrice(suggestion.pricePerKg))} €/kg',
                 cs: cs,
                 tt: tt,
@@ -207,12 +207,12 @@ class _SuggestionCard extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final ColorScheme cs;
   final TextTheme tt;
   const _Chip({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.cs,
     required this.tt,
@@ -223,7 +223,7 @@ class _Chip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: cs.onSurfaceVariant),
+        DonyIcon(iconAsset, size: 14, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,

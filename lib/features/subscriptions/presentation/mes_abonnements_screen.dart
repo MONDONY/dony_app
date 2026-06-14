@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_state.dart';
@@ -39,7 +40,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
             return DonyEmptyState(
               mascotte: DonyMascotteType.assis,
               type: DonyEmptyStateType.error,
-              icon: Icons.error_outline_rounded,
+              iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
               description: state.error ?? 'Une erreur est survenue.',
               actionLabel: 'Réessayer',
@@ -106,14 +107,27 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
         children: [
-          SlidableAction(
+          CustomSlidableAction(
             onPressed: (_) => context
                 .read<SubscriptionsBloc>()
                 .add(UnsubscribeTraveler(item.travelerId)),
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Colors.white,
-            icon: Icons.delete_rounded,
-            label: 'Désabonner',
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const DonyIcon('trash-2', color: Colors.white, size: 24),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  'Désabonner',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
           ),
         ],
       ),

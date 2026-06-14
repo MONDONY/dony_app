@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -295,7 +296,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
             color: cs.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.person_outline_rounded, color: cs.primary, size: 48),
+          child: Center(child: DonyIcon('user', color: cs.primary, size: 48)),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
@@ -326,7 +327,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
             color: cs.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.verified, color: cs.primary, size: 52),
+          child: Center(child: DonyIcon('badge-check', color: cs.primary, size: 52)),
         ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
@@ -362,7 +363,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
             color: cs.warningLight,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.hourglass_empty_rounded, color: cs.warning, size: 48),
+          child: Center(child: DonyIcon('hourglass', color: cs.warning, size: 48)),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
@@ -395,7 +396,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
             color: cs.warningLight,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.schedule_rounded, color: cs.warning, size: 48),
+          child: Center(child: DonyIcon('clock', color: cs.warning, size: 48)),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
@@ -426,7 +427,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
             color: cs.errorContainer,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.cancel_outlined, color: cs.error, size: 48),
+          child: Center(child: DonyIcon('circle-x', color: cs.error, size: 48)),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
@@ -449,7 +450,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.wifi_off_rounded, color: cs.onSurfaceVariant, size: 64),
+        DonyIcon('wifi-off', color: cs.onSurfaceVariant, size: 64),
         const SizedBox(height: DonySpacing.base),
         Text(
           message,

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
@@ -91,7 +92,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
         actions: [
           IconButton(
             tooltip: 'Fermer',
-            icon: Icon(Icons.close, color: cs.onSurface),
+            icon: DonyIcon('x', color: cs.onSurface),
             onPressed: () {
               context.read<KycBloc>().add(const KycSessionAbandoned());
               context.read<AuthBloc>().add(const AuthCheckRequested());

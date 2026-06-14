@@ -155,7 +155,7 @@ class _IntroView extends StatelessWidget {
                 // Info banner
                 const DonyStatusBanner(
                   type: DonyStatusBannerType.info,
-                  icon: Icons.shield_rounded,
+                  iconAsset: 'shield',
                   message:
                       'Tes données sont chiffrées et gérées directement par Stripe — dony n\'a jamais accès à tes informations bancaires.',
                 ).animate().fadeIn(delay: 180.ms),
@@ -184,7 +184,7 @@ class _IntroView extends StatelessWidget {
           ),
           child: DonyButton(
             label: 'Compléter mon compte',
-            icon: Icons.arrow_forward_rounded,
+            iconAsset: 'arrow-right',
             onPressed: isLoading
                 ? null
                 : () => context
@@ -205,10 +205,10 @@ class _BenefitsList extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     const items = [
-      (Icons.timer_outlined, '5 minutes', 'Rapide et guidé pas à pas'),
-      (Icons.bolt_rounded, 'Virement automatique',
+      ('timer', '5 minutes', 'Rapide et guidé pas à pas'),
+      ('zap', 'Virement automatique',
           'Reçu sur ton compte après chaque livraison confirmée'),
-      (Icons.verified_user_rounded, 'Sécurisé par Stripe',
+      ('shield-check', 'Sécurisé par Stripe',
           'Leader mondial des paiements en ligne'),
     ];
 
@@ -217,7 +217,7 @@ class _BenefitsList extends StatelessWidget {
       child: Column(
         children: items.indexed.map((entry) {
           final (i, item) = entry;
-          final (icon, title, subtitle) = item;
+          final (iconAsset, title, subtitle) = item;
           return Column(
             children: [
               Padding(
@@ -225,7 +225,7 @@ class _BenefitsList extends StatelessWidget {
                 child: Row(
                   children: [
                     DonyIconContainer(
-                      icon: icon,
+                      iconAsset: iconAsset,
                       size: DonyIconContainerSize.md,
                       borderRadius: DonyRadius.md,
                       backgroundColor: cs.primaryContainer,

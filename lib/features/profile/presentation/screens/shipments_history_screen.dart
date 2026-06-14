@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -25,7 +26,7 @@ class ShipmentsHistoryScreen extends StatelessWidget {
             return DonyEmptyState(
               type: DonyEmptyStateType.error,
               mascotte: DonyMascotteType.assis,
-              icon: Icons.error_outline_rounded,
+              iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
               description: state.error.message,
               actionLabel: 'Réessayer',
@@ -137,8 +138,8 @@ class _DeliveryCard extends StatelessWidget {
                       if (bid.travelerAverageRating != null)
                         Row(
                           children: [
-                            Icon(
-                              Icons.star_rounded,
+                            DonyIcon(
+                              'star',
                               size: 14,
                               color: cs.tertiary,
                             ),
@@ -164,7 +165,7 @@ class _DeliveryCard extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
               Row(
                 children: [
-                  Icon(Icons.route_rounded, size: 16, color: cs.primary),
+                  DonyIcon('route', size: 16, color: cs.primary),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     route,

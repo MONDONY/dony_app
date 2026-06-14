@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -120,8 +121,8 @@ class ProfileHeader extends StatelessWidget {
                     color: cs.surfaceContainerHighest,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.edit_rounded,
+                  child: DonyIcon(
+                    'square-pen',
                     size: 15,
                     color: cs.onSurfaceVariant,
                   ),
@@ -199,35 +200,35 @@ class _ContactChips extends StatelessWidget {
         if (hasPhone)
           const _Chip(
             label: 'Tél. ✓',
-            icon: Icons.phone_rounded,
+            iconAsset: 'phone',
             bg: DonyColors.success50,
             fg: DonyColors.success700,
           )
         else
           const _Chip(
             label: 'Tél. manquant',
-            icon: Icons.phone_outlined,
+            iconAsset: 'phone',
             bg: DonyColors.neutral100,
             fg: DonyColors.neutral500,
           ),
         if (hasEmail)
           const _Chip(
             label: 'Email ✓',
-            icon: Icons.email_rounded,
+            iconAsset: 'mail',
             bg: DonyColors.success50,
             fg: DonyColors.success700,
           )
         else
           const _Chip(
             label: 'Email manquant',
-            icon: Icons.email_outlined,
+            iconAsset: 'mail',
             bg: DonyColors.warning50,
             fg: DonyColors.warning700,
           ),
         if (isKycVerified)
           const _Chip(
             label: 'KYC ✓',
-            icon: Icons.verified_user_rounded,
+            iconAsset: 'shield-check',
             bg: DonyColors.blue50,
             fg: DonyColors.blue700,
           ),
@@ -239,13 +240,13 @@ class _ContactChips extends StatelessWidget {
 class _Chip extends StatelessWidget {
   const _Chip({
     required this.label,
-    required this.icon,
+    required this.iconAsset,
     required this.bg,
     required this.fg,
   });
 
   final String label;
-  final IconData icon;
+  final String iconAsset;
   final Color bg;
   final Color fg;
 
@@ -263,7 +264,7 @@ class _Chip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: fg),
+          DonyIcon(iconAsset, size: 11, color: fg),
           const SizedBox(width: 3),
           Text(
             label,

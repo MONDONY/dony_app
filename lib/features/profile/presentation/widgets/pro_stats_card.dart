@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/presentation/widgets/pro_stats_bottom_sheet.dart';
@@ -232,8 +233,8 @@ class _ErrorContent extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Row(
       children: [
-        Icon(
-          Icons.wifi_off_rounded,
+        DonyIcon(
+          'wifi-off',
           color: Colors.white.withValues(alpha: 0.5),
           size: 18,
         ),

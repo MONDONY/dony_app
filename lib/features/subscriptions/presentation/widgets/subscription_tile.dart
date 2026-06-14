@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:flutter/material.dart';
 
@@ -47,10 +48,10 @@ class SubscriptionTile extends StatelessWidget {
             ),
             IconButton(
               onPressed: onToggleBell,
-              icon: Icon(item.pushEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+              icon: DonyIcon(item.pushEnabled ? 'bell' : 'bell-off',
                   color: item.pushEnabled ? cs.primary : cs.onSurfaceVariant),
             ),
-            Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+            DonyIcon('chevron-right', color: cs.onSurfaceVariant),
           ],
         ),
       ),

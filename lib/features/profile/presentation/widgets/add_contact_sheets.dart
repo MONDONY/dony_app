@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -250,8 +251,8 @@ class _PhoneInputStep extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: DonySpacing.xs),
-                        Icon(
-                          Icons.arrow_drop_down_rounded,
+                        DonyIcon(
+                          'chevron-down',
                           size: 18,
                           color: cs.onSurfaceVariant,
                         ),
@@ -303,8 +304,8 @@ class _PhoneInputStep extends StatelessWidget {
                 leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
                 title: Text(c.$1),
                 trailing: c.$1 == dialCode
-                    ? Icon(
-                        Icons.check_rounded,
+                    ? DonyIcon(
+                        'check',
                         color: Theme.of(context).colorScheme.primary,
                       )
                     : null,
@@ -501,8 +502,8 @@ class _EmailInputStep extends StatelessWidget {
                 hintText: 'exemple@email.com',
                 hintStyle: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
                 border: InputBorder.none,
-                prefixIcon: Icon(
-                  Icons.email_outlined,
+                prefixIcon: DonyIcon(
+                  'mail',
                   color: cs.onSurfaceVariant,
                   size: 20,
                 ),

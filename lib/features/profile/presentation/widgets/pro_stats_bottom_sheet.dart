@@ -55,7 +55,7 @@ class ProStatsBottomSheet extends StatelessWidget {
               child: _MetricRow(
                 label: 'Revenus total (depuis le début)',
                 value: currencyFmt.format(stats.totalRevenue),
-                icon: Icons.account_balance_wallet_rounded,
+                iconAsset: 'wallet',
               ),
             )
             .animate()
@@ -337,12 +337,12 @@ class _MetricRow extends StatelessWidget {
   const _MetricRow({
     required this.label,
     required this.value,
-    required this.icon,
+    required this.iconAsset,
   });
 
   final String label;
   final String value;
-  final IconData icon;
+  final String iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +356,7 @@ class _MetricRow extends StatelessWidget {
             color: cs.primaryContainer,
             borderRadius: BorderRadius.circular(DonyRadius.sm),
           ),
-          child: Icon(icon, color: cs.primary, size: 20),
+          child: DonyIcon(iconAsset, color: cs.primary, size: 20),
         ),
         const SizedBox(width: DonySpacing.md),
         Expanded(
@@ -460,7 +460,7 @@ class _DestinationRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: DonySpacing.sm),
-        Icon(Icons.flight_rounded, size: 14, color: cs.primary),
+        DonyIcon('plane', size: 14, color: cs.primary),
         const SizedBox(width: DonySpacing.xs),
         Expanded(
           child: Text(

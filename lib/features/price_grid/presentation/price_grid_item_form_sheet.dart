@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
@@ -158,7 +159,7 @@ class _PriceGridItemFormContentState
             controller: _labelController,
             label: 'Article',
             hint: 'Ex : Téléphone, Vêtements, Chaussures…',
-            prefixIcon: Icons.label_outline_rounded,
+            prefixWidget: DonyIcon('tag', size: 20, color: cs.onSurfaceVariant),
             keyboardType: TextInputType.text,
             validator: (v) {
               if (v == null || v.trim().isEmpty) {
@@ -177,7 +178,7 @@ class _PriceGridItemFormContentState
             controller: _priceController,
             label: 'Prix net (€)',
             hint: 'Ex : 10.00',
-            prefixIcon: Icons.euro_rounded,
+            prefixWidget: DonyIcon('euro', size: 20, color: cs.onSurfaceVariant),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (v) {
               if (v == null || v.trim().isEmpty) {
@@ -214,8 +215,8 @@ class _PriceGridItemFormContentState
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.visibility_outlined,
+                        DonyIcon(
+                          'eye',
                           size: 16,
                           color: cs.primary,
                         ),

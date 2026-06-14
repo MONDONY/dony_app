@@ -361,7 +361,7 @@ class _StepCard extends StatelessWidget {
         statusChip = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_rounded, color: cs.success, size: 13),
+            DonyIcon('check', color: cs.success, size: 13),
             const SizedBox(width: DonySpacing.xxs),
             Text(
               'Vérifié',
@@ -402,7 +402,7 @@ class _StepCard extends StatelessWidget {
         statusChip = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.warning_amber_rounded, color: cs.error, size: 13),
+            DonyIcon('triangle-alert', color: cs.error, size: 13),
             const SizedBox(width: DonySpacing.xxs),
             Text(
               'Refusé',
@@ -520,7 +520,7 @@ class _StepBadge extends StatelessWidget {
       ),
       child: Center(
         child: isDone
-            ? Icon(Icons.check_rounded, color: color, size: 20)
+            ? DonyIcon('check', color: color, size: 20)
             : Text(
                 '$stepNumber',
                 style: tt.titleMedium?.copyWith(
@@ -561,7 +561,7 @@ class _PendingHint extends StatelessWidget {
 
     return DonyStatusBanner(
       type: DonyStatusBannerType.info,
-      icon: Icons.info_outline_rounded,
+      iconAsset: 'info',
       message: message,
     );
   }

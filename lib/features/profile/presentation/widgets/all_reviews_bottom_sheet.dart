@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
@@ -244,12 +245,12 @@ class _ReviewRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(
                   5,
-                  (i) => Icon(
-                    i < item.stars
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
+                  (i) => DonyIcon(
+                    'star',
                     size: 14,
-                    color: DonyColors.starGold,
+                    color: i < item.stars
+                        ? DonyColors.starGold
+                        : DonyColors.starGold.withValues(alpha: 0.35),
                   ),
                 ),
               ),
@@ -402,7 +403,7 @@ class _ErrorBody extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline_rounded, size: 40, color: cs.error),
+          DonyIcon('circle-alert', size: 40, color: cs.error),
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Impossible de charger les avis',

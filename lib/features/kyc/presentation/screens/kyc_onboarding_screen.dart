@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -96,7 +97,7 @@ class KycOnboardingScreen extends StatelessWidget {
         _buildStep(
           cs,
           tt,
-          icon: Icons.credit_card_outlined,
+          iconAsset: 'credit-card',
           title: 'Pièce d\'identité',
           description: 'Passeport, carte d\'identité ou permis de conduire',
         ),
@@ -104,7 +105,7 @@ class KycOnboardingScreen extends StatelessWidget {
         _buildStep(
           cs,
           tt,
-          icon: Icons.face_outlined,
+          iconAsset: 'scan-face',
           title: 'Selfie liveness',
           description: 'Photo en temps réel pour confirmer votre identité',
         ),
@@ -112,7 +113,7 @@ class KycOnboardingScreen extends StatelessWidget {
         _buildStep(
           cs,
           tt,
-          icon: Icons.check_circle_outline,
+          iconAsset: 'circle-check',
           title: 'Vérification automatique',
           description: 'Résultat dans les 24h, souvent instantané',
         ),
@@ -123,7 +124,7 @@ class KycOnboardingScreen extends StatelessWidget {
   Widget _buildStep(
     ColorScheme cs,
     TextTheme tt, {
-    required IconData icon,
+    required String iconAsset,
     required String title,
     required String description,
   }) {
@@ -140,7 +141,7 @@ class KycOnboardingScreen extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
-            child: Icon(icon, color: cs.primary, size: 22),
+            child: Center(child: DonyIcon(iconAsset, color: cs.primary, size: 22)),
           ),
           const SizedBox(width: DonySpacing.base),
           Expanded(

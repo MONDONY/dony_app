@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
@@ -82,8 +83,8 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
+            DonyIcon(
+              'circle-alert',
               size: 48,
               color: cs.error,
             ),
@@ -146,8 +147,8 @@ class _LoadedView extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.info_outline_rounded,
+              DonyIcon(
+                'info',
                 size: 18,
                 color: cs.info,
               ),
@@ -197,7 +198,7 @@ class _LoadedView extends StatelessWidget {
             ),
             child: DonyButton(
               label: 'Ajouter un article',
-              icon: Icons.add_rounded,
+              iconAsset: 'plus',
               onPressed: () => _openAddSheet(context),
             ),
           ),
@@ -236,8 +237,8 @@ class _EmptyGrid extends StatelessWidget {
                 color: cs.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.grid_view_rounded,
+              child: DonyIcon(
+                'layout-grid',
                 size: 32,
                 color: cs.primary,
               ),
@@ -258,7 +259,7 @@ class _EmptyGrid extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
               label: 'Ajouter un article',
-              icon: Icons.add_rounded,
+              iconAsset: 'plus',
               onPressed: onAdd,
             ),
           ],
@@ -334,7 +335,7 @@ class _PriceGridItemTile extends StatelessWidget {
 
           // Menu actions (⋮)
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert_rounded, color: cs.onSurfaceVariant),
+            icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant),
             tooltip: 'Options',
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -351,7 +352,7 @@ class _PriceGridItemTile extends StatelessWidget {
                 value: 'edit',
                 child: Row(
                   children: [
-                    Icon(Icons.edit_outlined, size: 20, color: cs.primary),
+                    DonyIcon('square-pen', size: 20, color: cs.primary),
                     const SizedBox(width: DonySpacing.md),
                     const Text('Modifier'),
                   ],
@@ -361,8 +362,7 @@ class _PriceGridItemTile extends StatelessWidget {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline_rounded,
-                        size: 20, color: cs.error),
+                    DonyIcon('trash-2', size: 20, color: cs.error),
                     const SizedBox(width: DonySpacing.md),
                     Text('Supprimer', style: TextStyle(color: cs.error)),
                   ],

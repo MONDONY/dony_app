@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -66,8 +67,8 @@ class KycOnboardingBottomSheet extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(
-              Icons.badge_rounded,
+            DonyIcon(
+              'id-card',
               size: 48,
               color: cs.primary,
             ),
@@ -87,21 +88,21 @@ class KycOnboardingBottomSheet extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xl),
             _InfoRow(
-              icon: Icons.verified_user_rounded,
+              iconAsset: 'shield-check',
               text: 'Processus Stripe Identity sécurisé',
               cs: cs,
               tt: tt,
             ),
             const SizedBox(height: DonySpacing.sm),
             _InfoRow(
-              icon: Icons.photo_camera_rounded,
+              iconAsset: 'camera',
               text: "Pièce d'identité + selfie requis",
               cs: cs,
               tt: tt,
             ),
             const SizedBox(height: DonySpacing.sm),
             _InfoRow(
-              icon: Icons.schedule_rounded,
+              iconAsset: 'clock',
               text: 'Vérification en 2 à 5 minutes',
               cs: cs,
               tt: tt,
@@ -116,13 +117,13 @@ class KycOnboardingBottomSheet extends StatelessWidget {
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({
-    required this.icon,
+    required this.iconAsset,
     required this.text,
     required this.cs,
     required this.tt,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final String text;
   final ColorScheme cs;
   final TextTheme tt;
@@ -131,8 +132,8 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
+        DonyIcon(
+          iconAsset,
           size: 16,
           color: cs.primary,
         ),
