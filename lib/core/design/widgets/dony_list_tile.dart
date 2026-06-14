@@ -20,6 +20,7 @@ class DonyListTile extends StatelessWidget {
     required this.label,
     this.subtitle,
     this.icon,
+    this.iconAsset,
     this.iconColor,
     this.iconBgColor,
     this.trailing,
@@ -32,6 +33,10 @@ class DonyListTile extends StatelessWidget {
   final String label;
   final String? subtitle;
   final IconData? icon;
+
+  /// Nom d'un SVG Lucide dans `assets/icons/` (sans extension). Alternative
+  /// à [icon] pour utiliser une icône moderne via [DonyIcon].
+  final String? iconAsset;
   final Color? iconColor;
   final Color? iconBgColor;
   final Widget? trailing;
@@ -75,9 +80,10 @@ class DonyListTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                if (icon != null) ...[
+                if (icon != null || iconAsset != null) ...[
                   DonyIconContainer(
-                    icon: icon!,
+                    icon: icon,
+                    iconAsset: iconAsset,
                     backgroundColor: effectiveIconBg,
                     iconColor: effectiveIconColor,
                     borderRadius: DonyRadius.sm,
@@ -165,6 +171,7 @@ class DonyListSection extends StatelessWidget {
                   label: tiles[i].label,
                   subtitle: tiles[i].subtitle,
                   icon: tiles[i].icon,
+                  iconAsset: tiles[i].iconAsset,
                   iconColor: tiles[i].iconColor,
                   iconBgColor: tiles[i].iconBgColor,
                   trailing: tiles[i].trailing,

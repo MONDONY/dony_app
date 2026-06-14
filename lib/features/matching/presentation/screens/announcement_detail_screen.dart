@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -39,7 +40,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
       confirmLabel: 'Supprimer',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.delete_outline_rounded,
+      iconAsset: 'trash-2',
     );
     return confirmed ?? false;
   }
@@ -140,7 +141,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.flight_takeoff_rounded, color: cs.onPrimary, size: 20),
+                    DonyIcon('plane-takeoff', color: cs.onPrimary, size: 20),
                     const SizedBox(width: DonySpacing.sm),
                     Text(
                       'Trajet',
@@ -165,7 +166,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-                      child: Icon(Icons.arrow_forward_rounded, color: cs.onPrimary.withValues(alpha: 0.7), size: 20),
+                      child: DonyIcon('arrow-right', color: cs.onPrimary.withValues(alpha: 0.7), size: 20),
                     ),
                     Text(
                       a.arrivalCity,
@@ -179,7 +180,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                 const SizedBox(height: DonySpacing.md),
                 Row(
                   children: [
-                    Icon(Icons.calendar_month_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 15),
+                    DonyIcon('calendar', color: cs.onPrimary.withValues(alpha: 0.6), size: 15),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
                       DateFormat('EEEE d MMMM yyyy', 'fr').format(a.departureDate),
@@ -194,7 +195,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   Row(
                     children: [
                       if (a.departureTime != null) ...[
-                        Icon(Icons.flight_takeoff_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
+                        DonyIcon('plane-takeoff', color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           a.departureTime!,
@@ -213,7 +214,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           ),
                         ),
                       if (a.arrivalTime != null) ...[
-                        Icon(Icons.flight_land_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
+                        DonyIcon('plane-landing', color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           a.arrivalTime!,
@@ -255,7 +256,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.location_on_rounded, size: 14, color: cs.primary),
+                        DonyIcon('map-pin', size: 14, color: cs.primary),
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
                           child: Text(
@@ -274,7 +275,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.location_on_outlined, size: 14, color: cs.error),
+                        DonyIcon('map-pin', size: 14, color: cs.error),
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
                           child: Text(
@@ -305,7 +306,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.schedule_rounded, size: 16, color: cs.primary),
+                  DonyIcon('clock', size: 16, color: cs.primary),
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Column(
@@ -342,7 +343,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             children: [
               Expanded(
                 child: _StatCard(
-                  icon: Icons.scale_rounded,
+                  iconName: 'scale',
                   label: 'Capacité dispo.',
                   value: a.capacityUnit == 'KG_FREE'
                       ? 'Kg libre'
@@ -355,7 +356,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: _StatCard(
-                  icon: Icons.euro_rounded,
+                  iconName: 'euro',
                   label: a.pricingMode == 'MIXED' ? 'Tarification' : 'Prix par kg',
                   value: a.pricingMode == 'MIXED'
                       ? 'Grille'
@@ -368,7 +369,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: _StatCard(
-                  icon: Icons.inbox_rounded,
+                  iconName: 'inbox',
                   label: 'Demandes',
                   value: '${a.bidsCount ?? 0}',
                   color: DonyColors.violet,
@@ -385,7 +386,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           if (a.status == 'ACTIVE') ...[
             DonyButton(
               label: 'Voir les demandes (${a.bidsCount ?? 0})',
-              icon: Icons.inbox_rounded,
+              iconAsset: 'inbox',
               onPressed: () => context.push('/announcements/${a.id}/bids'),
             ).animate().fadeIn(delay: 150.ms),
             const SizedBox(height: DonySpacing.md),
@@ -394,7 +395,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           if (canEdit) ...[
             DonyButton(
               label: 'Modifier ce trajet',
-              icon: Icons.edit_rounded,
+              iconAsset: 'square-pen',
               variant: DonyButtonVariant.secondary,
               onPressed: () => context.push('/announcements/${a.id}/edit', extra: a),
             ).animate().fadeIn(delay: 200.ms),
@@ -404,7 +405,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           if (!canDelete && a.status == 'ACTIVE') ...[
             DonyButton(
               label: 'Annuler ce trajet',
-              icon: Icons.cancel_outlined,
+              iconAsset: 'circle-x',
               variant: DonyButtonVariant.destructive,
               onPressed: () => CancellationBottomSheet.show(
                 context,
@@ -417,7 +418,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           if (canDelete)
             DonyButton(
               label: 'Supprimer ce trajet',
-              icon: Icons.delete_outline_rounded,
+              iconAsset: 'trash-2',
               variant: DonyButtonVariant.destructive,
               onPressed: () async {
                 final confirmed = await _confirmDelete(isCancelled: isCancelled);
@@ -439,7 +440,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, color: cs.warning, size: 18),
+                  DonyIcon('info', color: cs.warning, size: 18),
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Text(
@@ -491,7 +492,7 @@ class _StatusBadge extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  final IconData icon;
+  final String iconName;
   final String label;
   final String value;
   final Color color;
@@ -499,7 +500,7 @@ class _StatCard extends StatelessWidget {
   final TextTheme tt;
 
   const _StatCard({
-    required this.icon,
+    required this.iconName,
     required this.label,
     required this.value,
     required this.color,
@@ -525,7 +526,7 @@ class _StatCard extends StatelessWidget {
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(DonyRadius.sm),
             ),
-            child: Icon(icon, color: color, size: 16),
+            child: DonyIcon(iconName, color: color, size: 16),
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(

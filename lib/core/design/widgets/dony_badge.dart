@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 enum DonyBadgeType { info, success, warning, error }
@@ -9,11 +10,16 @@ class DonyBadge extends StatelessWidget {
     required this.label,
     this.type = DonyBadgeType.info,
     this.icon,
+    this.iconAsset,
   });
 
   final String label;
   final DonyBadgeType type;
   final IconData? icon;
+
+  /// Nom d'un SVG Lucide dans `assets/icons/` (sans extension), alternative à
+  /// [icon]. Teinté par la couleur du type de badge.
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +46,9 @@ class DonyBadge extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: 12, color: fg),
+            const SizedBox(width: 4),
+          ] else if (iconAsset != null) ...[
+            DonyIcon(iconAsset!, size: 12, color: fg),
             const SizedBox(width: 4),
           ],
           Text(
