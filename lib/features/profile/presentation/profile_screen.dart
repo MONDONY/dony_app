@@ -636,7 +636,7 @@ class _AccountTab extends StatelessWidget {
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mon profil public',
-                  onTap: () => context.push('/profile/public'),
+                  onTap: () => context.push('/profile/public', extra: user?.id),
                 ),
                 DonyListTile(
                   icon: Icons.stars_rounded,
