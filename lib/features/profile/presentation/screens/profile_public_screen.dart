@@ -3,12 +3,12 @@ import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
+import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sheet.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class ProfilePublicScreen extends StatelessWidget {
@@ -48,6 +48,7 @@ class ProfilePublicScreen extends StatelessWidget {
           }
           if (state is ProfilePublicLoaded) {
             return _LoadedView(
+              userId: _effectiveUserId,
               profile: state.profile,
               recentRatings: state.recentRatings,
             );
@@ -84,8 +85,13 @@ class _ErrorView extends StatelessWidget {
 // ─── Loaded view ─────────────────────────────────────────────────────────────
 
 class _LoadedView extends StatelessWidget {
-  const _LoadedView({required this.profile, required this.recentRatings});
+  const _LoadedView({
+    required this.userId,
+    required this.profile,
+    required this.recentRatings,
+  });
 
+  final String userId;
   final ProfilePublicModel profile;
   final RatingSummary recentRatings;
 
@@ -195,22 +201,28 @@ class _LoadedView extends StatelessWidget {
           ).animate().fadeIn(delay: 240.ms, duration: 300.ms),
         ),
 
-        // "Voir tous mes avis" button
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.base,
-              DonySpacing.lg,
-              DonySpacing.huge,
-            ),
-            child: DonyButton(
-              label: 'Voir tous mes avis',
-              variant: DonyButtonVariant.secondary,
-              onPressed: () => context.push('/profile/reviews'),
-            ),
-          ).animate().fadeIn(delay: 320.ms, duration: 300.ms),
-        ),
+        // "Voir tous les avis" button — only when there are reviews
+        if (recentRatings.ratingCount > 0)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.base,
+                DonySpacing.lg,
+                DonySpacing.huge,
+              ),
+              child: DonyButton(
+                label:
+                    'Voir tous les avis (${recentRatings.ratingCount})',
+                variant: DonyButtonVariant.secondary,
+                onPressed: () => AllReviewsBottomSheet.show(
+                  context,
+                  userId: userId,
+                  initialSummary: recentRatings,
+                ),
+              ),
+            ).animate().fadeIn(delay: 320.ms, duration: 300.ms),
+          ),
       ],
     );
   }

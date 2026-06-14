@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
@@ -508,6 +509,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<ProfileRepository>(),
       getIt<RatingRepository>(),
     ),
+  );
+  getIt.registerFactory<UserReviewsCubit>(
+    () => UserReviewsCubit(getIt<RatingRepository>()),
   );
 
   // Tracking
