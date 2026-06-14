@@ -140,6 +140,7 @@ import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_s
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
@@ -627,6 +628,10 @@ final appRouter = GoRouter(
       ),
     ),
     GoRoute(
+      path: '/tracking/scan-hub',
+      builder: (context, state) => const ScanHubScreen(),
+    ),
+    GoRoute(
       path: '/tracking/:bidId/timeline',
       builder: (context, state) {
         final bidId = state.pathParameters['bidId']!;
@@ -958,12 +963,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 2 — Suivi (QR centre)
+        // Branch 2 — Suivi (dispatcher additif par profil)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/tracking',
-              builder: (context, state) => const ScanHubScreen(),
+              builder: (context, state) => const SuiviScreen(),
             ),
           ],
         ),

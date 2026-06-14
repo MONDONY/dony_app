@@ -32,6 +32,10 @@ abstract final class AnalyticsEvents {
   static const qrScanSuccess     = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';
 
+  // Suivi (entrées additives)
+  static const suiviScanOpened  = 'suivi_scan_opened';
+  static const suiviTrackOpened = 'suivi_track_opened';
+
   // Package Request
   static const packageRequestCreated    = 'package_request_created';
   static const packageRequestUpdated    = 'package_request_updated';

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/data/datasources/delivery_address_datasource.dart';
@@ -509,6 +510,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TrackingBloc>(
     () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>(), getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<ScanHubCubit>(
+    () => ScanHubCubit(
+      getIt<AnnouncementRepository>(),
+      getIt<BidRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // City autocomplete

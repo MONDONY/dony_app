@@ -5,7 +5,6 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
-import 'package:dony/features/matching/presentation/widgets/billet/talon_traveler_action_view.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -82,16 +81,15 @@ void main() {
     expect(find.text('N° DE SUIVI'), findsNothing);
   });
 
-  testWidgets(
-    'sender + HANDED_OVER sans confirmationCode → bouton QR seul',
-    (tester) async {
-      await _pump(tester, _bid(status: 'HANDED_OVER'), true);
-      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
-      expect(find.textContaining('QR du colis'), findsOneWidget);
-      // Pas de bouton code de retrait tant que le code n'existe pas.
-      expect(find.text('Code de retrait'), findsNothing);
-    },
-  );
+  testWidgets('sender + HANDED_OVER sans confirmationCode → bouton QR seul', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'HANDED_OVER'), true);
+    expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+    expect(find.textContaining('QR du colis'), findsOneWidget);
+    // Pas de bouton code de retrait tant que le code n'existe pas.
+    expect(find.text('Code de retrait'), findsNothing);
+  });
 
   testWidgets(
     'sender + HANDED_OVER avec confirmationCode → boutons QR + Code de retrait',
@@ -109,14 +107,13 @@ void main() {
     },
   );
 
-  testWidgets(
-    'sender + IN_TRANSIT sans confirmationCode → bouton QR seul',
-    (tester) async {
-      await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
-      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
-      expect(find.text('Code de retrait'), findsNothing);
-    },
-  );
+  testWidgets('sender + IN_TRANSIT sans confirmationCode → bouton QR seul', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
+    expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+    expect(find.text('Code de retrait'), findsNothing);
+  });
 
   testWidgets(
     'sender + IN_TRANSIT avec confirmationCode → boutons QR + Code de retrait',
@@ -187,8 +184,9 @@ void main() {
     },
   );
 
-  testWidgets('sender + CANCELLED + colis restitué → bloc "Colis restitué"',
-      (tester) async {
+  testWidgets('sender + CANCELLED + colis restitué → bloc "Colis restitué"', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(
@@ -203,7 +201,7 @@ void main() {
 
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
-  testWidgets('voyageur + ACCEPTED → talon passif (pas de scan)', (
+  testWidgets('voyageur + ACCEPTED → lien "Scanner les étapes" (Suivi)', (
     tester,
   ) async {
     await _pump(
@@ -211,9 +209,9 @@ void main() {
       _bid(status: 'ACCEPTED', trackingNumber: 'DON-1'),
       false,
     );
-    // Le scan vit désormais dans la barre collante, pas dans le talon.
-    expect(find.byType(TalonTravelerActionView), findsNothing);
-    expect(find.text('Scanner le colis'), findsNothing);
+    // Accès au scan depuis le détail → redirige vers les étapes du Suivi.
+    expect(find.text('Scanner les étapes'), findsOneWidget);
+    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
     // La bande de suivi reste.
     expect(find.text('N° DE SUIVI'), findsOneWidget);
   });
@@ -247,19 +245,20 @@ void main() {
     expect(find.text('—'), findsWidgets);
   });
 
-  testWidgets('voyageur + HANDED_OVER → talon passif (pas de confirmation)', (
+  testWidgets('voyageur + HANDED_OVER → lien "Scanner les étapes" (Suivi)', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
-    expect(find.byType(TalonTravelerActionView), findsNothing);
-    expect(find.text('Confirmer la livraison'), findsNothing);
+    // Redirige vers les étapes du Suivi (ScanHub).
+    expect(find.text('Scanner les étapes'), findsOneWidget);
+    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
   });
 
-  testWidgets('voyageur + IN_TRANSIT → talon passif (pas de confirmation)', (
+  testWidgets('voyageur + IN_TRANSIT → lien "Scanner les étapes" (Suivi)', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'IN_TRANSIT'), false);
-    expect(find.byType(TalonTravelerActionView), findsNothing);
+    expect(find.text('Scanner les étapes'), findsOneWidget);
   });
 
   testWidgets('voyageur + COMPLETED → bloc vert "Colis livré"', (tester) async {
@@ -293,8 +292,9 @@ void main() {
     },
   );
 
-  testWidgets('voyageur + CANCELLED + colis restitué → bloc "Colis restitué"',
-      (tester) async {
+  testWidgets('voyageur + CANCELLED + colis restitué → bloc "Colis restitué"', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(

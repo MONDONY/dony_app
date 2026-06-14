@@ -61,7 +61,7 @@ class QuickActionsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _ActionTile(
-            icon: Icons.local_shipping_rounded,
+            icon: Icons.inventory_2_rounded,
             label: 'Suivi du colis',
             cs: cs,
             tt: tt,
