@@ -20,7 +20,6 @@ class FakeProfilePublicEvent extends Fake implements ProfilePublicEvent {}
 const _profile = ProfilePublicModel(
   userId: 'user-1',
   displayName: 'Fatou Diallo',
-  avatarUrl: null,
   kycVerified: true,
   isProAccount: false,
   isKiloPro: false,
@@ -31,6 +30,36 @@ const _profile = ProfilePublicModel(
   badges: ['Super Expéditeur'],
 );
 
+ProfilePublicModel profileWith({
+  String? bio,
+  List<String> languages = const [],
+  String? transportMode,
+}) {
+  return ProfilePublicModel(
+    userId: 'user-1',
+    displayName: 'Fatou Diallo',
+    kycVerified: true,
+    isProAccount: false,
+    isKiloPro: false,
+    completedBidsCount: 12,
+    averageRating: 4.8,
+    ratingCount: 7,
+    memberSince: 'mars 2025',
+    badges: const [],
+    bio: bio,
+    languages: languages,
+    transportMode: transportMode,
+  );
+}
+
+Widget _wrapLoaded({required ProfilePublicModel profile}) {
+  final bloc = MockProfilePublicBloc();
+  when(() => bloc.state).thenReturn(
+    ProfilePublicLoaded(profile: profile, recentRatings: _ratingSummary),
+  );
+  return _wrap(bloc);
+}
+
 final _ratingSummary = RatingSummary(
   averageRating: 4.8,
   ratingCount: 7,
@@ -39,7 +68,7 @@ final _ratingSummary = RatingSummary(
     RatingItem(
       stars: 5,
       comment: 'Parfait !',
-      createdAt: DateTime.utc(2026, 3, 1),
+      createdAt: DateTime.utc(2026, 3),
       excluded: false,
     ),
   ],
@@ -54,11 +83,11 @@ Widget _wrap(ProfilePublicBloc bloc) => BlocProvider<ProfilePublicBloc>.value(
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => const ProfilePublicScreen(userId: 'user-1'),
+          builder: (_, _) => const ProfilePublicScreen(userId: 'user-1'),
         ),
         GoRoute(
           path: '/profile/reviews',
-          builder: (_, __) => const Scaffold(body: Text('Reviews')),
+          builder: (_, _) => const Scaffold(body: Text('Reviews')),
         ),
       ],
     ),
@@ -141,5 +170,57 @@ void main() {
 
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<ProfilePublicRequested>()))).called(1);
+  });
+
+  testWidgets('profil public affiche À propos + langues si présents', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: profileWith(
+          bio: 'Hello',
+          languages: ['FR'],
+          transportMode: 'AVION',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('À PROPOS'), findsOneWidget);
+    expect(find.text('Hello'), findsOneWidget);
+    expect(find.text('LANGUES'), findsOneWidget);
+  });
+
+  testWidgets('profil public masque À propos/langues si absents', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: profileWith(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('À PROPOS'), findsNothing);
+    expect(find.text('LANGUES'), findsNothing);
+    expect(find.text('TRANSPORT'), findsNothing);
+  });
+
+  testWidgets('profil public affiche le bon label de transport', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: profileWith(
+          languages: [],
+          transportMode: 'VOITURE',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('🚗 Voiture'), findsOneWidget);
+    expect(find.text('TRANSPORT'), findsOneWidget);
+    expect(find.text('LANGUES'), findsNothing);
   });
 }

@@ -110,13 +110,49 @@ class _LoadedView extends StatelessWidget {
                   .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
+        // À propos card
+        if (profile.bio != null && profile.bio!.trim().isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.base,
+                DonySpacing.lg,
+                0,
+              ),
+              child: _AboutCard(bio: profile.bio!),
+            ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
+          ),
+
         // Stats row
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.base,
+              DonySpacing.lg,
+              0,
+            ),
             child: _StatsRow(profile: profile),
           ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
         ),
+
+        // Langues / Transport card
+        if (profile.languages.isNotEmpty || profile.transportMode != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.base,
+                DonySpacing.lg,
+                0,
+              ),
+              child: _TravelerInfoCard(
+                languages: profile.languages,
+                transportMode: profile.transportMode,
+              ),
+            ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
+          ),
 
         // Badges section
         if (profile.badges.isNotEmpty)
@@ -201,7 +237,6 @@ class _HeroCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(DonySpacing.xl),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           DonyAvatar(
             name: profile.displayName,
@@ -235,13 +270,13 @@ class _HeroCard extends StatelessWidget {
                         bgColor: cs.successLight,
                       ),
                     if (profile.isProAccount)
-                      _StatusChip(
+                      const _StatusChip(
                         label: 'PRO',
                         color: DonyColors.warning700,
                         bgColor: DonyColors.amberLight,
                       ),
                     if (profile.isKiloPro)
-                      _StatusChip(
+                      const _StatusChip(
                         label: 'Kilo Pro',
                         color: DonyColors.violet,
                         bgColor: DonyColors.violetLight,
@@ -387,6 +422,162 @@ class _StatItem extends StatelessWidget {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── À propos card ───────────────────────────────────────────────────────────
+
+class _AboutCard extends StatelessWidget {
+  const _AboutCard({required this.bio});
+
+  final String bio;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+        boxShadow: DonyShadows.card,
+      ),
+      padding: const EdgeInsets.all(DonySpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'À PROPOS',
+            style: tt.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            bio,
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface,
+              height: 1.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Langues / Transport card ─────────────────────────────────────────────────
+
+class _TravelerInfoCard extends StatelessWidget {
+  const _TravelerInfoCard({
+    required this.languages,
+    required this.transportMode,
+  });
+
+  final List<String> languages;
+  final String? transportMode;
+
+  static String _transportLabel(String mode) {
+    switch (mode) {
+      case 'AVION':
+        return '✈️ Avion';
+      case 'VOITURE':
+        return '🚗 Voiture';
+      case 'TRAIN':
+        return '🚆 Train';
+      default:
+        return mode;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+        boxShadow: DonyShadows.card,
+      ),
+      padding: const EdgeInsets.all(DonySpacing.xl),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (languages.isNotEmpty)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'LANGUES',
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                  Wrap(
+                    spacing: DonySpacing.xs,
+                    runSpacing: DonySpacing.xs,
+                    children: languages
+                        .map(
+                          (lang) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.sm,
+                              vertical: DonySpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer,
+                              borderRadius: BorderRadius.circular(DonyRadius.full),
+                            ),
+                            child: Text(
+                              lang,
+                              style: tt.labelMedium?.copyWith(
+                                color: cs.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+          if (languages.isNotEmpty && transportMode != null)
+            const SizedBox(width: DonySpacing.base),
+          if (transportMode != null)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TRANSPORT',
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                  Text(
+                    _transportLabel(transportMode!),
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
