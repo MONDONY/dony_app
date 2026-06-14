@@ -1277,6 +1277,30 @@ void main() {
       },
     );
 
+    testWidgets(
+      'Mes adresses visible pour un expéditeur (dans Mon carnet)',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildTestHarness(
+            authBloc: authBloc,
+            deletionBloc: deletionBloc,
+            bidBloc: bidBloc,
+            announcementBloc: announcementBloc,
+            referralBloc: referralBloc,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        await tester.scrollUntilVisible(
+          find.text('Mes adresses'),
+          300,
+          scrollable: _activityScrollable,
+        );
+        expect(find.text('Mes adresses'), findsOneWidget);
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+      },
+    );
+
     testWidgets('pur expéditeur : section FIDÉLITÉ présente en onglet Compte', (
       tester,
     ) async {
