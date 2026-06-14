@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 class CommissionCardEmptyState extends StatelessWidget {
@@ -9,13 +8,15 @@ class CommissionCardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(DonySpacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          DonyIcon('credit-card', size: 96, color: cs.onSurfaceVariant),
+          const DonyMascotteAnimated(
+            type: DonyMascotteType.assis,
+            size: DonyMascotteSize.lg,
+          ),
           const SizedBox(height: DonySpacing.base),
           Text(
             'Aucune carte enregistrée',

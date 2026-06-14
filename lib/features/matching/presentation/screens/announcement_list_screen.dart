@@ -533,6 +533,7 @@ class _EmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DonyEmptyState(
+      mascotte: DonyMascotteType.assis,
       title: _title,
       description: _description,
       iconAsset: 'plane-takeoff',

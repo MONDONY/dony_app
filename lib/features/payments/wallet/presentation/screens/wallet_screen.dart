@@ -79,7 +79,10 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIcon('wifi-off', size: 48, color: cs.onSurfaceVariant),
+            const DonyMascotteAnimated(
+              type: DonyMascotteType.assis,
+              size: DonyMascotteSize.lg,
+            ),
             const SizedBox(height: DonySpacing.base),
             Text(
               message,
@@ -171,10 +174,9 @@ class _LoadedView extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    DonyIcon(
-                      'receipt',
-                      size: 48,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const DonyMascotteAnimated(
+                      type: DonyMascotteType.assis,
+                      size: DonyMascotteSize.lg,
                     ),
                     const SizedBox(height: DonySpacing.base),
                     Text(

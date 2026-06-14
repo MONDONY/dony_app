@@ -1,6 +1,7 @@
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,7 +36,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Évaluer Amadou'), findsOneWidget);
-    expect(find.byIcon(Icons.star_outline_rounded), findsWidgets);
+    // Étoiles du sélecteur = DonyIcon('star') taille 44 (rempli/vide par couleur).
+    expect(
+      find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'star' && w.size == 44),
+      findsWidgets,
+    );
     expect(find.text('Commentaire (facultatif)'), findsOneWidget);
   });
 
@@ -69,8 +75,9 @@ void main() {
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    // Tape sur la 3ème étoile
-    final stars = find.byIcon(Icons.star_outline_rounded);
+    // Tape sur la 3ème étoile (DonyIcon('star') taille 44 du sélecteur)
+    final stars = find.byWidgetPredicate(
+        (w) => w is DonyIcon && w.name == 'star' && w.size == 44);
     await tester.tap(stars.at(2));
     await tester.pumpAndSettle();
 

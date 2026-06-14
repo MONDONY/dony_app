@@ -43,6 +43,7 @@ class TripTemplatesScreen extends StatelessWidget {
           }
           if (state.status == TripTemplateStatus.error && state.templates.isEmpty) {
             return DonyEmptyState(
+              mascotte: DonyMascotteType.assis,
               type: DonyEmptyStateType.error,
               iconAsset: 'circle-alert',
               title: 'Erreur de chargement',

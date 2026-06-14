@@ -120,6 +120,7 @@ class _RemiseTab extends StatelessWidget {
         if (state.status == PickupAddressStatus.error &&
             state.addresses.isEmpty) {
           return DonyEmptyState(
+            mascotte: DonyMascotteType.assis,
             type: DonyEmptyStateType.error,
             icon: Icons.error_outline_rounded,
             title: 'Erreur de chargement',
@@ -188,6 +189,7 @@ class _LivraisonTab extends StatelessWidget {
         if (state.status == DeliveryAddressStatus.error &&
             state.addresses.isEmpty) {
           return DonyEmptyState(
+            mascotte: DonyMascotteType.assis,
             type: DonyEmptyStateType.error,
             icon: Icons.error_outline_rounded,
             title: 'Erreur de chargement',

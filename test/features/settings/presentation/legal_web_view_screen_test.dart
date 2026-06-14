@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -102,7 +103,10 @@ void main() {
     testWidgets('affiche l\'icône d\'ouverture externe dans l\'AppBar', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pump(); // une frame pour construire l'appbar
-      expect(find.byIcon(Icons.open_in_browser_rounded), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'external-link'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('dispose sans erreur', (tester) async {

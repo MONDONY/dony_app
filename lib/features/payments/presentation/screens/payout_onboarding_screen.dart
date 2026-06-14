@@ -388,11 +388,10 @@ class _SuccessView extends StatelessWidget {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DonyIconContainer(
-                    iconAsset: 'circle-check',
-                    size: DonyIconContainerSize.xxl,
-                    backgroundColor: cs.success.withValues(alpha: 0.1),
-                    iconColor: cs.success,
+                  const DonyMascotteAnimated(
+                    type: DonyMascotteType.securise,
+                    size: DonyMascotteSize.lg,
+                    withGlow: true,
                   ),
                   const SizedBox(height: DonySpacing.xl),
                   Text(

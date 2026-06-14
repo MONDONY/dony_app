@@ -282,6 +282,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DonyEmptyState(
+      mascotte: DonyMascotteType.assis,
       title: 'Impossible de charger les trajets',
       description: message,
       type: DonyEmptyStateType.error,

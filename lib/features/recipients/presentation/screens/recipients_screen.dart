@@ -38,6 +38,7 @@ class RecipientsScreen extends StatelessWidget {
           if (state.status == RecipientStatus.error &&
               state.recipients.isEmpty) {
             return DonyEmptyState(
+              mascotte: DonyMascotteType.assis,
               type: DonyEmptyStateType.error,
               icon: Icons.error_outline_rounded,
               title: 'Erreur de chargement',

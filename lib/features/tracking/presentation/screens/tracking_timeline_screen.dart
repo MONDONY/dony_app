@@ -434,14 +434,9 @@ class _EmptyTimeline extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.md),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.lg),
-            ),
-            child: Icon(Icons.hourglass_empty_rounded,
-                color: cs.primary, size: 32),
+          const DonyMascotteAnimated(
+            type: DonyMascotteType.donneColis,
+            size: DonyMascotteSize.md,
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
@@ -736,8 +731,10 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded,
-                color: cs.error, size: 40),
+            const DonyMascotteAnimated(
+              type: DonyMascotteType.assis,
+              size: DonyMascotteSize.lg,
+            ),
             const SizedBox(height: DonySpacing.md),
             Text(
               message,
