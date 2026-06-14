@@ -530,8 +530,8 @@ class _ActivityTab extends StatelessWidget {
                 ),
                 DonyListTile(
                   icon: Icons.handshake_rounded,
-                  iconColor: cs.tertiary,
-                  iconBgColor: cs.tertiaryContainer,
+                  iconColor: cs.primary,
+                  iconBgColor: cs.primaryContainer,
                   label: 'Mes négociations',
                   showDivider: false,
                   onTap: () => context.push('/negotiations'),
