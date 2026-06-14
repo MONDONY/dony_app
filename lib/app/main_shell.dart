@@ -278,7 +278,7 @@ class _DonyBottomNav extends StatelessWidget {
                               },
                             ),
                           ),
-                          // 4 — Moi
+                          // 4 — Moi (photo de profil style Facebook)
                           Expanded(
                             child: _NavItem(
                               icon: Icons.person_rounded,
@@ -288,6 +288,8 @@ class _DonyBottomNav extends StatelessWidget {
                               currentIndex: currentIndex,
                               onTap: () => onTap(4),
                               isPro: isProAccount,
+                              avatarUrl: authUser?.avatarUrl,
+                              avatarName: authUser?.displayName,
                             ),
                           ),
                         ],
@@ -314,6 +316,8 @@ class _NavItem extends StatelessWidget {
     required this.onTap,
     this.badgeCount = 0,
     this.isPro = false,
+    this.avatarUrl,
+    this.avatarName,
   });
 
   final IconData icon;
@@ -324,6 +328,11 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onTap;
   final int badgeCount;
   final bool isPro;
+
+  /// Si renseigné, l'onglet affiche la photo de profil (style Facebook) au lieu
+  /// de l'icône — anneau bleu quand actif, initiales en repli sans photo.
+  final String? avatarUrl;
+  final String? avatarName;
 
   bool get _active => index == currentIndex;
 
@@ -361,25 +370,47 @@ class _NavItem extends StatelessWidget {
                         horizontal: DonySpacing.md,
                         vertical: DonySpacing.xs,
                       ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        transitionBuilder: (child, animation) =>
-                            ScaleTransition(
-                              scale: animation,
-                              child: FadeTransition(
-                                opacity: animation,
-                                child: child,
+                      child: avatarName != null
+                          ? AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutCubic,
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _active
+                                      ? DonyColors.primary
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: DonyAvatar(
+                                name: avatarName!,
+                                imageUrl: avatarUrl,
+                                size: DonyAvatarSize.xs,
+                              ),
+                            )
+                          : AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              transitionBuilder: (child, animation) =>
+                                  ScaleTransition(
+                                    scale: animation,
+                                    child: FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    ),
+                                  ),
+                              child: Icon(
+                                _active ? icon : outlinedIcon,
+                                key: ValueKey(
+                                  '${index}_${_active ? 'a' : 'i'}',
+                                ),
+                                size: 22,
+                                color: _active
+                                    ? DonyColors.primary
+                                    : DonyColors.textSubtle,
                               ),
                             ),
-                        child: Icon(
-                          _active ? icon : outlinedIcon,
-                          key: ValueKey('${index}_${_active ? 'a' : 'i'}'),
-                          size: 22,
-                          color: _active
-                              ? DonyColors.primary
-                              : DonyColors.textSubtle,
-                        ),
-                      ),
                     ),
                     if (badgeCount > 0)
                       Positioned(
@@ -387,7 +418,7 @@ class _NavItem extends StatelessWidget {
                         top: 2,
                         child: _NavBadge(count: badgeCount),
                       ),
-                    if (isPro)
+                    if (isPro && avatarName == null)
                       Positioned(
                         right: 0,
                         top: 0,
