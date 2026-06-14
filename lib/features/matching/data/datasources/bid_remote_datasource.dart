@@ -22,7 +22,6 @@ class BidRemoteDatasource {
   }) async {
     final body = <String, dynamic>{
       'announcementId': announcementId,
-      'weightKg': weightKg,
       'declaredValueEur': declaredValueEur,
       'description': description,
       'contentCategory': contentCategory,
@@ -30,6 +29,8 @@ class BidRemoteDatasource {
       'recipientPhone': recipientPhone,
       'disclaimerSigned': true,
     };
+    // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
+    if (weightKg > 0) body['weightKg'] = weightKg;
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
@@ -73,7 +74,6 @@ class BidRemoteDatasource {
     List<Map<String, dynamic>>? gridItems,
   }) async {
     final body = <String, dynamic>{
-      'weightKg': weightKg,
       'declaredValueEur': declaredValueEur,
       'description': description,
       'contentCategory': contentCategory,
@@ -82,6 +82,8 @@ class BidRemoteDatasource {
       'disclaimerSigned': true,
       'paymentMethod': paymentMethod.apiValue,
     };
+    // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
+    if (weightKg > 0) body['weightKg'] = weightKg;
     if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
     if (countryCode != null) body['countryCode'] = countryCode;
     if (promoCode != null && promoCode.isNotEmpty) {
@@ -143,23 +145,6 @@ class BidRemoteDatasource {
 
   Future<void> dismissBidAsTraveler(String bidId) async {
     await _apiClient.dio.delete('/bids/$bidId/traveler');
-  }
-
-  Future<BidModel> setHandover({
-    required String bidId,
-    required String location,
-    required DateTime windowStart,
-    required DateTime windowEnd,
-  }) async {
-    final response = await _apiClient.dio.put(
-      '/bids/$bidId/handover',
-      data: {
-        'location': location,
-        'windowStart': windowStart.toUtc().toIso8601String(),
-        'windowEnd': windowEnd.toUtc().toIso8601String(),
-      },
-    );
-    return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<BidModel> confirmPresence(String bidId) async {

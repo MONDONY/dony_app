@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 LinkedTripSummary _trip({
   String mode = 'PLANE',
   String? date,
+  String? capacityUnit,
 }) =>
     LinkedTripSummary(
       announcementId: 'ann-1',
@@ -15,6 +16,7 @@ LinkedTripSummary _trip({
       departureDate: date ?? '2026-08-15',
       transportMode: mode,
       availableKg: 10,
+      capacityUnit: capacityUnit,
     );
 
 Widget _wrap(Widget child) =>
@@ -37,6 +39,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.textContaining('2026-08-15'), findsOneWidget);
       expect(find.textContaining('10 kg'), findsOneWidget);
+    });
+
+    testWidgets('displays « Kg libre » for KG_FREE capacity', (tester) async {
+      await tester.pumpWidget(_wrap(
+        LinkedTripCard(trip: _trip(capacityUnit: 'KG_FREE'), onTap: () {}),
+      ));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('Kg libre'), findsOneWidget);
+      expect(find.textContaining('10 kg'), findsNothing);
     });
 
     testWidgets('displays plane icon for PLANE mode', (tester) async {

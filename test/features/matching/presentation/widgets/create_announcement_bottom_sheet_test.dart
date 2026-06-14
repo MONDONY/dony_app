@@ -98,6 +98,8 @@ final _kgFreeAnnouncement = AnnouncementModel(
   capacityUnit: 'KG_FREE',
   pricingMode: 'MIXED',
   transportMode: TransportMode.plane,
+  handoverWindowStart: DateTime(2026, 8, 14, 16),
+  handoverWindowEnd: DateTime(2026, 8, 14, 18),
 );
 
 /// Annonce complète utilisée pour tester la navigation entre étapes en mode
@@ -295,6 +297,23 @@ Future<void> _fillStep0AndContinue(
   await tester.tap(find.byKey(const Key('departureDateField')));
   await tester.pumpAndSettle();
   await tester.tap(find.text('OK'));
+  await tester.pumpAndSettle();
+
+  // Fenêtre de remise : début puis fin. Le picker propose la date du lendemain
+  // (= la date de départ) et des heures par défaut 16:00 / 18:00 → accepter via
+  // OK suffit à produire une fenêtre valide de 2 h, requise pour « Continuer ».
+  await tester.tap(find.byKey(const Key('sheet-handover-start-row')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // date
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // heure (16:00)
+  await tester.pumpAndSettle();
+
+  await tester.tap(find.byKey(const Key('sheet-handover-end-row')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // date
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // heure (18:00)
   await tester.pumpAndSettle();
 
   // "Continuer" est désormais actif.
@@ -578,7 +597,7 @@ void main() {
 
   group('CreateAnnouncementBottomSheet — édition (mode KG_FREE + MIXED)', () {
     testWidgets(
-        'affiche le mode KG_FREE (texte helper) à l\'étape capacité pour une annonce KG_FREE',
+        'affiche la carte info « kilo libre » (sans champ) à l\'étape capacité pour une annonce KG_FREE',
         (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -603,11 +622,9 @@ void main() {
       await tester.pump(_settle);
 
       // Le postFrameCallback a dispatché CapacityUnitChanged(kgFree)
-      // → CapacityControl doit afficher le helper de la carte KG libre
-      expect(
-        find.textContaining('Tarification au kilo'),
-        findsOneWidget,
-      );
+      // → CapacityControl affiche la carte info « kilo libre » (sans champ de saisie)
+      expect(find.text('Capacité illimitée'), findsOneWidget);
+      expect(find.textContaining('Vendu au kilo'), findsOneWidget);
     });
   });
 }

@@ -33,9 +33,12 @@ class ShipmentsHistoryScreen extends StatelessWidget {
             );
           }
           if (state is BidListLoaded) {
-            final delivered =
-                state.bids.where((b) => b.status == 'DELIVERED').toList()
-                  ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
+            // Statut terminal back-end d'une livraison réussie = COMPLETED
+            // (le back n'émet jamais DELIVERED).
+            final delivered = state.bids
+                .where((b) => b.status == 'COMPLETED')
+                .toList()
+              ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
 
             if (delivered.isEmpty) {
               return const DonyEmptyState(

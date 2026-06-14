@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/data/datasources/delivery_address_datasource.dart';
@@ -61,11 +62,13 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -109,6 +112,8 @@ import 'package:dony/features/package_request/data/price_estimation_repository.d
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/data/datasources/commission_method_remote_datasource.dart';
@@ -147,6 +152,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<HiveService>(),
       remote: getIt<AnalyticsConsentRemote>(),
     ),
+  );
+  DonyFeedbackButton.registerAnalyticsResolver(() => getIt<AnalyticsService>());
+  getIt.registerLazySingleton<ActiveRoleCubit>(
+    () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );
   getIt.registerLazySingleton<DeviceIdService>(() => DeviceIdService());
   getIt.registerLazySingleton<ApiClient>(
@@ -230,6 +239,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<HiveService>(),
       getIt<AnalyticsService>(),
     ),
+  );
+  getIt.registerFactory<TripsSummaryCubit>(
+    () => TripsSummaryCubit(getIt<AnnouncementRepository>()),
+  );
+  getIt.registerFactory<TripFilterCubit>(
+    () => TripFilterCubit(getIt<AnalyticsService>()),
   );
 
   // Price Grid
@@ -507,6 +522,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => TrackingBloc(
       getIt<TrackingRepository>(),
       getIt<OfflineSyncService>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<ScanHubCubit>(
+    () => ScanHubCubit(
+      getIt<AnnouncementRepository>(),
+      getIt<BidRepository>(),
       getIt<AnalyticsService>(),
     ),
   );

@@ -215,27 +215,6 @@ void main() {
     });
   });
 
-  // ── setHandover ──────────────────────────────────────────────────────────────
-
-  group('setHandover', () {
-    test('returns BidModel with handover set', () async {
-      final withHandover = {..._bidJson, 'handoverLocation': 'Gare du Nord'};
-      when(() => mockDio.put('/bids/bid-001/handover',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              _ok(withHandover, '/bids/bid-001/handover'));
-
-      final result = await datasource.setHandover(
-        bidId: 'bid-001',
-        location: 'Gare du Nord',
-        windowStart: DateTime(2024, 6, 1, 10),
-        windowEnd: DateTime(2024, 6, 1, 12),
-      );
-
-      expect(result.handoverLocation, 'Gare du Nord');
-    });
-  });
-
   // ── confirmPresence ──────────────────────────────────────────────────────────
 
   group('confirmPresence', () {
@@ -323,6 +302,51 @@ void main() {
       );
 
       expect((capturedBody as Map).containsKey('gridItems'), isFalse);
+    });
+
+    test('mode GRID pur : weightKg = 0 est omis du body', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/checkout', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_checkoutJson, '/bids/checkout');
+      });
+
+      await datasource.checkoutBid(
+        announcementId: 'ann-001',
+        weightKg: 0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 1}
+        ],
+      );
+
+      expect((capturedBody as Map).containsKey('weightKg'), isFalse);
+    });
+
+    test('mode KG : weightKg > 0 est inclus dans le body', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/checkout', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_checkoutJson, '/bids/checkout');
+      });
+
+      await datasource.checkoutBid(
+        announcementId: 'ann-001',
+        weightKg: 3.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+      );
+
+      expect((capturedBody as Map)['weightKg'], 3.0);
     });
   });
 
@@ -557,6 +581,53 @@ void main() {
       );
 
       expect((capturedBody as Map)['paymentMethod'], 'CASH');
+    });
+
+    test('mode GRID pur : weightKg = 0 est omis du body', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post(
+              '/announcements/ann-001/bids', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_bidJson, '/announcements/ann-001/bids');
+      });
+
+      await datasource.createBid(
+        announcementId: 'ann-001',
+        weightKg: 0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 1}
+        ],
+      );
+
+      expect((capturedBody as Map).containsKey('weightKg'), isFalse);
+    });
+
+    test('mode KG : weightKg > 0 est inclus dans le body', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post(
+              '/announcements/ann-001/bids', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_bidJson, '/announcements/ann-001/bids');
+      });
+
+      await datasource.createBid(
+        announcementId: 'ann-001',
+        weightKg: 4.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+      );
+
+      expect((capturedBody as Map)['weightKg'], 4.0);
     });
   });
 

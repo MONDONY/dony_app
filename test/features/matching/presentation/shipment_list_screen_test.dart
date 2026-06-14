@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -85,7 +86,7 @@ void main() {
     ),
   );
 
-  testWidgets('puce rapide « Passés » ne montre que les livrés/clôturés', (
+  testWidgets('puce rapide « Livrés » ne montre que les COMPLETED', (
     tester,
   ) async {
     final bids = [_bid('ACCEPTED', 'Dakar'), _bid('COMPLETED', 'Abidjan')];
@@ -97,11 +98,11 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Passés'));
+    await tester.tap(find.text('Livrés'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paris → Abidjan'), findsOneWidget);
-    expect(find.text('Paris → Dakar'), findsNothing);
+    expect(find.text('Abidjan'), findsOneWidget);
+    expect(find.text('Dakar'), findsNothing);
   });
 
   testWidgets('recherche filtre la liste après debounce', (tester) async {
@@ -118,8 +119,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paris → Bamako'), findsOneWidget);
-    expect(find.text('Paris → Dakar'), findsNothing);
+    expect(find.text('Bamako'), findsOneWidget);
+    expect(find.text('Dakar'), findsNothing);
   });
 
   testWidgets('état vide filtré affiche Réinitialiser', (tester) async {
@@ -206,7 +207,7 @@ void main() {
     expect(find.textContaining('Erreur de chargement'), findsOneWidget);
   });
 
-  testWidgets('liste vide totale affiche « Aucun envoi »', (tester) async {
+  testWidgets('liste vide totale affiche « Aucun envoi pour l\'instant »', (tester) async {
     whenListen(
       bidBloc,
       const Stream<BidState>.empty(),
@@ -216,6 +217,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.textContaining('Aucun envoi'), findsOneWidget);
+  });
+
+  testWidgets('liste vide totale — chips et champ recherche masqués', (tester) async {
+    whenListen(
+      bidBloc,
+      const Stream<BidState>.empty(),
+      initialState: BidListLoaded(const []),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // Chips and search are hidden when raw bid list is empty
+    expect(find.byType(StatusChipsRow), findsNothing);
+    expect(find.byType(TextField), findsNothing);
+  });
+
+  testWidgets('liste vide totale affiche CTA « Rechercher un trajet »', (tester) async {
+    whenListen(
+      bidBloc,
+      const Stream<BidState>.empty(),
+      initialState: BidListLoaded(const []),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Rechercher un trajet'), findsOneWidget);
   });
 
   testWidgets('puce rapide « En cours » filtre les bids ACCEPTED/HANDED_OVER/IN_TRANSIT',
@@ -235,8 +262,8 @@ void main() {
     await tester.tap(find.text('En cours'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paris → Dakar'), findsOneWidget);
-    expect(find.text('Paris → Abidjan'), findsNothing);
+    expect(find.text('Dakar'), findsOneWidget);
+    expect(find.text('Abidjan'), findsNothing);
   });
 
   testWidgets('puce rapide « Tous » réinitialise le filtre statut', (tester) async {
@@ -259,11 +286,11 @@ void main() {
     await tester.tap(find.text('Tous'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paris → Dakar'), findsOneWidget);
-    expect(find.text('Paris → Abidjan'), findsOneWidget);
+    expect(find.text('Dakar'), findsOneWidget);
+    expect(find.text('Abidjan'), findsOneWidget);
   });
 
-  testWidgets('puce rapide « À venir » filtre PENDING/AWAITING_PAYMENT/PAYMENT_ESCROWED',
+  testWidgets('puce rapide « En attente » filtre PENDING/AWAITING_PAYMENT/PAYMENT_ESCROWED',
       (tester) async {
     final bids = [
       _bid('ACCEPTED', 'Dakar'),
@@ -277,11 +304,11 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('À venir'));
+    await tester.tap(find.text('En attente'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paris → Abidjan'), findsOneWidget);
-    expect(find.text('Paris → Dakar'), findsNothing);
+    expect(find.text('Abidjan'), findsOneWidget);
+    expect(find.text('Dakar'), findsNothing);
   });
 
   testWidgets('« Tout effacer » réinitialise les filtres actifs', (tester) async {
@@ -322,7 +349,9 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('carte AWAITING_PAYMENT affiche le bouton « Payer → »', (tester) async {
+  // Note: after ShipmentCard redesign, AWAITING_PAYMENT shows badge 'EN ATTENTE'
+  // and navigates to bid detail on tap (no inline "Payer →" button).
+  testWidgets('carte AWAITING_PAYMENT affiche le badge EN ATTENTE', (tester) async {
     final bids = [_bid('AWAITING_PAYMENT', 'Dakar')];
     whenListen(
       bidBloc,
@@ -332,10 +361,10 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('Payer →'), findsOneWidget);
+    expect(find.text('EN ATTENTE'), findsOneWidget);
   });
 
-  testWidgets('carte COMPLETED affiche le badge LIVRÉ et le CTA « Détail → »',
+  testWidgets('carte COMPLETED affiche le badge LIVRÉ et le CTA « Détails → »',
       (tester) async {
     final bids = [_bid('COMPLETED', 'Dakar')];
     whenListen(
@@ -347,10 +376,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('LIVRÉ'), findsOneWidget);
-    expect(find.text('Détail →'), findsOneWidget);
+    expect(find.text('Détails →'), findsOneWidget);
   });
 
-  testWidgets('carte ACCEPTED affiche le badge CONFIRMÉ et le CTA « Voir → »',
+  testWidgets('carte ACCEPTED affiche le badge À REMETTRE et le CTA « Voir le QR → »',
       (tester) async {
     final bids = [_bid('ACCEPTED', 'Dakar')];
     whenListen(
@@ -361,11 +390,11 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('CONFIRMÉ'), findsOneWidget);
-    expect(find.text('Voir →'), findsOneWidget);
+    expect(find.text('À REMETTRE'), findsOneWidget);
+    expect(find.text('Voir le QR →'), findsOneWidget);
   });
 
-  testWidgets('carte REJECTED affiche badge REFUSÉ et CTA désactivé', (tester) async {
+  testWidgets('carte REJECTED affiche badge TERMINÉ', (tester) async {
     final bids = [_bid('REJECTED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -375,10 +404,10 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('REFUSÉ'), findsOneWidget);
+    expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  testWidgets('carte CANCELLED affiche badge ANNULÉ', (tester) async {
+  testWidgets('carte CANCELLED affiche badge TERMINÉ', (tester) async {
     final bids = [_bid('CANCELLED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -388,7 +417,7 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('ANNULÉ'), findsOneWidget);
+    expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
   testWidgets('carte IN_TRANSIT affiche badge EN TRANSIT', (tester) async {
@@ -404,7 +433,7 @@ void main() {
     expect(find.text('EN TRANSIT'), findsOneWidget);
   });
 
-  testWidgets('carte NO_SHOW affiche badge ABSENT', (tester) async {
+  testWidgets('carte NO_SHOW affiche badge TERMINÉ', (tester) async {
     final bids = [_bid('NO_SHOW', 'Dakar')];
     whenListen(
       bidBloc,
@@ -414,10 +443,10 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('ABSENT'), findsOneWidget);
+    expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  testWidgets('carte EXPIRED affiche badge EXPIRÉ', (tester) async {
+  testWidgets('carte EXPIRED affiche badge TERMINÉ', (tester) async {
     final bids = [_bid('EXPIRED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -427,10 +456,10 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('EXPIRÉ'), findsOneWidget);
+    expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  testWidgets('carte PARCEL_REFUSED affiche badge REFUSÉ', (tester) async {
+  testWidgets('carte PARCEL_REFUSED affiche badge TERMINÉ', (tester) async {
     final bids = [_bid('PARCEL_REFUSED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -440,7 +469,7 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('REFUSÉ'), findsOneWidget);
+    expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
   testWidgets('taper Réinitialiser dans l\'état vide filtré réinitialise le filtre',
@@ -464,7 +493,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Filter reset: all bids visible again
-    expect(find.text('Paris → Dakar'), findsOneWidget);
+    expect(find.text('Dakar'), findsOneWidget);
   });
 
   testWidgets('effacer la recherche via bouton clear dans le champ', (tester) async {
@@ -489,10 +518,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // After clear, search should be empty and both bids should show
-    expect(find.text('Paris → Dakar'), findsOneWidget);
+    expect(find.text('Dakar'), findsOneWidget);
   });
 
-  testWidgets('carte avec statut inconnu affiche le statut brut', (tester) async {
+  testWidgets('carte avec statut inconnu affiche le statut brut dans le badge', (tester) async {
     final bids = [_bid('CUSTOM_STATUS', 'Dakar')];
     whenListen(
       bidBloc,
@@ -502,8 +531,42 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    // The default case in _statusLabel should render the raw status string
+    // ShipmentCard._badge() default case returns bid.status as label
     expect(find.text('CUSTOM_STATUS'), findsOneWidget);
+  });
+
+  testWidgets('StatusChipsRow présente quand la liste contient des bids', (tester) async {
+    final bids = [_bid('ACCEPTED', 'Dakar')];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
+
+    // All four chip labels present
+    expect(find.text('Tous'), findsOneWidget);
+    expect(find.text('En cours'), findsOneWidget);
+    expect(find.text('En attente'), findsOneWidget);
+    expect(find.text('Livrés'), findsOneWidget);
+  });
+
+  testWidgets('tapper « Livrés » → cubit statuses == {COMPLETED}', (tester) async {
+    final bids = [_bid('COMPLETED', 'Dakar'), _bid('ACCEPTED', 'Abidjan')];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Livrés'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dakar'), findsOneWidget);
+    expect(find.text('Abidjan'), findsNothing);
   });
 
   testWidgets('mode standalone avec canGoBack=true affiche le bouton retour', (tester) async {

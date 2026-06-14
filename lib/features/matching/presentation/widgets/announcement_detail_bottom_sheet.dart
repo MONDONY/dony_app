@@ -391,6 +391,26 @@ class _AnnouncementDetailContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
         ],
 
+        // ── Fenêtre de remise ───────────────────────────────────────────────
+        if (a.handoverWindowStart != null && a.handoverWindowEnd != null) ...[
+          Text(
+            'FENÊTRE DE REMISE',
+            style: tt.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.8,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          _LieuRow(
+            icon: Icons.schedule_rounded,
+            label: 'CRÉNEAU',
+            address: _handoverRangeLabel(
+                a.handoverWindowStart!.toLocal(), a.handoverWindowEnd!.toLocal()),
+          ).animate().fadeIn(delay: 110.ms),
+          const SizedBox(height: DonySpacing.md),
+        ],
+
         // ── Paiements ────────────────────────────────────────────────────────
         if (a.acceptedPaymentMethods.isNotEmpty) ...[
           Text(
@@ -678,6 +698,19 @@ class _InfoPill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Formate la plage de remise. Même jour → « date heure → heure » ;
+/// jours différents → « date heure → date heure ».
+String _handoverRangeLabel(DateTime start, DateTime end) {
+  final sameDay = start.year == end.year &&
+      start.month == end.month &&
+      start.day == end.day;
+  final startStr = DateFormat('EEE d MMM, HH:mm', 'fr').format(start);
+  final endStr = sameDay
+      ? DateFormat('HH:mm', 'fr').format(end)
+      : DateFormat('EEE d MMM, HH:mm', 'fr').format(end);
+  return '$startStr → $endStr';
 }
 
 class _LieuRow extends StatelessWidget {

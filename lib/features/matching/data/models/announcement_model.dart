@@ -93,6 +93,14 @@ class AnnouncementModel {
   final String travelerId;
   final String departureCity;
   final String arrivalCity;
+
+  /// Code pays ISO-2 (ex: "US") du départ / arrivée. Fourni par le backend.
+  final String? departureCountryCode;
+  final String? arrivalCountryCode;
+
+  /// Drapeau emoji (ex: "🇺🇸") résolu par le backend depuis le code pays.
+  final String? departureFlag;
+  final String? arrivalFlag;
   final DateTime departureDate;
   // "HH:mm" format, null if not set
   final String? departureTime;
@@ -112,6 +120,16 @@ class AnnouncementModel {
   final TransportMode? transportMode;
   final String status;
   final int? bidsCount;
+
+  /// Nombre de demandes (bids) en attente d'acceptation pour ce trajet.
+  /// Exposé par `GET /announcements/my`. `0` si absent (ex: endpoint search).
+  @JsonKey(defaultValue: 0)
+  final int pendingBidCount;
+
+  /// Nombre de demandes (bids) acceptées / colis confirmés pour ce trajet.
+  /// Exposé par `GET /announcements/my`. `0` si absent.
+  @JsonKey(defaultValue: 0)
+  final int confirmedParcelCount;
   final TravelerProfile? traveler;
   final String? description;
   final List<String>? acceptedContentTypes;
@@ -139,11 +157,20 @@ class AnnouncementModel {
   /// Le surplus a déjà été ouvert au public (action définitive, non répétable).
   final bool surplusPublished;
 
+  /// Fenêtre de remise du trajet (créneau pendant lequel l'expéditeur remet le
+  /// colis). Définie à la création ; null pour les anciennes annonces.
+  final DateTime? handoverWindowStart;
+  final DateTime? handoverWindowEnd;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
     required this.departureCity,
     required this.arrivalCity,
+    this.departureCountryCode,
+    this.arrivalCountryCode,
+    this.departureFlag,
+    this.arrivalFlag,
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
@@ -156,6 +183,8 @@ class AnnouncementModel {
     this.transportMode,
     required this.status,
     this.bidsCount,
+    this.pendingBidCount = 0,
+    this.confirmedParcelCount = 0,
     this.traveler,
     this.description,
     this.acceptedContentTypes,
@@ -169,6 +198,8 @@ class AnnouncementModel {
     this.reservedKg = 0,
     this.surplusEligible = false,
     this.surplusPublished = false,
+    this.handoverWindowStart,
+    this.handoverWindowEnd,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
@@ -182,6 +213,10 @@ class AnnouncementModel {
   /// Le voyageur peut ouvrir le surplus : la négo est payée mais le surplus
   /// n'a pas encore été publié.
   bool get canOpenSurplus => surplusEligible && !surplusPublished;
+
+  /// Trajet vendu au kilo sans capacité fixe totale (mode "kilo libre").
+  /// Toujours vrai quand `capacityUnit == 'KG_FREE'`.
+  bool get isKgFree => capacityUnit == 'KG_FREE';
 }
 
 String? _transportModeToWireOrNull(TransportMode? mode) =>

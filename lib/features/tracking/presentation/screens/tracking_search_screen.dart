@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -10,7 +11,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class TrackingSearchScreen extends StatefulWidget {
-  const TrackingSearchScreen({super.key});
+  const TrackingSearchScreen({
+    super.key,
+    this.onScanTrip,
+    this.showBackButton = true,
+  });
+
+  /// Entrée additive « Scanner un trajet » (voyageur occasionnel). Null = non affichée.
+  final VoidCallback? onScanTrip;
+
+  /// Masque le bouton retour quand l'écran est rendu in-shell.
+  final bool showBackButton;
 
   @override
   State<TrackingSearchScreen> createState() => _TrackingSearchScreenState();
@@ -42,53 +53,86 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Suivre un colis'),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSearchHeader(cs, tt),
-                const SizedBox(height: DonySpacing.xl),
-                _buildSearchField(cs, tt),
-                const SizedBox(height: DonySpacing.lg),
-                DonyButton(
-                  label: 'Rechercher',
-                  onPressed: () => _search(context),
-                  icon: Icons.search_rounded,
-                ),
-                const SizedBox(height: DonySpacing.xxl),
-                BlocBuilder<TrackingBloc, TrackingState>(
-                  builder: (context, state) {
-                    if (state is TrackingSearchLoading) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40),
-                          child: CircularProgressIndicator(color: cs.primary),
+      appBar: DonyAppBar(
+        title: 'Suivre un colis',
+        showBackButton: widget.showBackButton,
+      ),
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              h,
+              DonySpacing.xxl,
+              h,
+              DonySpacing.huge,
+            ),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.onScanTrip != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            0,
+                            0,
+                            0,
+                            DonySpacing.lg,
+                          ),
+                          child: SecondaryActivityEntry(
+                            icon: Icons.qr_code_scanner_rounded,
+                            label: 'Scanner un trajet',
+                            onTap: widget.onScanTrip!,
+                          ),
                         ),
-                      );
-                    }
-                    if (state is TrackingSearchError) {
-                      return _buildError(
-                          ErrorPresenter.resolve(state.error).message,
-                          cs,
-                          context);
-                    }
-                    if (state is TrackingSearchLoaded) {
-                      return _TrackingResultCard(result: state.result);
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          ),
-        );
-      }),
+                      ],
+                      _buildSearchHeader(cs, tt),
+                      const SizedBox(height: DonySpacing.xl),
+                      _buildSearchField(cs, tt),
+                      const SizedBox(height: DonySpacing.lg),
+                      DonyButton(
+                        label: 'Rechercher',
+                        onPressed: () => _search(context),
+                        icon: Icons.search_rounded,
+                      ),
+                      const SizedBox(height: DonySpacing.xxl),
+                      BlocBuilder<TrackingBloc, TrackingState>(
+                        builder: (context, state) {
+                          if (state is TrackingSearchLoading) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 40,
+                                ),
+                                child: CircularProgressIndicator(
+                                  color: cs.primary,
+                                ),
+                              ),
+                            );
+                          }
+                          if (state is TrackingSearchError) {
+                            return _buildError(
+                              ErrorPresenter.resolve(state.error).message,
+                              cs,
+                              context,
+                            );
+                          }
+                          if (state is TrackingSearchLoaded) {
+                            return _TrackingResultCard(result: state.result);
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ],
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -96,19 +140,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(DonySpacing.md),
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            borderRadius: BorderRadius.circular(DonyRadius.lg),
-          ),
-          child: Icon(Icons.local_shipping_outlined, color: cs.primary, size: 28),
-        ),
-        const SizedBox(height: DonySpacing.base),
-        Text(
-          'Numéro de suivi',
-          style: tt.headlineLarge,
-        ),
+        Text('Numéro de suivi', style: tt.headlineLarge),
         const SizedBox(height: DonySpacing.xs),
         Text(
           'Entrez le numéro DON-XXXXXX pour suivre votre colis en temps réel.',
@@ -195,143 +227,155 @@ class _TrackingResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final (IconData icon, Color color, _) = _stepVisuals(result.currentStep, cs);
+    final (IconData icon, Color color, _) = _stepVisuals(
+      result.currentStep,
+      cs,
+    );
 
     return DonyCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          // Header corridor
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.lg),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [DonyColors.blue900, DonyColors.blue600],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              // Header corridor
+              Container(
+                padding: const EdgeInsets.all(DonySpacing.lg),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [DonyColors.blue900, DonyColors.blue600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(DonyRadius.card),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.md,
+                            vertical: DonySpacing.xs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(DonyRadius.sm),
+                          ),
+                          child: Text(
+                            result.trackingNumber,
+                            style: tt.labelLarge?.copyWith(
+                              color: Colors.white,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            result.departureCity,
+                            textAlign: TextAlign.center,
+                            style: tt.headlineMedium?.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.base,
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            size: 24,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            result.arrivalCity,
+                            textAlign: TextAlign.center,
+                            style: tt.headlineMedium?.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(DonyRadius.card),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+
+              // Step indicator
+              Padding(
+                padding: const EdgeInsets.all(DonySpacing.lg),
+                child: Column(
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.md,
-                        vertical: DonySpacing.xs,
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.md,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(DonyRadius.sm),
+                        color: color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        border: Border.all(color: color.withValues(alpha: 0.3)),
                       ),
-                      child: Text(
-                        result.trackingNumber,
-                        style: tt.labelLarge?.copyWith(
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                        ),
+                      child: Row(
+                        children: [
+                          Icon(icon, color: color, size: 22),
+                          const SizedBox(width: DonySpacing.md),
+                          Expanded(
+                            child: Text(
+                              result.stepLabel,
+                              style: tt.titleMedium?.copyWith(color: color),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const SizedBox(height: DonySpacing.base),
+                    _StepTimeline(currentStep: result.currentStep),
+                    const SizedBox(height: DonySpacing.lg),
+                    DonyButton(
+                      label: 'Voir le suivi détaillé',
+                      onPressed: () {
+                        final corridor =
+                            '${result.departureCity} → ${result.arrivalCity}';
+                        context.push(
+                          '/tracking/${result.bidId}/timeline',
+                          extra: corridor,
+                        );
+                      },
+                      variant: DonyButtonVariant.secondary,
+                      icon: Icons.timeline_rounded,
                     ),
                   ],
                 ),
-                const SizedBox(height: DonySpacing.md),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        result.departureCity,
-                        textAlign: TextAlign.center,
-                        style: tt.headlineMedium?.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
-                      child: Icon(Icons.arrow_forward_rounded,
-                          color: Colors.white.withValues(alpha: 0.7), size: 24),
-                    ),
-                    Expanded(
-                      child: Text(
-                        result.arrivalCity,
-                        textAlign: TextAlign.center,
-                        style: tt.headlineMedium?.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          // Step indicator
-          Padding(
-            padding: const EdgeInsets.all(DonySpacing.lg),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.md,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    border: Border.all(color: color.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(icon, color: color, size: 22),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: Text(
-                          result.stepLabel,
-                          style: tt.titleMedium?.copyWith(color: color),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.base),
-                _StepTimeline(currentStep: result.currentStep),
-                const SizedBox(height: DonySpacing.lg),
-                DonyButton(
-                  label: 'Voir le suivi détaillé',
-                  onPressed: () {
-                    final corridor =
-                        '${result.departureCity} → ${result.arrivalCity}';
-                    context.push(
-                        '/tracking/${result.bidId}/timeline',
-                        extra: corridor);
-                  },
-                  variant: DonyButtonVariant.secondary,
-                  icon: Icons.timeline_rounded,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic);
+        )
+        .animate()
+        .fadeIn(duration: 300.ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 
   (IconData, Color, String) _stepVisuals(String step, ColorScheme cs) {
     return switch (step) {
-      'DELIVERED'       => (Icons.check_circle_rounded, cs.success, step),
-      'IN_TRANSIT'      => (Icons.local_shipping_rounded, cs.primary, step),
-      'DEPARTED'        => (Icons.flight_takeoff_rounded, cs.primary, step),
+      'DELIVERED' => (Icons.check_circle_rounded, cs.success, step),
+      'IN_TRANSIT' => (Icons.local_shipping_rounded, cs.primary, step),
+      'DEPARTED' => (Icons.flight_takeoff_rounded, cs.primary, step),
       'PAYMENT_SECURED' => (Icons.lock_rounded, cs.primary, step),
-      'ACCEPTED'        => (Icons.handshake_outlined, cs.warning, step),
-      'REJECTED'        => (Icons.cancel_outlined, cs.error, step),
-      'CANCELLED'       => (Icons.block_outlined, cs.onSurfaceVariant, step),
-      _                 => (Icons.hourglass_empty_rounded, cs.warning, step),
+      'ACCEPTED' => (Icons.handshake_outlined, cs.warning, step),
+      'REJECTED' => (Icons.cancel_outlined, cs.error, step),
+      'CANCELLED' => (Icons.block_outlined, cs.onSurfaceVariant, step),
+      _ => (Icons.hourglass_empty_rounded, cs.warning, step),
     };
   }
 }

@@ -114,20 +114,6 @@ class BidRejectRequested extends BidEvent {
   BidRejectRequested(this.bidId, {this.reason});
 }
 
-class BidHandoverRequested extends BidEvent {
-  final String bidId;
-  final String location;
-  final DateTime windowStart;
-  final DateTime windowEnd;
-
-  BidHandoverRequested({
-    required this.bidId,
-    required this.location,
-    required this.windowStart,
-    required this.windowEnd,
-  });
-}
-
 class BidConfirmPresenceRequested extends BidEvent {
   final String bidId;
   BidConfirmPresenceRequested(this.bidId);

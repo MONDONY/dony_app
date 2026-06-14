@@ -23,15 +23,18 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
@@ -137,6 +140,7 @@ import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_s
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
@@ -427,17 +431,26 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Annonces additives (Phase 2) — secondary destinations from bottom nav ──
+    // ── Mes trajets (voyageur occasionnel, hors shell) ──────────────────────
     GoRoute(
       path: '/announcements/trips',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AnnouncementBloc>(),
-        child: const AnnouncementListScreen(),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) =>
+                getIt<AnnouncementBloc>()..add(AnnouncementListRequested()),
+          ),
+          BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
+          BlocProvider(create: (_) => getIt<TripFilterCubit>()),
+        ],
+        child: const AnnouncementListScreen(showBackButton: true),
       ),
     ),
+
+    // ── Envoyer un colis (voyageur PRO, hors shell) ──────────────────────────
     GoRoute(
       path: '/announcements/send',
-      builder: (context, state) => const EnvoyerHubScreen(),
+      builder: (context, state) => const EnvoyerHubScreen(showBackButton: true),
     ),
 
     // ── Modèles de trajet (hors shell) ───────────────────────────────────
@@ -614,6 +627,10 @@ final appRouter = GoRouter(
         create: (_) => getIt<TrackingBloc>(),
         child: const TrackingSearchScreen(),
       ),
+    ),
+    GoRoute(
+      path: '/tracking/scan-hub',
+      builder: (context, state) => const ScanHubScreen(),
     ),
     GoRoute(
       path: '/tracking/:bidId/timeline',
@@ -952,12 +969,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 2 — Suivi (QR centre)
+        // Branch 2 — Suivi (dispatcher additif par profil)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/tracking',
-              builder: (context, state) => const ScanHubScreen(),
+              builder: (context, state) => const SuiviScreen(),
             ),
           ],
         ),

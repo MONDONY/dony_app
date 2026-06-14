@@ -1,9 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -11,6 +14,17 @@ import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// Ouvre le sheet d'options expéditeur (signaler / contacter / partager /
+/// annuler / supprimer).
+void showSenderOptionsSheet(BuildContext context, BidModel bid) {
+  showModalBottomSheet<void>(
+    context: context,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
+  );
+}
 
 // ── Traveler PENDING bar ──────────────────────────────────────────────────────
 
@@ -42,7 +56,10 @@ class TravelerPendingBar extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: isLoading ? null : () => _showRejectDialog(context),
               icon: const Icon(Icons.close_rounded),
-              label: const Text('Refuser'),
+              label: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Refuser', maxLines: 1),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: cs.error,
                 side: BorderSide(color: cs.error),
@@ -77,7 +94,10 @@ class TravelerPendingBar extends StatelessWidget {
                       ),
                     )
                   : const Icon(Icons.check_rounded),
-              label: const Text('Accepter'),
+              label: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Accepter', maxLines: 1),
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: cs.success,
                 foregroundColor: DonyColors.white,
@@ -252,14 +272,8 @@ class SenderActionBar extends StatelessWidget {
     this.paymentLoaded = false,
   });
 
-  void _openOptions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
-    );
-  }
+  void _openOptions(BuildContext context) =>
+      showSenderOptionsSheet(context, bid);
 
   /// Whether the sender pays dony online (escrow). Only [BidPaymentMethod.stripe]
   /// involves an in-app sender payment. Cash / Wave / Orange Money are settled in
@@ -326,7 +340,7 @@ class SenderActionBar extends StatelessWidget {
                       ),
                     )
                   : existingPayment != null
-                  ? _EscrowBadge(
+                  ? EscrowBadge(
                       payment: existingPayment!,
                       bidStatus: bid.status,
                     )
@@ -334,7 +348,10 @@ class SenderActionBar extends StatelessWidget {
                       onPressed: () =>
                           context.push('/payments/pay', extra: bid),
                       icon: const Icon(Icons.lock_rounded, size: 18),
-                      label: const Text('Payer mon envoi'),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Payer mon envoi', maxLines: 1),
+                      ),
                       style: FilledButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: DonyColors.white,
@@ -431,11 +448,15 @@ class TravelerRejectedBar extends StatelessWidget {
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
-class _EscrowBadge extends StatelessWidget {
+class EscrowBadge extends StatelessWidget {
   final PaymentModel payment;
   final String bidStatus;
 
-  const _EscrowBadge({required this.payment, required this.bidStatus});
+  const EscrowBadge({
+    super.key,
+    required this.payment,
+    required this.bidStatus,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -459,6 +480,7 @@ class _EscrowBadge extends StatelessWidget {
             child: Text(
               label,
               style: tt.titleSmall?.copyWith(color: color),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -480,7 +502,11 @@ class _EscrowBadge extends StatelessWidget {
         cs.onSurfaceVariant,
         'Remboursé — $amount €',
       ),
-      PaymentStatus.failed => (Icons.error_outline_rounded, cs.error, 'Paiement échoué'),
+      PaymentStatus.failed => (
+        Icons.error_outline_rounded,
+        cs.error,
+        'Paiement échoué',
+      ),
       _ when bidStatus == 'PENDING' => (
         Icons.lock_clock_rounded,
         cs.warning,
@@ -499,7 +525,7 @@ class _EscrowBadge extends StatelessWidget {
 /// Informational pill shown to the sender when the deal is settled in person
 /// (cash / Wave / Orange Money). There is no online sender payment: dony's
 /// commission is collected from the traveler server-side. Styled like
-/// [_EscrowBadge] but with a warning tone.
+/// [EscrowBadge] but with a warning tone.
 class _CashBadge extends StatelessWidget {
   const _CashBadge();
 
@@ -525,6 +551,7 @@ class _CashBadge extends StatelessWidget {
             child: Text(
               'Paiement en espèces à la remise',
               style: tt.titleSmall?.copyWith(color: color),
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -598,7 +625,21 @@ class _SenderOptionsSheet extends StatelessWidget {
             },
           ),
           const SizedBox(height: DonySpacing.sm),
-          if (bid.status == 'PENDING') ...[
+          if (bid.trackingToken != null) ...[
+            _OptionTile(
+              icon: Icons.share_rounded,
+              iconColor: cs.primary,
+              iconBg: cs.primaryContainer,
+              label: 'Partager le suivi',
+              subtitle: 'Envoyer le lien de suivi au destinataire',
+              onTap: () {
+                context.pop();
+                shareTrackingLink(bid);
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+          ],
+          if (bid.canCancelBeforeHandover) ...[
             _OptionTile(
               icon: Icons.block_rounded,
               iconColor: cs.error,
@@ -608,6 +649,22 @@ class _SenderOptionsSheet extends StatelessWidget {
               onTap: () {
                 context.pop();
                 _showCancelDialog(outerContext);
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+          ],
+          // Annulation après remise (D5) — colis déjà chez le voyageur, avant le
+          // départ. L'expéditeur récupère son colis via le code de retour.
+          if (bid.canCancelAfterHandover) ...[
+            _OptionTile(
+              icon: Icons.block_rounded,
+              iconColor: cs.error,
+              iconBg: cs.errorLight,
+              label: 'Annuler la demande',
+              subtitle: 'Remboursement intégral · vous récupérez votre colis',
+              onTap: () {
+                context.pop();
+                _showAfterHandoverCancelDialog(outerContext);
               },
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -756,6 +813,49 @@ class _SenderOptionsSheet extends StatelessWidget {
             onPressed: () {
               ctx.pop();
               context.read<BidBloc>().add(BidCancelRequested(bid.id));
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: cs.error,
+              foregroundColor: DonyColors.white,
+              elevation: 0,
+            ),
+            child: Text('Oui, annuler', style: tt.labelLarge),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAfterHandoverCancelDialog(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        ),
+        title: Text('Annuler après remise ?', style: tt.headlineMedium),
+        content: Text(
+          'Le colis est déjà chez le voyageur. Vous serez intégralement remboursé '
+          'et récupérerez votre colis : le voyageur confirmera la restitution en '
+          'saisissant votre code de retour.',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => ctx.pop(),
+            child: Text(
+              'Non',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              ctx.pop();
+              context.read<CancellationBloc>().add(
+                    CancelAfterHandoverRequested(bid.id, actor: 'sender'),
+                  );
             },
             style: FilledButton.styleFrom(
               backgroundColor: cs.error,

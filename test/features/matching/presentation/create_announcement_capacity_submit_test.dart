@@ -90,6 +90,8 @@ final _testAnnouncement = AnnouncementModel(
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   departureDate: DateTime(2027, 8, 15),
+  // Après la fenêtre de remise (14h-16h) : départ à 18h pour rester valide.
+  departureTime: '18:00',
   availableKg: 10,
   totalKg: 10,
   pricePerKg: 6,
@@ -100,6 +102,8 @@ final _testAnnouncement = AnnouncementModel(
   createdAt: DateTime(2026, 1, 1),
   updatedAt: DateTime(2026, 1, 1),
   acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+  handoverWindowStart: DateTime(2027, 8, 15, 14, 0),
+  handoverWindowEnd: DateTime(2027, 8, 15, 16, 0),
 );
 
 // ── Builder ───────────────────────────────────────────────────────────────────
@@ -186,6 +190,8 @@ void main() {
       availableKg: 0,
       pricePerKg: 0,
       transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     ));
     registerFallbackValue(AnnouncementCreateRequested(
       departureCity: '',
@@ -196,6 +202,8 @@ void main() {
       availableKg: 0,
       pricePerKg: 0,
       transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     ));
 
     cityRepo = MockCityRepository();

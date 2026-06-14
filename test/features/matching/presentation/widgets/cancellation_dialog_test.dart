@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 /// Builds a [GoRouter] that shows [CancellationDialog] as a dialog on the
 /// root route and stores the result in [result].
 GoRouter _buildRouter({
-  required bool isInTransit,
+  required CancellationKind kind,
   required ValueNotifier<String?> result,
 }) {
   return GoRouter(
@@ -22,7 +22,7 @@ GoRouter _buildRouter({
             builder: (ctx) => ElevatedButton(
               onPressed: () async {
                 final value =
-                    await CancellationDialog.show(ctx, isInTransit: isInTransit);
+                    await CancellationDialog.show(ctx, kind: kind);
                 result.value = value;
               },
               child: const Text('Open'),
@@ -36,12 +36,12 @@ GoRouter _buildRouter({
 
 Future<void> _pumpAndOpenDialog(
   WidgetTester tester, {
-  required bool isInTransit,
+  required CancellationKind kind,
   required ValueNotifier<String?> result,
 }) async {
   await tester.pumpWidget(MaterialApp.router(
     theme: AppTheme.light,
-    routerConfig: _buildRouter(isInTransit: isInTransit, result: result),
+    routerConfig: _buildRouter(kind: kind, result: result),
   ));
   await tester.pump();
   await tester.tap(find.text('Open'));
@@ -57,7 +57,7 @@ void main() {
     testWidgets('shows optional hint text when isInTransit is false',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
       // Le champ motif affiche le hint "Motif (optionnel)"
       expect(find.text('Motif (optionnel)'), findsOneWidget);
@@ -66,33 +66,33 @@ void main() {
     testWidgets('shows mandatory hint text when isInTransit is true',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: true, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.afterHandover, result: result);
 
       expect(find.text("Motif de l'annulation *"), findsOneWidget);
     });
 
     testWidgets('shows warning box when isInTransit is true', (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: true, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.afterHandover, result: result);
 
-      expect(
-        find.textContaining('retourner le colis'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('restituer'), findsOneWidget);
+      expect(find.textContaining('code de retour'), findsOneWidget);
+      // Disclaimer espèces : aucun mouvement d'argent.
+      expect(find.textContaining("aucun mouvement d'argent"), findsOneWidget);
     });
 
     testWidgets('does NOT show warning box when isInTransit is false',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
-      expect(find.textContaining('retourner le colis'), findsNothing);
+      expect(find.textContaining('restituer'), findsNothing);
     });
 
     testWidgets('shows refund subtitle when isInTransit is false',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
       expect(
         find.textContaining('remboursé automatiquement'),
@@ -106,7 +106,7 @@ void main() {
         'tapping "Garder" dismisses the dialog and result is null (ACCEPTED)',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
       await tester.tap(find.text('Garder'));
       await tester.pumpAndSettle();
@@ -121,7 +121,7 @@ void main() {
         'tapping "Garder" dismisses the dialog and result is null (IN_TRANSIT)',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: true, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.afterHandover, result: result);
 
       await tester.tap(find.text('Garder'));
       await tester.pumpAndSettle();
@@ -130,13 +130,13 @@ void main() {
       expect(result.value, isNull);
     });
 
-    // ── "Annuler la demande" — ACCEPTED (isInTransit: false) ────────────────
+    // ── "Annuler la demande" — ACCEPTED (kind: CancellationKind.accepted) ────────────────
 
     testWidgets(
         'tapping "Annuler la demande" with empty reason in ACCEPTED returns ""',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
       await tester.tap(find.text('Annuler la demande'));
       await tester.pumpAndSettle();
@@ -149,7 +149,7 @@ void main() {
         'tapping "Annuler la demande" with filled reason in ACCEPTED returns the reason',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
       await tester.enterText(find.byType(TextField), 'Bagages complets');
       await tester.pump();
@@ -160,13 +160,13 @@ void main() {
       expect(result.value, equals('Bagages complets'));
     });
 
-    // ── "Annuler la demande" — IN_TRANSIT (isInTransit: true) ───────────────
+    // ── "Annuler la demande" — IN_TRANSIT (kind: CancellationKind.afterHandover) ───────────────
 
     testWidgets(
         'tapping "Annuler la demande" with empty reason in IN_TRANSIT shows error',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: true, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.afterHandover, result: result);
 
       // Confirm without typing anything
       await tester.tap(find.text('Annuler la demande'));
@@ -183,7 +183,7 @@ void main() {
         'tapping "Annuler la demande" with filled reason in IN_TRANSIT returns reason',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: true, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.afterHandover, result: result);
 
       await tester.enterText(find.byType(TextField), 'Colis trop lourd');
       await tester.pump();
@@ -199,7 +199,7 @@ void main() {
         'error clears when user starts typing after failed IN_TRANSIT confirm',
         (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: true, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.afterHandover, result: result);
 
       // Trigger error
       await tester.tap(find.text('Annuler la demande'));
@@ -217,7 +217,7 @@ void main() {
 
     testWidgets('dialog shows both action buttons', (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
       expect(find.text('Garder'), findsOneWidget);
       expect(find.text('Annuler la demande'), findsOneWidget);
@@ -225,7 +225,7 @@ void main() {
 
     testWidgets('dialog title is always visible', (tester) async {
       final result = ValueNotifier<String?>(null);
-      await _pumpAndOpenDialog(tester, isInTransit: false, result: result);
+      await _pumpAndOpenDialog(tester, kind: CancellationKind.accepted, result: result);
 
       expect(find.text('Annuler cette demande ?'), findsOneWidget);
     });

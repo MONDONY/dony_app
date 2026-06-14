@@ -227,10 +227,12 @@ void main() {
     }
   });
 
-  // ── Task 4 : Badge CASH ──────────────────────────────────────────────────────
+  // ── Task 4 : Badge CASH (redesign) ───────────────────────────────────────────
+  // Dans le redesign voyageur, le paiement en espèces est affiché via
+  // TravelerGainCard (label 'ESPÈCES'), et non plus via un badge 'CASH' inline.
 
   group('Badge CASH', () {
-    testWidgets('paymentMethod=cash → texte CASH visible', (tester) async {
+    testWidgets('paymentMethod=cash → label ESPÈCES visible (TravelerGainCard)', (tester) async {
       final authBloc = _MockAuthBloc();
       when(
         () => authBloc.state,
@@ -243,10 +245,11 @@ void main() {
         authBloc: authBloc,
       );
 
-      expect(find.text('CASH'), findsOneWidget);
+      // Dans le redesign, TravelerGainCard affiche 'ESPÈCES' pour les paiements cash.
+      expect(find.text('ESPÈCES'), findsOneWidget);
     });
 
-    testWidgets('paymentMethod=stripe → texte CASH absent', (tester) async {
+    testWidgets('paymentMethod=stripe → label ESPÈCES absent', (tester) async {
       final authBloc = _MockAuthBloc();
       when(
         () => authBloc.state,
@@ -262,11 +265,13 @@ void main() {
         authBloc: authBloc,
       );
 
-      expect(find.text('CASH'), findsNothing);
+      expect(find.text('ESPÈCES'), findsNothing);
     });
   });
 
   // ── Task 4 : Bouton no-show voyageur ─────────────────────────────────────────
+  // Dans le redesign, le bouton est dans TravelerHeroCard (_WindowExpiredHero).
+  // Le texte a changé : "Signaler l'absence de l'expéditeur".
 
   group('Bouton no-show (voyageur, CASH, ACCEPTED, fenêtre passée)', () {
     testWidgets(
@@ -290,8 +295,9 @@ void main() {
           authBloc: authBloc,
         );
 
+        // Dans le redesign TravelerHeroCard, le bouton a ce libellé.
         expect(
-          find.textContaining("L'expéditeur n'est pas venu"),
+          find.textContaining("Signaler l'absence de l'expéditeur"),
           findsOneWidget,
         );
       },
@@ -317,14 +323,51 @@ void main() {
         );
 
         expect(
-          find.textContaining("L'expéditeur n'est pas venu"),
+          find.textContaining("Signaler l'absence de l'expéditeur"),
           findsNothing,
         );
       },
     );
 
+    // Régression : le flux no-show est désormais bidirectionnel (CASH + Stripe).
+    // Le voyageur peut signaler l'absence de l'expéditeur même en Stripe.
     testWidgets(
-      'expéditeur + cash + ACCEPTED + handoverWindowEnd passé → bouton absent',
+      'voyageur + STRIPE + ACCEPTED + handoverWindowEnd passé → bouton visible',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            handoverWindowEnd: DateTime.now().subtract(
+              const Duration(hours: 1),
+            ),
+          ),
+          authBloc: authBloc,
+        );
+
+        expect(
+          find.textContaining("Signaler l'absence de l'expéditeur"),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  // ── Task 12 : Bouton "Voyageur absent" (expéditeur signale le voyageur) ───────
+
+  group('Section no-show voyageur (expéditeur, CASH + Stripe, ACCEPTED)', () {
+    const kTitle = "Le voyageur ne s'est pas présenté ?";
+
+    testWidgets(
+      'expéditeur + ACCEPTED + handoverWindowEnd passé → section visible',
       (tester) async {
         final authBloc = _MockAuthBloc();
         when(
@@ -337,6 +380,39 @@ void main() {
         await _pump(
           tester,
           bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            handoverWindowEnd: DateTime.now().subtract(
+              const Duration(hours: 1),
+            ),
+          ),
+          authBloc: authBloc,
+        );
+
+        // Le hero "Fenêtre de remise dépassée" porte le bouton de signalement.
+        expect(
+          find.textContaining("Signaler l'absence du voyageur"),
+          findsOneWidget,
+        );
+        // Le titre n'apparaît que dans la bottom sheet (pas encore ouverte).
+        expect(find.text(kTitle), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'expéditeur + HANDED_OVER → section absente (disparaît à la remise)',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            status: 'HANDED_OVER',
             handoverWindowEnd: DateTime.now().subtract(
               const Duration(hours: 1),
             ),
@@ -345,7 +421,33 @@ void main() {
         );
 
         expect(
-          find.textContaining("L'expéditeur n'est pas venu"),
+          find.textContaining("Signaler l'absence du voyageur"),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'expéditeur + ACCEPTED + handoverWindowEnd futur → section absente',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+          ),
+          authBloc: authBloc,
+        );
+
+        expect(
+          find.textContaining("Signaler l'absence du voyageur"),
           findsNothing,
         );
       },
@@ -473,5 +575,69 @@ void main() {
       );
       expect(find.byType(ColisBillet), findsOneWidget);
     });
+  });
+
+  // ── Task 10 : ConfirmPresenceBar (fenêtre de remise depuis l'annonce) ──────────
+
+  group('ConfirmPresenceBar (handoverWindowStart depuis annonce)', () {
+    testWidgets(
+      'voyageur + ACCEPTED + dans la fenêtre de remise → Confirmer ma présence visible',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        // Fenêtre qui commence dans 1 h (< 4 h → condition satisfaite) et
+        // se termine dans 2 h (dans le futur → DateTime.now().isBefore()).
+        final now = DateTime.now();
+        final bid = BidModel(
+          id: 'bid-window',
+          announcementId: 'ann-window',
+          senderId: _kSenderId,
+          weightKg: 3,
+          status: 'ACCEPTED',
+          createdAt: now,
+          updatedAt: now,
+          paymentMethod: BidPaymentMethod.stripe,
+          handoverWindowStart: now.add(const Duration(hours: 1)),
+          handoverWindowEnd: now.add(const Duration(hours: 2)),
+        );
+
+        await _pump(tester, bid: bid, authBloc: authBloc);
+
+        expect(find.text('Confirmer ma présence'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'voyageur + ACCEPTED + handoverWindowStart null + handoverWindowEnd futur → Confirmer ma présence visible',
+      (tester) async {
+        // Dans le redesign, TravelerStickyBar utilise uniquement handoverWindowEnd
+        // pour décider d'afficher ConfirmPresenceBar. handoverWindowStart null
+        // n'empêche plus l'affichage si la fenêtre de fin est dans le futur.
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+          ),
+          authBloc: authBloc,
+        );
+
+        expect(find.text('Confirmer ma présence'), findsOneWidget);
+      },
+    );
   });
 }

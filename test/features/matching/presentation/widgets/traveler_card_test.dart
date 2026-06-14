@@ -200,6 +200,22 @@ void main() {
       expect(find.text('Demande acceptée'), findsOneWidget);
     });
 
+    testWidgets(
+        'PAYMENT_ESCROWED reste "Demande en attente" (paiement séquestré, non accepté)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+        existingBidStatus: 'PAYMENT_ESCROWED',
+      )));
+      await tester.pumpAndSettle();
+      expect(find.byKey(chipKey), findsOneWidget);
+      expect(find.text('Demande en attente'), findsOneWidget);
+      expect(find.text('Demande acceptée'), findsNothing);
+    });
+
     testWidgets("n'affiche pas le chip quand existingBidStatus est null",
         (tester) async {
       await tester.pumpWidget(_wrap(TravelerCard(

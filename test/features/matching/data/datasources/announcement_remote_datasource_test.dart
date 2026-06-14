@@ -61,6 +61,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -82,6 +84,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -105,10 +109,68 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.train,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);
       expect(capturedData!['transportMode'], 'TRAIN');
+    });
+
+    test('includes country codes in payload when provided', () async {
+      Map<String, dynamic>? capturedData;
+      when(() => mockDio.post('/announcements', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedData = inv.namedArguments[const Symbol('data')]
+            as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements');
+      });
+
+      await datasource.createAnnouncement(
+        departureCity: 'New York',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
+        departureCountryCode: 'US',
+        arrivalCountryCode: 'SN',
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!['departureCountryCode'], 'US');
+      expect(capturedData!['arrivalCountryCode'], 'SN');
+    });
+
+    test('omits country code keys when null', () async {
+      Map<String, dynamic>? capturedData;
+      when(() => mockDio.post('/announcements', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedData = inv.namedArguments[const Symbol('data')]
+            as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements');
+      });
+
+      await datasource.createAnnouncement(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!.containsKey('departureCountryCode'), isFalse);
+      expect(capturedData!.containsKey('arrivalCountryCode'), isFalse);
     });
   });
 
@@ -249,6 +311,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -271,6 +335,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -296,10 +362,72 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.boat,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);
       expect(capturedData!['transportMode'], 'BOAT');
+    });
+
+    test('includes country codes in payload when provided', () async {
+      Map<String, dynamic>? capturedData;
+      when(() => mockDio.put('/announcements/ann-001',
+              data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedData = inv.namedArguments[const Symbol('data')]
+            as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements/ann-001');
+      });
+
+      await datasource.updateAnnouncement(
+        id: 'ann-001',
+        departureCity: 'New York',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
+        departureCountryCode: 'US',
+        arrivalCountryCode: 'SN',
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!['departureCountryCode'], 'US');
+      expect(capturedData!['arrivalCountryCode'], 'SN');
+    });
+
+    test('omits country code keys when null', () async {
+      Map<String, dynamic>? capturedData;
+      when(() => mockDio.put('/announcements/ann-001',
+              data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedData = inv.namedArguments[const Symbol('data')]
+            as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements/ann-001');
+      });
+
+      await datasource.updateAnnouncement(
+        id: 'ann-001',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!.containsKey('departureCountryCode'), isFalse);
+      expect(capturedData!.containsKey('arrivalCountryCode'), isFalse);
     });
   });
 }

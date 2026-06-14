@@ -5,6 +5,7 @@ import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
@@ -122,85 +123,99 @@ class _DonyAppState extends State<DonyApp> {
 
   @override
   Widget build(BuildContext context) => BlocProvider<AppPreferencesBloc>.value(
-    value: getIt<AppPreferencesBloc>(),
-    child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
-      builder: (context, prefsState) {
-        final themeMode = switch (prefsState.preferences.themeMode) {
-          'light' => ThemeMode.light,
-          'dark' => ThemeMode.dark,
-          _ => ThemeMode.system,
-        };
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthBloc>(create: (_) => getIt<AuthBloc>()),
-            BlocProvider<LocalAuthBloc>(create: (_) => getIt<LocalAuthBloc>()),
-            BlocProvider<KycBloc>(create: (_) => getIt<KycBloc>()),
-            BlocProvider<AnnouncementBloc>(
-              create: (_) => getIt<AnnouncementBloc>(),
-            ),
-            BlocProvider<BidBloc>(create: (_) => getIt<BidBloc>()),
-            BlocProvider<PaymentBloc>(create: (_) => getIt<PaymentBloc>()),
-            BlocProvider<NotificationBloc>(
-              create: (_) => getIt<NotificationBloc>(),
-            ),
-            BlocProvider<RatingBloc>(create: (_) => getIt<RatingBloc>()),
-            BlocProvider<StripeAccountBloc>(
-              create: (_) => getIt<StripeAccountBloc>(),
-            ),
-          ],
-          child: BlocListener<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is AuthAuthenticated) {
-                // Réconciliation de la préférence contactKycOnly depuis le backend
-                // vers le cache Hive local (utile en cas de changement sur un autre appareil).
-                unawaited(
-                  getIt<PrivacySettingsRepository>()
-                      .fetchContactKycOnly()
-                      .then(
-                        (v) => getIt<HiveService>().userPrefs.put(
-                          HiveService.kContactKycOnly,
-                          v,
-                        ),
-                      )
-                      .catchError((_) {}),
-                );
-              }
-            },
-            child: AnnotatedRegion<SystemUiOverlayStyle>(
-              value: const SystemUiOverlayStyle(
-                systemNavigationBarColor: Colors.transparent,
-                systemNavigationBarDividerColor: Colors.transparent,
-                systemNavigationBarContrastEnforced: false,
-                statusBarColor: Colors.transparent,
-              ),
-              child: MaterialApp.router(
-                title: 'dony',
-                theme: AppTheme.light,
-                darkTheme: AppTheme.dark,
-                themeMode: themeMode,
-                locale: Locale(prefsState.preferences.languageCode),
-                routerConfig: appRouter,
-                debugShowCheckedModeBanner: false,
-                // Monté sous le Navigator de MaterialApp → peut présenter
-                // le bottom sheet de consentement analytics + brancher
-                // identify/reset sur le cycle d'authentification.
-                builder: (context, child) => AnalyticsConsentGate(
-                  child: child ?? const SizedBox.shrink(),
+        value: getIt<AppPreferencesBloc>(),
+        child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+          builder: (context, prefsState) {
+            final themeMode = switch (prefsState.preferences.themeMode) {
+              'light' => ThemeMode.light,
+              'dark' => ThemeMode.dark,
+              _ => ThemeMode.system,
+            };
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider<ActiveRoleCubit>(
+                  create: (_) => getIt<ActiveRoleCubit>(),
                 ),
-                localizationsDelegates: const [
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                supportedLocales: const [
-                  Locale('fr', 'FR'),
-                  Locale('en', 'US'),
-                ],
+                BlocProvider<AuthBloc>(
+                  create: (_) => getIt<AuthBloc>(),
+                ),
+                BlocProvider<LocalAuthBloc>(
+                  create: (_) => getIt<LocalAuthBloc>(),
+                ),
+                BlocProvider<KycBloc>(
+                  create: (_) => getIt<KycBloc>(),
+                ),
+                BlocProvider<AnnouncementBloc>(
+                  create: (_) => getIt<AnnouncementBloc>(),
+                ),
+                BlocProvider<BidBloc>(
+                  create: (_) => getIt<BidBloc>(),
+                ),
+                BlocProvider<PaymentBloc>(
+                  create: (_) => getIt<PaymentBloc>(),
+                ),
+                BlocProvider<NotificationBloc>(
+                  create: (_) => getIt<NotificationBloc>(),
+                ),
+                BlocProvider<RatingBloc>(
+                  create: (_) => getIt<RatingBloc>(),
+                ),
+                BlocProvider<StripeAccountBloc>(
+                  create: (_) => getIt<StripeAccountBloc>(),
+                ),
+              ],
+              child: BlocListener<AuthBloc, AuthState>(
+                listener: (context, state) {
+                  if (state is AuthAuthenticated) {
+                    context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+                    // Réconciliation de la préférence contactKycOnly depuis le backend
+                    // vers le cache Hive local (utile en cas de changement sur un autre appareil).
+                    unawaited(
+                      getIt<PrivacySettingsRepository>()
+                          .fetchContactKycOnly()
+                          .then((v) => getIt<HiveService>().userPrefs
+                              .put(HiveService.kContactKycOnly, v))
+                          .catchError((_) {}),
+                    );
+                  } else if (state is AuthProfileUpdated) {
+                    context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+                  }
+                },
+                child: AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: const SystemUiOverlayStyle(
+                    systemNavigationBarColor: Colors.transparent,
+                    systemNavigationBarDividerColor: Colors.transparent,
+                    systemNavigationBarContrastEnforced: false,
+                    statusBarColor: Colors.transparent,
+                  ),
+                  child: MaterialApp.router(
+                    title: 'dony',
+                    theme: AppTheme.light,
+                    darkTheme: AppTheme.dark,
+                    themeMode: themeMode,
+                    locale: Locale(prefsState.preferences.languageCode),
+                    routerConfig: appRouter,
+                    debugShowCheckedModeBanner: false,
+                    // Monté sous le Navigator de MaterialApp → peut présenter
+                    // le bottom sheet de consentement analytics + brancher
+                    // identify/reset sur le cycle d'authentification.
+                    builder: (context, child) => AnalyticsConsentGate(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
+                    localizationsDelegates: const [
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    supportedLocales: const [
+                      Locale('fr', 'FR'),
+                      Locale('en', 'US'),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-      },
-    ),
-  );
+            );
+          },
+        ),
+      );
 }

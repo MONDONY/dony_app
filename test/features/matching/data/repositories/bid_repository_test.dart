@@ -127,24 +127,6 @@ void main() {
       await expectLater(repo.dismissBidAsTraveler('bid-001'), completes);
     });
 
-    test('setHandover delegates correctly', () async {
-      when(() => mockDs.setHandover(
-            bidId: any(named: 'bidId'),
-            location: any(named: 'location'),
-            windowStart: any(named: 'windowStart'),
-            windowEnd: any(named: 'windowEnd'),
-          )).thenAnswer((_) async => _bid(status: 'ACCEPTED'));
-
-      final result = await repo.setHandover(
-        bidId: 'bid-001',
-        location: 'Gare du Nord',
-        windowStart: DateTime(2024, 6, 1, 10),
-        windowEnd: DateTime(2024, 6, 1, 12),
-      );
-
-      expect(result.status, 'ACCEPTED');
-    });
-
     test('confirmPresence delegates correctly', () async {
       when(() => mockDs.confirmPresence('bid-001'))
           .thenAnswer((_) async => _bid());

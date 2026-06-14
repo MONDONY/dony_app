@@ -59,7 +59,9 @@ class LinkedTripCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$date · ${trip.availableKg} kg',
+                    trip.isKgFree
+                        ? '$date · Kg libre'
+                        : '$date · ${trip.availableKg} kg',
                     style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           fontWeight: FontWeight.w500,
                           color: DonyColors.neutral400,

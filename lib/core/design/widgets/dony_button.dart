@@ -67,7 +67,20 @@ class _DonyButtonState extends State<DonyButton> {
                 Icon(widget.icon, size: 18),
                 const SizedBox(width: DonySpacing.xs),
               ],
-              Text(widget.label),
+              // En pleine largeur la Row est bornée : on rend le label
+              // « shrink-safe » (FittedBox scaleDown) pour qu'un libellé long
+              // ou un textScaleFactor élevé ne provoque jamais d'overflow
+              // horizontal. En largeur intrinsèque (fullWidth=false) la Row
+              // est non bornée → on garde un Text simple (Flexible y crasherait).
+              if (widget.fullWidth)
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(widget.label, maxLines: 1),
+                  ),
+                )
+              else
+                Text(widget.label),
               if (widget.iconRight != null) ...[
                 const SizedBox(width: DonySpacing.xs),
                 Icon(widget.iconRight, size: 18),

@@ -28,7 +28,34 @@ class CancellationRemoteDatasource {
     await _apiClient.dio.post('/cancellations/bids/$bidId/report-noshow');
   }
 
+  Future<void> reportTravelerNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/report-traveler-noshow');
+  }
+
   Future<void> contestNoShow(String bidId) async {
     await _apiClient.dio.post('/cancellations/bids/$bidId/contest-noshow');
+  }
+
+  /// Annulation après remise (HANDED_OVER) — expéditeur OU voyageur (D5/D6).
+  /// Le backend renvoie le bid mis à jour ; on ignore le corps, l'écran rafraîchit
+  /// via BidBloc.BidDetailRequested.
+  Future<void> cancelAfterHandover(String bidId) async {
+    await _apiClient.dio.post('/bids/$bidId/cancel-after-handover');
+  }
+
+  /// Le voyageur saisit le code de retour détenu par l'expéditeur (D7).
+  Future<ReturnCodeModel> confirmReturn(String bidId, String code) async {
+    final response = await _apiClient.dio.post(
+      '/cancellations/bids/$bidId/confirm-return',
+      data: {'returnCode': code},
+    );
+    return ReturnCodeModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// L'expéditeur consulte son code de retour + l'état de la restitution (D7).
+  Future<ReturnCodeModel> getReturnCode(String bidId) async {
+    final response =
+        await _apiClient.dio.get('/cancellations/bids/$bidId/return-code');
+    return ReturnCodeModel.fromJson(response.data as Map<String, dynamic>);
   }
 }

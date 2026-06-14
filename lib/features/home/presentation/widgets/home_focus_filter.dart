@@ -26,7 +26,9 @@ class HomeFocusFilter extends StatelessWidget {
         child: Container(
           height: 44,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.80),
+            color: Theme.of(
+              context,
+            ).colorScheme.surface.withValues(alpha: 0.80),
             borderRadius: BorderRadius.circular(DonyRadius.full),
             boxShadow: [
               BoxShadow(

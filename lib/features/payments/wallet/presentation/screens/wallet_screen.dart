@@ -117,8 +117,19 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final transactions = wallet.transactions as List<WalletTransactionModel>;
 
-    return CustomScrollView(
-      slivers: [
+    return RefreshIndicator(
+      color: Theme.of(context).colorScheme.primary,
+      onRefresh: () async {
+        final bloc = context.read<WalletBloc>();
+        bloc.add(WalletRefreshRequested());
+        // Attend la fin du rafraîchissement (succès ou erreur) pour masquer
+        // l'indicateur de pull-to-refresh.
+        await bloc.stream
+            .firstWhere((s) => s is WalletLoaded || s is WalletError);
+      },
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
         // ── Hero SliverAppBar ──────────────────────────────────────────────
         SliverAppBar(
           expandedHeight: 220,
@@ -212,7 +223,8 @@ class _LoadedView extends StatelessWidget {
             child: SizedBox(height: DonySpacing.huge),
           ),
         ],
-      ],
+        ],
+      ),
     );
   }
 }
@@ -278,21 +290,19 @@ class _HeroHeader extends StatelessWidget {
                     icon: Icons.add_rounded,
                     label: 'Recharger',
                     onTap: () async {
+                      // Solde avant la recharge : sert de référence au polling
+                      // post-recharge (on s'arrête dès qu'il augmente).
+                      final previousBalance = balance;
                       final ok = await context
                           .push<bool>('/payments/wallet/topup/method');
                       if (ok != true || !context.mounted) {
                         return;
                       }
-                      final bloc = context.read<WalletBloc>();
-                      // Recharge immédiate + une seconde différée : le crédit
-                      // Stripe arrive de façon asynchrone via webhook, donc le
-                      // solde peut n'être à jour qu'après un court instant.
-                      bloc.add(WalletLoadRequested());
-                      Future.delayed(const Duration(seconds: 3), () {
-                        if (!bloc.isClosed) {
-                          bloc.add(WalletLoadRequested());
-                        }
-                      });
+                      // Le crédit Stripe arrive de façon asynchrone via webhook :
+                      // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
+                      context.read<WalletBloc>().add(
+                            WalletRefreshAfterTopupRequested(previousBalance),
+                          );
                     },
                   ),
                   const SizedBox(width: DonySpacing.sm),

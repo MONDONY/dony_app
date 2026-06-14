@@ -5,10 +5,7 @@ enum HomeMapFocus { all, parcels, trips }
 
 /// Résultat de visibilité de la carte : quels couches afficher.
 class HomeMapVisibility {
-  const HomeMapVisibility({
-    required this.showTrips,
-    required this.showParcels,
-  });
+  const HomeMapVisibility({required this.showTrips, required this.showParcels});
 
   final bool showTrips;
   final bool showParcels;

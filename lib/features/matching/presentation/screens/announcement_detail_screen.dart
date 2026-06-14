@@ -293,6 +293,48 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             ).animate().fadeIn(delay: 80.ms),
           ],
 
+          // Fenêtre de remise
+          if (a.handoverWindowStart != null && a.handoverWindowEnd != null) ...[
+            const SizedBox(height: DonySpacing.md),
+            Container(
+              padding: const EdgeInsets.all(DonySpacing.md),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.lg),
+                border: Border.all(color: cs.outline),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.schedule_rounded, size: 16, color: cs.primary),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Fenêtre de remise',
+                          style: tt.labelMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: DonySpacing.xs),
+                        Text(
+                          '${DateFormat('EEE d MMM, HH:mm', 'fr').format(a.handoverWindowStart!.toLocal())}'
+                          ' → ${DateFormat('HH:mm', 'fr').format(a.handoverWindowEnd!.toLocal())}',
+                          style: tt.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(delay: 90.ms),
+          ],
+
           const SizedBox(height: DonySpacing.base),
 
           // Stats row

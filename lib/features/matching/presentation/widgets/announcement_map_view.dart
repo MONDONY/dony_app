@@ -273,6 +273,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           dotColor: urgencyColor,
           isSelected: isSelected,
           brightness: _brightness,
+          prefix: '✈️',
         );
         return Marker(
           markerId: MarkerId(
@@ -307,6 +308,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       dotColor: urgencyColor,
       isSelected: isSelected,
       brightness: _brightness,
+      prefix: '✈️',
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),

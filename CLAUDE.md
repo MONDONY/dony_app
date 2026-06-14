@@ -321,15 +321,28 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
 | `cancellation_initiated` | CancellationBloc._onTripCancellationRequested() |
 | `rematch_accepted` | *(à implémenter)* |
+| `no_show_reported_by_sender` | CancellationBloc._onTravelerNoShowReport() — expéditeur signale le voyageur absent |
+| `no_show_reported_by_traveler` | CancellationBloc._onNoShowReport() — voyageur signale l'expéditeur absent |
+| `cancel_after_handover_initiated` | CancellationBloc._onCancelAfterHandover() — annulation après remise (propriété `actor`: sender/traveler, D5/D6) |
+| `return_code_viewed` | CancellationBloc._onReturnCodeRequested() — expéditeur consulte son code de retour (D7) |
+| `return_code_entry_opened` | ReturnEntrySheet.show() — voyageur ouvre la saisie du code de retour (propriété `status`) |
+| `return_confirmed` | CancellationBloc._onReturnConfirm() — voyageur confirme la restitution du colis (D7) |
 | `become_traveler_started` | BecomeTravelerScreen.initState |
 | `upgrade_to_pro_started` | UpgradeToProScreen.initState |
 | `referral_shared` | ReferralBloc._onShared() |
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
+| `trip_filter_applied` | TripFilterCubit.setFilter() — chips statut « Mes trajets » (Activités), propriété `status` |
 | `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
 | `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme |
 | `payment_method_selected` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — mode de paiement sélectionné au trip-linking |
+| `bid_qr_sheet_opened` | QrSheet ouverte depuis le détail d'envoi (propriété `status`) |
+| `bid_qr_downloaded` | Tap « Enregistrer » ou « Partager » dans la QrSheet |
+| `bid_retrait_code_opened` | RetraitCodeSheet ouverte depuis le talon (propriété `status`) |
+| `traveler_call_initiated` | Tap 📞 sur la carte voyageur (propriété `status`) |
+| `tracking_link_shared` | Partage de l'URL de suivi (app bar ou carte) |
+| `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriété `route`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

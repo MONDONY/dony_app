@@ -165,6 +165,33 @@ void main() {
     });
   });
 
+  group('AnnouncementModel bid counts', () {
+    test('parses pendingBidCount / confirmedParcelCount from JSON', () {
+      final json = baseAnnouncementJson()
+        ..['pendingBidCount'] = 3
+        ..['confirmedParcelCount'] = 2;
+      final model = AnnouncementModel.fromJson(json);
+
+      expect(model.pendingBidCount, 3);
+      expect(model.confirmedParcelCount, 2);
+    });
+
+    test('defaults both counts to 0 when absent', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.pendingBidCount, 0);
+      expect(model.confirmedParcelCount, 0);
+    });
+
+    test('round-trips bid counts through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['pendingBidCount'] = 5
+        ..['confirmedParcelCount'] = 1;
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['pendingBidCount'], 5);
+      expect(out['confirmedParcelCount'], 1);
+    });
+  });
+
   group('AnnouncementModel surplus capacity', () {
     test('parses reservedKg / surplusEligible / surplusPublished from JSON', () {
       final json = baseAnnouncementJson()
@@ -220,6 +247,69 @@ void main() {
       expect(build(eligible: true, published: true).canOpenSurplus, isFalse);
       expect(build(eligible: false, published: false).canOpenSurplus, isFalse);
       expect(build(eligible: false, published: true).canOpenSurplus, isFalse);
+    });
+  });
+
+  group('AnnouncementModel country codes & flags', () {
+    test('parses departure/arrival country codes and flags from JSON', () {
+      final json = baseAnnouncementJson()
+        ..['departureCountryCode'] = 'FR'
+        ..['arrivalCountryCode'] = 'US'
+        ..['departureFlag'] = '🇫🇷'
+        ..['arrivalFlag'] = '🇺🇸';
+      final model = AnnouncementModel.fromJson(json);
+
+      expect(model.departureCountryCode, 'FR');
+      expect(model.arrivalCountryCode, 'US');
+      expect(model.departureFlag, '🇫🇷');
+      expect(model.arrivalFlag, '🇺🇸');
+    });
+
+    test('country codes and flags are null when absent', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.departureCountryCode, isNull);
+      expect(model.arrivalCountryCode, isNull);
+      expect(model.departureFlag, isNull);
+      expect(model.arrivalFlag, isNull);
+    });
+
+    test('round-trips country codes and flags through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['departureCountryCode'] = 'SN'
+        ..['arrivalCountryCode'] = 'CI'
+        ..['departureFlag'] = '🇸🇳'
+        ..['arrivalFlag'] = '🇨🇮';
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['departureCountryCode'], 'SN');
+      expect(out['arrivalCountryCode'], 'CI');
+      expect(out['departureFlag'], '🇸🇳');
+      expect(out['arrivalFlag'], '🇨🇮');
+    });
+  });
+
+  group('AnnouncementModel handover window', () {
+    test('parse handoverWindowStart/End depuis le JSON', () {
+      final json = baseAnnouncementJson()
+        ..['handoverWindowStart'] = '2026-06-14T16:00:00'
+        ..['handoverWindowEnd'] = '2026-06-14T18:00:00';
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.handoverWindowStart, DateTime.parse('2026-06-14T16:00:00'));
+      expect(model.handoverWindowEnd, DateTime.parse('2026-06-14T18:00:00'));
+    });
+
+    test('handover window null toléré (annonce legacy)', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.handoverWindowStart, isNull);
+      expect(model.handoverWindowEnd, isNull);
+    });
+
+    test('round-trips handover window through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['handoverWindowStart'] = '2026-06-14T16:00:00.000Z'
+        ..['handoverWindowEnd'] = '2026-06-14T18:00:00.000Z';
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['handoverWindowStart'], isNotNull);
+      expect(out['handoverWindowEnd'], isNotNull);
     });
   });
 

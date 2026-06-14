@@ -108,6 +108,37 @@ void main() {
       expect(model.weightKg, 5.0);
     });
 
+    test('totalAmountEur lit la clé backend totalNetAmountEur (net voyageur)', () {
+      // Régression : le backend expose le net sous `totalNetAmountEur`. Avant le
+      // mapping, le champ restait null → "0 €"/"—" en mode grille (pricePerKg=0).
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'pricingMode': 'MIXED',
+        'pricePerKg': 0,
+        'totalNetAmountEur': 45.5,
+      });
+      expect(model.totalAmountEur, 45.5);
+    });
+
+    test('totalAmountEur null si la clé backend absente', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.totalAmountEur, isNull);
+    });
+
+    test('totalSenderAmountEur (total payé expéditeur = net + commission) parsé', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'totalNetAmountEur': 30.0,
+        'totalSenderAmountEur': 33.60, // net 30 + commission 12%
+      });
+      expect(model.totalAmountEur, 30.0);
+      expect(model.totalSenderAmountEur, 33.60);
+    });
+
+    test('totalSenderAmountEur null si absent', () {
+      expect(BidModel.fromJson(_minimalJson).totalSenderAmountEur, isNull);
+    });
+
     test('declaredValueEur parsed from int', () {
       final model = BidModel.fromJson({..._minimalJson, 'declaredValueEur': 100});
       expect(model.declaredValueEur, 100.0);
@@ -134,6 +165,21 @@ void main() {
       expect(json['handoverWindowEnd'], isNull);
       expect(json['disclaimerSignedAt'], isNull);
       expect(json['departureDate'], isNull);
+    });
+  });
+
+  group('BidModel.commissionStatus', () {
+    test('parses REFUND_FAILED without throwing', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'commissionStatus': 'REFUND_FAILED',
+      });
+      expect(model.commissionStatus, CommissionStatus.refundFailed);
+    });
+
+    test('null commissionStatus stays null', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.commissionStatus, isNull);
     });
   });
 
@@ -168,6 +214,71 @@ void main() {
     test('returns "Expéditeur" when both null', () {
       final model = BidModel.fromJson(_minimalJson);
       expect(model.resolvedSenderName, 'Expéditeur');
+    });
+  });
+
+  group('BidModel.departureAt / resolvedDepartureAt', () {
+    test('parses departureAt ISO string from JSON', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'departureAt': '2026-07-01T10:00:00.000+02:00',
+      });
+      expect(model.departureAt, DateTime.parse('2026-07-01T10:00:00.000+02:00'));
+      expect(model.resolvedDepartureAt,
+          DateTime.parse('2026-07-01T10:00:00.000+02:00'));
+    });
+
+    test('resolvedDepartureAt fuses date + time when departureAt absent', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'departureDate': '2026-07-01',
+        'departureTime': '10:30',
+      });
+      expect(model.departureAt, isNull);
+      expect(model.resolvedDepartureAt, DateTime(2026, 7, 1, 10, 30));
+    });
+
+    test('resolvedDepartureAt is null when no departureAt and no departureTime',
+        () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'departureDate': '2026-07-01',
+      });
+      expect(model.resolvedDepartureAt, isNull);
+    });
+  });
+
+  group('BidModel.canCancelBeforeHandover', () {
+    BidModel withStatus(String status) =>
+        BidModel.fromJson({..._minimalJson, 'status': status});
+
+    test('true pour PENDING (statut legacy)', () {
+      expect(withStatus('PENDING').canCancelBeforeHandover, isTrue);
+    });
+
+    test('true pour PAYMENT_ESCROWED (payé, avant acceptation voyageur)', () {
+      // Régression : après migration Stripe escrow, le statut post-paiement est
+      // PAYMENT_ESCROWED et non PENDING. L'expéditeur doit pouvoir annuler.
+      expect(withStatus('PAYMENT_ESCROWED').canCancelBeforeHandover, isTrue);
+    });
+
+    test('true pour ACCEPTED (voyageur a accepté, colis pas remis)', () {
+      expect(withStatus('ACCEPTED').canCancelBeforeHandover, isTrue);
+    });
+
+    test('false pour AWAITING_PAYMENT (pas encore payé)', () {
+      expect(withStatus('AWAITING_PAYMENT').canCancelBeforeHandover, isFalse);
+    });
+
+    test('false pour HANDED_OVER (relève de canCancelAfterHandover)', () {
+      expect(withStatus('HANDED_OVER').canCancelBeforeHandover, isFalse);
+    });
+
+    test('false pour IN_TRANSIT / COMPLETED / CANCELLED / REJECTED', () {
+      for (final status in ['IN_TRANSIT', 'COMPLETED', 'CANCELLED', 'REJECTED']) {
+        expect(withStatus(status).canCancelBeforeHandover, isFalse,
+            reason: '$status ne doit pas être annulable avant remise');
+      }
     });
   });
 }

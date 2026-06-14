@@ -152,15 +152,32 @@ class ThreadStateCtaBar extends StatelessWidget {
         // propre à la remise : ne pas afficher « payée ».
         final bool paidOnline = thread.paymentMethod == null ||
             thread.paymentMethod == PaymentMethod.stripe;
-        return ThreadStateBanner(
-          icon: Icons.check_circle_rounded,
-          tint: kSuccess,
-          message: paidOnline ? 'Demande acceptée et payée' : 'Demande acceptée',
-          subtitle: paidOnline
-              ? 'Tu peux passer aux étapes suivantes du suivi.'
-              : thread.paymentMethod == PaymentMethod.cash
-                  ? 'Le paiement se fait en espèces à la remise du colis.'
-                  : 'Le paiement se fait à la remise du colis.',
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ThreadStateBanner(
+              icon: Icons.check_circle_rounded,
+              tint: kSuccess,
+              message:
+                  paidOnline ? 'Demande acceptée et payée' : 'Demande acceptée',
+              subtitle: paidOnline
+                  ? 'Tu peux passer aux étapes suivantes du suivi.'
+                  : thread.paymentMethod == PaymentMethod.cash
+                      ? 'Le paiement se fait en espèces à la remise du colis.'
+                      : 'Le paiement se fait à la remise du colis.',
+            ),
+            // Entrée vers le détail de l'envoi (boutons no-show, suivi…) une fois
+            // le bid matérialisé côté back.
+            if (thread.materializedBidId != null) ...[
+              const SizedBox(height: DonySpacing.sm),
+              DonyButton(
+                label: 'Voir mon envoi',
+                variant: DonyButtonVariant.secondary,
+                onPressed: () =>
+                    context.push('/bids/${thread.materializedBidId}'),
+              ),
+            ],
+          ],
         );
 
       case NegotiationThreadStatus.rejected:

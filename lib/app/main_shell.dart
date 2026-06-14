@@ -4,9 +4,12 @@ import 'dart:ui';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -41,6 +44,15 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     HapticFeedback.selectionClick();
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
+    }
+    if (index == 0) {
+      // Accueil : la liste des bids de l'expéditeur est mise en cache au premier
+      // montage (home reste vivant dans le nav shell). Si un voyageur refuse une
+      // demande à distance, le cache reste sur « en attente ». Force un refresh à
+      // chaque (ré)sélection de l'onglet pour refléter le vrai statut.
+      context.read<BidBloc>().add(
+        const BidMyListAutoRefreshRequested(force: true),
+      );
     }
     widget.navigationShell.goBranch(
       index,
@@ -164,100 +176,77 @@ class _DonyBottomNav extends StatelessWidget {
         if (authState is AuthProfileUpdated) authUser = authState.user;
         final isProAccount = authUser?.isProAccount ?? false;
 
-        final isTraveler = authUser?.isTraveler ?? false;
+        return BlocBuilder<ActiveRoleCubit, ActiveRole>(
+          builder: (context, activeRole) {
+            final isTraveler = activeRole == ActiveRole.traveler;
 
-        // Tab 1 — Envoyer (sender) ou Trajets (traveler)
-        final tab1Label = isTraveler ? 'Trajets' : 'Envoyer';
-        final tab1Icon = isTraveler
-            ? Icons.send_rounded
-            : Icons.arrow_circle_right_rounded;
-        final tab1IconOutlined = isTraveler
-            ? Icons.send_outlined
-            : Icons.arrow_circle_right_outlined;
+            // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
+            // dans MatchingManagementScreen — Phase 2)
+            const tab1Label = 'Activités';
+            const tab1Icon = Icons.bolt_rounded;
+            const tab1IconOutlined = Icons.bolt_outlined;
 
-        // Tab 2 — Suivi (libellé fixe, icône role-aware)
-        final tab2Icon = isTraveler
-            ? Icons.qr_code_scanner_rounded
-            : Icons.track_changes_rounded;
+            // Tab 2 — Suivi (libellé + icône figés ; contenu adapté au profil
+            // dans SuiviScreen — voir spec Phase 3). Icône « cible/radar » =
+            // sens suivi/tracking neutre (ni scan ni colis).
+            const tab2Icon = Icons.track_changes_rounded;
 
-        return ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xB8FFFFFF),
-                border: Border(
-                  top: BorderSide(color: Color(0x99FFFFFF), width: 1),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(bottom: bottomPadding),
-                child: SizedBox(
-                  height: 68,
-                  child: Row(
-                    children: [
-                      // 0 — Accueil
-                      Expanded(
-                        child: _NavItem(
-                          icon: Icons.home_rounded,
-                          outlinedIcon: Icons.home_outlined,
-                          label: 'Accueil',
-                          index: 0,
-                          currentIndex: currentIndex,
-                          onTap: () => onTap(0),
-                        ),
-                      ),
-                      // 1 — Envoyer (sender) | Trajets (traveler)
-                      Expanded(
-                        child: _NavItem(
-                          icon: tab1Icon,
-                          outlinedIcon: tab1IconOutlined,
-                          label: tab1Label,
-                          index: 1,
-                          currentIndex: currentIndex,
-                          onTap: () => onTap(1),
-                        ),
-                      ),
-                      // 2 — Suivi (QR scan pour voyageur, recherche pour expéditeur)
-                      Expanded(
-                        child: _NavItem(
-                          icon: tab2Icon,
-                          outlinedIcon: tab2Icon,
-                          label: 'Suivi',
-                          index: 2,
-                          currentIndex: currentIndex,
-                          onTap: () {
-                            if (isTraveler) {
-                              onTap(2);
-                            } else {
-                              // Expéditeur : recherche de suivi en plein écran (hors shell, comportement intentionnel)
-                              context.push('/tracking/search');
-                            }
-                          },
-                        ),
-                      ),
-                      // 3 — Messages
-                      Expanded(
-                        child: Builder(
-                          builder: (context) {
-                            final uid = FirebaseAuth.instance.currentUser?.uid;
-                            final messagesItem = _NavItem(
-                              icon: Icons.chat_bubble_rounded,
-                              outlinedIcon: Icons.chat_bubble_outline_rounded,
-                              label: 'Messages',
-                              index: 3,
+            return ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xB8FFFFFF),
+                    border: Border(
+                      top: BorderSide(color: Color(0x99FFFFFF), width: 1),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: bottomPadding),
+                    child: SizedBox(
+                      height: 68,
+                      child: Row(
+                        children: [
+                          // 0 — Accueil
+                          Expanded(
+                            child: _NavItem(
+                              icon: Icons.home_rounded,
+                              outlinedIcon: Icons.home_outlined,
+                              label: 'Accueil',
+                              index: 0,
                               currentIndex: currentIndex,
-                              onTap: () => onTap(3),
-                            );
-                            if (uid == null || uid.isEmpty) {
-                              // Pendant le sign-out : pas de stream Firestore (path vide invalide).
-                              return messagesItem;
-                            }
-                            return StreamBuilder<int>(
-                              stream: getIt<FirestoreChatRepository>()
-                                  .totalUnreadStream(uid),
-                              builder: (context, snapshot) {
-                                return _NavItem(
+                              onTap: () => onTap(0),
+                            ),
+                          ),
+                          // 1 — Envoyer (sender) | Trajets (traveler)
+                          Expanded(
+                            child: _NavItem(
+                              icon: tab1Icon,
+                              outlinedIcon: tab1IconOutlined,
+                              label: tab1Label,
+                              index: 1,
+                              currentIndex: currentIndex,
+                              onTap: () => onTap(1),
+                            ),
+                          ),
+                          // 2 — Suivi (toujours in-shell ; SuiviScreen adapte le contenu au profil)
+                          Expanded(
+                            child: _NavItem(
+                              icon: tab2Icon,
+                              outlinedIcon: tab2Icon,
+                              label: 'Suivi',
+                              index: 2,
+                              currentIndex: currentIndex,
+                              onTap: () => onTap(2),
+                            ),
+                          ),
+                          // 3 — Messages
+                          Expanded(
+                            child: Builder(
+                              builder: (context) {
+                                final uid =
+                                    FirebaseAuth.instance.currentUser?.uid;
+                                final messagesItem = _NavItem(
                                   icon: Icons.chat_bubble_rounded,
                                   outlinedIcon:
                                       Icons.chat_bubble_outline_rounded,
@@ -265,31 +254,50 @@ class _DonyBottomNav extends StatelessWidget {
                                   index: 3,
                                   currentIndex: currentIndex,
                                   onTap: () => onTap(3),
-                                  badgeCount: snapshot.data ?? 0,
+                                );
+                                if (uid == null || uid.isEmpty) {
+                                  // Pendant le sign-out : pas de stream Firestore (path vide invalide).
+                                  return messagesItem;
+                                }
+                                return StreamBuilder<int>(
+                                  stream: getIt<FirestoreChatRepository>()
+                                      .totalUnreadStream(uid),
+                                  builder: (context, snapshot) {
+                                    return _NavItem(
+                                      icon: Icons.chat_bubble_rounded,
+                                      outlinedIcon:
+                                          Icons.chat_bubble_outline_rounded,
+                                      label: 'Messages',
+                                      index: 3,
+                                      currentIndex: currentIndex,
+                                      onTap: () => onTap(3),
+                                      badgeCount: snapshot.data ?? 0,
+                                    );
+                                  },
                                 );
                               },
-                            );
-                          },
-                        ),
+                            ),
+                          ),
+                          // 4 — Moi
+                          Expanded(
+                            child: _NavItem(
+                              icon: Icons.person_rounded,
+                              outlinedIcon: Icons.person_outline_rounded,
+                              label: 'Moi',
+                              index: 4,
+                              currentIndex: currentIndex,
+                              onTap: () => onTap(4),
+                              isPro: isProAccount,
+                            ),
+                          ),
+                        ],
                       ),
-                      // 4 — Moi
-                      Expanded(
-                        child: _NavItem(
-                          icon: Icons.person_rounded,
-                          outlinedIcon: Icons.person_outline_rounded,
-                          label: 'Moi',
-                          index: 4,
-                          currentIndex: currentIndex,
-                          onTap: () => onTap(4),
-                          isPro: isProAccount,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

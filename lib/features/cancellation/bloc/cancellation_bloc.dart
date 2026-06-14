@@ -16,7 +16,11 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     on<CancellationTripRequested>(_onTripCancellationRequested);
     on<RematchSuggestionsRequested>(_onRematchRequested);
     on<NoShowReportRequested>(_onNoShowReport);
+    on<TravelerNoShowReportRequested>(_onTravelerNoShowReport);
     on<NoShowContestRequested>(_onNoShowContest);
+    on<CancelAfterHandoverRequested>(_onCancelAfterHandover);
+    on<ReturnConfirmRequested>(_onReturnConfirm);
+    on<ReturnCodeRequested>(_onReturnCodeRequested);
   }
 
   Future<void> _onTripCancellationRequested(
@@ -60,6 +64,21 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.reportNoShow(event.bidId);
       emit(NoShowReported());
+      unawaited(_analytics.logEvent(AnalyticsEvents.noShowReportedByTraveler));
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onTravelerNoShowReport(
+    TravelerNoShowReportRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      await _repository.reportTravelerNoShow(event.bidId);
+      emit(NoShowReported());
+      unawaited(_analytics.logEvent(AnalyticsEvents.noShowReportedBySender));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }
@@ -73,6 +92,51 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.contestNoShow(event.bidId);
       emit(NoShowContested());
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onCancelAfterHandover(
+    CancelAfterHandoverRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      await _repository.cancelAfterHandover(event.bidId);
+      emit(CancelledAfterHandover());
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.cancelAfterHandoverInitiated,
+        properties: {'actor': event.actor},
+      ));
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onReturnConfirm(
+    ReturnConfirmRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      final result = await _repository.confirmReturn(event.bidId, event.code);
+      emit(ReturnConfirmed(result));
+      unawaited(_analytics.logEvent(AnalyticsEvents.returnConfirmed));
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onReturnCodeRequested(
+    ReturnCodeRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      final result = await _repository.getReturnCode(event.bidId);
+      emit(ReturnCodeLoaded(result));
+      unawaited(_analytics.logEvent(AnalyticsEvents.returnCodeViewed));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }

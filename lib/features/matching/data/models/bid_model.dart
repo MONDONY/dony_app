@@ -26,6 +26,7 @@ enum CommissionStatus {
   @JsonValue('CHARGED') charged,
   @JsonValue('FAILED') failed,
   @JsonValue('REFUNDED') refunded,
+  @JsonValue('REFUND_FAILED') refundFailed,
 }
 
 enum BidPricingMode {
@@ -67,6 +68,9 @@ class BidModel {
   final String? arrivalCity;
   final DateTime? departureDate;
   final String? departureTime;
+  // Instant canonique de départ (date + heure, fuseau ville de départ).
+  // Référence du verrou d'annulation après remise.
+  final DateTime? departureAt;
   final String? arrivalTime;
   final double? pricePerKg;
   final String? trackingNumber;
@@ -88,8 +92,27 @@ class BidModel {
   final CommissionStatus? commissionStatus;
   final String? cancellationNoShowStatus;
   final DateTime? contestationDeadline;
+
+  // Annulation après remise (D5/D7) : code de retour détenu par l'expéditeur, saisi
+  // par le voyageur pour confirmer la restitution physique du colis.
+  // `returnCode` n'est renseigné par le backend que pour l'expéditeur (sender-gated).
+  final String? returnCode;
+  final DateTime? returnDeadline;
+  final DateTime? returnedAt;
+
   final BidPricingMode pricingMode;
+
+  /// Net reçu par le voyageur, calculé côté backend (somme des items de grille +
+  /// part au kilo). Le backend l'expose sous la clé `totalNetAmountEur` ; sans ce
+  /// mapping le champ restait null en mode grille (pricePerKg=0) → "0 €"/"—".
+  @JsonKey(name: 'totalNetAmountEur')
   final double? totalAmountEur;
+
+  /// Montant total payé par l'EXPÉDITEUR : net voyageur + commission Dony pour un
+  /// paiement Stripe, égal au net pour le cash (la commission est alors prélevée
+  /// au voyageur). À afficher côté expéditeur (« payé / séquestré / remboursé »)
+  /// au lieu de [totalAmountEur] qui est le net reçu par le voyageur.
+  final double? totalSenderAmountEur;
 
   /// Code promo entré par l'expéditeur à la création du bid (nullable).
   final String? promoCode;
@@ -127,6 +150,7 @@ class BidModel {
     this.arrivalCity,
     this.departureDate,
     this.departureTime,
+    this.departureAt,
     this.arrivalTime,
     this.pricePerKg,
     this.trackingNumber,
@@ -148,8 +172,12 @@ class BidModel {
     this.commissionStatus,
     this.cancellationNoShowStatus,
     this.contestationDeadline,
+    this.returnCode,
+    this.returnDeadline,
+    this.returnedAt,
     this.pricingMode = BidPricingMode.kg,
     this.totalAmountEur,
+    this.totalSenderAmountEur,
     this.promoCode,
     this.promoCodeId,
   });
@@ -158,6 +186,19 @@ class BidModel {
       _$BidModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$BidModelToJson(this);
+
+  /// Instant de départ canonique. Le backend l'envoie (`departureAt`) ; fallback
+  /// par fusion `departureDate` + `departureTime` ("HH:mm") pour les anciens payloads.
+  DateTime? get resolvedDepartureAt {
+    if (departureAt != null) return departureAt;
+    if (departureDate == null || departureTime == null) return null;
+    final parts = departureTime!.split(':');
+    if (parts.length < 2) return departureDate;
+    final h = int.tryParse(parts[0]) ?? 0;
+    final m = int.tryParse(parts[1]) ?? 0;
+    return DateTime(
+        departureDate!.year, departureDate!.month, departureDate!.day, h, m);
+  }
 
   /// Minimal placeholder used when navigating from a deep-link (no BidModel in extra).
   /// The screen fetches the real data immediately via BidDetailRequested.
@@ -172,6 +213,32 @@ class BidModel {
       );
 
   bool get isSkeleton => senderId.isEmpty;
+
+  /// Le colis a été restitué (le voyageur a saisi le code de retour).
+  bool get isParcelReturned => returnedAt != null;
+
+  /// Annulation après remise en attente de restitution : un délai de retour existe
+  /// et le colis n'a pas encore été rendu.
+  bool get isAwaitingReturn => returnDeadline != null && returnedAt == null;
+
+  /// Annulation AVANT remise possible côté expéditeur : offre soumise/payée
+  /// (en séquestre Stripe) ou acceptée par le voyageur, mais colis pas encore
+  /// remis. Couvre l'ancien statut `PENDING` (legacy, conservé par sécurité),
+  /// le statut Stripe `PAYMENT_ESCROWED` et `ACCEPTED`. Le serveur
+  /// (CancellationGuard) reste l'autorité — il rembourse l'expéditeur.
+  bool get canCancelBeforeHandover =>
+      status == 'PENDING' ||
+      status == 'PAYMENT_ESCROWED' ||
+      status == 'ACCEPTED';
+
+  /// Annulation après remise possible (D3) : colis remis ET départ canonique pas
+  /// encore atteint. Source unique du verrou côté client (le serveur via
+  /// CancellationGuard reste l'autorité). Consommé par les options sheets voyageur
+  /// et expéditeur.
+  bool get canCancelAfterHandover =>
+      status == 'HANDED_OVER' &&
+      (resolvedDepartureAt == null ||
+          DateTime.now().isBefore(resolvedDepartureAt!));
 
   /// Nom à afficher pour l'expéditeur (même logique que TravelerProfile.resolvedName).
   /// Si le nom est défini → retourne le nom (le téléphone est géré séparément dans l'UI).

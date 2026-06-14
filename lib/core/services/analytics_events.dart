@@ -32,6 +32,10 @@ abstract final class AnalyticsEvents {
   static const qrScanSuccess     = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';
 
+  // Suivi (entrées additives)
+  static const suiviScanOpened  = 'suivi_scan_opened';
+  static const suiviTrackOpened = 'suivi_track_opened';
+
   // Package Request
   static const packageRequestCreated    = 'package_request_created';
   static const packageRequestUpdated    = 'package_request_updated';
@@ -53,8 +57,15 @@ abstract final class AnalyticsEvents {
   static const ratingSubmitted = 'rating_submitted';
 
   // Cancellations
-  static const cancellationInitiated = 'cancellation_initiated';
-  static const rematchAccepted       = 'rematch_accepted';
+  static const cancellationInitiated   = 'cancellation_initiated';
+  static const rematchAccepted         = 'rematch_accepted';
+  static const noShowReportedBySender  = 'no_show_reported_by_sender';
+  static const noShowReportedByTraveler = 'no_show_reported_by_traveler';
+  // Annulation après remise (D5/D6/D7)
+  static const cancelAfterHandoverInitiated = 'cancel_after_handover_initiated';
+  static const returnCodeViewed            = 'return_code_viewed';
+  static const returnCodeEntryOpened       = 'return_code_entry_opened';
+  static const returnConfirmed             = 'return_confirmed';
 
   // Profile
   static const becomeTravelerStarted = 'become_traveler_started';
@@ -70,9 +81,28 @@ abstract final class AnalyticsEvents {
   // Envois
   static const shipmentFilterApplied = 'shipment_filter_applied';
 
+  // Trajets (Mes trajets)
+  static const tripFilterApplied = 'trip_filter_applied';
+
   // Onglet « Envoyer » — noms d'écran (logScreen par onglet)
   static const envoyerEnvoisScreen = 'envoyer_envois';
   static const envoyerDemandesScreen = 'envoyer_demandes';
+
+  // Home map focus
+  static const homeMapFocusChanged = 'home_map_focus_changed';
+
+  // Annonces tab navigation (Phase 1 — modèle additif)
+  static const annoncesTripsOpened = 'annonces_trips_opened';
+  static const annoncesSendOpened  = 'annonces_send_opened';
+
+  // Détail d'envoi (vue expéditeur)
+  static const bidQrSheetOpened       = 'bid_qr_sheet_opened';
+  static const bidQrDownloaded        = 'bid_qr_downloaded';
+  static const bidRetraitCodeOpened   = 'bid_retrait_code_opened';
+  static const travelerCallInitiated  = 'traveler_call_initiated';
+  static const senderCallInitiated    = 'sender_call_initiated';
+  static const trackingLinkShared     = 'tracking_link_shared';
+  static const screenFeedbackSubmitted = 'screen_feedback_submitted';
 
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';

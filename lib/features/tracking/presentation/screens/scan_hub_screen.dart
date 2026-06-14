@@ -1,13 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
-class _TripStub {
-  static const corridor = 'Paris → Dakar';
-  static const date = '22 mai 2025';
-  static const totalColis = 3;
-  static const scannedDepart = 1;
-}
+import 'package:intl/intl.dart';
 
 class _EtapeInfo {
   final String code;
@@ -15,17 +14,54 @@ class _EtapeInfo {
   final IconData icon;
   final bool photoRequired;
 
-  const _EtapeInfo(this.code, this.label, this.icon, {required this.photoRequired});
+  const _EtapeInfo(
+    this.code,
+    this.label,
+    this.icon, {
+    required this.photoRequired,
+  });
 }
 
 const _etapes = [
-  _EtapeInfo('DEPART', 'Départ', Icons.flight_takeoff_rounded, photoRequired: true),
-  _EtapeInfo('TRANSIT', 'Transit', Icons.sync_alt_rounded, photoRequired: false),
-  _EtapeInfo('ARRIVEE', 'Arrivée', Icons.flight_land_rounded, photoRequired: true),
+  _EtapeInfo(
+    'DEPART',
+    'Départ',
+    Icons.flight_takeoff_rounded,
+    photoRequired: true,
+  ),
+  _EtapeInfo(
+    'TRANSIT',
+    'Transit',
+    Icons.sync_alt_rounded,
+    photoRequired: false,
+  ),
+  _EtapeInfo(
+    'ARRIVEE',
+    'Arrivée',
+    Icons.flight_land_rounded,
+    photoRequired: true,
+  ),
 ];
 
 class ScanHubScreen extends StatelessWidget {
-  const ScanHubScreen({super.key});
+  const ScanHubScreen({super.key, this.onTrackParcel});
+
+  /// Entrée additive « Suivre un colis » (voyageur pro). Null = non affichée.
+  final VoidCallback? onTrackParcel;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<ScanHubCubit>()..load(),
+      child: ScanHubView(onTrackParcel: onTrackParcel),
+    );
+  }
+}
+
+class ScanHubView extends StatelessWidget {
+  const ScanHubView({super.key, this.onTrackParcel});
+
+  final VoidCallback? onTrackParcel;
 
   @override
   Widget build(BuildContext context) {
@@ -45,39 +81,95 @@ class ScanHubScreen extends StatelessWidget {
           child: Divider(height: 1, color: cs.outline),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _TripHeroCard(),
-            const SizedBox(height: DonySpacing.xl),
-            _EtapesSection(),
-            const SizedBox(height: DonySpacing.xl),
-            _QuickActionsSection(),
-          ],
-        ),
+      body: BlocBuilder<ScanHubCubit, ScanHubState>(
+        builder: (context, state) {
+          switch (state) {
+            case ScanHubLoading():
+              return Center(
+                child: CircularProgressIndicator(color: cs.primary),
+              );
+            case ScanHubError(:final message):
+              return _ErrorState(
+                message: message,
+                onRetry: () => context.read<ScanHubCubit>().load(),
+              );
+            case ScanHubEmpty():
+              return const _NoTripState();
+            case ScanHubLoaded(:final trip, :final progress):
+              // Animation d'entrée jouée une fois : ScanHubLoaded est un état
+              // terminal (le cubit charge une seule fois, pas de refresh). Si un
+              // rafraîchissement de progression est ajouté un jour, sortir le
+              // `.animate()` du sous-arbre piloté par l'état pour éviter le replay.
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  DonySpacing.huge,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children:
+                      [
+                            if (onTrackParcel != null) ...[
+                              SecondaryActivityEntry(
+                                icon: Icons.inventory_2_rounded,
+                                label: 'Suivre un colis',
+                                onTap: onTrackParcel!,
+                              ),
+                              const SizedBox(height: DonySpacing.lg),
+                            ],
+                            _TripHeroCard(
+                              corridor:
+                                  '${trip.departureCity} → ${trip.arrivalCity}',
+                              dateLabel: _formatDate(trip.departureDate),
+                              confirmedColis: progress.confirmedColis,
+                              scannedDepart: progress.scannedDepart,
+                            ),
+                            const SizedBox(height: DonySpacing.xl),
+                            const _EtapesSection(),
+                            const SizedBox(height: DonySpacing.xl),
+                            const _QuickActionsSection(),
+                          ]
+                          .animate(interval: 60.ms)
+                          .fadeIn(duration: 280.ms)
+                          .slideY(begin: 0.06, curve: Curves.easeOutCubic),
+                ),
+              );
+          }
+        },
       ),
     );
   }
 }
 
+String _formatDate(DateTime date) {
+  return DateFormat('d MMMM yyyy', 'fr').format(date);
+}
+
 class _TripHeroCard extends StatelessWidget {
+  const _TripHeroCard({
+    required this.corridor,
+    required this.dateLabel,
+    required this.confirmedColis,
+    required this.scannedDepart,
+  });
+
+  final String corridor;
+  final String dateLabel;
+  final int confirmedColis;
+  final int scannedDepart;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    const progress = _TripStub.scannedDepart / _TripStub.totalColis;
+    final progress = confirmedColis == 0 ? 0.0 : scannedDepart / confirmedColis;
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            cs.primary,
-            cs.primary.withValues(alpha: 0.8),
-          ],
+          colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -96,17 +188,22 @@ class _TripHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            _TripStub.corridor,
+            corridor,
             style: tt.headlineMedium?.copyWith(
               color: DonyColors.neutral0,
               fontWeight: FontWeight.w800,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           Text(
-            '${_TripStub.date} · ${_TripStub.totalColis} colis confirmés',
+            '$dateLabel · $confirmedColis colis confirmés',
             style: tt.bodySmall?.copyWith(
               color: DonyColors.neutral0.withValues(alpha: 0.75),
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: DonySpacing.md),
           Container(
@@ -128,10 +225,11 @@ class _TripHeroCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${_TripStub.scannedDepart} / ${_TripStub.totalColis}',
+                      '$scannedDepart / $confirmedColis',
                       style: tt.labelSmall?.copyWith(
                         color: DonyColors.neutral0,
                         fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
@@ -155,7 +253,43 @@ class _TripHeroCard extends StatelessWidget {
   }
 }
 
+class _NoTripState extends StatelessWidget {
+  const _NoTripState();
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyEmptyState(
+      title: 'Aucun trajet à scanner',
+      description:
+          'Tu pourras scanner les colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.',
+      mascotte: DonyMascotteType.assis,
+      actionLabel: 'Voir mes trajets',
+      onAction: () => context.push('/announcements/trips'),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyEmptyState(
+      title: 'Impossible de charger les trajets',
+      description: message,
+      type: DonyEmptyStateType.error,
+      actionLabel: 'Réessayer',
+      onAction: onRetry,
+    );
+  }
+}
+
 class _EtapesSection extends StatelessWidget {
+  const _EtapesSection();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -174,15 +308,25 @@ class _EtapesSection extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         Row(
           children: _etapes
-              .map((e) => Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right: e.code == 'ARRIVEE' ? 0 : DonySpacing.sm,
-                      ),
-                      child: _EtapeChip(etape: e),
+              .map(
+                (e) => Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: e.code == 'ARRIVEE' ? 0 : DonySpacing.sm,
                     ),
-                  ))
+                    child: _EtapeChip(etape: e),
+                  ),
+                ),
+              )
               .toList(),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          'Photo obligatoire au départ et à l\'arrivée. Au transit, la photo est facultative.',
+          style: tt.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.4,
+          ),
         ),
       ],
     );
@@ -198,59 +342,41 @@ class _EtapeChip extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return GestureDetector(
+    return DonyPressable(
       onTap: () => context.push(
         '/tracking/scan/identify',
         extra: <String, dynamic>{'etape': etape.code, 'focusNumber': false},
       ),
-      child: Container(
+      child: DonyCard(
         padding: const EdgeInsets.symmetric(
           vertical: DonySpacing.md,
           horizontal: DonySpacing.sm,
         ),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(etape.icon, size: 22, color: cs.onSurface),
-                if (etape.photoRequired)
-                  Positioned(
-                    top: -2,
-                    right: -8,
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: cs.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.xs),
+            Icon(etape.icon, size: 24, color: cs.onSurface),
+            const SizedBox(height: DonySpacing.sm),
             Text(
               etape.label,
-              style: tt.labelSmall?.copyWith(
+              style: tt.labelMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: cs.onSurface,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
-            Text(
-              etape.photoRequired ? 'obligatoire' : 'optionnelle',
-              style: tt.labelSmall?.copyWith(
-                color: etape.photoRequired ? cs.error : cs.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
+            const SizedBox(height: DonySpacing.xs),
+            // Slot de hauteur fixe, pleine largeur : badge photo (départ/arrivée)
+            // ou vide (transit), pour garder les 3 chips alignés. FittedBox =
+            // garantie zéro overflow même sur écran étroit.
+            SizedBox(
+              height: 20,
+              width: double.infinity,
+              child: etape.photoRequired
+                  ? const FittedBox(fit: BoxFit.scaleDown, child: _PhotoBadge())
+                  : null,
             ),
           ],
         ),
@@ -259,7 +385,45 @@ class _EtapeChip extends StatelessWidget {
   }
 }
 
+/// Badge compact « 📷 Photo » — exigence photo de l'étape.
+class _PhotoBadge extends StatelessWidget {
+  const _PhotoBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.errorLight,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.photo_camera_rounded, size: 11, color: cs.error),
+          const SizedBox(width: DonySpacing.xxs),
+          Text(
+            'Photo',
+            style: tt.labelSmall?.copyWith(
+              color: cs.error,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _QuickActionsSection extends StatelessWidget {
+  const _QuickActionsSection();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -322,15 +486,10 @@ class _QuickBtn extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return GestureDetector(
+    return DonyPressable(
       onTap: onTap,
-      child: Container(
+      child: DonyCard(
         padding: const EdgeInsets.all(DonySpacing.md),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
-        ),
         child: Column(
           children: [
             Container(
@@ -344,13 +503,15 @@ class _QuickBtn extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Text(
               label,
-              style: tt.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+              style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             Text(
               subtitle,
-              style: tt.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

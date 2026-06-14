@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -43,6 +44,11 @@ class MockAnnouncementBloc
     implements AnnouncementBloc {}
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+class _FakeBidEvent extends Fake implements BidEvent {}
+
+class MockActiveRoleCubit extends MockCubit<ActiveRole>
+    implements ActiveRoleCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
 
@@ -95,12 +101,12 @@ class _FakeBox extends Fake implements Box<dynamic> {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-UserModel _makeUser({bool isTraveler = false}) => UserModel(
+UserModel _makeUser({List<String> roles = const ['ROLE_SENDER']}) => UserModel(
   id: 'uid-1',
   phoneNumber: '+33600000000',
   firstName: 'Ibrahima',
   lastName: 'Diallo',
-  roles: isTraveler ? const ['TRAVELER', 'SENDER'] : const ['SENDER'],
+  roles: roles,
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
 );
@@ -121,37 +127,40 @@ AnnouncementModel _makeAnn({String id = 'a1'}) => AnnouncementModel(
 
 Widget _buildHome({
   AnnouncementState? announcementState,
-  bool isTraveler = false,
+  ActiveRole role = ActiveRole.sender,
   UserModel? user,
   BidState? bidState,
   NotificationState? notificationState,
+  MockBidBloc? bidBloc,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
+  final roleCubit = MockActiveRoleCubit();
   final notifBloc = MockNotificationBloc();
-  final bidBloc = MockBidBloc();
+  final effectiveBidBloc = bidBloc ?? MockBidBloc();
 
   when(
     () => announcementBloc.state,
   ).thenReturn(announcementState ?? AnnouncementInitial());
   when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
-  when(
-    () => authBloc.state,
-  ).thenReturn(AuthAuthenticated(user ?? _makeUser(isTraveler: isTraveler)));
+  when(() => authBloc.state).thenReturn(AuthAuthenticated(user ?? _makeUser()));
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => roleCubit.state).thenReturn(role);
+  when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
   when(
     () => notifBloc.state,
   ).thenReturn(notificationState ?? const NotificationInitial());
   when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
-  when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
-  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => effectiveBidBloc.state).thenReturn(bidState ?? BidInitial());
+  when(() => effectiveBidBloc.stream).thenAnswer((_) => const Stream.empty());
 
   return MultiBlocProvider(
     providers: [
       BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
       BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
       BlocProvider<NotificationBloc>.value(value: notifBloc),
-      BlocProvider<BidBloc>.value(value: bidBloc),
+      BlocProvider<BidBloc>.value(value: effectiveBidBloc),
     ],
     child: MaterialApp(
       theme: AppTheme.light,
@@ -170,6 +179,8 @@ Widget _buildHome({
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
+  setUpAll(() => registerFallbackValue(_FakeBidEvent()));
+
   setUp(() {
     final hive = MockHiveService();
     final box = _FakeBox();
@@ -202,6 +213,21 @@ void main() {
 
       expect(find.text('Tous les corridors'), findsWidgets);
     });
+
+    testWidgets(
+      'régression : initState dispatche BidMyListAutoRefreshRequested '
+      '(jamais BidMyListRequested qui écraserait l\'état partagé)',
+      (tester) async {
+        final bidBloc = MockBidBloc();
+        await tester.pumpWidget(_buildHome(bidBloc: bidBloc));
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        verify(
+          () => bidBloc.add(any(that: isA<BidMyListAutoRefreshRequested>())),
+        ).called(1);
+        verifyNever(() => bidBloc.add(any(that: isA<BidMyListRequested>())));
+      },
+    );
 
     testWidgets('shows sender-specific filter chips when role is sender', (
       tester,
@@ -332,7 +358,14 @@ void main() {
           return prBloc;
         });
 
-        await tester.pumpWidget(_buildHome(isTraveler: true));
+        // Phase 1 : isTraveler est lu depuis le UserModel (capacité réelle),
+        // pas depuis ActiveRoleCubit. Il faut donc un utilisateur avec le rôle TRAVELER.
+        await tester.pumpWidget(
+          _buildHome(
+            role: ActiveRole.traveler,
+            user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+          ),
+        );
         await tester.pump();
 
         await tester.tap(find.byKey(const Key('near-me-fab')));
@@ -340,8 +373,7 @@ void main() {
         await tester.tap(find.text('Activer le filtre'));
         await tester.pumpAndSettle();
 
-        // Traveler near-me drives the package-request search (radius applied),
-        // not the announcement search.
+        // Traveler near-me drives the package-request search (radius applied).
         verify(
           () => prBloc.add(
             any(
@@ -365,7 +397,7 @@ void main() {
       // PackageRequestSearchBloc via getIt, we just assert it builds without
       // throwing — the inner GoogleMap widget rendering needs a platform mock
       // not worth the cost in this widget test.
-      await tester.pumpWidget(_buildHome(isTraveler: true));
+      await tester.pumpWidget(_buildHome(role: ActiveRole.traveler));
       await tester.pump();
 
       // The traveler header text appears in the floating overlay.

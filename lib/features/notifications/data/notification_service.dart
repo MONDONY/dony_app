@@ -99,8 +99,12 @@ class NotificationService {
 
   /// Call this after the user is authenticated (Firebase sign-in complete).
   Future<void> uploadCurrentToken() async {
-    final token = await _fcm.getToken();
-    if (token != null) await _uploadToken(token);
+    try {
+      final token = await _fcm.getToken();
+      if (token != null) await _uploadToken(token);
+    } catch (e) {
+      if (kDebugMode) debugPrint('[FCM] uploadCurrentToken failed: $e');
+    }
   }
 
   Future<void> _uploadToken(String token) async {

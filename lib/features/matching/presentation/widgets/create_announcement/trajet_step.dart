@@ -26,6 +26,11 @@ import 'package:intl/intl.dart';
 class TrajetStep extends StatelessWidget {
   final ValueNotifier<String?> departureCityNotifier;
   final ValueNotifier<String?> arrivalCityNotifier;
+
+  /// Codes pays ISO-2 capturés lors de la sélection ville (optionnels — null
+  /// dans les contextes/tests qui ne les passent pas, sans effet de bord).
+  final ValueNotifier<String?>? departureCountryCodeNotifier;
+  final ValueNotifier<String?>? arrivalCountryCodeNotifier;
   final ValueNotifier<DateTime?> departureDateNotifier;
   final ValueNotifier<TimeOfDay?> departureTimeNotifier;
   final ValueNotifier<TimeOfDay?> arrivalTimeNotifier;
@@ -53,6 +58,8 @@ class TrajetStep extends StatelessWidget {
     super.key,
     required this.departureCityNotifier,
     required this.arrivalCityNotifier,
+    this.departureCountryCodeNotifier,
+    this.arrivalCountryCodeNotifier,
     required this.departureDateNotifier,
     required this.departureTimeNotifier,
     required this.arrivalTimeNotifier,
@@ -219,39 +226,30 @@ class TrajetStep extends StatelessWidget {
                         ),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
+                          // Code pays d'abord : le listener du city notifier
+                          // (sync vers le form bloc) lit la valeur courante.
+                          departureCountryCodeNotifier?.value = city.countryCode;
                           departureCityNotifier.value = city.name;
                         },
                       ),
                     ),
               const SizedBox(height: DonySpacing.sm),
-              // ── Heure de départ (optionnel) — DonyTextField.tappable ───
+              // ── Heure de départ (obligatoire, D1) — DonyTextField.tappable ───
               DonyTextField.tappable(
                 key: const Key('departureTimeField'),
-                label: 'Heure de départ (optionnel)',
+                label: 'Heure de départ',
+                requiredLabel: true,
                 value: departureTimeNotifier.value != null
                     ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
                     : null,
                 prefixIcon: DonyIcons.time,
                 prefixIconColor: Theme.of(context).colorScheme.primary,
-                trailing: departureTimeNotifier.value != null
-                    ? IconButton(
-                        icon: Icon(
-                          DonyIcons.close,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        onPressed: () => departureTimeNotifier.value = null,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 44,
-                          minHeight: 44,
-                        ),
-                      )
-                    : Icon(
-                        DonyIcons.chevron,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                // Obligatoire (D1) : pas de bouton clear, on garde le chevron.
+                trailing: Icon(
+                  DonyIcons.chevron,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 onTap: () => onSelectDepartureTime(),
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -282,6 +280,7 @@ class TrajetStep extends StatelessWidget {
                         ),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
+                          arrivalCountryCodeNotifier?.value = city.countryCode;
                           arrivalCityNotifier.value = city.name;
                         },
                       ),

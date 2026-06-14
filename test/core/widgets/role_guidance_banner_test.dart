@@ -1,16 +1,16 @@
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/role_guidance_banner.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockHiveService extends Mock implements HiveService {}
-
 class MockBox extends Mock implements Box {}
 
 Widget _buildBanner({
-  required bool isTraveler,
+  required ActiveRole role,
   required bool hasPublished,
   required MockHiveService hive,
   int? senderFirstSeenMs,
@@ -18,38 +18,28 @@ Widget _buildBanner({
 }) {
   final mockBox = MockBox();
   when(() => hive.userPrefs).thenReturn(mockBox);
-  when(
-    () => mockBox.get(HiveService.kHasPublishedAsTraveler, defaultValue: false),
-  ).thenReturn(isTraveler ? hasPublished : false);
-  when(
-    () => mockBox.get(HiveService.kHasPublishedAsSender, defaultValue: false),
-  ).thenReturn(!isTraveler ? hasPublished : false);
-  when(
-    () =>
-        mockBox.get(HiveService.kTravelerBannerDismissed, defaultValue: false),
-  ).thenReturn(isTraveler ? dismissed : false);
-  when(
-    () => mockBox.get(HiveService.kSenderBannerDismissed, defaultValue: false),
-  ).thenReturn(!isTraveler ? dismissed : false);
-  when(
-    () => mockBox.get(HiveService.kSenderBannerFirstSeenAt),
-  ).thenReturn(senderFirstSeenMs);
-  when(
-    () => mockBox.put(HiveService.kSenderBannerFirstSeenAt, any()),
-  ).thenAnswer((_) async {});
-  when(
-    () => mockBox.put(HiveService.kTravelerBannerDismissed, any()),
-  ).thenAnswer((_) async {});
-  when(
-    () => mockBox.put(HiveService.kSenderBannerDismissed, any()),
-  ).thenAnswer((_) async {});
-  when(
-    () => hive.listenUserPrefs(keys: any(named: 'keys')),
-  ).thenReturn(ValueNotifier<Box>(mockBox));
+  when(() => mockBox.get(HiveService.kHasPublishedAsTraveler, defaultValue: false))
+      .thenReturn(role == ActiveRole.traveler ? hasPublished : false);
+  when(() => mockBox.get(HiveService.kHasPublishedAsSender, defaultValue: false))
+      .thenReturn(role == ActiveRole.sender ? hasPublished : false);
+  when(() => mockBox.get(HiveService.kTravelerBannerDismissed, defaultValue: false))
+      .thenReturn(role == ActiveRole.traveler ? dismissed : false);
+  when(() => mockBox.get(HiveService.kSenderBannerDismissed, defaultValue: false))
+      .thenReturn(role == ActiveRole.sender ? dismissed : false);
+  when(() => mockBox.get(HiveService.kSenderBannerFirstSeenAt))
+      .thenReturn(senderFirstSeenMs);
+  when(() => mockBox.put(HiveService.kSenderBannerFirstSeenAt, any()))
+      .thenAnswer((_) async {});
+  when(() => mockBox.put(HiveService.kTravelerBannerDismissed, any()))
+      .thenAnswer((_) async {});
+  when(() => mockBox.put(HiveService.kSenderBannerDismissed, any()))
+      .thenAnswer((_) async {});
+  when(() => hive.listenUserPrefs(keys: any(named: 'keys')))
+      .thenReturn(ValueNotifier<Box>(mockBox));
 
   return MaterialApp(
     home: Scaffold(
-      body: RoleGuidanceBanner(isTraveler: isTraveler, hiveService: hive),
+      body: RoleGuidanceBanner(role: role, hiveService: hive),
     ),
   );
 }
@@ -58,40 +48,32 @@ void main() {
   late MockHiveService mockHive;
   setUp(() => mockHive = MockHiveService());
 
-  testWidgets('affiche le banner Expéditeur quand pas encore publié', (
-    tester,
-  ) async {
+  testWidgets('affiche le banner Expéditeur quand pas encore publié', (tester) async {
     await tester.pumpWidget(
-      _buildBanner(isTraveler: false, hasPublished: false, hive: mockHive),
+      _buildBanner(role: ActiveRole.sender, hasPublished: false, hive: mockHive),
     );
     expect(find.text('Envoyer ton premier colis'), findsOneWidget);
     expect(find.text("Publier ma demande d'envoi"), findsOneWidget);
   });
 
-  testWidgets('affiche le banner Voyageur quand pas encore publié', (
-    tester,
-  ) async {
+  testWidgets('affiche le banner Voyageur quand pas encore publié', (tester) async {
     await tester.pumpWidget(
-      _buildBanner(isTraveler: true, hasPublished: false, hive: mockHive),
+      _buildBanner(role: ActiveRole.traveler, hasPublished: false, hive: mockHive),
     );
     expect(find.text('Publier ton premier trajet'), findsOneWidget);
     expect(find.text('Publier mon trajet'), findsOneWidget);
   });
 
-  testWidgets("ne s'affiche pas si déjà publié en mode Expéditeur", (
-    tester,
-  ) async {
+  testWidgets("ne s'affiche pas si déjà publié en mode Expéditeur", (tester) async {
     await tester.pumpWidget(
-      _buildBanner(isTraveler: false, hasPublished: true, hive: mockHive),
+      _buildBanner(role: ActiveRole.sender, hasPublished: true, hive: mockHive),
     );
     expect(find.text('Envoyer ton premier colis'), findsNothing);
   });
 
-  testWidgets("ne s'affiche pas si déjà publié en mode Voyageur", (
-    tester,
-  ) async {
+  testWidgets("ne s'affiche pas si déjà publié en mode Voyageur", (tester) async {
     await tester.pumpWidget(
-      _buildBanner(isTraveler: true, hasPublished: true, hive: mockHive),
+      _buildBanner(role: ActiveRole.traveler, hasPublished: true, hive: mockHive),
     );
     expect(find.text('Publier ton premier trajet'), findsNothing);
   });
@@ -104,7 +86,7 @@ void main() {
           .millisecondsSinceEpoch;
       await tester.pumpWidget(
         _buildBanner(
-          isTraveler: false,
+          role: ActiveRole.sender,
           hasPublished: false,
           hive: mockHive,
           senderFirstSeenMs: expiredMs,
@@ -122,7 +104,7 @@ void main() {
           .millisecondsSinceEpoch;
       await tester.pumpWidget(
         _buildBanner(
-          isTraveler: false,
+          role: ActiveRole.sender,
           hasPublished: false,
           hive: mockHive,
           senderFirstSeenMs: recentMs,
@@ -132,61 +114,60 @@ void main() {
     },
   );
 
-  testWidgets(
-    "ne s'affiche pas si l'utilisateur a fermé manuellement (Voyageur)",
-    (tester) async {
-      await tester.pumpWidget(
-        _buildBanner(
-          isTraveler: true,
-          hasPublished: false,
-          hive: mockHive,
-          dismissed: true,
-        ),
-      );
-      expect(find.text('Publier ton premier trajet'), findsNothing);
-    },
-  );
-
-  testWidgets(
-    "ne s'affiche pas si l'utilisateur a fermé manuellement (Expéditeur)",
-    (tester) async {
-      await tester.pumpWidget(
-        _buildBanner(
-          isTraveler: false,
-          hasPublished: false,
-          hive: mockHive,
-          dismissed: true,
-        ),
-      );
-      expect(find.text('Envoyer ton premier colis'), findsNothing);
-    },
-  );
-
-  testWidgets('le tap sur le X persiste la fermeture dans Hive (Voyageur)', (
-    tester,
-  ) async {
+  testWidgets("ne s'affiche pas si l'utilisateur a fermé manuellement (Voyageur)",
+      (tester) async {
     await tester.pumpWidget(
-      _buildBanner(isTraveler: true, hasPublished: false, hive: mockHive),
+      _buildBanner(
+        role: ActiveRole.traveler,
+        hasPublished: false,
+        hive: mockHive,
+        dismissed: true,
+      ),
+    );
+    expect(find.text('Publier ton premier trajet'), findsNothing);
+  });
+
+  testWidgets("ne s'affiche pas si l'utilisateur a fermé manuellement (Expéditeur)",
+      (tester) async {
+    await tester.pumpWidget(
+      _buildBanner(
+        role: ActiveRole.sender,
+        hasPublished: false,
+        hive: mockHive,
+        dismissed: true,
+      ),
+    );
+    expect(find.text('Envoyer ton premier colis'), findsNothing);
+  });
+
+  testWidgets('le tap sur le X persiste la fermeture dans Hive (Voyageur)',
+      (tester) async {
+    await tester.pumpWidget(
+      _buildBanner(
+        role: ActiveRole.traveler,
+        hasPublished: false,
+        hive: mockHive,
+      ),
     );
     expect(find.text('Publier ton premier trajet'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('role-guidance-banner-dismiss')));
     await tester.pump();
 
-    verify(
-      () => mockHive.userPrefs.put(HiveService.kTravelerBannerDismissed, true),
-    );
+    verify(() => mockHive.userPrefs.put(
+          HiveService.kTravelerBannerDismissed,
+          true,
+        ));
   });
 
-  testWidgets('le tap sur le X persiste la fermeture dans Hive (Expéditeur)', (
-    tester,
-  ) async {
+  testWidgets('le tap sur le X persiste la fermeture dans Hive (Expéditeur)',
+      (tester) async {
     final recentMs = DateTime.now()
         .subtract(const Duration(seconds: 10))
         .millisecondsSinceEpoch;
     await tester.pumpWidget(
       _buildBanner(
-        isTraveler: false,
+        role: ActiveRole.sender,
         hasPublished: false,
         hive: mockHive,
         senderFirstSeenMs: recentMs,
@@ -197,8 +178,9 @@ void main() {
     await tester.tap(find.byKey(const Key('role-guidance-banner-dismiss')));
     await tester.pump();
 
-    verify(
-      () => mockHive.userPrefs.put(HiveService.kSenderBannerDismissed, true),
-    );
+    verify(() => mockHive.userPrefs.put(
+          HiveService.kSenderBannerDismissed,
+          true,
+        ));
   });
 }
