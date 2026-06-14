@@ -192,7 +192,7 @@ class SenderStickyBar extends StatelessWidget {
           (dep.isNotEmpty && arr.isNotEmpty) ? '$dep → $arr' : 'Suivi du colis';
       return DonyButton(
         label: 'Suivi du colis',
-        icon: Icons.local_shipping_rounded,
+        icon: Icons.inventory_2_rounded,
         onPressed: () {
           HapticFeedback.lightImpact();
           showTrackingTimelineSheet(
