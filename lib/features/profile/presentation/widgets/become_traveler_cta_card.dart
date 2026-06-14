@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -74,8 +75,8 @@ class BecomeTravelerCtaCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(DonyRadius.xl),
                   ),
-                  child: const Icon(
-                    Icons.flight_takeoff_rounded,
+                  child: const DonyIcon(
+                    'plane-takeoff',
                     color: Colors.white,
                     size: 22,
                   ),

@@ -2,6 +2,7 @@
 // Ce fichier est interne à la feature matching — ne pas importer depuis l'extérieur.
 // Ca = préfixe CreateAnnouncement — widgets internes à la feature, ne pas importer ailleurs.
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -75,7 +76,13 @@ class CaRowDivider extends StatelessWidget {
 class CaSectionLabel extends StatelessWidget {
   final String label;
   final IconData? icon;
-  const CaSectionLabel({super.key, required this.label, this.icon});
+  final String? iconAsset;
+  const CaSectionLabel({
+    super.key,
+    required this.label,
+    this.icon,
+    this.iconAsset,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -88,11 +95,13 @@ class CaSectionLabel extends StatelessWidget {
         fontWeight: FontWeight.w600,
       ),
     );
-    if (icon == null) return labelWidget;
+    if (icon == null && iconAsset == null) return labelWidget;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: cs.onSurfaceVariant),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant)
+            : Icon(icon, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         labelWidget,
       ],

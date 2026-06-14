@@ -138,7 +138,7 @@ class _SuggestionCard extends StatelessWidget {
           Row(
             children: [
               DonyIconContainer(
-                icon: Icons.flight_takeoff_rounded,
+                iconAsset: 'plane-takeoff',
                 backgroundColor: cs.primaryContainer,
                 iconColor: cs.primary,
               ),

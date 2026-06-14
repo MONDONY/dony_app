@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
@@ -62,13 +63,13 @@ class TripTile extends StatelessWidget {
                               : cs.primaryContainer,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          isSelected
-                              ? Icons.check_rounded
-                              : Icons.flight_takeoff_rounded,
-                          color: isSelected ? cs.onPrimary : cs.primary,
-                          size: 20,
-                        ),
+                        child: isSelected
+                            ? Icon(
+                                Icons.check_rounded,
+                                color: cs.onPrimary,
+                                size: 20,
+                              )
+                            : const DonyEmoji.planeTakeoff(size: 20),
                       ),
                       const SizedBox(width: DonySpacing.md),
                       Expanded(

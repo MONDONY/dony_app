@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -227,7 +228,7 @@ class _TrackingResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final (IconData icon, Color color, _) = _stepVisuals(
+    final (IconData? icon, Color color, _, String? iconAsset) = _stepVisuals(
       result.currentStep,
       cs,
     );
@@ -328,7 +329,11 @@ class _TrackingResultCard extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(icon, color: color, size: 22),
+                          switch (iconAsset) {
+                            'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 22),
+                            'plane-landing' => const DonyEmoji.planeLanding(size: 22),
+                            _ => Icon(icon, color: color, size: 22),
+                          },
                           const SizedBox(width: DonySpacing.md),
                           Expanded(
                             child: Text(
@@ -366,16 +371,16 @@ class _TrackingResultCard extends StatelessWidget {
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 
-  (IconData, Color, String) _stepVisuals(String step, ColorScheme cs) {
+  (IconData?, Color, String, String?) _stepVisuals(String step, ColorScheme cs) {
     return switch (step) {
-      'DELIVERED' => (Icons.check_circle_rounded, cs.success, step),
-      'IN_TRANSIT' => (Icons.local_shipping_rounded, cs.primary, step),
-      'DEPARTED' => (Icons.flight_takeoff_rounded, cs.primary, step),
-      'PAYMENT_SECURED' => (Icons.lock_rounded, cs.primary, step),
-      'ACCEPTED' => (Icons.handshake_outlined, cs.warning, step),
-      'REJECTED' => (Icons.cancel_outlined, cs.error, step),
-      'CANCELLED' => (Icons.block_outlined, cs.onSurfaceVariant, step),
-      _ => (Icons.hourglass_empty_rounded, cs.warning, step),
+      'DELIVERED' => (Icons.check_circle_rounded, cs.success, step, null),
+      'IN_TRANSIT' => (Icons.local_shipping_rounded, cs.primary, step, null),
+      'DEPARTED' => (null, cs.primary, step, 'plane-takeoff'),
+      'PAYMENT_SECURED' => (Icons.lock_rounded, cs.primary, step, null),
+      'ACCEPTED' => (Icons.handshake_outlined, cs.warning, step, null),
+      'REJECTED' => (Icons.cancel_outlined, cs.error, step, null),
+      'CANCELLED' => (Icons.block_outlined, cs.onSurfaceVariant, step, null),
+      _ => (Icons.hourglass_empty_rounded, cs.warning, step, null),
     };
   }
 }

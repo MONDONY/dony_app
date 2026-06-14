@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:flutter/material.dart';
@@ -11,13 +12,15 @@ import 'package:intl/intl.dart';
 class _EtapeInfo {
   final String code;
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final bool photoRequired;
 
   const _EtapeInfo(
     this.code,
-    this.label,
-    this.icon, {
+    this.label, {
+    this.icon,
+    this.iconAsset,
     required this.photoRequired,
   });
 }
@@ -26,19 +29,19 @@ const _etapes = [
   _EtapeInfo(
     'DEPART',
     'Départ',
-    Icons.flight_takeoff_rounded,
+    iconAsset: 'plane-takeoff',
     photoRequired: true,
   ),
   _EtapeInfo(
     'TRANSIT',
     'Transit',
-    Icons.sync_alt_rounded,
+    icon: Icons.sync_alt_rounded,
     photoRequired: false,
   ),
   _EtapeInfo(
     'ARRIVEE',
     'Arrivée',
-    Icons.flight_land_rounded,
+    iconAsset: 'plane-landing',
     photoRequired: true,
   ),
 ];
@@ -355,7 +358,11 @@ class _EtapeChip extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(etape.icon, size: 24, color: cs.onSurface),
+            switch (etape.iconAsset) {
+              'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 24),
+              'plane-landing' => const DonyEmoji.planeLanding(size: 24),
+              _ => Icon(etape.icon, size: 24, color: cs.onSurface),
+            },
             const SizedBox(height: DonySpacing.sm),
             Text(
               etape.label,

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
@@ -285,8 +286,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                   child: CityAutocompleteField(
                     label: 'Ville de départ',
                     initialValue: _departureCityNotifier.value,
-                    prefixIcon: Icon(Icons.flight_takeoff_rounded,
-                        color: cs.primary, size: 20),
+                    prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                     onSelected: (CityModel city) {
                       _departureCityNotifier.value = city.name;
                     },
@@ -298,8 +298,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                   child: CityAutocompleteField(
                     label: 'Ville d\'arrivée',
                     initialValue: _arrivalCityNotifier.value,
-                    prefixIcon: const Icon(Icons.flight_land_rounded,
-                        color: DonyColors.accent, size: 20),
+                    prefixIcon: const DonyEmoji.planeLanding(size: 20),
                     onSelected: (CityModel city) {
                       _arrivalCityNotifier.value = city.name;
                     },

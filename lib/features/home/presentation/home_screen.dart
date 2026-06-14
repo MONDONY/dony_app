@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -591,7 +592,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               controller: depCtrl,
               decoration: const InputDecoration(
                 labelText: 'Ville de départ',
-                prefixIcon: Icon(Icons.flight_takeoff_rounded, size: 18),
+                prefixIcon: DonyEmoji.planeTakeoff(size: 18),
               ),
             ),
             const SizedBox(height: DonySpacing.md),
@@ -599,7 +600,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               controller: arrCtrl,
               decoration: const InputDecoration(
                 labelText: "Ville d'arrivée",
-                prefixIcon: Icon(Icons.flight_land_rounded, size: 18),
+                prefixIcon: DonyEmoji.planeLanding(size: 18),
               ),
             ),
             const SizedBox(height: DonySpacing.lg),

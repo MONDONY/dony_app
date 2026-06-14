@@ -68,7 +68,9 @@ void main() {
         price: '5 €/kg',
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.flight_takeoff_rounded), findsOneWidget);
+      // DonyTripCard rend désormais l'emoji décollage (DonyEmoji) au centre du
+      // tracé de trajet, à la place de Icons.flight_takeoff_rounded.
+      expect(find.text('🛫'), findsOneWidget);
     });
 
     testWidgets('shows rating row when rating is provided', (tester) async {

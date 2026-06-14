@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
@@ -76,7 +77,7 @@ class _SearchViewState extends State<_SearchView> {
                     controller: _depCtrl,
                     decoration: const InputDecoration(
                       hintText: 'Départ',
-                      prefixIcon: Icon(Icons.flight_takeoff_rounded, size: 18),
+                      prefixIcon: DonyEmoji.planeTakeoff(size: 18),
                     ),
                     onSubmitted: (_) => _applyFilters(),
                   ),
@@ -87,7 +88,7 @@ class _SearchViewState extends State<_SearchView> {
                     controller: _arrCtrl,
                     decoration: const InputDecoration(
                       hintText: 'Arrivée',
-                      prefixIcon: Icon(Icons.flight_land_rounded, size: 18),
+                      prefixIcon: DonyEmoji.planeLanding(size: 18),
                     ),
                     onSubmitted: (_) => _applyFilters(),
                   ),

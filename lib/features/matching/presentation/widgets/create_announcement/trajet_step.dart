@@ -4,6 +4,7 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
@@ -182,7 +183,7 @@ class TrajetStep extends StatelessWidget {
       ),
 
       // ── TRAJET ────────────────────────────────────────────────────────────
-      const CaSectionLabel(label: 'Trajet', icon: Icons.flight_takeoff_rounded),
+      const CaSectionLabel(label: 'Trajet', iconAsset: 'plane-takeoff'),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -219,11 +220,7 @@ class TrajetStep extends StatelessWidget {
                         label: 'Ville de départ',
                         fieldKey: const Key('departureCityField'),
                         initialValue: departureCityNotifier.value,
-                        prefixIcon: Icon(
-                          DonyIcons.departureCity,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
                           // Code pays d'abord : le listener du city notifier
@@ -273,11 +270,7 @@ class TrajetStep extends StatelessWidget {
                         label: 'Ville d\'arrivée',
                         fieldKey: const Key('arrivalCityField'),
                         initialValue: arrivalCityNotifier.value,
-                        prefixIcon: Icon(
-                          DonyIcons.arrivalCity,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
+                        prefixIcon: const DonyEmoji.planeLanding(size: 20),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
                           arrivalCountryCodeNotifier?.value = city.countryCode;

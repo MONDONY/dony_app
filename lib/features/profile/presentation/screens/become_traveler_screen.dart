@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -167,7 +168,7 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
                                             .add(
                                               const TravelerUpgradeDeactivateRequested(),
                                             ),
-                                  icon: Icons.flight_land_rounded,
+                                  iconAsset: 'plane-landing',
                                   variant: DonyButtonVariant.ghost,
                                 )
                                 .animate()
@@ -198,7 +199,7 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
                                             .add(
                                               const TravelerUpgradeActivateRequested(),
                                             ),
-                                  icon: Icons.flight_takeoff_rounded,
+                                  iconAsset: 'plane-takeoff',
                                 )
                                 .animate()
                                 .fadeIn(delay: 200.ms)
@@ -286,8 +287,8 @@ class _HeroSection extends StatelessWidget {
               color: cs.onPrimary.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Icon(
-              Icons.flight_takeoff_rounded,
+            child: DonyIcon(
+              'plane-takeoff',
               color: cs.onPrimary,
               size: 26,
             ),

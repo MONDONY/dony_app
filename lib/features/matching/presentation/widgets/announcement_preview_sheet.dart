@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -74,7 +75,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _PreviewRow(
-            icon: Icons.flight_takeoff,
+            iconAsset: 'plane-takeoff',
             label: 'Trajet',
             value:
                 '${formState.departureCity ?? '—'} → ${formState.arrivalCity ?? '—'}',
@@ -169,12 +170,14 @@ class AnnouncementPreviewSheet extends StatelessWidget {
 }
 
 class _PreviewRow extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final String value;
 
   const _PreviewRow({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.label,
     required this.value,
   });
@@ -188,7 +191,9 @@ class _PreviewRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: cs.primary),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 18, color: cs.primary)
+              : Icon(icon, size: 18, color: cs.primary),
           const SizedBox(width: DonySpacing.sm),
           SizedBox(
             width: 88,

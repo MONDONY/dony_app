@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
@@ -243,7 +244,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                 children: [
                   Container(width: 6, height: 6, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)),
                   Container(width: 28, height: 1.5, color: cs.primary.withValues(alpha: 0.3)),
-                  Icon(Icons.flight_takeoff_rounded, size: 16, color: cs.primary),
+                  const DonyEmoji.planeTakeoff(size: 16),
                   Container(width: 28, height: 1.5, color: cs.primary.withValues(alpha: 0.3)),
                   Container(width: 6, height: 6, decoration: const BoxDecoration(color: DonyColors.accent, shape: BoxShape.circle)),
                 ],

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -11,10 +12,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-const _etapeLabels = {
-  'DEPART': ('Départ', Icons.flight_takeoff_rounded),
-  'TRANSIT': ('Transit', Icons.sync_alt_rounded),
-  'ARRIVEE': ('Arrivée', Icons.flight_land_rounded),
+const _etapeLabels = <String, (String, IconData?, String?)>{
+  'DEPART': ('Départ', null, 'plane-takeoff'),
+  'TRANSIT': ('Transit', Icons.sync_alt_rounded, null),
+  'ARRIVEE': ('Arrivée', null, 'plane-landing'),
 };
 
 class ScanConfirmScreen extends StatefulWidget {
@@ -124,7 +125,11 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Chip(
-                      avatar: Icon(etapeInfo.$2, size: 14, color: cs.primary),
+                      avatar: switch (etapeInfo.$3) {
+                        'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 14),
+                        'plane-landing' => const DonyEmoji.planeLanding(size: 14),
+                        _ => Icon(etapeInfo.$2, size: 14, color: cs.primary),
+                      },
                       label: Text('${etapeInfo.$1} enregistrée'),
                       labelStyle: tt.labelSmall?.copyWith(
                         color: cs.primary,

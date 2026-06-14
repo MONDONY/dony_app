@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -168,7 +169,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Fenêtre de remise'), findsOneWidget);
-    expect(find.byIcon(Icons.schedule_rounded), findsOneWidget);
+    // L'icône horaire est désormais un DonyIcon SVG Lucide ('clock').
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'clock'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('masque la fenêtre si absente (annonce legacy)', (tester) async {

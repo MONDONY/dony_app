@@ -535,7 +535,7 @@ class _EmptyView extends StatelessWidget {
     return DonyEmptyState(
       title: _title,
       description: _description,
-      icon: Icons.flight_takeoff_rounded,
+      iconAsset: 'plane-takeoff',
     );
   }
 }

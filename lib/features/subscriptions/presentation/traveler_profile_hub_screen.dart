@@ -535,7 +535,7 @@ class _TripsTab extends StatelessWidget {
         if (announcements.isEmpty) {
           return const DonyEmptyState(
             mascotte: DonyMascotteType.assis,
-            icon: Icons.flight_takeoff_rounded,
+            iconAsset: 'plane-takeoff',
             title: 'Aucun trajet en cours',
             description: 'Ce voyageur n\'a pas encore publié de trajet.',
           );

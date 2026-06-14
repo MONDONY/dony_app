@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -232,7 +233,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.bookmark_rounded, size: 18, color: cs.primary),
+                  DonyIcon('bookmark', size: 18, color: cs.primary),
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text('Mes modèles',
@@ -268,7 +269,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       return ActionChip(
                         avatar: t.emoji != null
                             ? Text(t.emoji!)
-                            : Icon(Icons.bookmark_border_rounded,
+                            : DonyIcon('bookmark',
                                 size: 16, color: cs.primary),
                         label: Text('${t.label} · ${_formatPrice(t.pricePerKg)}€/kg'),
                         onPressed: () => _applyTemplate(t),
@@ -615,7 +616,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                 ),
-                child: Icon(Icons.close_rounded, size: 20, color: cs.primary),
+                child: DonyIcon('x', size: 20, color: cs.primary),
               ),
             ),
             bottom: PreferredSize(
@@ -720,7 +721,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // (CaFieldCard) et rend ses suggestions HORS de tout ClipRRect.
                 // Ne pas entourer ces champs dans un _SectionCard (ClipRRect)
                 // qui masquerait la liste de suggestions — fix B1.
-                const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+                const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
                 const SizedBox(height: DonySpacing.sm),
                 Column(
                   children: [
@@ -728,8 +729,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       create: (_) => getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         label: 'Ville de départ',
-                        prefixIcon: Icon(
-                          Icons.flight_takeoff_rounded,
+                        prefixIcon: DonyIcon(
+                          'plane-takeoff',
                           color: cs.primary,
                           size: 20,
                         ),
@@ -759,8 +760,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       create: (_) => getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         label: 'Ville d\'arrivée',
-                        prefixIcon: const Icon(
-                          Icons.flight_land_rounded,
+                        prefixIcon: const DonyIcon(
+                          'plane-landing',
                           color: DonyColors.accent,
                           size: 20,
                         ),
@@ -818,7 +819,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: DonySpacing.base,
                               ),
-                              leading: Icon(Icons.schedule_rounded, size: 20,
+                              leading: DonyIcon('clock', size: 20,
                                   color: Theme.of(context).colorScheme.primary),
                               title: const Text('Début'),
                               trailing: Text(dt != null
@@ -834,7 +835,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: DonySpacing.base,
                               ),
-                              leading: Icon(Icons.schedule_rounded, size: 20,
+                              leading: DonyIcon('clock', size: 20,
                                   color: Theme.of(context).colorScheme.primary),
                               title: const Text('Fin'),
                               trailing: Text(dt != null
@@ -862,7 +863,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.error_outline_rounded,
+                                    DonyIcon('circle-alert',
                                         size: 16,
                                         color: Theme.of(context).colorScheme.error),
                                     const SizedBox(width: DonySpacing.xs),
@@ -1164,7 +1165,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (isSelected) ...[
-                                          const Icon(Icons.check_rounded,
+                                          const DonyIcon('check',
                                               size: 12,
                                               color: DonyColors.white),
                                           const SizedBox(width: DonySpacing.xs),
@@ -1524,7 +1525,8 @@ class _RowDivider extends StatelessWidget {
 class _SectionLabel extends StatelessWidget {
   final String label;
   final IconData? icon;
-  const _SectionLabel({required this.label, this.icon});
+  final String? iconAsset;
+  const _SectionLabel({required this.label, this.icon, this.iconAsset});
 
   @override
   Widget build(BuildContext context) {
@@ -1538,11 +1540,13 @@ class _SectionLabel extends StatelessWidget {
         fontWeight: FontWeight.w600,
       ),
     );
-    if (icon == null) return labelWidget;
+    if (icon == null && iconAsset == null) return labelWidget;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: cs.onSurfaceVariant),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant)
+            : Icon(icon, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         labelWidget,
       ],

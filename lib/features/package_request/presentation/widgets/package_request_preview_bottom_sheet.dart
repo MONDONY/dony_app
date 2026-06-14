@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -151,10 +152,8 @@ class _CityPill extends StatelessWidget {
       crossAxisAlignment:
           isDestination ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        Icon(
-          isDestination
-              ? Icons.flight_land_rounded
-              : Icons.flight_takeoff_rounded,
+        DonyIcon(
+          isDestination ? 'plane-landing' : 'plane-takeoff',
           color: Colors.white.withValues(alpha: 0.7),
           size: 15,
         ),

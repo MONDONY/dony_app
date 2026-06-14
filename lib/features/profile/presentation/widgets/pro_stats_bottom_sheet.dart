@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/pro_stats_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -219,7 +220,7 @@ class _GlassHeroCard extends StatelessWidget {
                     child: _GlassTile(
                       label: 'Trajets',
                       value: trips.toString(),
-                      icon: Icons.flight_takeoff_rounded,
+                      iconAsset: 'plane-takeoff',
                     ),
                   ),
                   const SizedBox(width: DonySpacing.sm),
@@ -245,12 +246,14 @@ class _GlassTile extends StatelessWidget {
   const _GlassTile({
     required this.label,
     required this.value,
-    required this.icon,
+    this.icon,
+    this.iconAsset,
   });
 
   final String label;
   final String value;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +275,17 @@ class _GlassTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 18),
+              iconAsset != null
+                  ? DonyIcon(
+                      iconAsset!,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      size: 18,
+                    )
+                  : Icon(
+                      icon,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      size: 18,
+                    ),
               const SizedBox(height: DonySpacing.xs),
               Text(
                 value,

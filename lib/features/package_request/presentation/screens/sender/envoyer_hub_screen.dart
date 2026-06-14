@@ -447,7 +447,7 @@ class _EnvoyerHeader extends StatelessWidget {
             HeaderPill(
               key: const Key('show-trips-pill'),
               label: 'Mes trajets',
-              icon: Icons.flight_takeoff_rounded,
+              iconAsset: 'plane-takeoff',
               style: HeaderPillStyle.soft,
               onTap: onShowTrips!,
             ),

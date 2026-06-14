@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -172,14 +174,14 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── TRAJET ──────────────────────────────────────────────────
-              const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+              const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
               const SizedBox(height: DonySpacing.sm),
               BlocProvider(
                 create: (_) => getIt<CitySearchBloc>(),
                 child: CityAutocompleteField(
                   label: 'Ville de départ',
                   requiredLabel: true,
-                  prefixIcon: Icon(Icons.flight_takeoff_rounded, color: cs.primary, size: 20),
+                  prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                   initialValue: _departureCity,
                   onSelected: (CityModel city) =>
                       setState(() => _departureCity = city.name),
@@ -191,7 +193,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                 child: CityAutocompleteField(
                   label: "Ville d'arrivée",
                   requiredLabel: true,
-                  prefixIcon: Icon(Icons.flight_land_rounded, color: cs.secondary, size: 20),
+                  prefixIcon: const DonyEmoji.planeLanding(size: 20),
                   initialValue: _arrivalCity,
                   onSelected: (CityModel city) =>
                       setState(() => _arrivalCity = city.name),
@@ -421,7 +423,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── HEURE D'ARRIVÉE ─────────────────────────────────────────
-              const _SectionLabel(label: "HEURE D'ARRIVÉE", icon: Icons.flight_land_rounded),
+              const _SectionLabel(label: "HEURE D'ARRIVÉE", iconAsset: 'plane-landing'),
               const SizedBox(height: DonySpacing.sm),
               GestureDetector(
                 onTap: () async {
@@ -503,17 +505,20 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label, required this.icon});
+  const _SectionLabel({required this.label, this.icon, this.iconAsset});
 
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 18, color: cs.primary),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 18, color: cs.primary)
+            : Icon(icon, size: 18, color: cs.primary),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,

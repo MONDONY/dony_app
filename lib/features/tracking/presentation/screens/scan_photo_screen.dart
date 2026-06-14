@@ -1,16 +1,17 @@
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:native_exif/native_exif.dart';
 
-const _etapeLabels = {
-  'DEPART': ('Départ', Icons.flight_takeoff_rounded),
-  'TRANSIT': ('Transit', Icons.sync_alt_rounded),
-  'ARRIVEE': ('Arrivée', Icons.flight_land_rounded),
+const _etapeLabels = <String, (String, IconData?, String?)>{
+  'DEPART': ('Départ', null, 'plane-takeoff'),
+  'TRANSIT': ('Transit', Icons.sync_alt_rounded, null),
+  'ARRIVEE': ('Arrivée', null, 'plane-landing'),
 };
 
 class ScanPhotoScreen extends StatefulWidget {
@@ -232,8 +233,12 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(etapeInfo.$2,
-                                    color: DonyColors.neutral0, size: 12),
+                                if (etapeInfo.$3 != null)
+                                  DonyIcon(etapeInfo.$3!,
+                                      color: DonyColors.neutral0, size: 12)
+                                else
+                                  Icon(etapeInfo.$2,
+                                      color: DonyColors.neutral0, size: 12),
                                 const SizedBox(width: DonySpacing.xs),
                                 Text(
                                   'Étape : ${etapeInfo.$1}',

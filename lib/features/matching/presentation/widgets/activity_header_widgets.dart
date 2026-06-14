@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -29,11 +30,13 @@ class HeaderPill extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.icon,
+    this.iconAsset,
     this.style = HeaderPillStyle.primary,
   });
 
   final String label;
   final IconData? icon;
+  final String? iconAsset;
   final HeaderPillStyle style;
   final VoidCallback onTap;
 
@@ -74,7 +77,10 @@ class HeaderPill extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
+              if (iconAsset != null) ...[
+                DonyIcon(iconAsset!, size: 15, color: fg),
+                const SizedBox(width: DonySpacing.xs + 1),
+              ] else if (icon != null) ...[
                 Icon(icon, size: 15, color: fg),
                 const SizedBox(width: DonySpacing.xs + 1),
               ],

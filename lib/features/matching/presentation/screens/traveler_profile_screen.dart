@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -325,8 +326,8 @@ class _CorridorBanner extends StatelessWidget {
             Row(
               children: [
                 if (announcement.departureTime != null) ...[
-                  Icon(
-                    Icons.flight_takeoff_rounded,
+                  DonyIcon(
+                    'plane-takeoff',
                     color: cs.onPrimary.withValues(alpha: 0.6),
                     size: 13,
                   ),
@@ -351,8 +352,8 @@ class _CorridorBanner extends StatelessWidget {
                     ),
                   ),
                 if (announcement.arrivalTime != null) ...[
-                  Icon(
-                    Icons.flight_land_rounded,
+                  DonyIcon(
+                    'plane-landing',
                     color: cs.onPrimary.withValues(alpha: 0.6),
                     size: 13,
                   ),
