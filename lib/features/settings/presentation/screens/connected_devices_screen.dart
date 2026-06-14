@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/data/models/device_model.dart';
@@ -233,7 +234,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 48, color: cs.onSurfaceVariant),
+            DonyIcon('wifi-off', size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: DonySpacing.md),
             Text(message, style: tt.bodyMedium, textAlign: TextAlign.center),
             const SizedBox(height: DonySpacing.lg),

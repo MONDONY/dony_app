@@ -3,6 +3,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -121,8 +122,15 @@ void main() {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
 
-      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.send_rounded), findsOneWidget);
+      // Icônes migrées vers DonyIcon SVG Lucide ('image' / 'send').
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'image'),
+        findsOneWidget,
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'),
+        findsOneWidget,
+      );
     });
   });
 }

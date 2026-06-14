@@ -164,7 +164,7 @@ class _PaymentSummaryView extends StatelessWidget {
                 const SizedBox(height: DonySpacing.lg),
                 const DonyStatusBanner(
                   type: DonyStatusBannerType.info,
-                  icon: Icons.lock_rounded,
+                  iconAsset: 'lock',
                   message:
                       'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
                 ),
@@ -180,7 +180,7 @@ class _PaymentSummaryView extends StatelessWidget {
                   label: 'Payer ${_total.toStringAsFixed(2)} €',
                   onPressed: isLoading ? null : () => _pay(context),
                   isLoading: isLoading,
-                  icon: Icons.lock_rounded,
+                  iconAsset: 'lock',
                 ),
               ],
             )

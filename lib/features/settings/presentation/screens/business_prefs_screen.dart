@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
@@ -41,7 +42,7 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
             _SectionLabel('UNITÉS', cs: cs),
             DonyListSection(tiles: [
               DonyListTile(
-                icon: Icons.monitor_weight_outlined,
+                iconAsset: 'scale',
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Unité de poids',
@@ -61,7 +62,7 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
             _SectionLabel('DEVISE', cs: cs),
             DonyListSection(tiles: [
               DonyListTile(
-                icon: Icons.euro_rounded,
+                iconAsset: 'euro',
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Devise d\'affichage',
@@ -146,7 +147,8 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
             ListTile(
               title: Text(label),
               trailing: current == code
-                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                  ? DonyIcon('check',
+                      color: Theme.of(context).colorScheme.primary)
                   : null,
               onTap: () {
                 context.read<BusinessPrefsBloc>().add(CurrencyChanged(code));
@@ -182,7 +184,7 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.wifi_off_rounded, color: cs.onErrorContainer, size: 18),
+          DonyIcon('wifi-off', color: cs.onErrorContainer, size: 18),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
@@ -350,7 +352,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
 
               // ── Prix minimum ──────────────────────────────────────────────
               DonyListTile(
-                icon: Icons.euro_outlined,
+                iconAsset: 'euro',
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Prix minimum',
@@ -383,7 +385,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
 
               // ── Mode de contact ───────────────────────────────────────────
               DonyListTile(
-                icon: Icons.phone_outlined,
+                iconAsset: 'phone',
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Mode de contact',
@@ -411,7 +413,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
 
               // ── Délai de réponse ──────────────────────────────────────────
               DonyListTile(
-                icon: Icons.timer_outlined,
+                iconAsset: 'timer',
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Délai de réponse',

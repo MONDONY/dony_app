@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
@@ -133,7 +134,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(label: 'JOURS DE RÉPÉTITION', icon: Icons.event_repeat_rounded),
+              const _SectionLabel(label: 'JOURS DE RÉPÉTITION', iconAsset: 'calendar-sync'),
               const SizedBox(height: DonySpacing.sm),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -163,7 +164,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(delay: 40.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(label: "HEURE DE DÉPART", icon: Icons.schedule_rounded),
+              const _SectionLabel(label: "HEURE DE DÉPART", iconAsset: 'clock'),
               const SizedBox(height: DonySpacing.sm),
               GestureDetector(
                 onTap: _pickTime,
@@ -177,7 +178,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time_rounded, color: cs.primary, size: 20),
+                      DonyIcon('clock', color: cs.primary, size: 20),
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
@@ -190,7 +191,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                       if (_departureTime != null)
                         GestureDetector(
                           onTap: () => setState(() => _departureTime = null),
-                          child: Icon(Icons.close_rounded, size: 18, color: cs.onSurfaceVariant),
+                          child: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
                         ),
                     ],
                   ),
@@ -198,7 +199,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(label: 'LIEUX', icon: Icons.swap_horiz_rounded),
+              const _SectionLabel(label: 'LIEUX', iconAsset: 'arrow-left-right'),
               const SizedBox(height: DonySpacing.sm),
               AddressPickerField(
                 fieldLabel: 'Lieu de remise du colis *',
@@ -225,7 +226,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.play_circle_outline_rounded,
+                      DonyIcon('circle-play',
                           color: _active ? cs.primary : cs.onSurfaceVariant, size: 20),
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
@@ -254,16 +255,16 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label, required this.icon});
+  const _SectionLabel({required this.label, required this.iconAsset});
   final String label;
-  final IconData icon;
+  final String iconAsset;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 18, color: cs.primary),
+        DonyIcon(iconAsset, size: 18, color: cs.primary),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,

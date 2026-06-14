@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -30,7 +31,7 @@ class TripTemplatesScreen extends StatelessWidget {
       padding: EdgeInsets.zero,
       appBarActions: [
         IconButton(
-          icon: const Icon(Icons.add_rounded),
+          icon: DonyIcon('plus', color: Theme.of(context).colorScheme.onSurface),
           tooltip: 'Nouveau modèle',
           onPressed: () => _openEditor(context),
         ),
@@ -43,7 +44,7 @@ class TripTemplatesScreen extends StatelessWidget {
           if (state.status == TripTemplateStatus.error && state.templates.isEmpty) {
             return DonyEmptyState(
               type: DonyEmptyStateType.error,
-              icon: Icons.error_outline_rounded,
+              iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
               description: state.error ?? 'Une erreur est survenue.',
               actionLabel: 'Réessayer',
@@ -120,7 +121,7 @@ class _TripTemplateCard extends StatelessWidget {
                 ),
                 child: template.emoji != null
                     ? Text(template.emoji!, style: const TextStyle(fontSize: 20))
-                    : Icon(Icons.bookmark_rounded, color: cs.primary, size: 20),
+                    : DonyIcon('bookmark', color: cs.primary, size: 20),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -161,7 +162,7 @@ class _KebabMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return PopupMenuButton<_TemplateAction>(
-      icon: Icon(Icons.more_vert_rounded, color: cs.onSurfaceVariant, size: 20),
+      icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DonyRadius.md)),
       onSelected: (action) async {
         switch (action) {
@@ -175,7 +176,7 @@ class _KebabMenu extends StatelessWidget {
               title: 'Supprimer le modèle',
               message:
                   'Es-tu sûr de vouloir supprimer "${template.label}" ? Cette action est irréversible.',
-              icon: Icons.delete_outline_rounded,
+              iconAsset: 'trash-2',
               confirmLabel: 'Supprimer',
               variant: DonyDialogVariant.destructive,
             );
@@ -185,27 +186,26 @@ class _KebabMenu extends StatelessWidget {
         }
       },
       itemBuilder: (_) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: _TemplateAction.edit,
           child: Row(children: [
-            Icon(Icons.edit_outlined, size: 18),
-            SizedBox(width: DonySpacing.sm),
-            Text('Modifier'),
+            DonyIcon('square-pen', size: 18, color: cs.onSurface),
+            const SizedBox(width: DonySpacing.sm),
+            const Text('Modifier'),
           ]),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: _TemplateAction.recurrence,
           child: Row(children: [
-            Icon(Icons.event_repeat_rounded, size: 18),
-            SizedBox(width: DonySpacing.sm),
-            Text('Programmer la récurrence'),
+            DonyIcon('calendar-sync', size: 18, color: cs.onSurface),
+            const SizedBox(width: DonySpacing.sm),
+            const Text('Programmer la récurrence'),
           ]),
         ),
         PopupMenuItem(
           value: _TemplateAction.delete,
           child: Row(children: [
-            Icon(Icons.delete_outline_rounded,
-                size: 18, color: Theme.of(context).colorScheme.error),
+            DonyIcon('trash-2', size: 18, color: cs.error),
             const SizedBox(width: DonySpacing.sm),
             Text('Supprimer',
                 style: TextStyle(color: Theme.of(context).colorScheme.error)),

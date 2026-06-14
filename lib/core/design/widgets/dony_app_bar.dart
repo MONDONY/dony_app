@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onBack,
     this.showBackButton = true,
     this.leadingIcon,
+    this.leadingIconAsset,
     this.actions,
     this.bottom,
   }) : assert(
@@ -31,6 +33,10 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackButton;
   /// Override l'icône du bouton retour (ex: Icons.close_rounded pour les modals).
   final IconData? leadingIcon;
+
+  /// Override l'icône retour via un SVG Lucide (`assets/icons/<nom>.svg`).
+  /// Prioritaire sur [leadingIcon].
+  final String? leadingIconAsset;
   final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
 
@@ -68,11 +74,13 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                 ),
-                child: Icon(
-                  leadingIcon ?? Icons.chevron_left_rounded,
-                  size: 20,
-                  color: cs.primary,
-                ),
+                child: leadingIconAsset != null
+                    ? DonyIcon(leadingIconAsset!, size: 20, color: cs.primary)
+                    : Icon(
+                        leadingIcon ?? Icons.chevron_left_rounded,
+                        size: 20,
+                        color: cs.primary,
+                      ),
               ),
             )
           : null,

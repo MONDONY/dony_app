@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -152,7 +153,7 @@ class _RatingScreenState extends State<RatingScreen> {
                     // ── CTA ──────────────────────────────────────────────
                     DonyButton(
                       label: 'Envoyer l\'évaluation',
-                      icon: Icons.star_rounded,
+                      iconAsset: 'star',
                       isLoading: isLoading,
                       onPressed:
                           (_stars > 0 && !isLoading) ? () => _submit(context) : null,
@@ -201,8 +202,8 @@ class _StarSelector extends StatelessWidget {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
                 child: Builder(
-                  builder: (context) => Icon(
-                    filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                  builder: (context) => DonyIcon(
+                    'star',
                     key: ValueKey(filled),
                     size: 44,
                     color: filled

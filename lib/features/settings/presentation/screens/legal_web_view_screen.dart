@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -60,7 +61,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
         title: widget.title,
         actions: [
           IconButton(
-            icon: const Icon(Icons.open_in_browser_rounded),
+            icon: DonyIcon('external-link', color: cs.onSurfaceVariant),
             tooltip: 'Ouvrir dans le navigateur',
             onPressed: () async {
               final uri = Uri.parse(widget.url);
@@ -81,7 +82,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.wifi_off_rounded,
+                    DonyIcon('wifi-off',
                         size: 48, color: cs.onSurfaceVariant),
                     const SizedBox(height: DonySpacing.base),
                     Text(

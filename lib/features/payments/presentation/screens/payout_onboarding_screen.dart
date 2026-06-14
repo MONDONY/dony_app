@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +87,7 @@ class _OnboardingView extends StatelessWidget {
                 if (isPending) ...[
                   const DonyStatusBanner(
                     type: DonyStatusBannerType.warning,
-                    icon: Icons.schedule_rounded,
+                    iconAsset: 'clock',
                     message:
                         'Vérification en cours — Stripe finalise votre compte. Si vous avez déjà terminé l\'inscription, rafraîchissez le statut.',
                   ),
@@ -99,7 +100,7 @@ class _OnboardingView extends StatelessWidget {
                         : () => context
                             .read<PaymentBloc>()
                             .add(const PaymentOnboardingRefreshRequested()),
-                    icon: Icons.refresh_rounded,
+                    iconAsset: 'refresh-cw',
                   ),
                   const SizedBox(height: DonySpacing.xl),
                 ],
@@ -118,7 +119,7 @@ class _OnboardingView extends StatelessWidget {
                           .read<PaymentBloc>()
                           .add(const PaymentConnectAccountRequested()),
                   isLoading: isLoading,
-                  icon: Icons.account_balance_rounded,
+                  iconAsset: 'landmark',
                 ),
               ],
             )
@@ -144,7 +145,7 @@ class _HeroSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DonyIconContainer(
-          icon: Icons.account_balance_wallet_rounded,
+          iconAsset: 'wallet',
           size: DonyIconContainerSize.xl,
           borderRadius: DonyRadius.xl,
           backgroundColor: cs.primaryContainer,
@@ -177,11 +178,11 @@ class _BenefitsSection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     const items = [
-      (Icons.lock_rounded, 'Paiement sécurisé',
+      ('lock', 'Paiement sécurisé',
           'L\'argent est retenu en escrow jusqu\'à confirmation de livraison.'),
-      (Icons.bolt_rounded, 'Virement rapide',
+      ('zap', 'Virement rapide',
           'Reçu sur votre compte dans les 24h après confirmation.'),
-      (Icons.verified_user_rounded, 'Géré par Stripe',
+      ('shield-check', 'Géré par Stripe',
           'La vérification d\'identité et la conformité sont gérées par Stripe.'),
     ];
 
@@ -190,7 +191,7 @@ class _BenefitsSection extends StatelessWidget {
       child: Column(
         children: items.indexed.map((entry) {
           final (i, item) = entry;
-          final (icon, title, subtitle) = item;
+          final (iconAsset, title, subtitle) = item;
           return Column(
             children: [
               Padding(
@@ -198,7 +199,7 @@ class _BenefitsSection extends StatelessWidget {
                 child: Row(
                   children: [
                     DonyIconContainer(
-                      icon: icon,
+                      iconAsset: iconAsset,
                       size: DonyIconContainerSize.md,
                       borderRadius: DonyRadius.md,
                       backgroundColor: cs.primaryContainer,
@@ -253,7 +254,7 @@ class _ActiveAccountView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DonyIconContainer(
-                icon: Icons.check_circle_rounded,
+                iconAsset: 'circle-check',
                 size: DonyIconContainerSize.xl,
                 borderRadius: DonyRadius.xl,
                 backgroundColor: cs.success.withValues(alpha: 0.1),
@@ -280,21 +281,21 @@ class _ActiveAccountView extends StatelessWidget {
                 child: Column(
                   children: [
                     _InfoRow(
-                      icon: Icons.lock_rounded,
+                      iconAsset: 'lock',
                       title: 'Paiement sécurisé en escrow',
                       subtitle:
                           "L'argent est retenu jusqu'à confirmation de livraison.",
                     ),
                     const Divider(height: 1, indent: 70),
                     _InfoRow(
-                      icon: Icons.bolt_rounded,
+                      iconAsset: 'zap',
                       title: 'Virement automatique',
                       subtitle:
                           'Aucune action requise — Stripe vire directement sur votre RIB.',
                     ),
                     const Divider(height: 1, indent: 70),
                     _InfoRow(
-                      icon: Icons.account_balance_rounded,
+                      iconAsset: 'landmark',
                       title: 'Sur votre compte bancaire',
                       subtitle:
                           "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un wallet Stripe.",
@@ -314,14 +315,16 @@ class _ActiveAccountView extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String title;
   final String subtitle;
 
   const _InfoRow({
-    required this.icon,
     required this.title,
     required this.subtitle,
+    this.icon,
+    this.iconAsset,
   });
 
   @override
@@ -335,6 +338,7 @@ class _InfoRow extends StatelessWidget {
         children: [
           DonyIconContainer(
             icon: icon,
+            iconAsset: iconAsset,
             size: DonyIconContainerSize.md,
             borderRadius: DonyRadius.md,
             backgroundColor: cs.primaryContainer,
@@ -385,7 +389,7 @@ class _SuccessView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DonyIconContainer(
-                    icon: Icons.check_circle_rounded,
+                    iconAsset: 'circle-check',
                     size: DonyIconContainerSize.xxl,
                     backgroundColor: cs.success.withValues(alpha: 0.1),
                     iconColor: cs.success,
@@ -489,7 +493,7 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
       return Scaffold(
         appBar: DonyAppBar(
           title: 'Configuration du compte',
-          leadingIcon: Icons.close_rounded,
+          leadingIconAsset: 'x',
           onBack: _close,
         ),
         body: Center(
@@ -498,7 +502,7 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.error_outline_rounded, color: cs.error, size: 64),
+                DonyIcon('circle-alert', color: cs.error, size: 64),
                 const SizedBox(height: DonySpacing.lg),
                 Text(
                   'URL invalide',
@@ -521,7 +525,7 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
     return Scaffold(
       appBar: DonyAppBar(
         title: 'Configuration du compte',
-        leadingIcon: Icons.close_rounded,
+        leadingIconAsset: 'x',
         onBack: _close,
       ),
       body: Stack(

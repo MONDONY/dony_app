@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -54,21 +55,21 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.xl),
         _InfoTile(
-          icon: Icons.lock_rounded,
+          iconAsset: 'lock',
           text: "Votre paiement est bloqué en séquestre jusqu'à confirmation de livraison par le destinataire.",
           cs: cs,
           tt: tt,
         ),
         const SizedBox(height: DonySpacing.sm),
         _InfoTile(
-          icon: Icons.schedule_rounded,
+          iconAsset: 'clock',
           text: 'Libération automatique 48h après la date de livraison prévue si aucune confirmation.',
           cs: cs,
           tt: tt,
         ),
         const SizedBox(height: DonySpacing.sm),
         _InfoTile(
-          icon: Icons.shield_rounded,
+          iconAsset: 'shield',
           text: 'En cas de litige, dony intervient pour arbitrer et protéger les deux parties.',
           cs: cs,
           tt: tt,
@@ -79,9 +80,10 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
 }
 
 class _InfoTile extends StatelessWidget {
-  const _InfoTile({required this.icon, required this.text, required this.cs, required this.tt});
+  const _InfoTile({required this.text, required this.cs, required this.tt, this.icon, this.iconAsset});
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String text;
   final ColorScheme cs;
   final TextTheme tt;
@@ -97,7 +99,9 @@ class _InfoTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: cs.primary),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 16, color: cs.primary)
+              : Icon(icon, size: 16, color: cs.primary),
           const SizedBox(width: DonySpacing.sm),
           Expanded(child: Text(text, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant))),
         ],

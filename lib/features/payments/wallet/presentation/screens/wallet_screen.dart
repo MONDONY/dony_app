@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 48, color: cs.onSurfaceVariant),
+            DonyIcon('wifi-off', size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: DonySpacing.base),
             Text(
               message,
@@ -137,8 +138,8 @@ class _LoadedView extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           backgroundColor: DonyColors.blue700,
           leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_rounded,
+            icon: const DonyIcon(
+              'arrow-left',
               color: DonyColors.neutral0,
             ),
             tooltip: 'Retour',
@@ -170,8 +171,8 @@ class _LoadedView extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.receipt_long_rounded,
+                    DonyIcon(
+                      'receipt',
                       size: 48,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -287,7 +288,7 @@ class _HeroHeader extends StatelessWidget {
               Row(
                 children: [
                   _HeroAction(
-                    icon: Icons.add_rounded,
+                    iconAsset: 'plus',
                     label: 'Recharger',
                     onTap: () async {
                       // Solde avant la recharge : sert de référence au polling
@@ -307,7 +308,7 @@ class _HeroHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   _HeroAction(
-                    icon: Icons.history_rounded,
+                    iconAsset: 'history',
                     label: 'Utiliser',
                     onTap: () => context.pop(),
                   ),
@@ -325,12 +326,14 @@ class _HeroHeader extends StatelessWidget {
 
 class _HeroAction extends StatelessWidget {
   const _HeroAction({
-    required this.icon,
     required this.label,
     required this.onTap,
+    this.icon,
+    this.iconAsset,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final VoidCallback onTap;
 
@@ -356,7 +359,9 @@ class _HeroAction extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: DonyColors.neutral0, size: 16),
+              iconAsset != null
+                  ? DonyIcon(iconAsset!, color: DonyColors.neutral0, size: 16)
+                  : Icon(icon, color: DonyColors.neutral0, size: 16),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 label,
@@ -418,10 +423,8 @@ class _TxTile extends StatelessWidget {
                 color: isCredit ? DonyColors.blue50 : DonyColors.terra50,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
-              child: Icon(
-                isCredit
-                    ? Icons.arrow_downward_rounded
-                    : Icons.arrow_upward_rounded,
+              child: DonyIcon(
+                isCredit ? 'arrow-down' : 'arrow-up',
                 color: isCredit ? cs.primary : DonyColors.terra500,
                 size: 20,
               ),

@@ -6,6 +6,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -199,7 +200,7 @@ class _ChatScreenState extends State<ChatScreen> {
               color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
             ),
-            child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+            child: DonyIcon('chevron-left', size: 20, color: cs.primary),
           ),
         ),
         title: Row(
@@ -233,7 +234,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_outline_rounded,
+                    DonyIcon('trash-2',
                         size: 20, color: cs.error),
                     const SizedBox(width: DonySpacing.sm),
                     Text(
@@ -302,7 +303,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 return DonyEmptyState(
                   type: DonyEmptyStateType.error,
                   mascotte: DonyMascotteType.assis,
-                  icon: Icons.wifi_off_rounded,
+                  iconAsset: 'wifi-off',
                   title: 'Connexion interrompue',
                   description: ErrorPresenter.resolve(state.error).message,
                   actionLabel: 'Réessayer',
@@ -326,8 +327,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.chat_bubble_outline_rounded,
+                        DonyIcon(
+                          'message-circle',
                           size: 48,
                           color: cs.onSurfaceVariant.withValues(alpha: 0.35),
                         ),
@@ -415,7 +416,7 @@ class _ReadOnlyBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.lock_outline_rounded, size: 14, color: cs.onSurfaceVariant),
+          DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.xs),
           Expanded(
             child: Text(
@@ -466,7 +467,7 @@ class _TripBanner extends StatelessWidget {
                       color: cs.primaryContainer,
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
-                    child: Icon(Icons.flight_rounded, size: 16, color: cs.primary),
+                    child: DonyIcon('plane', size: 16, color: cs.primary),
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
@@ -493,8 +494,8 @@ class _TripBanner extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
+                  DonyIcon(
+                    'chevron-right',
                     size: 18,
                     color: cs.onSurfaceVariant,
                   ),
@@ -526,10 +527,10 @@ class _BidStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final (IconData?, String, Color, String?)? config = switch (status) {
       'BID_ACCEPTED' => (
-          Icons.check_circle_rounded,
+          null,
           'Offre acceptée',
           cs.success,
-          null,
+          'circle-check',
         ),
       'DELIVERY_CONFIRMED' => (
           null,
@@ -538,10 +539,10 @@ class _BidStatusBanner extends StatelessWidget {
           'package',
         ),
       'TRIP_CANCELLED' => (
-          Icons.cancel_rounded,
+          null,
           'Trajet annulé',
           cs.error,
-          null,
+          'circle-x',
         ),
       _ => null,
     };
@@ -558,6 +559,8 @@ class _BidStatusBanner extends StatelessWidget {
         children: [
           if (iconAsset == 'package')
             const DonyEmoji.parcel(size: 14)
+          else if (iconAsset != null)
+            DonyIcon(iconAsset, size: 14, color: color)
           else
             Icon(icon, size: 14, color: color),
           const SizedBox(width: DonySpacing.xs),
@@ -716,10 +719,10 @@ class _MessageBubble extends StatelessWidget {
                       ),
                       if (isMe) ...[
                         const SizedBox(width: 3),
-                        Icon(
+                        DonyIcon(
                           message.readAt != null
-                              ? Icons.done_all_rounded
-                              : Icons.done_rounded,
+                              ? 'check-check'
+                              : 'check',
                           size: 12,
                           color: message.readAt != null
                               ? cs.primary
@@ -798,7 +801,7 @@ class _ImageContent extends StatelessWidget {
               width: 220,
               height: 180,
               color: cs.surfaceContainerHighest,
-              child: Icon(Icons.broken_image_outlined, color: cs.onSurfaceVariant),
+              child: DonyIcon('image-off', color: cs.onSurfaceVariant),
             );
           },
         ),
@@ -832,8 +835,8 @@ class _LocationContent extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.location_on_rounded,
+          DonyIcon(
+            'map-pin',
             size: 20,
             color: isMe ? cs.onPrimary : cs.error,
           ),
@@ -882,8 +885,8 @@ class _DeletedContent extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.block_rounded,
+          DonyIcon(
+            'ban',
             size: 14,
             color: isMe
                 ? cs.onPrimary.withValues(alpha: 0.6)
@@ -945,7 +948,7 @@ class _InputBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock_rounded, size: 14, color: cs.onSurfaceVariant),
+            DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.xs),
             Text(
               'Envoi de messages désactivé',
@@ -976,13 +979,13 @@ class _InputBar extends StatelessWidget {
           children: [
             IconButton(
               onPressed: onPickImage,
-              icon: Icon(Icons.image_outlined, color: cs.onSurfaceVariant),
+              icon: DonyIcon('image', color: cs.onSurfaceVariant),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             ),
             IconButton(
               onPressed: onSendLocation,
-              icon: Icon(Icons.location_on_outlined, color: cs.onSurfaceVariant),
+              icon: DonyIcon('map-pin', color: cs.onSurfaceVariant),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             ),
@@ -1031,7 +1034,7 @@ class _InputBar extends StatelessWidget {
                       child: const SizedBox(
                         width: 44,
                         height: 44,
-                        child: Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                        child: DonyIcon('send', color: Colors.white, size: 20),
                       ),
                     ),
                   ),

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_otp_sheet.dart';
 import 'package:flutter/material.dart';
@@ -98,8 +99,8 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.warning_rounded,
+                DonyIcon(
+                  'triangle-alert',
                   color: cs.error,
                   size: 18,
                 ),

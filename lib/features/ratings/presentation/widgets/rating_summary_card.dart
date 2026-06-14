@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 class RatingSummaryCard extends StatelessWidget {
@@ -59,12 +60,12 @@ class RatingSummaryCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: List.generate(
                       5,
-                      (i) => Icon(
-                        i < averageRating.round()
-                            ? Icons.star_rounded
-                            : Icons.star_outline_rounded,
+                      (i) => DonyIcon(
+                        'star',
                         size: 14,
-                        color: DonyColors.starGold,
+                        color: i < averageRating.round()
+                            ? DonyColors.starGold
+                            : cs.onSurfaceVariant.withValues(alpha: 0.35),
                       ),
                     ),
                   ),
@@ -90,8 +91,8 @@ class RatingSummaryCard extends StatelessWidget {
                         children: [
                           Text('$star', style: tt.bodySmall),
                           const SizedBox(width: DonySpacing.xs),
-                          const Icon(
-                            Icons.star_rounded,
+                          const DonyIcon(
+                            'star',
                             size: 10,
                             color: Color(0xFFF59E0B),
                           ),

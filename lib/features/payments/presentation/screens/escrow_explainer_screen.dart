@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -217,7 +218,7 @@ class _StepRow extends StatelessWidget {
         // supporte pas de contenu texte).
         if (step.done)
           DonyIconContainer(
-            icon: Icons.check_rounded,
+            iconAsset: 'check',
             size: DonyIconContainerSize.md,
             backgroundColor: cs.primary,
             iconColor: cs.surface,
@@ -278,7 +279,7 @@ class _InsuranceCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.shield_outlined, color: cs.primary, size: DonySpacing.iconSm),
+          DonyIcon('shield', color: cs.primary, size: DonySpacing.iconSm),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text.rich(

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -148,7 +149,7 @@ class _TripLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.flight_rounded, size: 11, color: cs.primary),
+        DonyIcon('plane', size: 11, color: cs.primary),
         const SizedBox(width: DonySpacing.xs),
         Flexible(
           child: Text(

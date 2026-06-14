@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -89,7 +90,7 @@ class AuthMethodScreen extends StatelessWidget {
                   const SizedBox(height: DonySpacing.md),
                   if (_showAppleButton) ...[
                     _SocialCta(
-                          icon: Icons.apple,
+                          iconAsset: 'apple',
                           iconColor: cs.onSurface,
                           label: 'Continuer avec Apple',
                           onTap: () => context.read<AuthBloc>().add(
@@ -111,7 +112,7 @@ class AuthMethodScreen extends StatelessWidget {
                       .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   const SizedBox(height: DonySpacing.sm),
                   _SocialCta(
-                        icon: Icons.email_outlined,
+                        iconAsset: 'mail',
                         iconColor: cs.onSurfaceVariant,
                         label: 'Continuer avec mon email',
                         onTap: () => context.push('/auth/email'),
@@ -174,12 +175,12 @@ class _PhoneCta extends StatelessWidget {
 
 class _SocialCta extends StatelessWidget {
   const _SocialCta({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.onTap,
     this.iconColor,
   });
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final VoidCallback onTap;
   final Color? iconColor;
@@ -191,7 +192,7 @@ class _SocialCta extends StatelessWidget {
       height: 52,
       child: OutlinedButton.icon(
         onPressed: onTap,
-        icon: Icon(icon, size: 20, color: iconColor ?? cs.onSurface),
+        icon: DonyIcon(iconAsset, size: 20, color: iconColor ?? cs.onSurface),
         label: Text(label),
         style: OutlinedButton.styleFrom(
           backgroundColor: cs.surface,

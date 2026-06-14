@@ -1,5 +1,6 @@
 import 'package:dony/core/design/tokens/color_tokens.dart'; // DonyStatusColors extension
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Banner types for [DonyStatusBanner].
@@ -28,6 +29,7 @@ class DonyStatusBanner extends StatelessWidget {
     this.message,
     this.messageSpan,
     this.icon,
+    this.iconAsset,
     this.title,
     this.onDismiss,
     this.action,
@@ -46,6 +48,10 @@ class DonyStatusBanner extends StatelessWidget {
 
   /// Optional custom icon. Defaults to the type's standard icon.
   final IconData? icon;
+
+  /// Nom d'un SVG Lucide dans `assets/icons/` (sans extension). Prioritaire sur
+  /// [icon] — rend un [DonyIcon] teintable à la place d'une icône Material.
+  final String? iconAsset;
 
   /// Optional title displayed above the message in bold.
   final String? title;
@@ -118,7 +124,9 @@ class DonyStatusBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(effectiveIcon, size: 18, color: style.iconColor),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 18, color: style.iconColor)
+              : Icon(effectiveIcon, size: 18, color: style.iconColor),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Column(

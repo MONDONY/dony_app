@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -186,9 +187,10 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton.icon(
                               onPressed: _switchAccount,
-                              icon: const Icon(
-                                Icons.swap_horiz_rounded,
+                              icon: DonyIcon(
+                                'arrow-left-right',
                                 size: 18,
+                                color: cs.primary,
                               ),
                               label: const Text('Autre compte'),
                               style: TextButton.styleFrom(
@@ -263,8 +265,8 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
         color: isLocked ? cs.errorContainer : cs.primaryContainer,
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        isLocked ? Icons.lock : Icons.lock_open_outlined,
+      child: DonyIcon(
+        isLocked ? 'lock' : 'lock-open',
         color: isLocked ? cs.error : cs.primary,
         size: size * 0.45,
       ),
@@ -348,7 +350,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.timer_outlined, color: cs.error, size: 18),
+            DonyIcon('timer', color: cs.error, size: 18),
             const SizedBox(width: DonySpacing.sm),
             Text(
               'Réessayez dans $_lockSecondsLeft secondes',

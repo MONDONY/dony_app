@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
@@ -134,7 +135,7 @@ class _NotificationList extends StatelessWidget {
         if (state is NotificationError) {
           return DonyEmptyState(
             type: DonyEmptyStateType.error,
-            icon: Icons.wifi_off_rounded,
+            iconAsset: 'wifi-off',
             title: 'Erreur de chargement',
             description: 'Impossible de charger vos notifications.',
             actionLabel: 'Réessayer',
@@ -203,7 +204,7 @@ class _NotificationList extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.delete_outline_rounded,
+                        DonyIcon('trash-2',
                             color: cs.onError, size: 26),
                         const SizedBox(height: DonySpacing.xs),
                         Text(
@@ -310,7 +311,7 @@ class _NotificationTile extends StatelessWidget {
             ),
             if (hasRoute) ...[
               const SizedBox(width: DonySpacing.sm),
-              Icon(Icons.chevron_right_rounded,
+              DonyIcon('chevron-right',
                   size: 18, color: cs.onSurfaceVariant),
             ],
           ],
@@ -338,16 +339,16 @@ class _NotificationIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    final (IconData? icon, Color color, String? iconAsset) = switch (type) {
-      'BID_CREATED'        => (null,                          cs.primary,          'package'),
-      'BID_ACCEPTED'       => (Icons.check_circle_rounded,    cs.success,          null),
-      'BID_REJECTED'       => (Icons.cancel_rounded,          cs.error,            null),
-      'HANDOVER_DEFINED'   => (Icons.location_on_rounded,     cs.secondary,        null),
-      'TRIP_CANCELLED'     => (Icons.block_rounded,           cs.error,            null),
-      'PAYMENT_RELEASED'   => (Icons.payments_rounded,        cs.success,          null),
-      'DELIVERY_CONFIRMED' => (null,                          cs.success,          'package'),
-      'DISPUTE_OPENED'     => (Icons.warning_amber_rounded,   cs.warning,          null),
-      _                    => (Icons.notifications_rounded,   cs.onSurfaceVariant, null),
+    final (Color color, String iconAsset) = switch (type) {
+      'BID_CREATED'        => (cs.primary,          'package'),
+      'BID_ACCEPTED'       => (cs.success,          'circle-check'),
+      'BID_REJECTED'       => (cs.error,            'circle-x'),
+      'HANDOVER_DEFINED'   => (cs.secondary,        'map-pin'),
+      'TRIP_CANCELLED'     => (cs.error,            'ban'),
+      'PAYMENT_RELEASED'   => (cs.success,          'banknote'),
+      'DELIVERY_CONFIRMED' => (cs.success,          'package'),
+      'DISPUTE_OPENED'     => (cs.warning,          'triangle-alert'),
+      _                    => (cs.onSurfaceVariant, 'bell'),
     };
 
     return Container(
@@ -358,9 +359,9 @@ class _NotificationIcon extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
-      child: iconAsset != null
+      child: iconAsset == 'package'
           ? const DonyEmoji.parcel(size: DonySpacing.iconSm)
-          : Icon(icon, size: DonySpacing.iconSm, color: color),
+          : DonyIcon(iconAsset, size: DonySpacing.iconSm, color: color),
     );
   }
 }

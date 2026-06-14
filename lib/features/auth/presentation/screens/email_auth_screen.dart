@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -177,18 +178,25 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                   focusedBorder: InputBorder.none,
                                   errorBorder: InputBorder.none,
                                   focusedErrorBorder: InputBorder.none,
-                                  prefixIcon: Icon(
-                                    Icons.email_outlined,
-                                    color: _isValid
-                                        ? cs.primary
-                                        : cs.onSurfaceVariant,
-                                    size: 20,
+                                  prefixIcon: Padding(
+                                    padding: const EdgeInsets.all(DonySpacing.md),
+                                    child: DonyIcon(
+                                      'mail',
+                                      color: _isValid
+                                          ? cs.primary
+                                          : cs.onSurfaceVariant,
+                                      size: 20,
+                                    ),
                                   ),
                                   suffixIcon: _isValid
-                                      ? Icon(
-                                          Icons.check_circle_rounded,
-                                          color: cs.primary,
-                                          size: 20,
+                                      ? Padding(
+                                          padding: const EdgeInsets.all(
+                                              DonySpacing.md),
+                                          child: DonyIcon(
+                                            'circle-check',
+                                            color: cs.primary,
+                                            size: 20,
+                                          ),
                                         )
                                       : null,
                                   contentPadding: const EdgeInsets.symmetric(
@@ -201,8 +209,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                             const SizedBox(height: DonySpacing.sm),
                             Row(
                               children: [
-                                Icon(
-                                  Icons.info_outline_rounded,
+                                DonyIcon(
+                                  'info',
                                   size: 14,
                                   color: cs.onSurfaceVariant,
                                 ),
