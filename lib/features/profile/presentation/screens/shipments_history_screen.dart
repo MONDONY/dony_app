@@ -122,7 +122,7 @@ class _DeliveryCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                DonyAvatar(name: travelerName, size: DonyAvatarSize.sm),
+                DonyAvatar(name: travelerName, imageUrl: bid.travelerAvatarUrl, size: DonyAvatarSize.sm),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Column(

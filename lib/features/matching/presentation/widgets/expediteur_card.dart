@@ -42,6 +42,7 @@ class ExpediteurCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: bid.resolvedSenderName,
+                  imageUrl: bid.senderAvatarUrl,
                   verified: bid.senderKycVerified,
                   pro: bid.senderIsProAccount,
                 ),

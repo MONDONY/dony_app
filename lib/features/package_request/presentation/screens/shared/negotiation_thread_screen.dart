@@ -158,7 +158,7 @@ class _PartnerTitle extends StatelessWidget {
         : (thread.travelerName ?? 'Voyageur');
     final double? rating = iAmTraveler ? null : thread.travelerRating;
     final int? trips = iAmTraveler ? null : thread.travelerTripsCount;
-    final String? photoUrl = iAmTraveler ? null : thread.travelerPhotoUrl;
+    final String? photoUrl = iAmTraveler ? thread.senderPhotoUrl : thread.travelerPhotoUrl;
 
     String meta = '';
     if (rating != null) {

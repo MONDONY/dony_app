@@ -165,6 +165,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: traveler?.resolvedName ?? 'Voyageur',
+                  imageUrl: traveler?.avatarUrl,
                   size: DonyAvatarSize.lg,
                   verified: isKycVerified,
                   pro: traveler?.isProAccount ?? false,

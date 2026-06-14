@@ -92,6 +92,7 @@ class ExpediteurContactCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: name,
+                  imageUrl: bid.senderAvatarUrl,
                   verified: bid.senderKycVerified,
                   pro: bid.senderIsProAccount,
                 ),

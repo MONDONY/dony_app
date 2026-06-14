@@ -99,6 +99,7 @@ class VoyageurContactCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: name,
+                  imageUrl: bid.travelerAvatarUrl,
                   verified: bid.travelerKycVerified,
                   pro: bid.travelerIsProAccount,
                 ),

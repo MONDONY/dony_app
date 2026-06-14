@@ -207,6 +207,7 @@ class ShipmentCard extends StatelessWidget {
                 if (bid.travelerName != null) ...[
                   DonyAvatar(
                     name: bid.travelerName!,
+                    imageUrl: bid.travelerAvatarUrl,
                     size: DonyAvatarSize.sm,
                   ),
                   const SizedBox(width: DonySpacing.xs),
