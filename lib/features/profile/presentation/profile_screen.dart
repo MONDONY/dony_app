@@ -41,8 +41,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   final _scroll = ScrollController();
   late final _tabController = TabController(length: 3, vsync: this);
 
-  static const double _kContentHeightDual = 124.0;
-  static const double _kContentHeightSingle = 74.0;
+  static const double _kContentHeightDual = 84.0;
+  static const double _kContentHeightSingle = 44.0;
   static const double _kProgressBarSectionHeight = 38.0;
 
   @override
