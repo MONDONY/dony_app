@@ -15,6 +15,7 @@ class ProfileHeader extends StatelessWidget {
     this.city,
     this.profileCompletionPercent = 0.0,
     this.onEditProfile,
+    this.topPadding,
   });
 
   final String displayName;
@@ -29,11 +30,17 @@ class ProfileHeader extends StatelessWidget {
   final double profileCompletionPercent;
   final VoidCallback? onEditProfile;
 
+  /// Padding haut (zone status bar) — passé explicitement pour que la sonde de
+  /// mesure et le rendu réel utilisent une valeur identique (les deux vivent
+  /// dans des sous-arbres au `MediaQuery` différent). Repli sur le MediaQuery
+  /// local si non fourni.
+  final double? topPadding;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final topPad = MediaQuery.of(context).padding.top;
+    final topPad = topPadding ?? MediaQuery.of(context).padding.top;
 
     return Container(
       width: double.infinity,

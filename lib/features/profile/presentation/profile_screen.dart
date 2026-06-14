@@ -152,8 +152,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                         56.0 +
                         contentHeight -
                         (isProfileComplete ? _kProgressBarSectionHeight : 0.0);
-                    final expandedHeight =
+                    // La hauteur mesurée inclut topPad (ProfileHeader le pose
+                    // en padding). Or SliverAppBar ré-ajoute topPad par-dessus
+                    // expandedHeight → l'extent vaudrait header+topPad et
+                    // laisserait ~topPad de vide entre le header et les tabs.
+                    // On retranche donc topPad ici.
+                    final rawHeaderHeight =
                         _measuredHeaderHeight ?? fallbackHeight;
+                    final expandedHeight = (rawHeaderHeight - topPad).clamp(
+                      kToolbarHeight,
+                      double.infinity,
+                    );
 
                     final profileHeader = ProfileHeader(
                       displayName: displayName,
@@ -167,6 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       city: user?.city,
                       profileCompletionPercent: profileCompletionPercent,
                       onEditProfile: () => context.push('/profile/edit'),
+                      topPadding: topPad,
                     );
 
                     // Mesure la hauteur réelle du header (sonde hors-écran) pour
@@ -270,7 +280,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     ),
                                     actions: const [],
                                     flexibleSpace: FlexibleSpaceBar(
-                                      collapseMode: CollapseMode.parallax,
+                                      // none : pas de parallax/étirement du
+                                      // background (sinon il est agrandi puis
+                                      // décalé → vide entre header et tabs).
+                                      collapseMode: CollapseMode.none,
                                       background: profileHeader,
                                     ),
                                   ),
