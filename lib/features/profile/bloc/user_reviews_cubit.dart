@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,9 +57,24 @@ class UserReviewsError extends UserReviewsState {
 // ─── Cubit ───────────────────────────────────────────────────────────────────
 
 class UserReviewsCubit extends Cubit<UserReviewsState> {
-  UserReviewsCubit(this._repository) : super(const UserReviewsInitial());
+  UserReviewsCubit(this._repository, this._analytics)
+      : super(const UserReviewsInitial());
 
   final RatingRepository _repository;
+  final AnalyticsService _analytics;
+
+  bool _openedEventFired = false;
+
+  void _fireOpenedEvent(int ratingCount) {
+    if (_openedEventFired) return;
+    _openedEventFired = true;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.publicReviewsOpened,
+        properties: {'rating_count': ratingCount},
+      ),
+    );
+  }
 
   /// Load page 0 for [userId].  If [seed] is provided it is used immediately
   /// as the first page (so the sheet renders without a network round-trip).
@@ -67,6 +86,7 @@ class UserReviewsCubit extends Cubit<UserReviewsState> {
           allRatings: List<RatingItem>.of(seed.ratings),
         ),
       );
+      _fireOpenedEvent(seed.ratingCount);
       return;
     }
 
@@ -79,6 +99,7 @@ class UserReviewsCubit extends Cubit<UserReviewsState> {
           allRatings: List<RatingItem>.of(summary.ratings),
         ),
       );
+      _fireOpenedEvent(summary.ratingCount);
     } catch (e) {
       emit(UserReviewsError(message: e.toString()));
     }

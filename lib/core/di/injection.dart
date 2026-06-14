@@ -511,7 +511,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     ),
   );
   getIt.registerFactory<UserReviewsCubit>(
-    () => UserReviewsCubit(getIt<RatingRepository>()),
+    () => UserReviewsCubit(getIt<RatingRepository>(), getIt<AnalyticsService>()),
   );
 
   // Tracking

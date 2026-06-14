@@ -70,6 +70,9 @@ abstract final class AnalyticsEvents {
   // Profile
   static const becomeTravelerStarted = 'become_traveler_started';
   static const upgradeToProStarted   = 'upgrade_to_pro_started';
+  static const profilePhotoUpdated   = 'profile_photo_updated';
+  static const profileAboutUpdated   = 'profile_about_updated';
+  static const publicReviewsOpened   = 'public_reviews_opened';
 
   // Referral
   static const referralShared = 'referral_shared';

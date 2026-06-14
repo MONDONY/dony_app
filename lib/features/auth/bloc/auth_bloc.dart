@@ -328,6 +328,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         transportMode: event.transportMode,
       );
       emit(AuthProfileUpdated(updatedUser));
+      if (event.bio != null && event.bio!.trim().isNotEmpty) {
+        unawaited(_analytics?.logEvent(AnalyticsEvents.profileAboutUpdated));
+      }
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
@@ -343,6 +346,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final updated = await _authRepository.uploadAvatar(event.filePath);
       emit(AuthProfileUpdated(updated));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.profilePhotoUpdated));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
