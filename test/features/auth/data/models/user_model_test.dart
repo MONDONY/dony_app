@@ -399,6 +399,21 @@ void main() {
       });
     });
 
+    // ─── bio / avatarUrl / languages / transportMode ──────────────────────────
+
+    test('UserModel parse bio/avatarUrl/languages/transportMode', () {
+      final u = UserModel.fromJson({
+        'id': 'u1', 'roles': ['SENDER'],
+        'bio': 'Hello', 'avatarUrl': 'https://cdn/a.jpg',
+        'languages': ['FR', 'WO'], 'transportMode': 'AVION',
+      });
+      expect(u.bio, 'Hello');
+      expect(u.avatarUrl, 'https://cdn/a.jpg');
+      expect(u.languages, ['FR', 'WO']);
+      expect(u.transportMode, 'AVION');
+      expect(u.toJson()['bio'], 'Hello');
+    });
+
     // ─── deletionRequestedAt ──────────────────────────────────────────────────
 
     group('deletionRequestedAt', () {
