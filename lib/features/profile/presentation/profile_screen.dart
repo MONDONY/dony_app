@@ -15,6 +15,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
+import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
@@ -603,6 +604,16 @@ class _AccountTab extends StatelessWidget {
         DonySpacing.huge,
       ),
       children: [
+        // ── CTA Devenir voyageur (non-voyageur uniquement) ──────────────
+        if (!isTraveler) ...[
+          BecomeTravelerCtaCard(
+            onTap: () => context.push('/profile/become-traveler'),
+            kycStatus: user?.kycStatus,
+            stripeStatus: user?.stripeAccountStatus,
+          ),
+          const SizedBox(height: DonySpacing.xl),
+        ],
+
         // ── CONTACT & SÉCURITÉ ──────────────────────────────────────────
         _SectionLabel(label: 'CONTACT & SÉCURITÉ', cs: cs),
         _ContactSecuritySection(
@@ -756,32 +767,6 @@ class _AccountTab extends StatelessWidget {
               )
               .animate()
               .fadeIn(delay: 280.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          const SizedBox(height: DonySpacing.lg),
-        ],
-
-        // ── Uniquement non-voyageur ─────────────────────────────────────
-        if (!isTraveler) ...[
-          // ── DEVENIR VOYAGEUR ───────────────────────────────────────
-          _SectionLabel(label: 'DEVENIR VOYAGEUR', cs: cs),
-          DonyListSection(
-                tiles: [
-                  DonyListTile(
-                    icon: Icons.flight_takeoff_rounded,
-                    iconColor: cs.secondary,
-                    iconBgColor: cs.secondaryContainer,
-                    label: 'Devenir voyageur dony',
-                    trailing: _TravelerUpgradeTrailing(
-                      kycStatus: user?.kycStatus,
-                      stripeStatus: user?.stripeAccountStatus,
-                    ),
-                    showDivider: false,
-                    onTap: () => context.push('/profile/become-traveler'),
-                  ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 240.ms)
               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
           const SizedBox(height: DonySpacing.lg),
         ],
@@ -1481,45 +1466,3 @@ class DonyListSection extends StatelessWidget {
   }
 }
 
-// ── Traveler upgrade trailing ─────────────────────────────────────────────────
-
-class _TravelerUpgradeTrailing extends StatelessWidget {
-  const _TravelerUpgradeTrailing({
-    required this.kycStatus,
-    required this.stripeStatus,
-  });
-
-  final String? kycStatus;
-  final String? stripeStatus;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final kycOk = kycStatus == 'VERIFIED';
-    final stripeOk = stripeStatus == 'ONBOARDING_COMPLETE';
-
-    if (kycOk && stripeOk) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.check_circle_rounded, color: cs.success, size: 14),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            'Prêt',
-            style: tt.labelSmall?.copyWith(
-              color: cs.success,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      );
-    }
-
-    final int done = (kycOk ? 1 : 0) + (stripeOk ? 1 : 0);
-    return Text(
-      '$done/2 étapes',
-      style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-    );
-  }
-}

@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
@@ -200,6 +201,18 @@ Widget _buildTestHarness({
     GoRoute(
       path: '/payments/wallet',
       builder: (_, __) => const Scaffold(body: Text('Wallet')),
+    ),
+    GoRoute(
+      path: '/profile/become-traveler',
+      builder: (_, __) => const Scaffold(body: Text('BecomeTraveler')),
+    ),
+    GoRoute(
+      path: '/profile/edit',
+      builder: (_, __) => const Scaffold(body: Text('EditProfile')),
+    ),
+    GoRoute(
+      path: '/profile/price-grid',
+      builder: (_, __) => const Scaffold(body: Text('PriceGrid')),
     ),
   ];
 
@@ -803,11 +816,16 @@ void main() {
         await tester.pump(const Duration(milliseconds: 600));
 
         await _goToCompteTab(tester);
-        // Un voyageur ne doit pas voir la section DEVENIR VOYAGEUR.
+        // Un voyageur ne doit pas voir la CTA Devenir voyageur.
         expect(
           find.text('DEVENIR VOYAGEUR'),
           findsNothing,
-          reason: 'un voyageur ne doit pas voir DEVENIR VOYAGEUR',
+          reason: 'un voyageur ne doit pas voir la section DEVENIR VOYAGEUR',
+        );
+        expect(
+          find.byType(BecomeTravelerCtaCard),
+          findsNothing,
+          reason: 'un voyageur ne doit pas voir BecomeTravelerCtaCard',
         );
         await tester.pumpAndSettle(const Duration(seconds: 5));
       },
@@ -1151,7 +1169,7 @@ void main() {
     });
 
     testWidgets(
-      'tab Compte sender affiche DEVENIR VOYAGEUR (PAIEMENTS & FACTURES supprimé)',
+      'tab Compte sender affiche la CTA Devenir voyageur (PAIEMENTS & FACTURES supprimé)',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -1171,15 +1189,17 @@ void main() {
         expect(find.text('Factures'), findsNothing);
         expect(find.text('Crédits & codes promo'), findsNothing);
 
-        await tester.scrollUntilVisible(
-          find.text('DEVENIR VOYAGEUR'),
-          300,
-          scrollable: _accountScrollable,
+        // Le label DEVENIR VOYAGEUR a été remplacé par la carte CTA.
+        expect(find.text('DEVENIR VOYAGEUR'), findsNothing);
+        expect(
+          find.byType(BecomeTravelerCtaCard),
+          findsOneWidget,
+          reason: 'BecomeTravelerCtaCard manquante pour un sender',
         );
         expect(
-          find.text('DEVENIR VOYAGEUR'),
+          find.text('Devenir voyageur'),
           findsOneWidget,
-          reason: 'DEVENIR VOYAGEUR manquant (sender Compte)',
+          reason: 'Titre CTA manquant',
         );
         await tester.pumpAndSettle(const Duration(seconds: 5));
       },
@@ -1643,6 +1663,67 @@ void main() {
       findsOneWidget,
       reason: 'dual-role user (isTraveler=true) doit voir MES TRAJETS',
     );
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  // ── E3 — CTA Devenir voyageur en tête de Compte ──────────────────────────────
+
+  testWidgets('CTA Devenir voyageur en tête de Compte (non-voyageur)', (
+    tester,
+  ) async {
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_activeUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(
+      _buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        referralBloc: referralBloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await _goToCompteTab(tester);
+    expect(find.byType(BecomeTravelerCtaCard), findsOneWidget);
+    expect(find.text('Devenir voyageur'), findsOneWidget);
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  testWidgets('Pas de CTA Devenir voyageur pour un voyageur', (tester) async {
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_travelerUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(
+      _buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        referralBloc: referralBloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await _goToCompteTab(tester);
+    expect(find.byType(BecomeTravelerCtaCard), findsNothing);
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 }
