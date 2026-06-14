@@ -13,6 +13,9 @@ class ProfilePublicModel {
     required this.badges,
     this.contactMode,
     this.responseDelayHours,
+    this.bio,
+    this.languages = const [],
+    this.transportMode,
   });
 
   final String userId;
@@ -28,6 +31,9 @@ class ProfilePublicModel {
   final List<String> badges;
   final String? contactMode;
   final int? responseDelayHours;
+  final String? bio;
+  final List<String> languages;
+  final String? transportMode;
 
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
@@ -48,6 +54,9 @@ class ProfilePublicModel {
           [],
       contactMode: json['contactMode'] as String?,
       responseDelayHours: json['responseDelayHours'] as int?,
+      bio: json['bio'] as String?,
+      languages: (json['languages'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
+      transportMode: json['transportMode'] as String?,
     );
   }
 }
