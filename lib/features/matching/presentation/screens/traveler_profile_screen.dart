@@ -10,11 +10,12 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class TravelerProfileScreen extends StatefulWidget {
@@ -178,8 +179,13 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                         ].join(' · '),
                         rating: _a.traveler!.averageRating,
                         verified: true,
-                        onTap: () =>
-                            showTravelerProfileSheet(context, _a.traveler!),
+                        onTap: () => context.push(
+                            '/profile/public',
+                            extra: ProfilePublicArgs(
+                              userId: _a.traveler!.id,
+                              showSubscribe: true,
+                            ),
+                          ),
                       ),
                       if (_a.traveler!.isProAccount) ...[
                         const SizedBox(height: DonySpacing.sm),

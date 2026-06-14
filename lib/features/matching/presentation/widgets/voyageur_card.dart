@@ -1,9 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:flutter/material.dart';
@@ -11,23 +11,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Carte profil voyageur affichée à l'expéditeur (statuts ACCEPTED → COMPLETED).
 ///
-/// Ouvre le profil complet via [showTravelerProfileSheet] au tap.
+/// Ouvre le profil public via GoRouter au tap.
 /// Requiert un [ConversationOpenBloc] dans le contexte.
 class VoyageurCard extends StatelessWidget {
   final BidModel bid;
 
   const VoyageurCard({super.key, required this.bid});
-
-  TravelerProfile _buildTravelerProfile() => TravelerProfile(
-    id: bid.travelerId ?? '',
-    displayName: bid.travelerName,
-    phoneNumber: bid.travelerPhone,
-    averageRating: bid.travelerAverageRating,
-    totalTrips: bid.travelerTotalTrips,
-    kycVerified: bid.travelerKycVerified,
-    isProAccount: bid.travelerIsProAccount,
-    kiloPro: bid.travelerKiloPro,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +34,13 @@ class VoyageurCard extends StatelessWidget {
 
     return InkWell(
       onTap: canOpenProfile
-          ? () => showTravelerProfileSheet(context, _buildTravelerProfile())
+          ? () => context.push(
+                '/profile/public',
+                extra: ProfilePublicArgs(
+                  userId: bid.travelerId,
+                  showSubscribe: true,
+                ),
+              )
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(

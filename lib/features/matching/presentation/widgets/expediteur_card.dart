@@ -6,8 +6,7 @@ import 'package:intl/intl.dart';
 
 /// Carte profil expéditeur affichée au voyageur.
 ///
-/// Tappable si [onTap] est fourni — ouvre généralement le profil complet
-/// via [showSenderProfileSheet].
+/// Tappable si [onTap] est fourni — ouvre généralement le profil public.
 class ExpediteurCard extends StatelessWidget {
   final BidModel bid;
   final VoidCallback? onTap;

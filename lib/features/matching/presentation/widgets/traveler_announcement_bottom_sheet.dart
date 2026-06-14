@@ -11,7 +11,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -152,7 +152,13 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           borderRadius: BorderRadius.circular(DonyRadius.lg),
           onTap: traveler == null
               ? null
-              : () => showTravelerProfileSheet(context, traveler),
+              : () => context.push(
+                    '/profile/public',
+                    extra: ProfilePublicArgs(
+                      userId: traveler.id,
+                      showSubscribe: true,
+                    ),
+                  ),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
             child: Row(
