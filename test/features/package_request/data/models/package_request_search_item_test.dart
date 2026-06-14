@@ -89,4 +89,29 @@ void main() {
       expect(item.acceptedPaymentMethods, isEmpty);
     });
   });
+
+  group('SenderPublicProfile avatarUrl', () {
+    test('parses avatarUrl when present', () {
+      final json = _baseJson();
+      (json['sender'] as Map<String, dynamic>)['avatarUrl'] =
+          'https://cdn.dony.app/avatars/sender-1.jpg';
+      final item = PackageRequestSearchItem.fromJson(json);
+      expect(item.sender.avatarUrl, 'https://cdn.dony.app/avatars/sender-1.jpg');
+    });
+
+    test('avatarUrl is null when absent', () {
+      final item = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(item.sender.avatarUrl, isNull);
+    });
+
+    test('avatarUrl participates in equality (props)', () {
+      final json1 = _baseJson();
+      final json2 = _baseJson();
+      (json2['sender'] as Map<String, dynamic>)['avatarUrl'] =
+          'https://cdn.dony.app/avatars/sender-1.jpg';
+      final item1 = PackageRequestSearchItem.fromJson(json1);
+      final item2 = PackageRequestSearchItem.fromJson(json2);
+      expect(item1.sender, isNot(equals(item2.sender)));
+    });
+  });
 }

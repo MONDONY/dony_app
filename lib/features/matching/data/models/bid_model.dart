@@ -121,6 +121,12 @@ class BidModel {
   @JsonKey(name: 'promoCodeId')
   final String? promoCodeId;
 
+  /// URL de l'avatar de l'expéditeur (nullable, fourni par le backend).
+  final String? senderAvatarUrl;
+
+  /// URL de l'avatar du voyageur (nullable, fourni par le backend).
+  final String? travelerAvatarUrl;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -180,6 +186,8 @@ class BidModel {
     this.totalSenderAmountEur,
     this.promoCode,
     this.promoCodeId,
+    this.senderAvatarUrl,
+    this.travelerAvatarUrl,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

@@ -30,9 +30,7 @@ const _kNoDestinations = ProStatsModel(
 Widget _buildSheet(ProStatsModel stats) {
   return MaterialApp(
     home: Scaffold(
-      body: SingleChildScrollView(
-        child: ProStatsBottomSheet(stats: stats),
-      ),
+      body: SingleChildScrollView(child: ProStatsBottomSheet(stats: stats)),
     ),
   );
 }

@@ -26,17 +26,18 @@ void main() {
 
   group('activateTravelerRole', () {
     test('retourne UserModel quand le serveur répond 200', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(path))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: path),
-                data: {
-                  'id': 'user-123',
-                  'roles': ['SENDER', 'TRAVELER'],
-                  'kycStatus': 'VERIFIED',
-                  'stripeAccountStatus': 'ONBOARDING_COMPLETE',
-                  'status': 'ACTIVE',
-                },
-              ));
+      when(() => mockDio.post<Map<String, dynamic>>(path)).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: path),
+          data: {
+            'id': 'user-123',
+            'roles': ['SENDER', 'TRAVELER'],
+            'kycStatus': 'VERIFIED',
+            'stripeAccountStatus': 'ONBOARDING_COMPLETE',
+            'status': 'ACTIVE',
+          },
+        ),
+      );
 
       final user = await repo.activateTravelerRole();
 
@@ -47,10 +48,9 @@ void main() {
     });
 
     test('lève NetworkException quand response.data est null', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(path))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: path),
-              ));
+      when(() => mockDio.post<Map<String, dynamic>>(path)).thenAnswer(
+        (_) async => Response(requestOptions: RequestOptions(path: path)),
+      );
 
       await expectLater(
         repo.activateTravelerRole(),
@@ -89,34 +89,41 @@ void main() {
   });
 
   group('deactivateTravelerRole', () {
-    test('retourne UserModel sans TRAVELER quand le serveur répond 200',
-        () async {
-      when(() => mockDio.delete<Map<String, dynamic>>(deactivatePath))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: deactivatePath),
-                data: {
-                  'id': 'user-123',
-                  'roles': ['SENDER'],
-                  'kycStatus': 'VERIFIED',
-                  'stripeAccountStatus': 'ONBOARDING_COMPLETE',
-                  'status': 'ACTIVE',
-                },
-              ));
+    test(
+      'retourne UserModel sans TRAVELER quand le serveur répond 200',
+      () async {
+        when(
+          () => mockDio.delete<Map<String, dynamic>>(deactivatePath),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: deactivatePath),
+            data: {
+              'id': 'user-123',
+              'roles': ['SENDER'],
+              'kycStatus': 'VERIFIED',
+              'stripeAccountStatus': 'ONBOARDING_COMPLETE',
+              'status': 'ACTIVE',
+            },
+          ),
+        );
 
-      final user = await repo.deactivateTravelerRole();
+        final user = await repo.deactivateTravelerRole();
 
-      expect(user.id, 'user-123');
-      expect(user.roles, contains('SENDER'));
-      expect(user.roles, isNot(contains('TRAVELER')));
-      expect(user.kycStatus, 'VERIFIED');
-      expect(user.stripeAccountStatus, 'ONBOARDING_COMPLETE');
-    });
+        expect(user.id, 'user-123');
+        expect(user.roles, contains('SENDER'));
+        expect(user.roles, isNot(contains('TRAVELER')));
+        expect(user.kycStatus, 'VERIFIED');
+        expect(user.stripeAccountStatus, 'ONBOARDING_COMPLETE');
+      },
+    );
 
     test('lève NetworkException quand response.data est null', () async {
-      when(() => mockDio.delete<Map<String, dynamic>>(deactivatePath))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: deactivatePath),
-              ));
+      when(
+        () => mockDio.delete<Map<String, dynamic>>(deactivatePath),
+      ).thenAnswer(
+        (_) async =>
+            Response(requestOptions: RequestOptions(path: deactivatePath)),
+      );
 
       await expectLater(
         repo.deactivateTravelerRole(),
@@ -125,8 +132,9 @@ void main() {
     });
 
     test('lève AppException sur erreur réseau', () async {
-      when(() => mockDio.delete<Map<String, dynamic>>(deactivatePath))
-          .thenThrow(
+      when(
+        () => mockDio.delete<Map<String, dynamic>>(deactivatePath),
+      ).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: deactivatePath),
           error: const NetworkException('Erreur réseau'),

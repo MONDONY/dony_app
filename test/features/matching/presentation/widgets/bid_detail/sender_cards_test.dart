@@ -10,12 +10,6 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/voyageur_
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
-import 'package:dony/features/ratings/bloc/rating_bloc.dart';
-import 'package:dony/features/ratings/bloc/rating_event.dart';
-import 'package:dony/features/ratings/bloc/rating_state.dart';
-import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
-import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
-import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -23,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -34,13 +29,6 @@ class _MockConversationOpenBloc
 
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
-
-class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
-    implements RatingBloc {}
-
-class _MockTravelerSubscribeBloc
-    extends MockBloc<TravelerSubscribeEvent, TravelerSubscribeState>
-    implements TravelerSubscribeBloc {}
 
 // ── Fixture ───────────────────────────────────────────────────────────────────
 
@@ -108,16 +96,59 @@ BidModel _bid({
 
 // ── Host widget helpers ───────────────────────────────────────────────────────
 
-Widget _hostVoyageur(BidModel bid, _MockConversationOpenBloc bloc) =>
-    MaterialApp(
-      theme: AppTheme.light,
-      home: Scaffold(
-        body: BlocProvider<ConversationOpenBloc>.value(
-          value: bloc,
-          child: VoyageurContactCard(bid: bid),
+/// Builds a GoRouter-based host so that `context.push('/profile/public', ...)` works.
+/// The stub `/profile/public` route renders a Text widget with the userId from
+/// ProfilePublicArgs so tests can assert on navigation.
+Widget _hostVoyageur(
+  BidModel bid,
+  _MockConversationOpenBloc bloc, {
+  List<String>? pushedRoutes,
+}) {
+  final router = GoRouter(
+    initialLocation: '/',
+    observers: pushedRoutes == null
+        ? null
+        : [
+            _RecordingObserver(pushedRoutes),
+          ],
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (ctx, _) => Scaffold(
+          body: BlocProvider<ConversationOpenBloc>.value(
+            value: bloc,
+            child: VoyageurContactCard(bid: bid),
+          ),
         ),
       ),
-    );
+      GoRoute(
+        path: '/profile/public',
+        builder: (ctx, state) {
+          final args = state.extra;
+          return Scaffold(
+            body: Text('profile-public-screen'),
+          );
+        },
+      ),
+    ],
+  );
+  return MaterialApp.router(
+    theme: AppTheme.light,
+    routerConfig: router,
+  );
+}
+
+class _RecordingObserver extends NavigatorObserver {
+  final List<String> routes;
+  _RecordingObserver(this.routes);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route.settings.name != null) {
+      routes.add(route.settings.name!);
+    }
+  }
+}
 
 Widget _hostColis(BidModel bid) => MaterialApp(
       theme: AppTheme.light,
@@ -227,45 +258,8 @@ void main() {
     });
 
     testWidgets(
-        'travelerId non-null → chevron visible et tap ouvre le sheet profil',
+        'travelerId non-null → chevron visible et tap navigue vers /profile/public',
         (tester) async {
-      // Register mock blocs that showTravelerProfileSheet needs from GetIt.
-      final ratingBloc = _MockRatingBloc();
-      final subscribeBloc = _MockTravelerSubscribeBloc();
-      whenListen(
-        ratingBloc,
-        const Stream<RatingState>.empty(),
-        initialState: const UserRatingsLoaded(
-          averageRating: 0,
-          ratingCount: 0,
-          distribution: {},
-          ratings: [],
-          page: 0,
-          totalPages: 1,
-        ),
-      );
-      whenListen(
-        subscribeBloc,
-        const Stream<TravelerSubscribeState>.empty(),
-        initialState: const TravelerSubscribeState(
-          status: TravelerSubscribeStatus.loading,
-        ),
-      );
-
-      if (getIt.isRegistered<RatingBloc>()) getIt.unregister<RatingBloc>();
-      if (getIt.isRegistered<TravelerSubscribeBloc>()) {
-        getIt.unregister<TravelerSubscribeBloc>();
-      }
-      getIt.registerFactory<RatingBloc>(() => ratingBloc);
-      getIt.registerFactory<TravelerSubscribeBloc>(() => subscribeBloc);
-
-      addTearDown(() {
-        if (getIt.isRegistered<RatingBloc>()) getIt.unregister<RatingBloc>();
-        if (getIt.isRegistered<TravelerSubscribeBloc>()) {
-          getIt.unregister<TravelerSubscribeBloc>();
-        }
-      });
-
       final bidWithId = BidModel(
         id: 'bid-test',
         announcementId: 'ann-test',
@@ -287,13 +281,12 @@ void main() {
       // Chevron should be visible when travelerId is non-null.
       expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
 
-      // Tap the card to open traveler profile sheet.
+      // Tap the card — should navigate to /profile/public via GoRouter.
       await tester.tap(find.byType(InkWell).first);
-      await tester.pump(); // start animation
-      await tester.pump(const Duration(milliseconds: 400)); // advance past 300ms fadeIn
+      await tester.pumpAndSettle();
 
-      // Profile sheet should be open — abbreviated name visible.
-      expect(find.text('Ibrahima D.'), findsOneWidget);
+      // The stub /profile/public screen renders this text.
+      expect(find.text('profile-public-screen'), findsOneWidget);
     });
 
     testWidgets('travelerId null → pas de chevron', (tester) async {

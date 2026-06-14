@@ -32,7 +32,11 @@ class AnalyticsConsentScreen extends StatelessWidget {
                 const SizedBox(height: DonySpacing.md),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: DonyStepPill(current: 4, total: 4, label: 'Préférences'),
+                  child: DonyStepPill(
+                    current: 4,
+                    total: 4,
+                    label: 'Préférences',
+                  ),
                 ),
                 const Spacer(flex: 2),
                 _Header(cs: cs, tt: tt),
@@ -57,28 +61,31 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        DonyMascotteAnimated(
-          type: DonyMascotteType.joyeux,
-          size: DonyMascotteSize.md,
-        ),
-        const SizedBox(height: DonySpacing.lg),
-        Text(
-          'Une dernière chose',
-          style: tt.headlineLarge?.copyWith(color: cs.onSurface),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        Text(
-          "Pour améliorer dony, on aimerait mesurer comment\nl'app est utilisée. C'est anonyme et facultatif.",
-          style: tt.bodyMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            height: 1.45,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic);
+          children: [
+            DonyMascotteAnimated(
+              type: DonyMascotteType.joyeux,
+              size: DonyMascotteSize.md,
+            ),
+            const SizedBox(height: DonySpacing.lg),
+            Text(
+              'Une dernière chose',
+              style: tt.headlineLarge?.copyWith(color: cs.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              "Pour améliorer dony, on aimerait mesurer comment\nl'app est utilisée. C'est anonyme et facultatif.",
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.45,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        )
+        .animate()
+        .fadeIn(duration: 300.ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }
 
@@ -97,37 +104,36 @@ class _ConsentPoints extends StatelessWidget {
     ];
 
     return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      child: Column(
-        children: [
-          for (var i = 0; i < points.length; i++) ...[
-            if (i > 0)
-              Divider(height: DonySpacing.lg, color: cs.outline),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(points[i].$1, style: const TextStyle(fontSize: 18)),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Text(
-                    points[i].$2,
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onSurface,
-                      height: 1.35,
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: cs.outline),
+          ),
+          padding: const EdgeInsets.all(DonySpacing.base),
+          child: Column(
+            children: [
+              for (var i = 0; i < points.length; i++) ...[
+                if (i > 0) Divider(height: DonySpacing.lg, color: cs.outline),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(points[i].$1, style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Text(
+                        points[i].$2,
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurface,
+                          height: 1.35,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ],
-      ),
-    )
+            ],
+          ),
+        )
         .animate()
         .fadeIn(duration: 300.ms, delay: 100.ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
@@ -140,30 +146,32 @@ class _Buttons extends StatelessWidget {
 
   Future<void> _respond(BuildContext context, {required bool granted}) async {
     await getIt<AnalyticsService>().setConsent(granted: granted);
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.analyticsConsentAnswered,
-      properties: {'granted': granted},
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.analyticsConsentAnswered,
+        properties: {'granted': granted},
+      ),
+    );
     if (context.mounted) context.go('/auth/referral-code');
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        DonyButton(
-          label: 'Accepter',
-          onPressed: () => _respond(context, granted: true),
-        ),
-        const SizedBox(height: DonySpacing.md),
-        DonyButton(
-          label: 'Non merci',
-          variant: DonyButtonVariant.ghost,
-          onPressed: () => _respond(context, granted: false),
-        ),
-        SizedBox(height: DonySpacing.xxl + bottom),
-      ],
-    )
+          children: [
+            DonyButton(
+              label: 'Accepter',
+              onPressed: () => _respond(context, granted: true),
+            ),
+            const SizedBox(height: DonySpacing.md),
+            DonyButton(
+              label: 'Non merci',
+              variant: DonyButtonVariant.ghost,
+              onPressed: () => _respond(context, granted: false),
+            ),
+            SizedBox(height: DonySpacing.xxl + bottom),
+          ],
+        )
         .animate()
         .fadeIn(duration: 300.ms, delay: 150.ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);

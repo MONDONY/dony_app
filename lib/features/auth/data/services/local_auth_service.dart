@@ -6,7 +6,8 @@ import 'package:local_auth/local_auth.dart';
 
 class LocalAuthService {
   static const _pinKey = 'dony_pin_v2'; // v1 → v2 : hashed+salted
-  static const _pinKeyLegacy = 'dony_pin_v1'; // legacy plaintext, migré au 1er login
+  static const _pinKeyLegacy =
+      'dony_pin_v1'; // legacy plaintext, migré au 1er login
 
   final _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),

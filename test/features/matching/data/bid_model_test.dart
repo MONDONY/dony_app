@@ -248,6 +248,35 @@ void main() {
     });
   });
 
+  group('BidModel avatar URLs', () {
+    test('parses senderAvatarUrl and travelerAvatarUrl when present', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'senderAvatarUrl': 'https://cdn.dony.app/avatars/sender-1.jpg',
+        'travelerAvatarUrl': 'https://cdn.dony.app/avatars/traveler-1.jpg',
+      });
+      expect(model.senderAvatarUrl, 'https://cdn.dony.app/avatars/sender-1.jpg');
+      expect(model.travelerAvatarUrl, 'https://cdn.dony.app/avatars/traveler-1.jpg');
+    });
+
+    test('senderAvatarUrl and travelerAvatarUrl are null when absent', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.senderAvatarUrl, isNull);
+      expect(model.travelerAvatarUrl, isNull);
+    });
+
+    test('toJson includes senderAvatarUrl and travelerAvatarUrl', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'senderAvatarUrl': 'https://cdn.dony.app/avatars/sender-1.jpg',
+        'travelerAvatarUrl': 'https://cdn.dony.app/avatars/traveler-1.jpg',
+      });
+      final json = model.toJson();
+      expect(json['senderAvatarUrl'], 'https://cdn.dony.app/avatars/sender-1.jpg');
+      expect(json['travelerAvatarUrl'], 'https://cdn.dony.app/avatars/traveler-1.jpg');
+    });
+  });
+
   group('BidModel.canCancelBeforeHandover', () {
     BidModel withStatus(String status) =>
         BidModel.fromJson({..._minimalJson, 'status': status});

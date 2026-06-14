@@ -76,8 +76,10 @@ class _AddPhoneContent extends StatefulWidget {
 
 class _AddPhoneContentState extends State<_AddPhoneContent> {
   final _phoneCtrl = TextEditingController();
-  final List<TextEditingController> _otpCtrl =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _otpCtrl = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _otpFocus = List.generate(6, (_) => FocusNode());
   String _dialCode = '+33';
   String _pendingPhone = '';
@@ -117,11 +119,13 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     if (code.length != 6) return;
     final verificationId = _verificationId;
     if (verificationId == null) return;
-    context.read<AuthBloc>().add(AuthAddPhoneFromProfileRequested(
-      verificationId: verificationId,
-      smsCode: code,
-      phoneNumber: _pendingPhone,
-    ));
+    context.read<AuthBloc>().add(
+      AuthAddPhoneFromProfileRequested(
+        verificationId: verificationId,
+        smsCode: code,
+        phoneNumber: _pendingPhone,
+      ),
+    );
   }
 
   @override
@@ -136,9 +140,11 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
           widget.stepNotifier.value = _ContactStep.otp;
           widget.onSubmitReady(_handleSubmit);
         } else if (state is AuthProfileUpdated) {
-          DonySnackbar.show(context,
-              message: 'Numéro ajouté avec succès !',
-              type: DonySnackbarType.success);
+          DonySnackbar.show(
+            context,
+            message: 'Numéro ajouté avec succès !',
+            type: DonySnackbarType.success,
+          );
           Navigator.of(context, rootNavigator: true).pop();
         } else if (state is AuthError) {
           ErrorPresenter.show(context, state.error);
@@ -191,7 +197,10 @@ class _PhoneInputStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.xl,
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.xl,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,20 +234,27 @@ class _PhoneInputStep extends StatelessWidget {
                       children: [
                         Text(
                           codes
-                              .firstWhere((c) => c.$1 == dialCode,
-                                  orElse: () => codes.first)
+                              .firstWhere(
+                                (c) => c.$1 == dialCode,
+                                orElse: () => codes.first,
+                              )
                               .$2,
                           style: const TextStyle(fontSize: 18),
                         ),
                         const SizedBox(width: DonySpacing.xs),
-                        Text(dialCode,
-                            style: tt.bodyMedium?.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w600,
-                            )),
+                        Text(
+                          dialCode,
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(width: DonySpacing.xs),
-                        Icon(Icons.arrow_drop_down_rounded,
-                            size: 18, color: cs.onSurfaceVariant),
+                        Icon(
+                          Icons.arrow_drop_down_rounded,
+                          size: 18,
+                          color: cs.onSurfaceVariant,
+                        ),
                       ],
                     ),
                   ),
@@ -252,11 +268,13 @@ class _PhoneInputStep extends StatelessWidget {
                     style: tt.bodyLarge?.copyWith(color: cs.onSurface),
                     decoration: InputDecoration(
                       hintText: '6 12 34 56 78',
-                      hintStyle:
-                          tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                      hintStyle: tt.bodyLarge?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.md),
+                        horizontal: DonySpacing.md,
+                      ),
                     ),
                   ),
                 ),
@@ -280,19 +298,22 @@ class _PhoneInputStep extends StatelessWidget {
       child: ListView(
         shrinkWrap: true,
         children: codes
-            .map((c) => ListTile(
-                  leading: Text(c.$2,
-                      style: const TextStyle(fontSize: 22)),
-                  title: Text(c.$1),
-                  trailing: c.$1 == dialCode
-                      ? Icon(Icons.check_rounded,
-                          color: Theme.of(context).colorScheme.primary)
-                      : null,
-                  onTap: () {
-                    onDialCodeChanged(c.$1);
-                    Navigator.of(context).pop();
-                  },
-                ))
+            .map(
+              (c) => ListTile(
+                leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
+                title: Text(c.$1),
+                trailing: c.$1 == dialCode
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () {
+                  onDialCodeChanged(c.$1);
+                  Navigator.of(context).pop();
+                },
+              ),
+            )
             .toList(),
       ),
     );
@@ -346,8 +367,10 @@ class _AddEmailContent extends StatefulWidget {
 
 class _AddEmailContentState extends State<_AddEmailContent> {
   final _emailCtrl = TextEditingController();
-  final List<TextEditingController> _otpCtrl =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _otpCtrl = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _otpFocus = List.generate(6, (_) => FocusNode());
   String _pendingEmail = '';
 
@@ -403,9 +426,11 @@ class _AddEmailContentState extends State<_AddEmailContent> {
           widget.stepNotifier.value = _ContactStep.otp;
           widget.onSubmitReady(_handleSubmit);
         } else if (state is AuthProfileUpdated) {
-          DonySnackbar.show(context,
-              message: 'Email vérifié avec succès !',
-              type: DonySnackbarType.success);
+          DonySnackbar.show(
+            context,
+            message: 'Email vérifié avec succès !',
+            type: DonySnackbarType.success,
+          );
           Navigator.of(context, rootNavigator: true).pop();
         } else if (state is AuthError) {
           ErrorPresenter.show(context, state.error);
@@ -415,11 +440,7 @@ class _AddEmailContentState extends State<_AddEmailContent> {
         valueListenable: widget.stepNotifier,
         builder: (_, step, __) {
           if (step == _ContactStep.input) {
-            return _EmailInputStep(
-              controller: _emailCtrl,
-              tt: tt,
-              cs: cs,
-            );
+            return _EmailInputStep(controller: _emailCtrl, tt: tt, cs: cs);
           }
           return _OtpStep(
             controllers: _otpCtrl,
@@ -449,7 +470,10 @@ class _EmailInputStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.xl,
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.xl,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,11 +499,13 @@ class _EmailInputStep extends StatelessWidget {
               style: tt.bodyLarge?.copyWith(color: cs.onSurface),
               decoration: InputDecoration(
                 hintText: 'exemple@email.com',
-                hintStyle:
-                    tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                hintStyle: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
                 border: InputBorder.none,
-                prefixIcon: Icon(Icons.email_outlined,
-                    color: cs.onSurfaceVariant, size: 20),
+                prefixIcon: Icon(
+                  Icons.email_outlined,
+                  color: cs.onSurfaceVariant,
+                  size: 20,
+                ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.md,
                   vertical: DonySpacing.md,
@@ -521,7 +547,10 @@ class _OtpStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.xl,
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.xl,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,7 +558,9 @@ class _OtpStep extends StatelessWidget {
           Text.rich(
             TextSpan(
               style: tt.bodyMedium?.copyWith(
-                  color: cs.onSurfaceVariant, height: 1.5),
+                color: cs.onSurfaceVariant,
+                height: 1.5,
+              ),
               children: [
                 const TextSpan(text: 'Code envoyé à '),
                 TextSpan(

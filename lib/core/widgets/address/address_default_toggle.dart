@@ -33,21 +33,32 @@ class AddressDefaultToggle extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.star_rounded,
-                color: value ? activeColor : cs.onSurfaceVariant, size: 20),
+            Icon(
+              Icons.star_rounded,
+              color: value ? activeColor : cs.onSurfaceVariant,
+              size: 20,
+            ),
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Adresse par défaut',
-                      style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                  Text(subtitle,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(
+                    'Adresse par défaut',
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    subtitle,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
-            Switch(value: value, onChanged: onChanged, activeThumbColor: activeColor),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeThumbColor: activeColor,
+            ),
           ],
         ),
       ),

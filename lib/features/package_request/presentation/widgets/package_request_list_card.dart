@@ -259,6 +259,7 @@ class _InfoColumn extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: item.sender.displayName,
+                  imageUrl: item.sender.avatarUrl,
                   size: DonyAvatarSize.sm,
                   verified: item.sender.kycVerified,
                 ),

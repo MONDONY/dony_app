@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 Widget _wrap() => MaterialApp.router(
-      routerConfig: GoRouter(
-        routes: [GoRoute(path: '/', builder: (_, __) => const FaqScreen())],
-      ),
-    );
+  routerConfig: GoRouter(
+    routes: [GoRoute(path: '/', builder: (_, __) => const FaqScreen())],
+  ),
+);
 
 void main() {
   testWidgets('renders title and all section headers', (tester) async {
@@ -22,7 +22,9 @@ void main() {
     expect(find.text('Sécurité & données'), findsOneWidget);
   });
 
-  testWidgets('first section questions are visible as collapsed items', (tester) async {
+  testWidgets('first section questions are visible as collapsed items', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap());
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -36,16 +38,15 @@ void main() {
     await tester.pumpWidget(_wrap());
     await tester.pump(const Duration(milliseconds: 600));
 
-    final question = find.text('Pourquoi la vérification KYC est-elle obligatoire ?');
+    final question = find.text(
+      'Pourquoi la vérification KYC est-elle obligatoire ?',
+    );
     expect(question, findsOneWidget);
 
     await tester.tap(question);
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(
-      find.textContaining('lutter contre la fraude'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('lutter contre la fraude'), findsOneWidget);
   });
 
   testWidgets('subtitle is rendered', (tester) async {

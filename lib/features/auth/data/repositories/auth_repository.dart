@@ -6,9 +6,7 @@ class AuthRepository {
 
   AuthRepository(this._datasource);
 
-  Future<UserModel> register({
-    required String phoneNumber,
-  }) =>
+  Future<UserModel> register({required String phoneNumber}) =>
       _datasource.register(phoneNumber: phoneNumber);
 
   Future<UserModel> getProfile() => _datasource.getProfile();
@@ -22,24 +20,29 @@ class AuthRepository {
     DateTime? birthDate,
     String? city,
     String? phoneNumber,
-  }) =>
-      _datasource.updateProfile(
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        birthDate: birthDate,
-        city: city,
-        phoneNumber: phoneNumber,
-      );
+    String? bio,
+    List<String>? languages,
+    String? transportMode,
+  }) => _datasource.updateProfile(
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    birthDate: birthDate,
+    city: city,
+    phoneNumber: phoneNumber,
+    bio: bio,
+    languages: languages,
+    transportMode: transportMode,
+  );
 
-  Future<void> sendEmailOtp(String email) =>
-      _datasource.sendEmailOtp(email);
+  Future<UserModel> uploadAvatar(String filePath) =>
+      _datasource.uploadAvatar(filePath);
+
+  Future<void> sendEmailOtp(String email) => _datasource.sendEmailOtp(email);
 
   Future<String> verifyEmailOtp(String email, String code) =>
       _datasource.verifyEmailOtp(email, code);
 
-  Future<UserModel> registerWithEmail({
-    required String email,
-  }) =>
+  Future<UserModel> registerWithEmail({required String email}) =>
       _datasource.registerWithEmail(email: email);
 }

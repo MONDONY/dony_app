@@ -6,8 +6,9 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +61,13 @@ class ExpediteurContactCard extends StatelessWidget {
 
     return InkWell(
       onTap: canOpenProfile
-          ? () => showSenderProfileSheet(context, bid)
+          ? () => context.push(
+                '/profile/public',
+                extra: ProfilePublicArgs(
+                  userId: bid.senderId,
+                  showSubscribe: false,
+                ),
+              )
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
@@ -85,6 +92,7 @@ class ExpediteurContactCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: name,
+                  imageUrl: bid.senderAvatarUrl,
                   verified: bid.senderKycVerified,
                   pro: bid.senderIsProAccount,
                 ),

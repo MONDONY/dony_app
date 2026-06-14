@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
@@ -209,7 +210,7 @@ class _DonyBottomNav extends StatelessWidget {
                         children: [
                           // 0 — Accueil
                           Expanded(
-                            child: _NavItem(
+                            child: DonyNavItem(
                               icon: Icons.home_rounded,
                               outlinedIcon: Icons.home_outlined,
                               label: 'Accueil',
@@ -220,7 +221,7 @@ class _DonyBottomNav extends StatelessWidget {
                           ),
                           // 1 — Envoyer (sender) | Trajets (traveler)
                           Expanded(
-                            child: _NavItem(
+                            child: DonyNavItem(
                               icon: tab1Icon,
                               outlinedIcon: tab1IconOutlined,
                               label: tab1Label,
@@ -231,7 +232,7 @@ class _DonyBottomNav extends StatelessWidget {
                           ),
                           // 2 — Suivi (toujours in-shell ; SuiviScreen adapte le contenu au profil)
                           Expanded(
-                            child: _NavItem(
+                            child: DonyNavItem(
                               icon: tab2Icon,
                               outlinedIcon: tab2Icon,
                               label: 'Suivi',
@@ -246,7 +247,7 @@ class _DonyBottomNav extends StatelessWidget {
                               builder: (context) {
                                 final uid =
                                     FirebaseAuth.instance.currentUser?.uid;
-                                final messagesItem = _NavItem(
+                                final messagesItem = DonyNavItem(
                                   icon: Icons.chat_bubble_rounded,
                                   outlinedIcon:
                                       Icons.chat_bubble_outline_rounded,
@@ -263,7 +264,7 @@ class _DonyBottomNav extends StatelessWidget {
                                   stream: getIt<FirestoreChatRepository>()
                                       .totalUnreadStream(uid),
                                   builder: (context, snapshot) {
-                                    return _NavItem(
+                                    return DonyNavItem(
                                       icon: Icons.chat_bubble_rounded,
                                       outlinedIcon:
                                           Icons.chat_bubble_outline_rounded,
@@ -278,9 +279,9 @@ class _DonyBottomNav extends StatelessWidget {
                               },
                             ),
                           ),
-                          // 4 — Moi
+                          // 4 — Moi (photo de profil style Facebook)
                           Expanded(
-                            child: _NavItem(
+                            child: DonyNavItem(
                               icon: Icons.person_rounded,
                               outlinedIcon: Icons.person_outline_rounded,
                               label: 'Moi',
@@ -288,6 +289,8 @@ class _DonyBottomNav extends StatelessWidget {
                               currentIndex: currentIndex,
                               onTap: () => onTap(4),
                               isPro: isProAccount,
+                              avatarUrl: authUser?.avatarUrl,
+                              avatarName: authUser?.displayName,
                             ),
                           ),
                         ],
@@ -300,155 +303,6 @@ class _DonyBottomNav extends StatelessWidget {
           },
         );
       },
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.outlinedIcon,
-    required this.label,
-    required this.index,
-    required this.currentIndex,
-    required this.onTap,
-    this.badgeCount = 0,
-    this.isPro = false,
-  });
-
-  final IconData icon;
-  final IconData outlinedIcon;
-  final String label;
-  final int index;
-  final int currentIndex;
-  final VoidCallback onTap;
-  final int badgeCount;
-  final bool isPro;
-
-  bool get _active => index == currentIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          // Barre indicatrice en haut (style Coclis)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            height: 3,
-            decoration: BoxDecoration(
-              color: _active ? DonyColors.primary : Colors.transparent,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(3),
-                bottomRight: Radius.circular(3),
-              ),
-            ),
-          ),
-          // Icône + label centrés dans l'espace restant
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.md,
-                        vertical: DonySpacing.xs,
-                      ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        transitionBuilder: (child, animation) =>
-                            ScaleTransition(
-                              scale: animation,
-                              child: FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              ),
-                            ),
-                        child: Icon(
-                          _active ? icon : outlinedIcon,
-                          key: ValueKey('${index}_${_active ? 'a' : 'i'}'),
-                          size: 22,
-                          color: _active
-                              ? DonyColors.primary
-                              : DonyColors.textSubtle,
-                        ),
-                      ),
-                    ),
-                    if (badgeCount > 0)
-                      Positioned(
-                        right: 2,
-                        top: 2,
-                        child: _NavBadge(count: badgeCount),
-                      ),
-                    if (isPro)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: const BoxDecoration(
-                            color: DonyColors.warning,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.star_rounded,
-                            color: DonyColors.white,
-                            size: 9,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: DonySpacing.xxs),
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                    fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
-                    color: _active ? DonyColors.primary : DonyColors.textSubtle,
-                  ),
-                  child: Text(label),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavBadge extends StatelessWidget {
-  final int count;
-  const _NavBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = count > 99 ? '99+' : count.toString();
-    return Container(
-      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: const BoxDecoration(
-        color: DonyColors.error,
-        borderRadius: BorderRadius.all(Radius.circular(DonyRadius.sm)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: DonyColors.white,
-          height: 1.6,
-        ),
-        textAlign: TextAlign.center,
-      ),
     );
   }
 }

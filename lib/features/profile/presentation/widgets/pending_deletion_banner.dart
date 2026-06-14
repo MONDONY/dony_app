@@ -35,11 +35,7 @@ class PendingDeletionBanner extends StatelessWidget {
               color: cs.error.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Icon(
-              Icons.warning_amber_rounded,
-              color: cs.error,
-              size: 18,
-            ),
+            child: Icon(Icons.warning_amber_rounded, color: cs.error, size: 18),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(

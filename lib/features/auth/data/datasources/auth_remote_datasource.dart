@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:intl/intl.dart';
@@ -7,9 +8,7 @@ class AuthRemoteDatasource {
 
   AuthRemoteDatasource(this._apiClient);
 
-  Future<UserModel> register({
-    required String phoneNumber,
-  }) async {
+  Future<UserModel> register({required String phoneNumber}) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/auth/register',
       data: {'phoneNumber': phoneNumber},
@@ -33,6 +32,9 @@ class AuthRemoteDatasource {
     DateTime? birthDate,
     String? city,
     String? phoneNumber,
+    String? bio,
+    List<String>? languages,
+    String? transportMode,
   }) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/auth/me',
@@ -44,7 +46,21 @@ class AuthRemoteDatasource {
           'birthDate': DateFormat('yyyy-MM-dd').format(birthDate),
         if (city != null) 'city': city,
         if (phoneNumber != null) 'phoneNumber': phoneNumber,
+        if (bio != null) 'bio': bio,
+        if (languages != null) 'languages': languages,
+        if (transportMode != null) 'transportMode': transportMode,
       },
+    );
+    return UserModel.fromJson(response.data!);
+  }
+
+  Future<UserModel> uploadAvatar(String filePath) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: 'avatar.jpg'),
+    });
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/me/avatar',
+      data: form,
     );
     return UserModel.fromJson(response.data!);
   }
@@ -64,9 +80,7 @@ class AuthRemoteDatasource {
     return response.data!['customToken'] as String;
   }
 
-  Future<UserModel> registerWithEmail({
-    required String email,
-  }) async {
+  Future<UserModel> registerWithEmail({required String email}) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/auth/register',
       data: {'email': email},

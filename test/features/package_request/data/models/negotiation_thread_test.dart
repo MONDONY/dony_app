@@ -156,4 +156,24 @@ void main() {
     final t = NegotiationThread.fromJson(_baseJson());
     expect(t.materializedBidId, isNull);
   });
+
+  test('fromJson parses senderPhotoUrl when present', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
+    }));
+    expect(t.senderPhotoUrl, 'https://cdn.dony.app/avatars/sender-42.jpg');
+  });
+
+  test('fromJson returns null senderPhotoUrl when absent', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.senderPhotoUrl, isNull);
+  });
+
+  test('senderPhotoUrl participates in props/equality', () {
+    final t1 = NegotiationThread.fromJson(_baseJson());
+    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {
+      'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
+    }));
+    expect(t1, isNot(equals(t2)));
+  });
 }

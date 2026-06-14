@@ -21,9 +21,7 @@ const _kStats = ProStatsModel(
   monthlyParcelsDelivered: 12,
   acceptanceRate: 0.92,
   averageRating: 4.7,
-  topDestinations: [
-    DestinationStatModel(from: 'Paris', to: 'Dakar', count: 2),
-  ],
+  topDestinations: [DestinationStatModel(from: 'Paris', to: 'Dakar', count: 2)],
 );
 
 Widget _buildCard(MockProStatsBloc bloc) {
@@ -66,7 +64,9 @@ void main() {
   });
 
   testWidgets('affiche le message d\'erreur en état Error', (tester) async {
-    when(() => bloc.state).thenReturn(ProStatsError(NetworkException('Erreur réseau')));
+    when(
+      () => bloc.state,
+    ).thenReturn(ProStatsError(NetworkException('Erreur réseau')));
 
     await tester.pumpWidget(_buildCard(bloc));
 
@@ -75,7 +75,9 @@ void main() {
   });
 
   testWidgets('envoie ProStatsLoadRequested au tap Réessayer', (tester) async {
-    when(() => bloc.state).thenReturn(ProStatsError(NetworkException('Erreur')));
+    when(
+      () => bloc.state,
+    ).thenReturn(ProStatsError(NetworkException('Erreur')));
 
     await tester.pumpWidget(_buildCard(bloc));
     await tester.tap(find.text('Réessayer'));

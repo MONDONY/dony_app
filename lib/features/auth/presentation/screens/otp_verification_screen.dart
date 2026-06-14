@@ -31,8 +31,10 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   int _attemptCount = 0;
 
@@ -47,33 +49,40 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   void _verify() {
     if (_otpCode.length != 6) {
-      DonySnackbar.show(context,
-          message: 'Entrez le code à 6 chiffres',
-          type: DonySnackbarType.error);
+      DonySnackbar.show(
+        context,
+        message: 'Entrez le code à 6 chiffres',
+        type: DonySnackbarType.error,
+      );
       return;
     }
     _attemptCount++;
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.otpSubmitted,
-      properties: {'attempt_count': _attemptCount},
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.otpSubmitted,
+        properties: {'attempt_count': _attemptCount},
+      ),
+    );
     if (widget.mode == OtpMode.email) {
-      context.read<AuthBloc>().add(AuthEmailOtpVerifyRequested(
-            email: widget.contact,
-            code: _otpCode,
-          ));
+      context.read<AuthBloc>().add(
+        AuthEmailOtpVerifyRequested(email: widget.contact, code: _otpCode),
+      );
     } else {
       final state = context.read<AuthBloc>().state;
       if (state is! AuthOtpSent) {
-        DonySnackbar.show(context,
-            message: 'Session expirée, veuillez recommencer',
-            type: DonySnackbarType.error);
+        DonySnackbar.show(
+          context,
+          message: 'Session expirée, veuillez recommencer',
+          type: DonySnackbarType.error,
+        );
         return;
       }
-      context.read<AuthBloc>().add(AuthPhoneVerified(
-            verificationId: state.verificationId,
-            smsCode: _otpCode,
-          ));
+      context.read<AuthBloc>().add(
+        AuthPhoneVerified(
+          verificationId: state.verificationId,
+          smsCode: _otpCode,
+        ),
+      );
     }
   }
 
@@ -105,15 +114,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 );
               } else {
                 // Email vérifié via OTP — déjà sauvegardé côté backend
-                DonySnackbar.show(context,
-                    message: 'Email vérifié avec succès !',
-                    type: DonySnackbarType.success);
+                DonySnackbar.show(
+                  context,
+                  message: 'Email vérifié avec succès !',
+                  type: DonySnackbarType.success,
+                );
                 context.go('/profile');
               }
             } else if (state is AuthProfileUpdated) {
-              DonySnackbar.show(context,
-                  message: 'Numéro ajouté avec succès !',
-                  type: DonySnackbarType.success);
+              DonySnackbar.show(
+                context,
+                message: 'Numéro ajouté avec succès !',
+                type: DonySnackbarType.success,
+              );
               context.go('/profile');
             } else if (state is AuthError) {
               ErrorPresenter.show(context, state.error);
@@ -163,15 +176,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 // ── Top bar ──────────────────────────────────────
                 Padding(
                   padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
-                  child: Row(children: [
-                    DonyBackCircle(onTap: () => context.pop()),
-                    const Spacer(),
-                    DonyStepPill(
-                      current: 2,
-                      total: 3,
-                      label: widget.mode == OtpMode.email ? 'Code email' : 'Code SMS',
-                    ),
-                  ]),
+                  child: Row(
+                    children: [
+                      DonyBackCircle(onTap: () => context.pop()),
+                      const Spacer(),
+                      DonyStepPill(
+                        current: 2,
+                        total: 3,
+                        label: widget.mode == OtpMode.email
+                            ? 'Code email'
+                            : 'Code SMS',
+                      ),
+                    ],
+                  ),
                 ),
 
                 // ── Scrollable content ───────────────────────────
@@ -179,7 +196,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
-                        h, DonySpacing.lg, h, DonySpacing.xl),
+                      h,
+                      DonySpacing.lg,
+                      h,
+                      DonySpacing.xl,
+                    ),
                     child: DonyLayout.constrained(
                       context,
                       Column(
@@ -205,7 +226,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           Text.rich(
                             TextSpan(
                               style: tt.bodyLarge?.copyWith(
-                                  color: cs.onSurfaceVariant, height: 1.5),
+                                color: cs.onSurfaceVariant,
+                                height: 1.5,
+                              ),
                               children: [
                                 TextSpan(
                                   text: widget.mode == OtpMode.email
@@ -226,11 +249,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
                           // OTP 6-digit input
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: List.generate(6, (index) {
                               return SizedBox(
-                                width: (DonyLayout.screenWidth(context) -
+                                width:
+                                    (DonyLayout.screenWidth(context) -
                                         h * 2 -
                                         DonySpacing.sm * 5) /
                                     6,
@@ -254,31 +277,32 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                     fillColor: cs.surface,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(
-                                          DonyRadius.md),
-                                      borderSide: BorderSide(
-                                          color: cs.outline),
+                                        DonyRadius.md,
+                                      ),
+                                      borderSide: BorderSide(color: cs.outline),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(
-                                          DonyRadius.md),
-                                      borderSide: BorderSide(
-                                          color: cs.outline),
+                                        DonyRadius.md,
+                                      ),
+                                      borderSide: BorderSide(color: cs.outline),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(
-                                          DonyRadius.md),
+                                        DonyRadius.md,
+                                      ),
                                       borderSide: BorderSide(
-                                          color: cs.primary, width: 2),
+                                        color: cs.primary,
+                                        width: 2,
+                                      ),
                                     ),
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                   onChanged: (value) {
                                     if (value.isNotEmpty && index < 5) {
-                                      _focusNodes[index + 1]
-                                          .requestFocus();
+                                      _focusNodes[index + 1].requestFocus();
                                     } else if (value.isEmpty && index > 0) {
-                                      _focusNodes[index - 1]
-                                          .requestFocus();
+                                      _focusNodes[index - 1].requestFocus();
                                     }
                                   },
                                 ),
@@ -313,11 +337,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).scaffoldBackgroundColor,
-                    border: Border(
-                        top: BorderSide(color: cs.outline)),
+                    border: Border(top: BorderSide(color: cs.outline)),
                   ),
                   padding: EdgeInsets.fromLTRB(
-                      h, DonySpacing.base, h, DonySpacing.base + bottom),
+                    h,
+                    DonySpacing.base,
+                    h,
+                    DonySpacing.base + bottom,
+                  ),
                   child: DonyButton(
                     label: 'Vérifier',
                     onPressed: isLoading ? null : _verify,

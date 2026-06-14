@@ -50,8 +50,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
       return;
     }
     context.read<AuthBloc>().add(
-          AuthEmailOtpSendRequested(_emailController.text.trim()),
-        );
+      AuthEmailOtpSendRequested(_emailController.text.trim()),
+    );
   }
 
   @override
@@ -91,27 +91,40 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ── Top bar ─────────────────────────────────────
-                  if (!widget.fromProfile) Padding(
-                    padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
-                    child: Row(children: [
-                      DonyBackCircle(onTap: () => context.pop()),
-                      const Spacer(),
-                      const DonyStepPill(current: 1, total: 3, label: 'Email'),
-                    ]),
-                  ),
+                  if (!widget.fromProfile)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                      child: Row(
+                        children: [
+                          DonyBackCircle(onTap: () => context.pop()),
+                          const Spacer(),
+                          const DonyStepPill(
+                            current: 1,
+                            total: 3,
+                            label: 'Email',
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // ── Scrollable content ──────────────────────────
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
-                          h, DonySpacing.xl, h, DonySpacing.xl),
+                        h,
+                        DonySpacing.xl,
+                        h,
+                        DonySpacing.xl,
+                      ),
                       child: DonyLayout.constrained(
                         context,
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(child: DonyHeroAvatar(emoji: '✉️', size: 72)),
+                            Center(
+                              child: DonyHeroAvatar(emoji: '✉️', size: 72),
+                            ),
                             const SizedBox(height: DonySpacing.xl),
 
                             Text(
@@ -139,22 +152,26 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                   color: _isValid ? cs.primary : cs.outline,
                                   width: _isValid ? 1.5 : 1.0,
                                 ),
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.md),
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.md,
+                                ),
                                 color: cs.surface,
                               ),
                               child: TextFormField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
                                 autocorrect: false,
-                                scrollPadding:
-                                    const EdgeInsets.only(bottom: 120),
+                                scrollPadding: const EdgeInsets.only(
+                                  bottom: 120,
+                                ),
                                 style: tt.bodyLarge?.copyWith(
-                                    color: cs.onSurface),
+                                  color: cs.onSurface,
+                                ),
                                 decoration: InputDecoration(
                                   hintText: 'exemple@email.com',
                                   hintStyle: tt.bodyLarge?.copyWith(
-                                      color: cs.onSurfaceVariant),
+                                    color: cs.onSurfaceVariant,
+                                  ),
                                   border: InputBorder.none,
                                   enabledBorder: InputBorder.none,
                                   focusedBorder: InputBorder.none,
@@ -162,33 +179,44 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                   focusedErrorBorder: InputBorder.none,
                                   prefixIcon: Icon(
                                     Icons.email_outlined,
-                                    color: _isValid ? cs.primary : cs.onSurfaceVariant,
+                                    color: _isValid
+                                        ? cs.primary
+                                        : cs.onSurfaceVariant,
                                     size: 20,
                                   ),
                                   suffixIcon: _isValid
-                                      ? Icon(Icons.check_circle_rounded,
-                                          color: cs.primary, size: 20)
+                                      ? Icon(
+                                          Icons.check_circle_rounded,
+                                          color: cs.primary,
+                                          size: 20,
+                                        )
                                       : null,
-                                  contentPadding:
-                                      const EdgeInsets.symmetric(
-                                          horizontal: DonySpacing.base,
-                                          vertical: DonySpacing.md),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.base,
+                                    vertical: DonySpacing.md,
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(height: DonySpacing.sm),
-                            Row(children: [
-                              Icon(Icons.info_outline_rounded,
-                                  size: 14, color: cs.onSurfaceVariant),
-                              const SizedBox(width: DonySpacing.xs),
-                              Expanded(
-                                child: Text(
-                                  'Vérifie tes spams si tu ne reçois pas le code.',
-                                  style: tt.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 14,
+                                  color: cs.onSurfaceVariant,
                                 ),
-                              ),
-                            ]),
+                                const SizedBox(width: DonySpacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    'Vérifie tes spams si tu ne reçois pas le code.',
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -202,7 +230,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                       border: Border(top: BorderSide(color: cs.outline)),
                     ),
                     padding: EdgeInsets.fromLTRB(
-                        h, DonySpacing.base, h, DonySpacing.base + bottom),
+                      h,
+                      DonySpacing.base,
+                      h,
+                      DonySpacing.base + bottom,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [

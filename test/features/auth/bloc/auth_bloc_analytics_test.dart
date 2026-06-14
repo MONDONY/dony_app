@@ -11,6 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
+// Needed for registerFallbackValue on nullable args in updateProfile
+class _FakeDateTime extends Fake implements DateTime {}
+
 class _MockAuthRepo extends Mock implements AuthRepository {}
 class _MockLocalAuth extends Mock implements LocalAuthService {}
 class _MockFirebaseAuth extends Mock implements FirebaseAuth {}
@@ -30,6 +33,10 @@ void main() {
     kycStatus: 'NOT_STARTED',
     status: 'ACTIVE',
   );
+
+  setUpAll(() {
+    registerFallbackValue(_FakeDateTime());
+  });
 
   setUp(() {
     repo = _MockAuthRepo();
@@ -100,6 +107,117 @@ void main() {
       await bloc.stream.firstWhere((s) => s is AuthAuthenticated);
       await Future<void>.delayed(Duration.zero);
       verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
+  group('profile_photo_updated', () {
+    test('fires after successful avatar upload', () async {
+      when(
+        () => repo.uploadAvatar(any()),
+      ).thenAnswer((_) async => fakeUser);
+
+      final bloc = makeBloc();
+      bloc.add(const AuthAvatarUploadRequested('/tmp/photo.jpg'));
+      await bloc.stream.firstWhere((s) => s is AuthProfileUpdated);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.profilePhotoUpdated, any()),
+      ).called(1);
+    });
+
+    test('does NOT fire when upload fails', () async {
+      when(
+        () => repo.uploadAvatar(any()),
+      ).thenThrow(Exception('upload error'));
+
+      final bloc = makeBloc();
+      bloc.add(const AuthAvatarUploadRequested('/tmp/photo.jpg'));
+      await bloc.stream.firstWhere((s) => s is AuthError);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.profilePhotoUpdated, any()),
+      );
+    });
+  });
+
+  group('profile_about_updated', () {
+    test('fires when bio is non-empty on profile update', () async {
+      when(
+        () => repo.updateProfile(
+          firstName: any(named: 'firstName'),
+          lastName: any(named: 'lastName'),
+          email: any(named: 'email'),
+          birthDate: any(named: 'birthDate'),
+          city: any(named: 'city'),
+          phoneNumber: any(named: 'phoneNumber'),
+          bio: any(named: 'bio'),
+          languages: any(named: 'languages'),
+          transportMode: any(named: 'transportMode'),
+        ),
+      ).thenAnswer((_) async => fakeUser);
+
+      final bloc = makeBloc();
+      bloc.add(
+        const AuthUpdateProfileRequested(bio: 'Je suis voyageur professionnel'),
+      );
+      await bloc.stream.firstWhere((s) => s is AuthProfileUpdated);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.profileAboutUpdated, any()),
+      ).called(1);
+    });
+
+    test('does NOT fire when bio is null', () async {
+      when(
+        () => repo.updateProfile(
+          firstName: any(named: 'firstName'),
+          lastName: any(named: 'lastName'),
+          email: any(named: 'email'),
+          birthDate: any(named: 'birthDate'),
+          city: any(named: 'city'),
+          phoneNumber: any(named: 'phoneNumber'),
+          bio: any(named: 'bio'),
+          languages: any(named: 'languages'),
+          transportMode: any(named: 'transportMode'),
+        ),
+      ).thenAnswer((_) async => fakeUser);
+
+      final bloc = makeBloc();
+      bloc.add(const AuthUpdateProfileRequested(firstName: 'Amadou', bio: null));
+      await bloc.stream.firstWhere((s) => s is AuthProfileUpdated);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.profileAboutUpdated, any()),
+      );
+    });
+
+    test('does NOT fire when bio is whitespace-only', () async {
+      when(
+        () => repo.updateProfile(
+          firstName: any(named: 'firstName'),
+          lastName: any(named: 'lastName'),
+          email: any(named: 'email'),
+          birthDate: any(named: 'birthDate'),
+          city: any(named: 'city'),
+          phoneNumber: any(named: 'phoneNumber'),
+          bio: any(named: 'bio'),
+          languages: any(named: 'languages'),
+          transportMode: any(named: 'transportMode'),
+        ),
+      ).thenAnswer((_) async => fakeUser);
+
+      final bloc = makeBloc();
+      bloc.add(const AuthUpdateProfileRequested(bio: '   '));
+      await bloc.stream.firstWhere((s) => s is AuthProfileUpdated);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+        () => backend.capture(AnalyticsEvents.profileAboutUpdated, any()),
+      );
     });
   });
 }

@@ -96,6 +96,7 @@ class SenderPublicProfile extends Equatable {
     required this.averageRating,
     required this.totalRatings,
     required this.kycVerified,
+    this.avatarUrl,
   });
 
   final String id;
@@ -104,6 +105,9 @@ class SenderPublicProfile extends Equatable {
   final int totalRatings;
   final bool kycVerified;
 
+  /// URL de l'avatar de l'expéditeur (nullable, fourni par le backend).
+  final String? avatarUrl;
+
   factory SenderPublicProfile.fromJson(Map<String, dynamic> json) =>
       SenderPublicProfile(
         id: json['id'] as String,
@@ -111,9 +115,10 @@ class SenderPublicProfile extends Equatable {
         averageRating: (json['averageRating'] as num).toDouble(),
         totalRatings: json['totalRatings'] as int,
         kycVerified: json['kycVerified'] as bool,
+        avatarUrl: json['avatarUrl'] as String?,
       );
 
   @override
   List<Object?> get props =>
-      [id, displayName, averageRating, totalRatings, kycVerified];
+      [id, displayName, averageRating, totalRatings, kycVerified, avatarUrl];
 }

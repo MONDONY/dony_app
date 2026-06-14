@@ -19,45 +19,41 @@ BidModel _bid({
   required String id,
   required String status,
   String? travelerName,
-}) =>
-    BidModel(
-      id: id,
-      announcementId: 'ann-1',
-      senderId: 'user-1',
-      senderKycVerified: true,
-      senderIsProAccount: false,
-      senderKiloPro: false,
-      weightKg: 2.0,
-      status: status,
-      voyageurConfirmed: false,
-      confirmationCodeRefreshCount: 0,
-      createdAt: DateTime(2025, 3, 10),
-      updatedAt: DateTime(2025, 3, 12),
-      travelerKycVerified: true,
-      travelerIsProAccount: false,
-      travelerKiloPro: false,
-      senderHasRated: false,
-      travelerHasRated: false,
-      travelerName: travelerName,
-    );
+}) => BidModel(
+  id: id,
+  announcementId: 'ann-1',
+  senderId: 'user-1',
+  senderKycVerified: true,
+  senderIsProAccount: false,
+  senderKiloPro: false,
+  weightKg: 2.0,
+  status: status,
+  voyageurConfirmed: false,
+  confirmationCodeRefreshCount: 0,
+  createdAt: DateTime(2025, 3, 10),
+  updatedAt: DateTime(2025, 3, 12),
+  travelerKycVerified: true,
+  travelerIsProAccount: false,
+  travelerKiloPro: false,
+  senderHasRated: false,
+  travelerHasRated: false,
+  travelerName: travelerName,
+);
 
 Widget _wrap(BidBloc bloc) => BlocProvider<BidBloc>.value(
-      value: bloc,
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const ShipmentsHistoryScreen(),
-            ),
-            GoRoute(
-              path: '/bids/:id/detail',
-              builder: (_, __) => const Scaffold(body: Text('Detail')),
-            ),
-          ],
+  value: bloc,
+  child: MaterialApp.router(
+    routerConfig: GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const ShipmentsHistoryScreen()),
+        GoRoute(
+          path: '/bids/:id/detail',
+          builder: (_, __) => const Scaffold(body: Text('Detail')),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
 
 void main() {
   late MockBidBloc bloc;
@@ -79,10 +75,12 @@ void main() {
   });
 
   testWidgets('shows empty state when no delivered bids', (tester) async {
-    when(() => bloc.state).thenReturn(BidListLoaded([
-      _bid(id: 'b1', status: 'PENDING'),
-      _bid(id: 'b2', status: 'ACCEPTED'),
-    ]));
+    when(() => bloc.state).thenReturn(
+      BidListLoaded([
+        _bid(id: 'b1', status: 'PENDING'),
+        _bid(id: 'b2', status: 'ACCEPTED'),
+      ]),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -139,7 +137,10 @@ void main() {
 
     expect(find.text('Fatoumata Bah'), findsOneWidget);
     expect(find.text('Paris → Dakar'), findsOneWidget);
-    expect(find.textContaining('53'), findsOneWidget); // 3.5 * 15 = 52.5 → "52 €"
+    expect(
+      find.textContaining('53'),
+      findsOneWidget,
+    ); // 3.5 * 15 = 52.5 → "52 €"
     expect(find.textContaining('Médicaments'), findsOneWidget);
   });
 
@@ -192,8 +193,9 @@ void main() {
   });
 
   testWidgets('shows error state when BidError', (tester) async {
-    when(() => bloc.state)
-        .thenReturn(BidError(const ServerException('Erreur serveur')));
+    when(
+      () => bloc.state,
+    ).thenReturn(BidError(const ServerException('Erreur serveur')));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -203,8 +205,9 @@ void main() {
   });
 
   testWidgets('retry button dispatches BidMyListRequested', (tester) async {
-    when(() => bloc.state)
-        .thenReturn(BidError(const ServerException('Erreur serveur')));
+    when(
+      () => bloc.state,
+    ).thenReturn(BidError(const ServerException('Erreur serveur')));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));

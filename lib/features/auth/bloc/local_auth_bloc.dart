@@ -23,11 +23,12 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     this._service,
     this._userPrefs, {
     FlutterSecureStorage? secureStorage,
-  })  : _secureStorage = secureStorage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            ),
-        super(const LocalAuthInitial()) {
+  }) : _secureStorage =
+           secureStorage ??
+           const FlutterSecureStorage(
+             aOptions: AndroidOptions(encryptedSharedPreferences: true),
+           ),
+       super(const LocalAuthInitial()) {
     on<LocalAuthStarted>(_onStarted);
     on<LocalAuthBiometricRequested>(_onBiometricRequested);
     on<LocalAuthPinSubmitted>(_onPinSubmitted);
@@ -108,10 +109,9 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
       return;
     }
 
-    final appLockEnabled = _userPrefs.get(
-      HiveService.kAppLockBiometric,
-      defaultValue: true,
-    ) as bool;
+    final appLockEnabled =
+        _userPrefs.get(HiveService.kAppLockBiometric, defaultValue: true)
+            as bool;
     final biometricAvailable = await _service.isBiometricAvailable();
 
     if (biometricAvailable && appLockEnabled) {
@@ -126,10 +126,12 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     }
 
     if (!emit.isDone) {
-      emit(LocalAuthPinRequired(
-        attemptsLeft: _attemptsLeft,
-        biometricAvailable: biometricAvailable && appLockEnabled,
-      ));
+      emit(
+        LocalAuthPinRequired(
+          attemptsLeft: _attemptsLeft,
+          biometricAvailable: biometricAvailable && appLockEnabled,
+        ),
+      );
     }
   }
 
@@ -137,10 +139,9 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     LocalAuthBiometricRequested event,
     Emitter<LocalAuthState> emit,
   ) async {
-    final appLockEnabled = _userPrefs.get(
-      HiveService.kAppLockBiometric,
-      defaultValue: true,
-    ) as bool;
+    final appLockEnabled =
+        _userPrefs.get(HiveService.kAppLockBiometric, defaultValue: true)
+            as bool;
     if (!appLockEnabled) {
       return;
     }
@@ -167,8 +168,9 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     if (_attemptsLeft <= 0) {
       _attemptsLeft = 0;
       await _persistAttempts(0);
-      final lockoutUntil =
-          DateTime.now().add(const Duration(seconds: _lockoutSeconds));
+      final lockoutUntil = DateTime.now().add(
+        const Duration(seconds: _lockoutSeconds),
+      );
       await _persistLockoutUntil(lockoutUntil);
       // Widget will manage the countdown timer and dispatch LocalAuthLockExpired.
       emit(const LocalAuthLocked(_lockoutSeconds));
@@ -176,16 +178,17 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     }
 
     await _persistAttempts(_attemptsLeft);
-    final appLockEnabled = _userPrefs.get(
-      HiveService.kAppLockBiometric,
-      defaultValue: true,
-    ) as bool;
+    final appLockEnabled =
+        _userPrefs.get(HiveService.kAppLockBiometric, defaultValue: true)
+            as bool;
     final biometricAvailable = await _service.isBiometricAvailable();
     if (!emit.isDone) {
-      emit(LocalAuthPinRequired(
-        attemptsLeft: _attemptsLeft,
-        biometricAvailable: biometricAvailable && appLockEnabled,
-      ));
+      emit(
+        LocalAuthPinRequired(
+          attemptsLeft: _attemptsLeft,
+          biometricAvailable: biometricAvailable && appLockEnabled,
+        ),
+      );
     }
   }
 

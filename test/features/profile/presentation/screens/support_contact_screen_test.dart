@@ -13,18 +13,15 @@ class MockSupportContactBloc
     implements SupportContactBloc {}
 
 Widget _wrap(SupportContactBloc bloc) => BlocProvider<SupportContactBloc>.value(
-      value: bloc,
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const SupportContactScreen(),
-            ),
-          ],
-        ),
-      ),
-    );
+  value: bloc,
+  child: MaterialApp.router(
+    routerConfig: GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const SupportContactScreen()),
+      ],
+    ),
+  ),
+);
 
 void main() {
   late MockSupportContactBloc bloc;
@@ -52,29 +49,39 @@ void main() {
     expect(find.text('Envoyer un message'), findsOneWidget);
   });
 
-  testWidgets('submit button is disabled when state is invalid', (tester) async {
+  testWidgets('submit button is disabled when state is invalid', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(const SupportContactState());
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
     final submitBtn = tester.widget<InkWell>(
-      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      find.descendant(
+        of: find.byType(DonyButton),
+        matching: find.byType(InkWell),
+      ),
     );
     expect(submitBtn.onTap, isNull);
   });
 
   testWidgets('submit button is enabled when state is valid', (tester) async {
-    when(() => bloc.state).thenReturn(const SupportContactState(
-      category: 'Paiement',
-      subject: 'Problème remboursement',
-      message: 'Je n\'ai pas reçu mon remboursement depuis 5 jours.',
-    ));
+    when(() => bloc.state).thenReturn(
+      const SupportContactState(
+        category: 'Paiement',
+        subject: 'Problème remboursement',
+        message: 'Je n\'ai pas reçu mon remboursement depuis 5 jours.',
+      ),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
     final submitBtn = tester.widget<InkWell>(
-      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      find.descendant(
+        of: find.byType(DonyButton),
+        matching: find.byType(InkWell),
+      ),
     );
     expect(submitBtn.onTap, isNotNull);
   });
@@ -83,16 +90,15 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(
-      find.textContaining('Notre équipe répond sous 24'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Notre équipe répond sous 24'), findsOneWidget);
   });
 
-  testWidgets('shows char count hint when message is short but not empty', (tester) async {
-    when(() => bloc.state).thenReturn(const SupportContactState(
-      message: 'Court',
-    ));
+  testWidgets('shows char count hint when message is short but not empty', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(const SupportContactState(message: 'Court'));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -100,7 +106,9 @@ void main() {
     expect(find.textContaining('Au moins 20 caractères'), findsOneWidget);
   });
 
-  testWidgets('does not show char count hint when message is empty', (tester) async {
+  testWidgets('does not show char count hint when message is empty', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(const SupportContactState());
 
     await tester.pumpWidget(_wrap(bloc));
@@ -109,7 +117,9 @@ void main() {
     expect(find.textContaining('Au moins 20 caractères'), findsNothing);
   });
 
-  testWidgets('dispatches SupportCategorySelected when dropdown changes', (tester) async {
+  testWidgets('dispatches SupportCategorySelected when dropdown changes', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -123,12 +133,14 @@ void main() {
   });
 
   testWidgets('submit button shows loading when isSubmitting', (tester) async {
-    when(() => bloc.state).thenReturn(const SupportContactState(
-      category: 'Paiement',
-      subject: 'Problème remboursement',
-      message: 'Je n\'ai pas reçu mon remboursement depuis 5 jours.',
-      submitStatus: SupportSubmitStatus.submitting,
-    ));
+    when(() => bloc.state).thenReturn(
+      const SupportContactState(
+        category: 'Paiement',
+        subject: 'Problème remboursement',
+        message: 'Je n\'ai pas reçu mon remboursement depuis 5 jours.',
+        submitStatus: SupportSubmitStatus.submitting,
+      ),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -136,7 +148,9 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('typing in subject field dispatches SupportSubjectChanged', (tester) async {
+  testWidgets('typing in subject field dispatches SupportSubjectChanged', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -145,10 +159,14 @@ void main() {
       'Mon problème de paiement',
     );
 
-    verify(() => bloc.add(any(that: isA<SupportSubjectChanged>()))).called(greaterThan(0));
+    verify(
+      () => bloc.add(any(that: isA<SupportSubjectChanged>())),
+    ).called(greaterThan(0));
   });
 
-  testWidgets('typing in message field dispatches SupportMessageChanged', (tester) async {
+  testWidgets('typing in message field dispatches SupportMessageChanged', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -157,10 +175,14 @@ void main() {
       'Description du problème rencontré sur l\'application.',
     );
 
-    verify(() => bloc.add(any(that: isA<SupportMessageChanged>()))).called(greaterThan(0));
+    verify(
+      () => bloc.add(any(that: isA<SupportMessageChanged>())),
+    ).called(greaterThan(0));
   });
 
-  testWidgets('category dropdown renders all options when opened', (tester) async {
+  testWidgets('category dropdown renders all options when opened', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -168,7 +190,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     // All dropdown items should be in the tree when opened
-    for (final cat in ['Paiement', 'KYC / vérification', 'Livraison', 'Litige', 'Bug technique', 'Autre']) {
+    for (final cat in [
+      'Paiement',
+      'KYC / vérification',
+      'Livraison',
+      'Litige',
+      'Bug technique',
+      'Autre',
+    ]) {
       expect(find.text(cat), findsWidgets);
     }
   });

@@ -33,7 +33,9 @@ class AddressLocationStatus extends StatelessWidget {
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color, fontWeight: FontWeight.w600),
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

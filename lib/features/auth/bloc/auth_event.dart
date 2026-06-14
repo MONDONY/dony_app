@@ -62,6 +62,9 @@ class AuthUpdateProfileRequested extends AuthEvent {
   final DateTime? birthDate;
   final String? city;
   final String? phoneNumber;
+  final String? bio;
+  final List<String>? languages;
+  final String? transportMode;
 
   const AuthUpdateProfileRequested({
     this.firstName,
@@ -70,10 +73,30 @@ class AuthUpdateProfileRequested extends AuthEvent {
     this.birthDate,
     this.city,
     this.phoneNumber,
+    this.bio,
+    this.languages,
+    this.transportMode,
   });
 
   @override
-  List<Object?> get props => [firstName, lastName, email, birthDate, city, phoneNumber];
+  List<Object?> get props => [
+    firstName,
+    lastName,
+    email,
+    birthDate,
+    city,
+    phoneNumber,
+    bio,
+    languages,
+    transportMode,
+  ];
+}
+
+class AuthAvatarUploadRequested extends AuthEvent {
+  final String filePath;
+  const AuthAvatarUploadRequested(this.filePath);
+  @override
+  List<Object?> get props => [filePath];
 }
 
 class OnboardingCompleted extends AuthEvent {
@@ -138,7 +161,10 @@ class AuthAddPhoneFromProfileRequested extends AuthEvent {
 class AuthAddEmailFromProfileRequested extends AuthEvent {
   final String email;
   final String code;
-  const AuthAddEmailFromProfileRequested({required this.email, required this.code});
+  const AuthAddEmailFromProfileRequested({
+    required this.email,
+    required this.code,
+  });
   @override
   List<Object?> get props => [email, code];
 }

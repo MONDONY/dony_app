@@ -33,18 +33,26 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
     super.dispose();
   }
 
-  Future<void> _openMailto(BuildContext context, SupportContactState state) async {
-    final subject = Uri.encodeComponent('[${state.category}] ${state.subject.trim()}');
+  Future<void> _openMailto(
+    BuildContext context,
+    SupportContactState state,
+  ) async {
+    final subject = Uri.encodeComponent(
+      '[${state.category}] ${state.subject.trim()}',
+    );
     final body = Uri.encodeComponent(
       '${state.message.trim()}\n\n---\nEnvoyé depuis dony app',
     );
-    final uri = Uri.parse('mailto:support@dony.app?subject=$subject&body=$body');
+    final uri = Uri.parse(
+      'mailto:support@dony.app?subject=$subject&body=$body',
+    );
 
     if (!await launchUrl(uri)) {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Impossible d\'ouvrir le client mail. Écris-nous à support@dony.app',
+          message:
+              'Impossible d\'ouvrir le client mail. Écris-nous à support@dony.app',
           type: DonySnackbarType.error,
         );
       }
@@ -75,14 +83,18 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
             onPressed: state.isValid ? () => _openMailto(context, state) : null,
             isLoading: state.isSubmitting,
           ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _InfoCard(),
-              const SizedBox(height: DonySpacing.xl),
-              _buildForm(context, state),
-            ],
-          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          body:
+              Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _InfoCard(),
+                      const SizedBox(height: DonySpacing.xl),
+                      _buildForm(context, state),
+                    ],
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         );
       },
     );
@@ -104,7 +116,8 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
         DonyTextField(
           controller: _subjectCtrl,
           hint: 'Résume ton problème en quelques mots',
-          onChanged: (v) => context.read<SupportContactBloc>().add(SupportSubjectChanged(v)),
+          onChanged: (v) =>
+              context.read<SupportContactBloc>().add(SupportSubjectChanged(v)),
         ),
         const SizedBox(height: DonySpacing.base),
         Text('Message', style: tt.labelLarge?.copyWith(color: cs.onSurface)),
@@ -112,7 +125,8 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
         TextFormField(
           controller: _messageCtrl,
           maxLines: 6,
-          onChanged: (v) => context.read<SupportContactBloc>().add(SupportMessageChanged(v)),
+          onChanged: (v) =>
+              context.read<SupportContactBloc>().add(SupportMessageChanged(v)),
           decoration: InputDecoration(
             hintText: 'Décris ta situation avec le maximum de détails',
             hintStyle: TextStyle(color: cs.onSurfaceVariant),
@@ -182,11 +196,18 @@ class _CategoryDropdown extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           items: _categories
-              .map((c) => DropdownMenuItem(value: c, child: Text(c, style: tt.bodyMedium)))
+              .map(
+                (c) => DropdownMenuItem(
+                  value: c,
+                  child: Text(c, style: tt.bodyMedium),
+                ),
+              )
               .toList(),
           onChanged: (v) {
             if (v != null) {
-              context.read<SupportContactBloc>().add(SupportCategorySelected(v));
+              context.read<SupportContactBloc>().add(
+                SupportCategorySelected(v),
+              );
             }
           },
         ),

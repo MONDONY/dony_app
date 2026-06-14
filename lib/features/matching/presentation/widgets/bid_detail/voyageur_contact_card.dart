@@ -4,11 +4,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:flutter/material.dart';
@@ -26,17 +26,6 @@ class VoyageurContactCard extends StatelessWidget {
   final BidModel bid;
 
   const VoyageurContactCard({super.key, required this.bid});
-
-  TravelerProfile _buildTravelerProfile() => TravelerProfile(
-        id: bid.travelerId ?? '',
-        displayName: bid.travelerName,
-        phoneNumber: bid.travelerPhone,
-        averageRating: bid.travelerAverageRating,
-        totalTrips: bid.travelerTotalTrips,
-        kycVerified: bid.travelerKycVerified,
-        isProAccount: bid.travelerIsProAccount,
-        kiloPro: bid.travelerKiloPro,
-      );
 
   bool get _showPhoneButton {
     final phone = bid.travelerPhone;
@@ -79,7 +68,13 @@ class VoyageurContactCard extends StatelessWidget {
 
     return InkWell(
       onTap: canOpenProfile
-          ? () => showTravelerProfileSheet(context, _buildTravelerProfile())
+          ? () => context.push(
+                '/profile/public',
+                extra: ProfilePublicArgs(
+                  userId: bid.travelerId,
+                  showSubscribe: true,
+                ),
+              )
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
@@ -104,6 +99,7 @@ class VoyageurContactCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: name,
+                  imageUrl: bid.travelerAvatarUrl,
                   verified: bid.travelerKycVerified,
                   pro: bid.travelerIsProAccount,
                 ),

@@ -925,7 +925,7 @@ class _BidCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DonyAvatar(name: bid.resolvedSenderName),
+                  DonyAvatar(name: bid.resolvedSenderName, imageUrl: bid.senderAvatarUrl),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(

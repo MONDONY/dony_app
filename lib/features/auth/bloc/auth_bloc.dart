@@ -15,9 +15,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-typedef AppleSignInCallback = Future<AuthorizationCredentialAppleID> Function(
-  List<AppleIDAuthorizationScopes> scopes,
-);
+typedef AppleSignInCallback =
+    Future<AuthorizationCredentialAppleID> Function(
+      List<AppleIDAuthorizationScopes> scopes,
+    );
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
@@ -37,12 +38,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     GoogleSignIn? googleSignIn,
     AppleSignInCallback? appleSignIn,
     AnalyticsService? analytics,
-  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn(),
-        _appleSignIn = appleSignIn ??
-            ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
-        _analytics = analytics,
-        super(const AuthInitial()) {
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn(),
+       _appleSignIn =
+           appleSignIn ??
+           ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
+       _analytics = analytics,
+       super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthSendOtpRequested>(_onSendOtpRequested);
     on<AuthPhoneVerified>(_onPhoneVerified);
@@ -62,6 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthAddPhoneFromProfileRequested>(_onAddPhoneFromProfileRequested);
     on<AuthAddEmailFromProfileRequested>(_onAddEmailFromProfileRequested);
     on<AuthUserSynced>(_onUserSynced);
+    on<AuthAvatarUploadRequested>(_onAvatarUploadRequested);
   }
 
   @override
@@ -85,7 +88,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.getProfile();
       emit(AuthAuthenticated(user));
-      unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'check'}));
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.loginSuccess,
+          properties: {'method': 'check'},
+        ),
+      );
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         // Firebase OK mais pas encore inscrit en backend
@@ -94,7 +102,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         // Erreur réseau/serveur → ne pas forcer la re-inscription
         emit(AuthError(unwrapDioError(e)));
-        unawaited(_analytics?.logEvent(AnalyticsEvents.loginFailed, properties: {'error_type': e.response?.statusCode?.toString() ?? 'network'}));
+        unawaited(
+          _analytics?.logEvent(
+            AnalyticsEvents.loginFailed,
+            properties: {
+              'error_type': e.response?.statusCode?.toString() ?? 'network',
+            },
+          ),
+        );
       }
     } catch (_) {
       _pendingPhoneNumber = firebaseUser.phoneNumber;
@@ -129,7 +144,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // Auto-vérification Android
         try {
           await _firebaseAuth.signInWithCredential(credential);
-          if (!isClosed) add(AuthPhoneVerified(verificationId: '', smsCode: '', autoVerified: true));
+          if (!isClosed)
+            add(
+              AuthPhoneVerified(
+                verificationId: '',
+                smsCode: '',
+                autoVerified: true,
+              ),
+            );
         } catch (e) {
           if (!isClosed && !emit.isDone) emit(AuthError(_friendlyError(e)));
         }
@@ -141,11 +163,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       codeSent: (String verificationId, int? resendToken) {
         if (!emit.isDone) {
-          emit(AuthOtpSent(
-            verificationId: verificationId,
-            phoneNumber: event.phoneNumber,
-            secondsLeft: 60,
-          ));
+          emit(
+            AuthOtpSent(
+              verificationId: verificationId,
+              phoneNumber: event.phoneNumber,
+              secondsLeft: 60,
+            ),
+          );
           _otpTimer?.cancel();
           _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
             if (!isClosed) add(const AuthOtpTimerTicked());
@@ -189,7 +213,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final user = await _authRepository.getProfile();
         // Compte existant → déjà authentifié, écran PIN suffira
         emit(AuthAuthenticated(user));
-        unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'phone'}));
+        unawaited(
+          _analytics?.logEvent(
+            AnalyticsEvents.loginSuccess,
+            properties: {'method': 'phone'},
+          ),
+        );
       } on DioException catch (e) {
         if (e.response?.statusCode == 404) {
           // Nouveau numéro → flux de création de compte
@@ -294,8 +323,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         birthDate: event.birthDate,
         city: event.city,
         phoneNumber: event.phoneNumber,
+        bio: event.bio,
+        languages: event.languages,
+        transportMode: event.transportMode,
       );
       emit(AuthProfileUpdated(updatedUser));
+      if (event.bio != null && event.bio!.trim().isNotEmpty) {
+        unawaited(_analytics?.logEvent(AnalyticsEvents.profileAboutUpdated));
+      }
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Upload avatar ────────────────────────────────────────────────────────
+
+  Future<void> _onAvatarUploadRequested(
+    AuthAvatarUploadRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final updated = await _authRepository.uploadAvatar(event.filePath);
+      emit(AuthProfileUpdated(updated));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.profilePhotoUpdated));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
@@ -354,12 +405,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      final customToken = await _authRepository.verifyEmailOtp(event.email, event.code);
+      final customToken = await _authRepository.verifyEmailOtp(
+        event.email,
+        event.code,
+      );
       await _firebaseAuth.signInWithCustomToken(customToken);
       // User existant → Home directement ; nouveau → RoleSelection
       final user = await _authRepository.getProfile();
       emit(AuthAuthenticated(user));
-      unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'email'}));
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.loginSuccess,
+          properties: {'method': 'email'},
+        ),
+      );
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         emit(AuthEmailOtpVerified(event.email));
@@ -379,9 +438,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      final user = await _authRepository.registerWithEmail(
-        email: event.email,
-      );
+      final user = await _authRepository.registerWithEmail(email: event.email);
       await _localAuthService.clearPin();
       emit(AuthAuthenticated(user));
     } catch (e) {
@@ -487,7 +544,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authRepository.verifyEmailOtp(event.email, event.code);
       // Update backend profile; freeEmailFromDeletedAccounts runs server-side
       // if the email was previously held by a soft-deleted account.
-      final updatedUser = await _authRepository.updateProfile(email: event.email);
+      final updatedUser = await _authRepository.updateProfile(
+        email: event.email,
+      );
       emit(AuthProfileUpdated(updatedUser));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
@@ -502,7 +561,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.getProfile();
       emit(AuthAuthenticated(user));
-      unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'social'}));
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.loginSuccess,
+          properties: {'method': 'social'},
+        ),
+      );
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         final email = _firebaseAuth.currentUser?.email ?? '';
@@ -519,10 +583,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AppException _friendlyFirebaseError(FirebaseAuthException e) {
     final (message, code) = switch (e.code) {
-      'invalid-phone-number' => ('Numéro de téléphone invalide', 'invalid-phone-number'),
-      'invalid-verification-code' => ('Code de vérification incorrect', 'code-incorrect'),
-      'code-expired' => ('Le code a expiré. Demandez un nouveau code.', 'code-expired'),
-      'too-many-requests' => ('Trop de tentatives. Réessayez plus tard.', 'too-many-attempts'),
+      'invalid-phone-number' => (
+        'Numéro de téléphone invalide',
+        'invalid-phone-number',
+      ),
+      'invalid-verification-code' => (
+        'Code de vérification incorrect',
+        'code-incorrect',
+      ),
+      'code-expired' => (
+        'Le code a expiré. Demandez un nouveau code.',
+        'code-expired',
+      ),
+      'too-many-requests' => (
+        'Trop de tentatives. Réessayez plus tard.',
+        'too-many-attempts',
+      ),
       'session-expired' => ('Session expirée. Recommencez.', 'session-expired'),
       _ => (e.message ?? 'Erreur d\'authentification', 'firebase-auth-error'),
     };

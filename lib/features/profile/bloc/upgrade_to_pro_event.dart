@@ -11,10 +11,7 @@ class UpgradeToProSubmitted extends UpgradeToProEvent {
   final String companyName;
   final String siret;
 
-  const UpgradeToProSubmitted({
-    required this.companyName,
-    required this.siret,
-  });
+  const UpgradeToProSubmitted({required this.companyName, required this.siret});
 
   @override
   List<Object?> get props => [companyName, siret];

@@ -112,6 +112,7 @@ class TravelerCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: _displayName,
+                  imageUrl: traveler?.avatarUrl,
                   size: DonyAvatarSize.md,
                   verified: traveler?.kycVerified ?? false,
                   pro: isProAccount,

@@ -91,7 +91,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     } else {
       if (_pin == _firstPin) {
         await getIt<LocalAuthService>().savePin(_pin);
-        unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.signupCompleted));
+        unawaited(
+          getIt<AnalyticsService>().logEvent(AnalyticsEvents.signupCompleted),
+        );
         final route = await resolvePostPinSetupRoute(
           getIt<AnalyticsService>(),
           getIt<HiveService>().userPrefs,
@@ -133,11 +135,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 const SizedBox(height: DonySpacing.md),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: DonyStepPill(
-                    current: 3,
-                    total: 3,
-                    label: 'Code PIN',
-                  ),
+                  child: DonyStepPill(current: 3, total: 3, label: 'Code PIN'),
                 ),
                 const Spacer(flex: 2),
                 _buildHeader(cs, tt),
@@ -216,8 +214,8 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
             color: _hasError
                 ? cs.error
                 : filled
-                    ? cs.primary
-                    : cs.outline,
+                ? cs.primary
+                : cs.outline,
           ),
         );
       }),

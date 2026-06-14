@@ -343,6 +343,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `traveler_call_initiated` | Tap 📞 sur la carte voyageur (propriété `status`) |
 | `tracking_link_shared` | Partage de l'URL de suivi (app bar ou carte) |
 | `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriété `route`) |
+| `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
+| `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
+| `public_reviews_opened` | UserReviewsCubit — ouverture de la bottom sheet « tous les avis » (propriété `rating_count`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

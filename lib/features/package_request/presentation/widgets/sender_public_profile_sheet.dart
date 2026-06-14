@@ -31,6 +31,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
         children: [
           DonyAvatar(
             name: sender.displayName,
+            imageUrl: sender.avatarUrl,
             size: DonyAvatarSize.xl,
             verified: sender.kycVerified,
           ),

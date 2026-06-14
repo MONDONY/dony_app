@@ -11,8 +11,10 @@ class ProStatsBottomSheet extends StatelessWidget {
 
   final ProStatsModel stats;
 
-  static Future<void> show(BuildContext context,
-      {required ProStatsModel stats}) {
+  static Future<void> show(
+    BuildContext context, {
+    required ProStatsModel stats,
+  }) {
     return DonyBottomSheet.show(
       context,
       title: 'Mes statistiques PRO',
@@ -23,8 +25,11 @@ class ProStatsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final currencyFmt =
-        NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2);
+    final currencyFmt = NumberFormat.currency(
+      locale: 'fr_FR',
+      symbol: '€',
+      decimalDigits: 2,
+    );
     final now = DateTime.now();
     final monthLabel = DateFormat('MMMM yyyy', 'fr_FR').format(now);
 
@@ -33,80 +38,93 @@ class ProStatsBottomSheet extends StatelessWidget {
       children: [
         // ── Hero mensuel glass ──────────────────────────────────────────────
         _GlassHeroCard(
-          monthLabel: monthLabel,
-          revenue: currencyFmt.format(stats.monthlyRevenue),
-          trips: stats.monthlyTrips,
-          parcels: stats.monthlyParcelsDelivered,
-        ).animate().fadeIn(delay: 60.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+              monthLabel: monthLabel,
+              revenue: currencyFmt.format(stats.monthlyRevenue),
+              trips: stats.monthlyTrips,
+              parcels: stats.monthlyParcelsDelivered,
+            )
+            .animate()
+            .fadeIn(delay: 60.ms)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
 
         const SizedBox(height: DonySpacing.base),
 
         // ── Revenus total ───────────────────────────────────────────────────
         _SectionCard(
-          child: _MetricRow(
-            label: 'Revenus total (depuis le début)',
-            value: currencyFmt.format(stats.totalRevenue),
-            icon: Icons.account_balance_wallet_rounded,
-          ),
-        ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+              child: _MetricRow(
+                label: 'Revenus total (depuis le début)',
+                value: currencyFmt.format(stats.totalRevenue),
+                icon: Icons.account_balance_wallet_rounded,
+              ),
+            )
+            .animate()
+            .fadeIn(delay: 100.ms)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
 
         const SizedBox(height: DonySpacing.base),
 
         // ── Performance ─────────────────────────────────────────────────────
         _SectionCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionLabel('PERFORMANCE'),
-              const SizedBox(height: DonySpacing.base),
-              _ProgressMetric(
-                label: "Taux d'acceptation",
-                value: stats.acceptanceRate,
-                displayText: '${(stats.acceptanceRate * 100).round()}%',
-                color: cs.primary,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SectionLabel('PERFORMANCE'),
+                  const SizedBox(height: DonySpacing.base),
+                  _ProgressMetric(
+                    label: "Taux d'acceptation",
+                    value: stats.acceptanceRate,
+                    displayText: '${(stats.acceptanceRate * 100).round()}%',
+                    color: cs.primary,
+                  ),
+                  const SizedBox(height: DonySpacing.md),
+                  _ProgressMetric(
+                    label: 'Note moyenne',
+                    value: stats.averageRating / 5.0,
+                    displayText: stats.averageRating > 0
+                        ? '${stats.averageRating.toStringAsFixed(1)} / 5.0 ★'
+                        : '— / 5.0',
+                    // cs.secondary = terra500 en light, adapté en dark
+                    color: cs.secondary,
+                  ),
+                ],
               ),
-              const SizedBox(height: DonySpacing.md),
-              _ProgressMetric(
-                label: 'Note moyenne',
-                value: stats.averageRating / 5.0,
-                displayText: stats.averageRating > 0
-                    ? '${stats.averageRating.toStringAsFixed(1)} / 5.0 ★'
-                    : '— / 5.0',
-                // cs.secondary = terra500 en light, adapté en dark
-                color: cs.secondary,
-              ),
-            ],
-          ),
-        ).animate().fadeIn(delay: 140.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            )
+            .animate()
+            .fadeIn(delay: 140.ms)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
 
         // ── Top destinations ────────────────────────────────────────────────
         if (stats.topDestinations.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.base),
           _SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SectionLabel('TOP DESTINATIONS'),
-                const SizedBox(height: DonySpacing.base),
-                ...stats.topDestinations.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final dest = entry.value;
-                  return Padding(
-                    padding: EdgeInsets.only(
-                        bottom: i < stats.topDestinations.length - 1
-                            ? DonySpacing.sm
-                            : 0),
-                    child: _DestinationRow(
-                      rank: i + 1,
-                      from: dest.from,
-                      to: dest.to,
-                      count: dest.count,
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionLabel('TOP DESTINATIONS'),
+                    const SizedBox(height: DonySpacing.base),
+                    ...stats.topDestinations.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final dest = entry.value;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: i < stats.topDestinations.length - 1
+                              ? DonySpacing.sm
+                              : 0,
+                        ),
+                        child: _DestinationRow(
+                          rank: i + 1,
+                          from: dest.from,
+                          to: dest.to,
+                          count: dest.count,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 180.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ],
 
         const SizedBox(height: DonySpacing.xxl),
@@ -135,12 +153,8 @@ class _GlassHeroCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final gradientStart = isDark
-        ? DonyColors.proBg1
-        : DonyColors.ink800;
-    final gradientEnd = isDark
-        ? DonyColors.proBg2
-        : DonyColors.proBg3;
+    final gradientStart = isDark ? DonyColors.proBg1 : DonyColors.ink800;
+    final gradientEnd = isDark ? DonyColors.proBg2 : DonyColors.proBg3;
     final bgAlpha = isDark ? 0.80 : 0.90;
     final borderAlpha = isDark ? 0.10 : 0.18;
 
@@ -201,17 +215,21 @@ class _GlassHeroCard extends StatelessWidget {
               const SizedBox(height: DonySpacing.base),
               Row(
                 children: [
-                  Expanded(child: _GlassTile(
-                    label: 'Trajets',
-                    value: trips.toString(),
-                    icon: Icons.flight_takeoff_rounded,
-                  )),
+                  Expanded(
+                    child: _GlassTile(
+                      label: 'Trajets',
+                      value: trips.toString(),
+                      icon: Icons.flight_takeoff_rounded,
+                    ),
+                  ),
                   const SizedBox(width: DonySpacing.sm),
-                  Expanded(child: _GlassTile(
-                    label: 'Colis livrés',
-                    value: parcels.toString(),
-                    icon: Icons.inventory_2_rounded,
-                  )),
+                  Expanded(
+                    child: _GlassTile(
+                      label: 'Colis livrés',
+                      value: parcels.toString(),
+                      icon: Icons.inventory_2_rounded,
+                    ),
+                  ),
                 ],
               ),
             ],
