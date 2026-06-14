@@ -103,7 +103,6 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
                           const SizedBox(height: DonySpacing.xxl),
                           _StepCard(
                                 stepNumber: 1,
-                                icon: Icons.badge_rounded,
                                 title: 'Identité vérifiée',
                                 subtitle:
                                     "Pièce d'identité et liveness check via Stripe Identity.",
@@ -127,7 +126,6 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
                           const SizedBox(height: DonySpacing.md),
                           _StepCard(
                                 stepNumber: 2,
-                                icon: Icons.account_balance_rounded,
                                 title: 'Compte bancaire connecté',
                                 subtitle:
                                     'Recevez vos paiements automatiquement après chaque livraison.',
@@ -265,31 +263,57 @@ class _HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DonyIconContainer(
-          icon: Icons.flight_takeoff_rounded,
-          size: DonyIconContainerSize.xl,
-          borderRadius: DonyRadius.xl,
-          backgroundColor: cs.secondaryContainer,
-          iconColor: cs.secondary,
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            cs.primary,
+            cs.primary.withValues(alpha: 0.82),
+          ],
         ),
-        const SizedBox(height: DonySpacing.lg),
-        Text(
-          'Devenez voyageur\ndony',
-          style: tt.displayLarge?.copyWith(height: 1.2),
-        ),
-        const SizedBox(height: DonySpacing.md),
-        Text(
-          "Transportez des colis vers l'Afrique et soyez payé automatiquement après chaque livraison confirmée.",
-          style: tt.bodyLarge?.copyWith(
-            color: cs.onSurfaceVariant,
-            height: 1.5,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: cs.onPrimary.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Icon(
+              Icons.flight_takeoff_rounded,
+              color: cs.onPrimary,
+              size: 26,
+            ),
           ),
-        ),
-      ],
-    );
+          const SizedBox(height: DonySpacing.lg),
+          Text(
+            'Devenir voyageur',
+            style: tt.displayLarge?.copyWith(
+              height: 1.2,
+              color: cs.onPrimary,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            'Transporte des colis, gagne de l\'argent. Tu gardes ton compte expéditeur.',
+            style: tt.bodyLarge?.copyWith(
+              color: cs.onPrimary.withValues(alpha: 0.85),
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 280.ms)
+        .slideY(begin: 0.03, curve: Curves.easeOutCubic);
   }
 }
 
@@ -302,7 +326,6 @@ enum _StepStatus { todo, pending, done, rejected }
 class _StepCard extends StatelessWidget {
   const _StepCard({
     required this.stepNumber,
-    required this.icon,
     required this.title,
     required this.subtitle,
     required this.status,
@@ -312,7 +335,6 @@ class _StepCard extends StatelessWidget {
   });
 
   final int stepNumber;
-  final IconData icon;
   final String title;
   final String subtitle;
   final _StepStatus status;
@@ -325,34 +347,45 @@ class _StepCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    final Color stepColor;
-    final Color stepBg;
-    final Widget statusWidget;
+    final bool isDone = status == _StepStatus.done;
+
+    final Color badgeColor;
+    final Color badgeBg;
+    final Widget statusChip;
 
     switch (status) {
       case _StepStatus.done:
-        stepColor = cs.success;
-        stepBg = cs.successLight;
-        statusWidget = Icon(
-          Icons.check_circle_rounded,
-          color: cs.success,
-          size: 20,
+        badgeColor = cs.success;
+        badgeBg = cs.successLight;
+        statusChip = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_rounded, color: cs.success, size: 13),
+            const SizedBox(width: DonySpacing.xxs),
+            Text(
+              'Vérifié',
+              style: tt.labelSmall?.copyWith(
+                color: cs.success,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         );
       case _StepStatus.pending:
-        stepColor = cs.warning;
-        stepBg = cs.warningLight;
-        statusWidget = Row(
+        badgeColor = cs.warning;
+        badgeBg = cs.warningLight;
+        statusChip = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 14,
-              height: 14,
+              width: 11,
+              height: 11,
               child: CircularProgressIndicator(
                 strokeWidth: 1.5,
                 color: cs.warning,
               ),
             ),
-            const SizedBox(width: DonySpacing.xs),
+            const SizedBox(width: DonySpacing.xxs),
             Text(
               'En cours',
               style: tt.labelSmall?.copyWith(
@@ -363,17 +396,26 @@ class _StepCard extends StatelessWidget {
           ],
         );
       case _StepStatus.rejected:
-        stepColor = cs.error;
-        stepBg = cs.errorContainer.withValues(alpha: 0.3);
-        statusWidget = Icon(
-          Icons.warning_amber_rounded,
-          color: cs.error,
-          size: 20,
+        badgeColor = cs.error;
+        badgeBg = cs.errorContainer.withValues(alpha: 0.3);
+        statusChip = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.warning_amber_rounded, color: cs.error, size: 13),
+            const SizedBox(width: DonySpacing.xxs),
+            Text(
+              'Refusé',
+              style: tt.labelSmall?.copyWith(
+                color: cs.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         );
       case _StepStatus.todo:
-        stepColor = cs.onSurfaceVariant;
-        stepBg = cs.surfaceContainerHighest;
-        statusWidget = Text(
+        badgeColor = cs.onSurfaceVariant;
+        badgeBg = cs.surfaceContainerHighest;
+        statusChip = Text(
           'À faire',
           style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
         );
@@ -381,53 +423,111 @@ class _StepCard extends StatelessWidget {
 
     return DonyCard(
       padding: const EdgeInsets.all(DonySpacing.base),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              DonyIconContainer(
-                icon: icon,
-                borderRadius: DonyRadius.md,
-                backgroundColor: stepBg,
-                iconColor: stepColor,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
+          // ── Circular step badge ──────────────────────────────────
+          _StepBadge(
+            stepNumber: stepNumber,
+            isDone: isDone,
+            color: badgeColor,
+            bg: badgeBg,
+          ),
+          const SizedBox(width: DonySpacing.md),
+          // ── Content ──────────────────────────────────────────────
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Étape $stepNumber — $title',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: DonySpacing.xxs),
-                    Text(
-                      subtitle,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        height: 1.4,
+                    const SizedBox(width: DonySpacing.sm),
+                    // Status chip (top-right)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.xxs + 1,
                       ),
+                      decoration: BoxDecoration(
+                        color: badgeBg,
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                      ),
+                      child: statusChip,
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              statusWidget,
-            ],
-          ),
-          if (showCta) ...[
-            const SizedBox(height: DonySpacing.md),
-            DonyButton(
-              label: ctaLabel,
-              variant: DonyButtonVariant.secondary,
-              fullWidth: false,
-              onPressed: onCta,
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  subtitle,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                if (showCta) ...[
+                  const SizedBox(height: DonySpacing.md),
+                  DonyButton(
+                    label: ctaLabel,
+                    variant: DonyButtonVariant.secondary,
+                    fullWidth: false,
+                    onPressed: onCta,
+                  ),
+                ],
+              ],
             ),
-          ],
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Step badge (circular) ─────────────────────────────────────────────────────
+
+class _StepBadge extends StatelessWidget {
+  const _StepBadge({
+    required this.stepNumber,
+    required this.isDone,
+    required this.color,
+    required this.bg,
+  });
+
+  final int stepNumber;
+  final bool isDone;
+  final Color color;
+  final Color bg;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: bg,
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+      ),
+      child: Center(
+        child: isDone
+            ? Icon(Icons.check_rounded, color: color, size: 20)
+            : Text(
+                '$stepNumber',
+                style: tt.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
       ),
     );
   }
