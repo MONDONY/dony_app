@@ -640,4 +640,32 @@ void main() {
       },
     );
   });
+
+  // ── Régression : résolution du rôle après mise à jour de profil ──────────────
+  // Bug : isSender ne testait que AuthAuthenticated. Après édition profil / upload
+  // photo (état AuthProfileUpdated), l'expéditeur basculait sur la vue voyageur
+  // (carte EXPÉDITEUR au lieu de VOYAGEUR, mauvaise sticky bar/menu).
+  group('Résolution du rôle (AuthProfileUpdated)', () {
+    testWidgets(
+      'expéditeur + AuthProfileUpdated → vue expéditeur (carte VOYAGEUR)',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthProfileUpdated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(status: 'ACCEPTED'),
+          authBloc: authBloc,
+        );
+
+        expect(find.text('VOYAGEUR'), findsOneWidget);
+        expect(find.text('EXPÉDITEUR'), findsNothing);
+      },
+    );
+  });
 }

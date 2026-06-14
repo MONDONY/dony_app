@@ -413,9 +413,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
               builder: (context, state) {
                 final isLoading = state is BidLoading;
                 final authState = context.read<AuthBloc>().state;
+                // Résoudre l'utilisateur courant depuis AuthAuthenticated ET
+                // AuthProfileUpdated (émis après édition profil / upload photo) :
+                // sans ce dernier, l'expéditeur était traité comme voyageur après
+                // une mise à jour de profil → mauvais body (carte EXPÉDITEUR au lieu
+                // de VOYAGEUR), mauvaise sticky bar et menu options.
+                final currentUser = authState is AuthAuthenticated
+                    ? authState.user
+                    : authState is AuthProfileUpdated
+                        ? authState.user
+                        : null;
                 final isSender =
-                    authState is AuthAuthenticated &&
-                    authState.user.id == _bid.senderId;
+                    currentUser != null && currentUser.id == _bid.senderId;
 
                 // Derive bid code from tracking number or id
                 final bidCode =
