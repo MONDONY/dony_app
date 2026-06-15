@@ -70,7 +70,7 @@ class RouteBottomSheet extends StatelessWidget {
     final items = _filtered;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.7,
+      initialChildSize: 0.8,
       minChildSize: 0.4,
       maxChildSize: 0.92,
       expand: false,
@@ -129,6 +129,10 @@ class RouteBottomSheet extends StatelessWidget {
                         final activeBids = bidState.activeBidsByAnnouncement();
                         return ListView.separated(
                           controller: scrollCtrl,
+                          // Liste courte (trajets d'une même route) : on
+                          // construit largement hors écran pour que les cartes
+                          // soient prêtes au scroll (pas de carte blanche).
+                          cacheExtent: 1200,
                           padding: const EdgeInsets.fromLTRB(
                             DonySpacing.base,
                             0,

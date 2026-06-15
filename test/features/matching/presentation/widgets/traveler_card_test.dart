@@ -6,7 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 AnnouncementModel _makeAnn({
+  String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
+  String? departureFlag,
+  String? arrivalFlag,
   bool kiloPro = false,
   bool isProAccount = false,
   bool kycVerified = false,
@@ -14,8 +17,10 @@ AnnouncementModel _makeAnn({
     AnnouncementModel(
       id: 'a1',
       travelerId: 't1',
-      departureCity: 'Paris',
+      departureCity: departureCity,
       arrivalCity: arrivalCity,
+      departureFlag: departureFlag,
+      arrivalFlag: arrivalFlag,
       departureDate: DateTime(2026, 6, 15),
       availableKg: 8,
       totalKg: 8,
@@ -142,6 +147,70 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byType(TravelerCard));
       expect(tapped, isTrue);
+    });
+  });
+
+  group('TravelerCard – trajet (route header)', () {
+    testWidgets('affiche les villes départ et arrivée', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(departureCity: 'Lyon', arrivalCity: 'Abidjan'),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('Lyon'), findsOneWidget);
+      expect(find.text('Abidjan'), findsOneWidget);
+    });
+
+    testWidgets('retombe sur cityFlag quand le drapeau backend est absent',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      // Paris → 🇫🇷, Dakar → 🇸🇳 via la map locale cityFlag().
+      expect(find.text('🇫🇷'), findsOneWidget);
+      expect(find.text('🇸🇳'), findsOneWidget);
+    });
+
+    testWidgets('privilégie le drapeau résolu par le backend', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(
+          departureCity: 'Tombouctou-les-Bains', // inconnu de cityFlag
+          departureFlag: '🇲🇱',
+          arrivalFlag: '🇸🇳',
+        ),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('🇲🇱'), findsOneWidget);
+      expect(find.text('🇸🇳'), findsOneWidget);
+    });
+
+    testWidgets('appui réduit légèrement la carte (scale < 1)', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+
+      final gesture =
+          await tester.startGesture(tester.getCenter(find.byType(TravelerCard)));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      final scale = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
+      expect(scale.scale, lessThan(1.0));
+
+      await gesture.up();
+      await tester.pumpAndSettle();
     });
   });
 

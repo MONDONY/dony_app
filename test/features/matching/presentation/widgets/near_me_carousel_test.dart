@@ -88,7 +88,7 @@ Widget _wrap(
       GoRoute(
         path: '/',
         builder: (_, __) =>
-            Scaffold(body: SizedBox(height: 280, child: child)),
+            Scaffold(body: SizedBox(height: 312, child: child)),
       ),
       GoRoute(
         path: '/bids/:id',

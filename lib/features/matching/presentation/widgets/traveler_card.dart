@@ -3,6 +3,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -76,12 +77,24 @@ class TravelerCard extends StatelessWidget {
     final totalTrips = traveler?.totalTrips;
     final isKiloPro = traveler?.kiloPro ?? false;
     final isProAccount = traveler?.isProAccount ?? false;
-    final dateStr = DateFormat('EEE d', 'fr').format(announcement.departureDate);
+    final dateStr =
+        DateFormat('EEE d MMM', 'fr').format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
     final hasExistingBid = existingBidStatus != null;
     final bidStyle = _bidStyle(cs);
 
-    return GestureDetector(
+    // Préfère le drapeau résolu par le backend (n'importe quel pays), retombe
+    // sur la map hardcodée locale, puis null (point bleu via _FlagEndpoint).
+    final depFlag =
+        announcement.departureFlag ?? cityFlag(announcement.departureCity);
+    final arrFlag =
+        announcement.arrivalFlag ?? cityFlag(announcement.arrivalCity);
+
+    final priceLabel = announcement.pricingMode == 'MIXED'
+        ? 'Grille tarifaire'
+        : '${formatKgPrice(announcement.senderPricePerKg)} €/kg';
+
+    return _PressableCard(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
@@ -91,6 +104,13 @@ class TravelerCard extends StatelessWidget {
             color: hasExistingBid ? bidStyle.border : cs.outline,
             width: hasExistingBid ? 1.5 : 1,
           ),
+          boxShadow: const [
+            BoxShadow(
+              color: DonyColors.shadow,
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(DonySpacing.base),
         child: Column(
@@ -109,6 +129,34 @@ class TravelerCard extends StatelessWidget {
               _DistanceBadge(label: distanceBadge!),
               const SizedBox(height: DonySpacing.sm),
             ],
+
+            // ── Zone 1 : trajet (hero) ──
+            _RouteHeader(
+              departureCity: announcement.departureCity,
+              arrivalCity: announcement.arrivalCity,
+              depFlag: depFlag,
+              arrFlag: arrFlag,
+            ),
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              children: [
+                DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  dateStr,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: DonySpacing.md),
+            Divider(height: 1, thickness: 1, color: cs.outline),
+            const SizedBox(height: DonySpacing.md),
+
+            // ── Zone 2 : voyageur + prix ──
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -132,7 +180,12 @@ class TravelerCard extends StatelessWidget {
                         runSpacing: DonySpacing.xxs,
                         children: [
                           DonyIcon('star', size: 13, color: cs.warning),
-                          Text(rating != null ? rating.toStringAsFixed(1) : '—', style: tt.titleSmall),
+                          Text(
+                            rating != null ? rating.toStringAsFixed(1) : '—',
+                            style: tt.titleSmall?.copyWith(
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
                           Text(
                             '· ${totalTrips ?? 0} trajet${(totalTrips ?? 0) > 1 ? 's' : ''}',
                             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -146,10 +199,12 @@ class TravelerCard extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
-                  announcement.pricingMode == 'MIXED'
-                      ? 'Grille tarifaire'
-                      : '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
-                  style: tt.titleLarge?.copyWith(color: cs.success, fontWeight: FontWeight.w700),
+                  priceLabel,
+                  style: tt.titleLarge?.copyWith(
+                    color: cs.success,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
@@ -158,17 +213,16 @@ class TravelerCard extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             Row(
               children: [
-                DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
-                const SizedBox(width: DonySpacing.xxs),
-                Text(dateStr, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                const SizedBox(width: DonySpacing.md),
                 const DonyEmoji.parcel(size: 13),
                 const SizedBox(width: DonySpacing.xxs),
                 Text(
                   announcement.capacityUnit == 'KG_FREE'
                       ? 'Kg libre'
                       : '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ],
             ),
@@ -182,10 +236,169 @@ class TravelerCard extends StatelessWidget {
             ],
           ],
         ),
-      )
-          .animate()
-          .fadeIn(delay: Duration(milliseconds: 60 * index))
-          .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+      ),
+    )
+        .animate()
+        .fadeIn(delay: Duration(milliseconds: 60 * index))
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+/// Carte tactile : applique un léger scale 0.97 pendant l'appui (feedback
+/// premium). N'active le retour visuel que si [onTap] est fourni — les cartes
+/// non cliquables (« Votre trajet ») restent statiques.
+class _PressableCard extends StatefulWidget {
+  const _PressableCard({required this.onTap, required this.child});
+
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  State<_PressableCard> createState() => _PressableCardState();
+}
+
+class _PressableCardState extends State<_PressableCard> {
+  bool _pressed = false;
+
+  void _setPressed(bool v) {
+    if (widget.onTap == null) {
+      return;
+    }
+    setState(() => _pressed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => _setPressed(true),
+      onTapUp: (_) => _setPressed(false),
+      onTapCancel: () => _setPressed(false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// En-tête trajet : `drapeau · ville  ──✈──  ville · drapeau`.
+/// Les villes sont non-flexibles (toujours affichées en entier) et le
+/// connecteur occupe l'espace restant — la ligne s'étire entre les deux villes.
+class _RouteHeader extends StatelessWidget {
+  const _RouteHeader({
+    required this.departureCity,
+    required this.arrivalCity,
+    required this.depFlag,
+    required this.arrFlag,
+  });
+
+  final String departureCity;
+  final String arrivalCity;
+  final String? depFlag;
+  final String? arrFlag;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final cityStyle = tt.headlineMedium?.copyWith(color: cs.onSurface);
+
+    return Row(
+      children: [
+        _FlagEndpoint(flag: depFlag),
+        const SizedBox(width: DonySpacing.xs),
+        Flexible(
+          child: Text(
+            departureCity,
+            style: cityStyle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        const Expanded(child: _RouteConnector()),
+        const SizedBox(width: DonySpacing.sm),
+        Flexible(
+          child: Text(
+            arrivalCity,
+            style: cityStyle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.right,
+          ),
+        ),
+        const SizedBox(width: DonySpacing.xs),
+        _FlagEndpoint(flag: arrFlag),
+      ],
+    );
+  }
+}
+
+/// Ligne pleine fine surmontée d'une icône avion (le fond surface « coupe » la
+/// ligne autour de l'avion pour un rendu net).
+class _RouteConnector extends StatelessWidget {
+  const _RouteConnector();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      height: 18,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: Center(
+              child: Container(
+                height: 1.5,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: DonyColors.blue200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+          // Lucide 'plane' pointe en haut-à-gauche par défaut → quart de tour
+          // pour le faire pointer vers la droite (sens du trajet).
+          Container(
+            color: cs.surface,
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
+            child: RotatedBox(
+              quarterTurns: 1,
+              child: DonyIcon('plane', size: 16, color: cs.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Drapeau emoji du trajet, ou point bleu de repli si la ville est inconnue.
+class _FlagEndpoint extends StatelessWidget {
+  const _FlagEndpoint({required this.flag});
+
+  final String? flag;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    if (flag != null) {
+      return Text(flag!, style: const TextStyle(fontSize: 18));
+    }
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: cs.primary,
+        shape: BoxShape.circle,
+      ),
     );
   }
 }
