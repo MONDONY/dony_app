@@ -33,28 +33,17 @@ class AnnouncementDetailBottomSheet {
       ),
       stickyBottom: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
-          if (state is! AnnouncementDetailLoaded) return const SizedBox.shrink();
+          if (state is! AnnouncementDetailLoaded) {
+            return const SizedBox.shrink();
+          }
           final a = state.announcement;
           final canEdit = a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0;
           final isCancelled = a.status == 'CANCELLED';
           final canDelete =
               (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
+          final cs = Theme.of(context).colorScheme;
 
-          // Bouton principal — Voir les demandes (pleine largeur)
-          // TODO(backend): bidsCount doit retourner le total (pending + accepted)
-          // pour que ce compteur soit fidèle à la réalité.
-          final Widget? primaryBtn = a.status == 'ACTIVE'
-              ? DonyButton(
-                  label: 'Voir les demandes (${a.bidsCount ?? 0})',
-                  iconAsset: 'package',
-                  onPressed: () => context.push('/announcements/${a.id}/bids'),
-                )
-              : null;
-
-          // Bouton « Ouvrir les kg restants » — uniquement sur un trajet dédié
-          // dont la négociation est payée et le surplus pas encore publié.
-          // Ouvre OpenSurplusBottomSheet, puis recharge le détail (sur ce même
-          // AnnouncementBloc partagé) si l'ouverture a réussi.
+          // Bouton surplus — garde sa forme pleine largeur (action rare)
           final Widget? surplusBtn = a.canOpenSurplus
               ? DonyButton(
                   label: 'Ouvrir les kg restants',
@@ -73,70 +62,74 @@ class AnnouncementDetailBottomSheet {
                 )
               : null;
 
-          // Bouton secondaire — Modifier (gauche)
-          final Widget? modifierBtn = canEdit
-              ? DonyButton(
-                  label: 'Modifier',
-                  iconAsset: 'square-pen',
-                  variant: DonyButtonVariant.secondary,
-                  onPressed: () =>
-                      CreateAnnouncementBottomSheet.show(context, announcement: a),
-                )
-              : null;
-
-          // Bouton destructif — Annuler ou Supprimer (droite)
-          final Widget? destructifBtn = canDelete
-              ? DonyButton(
-                  label: 'Supprimer',
-                  iconAsset: 'trash-2',
-                  variant: DonyButtonVariant.destructive,
-                  onPressed: () async {
-                    final confirmed =
-                        await _confirmDelete(context, isCancelled: isCancelled);
-                    if (confirmed && context.mounted) {
-                      context
-                          .read<AnnouncementBloc>()
-                          .add(AnnouncementDeleteRequested(a.id));
-                    }
-                  },
-                )
-              : (!canDelete && a.status == 'ACTIVE')
-                  ? DonyButton(
-                      label: 'Annuler',
-                      iconAsset: 'circle-x',
-                      variant: DonyButtonVariant.destructive,
-                      onPressed: () =>
-                          CancellationBottomSheet.show(context, announcementId: a.id),
-                    )
-                  : null;
-
-          if (primaryBtn == null &&
-              surplusBtn == null &&
-              modifierBtn == null &&
-              destructifBtn == null) {
+          // Aucune action disponible (COMPLETED, FULL, …)
+          final hasAnyAction = a.status == 'ACTIVE' || isCancelled;
+          if (!hasAnyAction && surplusBtn == null) {
             return const SizedBox.shrink();
           }
 
-          final hasSecondRow = modifierBtn != null || destructifBtn != null;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (primaryBtn != null) ...[
-                primaryBtn,
-                if (surplusBtn != null || hasSecondRow)
-                  const SizedBox(height: DonySpacing.sm),
-              ],
               if (surplusBtn != null) ...[
                 surplusBtn,
-                if (hasSecondRow) const SizedBox(height: DonySpacing.sm),
+                const SizedBox(height: DonySpacing.md),
               ],
-              if (hasSecondRow)
+              if (hasAnyAction)
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    if (modifierBtn != null) Expanded(child: modifierBtn),
-                    if (modifierBtn != null && destructifBtn != null)
-                      const SizedBox(width: DonySpacing.sm),
-                    if (destructifBtn != null) Expanded(child: destructifBtn),
+                    // Voir les demandes — toujours visible si ACTIVE
+                    if (a.status == 'ACTIVE')
+                      _IconActionBtn(
+                        iconAsset: 'package',
+                        label: 'Demandes',
+                        bgColor: cs.primaryContainer,
+                        iconColor: cs.primary,
+                        labelColor: cs.primary,
+                        showBadge: (a.bidsCount ?? 0) > 0,
+                        onPressed: () =>
+                            context.push('/announcements/${a.id}/bids'),
+                      ),
+                    // Modifier — uniquement si 0 demande
+                    if (canEdit)
+                      _IconActionBtn(
+                        iconAsset: 'square-pen',
+                        label: 'Modifier',
+                        bgColor: cs.surfaceContainerHighest,
+                        iconColor: cs.onSurface,
+                        labelColor: cs.onSurfaceVariant,
+                        onPressed: () => CreateAnnouncementBottomSheet.show(
+                            context,
+                            announcement: a),
+                      ),
+                    // Supprimer ou Annuler
+                    if (canDelete)
+                      _IconActionBtn(
+                        iconAsset: 'trash-2',
+                        label: 'Supprimer',
+                        bgColor: cs.errorContainer,
+                        iconColor: cs.error,
+                        labelColor: cs.error,
+                        onPressed: () async {
+                          final confirmed = await _confirmDelete(context,
+                              isCancelled: isCancelled);
+                          if (confirmed && context.mounted) {
+                            context.read<AnnouncementBloc>().add(
+                                AnnouncementDeleteRequested(a.id));
+                          }
+                        },
+                      )
+                    else if (a.status == 'ACTIVE')
+                      _IconActionBtn(
+                        iconAsset: 'circle-x',
+                        label: 'Annuler',
+                        bgColor: cs.errorContainer,
+                        iconColor: cs.error,
+                        labelColor: cs.error,
+                        onPressed: () => CancellationBottomSheet.show(context,
+                            announcementId: a.id),
+                      ),
                   ],
                 ),
             ],
@@ -179,7 +172,9 @@ class _AnnouncementDetailContent extends StatelessWidget {
           DonySnackbar.show(
               context, message: 'Trajet supprimé', type: DonySnackbarType.success);
           Navigator.of(context, rootNavigator: true).pop();
-          if (context.mounted) context.go('/announcements');
+          if (context.mounted) {
+            context.go('/announcements');
+          }
         } else if (state is AnnouncementNotFound) {
           DonySnackbar.show(
             context,
@@ -225,19 +220,19 @@ class _AnnouncementDetailContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ── Hero gradient card ──────────────────────────────────────────────
+        // ── Hero bleu nuit ──────────────────────────────────────────────
         Container(
           padding: const EdgeInsets.all(DonySpacing.lg),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF2D1B69), Color(0xFF1A0D3E)],
+              colors: [Color(0xFF0F172A), Color(0xFF1E3A5F), Color(0xFF0C4A6E)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(DonyRadius.xl),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF2D1B69).withValues(alpha: 0.35),
+                color: const Color(0xFF0F172A).withValues(alpha: 0.4),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -256,18 +251,18 @@ class _AnnouncementDetailContent extends StatelessWidget {
                         Text(
                           'TRAJET',
                           style: tt.labelSmall?.copyWith(
-                            color: Colors.white54,
+                            color: Colors.white38,
                             letterSpacing: 1.2,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         Text(
                           '${a.departureCity} → ${a.arrivalCity}',
                           style: tt.titleLarge?.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
                           ),
                         ),
                       ],
@@ -277,46 +272,22 @@ class _AnnouncementDetailContent extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: DonySpacing.sm),
-              // Date + horaires
-              Row(
+              Wrap(
+                spacing: DonySpacing.xs,
+                runSpacing: DonySpacing.xs,
                 children: [
-                  const DonyIcon('calendar',
-                      size: 12, color: Colors.white54),
-                  const SizedBox(width: DonySpacing.xs),
-                  Text(
-                    DateFormat('EEE d MMM yyyy', 'fr').format(a.departureDate),
-                    style: tt.bodySmall?.copyWith(color: Colors.white70),
+                  _HeroChip(
+                    label: DateFormat('EEE d MMM yyyy', 'fr').format(a.departureDate),
                   ),
-                  if (a.departureTime != null) ...[
-                    const SizedBox(width: DonySpacing.sm),
-                    const DonyIcon('clock',
-                        size: 12, color: Colors.white54),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      a.departureTime! +
+                  if (a.transportMode != null)
+                    _HeroChip(label: a.transportMode!.label),
+                  if (a.departureTime != null)
+                    _HeroChip(
+                      label: a.departureTime! +
                           (a.arrivalTime != null ? ' → ${a.arrivalTime}' : ''),
-                      style: tt.bodySmall?.copyWith(color: Colors.white70),
                     ),
-                  ],
                 ],
               ),
-              if (a.transportMode != null) ...[
-                const SizedBox(height: DonySpacing.xs),
-                Row(
-                  children: [
-                    Icon(
-                      a.transportMode!.icon,
-                      size: 12,
-                      color: Colors.white54,
-                    ),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      a.transportMode!.label,
-                      style: tt.bodySmall?.copyWith(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ],
             ],
           ),
         ).animate().fadeIn(duration: 250.ms),
@@ -362,66 +333,53 @@ class _AnnouncementDetailContent extends StatelessWidget {
             ],
           ),
         ).animate().fadeIn(delay: 60.ms),
-        const SizedBox(height: DonySpacing.md),
+        const SizedBox(height: DonySpacing.lg),
 
-        // ── Lieux de remise ─────────────────────────────────────────────────
+        // ── Lieux de remise (orange) ─────────────────────────────────────────
         if (a.pickupAddress != null || a.deliveryAddress != null) ...[
-          Text(
-            'LIEUX DE REMISE',
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          const _BSectionTitle(label: 'Lieux de remise', color: Color(0xFFEA580C)),
           const SizedBox(height: DonySpacing.xs),
           if (a.pickupAddress != null)
-            _LieuRow(
+            _BSectionRow(
               iconAsset: 'upload',
-              label: 'REMISE COLIS',
-              address: a.pickupAddress!.label,
+              label: 'Remise colis',
+              value: a.pickupAddress!.label,
+              iconBg: const Color(0xFFFFF7ED),
+              iconColor: const Color(0xFFF97316),
             ).animate().fadeIn(delay: 80.ms),
           if (a.deliveryAddress != null) ...[
             const SizedBox(height: DonySpacing.xs),
-            _LieuRow(
+            _BSectionRow(
               iconAsset: 'download',
-              label: 'RÉCUPÉRATION',
-              address: a.deliveryAddress!.label,
+              label: 'Récupération',
+              value: a.deliveryAddress!.label,
+              iconBg: const Color(0xFFE0F2FE),
+              iconColor: const Color(0xFF0284C7),
             ).animate().fadeIn(delay: 100.ms),
           ],
           const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── Fenêtre de remise ───────────────────────────────────────────────
+        // ── Fenêtre de remise (sky) — dates complètes ────────────────────────
         if (a.handoverWindowStart != null && a.handoverWindowEnd != null) ...[
-          Text(
-            'FENÊTRE DE REMISE',
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          const _BSectionTitle(label: 'Fenêtre de remise', color: Color(0xFF0284C7)),
           const SizedBox(height: DonySpacing.xs),
-          _LieuRow(
+          _BSectionRow(
             iconAsset: 'clock',
-            label: 'CRÉNEAU',
-            address: _handoverRangeLabel(
-                a.handoverWindowStart!.toLocal(), a.handoverWindowEnd!.toLocal()),
+            label: 'Créneau',
+            value: _handoverRangeLabel(
+              a.handoverWindowStart!.toLocal(),
+              a.handoverWindowEnd!.toLocal(),
+            ),
+            iconBg: const Color(0xFFFEF9C3),
+            iconColor: const Color(0xFFB45309),
           ).animate().fadeIn(delay: 110.ms),
           const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── Paiements ────────────────────────────────────────────────────────
+        // ── Paiements (violet) ───────────────────────────────────────────────
         if (a.acceptedPaymentMethods.isNotEmpty) ...[
-          Text(
-            'PAIEMENTS ACCEPTÉS',
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          const _BSectionTitle(label: 'Paiements acceptés', color: Color(0xFF7C3AED)),
           const SizedBox(height: DonySpacing.xs),
           Wrap(
             spacing: DonySpacing.xs,
@@ -434,106 +392,47 @@ class _AnnouncementDetailContent extends StatelessWidget {
                 'ORANGE_MONEY' => '🟠 Orange Money',
                 _ => m.apiValue,
               };
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                ),
-                child: Text(
-                  label,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              return _BChip(
+                label: label,
+                bg: const Color(0xFFEDE9FE),
+                fg: const Color(0xFF6D28D9),
               );
             }).toList(),
           ),
           const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── Conditions ──────────────────────────────────────────────────────
-        if ((a.acceptedContentTypes?.isNotEmpty ?? false) ||
-            (a.refusedTypes?.isNotEmpty ?? false)) ...[
-          if (a.acceptedContentTypes?.isNotEmpty ?? false) ...[
-            Text(
-              'CE QUE J\'ACCEPTE',
-              style: tt.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Wrap(
-              spacing: DonySpacing.xs,
-              runSpacing: DonySpacing.xs,
-              children: (a.acceptedContentTypes ?? []).map((t) => Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
-                decoration: BoxDecoration(
-                  color: cs.successLight,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                  border: Border.all(color: cs.success.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  t,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.success,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              )).toList(),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-          ],
-          if (a.refusedTypes?.isNotEmpty ?? false) ...[
-            Text(
-              'CE QUE JE REFUSE',
-              style: tt.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Wrap(
-              spacing: DonySpacing.xs,
-              runSpacing: DonySpacing.xs,
-              children: (a.refusedTypes ?? []).map((t) => Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
-                decoration: BoxDecoration(
-                  color: cs.errorContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                  border: Border.all(color: cs.error.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  t,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              )).toList(),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-          ],
+        // ── Ce que j'accepte (vert) ──────────────────────────────────────────
+        if (a.acceptedContentTypes?.isNotEmpty ?? false) ...[
+          _BSectionTitle(label: 'Ce que j\'accepte', color: cs.success),
           const SizedBox(height: DonySpacing.xs),
+          Wrap(
+            spacing: DonySpacing.xs,
+            runSpacing: DonySpacing.xs,
+            children: (a.acceptedContentTypes ?? [])
+                .map((t) => _BChip(label: t, bg: cs.successLight, fg: cs.success))
+                .toList(),
+          ),
+          const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── Note expéditeurs ────────────────────────────────────────────────
-        if (a.description != null && a.description!.isNotEmpty) ...[
-          Text(
-            'NOTE AUX EXPÉDITEURS',
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.8,
-              fontWeight: FontWeight.w600,
-            ),
+        // ── Ce que je refuse (rouge) ─────────────────────────────────────────
+        if (a.refusedTypes?.isNotEmpty ?? false) ...[
+          _BSectionTitle(label: 'Ce que je refuse', color: cs.error),
+          const SizedBox(height: DonySpacing.xs),
+          Wrap(
+            spacing: DonySpacing.xs,
+            runSpacing: DonySpacing.xs,
+            children: (a.refusedTypes ?? [])
+                .map((t) => _BChip(label: t, bg: cs.errorContainer, fg: cs.error))
+                .toList(),
           ),
+          const SizedBox(height: DonySpacing.md),
+        ],
+
+        // ── Note expéditeurs ─────────────────────────────────────────────────
+        if (a.description != null && a.description!.isNotEmpty) ...[
+          const _BSectionTitle(label: 'Note aux expéditeurs', color: Color(0xFFB45309)),
           const SizedBox(height: DonySpacing.xs),
           Container(
             padding: const EdgeInsets.all(DonySpacing.base),
@@ -541,7 +440,8 @@ class _AnnouncementDetailContent extends StatelessWidget {
               color: const Color(0xFFFFFBEA),
               borderRadius: BorderRadius.circular(DonyRadius.card),
               border: Border.all(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+              ),
             ),
             child: Text(
               a.description!,
@@ -701,74 +601,215 @@ class _InfoPill extends StatelessWidget {
   }
 }
 
-/// Formate la plage de remise. Même jour → « date heure → heure » ;
-/// jours différents → « date heure → date heure ».
+/// Formate la plage de remise — toujours dates complètes début et fin.
 String _handoverRangeLabel(DateTime start, DateTime end) {
-  final sameDay = start.year == end.year &&
-      start.month == end.month &&
-      start.day == end.day;
-  final startStr = DateFormat('EEE d MMM, HH:mm', 'fr').format(start);
-  final endStr = sameDay
-      ? DateFormat('HH:mm', 'fr').format(end)
-      : DateFormat('EEE d MMM, HH:mm', 'fr').format(end);
-  return '$startStr → $endStr';
+  final fmt = DateFormat('EEE d MMM, HH:mm', 'fr');
+  return '${fmt.format(start)} → ${fmt.format(end)}';
 }
 
-class _LieuRow extends StatelessWidget {
+class _IconActionBtn extends StatelessWidget {
   final String iconAsset;
   final String label;
-  final String address;
-  const _LieuRow({
+  final Color bgColor;
+  final Color iconColor;
+  final Color labelColor;
+  final VoidCallback? onPressed;
+  final bool showBadge;
+
+  const _IconActionBtn({
     required this.iconAsset,
     required this.label,
-    required this.address,
+    required this.bgColor,
+    required this.iconColor,
+    required this.labelColor,
+    this.onPressed,
+    this.showBadge = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.sm),
-            ),
-            child: DonyIcon(iconAsset, size: 16, color: cs.primary),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(DonyRadius.full),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  label,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    shape: BoxShape.circle,
                   ),
+                  child: Center(child: DonyIcon(iconAsset, size: 22, color: iconColor)),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  address,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                ),
+                if (showBadge)
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: labelColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+class _HeroChip extends StatelessWidget {
+  final String label;
+  const _HeroChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _BSectionTitle extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _BSectionTitle({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label.toUpperCase(),
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w800,
+        color: color,
+        letterSpacing: 0.7,
+      ),
+    );
+  }
+}
+
+class _BSectionRow extends StatelessWidget {
+  final String iconAsset;
+  final String label;
+  final String value;
+  final Color iconBg;
+  final Color iconColor;
+
+  const _BSectionRow({
+    required this.iconAsset,
+    required this.label,
+    required this.value,
+    required this.iconBg,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: iconBg,
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+          ),
+          child: Center(child: DonyIcon(iconAsset, size: 16, color: iconColor)),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: tt.bodySmall?.copyWith(color: cs.onSurface),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BChip extends StatelessWidget {
+  final String label;
+  final Color bg;
+  final Color fg;
+
+  const _BChip({required this.label, required this.bg, required this.fg});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: fg,
+        ),
+      ),
+    );
+  }
+}
+
