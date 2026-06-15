@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Card de profil utilisateur (voyageur ou expéditeur).
@@ -73,7 +74,7 @@ class DonyUserCard extends StatelessWidget {
                     ),
                     if (rating != null) ...[
                       const SizedBox(width: DonySpacing.xs),
-                      Icon(Icons.star_rounded, size: 13, color: cs.warning),
+                      DonyIcon('star', size: 13, color: cs.warning),
                       const SizedBox(width: DonySpacing.xxs),
                       Text(
                         '${rating!.toStringAsFixed(1)}/5',
@@ -100,8 +101,7 @@ class DonyUserCard extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             trailing!,
           ] else if (onTap != null)
-            Icon(
-              Icons.chevron_right_rounded,
+            DonyIcon('chevron-right',
               size: 20,
               color: cs.onSurfaceVariant,
             ),

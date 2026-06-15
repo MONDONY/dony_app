@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Helper pour afficher un bottom sheet standardisé dony.
@@ -143,7 +144,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded, size: 20),
+                    icon: const DonyIcon('x', size: 20),
                     style: IconButton.styleFrom(
                       foregroundColor: cs.onSurfaceVariant,
                     ),

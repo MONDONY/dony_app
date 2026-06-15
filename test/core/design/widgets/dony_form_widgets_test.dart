@@ -3,6 +3,7 @@ import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/core/design/widgets/dony_badge.dart';
 import 'package:dony/core/design/widgets/dony_card.dart';
 import 'package:dony/core/design/widgets/dony_text_field.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -246,12 +247,12 @@ void main() {
 
     testWidgets('verified shows check icon', (tester) async {
       await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test User', verified: true)));
-      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsWidgets);
     });
 
     testWidgets('not verified hides check icon', (tester) async {
       await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test User')));
-      expect(find.byIcon(Icons.verified_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsNothing);
     });
 
     testWidgets('same name produces same initials text', (tester) async {

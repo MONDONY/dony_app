@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -114,8 +115,7 @@ class DonyListTile extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 trailing ??
                     (onTap != null
-                        ? Icon(
-                            Icons.chevron_right_rounded,
+                        ? DonyIcon('chevron-right',
                             size: 18,
                             color: cs.onSurfaceVariant,
                           )

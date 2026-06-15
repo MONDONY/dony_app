@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 class AddressDefaultToggle extends StatelessWidget {
@@ -33,8 +34,7 @@ class AddressDefaultToggle extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.star_rounded,
+            DonyIcon('star',
               color: value ? activeColor : cs.onSurfaceVariant,
               size: 20,
             ),

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -152,7 +153,7 @@ class DonyFeedbackButton extends StatelessWidget {
     return Tooltip(
       message: 'Signaler un problème',
       child: IconButton(
-        icon: const Icon(Icons.bug_report_outlined),
+        icon: const DonyIcon('bug'),
         onPressed: () => _openSheet(context),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 
 class DonyKeypad extends StatelessWidget {
   const DonyKeypad({
@@ -32,7 +33,7 @@ class DonyKeypad extends StatelessWidget {
               onTap: onBiometric,
               enabled: enabled && onBiometric != null,
               child: onBiometric != null
-                  ? const Icon(Icons.fingerprint, size: 28)
+                  ? const DonyIcon('fingerprint', size: 28)
                   : const SizedBox.shrink(),
             ),
             const SizedBox(width: 12),
@@ -48,7 +49,7 @@ class DonyKeypad extends StatelessWidget {
             _KeypadKey(
               onTap: onDelete,
               enabled: enabled,
-              child: const Icon(Icons.backspace_outlined, size: 24),
+              child: const DonyIcon('delete', size: 24),
             ),
           ],
         ),

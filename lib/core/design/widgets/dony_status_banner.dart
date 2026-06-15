@@ -155,7 +155,7 @@ class DonyStatusBanner extends StatelessWidget {
             const SizedBox(width: DonySpacing.xs),
             GestureDetector(
               onTap: onDismiss,
-              child: Icon(Icons.close_rounded, size: 16, color: style.iconColor),
+              child: DonyIcon('x', size: 16, color: style.iconColor),
             ),
           ],
         ],

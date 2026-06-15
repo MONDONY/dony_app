@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -74,8 +75,8 @@ void main() {
         message: 'Dismissable',
         onDismiss: () => dismissed = true,
       )));
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
       expect(dismissed, isTrue);
     });
 
@@ -84,7 +85,7 @@ void main() {
         type: DonyStatusBannerType.info,
         message: 'Non dismissable',
       )));
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsNothing);
     });
 
     testWidgets('action widget s\'affiche sous le message', (tester) async {

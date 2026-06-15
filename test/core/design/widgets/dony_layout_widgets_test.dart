@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -436,7 +437,7 @@ void main() {
       ));
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
     });
 
     testWidgets('close button dismisses the sheet', (tester) async {
@@ -446,7 +447,7 @@ void main() {
       ));
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
       await tester.pumpAndSettle();
       expect(find.text('Closeable'), findsNothing);
     });
@@ -459,7 +460,7 @@ void main() {
       ));
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsNothing);
       expect(find.text('No title sheet'), findsOneWidget);
     });
 

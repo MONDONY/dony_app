@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -98,7 +99,7 @@ void main() {
         onTap: () {},
       )));
       await tester.pumpAndSettle();
-      final goldIcons = tester.widgetList<Icon>(find.byIcon(Icons.verified_rounded)).where(
+      final goldIcons = tester.widgetList<DonyIcon>(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check')).where(
         (icon) => icon.color == const Color(0xFFF0B829),
       );
       expect(goldIcons, isNotEmpty);
@@ -113,7 +114,7 @@ void main() {
         onTap: () {},
       )));
       await tester.pumpAndSettle();
-      final blueIcons = tester.widgetList<Icon>(find.byIcon(Icons.verified_rounded)).where(
+      final blueIcons = tester.widgetList<DonyIcon>(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check')).where(
         (icon) => icon.color != const Color(0xFFF0B829),
       );
       expect(blueIcons, isNotEmpty);

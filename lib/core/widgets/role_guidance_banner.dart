@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -170,7 +171,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
                   key: const Key('role-guidance-banner-dismiss'),
                   padding: EdgeInsets.zero,
                   iconSize: 18,
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const DonyIcon('x'),
                   color: DonyColors.primary,
                   onPressed: _onDismiss,
                   tooltip: 'Masquer ce conseil',
@@ -224,7 +225,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                  const DonyIcon('plus', size: 16, color: Colors.white),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     ctaLabel,
