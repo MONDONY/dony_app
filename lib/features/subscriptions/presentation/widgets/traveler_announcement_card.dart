@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -52,7 +54,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
                       height: 1.5,
                       color: cs.primary.withValues(alpha: 0.3),
                     ),
-                    Icon(Icons.flight_takeoff_rounded, size: 16, color: cs.primary),
+                    const DonyEmoji.planeTakeoff(size: 16),
                     Container(
                       width: 28,
                       height: 1.5,
@@ -96,8 +98,8 @@ class TravelerAnnouncementCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
+                        DonyIcon(
+                          'calendar',
                           size: 13,
                           color: cs.onSurfaceVariant,
                         ),

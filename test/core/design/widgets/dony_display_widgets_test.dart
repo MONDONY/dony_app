@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -57,7 +58,7 @@ void main() {
         price: '5 €/kg',
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.calendar_today_outlined), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'calendar'), findsOneWidget);
     });
 
     testWidgets('shows flight icon', (tester) async {
@@ -68,7 +69,9 @@ void main() {
         price: '5 €/kg',
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.flight_takeoff_rounded), findsOneWidget);
+      // DonyTripCard rend désormais l'emoji décollage (DonyEmoji) au centre du
+      // tracé de trajet, à la place de Icons.flight_takeoff_rounded.
+      expect(find.text('🛫'), findsOneWidget);
     });
 
     testWidgets('shows rating row when rating is provided', (tester) async {
@@ -81,7 +84,7 @@ void main() {
       )));
       await tester.pump();
       expect(find.text('4.7/5'), findsOneWidget);
-      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsOneWidget);
     });
 
     testWidgets('hides rating row when rating is null', (tester) async {
@@ -92,7 +95,7 @@ void main() {
         price: '9 €/kg',
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.star_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsNothing);
     });
 
     testWidgets('shows availableKg when provided', (tester) async {
@@ -276,7 +279,7 @@ void main() {
         onTap: () {},
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsOneWidget);
     });
 
     testWidgets('shows trailing widget when provided', (tester) async {
@@ -288,14 +291,14 @@ void main() {
       await tester.pump();
       expect(find.byIcon(Icons.toggle_on), findsOneWidget);
       // No chevron when trailing is provided
-      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
     });
 
     testWidgets('shows SizedBox.shrink when no onTap and no trailing', (tester) async {
       await tester.pumpWidget(_wrap(const DonyListTile(label: 'Static item')));
       await tester.pump();
       expect(find.byType(SizedBox), findsWidgets);
-      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
     });
 
     testWidgets('shows divider by default', (tester) async {
@@ -506,13 +509,13 @@ void main() {
       )));
       await tester.pump();
       expect(find.text('4.8/5'), findsOneWidget);
-      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsOneWidget);
     });
 
     testWidgets('hides rating row when rating is null', (tester) async {
       await tester.pumpWidget(_wrap(const DonyUserCard(name: 'Bamba')));
       await tester.pump();
-      expect(find.byIcon(Icons.star_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsNothing);
     });
 
     testWidgets('shows verified badge on avatar when verified=true', (tester) async {
@@ -521,13 +524,13 @@ void main() {
         verified: true,
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsWidgets);
     });
 
     testWidgets('no check icon when verified=false', (tester) async {
       await tester.pumpWidget(_wrap(const DonyUserCard(name: 'Unverified')));
       await tester.pump();
-      expect(find.byIcon(Icons.verified_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsNothing);
     });
 
     testWidgets('onTap callback fires', (tester) async {
@@ -547,7 +550,7 @@ void main() {
         onTap: () {},
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsOneWidget);
     });
 
     testWidgets('shows trailing widget when provided', (tester) async {
@@ -558,13 +561,13 @@ void main() {
       )));
       await tester.pump();
       expect(find.byIcon(Icons.more_vert), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
     });
 
     testWidgets('hides chevron when no onTap and no trailing', (tester) async {
       await tester.pumpWidget(_wrap(const DonyUserCard(name: 'Static')));
       await tester.pump();
-      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
     });
 
     testWidgets('compact=true uses compact padding and titleMedium style', (tester) async {
@@ -638,7 +641,7 @@ void main() {
       expect(find.text('All Params'), findsOneWidget);
       expect(find.text('Expéditeur • 5 envois'), findsOneWidget);
       expect(find.text('4.5/5'), findsOneWidget);
-      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsWidgets);
       expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
       await tester.tap(find.byType(DonyUserCard));
       expect(tapped, isTrue);
@@ -701,7 +704,7 @@ void main() {
         onAction: () {},
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'arrow-right'), findsOneWidget);
     });
 
     testWidgets('hides action button when actionLabel is null', (tester) async {

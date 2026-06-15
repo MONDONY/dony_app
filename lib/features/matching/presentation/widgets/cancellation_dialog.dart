@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -117,8 +118,8 @@ class _CancellationDialogState extends State<CancellationDialog> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
+                    DonyIcon(
+                      'triangle-alert',
                       color: cs.error,
                       size: 18,
                     ),

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
@@ -68,7 +69,7 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
       padding: EdgeInsets.zero,
       appBarActions: [
         IconButton(
-          icon: const Icon(Icons.add_rounded),
+          icon: DonyIcon('plus', color: activeColor),
           tooltip: isLivraison
               ? 'Ajouter une adresse de livraison'
               : 'Ajouter une adresse de remise',
@@ -120,8 +121,9 @@ class _RemiseTab extends StatelessWidget {
         if (state.status == PickupAddressStatus.error &&
             state.addresses.isEmpty) {
           return DonyEmptyState(
+            mascotte: DonyMascotteType.assis,
             type: DonyEmptyStateType.error,
-            icon: Icons.error_outline_rounded,
+            iconAsset: 'circle-alert',
             title: 'Erreur de chargement',
             description: state.error ?? 'Une erreur est survenue.',
             actionLabel: 'Réessayer',
@@ -188,8 +190,9 @@ class _LivraisonTab extends StatelessWidget {
         if (state.status == DeliveryAddressStatus.error &&
             state.addresses.isEmpty) {
           return DonyEmptyState(
+            mascotte: DonyMascotteType.assis,
             type: DonyEmptyStateType.error,
-            icon: Icons.error_outline_rounded,
+            iconAsset: 'circle-alert',
             title: 'Erreur de chargement',
             description: state.error ?? 'Une erreur est survenue.',
             actionLabel: 'Réessayer',
@@ -283,7 +286,7 @@ class _PickupAddressCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
                 child:
-                    Icon(Icons.download_rounded, color: cs.primary, size: 20),
+                    DonyIcon('download', color: cs.primary, size: 20),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -385,7 +388,7 @@ class _DeliveryAddressCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
                 child:
-                    Icon(Icons.upload_rounded, color: cs.secondary, size: 20),
+                    DonyIcon('upload', color: cs.secondary, size: 20),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -459,7 +462,8 @@ class _PickupKebabMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return PopupMenuButton<_AddressAction>(
-      icon: Icon(Icons.more_vert_rounded, color: cs.onSurfaceVariant, size: 20),
+      icon: DonyIcon('ellipsis-vertical',
+          color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md)),
       onSelected: (action) async {
@@ -482,7 +486,7 @@ class _PickupKebabMenu extends StatelessWidget {
               title: 'Supprimer l\'adresse',
               message:
                   'Es-tu sûr de vouloir supprimer "${address.label}" ? Cette action est irréversible.',
-              icon: Icons.delete_outline_rounded,
+              iconAsset: 'trash-2',
               confirmLabel: 'Supprimer',
               variant: DonyDialogVariant.destructive,
             );
@@ -498,7 +502,7 @@ class _PickupKebabMenu extends StatelessWidget {
           const PopupMenuItem(
             value: _AddressAction.setDefault,
             child: Row(children: [
-              Icon(Icons.check_circle_outline_rounded, size: 18),
+              DonyIcon('circle-check', size: 18),
               SizedBox(width: DonySpacing.sm),
               Text('Définir par défaut'),
             ]),
@@ -506,7 +510,7 @@ class _PickupKebabMenu extends StatelessWidget {
         const PopupMenuItem(
           value: _AddressAction.edit,
           child: Row(children: [
-            Icon(Icons.edit_outlined, size: 18),
+            DonyIcon('square-pen', size: 18),
             SizedBox(width: DonySpacing.sm),
             Text('Modifier'),
           ]),
@@ -514,7 +518,7 @@ class _PickupKebabMenu extends StatelessWidget {
         PopupMenuItem(
           value: _AddressAction.delete,
           child: Row(children: [
-            Icon(Icons.delete_outline_rounded,
+            DonyIcon('trash-2',
                 size: 18, color: Theme.of(context).colorScheme.error),
             const SizedBox(width: DonySpacing.sm),
             Text('Supprimer',
@@ -536,7 +540,8 @@ class _DeliveryKebabMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return PopupMenuButton<_AddressAction>(
-      icon: Icon(Icons.more_vert_rounded, color: cs.onSurfaceVariant, size: 20),
+      icon: DonyIcon('ellipsis-vertical',
+          color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md)),
       onSelected: (action) async {
@@ -559,7 +564,7 @@ class _DeliveryKebabMenu extends StatelessWidget {
               title: 'Supprimer l\'adresse',
               message:
                   'Es-tu sûr de vouloir supprimer "${address.label}" ? Cette action est irréversible.',
-              icon: Icons.delete_outline_rounded,
+              iconAsset: 'trash-2',
               confirmLabel: 'Supprimer',
               variant: DonyDialogVariant.destructive,
             );
@@ -575,7 +580,7 @@ class _DeliveryKebabMenu extends StatelessWidget {
           const PopupMenuItem(
             value: _AddressAction.setDefault,
             child: Row(children: [
-              Icon(Icons.check_circle_outline_rounded, size: 18),
+              DonyIcon('circle-check', size: 18),
               SizedBox(width: DonySpacing.sm),
               Text('Définir par défaut'),
             ]),
@@ -583,7 +588,7 @@ class _DeliveryKebabMenu extends StatelessWidget {
         const PopupMenuItem(
           value: _AddressAction.edit,
           child: Row(children: [
-            Icon(Icons.edit_outlined, size: 18),
+            DonyIcon('square-pen', size: 18),
             SizedBox(width: DonySpacing.sm),
             Text('Modifier'),
           ]),
@@ -591,7 +596,7 @@ class _DeliveryKebabMenu extends StatelessWidget {
         PopupMenuItem(
           value: _AddressAction.delete,
           child: Row(children: [
-            Icon(Icons.delete_outline_rounded,
+            DonyIcon('trash-2',
                 size: 18, color: Theme.of(context).colorScheme.error),
             const SizedBox(width: DonySpacing.sm),
             Text('Supprimer',

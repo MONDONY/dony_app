@@ -13,6 +13,7 @@ import 'package:dony/features/payments/data/repositories/payment_repository.dart
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -448,14 +449,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       DonyFeedbackButton(repaintBoundaryKey: _screenBoundaryKey),
                       if (_bid.trackingToken != null)
                         IconButton(
-                          icon: Icon(Icons.share_rounded, color: cs.onSurface),
+                          icon: DonyIcon('share-2', color: cs.onSurface),
                           tooltip: 'Partager le suivi',
                           onPressed: () => shareTrackingLink(_bid),
                         ),
                       if (isSender)
                         IconButton(
-                          icon: Icon(
-                            Icons.more_vert_rounded,
+                          icon: DonyIcon(
+                            'ellipsis-vertical',
                             color: cs.onSurface,
                           ),
                           tooltip: 'Options',
@@ -464,7 +465,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         ),
                       if (!isSender)
                         IconButton(
-                          icon: Icon(Icons.more_vert_rounded, color: cs.onSurface),
+                          icon: DonyIcon('ellipsis-vertical', color: cs.onSurface),
                           tooltip: 'Options',
                           onPressed: () => showTravelerOptionsSheet(context, _bid),
                         ),

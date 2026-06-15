@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -45,12 +46,12 @@ class RatingListItem extends StatelessWidget {
                   children: [
                     ...List.generate(
                       5,
-                      (i) => Icon(
-                        i < item.stars
-                            ? Icons.star_rounded
-                            : Icons.star_outline_rounded,
+                      (i) => DonyIcon(
+                        'star',
                         size: 16,
-                        color: DonyColors.starGold,
+                        color: i < item.stars
+                            ? DonyColors.starGold
+                            : cs.onSurfaceVariant.withValues(alpha: 0.35),
                       ),
                     ),
                     const Spacer(),

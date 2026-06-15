@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -31,13 +32,13 @@ void main() {
 
   testWidgets('icône 🐞 visible avec tooltip', (tester) async {
     await tester.pumpWidget(subject());
-    expect(find.byIcon(Icons.bug_report_outlined), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
     expect(find.byTooltip('Signaler un problème'), findsOneWidget);
   });
 
   testWidgets('tap ouvre le sheet avec champ texte et bouton désactivé', (tester) async {
     await tester.pumpWidget(subject());
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     expect(find.text('Un problème sur cet écran ?'), findsOneWidget);
@@ -51,7 +52,7 @@ void main() {
   testWidgets('saisie active le bouton et l\'envoi appelle onSubmit', (tester) async {
     String? submitted;
     await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'Le code retrait ne s\'affiche pas');
@@ -69,7 +70,7 @@ void main() {
     await tester.pumpWidget(
       subject(onSubmit: (_) async => throw Exception('network')),
     );
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'bug');
     await tester.pumpAndSettle();
@@ -107,7 +108,7 @@ void main() {
     // pas de GoRouter ancêtre. resolveRoute() retourne 'unknown' silencieusement.
     String? submitted;
     await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'test sans GoRouter');
@@ -131,7 +132,7 @@ void main() {
     String? submitted;
     // subject() ne passe pas de repaintBoundaryKey → null par défaut.
     await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'bug sans capture');
@@ -155,7 +156,7 @@ void main() {
     DonyFeedbackButton.registerAnalyticsResolver(() => _FakeAnalytics());
     DonyFeedbackButton.resetAnalyticsResolver();
     await tester.pumpWidget(subject(onSubmit: (_) async {}));
-    expect(find.byIcon(Icons.bug_report_outlined), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
   });
 
   // ── _captureScreen avec RepaintBoundary réel ───────────────────────────────
@@ -188,7 +189,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'test avec repaint boundary');
@@ -219,7 +220,7 @@ void main() {
     // puis Sentry.captureMessage qui ne se résout jamais en test headless.
     // On utilise pump() à durée fixe pour avancer sans attendre la résolution.
     await tester.pumpWidget(subject()); // pas d'onSubmitOverride
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'test sentry path');
@@ -232,7 +233,7 @@ void main() {
     }
     // Le widget est en état "loading" (sending=true) car Sentry est en attente.
     // On vérifie juste que l'arbre est stable et le sheet toujours présent.
-    expect(find.byIcon(Icons.bug_report_outlined), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
   });
 
   testWidgets(
@@ -259,7 +260,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'test boundary sentry path');
@@ -270,7 +271,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     }
     // Sheet toujours présent (Sentry en attente indéfinie)
-    expect(find.byIcon(Icons.bug_report_outlined), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
   });
 
   // Lignes documentées comme inatteignables en test :
@@ -300,7 +301,7 @@ void main() {
 
     String? submitted;
     await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byIcon(Icons.bug_report_outlined));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'test analytics');

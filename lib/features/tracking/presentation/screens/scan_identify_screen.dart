@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -6,10 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-const _etapeLabels = {
-  'DEPART': ('Départ', Icons.flight_takeoff_rounded),
-  'TRANSIT': ('Transit', Icons.sync_alt_rounded),
-  'ARRIVEE': ('Arrivée', Icons.flight_land_rounded),
+const _etapeLabels = <String, (String, String?, String?)>{
+  'DEPART': ('Départ', null, 'plane-takeoff'),
+  'TRANSIT': ('Transit', 'arrow-left-right', null),
+  'ARRIVEE': ('Arrivée', null, 'plane-landing'),
 };
 
 class ScanIdentifyScreen extends StatefulWidget {
@@ -143,7 +145,11 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: DonySpacing.base),
                   child: Chip(
-                    avatar: Icon(etapeLabel.$2, size: 14, color: cs.primary),
+                    avatar: switch (etapeLabel.$3) {
+                      'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 14),
+                      'plane-landing' => const DonyEmoji.planeLanding(size: 14),
+                      _ => DonyIcon(etapeLabel.$2!, size: 14, color: cs.primary),
+                    },
                     label: Text(etapeLabel.$1),
                     labelStyle: tt.labelSmall?.copyWith(
                       color: cs.primary,
@@ -183,7 +189,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                     ),
                     child: Column(
                       children: [
-                        Icon(Icons.qr_code_scanner_rounded,
+                        DonyIcon('scan-line',
                             size: 36, color: cs.onPrimary),
                         const SizedBox(height: DonySpacing.sm),
                         Text(
@@ -240,8 +246,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                       letterSpacing: 1.5,
                       color: cs.onSurfaceVariant,
                     ),
-                    prefixIcon:
-                        Icon(Icons.local_shipping_outlined, color: cs.primary),
+                    prefixIcon: const DonyEmoji.parcel(size: 24),
                     filled: true,
                     fillColor: cs.surface,
                     border: OutlineInputBorder(
@@ -350,7 +355,11 @@ class _EtapePickerSheet extends StatelessWidget {
             Material(
               type: MaterialType.transparency,
               child: ListTile(
-                leading: Icon(entry.value.$2, color: cs.primary),
+                leading: switch (entry.value.$3) {
+                  'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 24),
+                  'plane-landing' => const DonyEmoji.planeLanding(size: 24),
+                  _ => DonyIcon(entry.value.$2!, color: cs.primary),
+                },
                 title: Text(
                   entry.value.$1,
                   style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),

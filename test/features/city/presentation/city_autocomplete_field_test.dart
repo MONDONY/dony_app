@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -59,7 +60,7 @@ void main() {
     await tester.pumpWidget(buildWidget(initialValue: 'Paris'));
     await tester.pump();
     expect(find.text('Paris'), findsOneWidget);
-    expect(find.byIcon(Icons.close), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
   });
 
   testWidgets(
@@ -213,7 +214,7 @@ void main() {
     await tester.pumpWidget(buildWidget());
     await tester.enterText(find.byType(TextField), 'Lyon');
     await tester.pump();
-    expect(find.byIcon(Icons.close), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
   });
 
   testWidgets(
@@ -226,14 +227,14 @@ void main() {
     // Effacer les appels précédents (onChanged a déjà dispatché QueryChanged)
     clearInteractions(mockBloc);
 
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
     await tester.pump();
 
     final captured =
         verify(() => mockBloc.add(captureAny())).captured;
     expect(captured.any((e) => e is CitySearchCleared), isTrue);
     // Le champ doit être vide (pas d'icône close)
-    expect(find.byIcon(Icons.close), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsNothing);
   });
 
   // ── Focus ─────────────────────────────────────────────────────────────────

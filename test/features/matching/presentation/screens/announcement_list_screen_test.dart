@@ -15,6 +15,7 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -282,7 +283,7 @@ void main() {
 
       await _pump(tester, bloc);
 
-      expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'wifi-off'), findsOneWidget);
     });
 
     testWidgets(

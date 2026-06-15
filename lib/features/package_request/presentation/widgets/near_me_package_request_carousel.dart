@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_carousel_card.dart';
 import 'package:flutter/material.dart';
@@ -181,7 +182,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.location_searching_rounded,
+            DonyIcon('locate-fixed',
                 color: cs.onSurfaceVariant, size: 32),
             const SizedBox(height: DonySpacing.sm),
             Text(

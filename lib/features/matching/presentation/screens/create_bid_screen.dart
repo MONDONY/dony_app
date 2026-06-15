@@ -8,6 +8,7 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -347,7 +348,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                       const SizedBox(height: DonySpacing.xs),
                                       Row(
                                         children: [
-                                          const Icon(Icons.check_circle_rounded,
+                                          const DonyIcon('circle-check',
                                               size: 16, color: Color(0xFF16A34A)),
                                           const SizedBox(width: 6),
                                           Expanded(
@@ -366,7 +367,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                       const SizedBox(height: DonySpacing.xs),
                                       Row(
                                         children: [
-                                          const Icon(Icons.error_outline_rounded,
+                                          const DonyIcon('circle-alert',
                                               size: 16, color: Color(0xFFE53935)),
                                           const SizedBox(width: 6),
                                           Expanded(
@@ -489,7 +490,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             color: cs.primaryContainer,
             borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
           ),
-          child: Icon(Icons.close_rounded, size: 20, color: cs.primary),
+          child: DonyIcon('x', size: 20, color: cs.primary),
         ),
       ),
       title: Column(
@@ -651,7 +652,7 @@ class _CategoryChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selected) ...[
-              Icon(Icons.check_rounded,
+              DonyIcon('check',
                   size: 14, color: cs.surface),
               const SizedBox(width: DonySpacing.xxs),
             ],
@@ -698,8 +699,8 @@ class _DisclaimerCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.warning_amber_rounded,
+              DonyIcon(
+                'triangle-alert',
                 size: 20,
                 color: cs.secondary,
               ),
@@ -871,7 +872,7 @@ class _BottomBar extends StatelessWidget {
                 'Bloquer ${fmt.format(totalPrice)} & envoyer',
             onPressed: canSubmit && !isLoading ? onSubmit : null,
             isLoading: isLoading,
-            icon: Icons.lock_rounded,
+            iconAsset: 'lock',
           ),
         ],
       ),

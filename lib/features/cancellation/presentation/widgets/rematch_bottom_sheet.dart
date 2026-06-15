@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -38,8 +39,8 @@ class RematchBottomSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: DonySpacing.lg),
-          Icon(
-            Icons.search_off_rounded,
+          DonyIcon(
+            'search-x',
             size: 48,
             color: cs.onSurfaceVariant,
           ),

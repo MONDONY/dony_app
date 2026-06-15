@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -111,8 +112,10 @@ void main() {
         isNearMeActive: true,
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.near_me_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.near_me_outlined), findsNothing);
+      // La FAB near-me utilise désormais un seul DonyIcon('navigation') ;
+      // l'état actif/inactif est porté par la couleur, plus par une variante
+      // filled/outlined distincte. On vérifie donc juste sa présence.
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'navigation'), findsOneWidget);
     });
 
     testWidgets('FAB shows a spinner while locating', (tester) async {

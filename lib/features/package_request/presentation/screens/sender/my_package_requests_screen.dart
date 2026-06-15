@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -212,7 +214,7 @@ class _ListContentState extends State<_ListContent> {
               await PackageRequestCreateWizard.show(context);
             },
             backgroundColor: Theme.of(context).colorScheme.primary,
-            icon: const Icon(Icons.add_rounded, color: Colors.white),
+            icon: const DonyIcon('plus', size: 24, color: Colors.white),
             label: Text(
               'Nouvelle demande',
               style: Theme.of(context)
@@ -349,8 +351,7 @@ class _FilterEmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox_outlined,
-                size: 40, color: DonyColors.neutral300),
+            const DonyEmoji.parcel(size: 40),
             const SizedBox(height: DonySpacing.base),
             Text(
               label,
@@ -600,7 +601,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded,
+            const DonyIcon('circle-alert',
                 size: 48, color: DonyColors.danger500),
             const SizedBox(height: DonySpacing.base),
             Text(message,

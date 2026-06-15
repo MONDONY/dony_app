@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const DonyIcon('x'),
           onPressed: () => context.pop(),
         ),
         title: const Text('Compte rejeté'),
@@ -62,7 +63,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFFE53935)),
+                  const DonyIcon('circle-alert', size: 48, color: Color(0xFFE53935)),
                   const SizedBox(height: 16),
                   Text(
                     'Compte rejeté',

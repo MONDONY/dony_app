@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -232,7 +233,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.bookmark_rounded, size: 18, color: cs.primary),
+                  DonyIcon('bookmark', size: 18, color: cs.primary),
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text('Mes modèles',
@@ -268,7 +269,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       return ActionChip(
                         avatar: t.emoji != null
                             ? Text(t.emoji!)
-                            : Icon(Icons.bookmark_border_rounded,
+                            : DonyIcon('bookmark',
                                 size: 16, color: cs.primary),
                         label: Text('${t.label} · ${_formatPrice(t.pricePerKg)}€/kg'),
                         onPressed: () => _applyTemplate(t),
@@ -615,7 +616,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                 ),
-                child: Icon(Icons.close_rounded, size: 20, color: cs.primary),
+                child: DonyIcon('x', size: 20, color: cs.primary),
               ),
             ),
             bottom: PreferredSize(
@@ -720,7 +721,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // (CaFieldCard) et rend ses suggestions HORS de tout ClipRRect.
                 // Ne pas entourer ces champs dans un _SectionCard (ClipRRect)
                 // qui masquerait la liste de suggestions — fix B1.
-                const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+                const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
                 const SizedBox(height: DonySpacing.sm),
                 Column(
                   children: [
@@ -728,8 +729,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       create: (_) => getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         label: 'Ville de départ',
-                        prefixIcon: Icon(
-                          Icons.flight_takeoff_rounded,
+                        prefixIcon: DonyIcon(
+                          'plane-takeoff',
                           color: cs.primary,
                           size: 20,
                         ),
@@ -759,8 +760,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       create: (_) => getIt<CitySearchBloc>(),
                       child: CityAutocompleteField(
                         label: 'Ville d\'arrivée',
-                        prefixIcon: const Icon(
-                          Icons.flight_land_rounded,
+                        prefixIcon: const DonyIcon(
+                          'plane-landing',
                           color: DonyColors.accent,
                           size: 20,
                         ),
@@ -818,7 +819,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: DonySpacing.base,
                               ),
-                              leading: Icon(Icons.schedule_rounded, size: 20,
+                              leading: DonyIcon('clock', size: 20,
                                   color: Theme.of(context).colorScheme.primary),
                               title: const Text('Début'),
                               trailing: Text(dt != null
@@ -834,7 +835,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: DonySpacing.base,
                               ),
-                              leading: Icon(Icons.schedule_rounded, size: 20,
+                              leading: DonyIcon('clock', size: 20,
                                   color: Theme.of(context).colorScheme.primary),
                               title: const Text('Fin'),
                               trailing: Text(dt != null
@@ -862,7 +863,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.error_outline_rounded,
+                                    DonyIcon('circle-alert',
                                         size: 16,
                                         color: Theme.of(context).colorScheme.error),
                                     const SizedBox(width: DonySpacing.xs),
@@ -892,7 +893,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── LIEUX DE REMISE ─────────────────────────────────────────
-                const _SectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
+                const _SectionLabel(label: 'LIEUX DE REMISE', iconAsset: 'arrow-left-right'),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Précisez l\'endroit exact de remise et récupération',
@@ -918,7 +919,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────
-                const _SectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
+                const _SectionLabel(label: 'CAPACITÉ DISPONIBLE', iconAsset: 'luggage'),
                 const SizedBox(height: DonySpacing.base),
                 ValueListenableBuilder<double>(
                   valueListenable: _availableKgNotifier,
@@ -1006,7 +1007,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── PRIX PAR KG ─────────────────────────────────────────────
-                const _SectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
+                const _SectionLabel(label: 'PRIX PAR KG', iconAsset: 'tag'),
                 const SizedBox(height: DonySpacing.md),
                 ValueListenableBuilder<int>(
                   valueListenable: _priceOptionNotifier,
@@ -1083,7 +1084,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // ── MODE DE TRANSPORT ───────────────────────────────────────
                 const _SectionLabel(
                   label: 'MODE DE TRANSPORT',
-                  icon: Icons.commute_rounded,
+                  iconAsset: 'route',
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 ValueListenableBuilder<TransportMode?>(
@@ -1108,7 +1109,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── CE QUE J'ACCEPTE ────────────────────────────────────────
-                const _SectionLabel(label: 'CE QUE J\'ACCEPTE', icon: Icons.check_circle_outline_rounded),
+                const _SectionLabel(label: 'CE QUE J\'ACCEPTE', iconAsset: 'circle-check'),
                 const SizedBox(height: DonySpacing.sm),
                 ListenableBuilder(
                   listenable: Listenable.merge([
@@ -1164,7 +1165,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (isSelected) ...[
-                                          const Icon(Icons.check_rounded,
+                                          const DonyIcon('check',
                                               size: 12,
                                               color: DonyColors.white),
                                           const SizedBox(width: DonySpacing.xs),
@@ -1234,7 +1235,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── CE QUE JE REFUSE ────────────────────────────────────────
-                const _SectionLabel(label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
+                const _SectionLabel(label: 'CE QUE JE REFUSE', iconAsset: 'ban'),
                 const SizedBox(height: DonySpacing.sm),
                 ValueListenableBuilder<Set<String>>(
                   valueListenable: _refusedTypesNotifier,
@@ -1287,7 +1288,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── NOTE AUX EXPÉDITEURS ────────────────────────────────────
-                const _SectionLabel(label: 'NOTE AUX EXPÉDITEURS', icon: Icons.edit_note_rounded),
+                const _SectionLabel(label: 'NOTE AUX EXPÉDITEURS', iconAsset: 'notebook-pen'),
                 const SizedBox(height: DonySpacing.sm),
                 ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _descriptionCtrl,
@@ -1342,7 +1343,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // ── MODES DE PAIEMENT ACCEPTÉS ───────────────────────────────
                 const _SectionLabel(
                   label: 'MODES DE PAIEMENT ACCEPTÉS',
-                  icon: Icons.payments_rounded,
+                  iconAsset: 'banknote',
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 // La carte de commission n'est plus requise à la création d'annonce.
@@ -1357,7 +1358,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         activeColor: cs.primary,
                         title: Row(
                           children: [
-                            const Icon(Icons.credit_card_rounded, size: 18),
+                            const DonyIcon('credit-card', size: 18),
                             const SizedBox(width: DonySpacing.sm),
                             Text(
                               'Carte bancaire (Stripe)',
@@ -1392,7 +1393,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                 activeColor: cs.primary,
                                 title: Row(
                                   children: [
-                                    const Icon(Icons.payments_rounded,
+                                    const DonyIcon('banknote',
                                         size: 18),
                                     const SizedBox(width: DonySpacing.sm),
                                     Text(
@@ -1524,7 +1525,8 @@ class _RowDivider extends StatelessWidget {
 class _SectionLabel extends StatelessWidget {
   final String label;
   final IconData? icon;
-  const _SectionLabel({required this.label, this.icon});
+  final String? iconAsset;
+  const _SectionLabel({required this.label, this.icon, this.iconAsset});
 
   @override
   Widget build(BuildContext context) {
@@ -1538,11 +1540,13 @@ class _SectionLabel extends StatelessWidget {
         fontWeight: FontWeight.w600,
       ),
     );
-    if (icon == null) return labelWidget;
+    if (icon == null && iconAsset == null) return labelWidget;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: cs.onSurfaceVariant),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant)
+            : Icon(icon, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         labelWidget,
       ],
@@ -1605,7 +1609,7 @@ class _InlineAddRow extends StatelessWidget {
                 color: accentColor,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.add_rounded,
+              child: const DonyIcon('plus',
                   size: 18, color: DonyColors.white),
             ),
           ),
@@ -1656,7 +1660,7 @@ class _RemovableChip extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(Icons.close_rounded, size: 14, color: accentColor),
+            child: DonyIcon('x', size: 14, color: accentColor),
           ),
         ],
       ),
@@ -1693,7 +1697,7 @@ class _TimeRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time_rounded,
+            DonyIcon('clock',
                 size: 14, color: color.withValues(alpha: 0.7)),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -1715,11 +1719,11 @@ class _TimeRow extends StatelessWidget {
             if (time != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: Icon(Icons.close_rounded,
+                child: DonyIcon('x',
                     size: 16, color: cs.onSurfaceVariant),
               )
             else
-              Icon(Icons.chevron_right_rounded,
+              DonyIcon('chevron-right',
                   size: 18, color: cs.onSurfaceVariant),
           ],
         ),
@@ -1749,7 +1753,7 @@ class _DateRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today_rounded,
+            DonyIcon('calendar',
                 size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -1766,7 +1770,7 @@ class _DateRow extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
+            DonyIcon('chevron-right',
                 size: 18, color: cs.onSurfaceVariant),
           ],
         ),

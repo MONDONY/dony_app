@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -45,7 +46,7 @@ class AnnouncementDetailBottomSheet {
           final Widget? primaryBtn = a.status == 'ACTIVE'
               ? DonyButton(
                   label: 'Voir les demandes (${a.bidsCount ?? 0})',
-                  icon: Icons.inbox_rounded,
+                  iconAsset: 'package',
                   onPressed: () => context.push('/announcements/${a.id}/bids'),
                 )
               : null;
@@ -57,7 +58,7 @@ class AnnouncementDetailBottomSheet {
           final Widget? surplusBtn = a.canOpenSurplus
               ? DonyButton(
                   label: 'Ouvrir les kg restants',
-                  icon: Icons.add_box_outlined,
+                  iconAsset: 'square-plus',
                   variant: DonyButtonVariant.secondary,
                   onPressed: () async {
                     final bloc = context.read<AnnouncementBloc>();
@@ -76,7 +77,7 @@ class AnnouncementDetailBottomSheet {
           final Widget? modifierBtn = canEdit
               ? DonyButton(
                   label: 'Modifier',
-                  icon: Icons.edit_rounded,
+                  iconAsset: 'square-pen',
                   variant: DonyButtonVariant.secondary,
                   onPressed: () =>
                       CreateAnnouncementBottomSheet.show(context, announcement: a),
@@ -87,7 +88,7 @@ class AnnouncementDetailBottomSheet {
           final Widget? destructifBtn = canDelete
               ? DonyButton(
                   label: 'Supprimer',
-                  icon: Icons.delete_outline_rounded,
+                  iconAsset: 'trash-2',
                   variant: DonyButtonVariant.destructive,
                   onPressed: () async {
                     final confirmed =
@@ -102,7 +103,7 @@ class AnnouncementDetailBottomSheet {
               : (!canDelete && a.status == 'ACTIVE')
                   ? DonyButton(
                       label: 'Annuler',
-                      icon: Icons.cancel_outlined,
+                      iconAsset: 'circle-x',
                       variant: DonyButtonVariant.destructive,
                       onPressed: () =>
                           CancellationBottomSheet.show(context, announcementId: a.id),
@@ -158,7 +159,7 @@ class AnnouncementDetailBottomSheet {
           : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
       confirmLabel: 'Supprimer',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.delete_outline_rounded,
+      iconAsset: 'trash-2',
     );
     return confirmed ?? false;
   }
@@ -279,7 +280,7 @@ class _AnnouncementDetailContent extends StatelessWidget {
               // Date + horaires
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_rounded,
+                  const DonyIcon('calendar',
                       size: 12, color: Colors.white54),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
@@ -288,7 +289,7 @@ class _AnnouncementDetailContent extends StatelessWidget {
                   ),
                   if (a.departureTime != null) ...[
                     const SizedBox(width: DonySpacing.sm),
-                    const Icon(Icons.access_time_rounded,
+                    const DonyIcon('clock',
                         size: 12, color: Colors.white54),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
@@ -376,14 +377,14 @@ class _AnnouncementDetailContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           if (a.pickupAddress != null)
             _LieuRow(
-              icon: Icons.upload_rounded,
+              iconAsset: 'upload',
               label: 'REMISE COLIS',
               address: a.pickupAddress!.label,
             ).animate().fadeIn(delay: 80.ms),
           if (a.deliveryAddress != null) ...[
             const SizedBox(height: DonySpacing.xs),
             _LieuRow(
-              icon: Icons.download_rounded,
+              iconAsset: 'download',
               label: 'RÉCUPÉRATION',
               address: a.deliveryAddress!.label,
             ).animate().fadeIn(delay: 100.ms),
@@ -403,7 +404,7 @@ class _AnnouncementDetailContent extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           _LieuRow(
-            icon: Icons.schedule_rounded,
+            iconAsset: 'clock',
             label: 'CRÉNEAU',
             address: _handoverRangeLabel(
                 a.handoverWindowStart!.toLocal(), a.handoverWindowEnd!.toLocal()),
@@ -568,7 +569,7 @@ class _AnnouncementDetailContent extends StatelessWidget {
       confirmLabel: 'Annuler le voyage',
       cancelLabel: 'Fermer',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.event_busy_rounded,
+      iconAsset: 'calendar-x',
     );
     if (confirmed == true && context.mounted) {
       await CancellationBottomSheet.show(context, announcementId: announcementId);
@@ -632,7 +633,7 @@ class _SurplusSplitRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.public_rounded, size: 18, color: cs.success),
+          DonyIcon('globe', size: 18, color: cs.success),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text.rich(
@@ -714,10 +715,14 @@ String _handoverRangeLabel(DateTime start, DateTime end) {
 }
 
 class _LieuRow extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final String address;
-  const _LieuRow({required this.icon, required this.label, required this.address});
+  const _LieuRow({
+    required this.iconAsset,
+    required this.label,
+    required this.address,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -739,7 +744,7 @@ class _LieuRow extends StatelessWidget {
               color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.sm),
             ),
-            child: Icon(icon, size: 16, color: cs.primary),
+            child: DonyIcon(iconAsset, size: 16, color: cs.primary),
           ),
           const SizedBox(width: DonySpacing.sm),
           Expanded(

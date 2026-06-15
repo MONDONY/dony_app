@@ -14,6 +14,7 @@ class DonyEmptyState extends StatelessWidget {
     required this.title,
     this.description,
     this.icon,
+    this.iconAsset,
     this.mascotte,
     this.type = DonyEmptyStateType.empty,
     this.actionLabel,
@@ -24,6 +25,10 @@ class DonyEmptyState extends StatelessWidget {
   final String title;
   final String? description;
   final IconData? icon;
+
+  /// Nom d'un SVG Lucide dans `assets/icons/` (sans extension), alternative à
+  /// [icon]. Prioritaire sur [icon] s'il est fourni.
+  final String? iconAsset;
   final DonyMascotteType? mascotte;
   final DonyEmptyStateType type;
   final String? actionLabel;
@@ -77,7 +82,8 @@ class DonyEmptyState extends StatelessWidget {
             (mascotte != null
                     ? DonyMascotteAnimated(type: mascotte!, size: DonyMascotteSize.lg)
                     : DonyIconContainer(
-                        icon: icon ?? defaultIcon,
+                        icon: iconAsset == null ? (icon ?? defaultIcon) : null,
+                        iconAsset: iconAsset,
                         size: DonyIconContainerSize.xl,
                         backgroundColor: bg,
                         iconColor: ic,

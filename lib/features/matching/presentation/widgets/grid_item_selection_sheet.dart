@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -192,7 +193,7 @@ class _GridItemRow extends StatelessWidget {
             children: [
               _StepBtn(
                 key: Key('grid-item-remove-${item.id}'),
-                icon: Icons.remove,
+                iconAsset: 'minus',
                 active: quantity > 0,
                 onTap: onDecrement,
               ),
@@ -204,7 +205,7 @@ class _GridItemRow extends StatelessWidget {
               ),
               _StepBtn(
                 key: Key('grid-item-add-${item.id}'),
-                icon: Icons.add,
+                iconAsset: 'plus',
                 active: true,
                 onTap: onIncrement,
               ),
@@ -219,12 +220,12 @@ class _GridItemRow extends StatelessWidget {
 class _StepBtn extends StatelessWidget {
   const _StepBtn({
     super.key,
-    required this.icon,
+    required this.iconAsset,
     required this.active,
     this.onTap,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final bool active;
   final VoidCallback? onTap;
 
@@ -244,7 +245,7 @@ class _StepBtn extends StatelessWidget {
             color: bgColor,
             borderRadius: BorderRadius.circular(DonyRadius.sm),
           ),
-          child: Icon(icon, size: 14, color: iconColor),
+          child: DonyIcon(iconAsset, size: 14, color: iconColor),
         ),
       ),
     );

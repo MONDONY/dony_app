@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -94,7 +95,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
       return DonyEmptyState(
         type: DonyEmptyStateType.error,
         mascotte: DonyMascotteType.assis,
-        icon: Icons.wifi_off_rounded,
+        iconAsset: 'wifi-off',
         title: 'Erreur de chargement',
         description: ErrorPresenter.resolve(state.error).message,
         actionLabel: 'Réessayer',
@@ -242,7 +243,7 @@ class _MessagesHeader extends StatelessWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: () => context.push('/messages/archives'),
-                  icon: const Icon(Icons.archive_outlined),
+                  icon: DonyIcon('archive', color: cs.onSurfaceVariant),
                   color: cs.onSurfaceVariant,
                 ),
               ],
@@ -269,10 +270,10 @@ class _MessagesHeader extends StatelessWidget {
                 hintText: 'Rechercher une conversation…',
                 hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 prefixIcon:
-                    Icon(Icons.search_rounded, size: 18, color: cs.onSurfaceVariant),
+                    DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
                 suffixIcon: isSearching
                     ? IconButton(
-                        icon: Icon(Icons.close_rounded,
+                        icon: DonyIcon('x',
                             size: 16, color: cs.onSurfaceVariant),
                         onPressed: () {
                           searchController.clear();

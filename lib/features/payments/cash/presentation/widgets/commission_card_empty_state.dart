@@ -8,13 +8,15 @@ class CommissionCardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(DonySpacing.xl),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.credit_card_outlined, size: 96, color: cs.onSurfaceVariant),
+          const DonyMascotteAnimated(
+            type: DonyMascotteType.assis,
+            size: DonyMascotteSize.lg,
+          ),
           const SizedBox(height: DonySpacing.base),
           Text(
             'Aucune carte enregistrée',

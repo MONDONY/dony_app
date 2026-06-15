@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 class OfflineScanQueueScreen extends StatelessWidget {
@@ -70,8 +71,8 @@ class OfflineScanQueueScreen extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.wifi_off_rounded,
+                    DonyIcon(
+                      'wifi-off',
                       size: 12,
                       color: cs.secondary,
                     ),
@@ -165,8 +166,8 @@ class _AlertBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.shield_outlined,
+          DonyIcon(
+            'shield',
             color: cs.secondary,
             size: DonySpacing.iconSm,
           ),
@@ -230,8 +231,8 @@ class _QueueItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.qr_code_rounded,
+          DonyIcon(
+            'qr-code',
             size: DonySpacing.iconSm,
             color: cs.onSurfaceVariant,
           ),
@@ -259,8 +260,8 @@ class _QueueItemCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
-            Icons.schedule_outlined,
+          DonyIcon(
+            'clock',
             size: 16,
             color: cs.onSurfaceVariant,
           ),

@@ -20,6 +20,7 @@ class DonyTextField extends StatelessWidget {
     this.label,
     this.hint,
     this.prefixIcon,
+    this.prefixWidget,
     this.prefixIconColor,
     this.suffixIcon,
     this.obscureText = false,
@@ -58,6 +59,7 @@ class DonyTextField extends StatelessWidget {
     this.label,
     String? value,
     this.prefixIcon,
+    this.prefixWidget,
     this.prefixIconColor,
     Widget? trailing,
     VoidCallback? onTap,
@@ -86,6 +88,11 @@ class DonyTextField extends StatelessWidget {
   final String? label;
   final String? hint;
   final IconData? prefixIcon;
+
+  /// Widget de préfixe arbitraire (ex : [DonyEmoji], [DonyIcon]). Prioritaire
+  /// sur [prefixIcon] s'il est fourni — permet un emoji 🛫/🛬 ou un SVG Lucide
+  /// à la place d'une icône Material.
+  final Widget? prefixWidget;
 
   /// Couleur de l'icône de préfixe.
   ///
@@ -133,9 +140,10 @@ class DonyTextField extends StatelessWidget {
       label: labelWidget,
       labelText: labelWidget == null ? (labelOverride ?? label) : null,
       hintText: hintOverride ?? hint,
-      prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, color: prefixIconColor)
-          : null,
+      prefixIcon: prefixWidget ??
+          (prefixIcon != null
+              ? Icon(prefixIcon, color: prefixIconColor)
+              : null),
       suffixIcon: suffixOverride ?? suffixIcon,
       errorText: errorText,
       contentPadding: const EdgeInsets.symmetric(

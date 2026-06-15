@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -71,8 +72,8 @@ class LinkedTripCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
+            const DonyIcon(
+              'chevron-right',
               color: DonyColors.starGold,
               size: 20,
             ),

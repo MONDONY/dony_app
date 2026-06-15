@@ -78,7 +78,7 @@ dependencies:
   # UI / Design
   flutter_animate: ^4.5.0
   flutter_slidable: ^3.1.0
-  flutter_svg: ^2.0.10+1
+  flutter_svg: ^2.3.0
   # phosphor_flutter retiré : étend IconData (final depuis Flutter 3.44 → erreur
   # de compilation kernel). Les icônes passent par DonyIcons (Material Icons).
   # Voir lib/core/design/dony_icons.dart.
@@ -173,3 +173,5 @@ flutter:
     - assets/logos/2.0x/
     - assets/logos/3.0x/
     - assets/mascotte/
+    - assets/icons/
+    - assets/icons_3d/

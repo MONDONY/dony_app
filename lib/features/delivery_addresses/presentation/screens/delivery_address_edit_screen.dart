@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/address/address_default_toggle.dart';
 import 'package:dony/core/widgets/address/address_label_chips.dart';
 import 'package:dony/core/widgets/address/address_location_status.dart';
 import 'package:dony/core/widgets/address/address_section_label.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
@@ -150,7 +151,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
               ),
             ),
             trailing: isSelected
-                ? Icon(Icons.check_rounded, color: cs.secondary)
+                ? DonyIcon('check', color: cs.secondary)
                 : null,
             onTap: () => Navigator.of(context, rootNavigator: true).pop(c.$1),
           );
@@ -237,8 +238,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                 controller: _labelCtrl,
                 label: "Nom de l'adresse",
                 hint: 'Ex : Famille Dakar, Dépôt…',
-                prefixIcon: Icons.sell_outlined,
-                prefixIconColor: cs.secondary,
+                prefixWidget: DonyIcon('tag', size: 20, color: cs.secondary),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -275,7 +275,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded,
+                      DonyIcon('chevron-right',
                           color: cs.onSurfaceVariant),
                     ],
                   ),
@@ -289,8 +289,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                 controller: _cityCtrl,
                 label: 'Ville',
                 hint: 'Ex : Dakar, Abidjan, Bamako…',
-                prefixIcon: Icons.location_city_rounded,
-                prefixIconColor: cs.secondary,
+                prefixWidget: DonyIcon('building-2', size: 20, color: cs.secondary),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: DonySpacing.base),
@@ -325,7 +324,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                       left: DonySpacing.md,
                       right: DonySpacing.xs,
                     ),
-                    child: Icon(Icons.chat_bubble_outline_rounded,
+                    child: DonyIcon('message-circle',
                         size: 18, color: cs.onSurfaceVariant),
                   ),
                   prefixIconConstraints: const BoxConstraints(minWidth: 40),

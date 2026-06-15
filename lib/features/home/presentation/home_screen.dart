@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -591,7 +593,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               controller: depCtrl,
               decoration: const InputDecoration(
                 labelText: 'Ville de départ',
-                prefixIcon: Icon(Icons.flight_takeoff_rounded, size: 18),
+                prefixIcon: DonyEmoji.planeTakeoff(size: 18),
               ),
             ),
             const SizedBox(height: DonySpacing.md),
@@ -599,7 +601,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               controller: arrCtrl,
               decoration: const InputDecoration(
                 labelText: "Ville d'arrivée",
-                prefixIcon: Icon(Icons.flight_land_rounded, size: 18),
+                prefixIcon: DonyEmoji.planeLanding(size: 18),
               ),
             ),
             const SizedBox(height: DonySpacing.lg),
@@ -620,7 +622,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   _dispatchPackageRequestSearch();
                   Navigator.of(ctx, rootNavigator: true).pop();
                 },
-                icon: const Icon(Icons.clear_rounded, size: 16),
+                icon: DonyIcon('x',
+                    size: 16, color: Theme.of(ctx).colorScheme.primary),
                 label: const Text('Effacer tous les filtres'),
               ),
           ],
@@ -1817,7 +1820,7 @@ class _CorridorBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
         child: Row(
           children: [
-            Icon(Icons.search_rounded, size: 18, color: cs.onSurfaceVariant),
+            DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: Text(
@@ -1842,8 +1845,8 @@ class _CorridorBar extends StatelessWidget {
                         : Theme.of(context).scaffoldBackgroundColor,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.tune_rounded,
+                  child: DonyIcon(
+                    'sliders-horizontal',
                     size: 18,
                     color: _hasActive ? cs.surface : cs.onSurface,
                   ),
@@ -1920,7 +1923,7 @@ class _HomeCarteFab extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.map_outlined, size: 16, color: cs.surface),
+            DonyIcon('map', size: 16, color: cs.surface),
             const SizedBox(width: DonySpacing.xs),
             Text(
               'Carte',
@@ -1976,7 +1979,7 @@ class _NearMeRadiusPill extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.adjust_rounded, size: 16, color: cs.primary),
+              DonyIcon('circle-dot', size: 16, color: cs.primary),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 'Rayon · ${radiusKm.round()} km',
@@ -1986,7 +1989,8 @@ class _NearMeRadiusPill extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: DonySpacing.xs),
-              Icon(Icons.tune_rounded, size: 15, color: cs.onSurfaceVariant),
+              DonyIcon('sliders-horizontal',
+                  size: 15, color: cs.onSurfaceVariant),
             ],
           ),
         ),
@@ -2083,28 +2087,28 @@ class _HomeFilterChipsRow extends StatelessWidget {
           _SmallChip(
             label: _dateLabel,
             isActive: datePreset != _DatePreset.none,
-            icon: Icons.calendar_today_rounded,
+            iconAsset: 'calendar',
             onTap: datePreset != _DatePreset.none ? onDateClear : onDateTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _ratingLabel,
             isActive: minRating != null,
-            icon: Icons.star_rounded,
+            iconAsset: 'star',
             onTap: minRating != null ? onRatingClear : onRatingTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _weightLabel,
             isActive: weightMin != null || weightMax != null,
-            icon: Icons.fitness_center_rounded,
+            iconAsset: 'dumbbell',
             onTap: (weightMin != null || weightMax != null) ? onWeightClear : onWeightTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _priceLabel,
             isActive: maxPricePerKg != null,
-            icon: Icons.euro_rounded,
+            iconAsset: 'euro',
             onTap: maxPricePerKg != null ? onPriceClear : onPriceTap,
           ),
           const SizedBox(width: DonySpacing.xs),
@@ -2132,13 +2136,13 @@ class _SmallChip extends StatelessWidget {
     required this.label,
     required this.isActive,
     required this.onTap,
-    this.icon,
+    this.iconAsset,
   });
 
   final String label;
   final bool isActive;
   final VoidCallback onTap;
-  final IconData? icon;
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -2167,9 +2171,9 @@ class _SmallChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
+            if (iconAsset != null) ...[
+              DonyIcon(
+                iconAsset!,
                 size: 15,
                 color: isActive ? Colors.white : cs.onSurfaceVariant,
               ),
@@ -2307,8 +2311,8 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                               ),
                             ),
                             if (isSelected)
-                              Icon(
-                                Icons.check_circle_rounded,
+                              DonyIcon(
+                                'circle-check',
                                 size: 18,
                                 color: cs.primary,
                               ),
@@ -2534,7 +2538,7 @@ class _PresetOption extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_rounded, size: 18, color: cs.primary),
+              DonyIcon('check', size: 18, color: cs.primary),
           ],
         ),
       ),
@@ -3064,21 +3068,21 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
           _SmallChip(
             label: _dateLabel,
             isActive: dateFrom != null,
-            icon: Icons.calendar_today_rounded,
+            iconAsset: 'calendar',
             onTap: dateFrom != null ? onDateClear : onDateTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _weightLabel,
             isActive: maxWeight != null,
-            icon: Icons.fitness_center_rounded,
+            iconAsset: 'dumbbell',
             onTap: maxWeight != null ? onWeightClear : onWeightTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _sizeLabel,
             isActive: parcelSize != null,
-            icon: Icons.inventory_2_outlined,
+            iconAsset: 'package',
             onTap: parcelSize != null ? onSizeClear : onSizeTap,
           ),
         ],
@@ -3116,7 +3120,7 @@ class _TrustBanner extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _TrustPill(
-            icon: Icons.verified_user_rounded,
+            iconAsset: 'shield-check',
             label: 'Utilisateurs vérifiés',
             cs: cs,
             tt: tt,
@@ -3128,7 +3132,7 @@ class _TrustBanner extends StatelessWidget {
             color: cs.primary.withValues(alpha: 0.25),
           ),
           _TrustPill(
-            icon: Icons.lock_rounded,
+            iconAsset: 'lock',
             label: 'Paiement sécurisé',
             cs: cs,
             tt: tt,
@@ -3141,13 +3145,13 @@ class _TrustBanner extends StatelessWidget {
 
 class _TrustPill extends StatelessWidget {
   const _TrustPill({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.cs,
     required this.tt,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final ColorScheme cs;
   final TextTheme tt;
@@ -3157,7 +3161,7 @@ class _TrustPill extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: cs.primary),
+        DonyIcon(iconAsset, size: 14, color: cs.primary),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,
@@ -3207,10 +3211,8 @@ class _NotificationBell extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(
-                  unreadCount > 0
-                      ? Icons.notifications_rounded
-                      : Icons.notifications_outlined,
+                child: DonyIcon(
+                  'bell',
                   size: 22,
                   color: unreadCount > 0 ? cs.primary : cs.onSurfaceVariant,
                 ),

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -97,8 +98,8 @@ class _TravelerProfileSheet extends StatelessWidget {
                 Positioned(
                   right: DonySpacing.sm,
                   child: IconButton(
-                    icon: Icon(
-                      Icons.more_horiz_rounded,
+                    icon: DonyIcon(
+                      'ellipsis',
                       color: cs.onSurfaceVariant,
                     ),
                     tooltip: 'Plus d\'options',
@@ -148,7 +149,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                       child: _StatCard(
                         value: noteValue,
                         label: 'Note',
-                        icon: Icons.star_rounded,
+                        iconAsset: 'star',
                         iconColor: cs.warning,
                       ),
                     ),
@@ -157,7 +158,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                       child: _StatCard(
                         value: tripsValue,
                         label: 'Trajets',
-                        icon: Icons.flight_takeoff_rounded,
+                        iconAsset: 'plane-takeoff',
                         iconColor: cs.primary,
                       ),
                     ),
@@ -166,7 +167,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                       child: _StatCard(
                         value: '–',
                         label: 'Livraison',
-                        icon: Icons.check_circle_outline_rounded,
+                        iconAsset: 'circle-check',
                         iconColor: cs.success,
                       ),
                     ),
@@ -241,7 +242,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                                     UserRatingsLoadRequested(
                                         userId: traveler.id),
                                   ),
-                          icon: const Icon(Icons.refresh_rounded),
+                          icon: const DonyIcon('refresh-cw'),
                           label: const Text('Réessayer'),
                         ),
                       );
@@ -337,7 +338,7 @@ class _ProfileHeader extends StatelessWidget {
                 if (traveler.phoneNumber != null)
                   Row(
                     children: [
-                      Icon(Icons.phone_rounded,
+                      DonyIcon('phone',
                           size: 12, color: cs.onSurfaceVariant),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
@@ -362,19 +363,19 @@ class _ProfileHeader extends StatelessWidget {
                   children: [
                     if (traveler.isProAccount)
                       _ProfileBadge(
-                        icon: Icons.star_rounded,
+                        iconAsset: 'star',
                         label: 'Compte PRO',
                         iconColor: cs.warning,
                       ),
                     if (traveler.kiloPro)
                       _ProfileBadge(
-                        icon: Icons.local_shipping_rounded,
+                        iconAsset: 'package',
                         label: 'Kilo Pro',
                         iconColor: cs.warning,
                       ),
                     if (traveler.kycVerified)
                       _ProfileBadge(
-                        icon: Icons.verified_rounded,
+                        iconAsset: 'badge-check',
                         label: 'Identité vérifiée',
                         iconColor: cs.primary,
                       ),
@@ -393,12 +394,12 @@ class _ProfileHeader extends StatelessWidget {
 
 class _ProfileBadge extends StatelessWidget {
   const _ProfileBadge({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.iconColor,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final Color iconColor;
 
@@ -419,7 +420,7 @@ class _ProfileBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: iconColor),
+          DonyIcon(iconAsset, size: 11, color: iconColor),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -440,13 +441,13 @@ class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.value,
     required this.label,
-    required this.icon,
+    required this.iconAsset,
     required this.iconColor,
   });
 
   final String value;
   final String label;
-  final IconData icon;
+  final String iconAsset;
   final Color iconColor;
 
   @override
@@ -463,7 +464,7 @@ class _StatCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: iconColor),
+          DonyIcon(iconAsset, size: 18, color: iconColor),
           const SizedBox(height: DonySpacing.xs),
           Text(
             value,
@@ -513,7 +514,7 @@ class _SubscribeBar extends StatelessWidget {
                   ? _SubscribedRow(pushEnabled: state.pushEnabled)
                   : DonyButton(
                       label: "S'abonner à ce voyageur",
-                      icon: Icons.notifications_active_rounded,
+                      iconAsset: 'bell',
                       onPressed: () => context
                           .read<TravelerSubscribeBloc>()
                           .add(const SubscribePressed()),
@@ -538,7 +539,7 @@ class _SubscribedRow extends StatelessWidget {
       message: 'Vous ne recevrez plus les notifications de ce voyageur.',
       confirmLabel: 'Se désabonner',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.notifications_off_rounded,
+      iconAsset: 'bell-off',
     );
     if ((confirmed ?? false) && context.mounted) {
       context.read<TravelerSubscribeBloc>().add(const UnsubscribePressed());
@@ -563,10 +564,8 @@ class _SubscribedRow extends StatelessWidget {
           tooltip: pushEnabled
               ? 'Désactiver les notifications'
               : 'Activer les notifications',
-          icon: Icon(
-            pushEnabled
-                ? Icons.notifications_active_rounded
-                : Icons.notifications_off_rounded,
+          icon: DonyIcon(
+            pushEnabled ? 'bell' : 'bell-off',
             color: cs.primary,
           ),
           onPressed: () => context

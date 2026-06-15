@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Item de la bottom navigation bar dony.
@@ -10,8 +11,9 @@ import 'package:flutter/material.dart';
 class DonyNavItem extends StatelessWidget {
   const DonyNavItem({
     super.key,
-    required this.icon,
-    required this.outlinedIcon,
+    this.icon,
+    this.outlinedIcon,
+    this.iconAsset,
     required this.label,
     required this.index,
     required this.currentIndex,
@@ -20,10 +22,20 @@ class DonyNavItem extends StatelessWidget {
     this.isPro = false,
     this.avatarUrl,
     this.avatarName,
-  });
+  }) : assert(
+          avatarName != null ||
+              iconAsset != null ||
+              (icon != null && outlinedIcon != null),
+          'DonyNavItem requiert iconAsset, ou (icon + outlinedIcon), ou avatarName',
+        );
 
-  final IconData icon;
-  final IconData outlinedIcon;
+  final IconData? icon;
+  final IconData? outlinedIcon;
+
+  /// Nom d'un SVG Lucide dans `assets/icons/` (sans extension). Prioritaire sur
+  /// [icon]/[outlinedIcon] : Lucide n'a qu'une variante par icône, l'état
+  /// actif/inactif est porté par la couleur.
+  final String? iconAsset;
   final String label;
   final int index;
   final int currentIndex;
@@ -102,16 +114,27 @@ class DonyNavItem extends StatelessWidget {
                                       child: child,
                                     ),
                                   ),
-                              child: Icon(
-                                _active ? icon : outlinedIcon,
-                                key: ValueKey(
-                                  '${index}_${_active ? 'a' : 'i'}',
-                                ),
-                                size: 22,
-                                color: _active
-                                    ? DonyColors.primary
-                                    : DonyColors.textSubtle,
-                              ),
+                              child: iconAsset != null
+                                  ? DonyIcon(
+                                      iconAsset!,
+                                      key: ValueKey(
+                                        '${index}_${_active ? 'a' : 'i'}',
+                                      ),
+                                      size: 22,
+                                      color: _active
+                                          ? DonyColors.primary
+                                          : DonyColors.textSubtle,
+                                    )
+                                  : Icon(
+                                      _active ? icon : outlinedIcon,
+                                      key: ValueKey(
+                                        '${index}_${_active ? 'a' : 'i'}',
+                                      ),
+                                      size: 22,
+                                      color: _active
+                                          ? DonyColors.primary
+                                          : DonyColors.textSubtle,
+                                    ),
                             ),
                     ),
                     if (badgeCount > 0)
@@ -131,8 +154,8 @@ class DonyNavItem extends StatelessWidget {
                             color: DonyColors.warning,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
-                            Icons.star_rounded,
+                          child: const DonyIcon(
+                            'star',
                             color: DonyColors.white,
                             size: 9,
                           ),

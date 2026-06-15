@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Encart informatif affiché quand le voyageur active le paiement en espèces
@@ -27,7 +28,7 @@ class CashCommissionNotice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, size: 18, color: cs.primary),
+          DonyIcon('info', size: 18, color: cs.primary),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: RichText(

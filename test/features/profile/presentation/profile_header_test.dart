@@ -1,5 +1,6 @@
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -166,7 +167,9 @@ void main() {
       var tapped = false;
       await tester.pumpWidget(_buildHeader(onEditProfile: () => tapped = true));
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.edit_rounded));
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'square-pen'),
+      );
       expect(tapped, isTrue);
     });
 

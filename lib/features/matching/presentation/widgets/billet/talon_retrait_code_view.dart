@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -216,7 +217,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.copy_rounded, size: 16, color: cs.primary),
+                        DonyIcon('copy', size: 16, color: cs.primary),
                         const SizedBox(width: DonySpacing.sm),
                         Text(
                           'Copier le code',
@@ -257,14 +258,14 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                               ),
                             )
                           else if (_isRateLimited)
-                            Icon(
-                              Icons.lock_clock_rounded,
+                            DonyIcon(
+                              'clock',
                               size: 16,
                               color: cs.onSecondaryContainer,
                             )
                           else
-                            Icon(
-                              Icons.refresh_rounded,
+                            DonyIcon(
+                              'refresh-cw',
                               size: 16,
                               color: cs.onSecondaryContainer,
                             ),
@@ -308,7 +309,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.block_rounded, size: 14, color: cs.error),
+                      DonyIcon('ban', size: 14, color: cs.error),
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
@@ -336,8 +337,8 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.info_outline_rounded,
+                      DonyIcon(
+                        'info',
                         size: 14,
                         color: cs.warning,
                       ),

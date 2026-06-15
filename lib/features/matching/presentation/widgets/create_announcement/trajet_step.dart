@@ -4,6 +4,8 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
@@ -182,7 +184,7 @@ class TrajetStep extends StatelessWidget {
       ),
 
       // ── TRAJET ────────────────────────────────────────────────────────────
-      const CaSectionLabel(label: 'Trajet', icon: Icons.flight_takeoff_rounded),
+      const CaSectionLabel(label: 'Trajet', iconAsset: 'plane-takeoff'),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -205,10 +207,8 @@ class TrajetStep extends StatelessWidget {
                       key: const Key('departureCityField'),
                       label: 'Ville de départ',
                       value: departureCityNotifier.value,
-                      prefixIcon: DonyIcons.departureCity,
-                      prefixIconColor:
-                          Theme.of(context).colorScheme.primary,
-                      trailing: Icon(Icons.lock_rounded,
+                      prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
+                      trailing: DonyIcon('lock',
                           size: 16, color: cs.onSurfaceVariant),
                       onTap: () {},
                     )
@@ -219,11 +219,7 @@ class TrajetStep extends StatelessWidget {
                         label: 'Ville de départ',
                         fieldKey: const Key('departureCityField'),
                         initialValue: departureCityNotifier.value,
-                        prefixIcon: Icon(
-                          DonyIcons.departureCity,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
                           // Code pays d'abord : le listener du city notifier
@@ -259,10 +255,8 @@ class TrajetStep extends StatelessWidget {
                       key: const Key('arrivalCityField'),
                       label: 'Ville d\'arrivée',
                       value: arrivalCityNotifier.value,
-                      prefixIcon: DonyIcons.arrivalCity,
-                      prefixIconColor:
-                          Theme.of(context).colorScheme.secondary,
-                      trailing: Icon(Icons.lock_rounded,
+                      prefixWidget: const DonyEmoji.planeLanding(size: 20),
+                      trailing: DonyIcon('lock',
                           size: 16, color: cs.onSurfaceVariant),
                       onTap: () {},
                     )
@@ -273,11 +267,7 @@ class TrajetStep extends StatelessWidget {
                         label: 'Ville d\'arrivée',
                         fieldKey: const Key('arrivalCityField'),
                         initialValue: arrivalCityNotifier.value,
-                        prefixIcon: Icon(
-                          DonyIcons.arrivalCity,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
+                        prefixIcon: const DonyEmoji.planeLanding(size: 20),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
                           arrivalCountryCodeNotifier?.value = city.countryCode;
@@ -327,8 +317,8 @@ class TrajetStep extends StatelessWidget {
                     : null,
                 prefixIcon: DonyIcons.date,
                 prefixIconColor: Theme.of(context).colorScheme.primary,
-                trailing: Icon(
-                  lockDate ? Icons.lock_rounded : DonyIcons.chevron,
+                trailing: DonyIcon(
+                  lockDate ? 'lock' : 'chevron-right',
                   size: lockDate ? 16 : 18,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -344,7 +334,7 @@ class TrajetStep extends StatelessWidget {
       // ── MODE DE TRANSPORT ─────────────────────────────────────────────────
       const CaSectionLabel(
         label: 'Mode de transport',
-        icon: Icons.commute_rounded,
+        iconAsset: 'route',
       ),
       const SizedBox(height: DonySpacing.sm),
       ValueListenableBuilder<TransportMode?>(

@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -8,7 +10,7 @@ class FaqScreen extends StatelessWidget {
   static const _sections = <_FaqSectionData>[
     _FaqSectionData(
       title: 'Compte & KYC',
-      icon: Icons.verified_user_rounded,
+      iconAsset: 'shield-check',
       items: [
         _FaqItem(
           q: 'Pourquoi la vérification KYC est-elle obligatoire ?',
@@ -30,7 +32,7 @@ class FaqScreen extends StatelessWidget {
     ),
     _FaqSectionData(
       title: 'Annonces & demandes',
-      icon: Icons.inventory_2_rounded,
+      iconAsset: 'package',
       items: [
         _FaqItem(
           q: 'Comment publier un trajet en tant que voyageur ?',
@@ -52,7 +54,7 @@ class FaqScreen extends StatelessWidget {
     ),
     _FaqSectionData(
       title: 'Paiements & remboursements',
-      icon: Icons.payments_rounded,
+      iconAsset: 'banknote',
       items: [
         _FaqItem(
           q: 'Quand suis-je débité ?',
@@ -74,7 +76,7 @@ class FaqScreen extends StatelessWidget {
     ),
     _FaqSectionData(
       title: 'Suivi & livraison',
-      icon: Icons.local_shipping_rounded,
+      iconAsset: 'package',
       items: [
         _FaqItem(
           q: 'Comment fonctionne le QR de remise ?',
@@ -92,7 +94,7 @@ class FaqScreen extends StatelessWidget {
     ),
     _FaqSectionData(
       title: 'Sécurité & données',
-      icon: Icons.security_rounded,
+      iconAsset: 'shield-check',
       items: [
         _FaqItem(
           q: 'Pourquoi la valeur déclarée est-elle limitée à 500 € ?',
@@ -178,7 +180,13 @@ class _FaqSection extends StatelessWidget {
                       color: cs.primaryContainer,
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
-                    child: Icon(data.icon, color: cs.primary, size: 18),
+                    child: data.iconAsset == 'package'
+                        ? const DonyEmoji.parcel(size: 18)
+                        : DonyIcon(
+                            data.iconAsset,
+                            color: cs.primary,
+                            size: 18,
+                          ),
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Text(
@@ -252,12 +260,12 @@ class _FaqTile extends StatelessWidget {
 class _FaqSectionData {
   const _FaqSectionData({
     required this.title,
-    required this.icon,
+    required this.iconAsset,
     required this.items,
   });
 
   final String title;
-  final IconData icon;
+  final String iconAsset;
   final List<_FaqItem> items;
 }
 

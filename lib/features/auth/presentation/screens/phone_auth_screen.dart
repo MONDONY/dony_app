@@ -7,6 +7,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -82,7 +83,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
                       title: Text('${c.$3} (${c.$1})', style: tt.titleMedium),
                       trailing: selectedCode == c.$1
-                          ? Icon(Icons.check_rounded, color: cs.primary)
+                          ? DonyIcon('check', color: cs.primary)
                           : null,
                       onTap: () {
                         authBloc.add(
@@ -236,8 +237,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                           const SizedBox(
                                             width: DonySpacing.xxs,
                                           ),
-                                          Icon(
-                                            Icons.keyboard_arrow_down_rounded,
+                                          DonyIcon(
+                                            'chevron-down',
                                             size: 16,
                                             color: cs.onSurfaceVariant,
                                           ),

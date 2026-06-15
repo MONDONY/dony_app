@@ -5,6 +5,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -162,7 +163,7 @@ class _ReturnCodeContent extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.copy_rounded, size: 16, color: cs.primary),
+                      DonyIcon('copy', size: 16, color: cs.primary),
                       const SizedBox(width: DonySpacing.sm),
                       Text('Copier le code',
                           style: tt.titleSmall?.copyWith(color: cs.primary)),
@@ -182,7 +183,7 @@ class _ReturnCodeContent extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline_rounded, size: 14, color: cs.warning),
+                DonyIcon('info', size: 14, color: cs.warning),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
@@ -216,7 +217,7 @@ class _ReturnedConfirmation extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.check_circle_rounded, size: 48, color: cs.success),
+          DonyIcon('circle-check', size: 48, color: cs.success),
           const SizedBox(height: DonySpacing.md),
           Text(
             'Colis restitué',

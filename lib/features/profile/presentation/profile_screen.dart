@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -267,8 +268,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           const SizedBox(width: DonySpacing.xs),
                                           Opacity(
                                             opacity: progress,
-                                            child: Icon(
-                                              Icons.verified_rounded,
+                                            child: DonyIcon(
+                                              'badge-check',
                                               size: 13,
                                               color: isProAccount
                                                   ? DonyColors.kycBadgeGold
@@ -330,20 +331,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         tabs: const [
                                           Tab(
                                             child: _TabItem(
-                                              icon: Icons.bolt_rounded,
+                                              iconAsset: 'zap',
                                               label: 'Activité',
                                             ),
                                           ),
                                           Tab(
                                             child: _TabItem(
-                                              icon:
-                                                  Icons.manage_accounts_rounded,
+                                              iconAsset: 'user-cog',
                                               label: 'Compte',
                                             ),
                                           ),
                                           Tab(
                                             child: _TabItem(
-                                              icon: Icons.tune_rounded,
+                                              iconAsset: 'sliders-horizontal',
                                               label: 'Réglages',
                                             ),
                                           ),
@@ -419,16 +419,22 @@ class _ProfileTabBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _TabItem extends StatelessWidget {
-  const _TabItem({required this.icon, required this.label});
+  const _TabItem({required this.iconAsset, required this.label});
 
-  final IconData icon;
+  final String iconAsset;
   final String label;
 
   @override
   Widget build(BuildContext context) {
+    // IconTheme porte la couleur (animée) sélectionné/non-sélectionné du TabBar.
+    final color = IconTheme.of(context).color;
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [Icon(icon, size: 15), const SizedBox(width: 5), Text(label)],
+      children: [
+        DonyIcon(iconAsset, size: 15, color: color),
+        const SizedBox(width: 5),
+        Text(label),
+      ],
     );
   }
 }
@@ -513,7 +519,7 @@ class _ActivityTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.inventory_2_rounded,
+                  iconAsset: 'package',
                   iconColor: cs.secondary,
                   iconBgColor: cs.secondaryContainer,
                   label: 'Mes envois en cours',
@@ -529,7 +535,7 @@ class _ActivityTab extends StatelessWidget {
                   onTap: () => context.push('/announcements'),
                 ),
                 DonyListTile(
-                  icon: Icons.handshake_rounded,
+                  iconAsset: 'handshake',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mes négociations',
@@ -547,21 +553,21 @@ class _ActivityTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.contacts_rounded,
+                  iconAsset: 'contact',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mes destinataires',
                   onTap: () => context.push('/profile/recipients'),
                 ),
                 DonyListTile(
-                  icon: Icons.notifications_active_rounded,
+                  iconAsset: 'bell',
                   iconColor: cs.tertiary,
                   iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
                   label: 'Mes abonnements',
                   onTap: () => context.push('/profile/subscriptions'),
                 ),
                 DonyListTile(
-                  icon: Icons.location_on_rounded,
+                  iconAsset: 'map-pin',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mes adresses',
@@ -579,7 +585,7 @@ class _ActivityTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.balance_rounded,
+                  iconAsset: 'scale',
                   iconColor: cs.error,
                   iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
                   label: 'Mes litiges',
@@ -599,7 +605,7 @@ class _ActivityTab extends StatelessWidget {
           DonyListSection(
                 tiles: [
                   DonyListTile(
-                    icon: Icons.flight_rounded,
+                    iconAsset: 'plane',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Mes trajets',
@@ -615,7 +621,7 @@ class _ActivityTab extends StatelessWidget {
                     onTap: () => context.push('/announcements'),
                   ),
                   DonyListTile(
-                    icon: Icons.move_to_inbox_rounded,
+                    iconAsset: 'inbox',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Colis sur mes trajets',
@@ -631,7 +637,7 @@ class _ActivityTab extends StatelessWidget {
                     onTap: () => context.push('/package-requests/match'),
                   ),
                   DonyListTile(
-                    icon: Icons.bookmark_rounded,
+                    iconAsset: 'bookmark',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Mes modèles de trajet',
@@ -708,7 +714,7 @@ class _AccountTab extends StatelessWidget {
               tiles: [
                 _kycTile(context, user),
                 DonyListTile(
-                  icon: Icons.person_rounded,
+                  iconAsset: 'user',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mon profil public',
@@ -721,7 +727,7 @@ class _AccountTab extends StatelessWidget {
                   ),
                 ),
                 DonyListTile(
-                  icon: Icons.stars_rounded,
+                  iconAsset: 'star',
                   iconColor: cs.secondary,
                   iconBgColor: cs.secondaryContainer,
                   label: 'Mes avis reçus',
@@ -740,7 +746,7 @@ class _AccountTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.group_add_rounded,
+                  iconAsset: 'user-plus',
                   iconColor: cs.success,
                   iconBgColor: cs.successLight,
                   label: 'Parrainages',
@@ -758,7 +764,7 @@ class _AccountTab extends StatelessWidget {
                         referralState.info.hasBeenReferred;
                     if (alreadyReferred) return const SizedBox.shrink();
                     return DonyListTile(
-                      icon: Icons.card_giftcard_rounded,
+                      iconAsset: 'gift',
                       iconColor: cs.primary,
                       iconBgColor: cs.primaryContainer,
                       label: 'J\'ai un code parrain',
@@ -790,21 +796,21 @@ class _AccountTab extends StatelessWidget {
           DonyListSection(
                 tiles: [
                   DonyListTile(
-                    icon: Icons.savings_rounded,
+                    iconAsset: 'piggy-bank',
                     iconColor: cs.success,
                     iconBgColor: cs.successLight,
                     label: 'Recevoir mes paiements',
                     onTap: () => context.push('/payments/onboarding'),
                   ),
                   DonyListTile(
-                    icon: Icons.payment_rounded,
+                    iconAsset: 'credit-card',
                     iconColor: DonyColors.purple,
                     iconBgColor: DonyColors.violetLight,
                     label: 'Carte commission cash',
                     onTap: () => context.push('/payments/commission-method'),
                   ),
                   DonyListTile(
-                    icon: Icons.grid_view_outlined,
+                    iconAsset: 'layout-grid',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Ma grille de prix',
@@ -824,7 +830,7 @@ class _AccountTab extends StatelessWidget {
           DonyListSection(
                 tiles: [
                   DonyListTile(
-                    icon: Icons.workspace_premium_rounded,
+                    iconAsset: 'award',
                     iconColor: isProAccount ? cs.success : cs.warning,
                     iconBgColor: isProAccount
                         ? cs.successLight
@@ -833,8 +839,8 @@ class _AccountTab extends StatelessWidget {
                         ? 'Mon profil PRO'
                         : 'Passer en compte PRO',
                     trailing: isProAccount
-                        ? Icon(
-                            Icons.verified_rounded,
+                        ? DonyIcon(
+                            'badge-check',
                             color: cs.success,
                             size: 18,
                           )
@@ -858,7 +864,7 @@ class _AccountTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.account_balance_wallet_rounded,
+                  iconAsset: 'wallet',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mon portefeuille',
@@ -902,19 +908,19 @@ class _SettingsTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.tune_rounded,
+                  iconAsset: 'sliders-horizontal',
                   label: 'Paramètres',
                   onTap: () => context.push('/settings'),
                 ),
                 DonyListTile(
-                  icon: Icons.notifications_none_rounded,
+                  iconAsset: 'bell',
                   iconColor: cs.warning,
                   iconBgColor: cs.warningLight,
                   label: 'Notifications',
                   onTap: () {},
                 ),
                 DonyListTile(
-                  icon: Icons.translate_rounded,
+                  iconAsset: 'languages',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Langue',
@@ -937,7 +943,7 @@ class _SettingsTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.security_rounded,
+                  iconAsset: 'shield-check',
                   iconColor: cs.onSurfaceVariant,
                   iconBgColor: cs.outline.withValues(alpha: 0.3),
                   label: 'Sécurité & confidentialité',
@@ -956,14 +962,14 @@ class _SettingsTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.headset_mic_rounded,
+                  iconAsset: 'headset',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Contacter le support',
                   onTap: () => context.push('/profile/help/contact'),
                 ),
                 DonyListTile(
-                  icon: Icons.quiz_rounded,
+                  iconAsset: 'circle-help',
                   iconColor: cs.onSurfaceVariant,
                   iconBgColor: cs.outline.withValues(alpha: 0.3),
                   label: 'FAQ & aide',
@@ -1023,7 +1029,7 @@ class _ContactSecuritySection extends StatelessWidget {
       child: Column(
         children: [
           _ContactRow(
-            icon: Icons.phone_rounded,
+            iconAsset: 'phone',
             iconBg: cs.primaryContainer,
             iconColor: cs.primary,
             typeLabel: 'TÉLÉPHONE',
@@ -1034,7 +1040,7 @@ class _ContactSecuritySection extends StatelessWidget {
             onTap: onPhoneTap,
           ),
           _ContactRow(
-            icon: Icons.alternate_email_rounded,
+            iconAsset: 'at-sign',
             iconBg: cs.successLight,
             iconColor: cs.success,
             typeLabel: 'E-MAIL',
@@ -1052,7 +1058,7 @@ class _ContactSecuritySection extends StatelessWidget {
 
 class _ContactRow extends StatelessWidget {
   const _ContactRow({
-    required this.icon,
+    required this.iconAsset,
     required this.iconBg,
     required this.iconColor,
     required this.typeLabel,
@@ -1063,7 +1069,7 @@ class _ContactRow extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final Color iconBg;
   final Color iconColor;
   final String typeLabel;
@@ -1097,7 +1103,7 @@ class _ContactRow extends StatelessWidget {
             child: Row(
               children: [
                 DonyIconContainer(
-                  icon: icon,
+                  iconAsset: iconAsset,
                   backgroundColor: iconBg,
                   iconColor: iconColor,
                   borderRadius: DonyRadius.sm,
@@ -1323,7 +1329,7 @@ DonyListTile _kycTile(BuildContext context, UserModel? user) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
   return DonyListTile(
-    icon: Icons.shield_rounded,
+    iconAsset: 'shield',
     iconColor: cs.primary,
     iconBgColor: cs.primaryContainer,
     label: 'Documents KYC',
@@ -1338,7 +1344,7 @@ DonyListTile _kycTile(BuildContext context, UserModel? user) {
       'REJECTED' => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.warning_amber_rounded, color: cs.warning, size: 16),
+          DonyIcon('triangle-alert', color: cs.warning, size: 16),
           const SizedBox(width: DonySpacing.xs),
           Text(
             'Réessayer',
@@ -1429,8 +1435,8 @@ class _ProfileCompletionBanner extends StatelessWidget {
                     color: cs.warning.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
-                  child: Icon(
-                    Icons.edit_note_rounded,
+                  child: DonyIcon(
+                    'notebook-pen',
                     color: cs.warning,
                     size: 18,
                   ),
@@ -1457,8 +1463,8 @@ class _ProfileCompletionBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
+                DonyIcon(
+                  'chevron-right',
                   color: cs.onSurfaceVariant,
                   size: 18,
                 ),
@@ -1512,7 +1518,7 @@ class _MissingChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.add_rounded, color: cs.warning, size: 12),
+          DonyIcon('plus', color: cs.warning, size: 12),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,

@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
@@ -182,7 +184,7 @@ class _SubscribeButton extends StatelessWidget {
         if (state.subscribed) {
           return DonyButton(
             label: 'Abonné',
-            icon: Icons.check_rounded,
+            iconAsset: 'check',
             variant: DonyButtonVariant.secondary,
             isLoading: isLoading,
             onPressed: isLoading
@@ -195,7 +197,7 @@ class _SubscribeButton extends StatelessWidget {
 
         return DonyButton(
           label: "S'abonner à ce voyageur",
-          icon: Icons.notifications_active_rounded,
+          iconAsset: 'bell',
           isLoading: isLoading,
           onPressed: isLoading
               ? null
@@ -221,7 +223,7 @@ class _ErrorView extends StatelessWidget {
     return DonyEmptyState(
       type: DonyEmptyStateType.error,
       mascotte: DonyMascotteType.assis,
-      icon: Icons.error_outline_rounded,
+      iconAsset: 'circle-alert',
       title: 'Impossible de charger le profil',
       description: message,
       actionLabel: 'Réessayer',
@@ -608,7 +610,7 @@ class _StatsRow extends StatelessWidget {
                   ? profile.averageRating.toStringAsFixed(1)
                   : '—',
               label: 'Note',
-              icon: Icons.star_rounded,
+              iconAsset: 'star',
               iconColor: DonyColors.warning500,
             ),
           ),
@@ -621,7 +623,7 @@ class _StatsRow extends StatelessWidget {
             child: _StatItem(
               value: '${profile.completedBidsCount}',
               label: 'Livraisons',
-              icon: Icons.inventory_2_rounded,
+              iconAsset: 'package',
               iconColor: cs.primary,
             ),
           ),
@@ -634,7 +636,7 @@ class _StatsRow extends StatelessWidget {
             child: _StatItem(
               value: delayLabel,
               label: 'Répond en',
-              icon: Icons.timer_rounded,
+              iconAsset: 'timer',
               iconColor: cs.onSurfaceVariant,
             ),
           ),
@@ -648,13 +650,13 @@ class _StatItem extends StatelessWidget {
   const _StatItem({
     required this.value,
     required this.label,
-    required this.icon,
+    required this.iconAsset,
     required this.iconColor,
   });
 
   final String value;
   final String label;
-  final IconData icon;
+  final String iconAsset;
   final Color iconColor;
 
   @override
@@ -667,7 +669,9 @@ class _StatItem extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: iconColor),
+          iconAsset == 'package'
+              ? const DonyEmoji.parcel(size: 18)
+              : DonyIcon(iconAsset, size: 18, color: iconColor),
           const SizedBox(height: DonySpacing.xs),
           Text(
             value,
@@ -891,17 +895,17 @@ class _ContactInfoSection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     String? contactLabel;
-    IconData? contactIcon;
+    String? contactIcon;
     switch (profile.contactMode) {
       case 'call':
         contactLabel = 'Joignable par appel';
-        contactIcon = Icons.phone_rounded;
+        contactIcon = 'phone';
       case 'message':
         contactLabel = 'Joignable par message';
-        contactIcon = Icons.message_rounded;
+        contactIcon = 'message-circle';
       case 'both':
         contactLabel = 'Appel & message';
-        contactIcon = Icons.forum_rounded;
+        contactIcon = 'messages-square';
     }
 
     return Column(
@@ -914,10 +918,10 @@ class _ContactInfoSection extends StatelessWidget {
           runSpacing: DonySpacing.sm,
           children: [
             if (contactLabel != null)
-              _InfoChip(icon: contactIcon!, label: contactLabel, cs: cs),
+              _InfoChip(iconAsset: contactIcon!, label: contactLabel, cs: cs),
             if (profile.responseDelayHours != null)
               _InfoChip(
-                icon: Icons.timer_rounded,
+                iconAsset: 'timer',
                 label: 'Répond en < ${profile.responseDelayHours}h',
                 cs: cs,
               ),
@@ -929,9 +933,13 @@ class _ContactInfoSection extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label, required this.cs});
+  const _InfoChip({
+    required this.iconAsset,
+    required this.label,
+    required this.cs,
+  });
 
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final ColorScheme cs;
 
@@ -950,7 +958,7 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: cs.primary),
+          DonyIcon(iconAsset, size: 14, color: cs.primary),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -1116,10 +1124,8 @@ class _FlatReviewRow extends StatelessWidget {
                 // Stars
                 Row(
                   children: List.generate(5, (i) {
-                    return Icon(
-                      i < item.stars
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
+                    return DonyIcon(
+                      'star',
                       size: 13,
                       color: i < item.stars
                           ? DonyColors.warning500

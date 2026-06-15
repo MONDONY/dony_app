@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -76,10 +77,8 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             ? null
             : [
                 IconButton(
-                  icon: Icon(
-                    _isSaved
-                        ? Icons.bookmark_rounded
-                        : Icons.bookmark_border_rounded,
+                  icon: DonyIcon(
+                    'bookmark',
                     color: _isSaved ? cs.primary : cs.onSurfaceVariant,
                     size: 24,
                   ),
@@ -87,7 +86,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   tooltip: _isSaved ? 'Retirer' : 'Sauvegarder',
                 ),
                 IconButton(
-                  icon: Icon(Icons.chat_bubble_outline_rounded,
+                  icon: DonyIcon('message-circle',
                       color: cs.onSurfaceVariant, size: 22),
                   onPressed: () {},
                   tooltip: 'Contacter',
@@ -284,8 +283,8 @@ class _CorridorBanner extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
+                child: DonyIcon(
+                  'arrow-right',
                   color: cs.onPrimary.withValues(alpha: 0.7),
                   size: 20,
                 ),
@@ -303,8 +302,8 @@ class _CorridorBanner extends StatelessWidget {
           // Date
           Row(
             children: [
-              Icon(
-                Icons.calendar_month_rounded,
+              DonyIcon(
+                'calendar',
                 color: cs.onPrimary.withValues(alpha: 0.6),
                 size: 14,
               ),
@@ -325,8 +324,8 @@ class _CorridorBanner extends StatelessWidget {
             Row(
               children: [
                 if (announcement.departureTime != null) ...[
-                  Icon(
-                    Icons.flight_takeoff_rounded,
+                  DonyIcon(
+                    'plane-takeoff',
                     color: cs.onPrimary.withValues(alpha: 0.6),
                     size: 13,
                   ),
@@ -351,8 +350,8 @@ class _CorridorBanner extends StatelessWidget {
                     ),
                   ),
                 if (announcement.arrivalTime != null) ...[
-                  Icon(
-                    Icons.flight_land_rounded,
+                  DonyIcon(
+                    'plane-landing',
                     color: cs.onPrimary.withValues(alpha: 0.6),
                     size: 13,
                   ),
@@ -373,14 +372,14 @@ class _CorridorBanner extends StatelessWidget {
           Row(
             children: [
               _StatPill(
-                icon: Icons.scale_rounded,
+                iconAsset: 'scale',
                 label:
                     '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
                 cs: cs,
               ),
               const SizedBox(width: DonySpacing.sm),
               _StatPill(
-                icon: Icons.euro_rounded,
+                iconAsset: 'euro',
                 label:
                     '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
                 cs: cs,
@@ -395,12 +394,14 @@ class _CorridorBanner extends StatelessWidget {
 
 class _StatPill extends StatelessWidget {
   const _StatPill({
-    required this.icon,
     required this.label,
     required this.cs,
+    this.icon,
+    this.iconAsset,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final ColorScheme cs;
 
@@ -418,7 +419,9 @@ class _StatPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: cs.onPrimary),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 13, color: cs.onPrimary)
+              : Icon(icon, size: 13, color: cs.onPrimary),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -578,7 +581,7 @@ class _HandoverCard extends StatelessWidget {
             label: 'Lieu de remise (départ)',
             value: hasDepLoc ? depLoc : 'Non précisé par le voyageur',
             hasValue: hasDepLoc,
-            icon: Icons.location_on_rounded,
+            iconAsset: 'map-pin',
             iconBg: cs.primaryContainer,
             iconColor: cs.primary,
             cs: cs,
@@ -592,7 +595,7 @@ class _HandoverCard extends StatelessWidget {
             label: 'Lieu de récupération (arrivée)',
             value: hasArrLoc ? arrLoc : 'Non précisé par le voyageur',
             hasValue: hasArrLoc,
-            icon: Icons.location_on_rounded,
+            iconAsset: 'map-pin',
             iconBg: cs.errorContainer,
             iconColor: cs.error,
             cs: cs,
@@ -609,17 +612,19 @@ class _LocationRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.hasValue,
-    required this.icon,
     required this.iconBg,
     required this.iconColor,
     required this.cs,
     required this.tt,
+    this.icon,
+    this.iconAsset,
   });
 
   final String label;
   final String value;
   final bool hasValue;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color iconBg;
   final Color iconColor;
   final ColorScheme cs;
@@ -637,7 +642,9 @@ class _LocationRow extends StatelessWidget {
             color: iconBg,
             borderRadius: BorderRadius.circular(DonyRadius.sm),
           ),
-          child: Icon(icon, size: 14, color: iconColor),
+          child: iconAsset != null
+              ? DonyIcon(iconAsset!, size: 14, color: iconColor)
+              : Icon(icon, size: 14, color: iconColor),
         ),
         const SizedBox(width: DonySpacing.md),
         Expanded(
@@ -689,8 +696,8 @@ class _ProBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.verified_rounded,
+          DonyIcon(
+            'badge-check',
             size: 13,
             color: cs.warning,
           ),
@@ -746,7 +753,7 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
           return Scaffold(
             appBar: const DonyAppBar(title: ''),
             body: DonyEmptyState(
-              icon: Icons.error_outline_rounded,
+              iconAsset: 'circle-alert',
               type: DonyEmptyStateType.error,
               mascotte: DonyMascotteType.assis,
               title: 'Erreur de chargement',

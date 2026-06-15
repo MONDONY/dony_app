@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +73,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.warning_amber_rounded, color: kError, size: 20),
+              const DonyIcon('triangle-alert', color: kError, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(

@@ -1,6 +1,7 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/shadow_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,6 +15,8 @@ class DonyButton extends StatefulWidget {
     this.variant = DonyButtonVariant.primary,
     this.icon,
     this.iconRight,
+    this.iconAsset,
+    this.iconRightAsset,
     this.isLoading = false,
     this.fullWidth = true,
   });
@@ -23,6 +26,11 @@ class DonyButton extends StatefulWidget {
   final DonyButtonVariant variant;
   final IconData? icon;
   final IconData? iconRight;
+
+  /// Nom d'un SVG Lucide dans `assets/icons/` (sans extension), alternative à
+  /// [icon] / [iconRight]. Teinté automatiquement par la couleur du variant.
+  final String? iconAsset;
+  final String? iconRightAsset;
   final bool isLoading;
   final bool fullWidth;
 
@@ -66,6 +74,17 @@ class _DonyButtonState extends State<DonyButton> {
               if (widget.icon != null) ...[
                 Icon(widget.icon, size: 18),
                 const SizedBox(width: DonySpacing.xs),
+              ] else if (widget.iconAsset != null) ...[
+                // Builder : lit l'IconTheme du variant (foreground) pour teinter
+                // le SVG comme un Icon Material l'aurait été.
+                Builder(
+                  builder: (ctx) => DonyIcon(
+                    widget.iconAsset!,
+                    size: 18,
+                    color: IconTheme.of(ctx).color,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
               ],
               // En pleine largeur la Row est bornée : on rend le label
               // « shrink-safe » (FittedBox scaleDown) pour qu'un libellé long
@@ -84,6 +103,15 @@ class _DonyButtonState extends State<DonyButton> {
               if (widget.iconRight != null) ...[
                 const SizedBox(width: DonySpacing.xs),
                 Icon(widget.iconRight, size: 18),
+              ] else if (widget.iconRightAsset != null) ...[
+                const SizedBox(width: DonySpacing.xs),
+                Builder(
+                  builder: (ctx) => DonyIcon(
+                    widget.iconRightAsset!,
+                    size: 18,
+                    color: IconTheme.of(ctx).color,
+                  ),
+                ),
               ],
             ],
           );

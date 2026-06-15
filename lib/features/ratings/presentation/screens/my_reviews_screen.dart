@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_state.dart';
@@ -80,8 +81,9 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DonyEmptyState(
+      mascotte: DonyMascotteType.assis,
       type: DonyEmptyStateType.error,
-      icon: Icons.error_outline_rounded,
+      iconAsset: 'circle-alert',
       title: 'Impossible de charger les avis',
       description: message,
       actionLabel: 'Réessayer',
@@ -204,8 +206,8 @@ class _HeaderCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(5, (i) {
                   final filled = i < summary.averageRating.round();
-                  return Icon(
-                    filled ? Icons.star_rounded : Icons.star_border_rounded,
+                  return DonyIcon(
+                    'star',
                     size: 14,
                     color: filled
                         ? DonyColors.warning500
@@ -331,10 +333,8 @@ class _ReviewItem extends StatelessWidget {
               children: [
                 // Étoiles
                 ...List.generate(5, (i) {
-                  return Icon(
-                    i < item.stars
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
+                  return DonyIcon(
+                    'star',
                     size: 16,
                     color: i < item.stars
                         ? DonyColors.warning500

@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -87,7 +89,7 @@ class _PackageRequestDetailScreenState
         actions: [
           IconButton(
             icon:
-                Icon(Icons.more_horiz_rounded, color: cs.onSurface, size: 22),
+                DonyIcon('ellipsis', color: cs.onSurface, size: 22),
             onPressed: () {},
           ),
         ],
@@ -382,9 +384,7 @@ class _OffersSection extends StatelessWidget {
                 color: DonyColors.primarySoft,
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
               ),
-              child: const Center(
-                  child: Icon(Icons.inbox_outlined,
-                      size: 26, color: DonyColors.primary)),
+              child: const Center(child: DonyEmoji.parcel(size: 26)),
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -505,7 +505,7 @@ class _OfferTile extends StatelessWidget {
                       ),
                       if (rating != null) ...[
                         const SizedBox(width: 4),
-                        Icon(Icons.star_rounded,
+                        const DonyIcon('star',
                             size: 13, color: DonyColors.warning500),
                         Text(
                           rating.toStringAsFixed(1),
@@ -655,7 +655,7 @@ class CandidatesSection extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded,
+                  const DonyIcon('info',
                       size: 16, color: DonyColors.warning500),
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
@@ -747,7 +747,7 @@ class _CandidateCard extends StatelessWidget {
                     ),
                     if (rating != null) ...[
                       const SizedBox(width: 4),
-                      Icon(Icons.star_rounded,
+                      const DonyIcon('star',
                           size: 13, color: DonyColors.warning500),
                       Text(
                         rating.toStringAsFixed(1),
@@ -827,7 +827,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded,
+            const DonyIcon('circle-alert',
                 size: 48, color: DonyColors.danger500),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -948,7 +948,7 @@ class _SheetFrame extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded, size: 20),
+                  icon: const DonyIcon('x', size: 20),
                   style: IconButton.styleFrom(
                     foregroundColor: cs.onSurfaceVariant,
                   ),

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -8,17 +9,17 @@ class OnboardingScreen extends StatelessWidget {
 
   static const _features = [
     (
-      Icons.verified_user_outlined,
+      'shield-check',
       'Vérifié',
       'KYC + selfie animé pour chaque profil',
     ),
     (
-      Icons.qr_code_2_outlined,
+      'qr-code',
       'Tracé',
       'QR scanné à chaque étape, jusqu\'à la remise',
     ),
     (
-      Icons.lock_outline_rounded,
+      'lock',
       'Garanti',
       'Paiement bloqué, libéré seulement à l\'arrivée',
     ),
@@ -123,7 +124,7 @@ class OnboardingScreen extends StatelessWidget {
                           ),
                           child:
                               _FeatureCard(
-                                    icon: e.value.$1,
+                                    iconAsset: e.value.$1,
                                     title: e.value.$2,
                                     subtitle: e.value.$3,
                                   )
@@ -157,12 +158,12 @@ class OnboardingScreen extends StatelessWidget {
 
 class _FeatureCard extends StatelessWidget {
   const _FeatureCard({
-    required this.icon,
+    required this.iconAsset,
     required this.title,
     required this.subtitle,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final String title;
   final String subtitle;
 
@@ -187,7 +188,7 @@ class _FeatureCard extends StatelessWidget {
               color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Icon(icon, size: DonySpacing.iconSm, color: cs.primary),
+            child: DonyIcon(iconAsset, size: DonySpacing.iconSm, color: cs.primary),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(

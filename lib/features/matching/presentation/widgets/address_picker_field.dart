@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
 
@@ -313,8 +314,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                               borderRadius:
                                   BorderRadius.circular(DonyRadius.sm),
                             ),
-                            child: Icon(
-                              Icons.place_rounded,
+                            child: DonyIcon(
+                              'map-pin',
                               size: 16,
                               color: ics.primary,
                             ),
@@ -448,8 +449,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                     left: DonySpacing.md,
                     right: DonySpacing.xs,
                   ),
-                  child: Icon(
-                    confirmed ? Icons.place_rounded : Icons.place_outlined,
+                  child: DonyIcon(
+                    'map-pin',
                     size: 18,
                     color: confirmed
                         ? cs.success
@@ -478,8 +479,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                         ? Padding(
                             padding: const EdgeInsets.only(
                                 right: DonySpacing.md),
-                            child: Icon(
-                              Icons.check_circle_rounded,
+                            child: DonyIcon(
+                              'circle-check',
                               color: cs.success,
                               size: 20,
                             ),
@@ -507,8 +508,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                         color: cs.primaryContainer,
                         borderRadius: BorderRadius.circular(DonyRadius.sm),
                       ),
-                      child: Icon(
-                        Icons.my_location_rounded,
+                      child: DonyIcon(
+                        'locate-fixed',
                         size: 14,
                         color: cs.primary,
                       ),
@@ -547,8 +548,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.wifi_off_rounded,
+                  DonyIcon(
+                    'wifi-off',
                     size: 12,
                     color: cs.warning,
                   ),
@@ -606,8 +607,8 @@ class _PermissionSheet extends StatelessWidget {
               color: cs.warningLight,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Icon(
-              Icons.location_off_outlined,
+            child: DonyIcon(
+              'map-pin-off',
               size: 24,
               color: cs.warning,
             ),
@@ -669,8 +670,8 @@ class _GpsDisabledSheet extends StatelessWidget {
               color: cs.warningLight,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Icon(
-              Icons.gps_off,
+            child: DonyIcon(
+              'map-pin-off',
               size: 24,
               color: cs.warning,
             ),

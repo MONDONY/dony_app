@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
@@ -173,8 +174,8 @@ class _HeroCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.card_giftcard_rounded,
+          const DonyIcon(
+            'gift',
             size: 48,
             color: Colors.white,
           ),
@@ -260,8 +261,8 @@ class _CodeBox extends StatelessWidget {
                     borderRadius: BorderRadius.circular(DonyRadius.sm),
                     border: Border.all(color: greenAccent.withValues(alpha: 0.4)),
                   ),
-                  child: const Icon(
-                    Icons.copy_rounded,
+                  child: const DonyIcon(
+                    'copy',
                     color: greenPrimary,
                     size: 20,
                   ),
@@ -337,7 +338,7 @@ class _ShareButton extends StatelessWidget {
           DonySpacing.base,
         ),
         child: FilledButton.icon(
-          icon: const Icon(Icons.share_rounded),
+          icon: const DonyIcon('share-2'),
           label: const Text('Partager mon code'),
           style: FilledButton.styleFrom(
             backgroundColor: DonyColors.referralGreen,
@@ -369,10 +370,9 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 56,
-              color: Theme.of(context).colorScheme.error,
+            const DonyMascotteAnimated(
+              type: DonyMascotteType.assis,
+              size: DonyMascotteSize.lg,
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -388,7 +388,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xl),
             FilledButton.icon(
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const DonyIcon('refresh-cw'),
               label: const Text('Réessayer'),
               style: FilledButton.styleFrom(
                 backgroundColor: DonyColors.referralGreen,

@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -422,8 +423,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.notifications_rounded), findsNothing);
+      // Cloche = DonyIcon('bell') unique ; l'état lu/non-lu est porté par la
+      // couleur + le badge (présent seulement si unread > 0).
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('notification-badge')), findsNothing);
     });
 
     testWidgets('shows filled bell icon and badge count when unread > 0', (
@@ -439,8 +445,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.notifications_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.notifications_outlined), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'),
+        findsOneWidget,
+      );
       expect(
         find.descendant(
           of: find.byKey(const Key('notification-badge')),
@@ -474,8 +482,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.notifications_rounded), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('notification-badge')), findsNothing);
     });
   });
 }

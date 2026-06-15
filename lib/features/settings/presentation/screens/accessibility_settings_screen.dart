@@ -58,7 +58,7 @@ class AccessibilitySettingsScreen extends StatelessWidget {
             _SectionLabel('AFFICHAGE', cs: cs),
             DonyListSection(tiles: [
               DonyListTile(
-                icon: Icons.contrast_rounded,
+                iconAsset: 'contrast',
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Contraste élevé',
@@ -74,7 +74,7 @@ class AccessibilitySettingsScreen extends StatelessWidget {
                     .add(const HighContrastToggled()),
               ),
               DonyListTile(
-                icon: Icons.animation_rounded,
+                iconAsset: 'circle-play',
                 iconColor: cs.onSurfaceVariant,
                 iconBgColor: cs.surfaceContainerHighest,
                 label: 'Réduire les animations',

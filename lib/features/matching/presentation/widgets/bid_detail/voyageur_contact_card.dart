@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -155,7 +156,7 @@ class VoyageurContactCard extends StatelessWidget {
                 // Bouton 📞 — conditionnel
                 if (_showPhoneButton) ...[
                   _IconActionButton(
-                    icon: Icons.phone_rounded,
+                    iconAsset: 'phone',
                     onTap: () => _call(context),
                   ),
                   const SizedBox(width: DonySpacing.sm),
@@ -165,7 +166,7 @@ class VoyageurContactCard extends StatelessWidget {
                   builder: (context, openState) {
                     final isOpening = openState is ConversationOpenLoading;
                     return _IconActionButton(
-                      icon: Icons.chat_bubble_outline_rounded,
+                      iconAsset: 'message-circle',
                       isLoading: isOpening,
                       onTap: isOpening
                           ? null
@@ -177,8 +178,8 @@ class VoyageurContactCard extends StatelessWidget {
                 ),
                 if (canOpenProfile) ...[
                   const SizedBox(width: DonySpacing.xs),
-                  Icon(
-                    Icons.chevron_right_rounded,
+                  DonyIcon(
+                    'chevron-right',
                     color: cs.onSurfaceVariant,
                     size: 18,
                   ),
@@ -195,12 +196,12 @@ class VoyageurContactCard extends StatelessWidget {
 // ── Bouton icône circulaire 44×44 ─────────────────────────────────────────────
 
 class _IconActionButton extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
   final VoidCallback? onTap;
   final bool isLoading;
 
   const _IconActionButton({
-    required this.icon,
+    required this.iconAsset,
     required this.onTap,
     this.isLoading = false,
   });
@@ -225,7 +226,7 @@ class _IconActionButton extends StatelessWidget {
                   strokeWidth: 2,
                 ),
               )
-            : Icon(icon, color: cs.primary, size: 18),
+            : DonyIcon(iconAsset, color: cs.primary, size: 18),
       ),
     );
   }

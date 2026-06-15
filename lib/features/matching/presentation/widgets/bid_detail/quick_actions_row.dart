@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +62,7 @@ class QuickActionsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _ActionTile(
-            icon: Icons.inventory_2_rounded,
+            iconAsset: 'package',
             label: 'Suivi du colis',
             cs: cs,
             tt: tt,
@@ -76,7 +77,7 @@ class QuickActionsRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: _ActionTile(
-              icon: Icons.share_rounded,
+              iconAsset: 'share-2',
               label: 'Partager le suivi',
               cs: cs,
               tt: tt,
@@ -92,19 +93,21 @@ class QuickActionsRow extends StatelessWidget {
 // ── Tuile d'action ────────────────────────────────────────────────────────────
 
 class _ActionTile extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final ColorScheme cs;
   final TextTheme tt;
   final VoidCallback onTap;
 
   const _ActionTile({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.label,
     required this.cs,
     required this.tt,
     required this.onTap,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +127,9 @@ class _ActionTile extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: cs.primary, size: 18),
+            iconAsset != null
+                ? DonyIcon(iconAsset!, color: cs.primary, size: 18)
+                : Icon(icon, color: cs.primary, size: 18),
             const SizedBox(width: DonySpacing.sm),
             Flexible(
               child: Text(

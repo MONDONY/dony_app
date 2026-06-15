@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -74,46 +75,46 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _PreviewRow(
-            icon: Icons.flight_takeoff,
+            iconAsset: 'plane-takeoff',
             label: 'Trajet',
             value:
                 '${formState.departureCity ?? '—'} → ${formState.arrivalCity ?? '—'}',
           ),
           _PreviewRow(
-            icon: Icons.calendar_today,
+            iconAsset: 'calendar',
             label: 'Date',
             value: dateStr,
           ),
           if (departureTime != null)
             _PreviewRow(
-              icon: Icons.schedule_rounded,
+              iconAsset: 'clock',
               label: 'Départ',
               value: _formatTime(departureTime!),
             ),
           if (formState.pickupAddress != null)
             _PreviewRow(
-              icon: Icons.swap_horiz_rounded,
+              iconAsset: 'arrow-left-right',
               label: 'Remise',
               value: formState.pickupAddress!.label,
             ),
           if (formState.deliveryAddress != null)
             _PreviewRow(
-              icon: Icons.swap_horiz_rounded,
+              iconAsset: 'arrow-left-right',
               label: 'Récupération',
               value: formState.deliveryAddress!.label,
             ),
           _PreviewRow(
-            icon: Icons.luggage,
+            iconAsset: 'luggage',
             label: 'Capacité',
             value: formState.capacityUnit.label,
           ),
           _PreviewRow(
-            icon: Icons.euro,
+            iconAsset: 'euro',
             label: 'Prix',
             value: prixStr,
           ),
           _PreviewRow(
-            icon: Icons.payments_rounded,
+            iconAsset: 'banknote',
             label: 'Paiement',
             value: formState.cashAccepted
                 ? 'Carte + Espèces'
@@ -121,20 +122,20 @@ class AnnouncementPreviewSheet extends StatelessWidget {
           ),
           if (formState.acceptedTypes.isNotEmpty)
             _PreviewRow(
-              icon: Icons.check_circle_outline_rounded,
+              iconAsset: 'circle-check',
               label: 'Accepte',
               value: formState.acceptedTypes.join(', '),
             ),
           if (formState.rejectedTypes.isNotEmpty)
             _PreviewRow(
-              icon: Icons.cancel_outlined,
+              iconAsset: 'circle-x',
               label: 'Refuse',
               value: formState.rejectedTypes.join(', '),
             ),
           if (formState.description != null &&
               formState.description!.isNotEmpty)
             _PreviewRow(
-              icon: Icons.notes,
+              iconAsset: 'file-text',
               label: 'Note',
               value: formState.description!,
             ),
@@ -148,7 +149,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
+                  DonyIcon('triangle-alert',
                       color: cs.warning, size: 16),
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
@@ -169,12 +170,12 @@ class AnnouncementPreviewSheet extends StatelessWidget {
 }
 
 class _PreviewRow extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final String value;
 
   const _PreviewRow({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.value,
   });
@@ -188,7 +189,7 @@ class _PreviewRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: cs.primary),
+          DonyIcon(iconAsset, size: 18, color: cs.primary),
           const SizedBox(width: DonySpacing.sm),
           SizedBox(
             width: 88,

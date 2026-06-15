@@ -7,6 +7,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
@@ -108,8 +109,8 @@ class _MobileMoneyAwaitingScreenState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.check_circle_outline,
+                  DonyIcon(
+                    'circle-check',
                     color: cs.success,
                     size: 64,
                   ),
@@ -132,8 +133,8 @@ class _MobileMoneyAwaitingScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.timer_off_outlined,
+                    DonyIcon(
+                      'timer-off',
                       color: cs.warning,
                       size: 48,
                     ),
@@ -173,8 +174,8 @@ class _MobileMoneyAwaitingScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.error_outline,
+                    DonyIcon(
+                      'circle-alert',
                       color: cs.error,
                       size: 48,
                     ),
@@ -225,8 +226,8 @@ class _MobileMoneyAwaitingScreenState
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.phone_android_outlined,
+                      const DonyIcon(
+                        'smartphone',
                         color: Colors.white,
                         size: 32,
                       ),
@@ -281,7 +282,7 @@ class _MobileMoneyAwaitingScreenState
                 // CTA
                 DonyButton(
                   label: 'Payer maintenant',
-                  icon: Icons.open_in_new,
+                  iconAsset: 'external-link',
                   onPressed: pending.paymentLink.isNotEmpty
                       ? () => _openLink(pending.paymentLink)
                       : null,

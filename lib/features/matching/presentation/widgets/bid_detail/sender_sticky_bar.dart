@@ -167,7 +167,7 @@ class SenderStickyBar extends StatelessWidget {
     if (needsPayment) {
       return DonyButton(
         label: 'Payer mon envoi',
-        icon: Icons.lock_rounded,
+        iconAsset: 'lock',
         isLoading: isLoading,
         onPressed: isLoading ? null : () => context.push('/payments/pay', extra: bid),
       );
@@ -177,7 +177,7 @@ class SenderStickyBar extends StatelessWidget {
     if (status == 'ACCEPTED') {
       return DonyButton(
         label: 'Afficher le QR de remise',
-        icon: Icons.qr_code_2_rounded,
+        iconAsset: 'qr-code',
         onPressed: () {
           // Haptic is handled by QrSheet.show internally — do not duplicate it.
           QrSheet.show(context, bidId: bid.id, status: bid.status);
@@ -192,7 +192,7 @@ class SenderStickyBar extends StatelessWidget {
           (dep.isNotEmpty && arr.isNotEmpty) ? '$dep → $arr' : 'Suivi du colis';
       return DonyButton(
         label: 'Suivi du colis',
-        icon: Icons.inventory_2_rounded,
+        iconAsset: 'package',
         onPressed: () {
           HapticFeedback.lightImpact();
           showTrackingTimelineSheet(
@@ -210,7 +210,7 @@ class SenderStickyBar extends StatelessWidget {
       }
       return DonyButton(
         label: 'Noter le voyageur',
-        icon: Icons.star_rounded,
+        iconAsset: 'star',
         onPressed: () {
           RatingBottomSheet.show(
             context,
@@ -225,7 +225,7 @@ class SenderStickyBar extends StatelessWidget {
     if (kEnvoisPasses.contains(status)) {
       return DonyButton(
         label: 'Supprimer cette demande',
-        icon: Icons.delete_outline_rounded,
+        iconAsset: 'trash-2',
         variant: DonyButtonVariant.destructive,
         onPressed: () {
           HapticFeedback.mediumImpact();

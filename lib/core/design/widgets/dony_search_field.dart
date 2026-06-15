@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Champ de recherche dony avec animation de focus et bouton clear.
@@ -88,7 +89,7 @@ class _DonySearchFieldState extends State<DonySearchField> {
         prefixIcon: Icon(widget.prefixIcon, size: 20, color: cs.onSurfaceVariant),
         suffixIcon: _hasText
             ? IconButton(
-                icon: const Icon(Icons.close_rounded, size: 18),
+                icon: const DonyIcon('x', size: 18),
                 color: cs.onSurfaceVariant,
                 onPressed: _clear,
                 tooltip: 'Effacer',

@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,8 +27,8 @@ class CommissionCardExpirationBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            isExpired ? Icons.error : Icons.warning,
+          DonyIcon(
+            isExpired ? 'circle-alert' : 'triangle-alert',
             color: isExpired ? Colors.red : Colors.amber.shade700,
           ),
           const SizedBox(width: 8),

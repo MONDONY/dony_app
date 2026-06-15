@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
 import 'package:flutter/material.dart';
@@ -282,7 +283,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFF6B7A8D)),
+            const DonyIcon('circle-alert', size: 48, color: Color(0xFF6B7A8D)),
             const SizedBox(height: 16),
             Text(
               message,

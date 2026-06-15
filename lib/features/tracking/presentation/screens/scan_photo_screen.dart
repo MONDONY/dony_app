@@ -1,16 +1,17 @@
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:native_exif/native_exif.dart';
 
-const _etapeLabels = {
-  'DEPART': ('Départ', Icons.flight_takeoff_rounded),
-  'TRANSIT': ('Transit', Icons.sync_alt_rounded),
-  'ARRIVEE': ('Arrivée', Icons.flight_land_rounded),
+const _etapeLabels = <String, (String, String?, String?)>{
+  'DEPART': ('Départ', null, 'plane-takeoff'),
+  'TRANSIT': ('Transit', 'arrow-left-right', null),
+  'ARRIVEE': ('Arrivée', null, 'plane-landing'),
 };
 
 class ScanPhotoScreen extends StatefulWidget {
@@ -166,7 +167,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.close_rounded,
+                          icon: const DonyIcon('x',
                               color: DonyColors.neutral0),
                           onPressed: () => context.pop(),
                         ),
@@ -200,7 +201,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.inventory_2_outlined,
+                          const DonyIcon('package',
                               color: DonyColors.neutral0, size: 13),
                           const SizedBox(width: DonySpacing.xs),
                           Text(
@@ -232,8 +233,12 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(etapeInfo.$2,
-                                    color: DonyColors.neutral0, size: 12),
+                                if (etapeInfo.$3 != null)
+                                  DonyIcon(etapeInfo.$3!,
+                                      color: DonyColors.neutral0, size: 12)
+                                else
+                                  DonyIcon(etapeInfo.$2!,
+                                      color: DonyColors.neutral0, size: 12),
                                 const SizedBox(width: DonySpacing.xs),
                                 Text(
                                   'Étape : ${etapeInfo.$1}',
@@ -260,7 +265,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.camera_alt_rounded,
+                                const DonyIcon('camera',
                                     color: DonyColors.neutral0, size: 11),
                                 const SizedBox(width: 2),
                                 Text(
@@ -318,7 +323,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                     color: DonyColors.neutral0,
                                   ),
                                 )
-                              : const Icon(Icons.camera_alt_rounded),
+                              : const DonyIcon('camera'),
                           label: Text(
                             loading ? 'Ouverture...' : 'Prendre la photo',
                           ),
@@ -364,8 +369,8 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.location_on_rounded,
+                          DonyIcon(
+                            'map-pin',
                             color: DonyColors.neutral0.withValues(alpha: 0.5),
                             size: 12,
                           ),

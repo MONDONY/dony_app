@@ -38,12 +38,13 @@ void main() {
     expect(find.text('Dakar'), findsOneWidget);
   });
 
-  testWidgets('affiche l\'icône avion', (tester) async {
+  testWidgets('affiche l\'emoji avion', (tester) async {
     await tester.pumpWidget(_wrap(TravelerAnnouncementCard(
       announcement: _announcement(),
       onReserve: () {},
     )));
-    expect(find.byIcon(Icons.flight_takeoff_rounded), findsOneWidget);
+    // L'icône avion est désormais l'emoji décollage (DonyEmoji 🛫).
+    expect(find.text('🛫'), findsOneWidget);
   });
 
   testWidgets('affiche la date formatée en français', (tester) async {

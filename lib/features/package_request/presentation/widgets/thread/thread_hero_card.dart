@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:flutter/material.dart';
@@ -77,12 +78,12 @@ enum ThreadStatusVariant {
         terminal => 'PRIX FINAL',
       };
 
-  IconData get icon => switch (this) {
-        open => Icons.handshake_rounded,
-        awaitingTrip => Icons.hourglass_top_rounded,
-        awaitingPayment => Icons.credit_card_rounded,
-        accepted => Icons.check_circle_rounded,
-        terminal => Icons.cancel_outlined,
+  String get iconAsset => switch (this) {
+        open => 'handshake',
+        awaitingTrip => 'hourglass',
+        awaitingPayment => 'credit-card',
+        accepted => 'circle-check',
+        terminal => 'circle-x',
       };
 }
 
@@ -149,7 +150,7 @@ class ThreadHeroCard extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(statusVariant.icon,
+                      child: DonyIcon(statusVariant.iconAsset,
                           color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: DonySpacing.md),

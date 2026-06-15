@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -235,7 +236,7 @@ class _CapacityBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.scale_rounded, size: 14, color: cs.onSurfaceVariant),
+          DonyIcon('scale', size: 14, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.xs + 2),
           Text.rich(TextSpan(children: [
             TextSpan(
@@ -371,10 +372,9 @@ class _NoTripsEmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.flight_rounded,
-              size: 64,
-              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+            const DonyMascotteAnimated(
+              type: DonyMascotteType.assis,
+              size: DonyMascotteSize.lg,
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -412,10 +412,9 @@ class _NoResultsEmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.inventory_2_rounded,
-              size: 64,
-              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+            const DonyMascotteAnimated(
+              type: DonyMascotteType.assis,
+              size: DonyMascotteSize.lg,
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -444,7 +443,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded, size: 64, color: cs.error),
+            DonyIcon('circle-alert', size: 64, color: cs.error),
             const SizedBox(height: DonySpacing.base),
             Text(
               'Une erreur est survenue',

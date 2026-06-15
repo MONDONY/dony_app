@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -74,8 +75,8 @@ class BecomeTravelerCtaCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(DonyRadius.xl),
                   ),
-                  child: const Icon(
-                    Icons.flight_takeoff_rounded,
+                  child: const DonyIcon(
+                    'plane-takeoff',
                     color: Colors.white,
                     size: 22,
                   ),
@@ -108,10 +109,8 @@ class BecomeTravelerCtaCard extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            allDone
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked_rounded,
+                          DonyIcon(
+                            allDone ? 'circle-check' : 'circle',
                             size: 12,
                             color: allDone
                                 ? Colors.white
@@ -135,8 +134,8 @@ class BecomeTravelerCtaCard extends StatelessWidget {
 
                 // ── Chevron trailing ────────────────────────────────────────
                 const SizedBox(width: DonySpacing.sm),
-                Icon(
-                  Icons.chevron_right_rounded,
+                DonyIcon(
+                  'chevron-right',
                   color: Colors.white.withValues(alpha: 0.80),
                   size: 22,
                 ),

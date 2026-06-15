@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
               const _SectionLabel('LANGUE & COMMUNICATION'),
               DonyListSection(tiles: [
                 DonyListTile(
-                  icon: Icons.translate_rounded,
+                  iconAsset: 'languages',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Langue',
@@ -122,7 +123,7 @@ class SettingsScreen extends StatelessWidget {
               const _SectionLabel('SÉCURITÉ & DONNÉES'),
               DonyListSection(tiles: [
                 DonyListTile(
-                  icon: Icons.lock_rounded,
+                  iconAsset: 'lock',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Sécurité',
@@ -130,7 +131,7 @@ class SettingsScreen extends StatelessWidget {
                   onTap: () => context.push('/settings/security'),
                 ),
                 DonyListTile(
-                  icon: Icons.visibility_off_rounded,
+                  iconAsset: 'eye-off',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Confidentialité',
@@ -138,7 +139,7 @@ class SettingsScreen extends StatelessWidget {
                   onTap: () => context.push('/settings/privacy'),
                 ),
                 DonyListTile(
-                  icon: Icons.folder_rounded,
+                  iconAsset: 'folder',
                   iconColor: cs.error,
                   iconBgColor: cs.errorContainer,
                   label: 'Mes données',
@@ -152,7 +153,7 @@ class SettingsScreen extends StatelessWidget {
               const _SectionLabel('PERSONNALISATION'),
               DonyListSection(tiles: [
                 DonyListTile(
-                  icon: Icons.notifications_none_rounded,
+                  iconAsset: 'bell',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Notifications',
@@ -161,7 +162,7 @@ class SettingsScreen extends StatelessWidget {
                       context.push('/settings/notifications'),
                 ),
                 DonyListTile(
-                  icon: Icons.tune_rounded,
+                  iconAsset: 'sliders-horizontal',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Préférences',
@@ -170,7 +171,7 @@ class SettingsScreen extends StatelessWidget {
                       context.push('/settings/preferences'),
                 ),
                 DonyListTile(
-                  icon: Icons.accessibility_new_rounded,
+                  iconAsset: 'accessibility',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Accessibilité',
@@ -185,7 +186,7 @@ class SettingsScreen extends StatelessWidget {
               const _SectionLabel('INFORMATIONS'),
               DonyListSection(tiles: [
                 DonyListTile(
-                  icon: Icons.article_outlined,
+                  iconAsset: 'file-text',
                   iconColor: cs.onSurfaceVariant,
                   iconBgColor: cs.surfaceContainerHighest,
                   label: 'CGU',
@@ -193,7 +194,7 @@ class SettingsScreen extends StatelessWidget {
                       context.push('/settings/legal/terms'),
                 ),
                 DonyListTile(
-                  icon: Icons.policy_outlined,
+                  iconAsset: 'file-badge',
                   iconColor: cs.onSurfaceVariant,
                   iconBgColor: cs.surfaceContainerHighest,
                   label: 'Politique de confidentialité',
@@ -201,7 +202,7 @@ class SettingsScreen extends StatelessWidget {
                       context.push('/settings/legal/privacy'),
                 ),
                 DonyListTile(
-                  icon: Icons.bug_report_outlined,
+                  iconAsset: 'bug',
                   iconColor: cs.onSurfaceVariant,
                   iconBgColor: cs.surfaceContainerHighest,
                   label: 'Diagnostics',
@@ -227,8 +228,10 @@ class SettingsScreen extends StatelessWidget {
           children: [
             ListTile(
               title: const Text('Français'),
-              trailing:
-                  current == 'fr' ? const Icon(Icons.check) : null,
+              trailing: current == 'fr'
+                  ? DonyIcon('check',
+                      color: Theme.of(context).colorScheme.primary)
+                  : null,
               onTap: () {
                 context
                     .read<AppPreferencesBloc>()
@@ -238,8 +241,10 @@ class SettingsScreen extends StatelessWidget {
             ),
             ListTile(
               title: const Text('English'),
-              trailing:
-                  current == 'en' ? const Icon(Icons.check) : null,
+              trailing: current == 'en'
+                  ? DonyIcon('check',
+                      color: Theme.of(context).colorScheme.primary)
+                  : null,
               onTap: () {
                 context
                     .read<AppPreferencesBloc>()
@@ -260,10 +265,10 @@ class _ThemeSelector extends StatelessWidget {
   final String current;
   final ValueChanged<String> onChanged;
 
-  IconData get _icon => switch (current) {
-        'light' => Icons.light_mode_rounded,
-        'dark'  => Icons.dark_mode_rounded,
-        _       => Icons.brightness_auto_rounded,
+  String get _iconAsset => switch (current) {
+        'light' => 'sun',
+        'dark'  => 'moon',
+        _       => 'sun-moon',
       };
 
   @override
@@ -285,7 +290,7 @@ class _ThemeSelector extends StatelessWidget {
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.sm),
                 ),
-                child: Icon(_icon, color: cs.primary, size: 22),
+                child: DonyIcon(_iconAsset, color: cs.primary, size: 22),
               ),
               const SizedBox(width: DonySpacing.md),
               Column(
@@ -304,21 +309,22 @@ class _ThemeSelector extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<String>(
-              segments: const [
+              segments: [
                 ButtonSegment<String>(
                   value: 'light',
-                  label: Text('Clair'),
-                  icon: Icon(Icons.light_mode_outlined),
+                  label: const Text('Clair'),
+                  icon: DonyIcon('sun', size: 18, color: cs.onSurfaceVariant),
                 ),
                 ButtonSegment<String>(
                   value: 'dark',
-                  label: Text('Sombre'),
-                  icon: Icon(Icons.dark_mode_outlined),
+                  label: const Text('Sombre'),
+                  icon: DonyIcon('moon', size: 18, color: cs.onSurfaceVariant),
                 ),
                 ButtonSegment<String>(
                   value: 'system',
-                  label: Text('Auto'),
-                  icon: Icon(Icons.brightness_auto_outlined),
+                  label: const Text('Auto'),
+                  icon:
+                      DonyIcon('sun-moon', size: 18, color: cs.onSurfaceVariant),
                 ),
               ],
               selected: {current},

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
@@ -155,7 +156,7 @@ void main() {
       expect(find.text('Abonné ✓'), findsOneWidget);
 
       // Bell off icon
-      expect(find.byIcon(Icons.notifications_off_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off'), findsOneWidget);
     },
   );
 
@@ -323,7 +324,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     // Bell is notifications_off_rounded when pushEnabled=false
-    final bellFinder = find.byIcon(Icons.notifications_off_rounded);
+    final bellFinder = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off');
     expect(bellFinder, findsOneWidget);
     await tester.tap(bellFinder);
     await tester.pump();
@@ -483,8 +484,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Stars widget renders (both filled and empty stars should exist for 3/5)
-    expect(find.byIcon(Icons.star_rounded), findsWidgets);
-    expect(find.byIcon(Icons.star_border_rounded), findsWidgets);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsWidgets);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsWidgets);
   });
 
   // ─── Test 14: averageRating == 0 → '—' in stat column ───────────────────

@@ -41,7 +41,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
             DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.info_outline_rounded,
+                  iconAsset: 'info',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Version',
@@ -64,7 +64,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
             DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.wifi_rounded,
+                  iconAsset: 'wifi',
                   iconColor: _pingIconColor(state, cs),
                   iconBgColor: _pingIconBg(state, cs),
                   label: 'Statut API',
@@ -100,14 +100,14 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
             DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.bug_report_outlined,
+                  iconAsset: 'bug',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Signaler un bug',
                   onTap: () => _showBugReportDialog(context),
                 ),
                 DonyListTile(
-                  icon: Icons.copy_rounded,
+                  iconAsset: 'copy',
                   iconColor: cs.onSurfaceVariant,
                   iconBgColor: cs.surfaceContainerHighest,
                   label: 'Copier mon ID utilisateur',

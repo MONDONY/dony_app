@@ -13,6 +13,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -195,7 +196,7 @@ void main() {
 
       expect(find.text('Oumar Diallo'), findsOneWidget);
       expect(find.text('★ 4.8 · 12 trajets'), findsOneWidget);
-      expect(find.byIcon(Icons.chat_bubble_outline_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'), findsOneWidget);
     });
 
     testWidgets('shows phone button when phone is present and status is ACCEPTED',
@@ -207,7 +208,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.byIcon(Icons.phone_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsOneWidget);
     });
 
     testWidgets('hides phone button when phone is null', (tester) async {
@@ -215,7 +216,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.byIcon(Icons.phone_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
     });
 
     testWidgets('hides phone button when status is COMPLETED even with phone',
@@ -227,7 +228,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.byIcon(Icons.phone_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
     });
 
     testWidgets('hides phone button when status is DELIVERED even with phone',
@@ -239,7 +240,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.byIcon(Icons.phone_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
     });
 
     testWidgets('tap chat button fires ConversationOpenRequested once',
@@ -248,7 +249,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      await tester.tap(find.byIcon(Icons.chat_bubble_outline_rounded));
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'));
       await tester.pump();
 
       final captured = verify(() => bloc.add(captureAny())).captured;
@@ -279,7 +280,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Chevron should be visible when travelerId is non-null.
-      expect(find.byIcon(Icons.chevron_right_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsOneWidget);
 
       // Tap the card — should navigate to /profile/public via GoRouter.
       await tester.tap(find.byType(InkWell).first);
@@ -304,7 +305,7 @@ void main() {
       await tester.pumpWidget(_hostVoyageur(bidNoId, bloc));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
     });
 
     testWidgets(
@@ -327,7 +328,7 @@ void main() {
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.phone_rounded));
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -558,7 +559,7 @@ void main() {
         await tester.pump();
 
         // Tap the phone button
-        await tester.tap(find.byIcon(Icons.phone_rounded));
+        await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
         // Pump twice: once for the async _call to resolve, once for the snackbar
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));

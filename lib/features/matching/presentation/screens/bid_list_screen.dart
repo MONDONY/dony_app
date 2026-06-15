@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
@@ -400,7 +402,7 @@ class _BidListViewState extends State<_BidListView>
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                   ),
-                  child: Icon(Icons.chevron_left_rounded,
+                  child: DonyIcon('chevron-left',
                       size: 20, color: cs.primary),
                 ),
               ),
@@ -520,7 +522,7 @@ class _BidListViewState extends State<_BidListView>
       message: "L'expéditeur sera informé. Cette action est irréversible.",
       confirmLabel: 'Refuser',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.cancel_rounded,
+      iconAsset: 'circle-x',
     );
     if (confirmed == true && context.mounted) {
       context.read<BidBloc>().add(BidRejectRequested(bidId));
@@ -656,7 +658,7 @@ class _PendingTab extends StatelessWidget {
           'Cette demande refusée sera retirée définitivement de votre liste.',
       confirmLabel: 'Supprimer',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.delete_outline_rounded,
+      iconAsset: 'trash-2',
     );
     return confirmed == true;
   }
@@ -843,11 +845,13 @@ class _SearchEmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.xxl),
       child: Column(
         children: [
-          Icon(
-            hasQuery ? Icons.search_off_rounded : Icons.inbox_outlined,
-            size: 44,
-            color: cs.outlineVariant,
-          ),
+          hasQuery
+              ? DonyIcon(
+                  'search-x',
+                  size: 44,
+                  color: cs.outlineVariant,
+                )
+              : const DonyEmoji.parcel(size: 44),
           const SizedBox(height: DonySpacing.md),
           Text(
             hasQuery ? 'Aucun résultat' : 'Aucun envoi',
@@ -974,7 +978,7 @@ class _BidCard extends StatelessWidget {
                 runSpacing: DonySpacing.sm,
                 children: [
                   _MetaPill(
-                    icon: Icons.scale_outlined,
+                    iconAsset: 'scale',
                     label: bid.weightKg != null
                         ? '${bid.weightKg!.toStringAsFixed(0)} kg'
                         : bid.pricingMode == BidPricingMode.grid
@@ -983,7 +987,7 @@ class _BidCard extends StatelessWidget {
                   ),
                   if (content != null && content.isNotEmpty)
                     _MetaPill(
-                      icon: Icons.inventory_2_outlined,
+                      iconAsset: 'package',
                       label: content,
                     ),
                 ],
@@ -1069,10 +1073,11 @@ class _HighlightedText extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _MetaPill extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
 
-  const _MetaPill({required this.icon, required this.label});
+  const _MetaPill({required this.label, this.icon, this.iconAsset});
 
   @override
   Widget build(BuildContext context) {
@@ -1090,7 +1095,9 @@ class _MetaPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: cs.onSurfaceVariant),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant)
+              : Icon(icon, size: 13, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -1164,7 +1171,7 @@ class _EscrowedHint extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.lock_rounded, size: 14, color: cs.warning),
+          DonyIcon('lock', size: 14, color: cs.warning),
           const SizedBox(width: DonySpacing.xs),
           Flexible(
             child: Text(
@@ -1252,7 +1259,7 @@ class _DismissBackground extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.delete_outline_rounded,
+          const DonyIcon('trash-2',
               color: DonyColors.neutral0, size: 28),
           const SizedBox(height: DonySpacing.xs),
           Text(
@@ -1296,7 +1303,7 @@ class _ScannerChipButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.qr_code_scanner_rounded, size: 16, color: cs.onSurface),
+            DonyIcon('scan-line', size: 16, color: cs.onSurface),
             const SizedBox(width: DonySpacing.xs),
             Text(
               'Scanner',
@@ -1332,7 +1339,7 @@ class _HiddenBidsBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.filter_list_rounded, size: 16, color: cs.onSurfaceVariant),
+          DonyIcon('list-filter', size: 16, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.xs),
           Expanded(
             child: Text(
@@ -1370,7 +1377,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded,
+            DonyIcon('circle-alert',
                 size: 48, color: cs.outlineVariant),
             const SizedBox(height: DonySpacing.md),
             Text(

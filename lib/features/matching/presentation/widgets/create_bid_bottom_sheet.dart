@@ -5,6 +5,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -43,11 +45,11 @@ enum _FormStep { form, paymentPicker }
 class _BtnConfig {
   const _BtnConfig({
     required this.label,
-    required this.icon,
+    required this.iconAsset,
     this.onPressed,
   });
   final String label;
-  final IconData icon;
+  final String iconAsset;
   final VoidCallback? onPressed;
 }
 
@@ -90,7 +92,7 @@ class CreateBidBottomSheet {
   }) {
     final btnConfigNotifier = ValueNotifier<_BtnConfig?>(const _BtnConfig(
       label: 'Envoyer',
-      icon: Icons.send_rounded,
+      iconAsset: 'send',
     ));
     final isCashAvailable =
         announcement.acceptedPaymentMethods.contains(BidPaymentMethod.cash);
@@ -123,7 +125,7 @@ class CreateBidBottomSheet {
             final isLoading = state is BidLoading;
             return DonyButton(
               label: config?.label ?? 'Envoyer',
-              icon: config?.icon ?? Icons.send_rounded,
+              iconAsset: config?.iconAsset ?? 'send',
               isLoading: isLoading,
               onPressed: isLoading ? null : config?.onPressed,
             );
@@ -300,7 +302,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
 
     widget.btnConfigNotifier.value = _BtnConfig(
       label: 'Envoyer',
-      icon: Icons.send_rounded,
+      iconAsset: 'send',
       onPressed: canSubmit ? _goToPicker : null,
     );
   }
@@ -315,26 +317,26 @@ class _CreateBidContentState extends State<_CreateBidContent> {
             _mmCountryNotifier.value != null);
 
     final String label;
-    final IconData icon;
+    final String iconAsset;
     if (method == BidPaymentMethod.cash) {
       label = 'Confirmer (paiement en espèces)';
-      icon = Icons.payments_rounded;
+      iconAsset = 'banknote';
     } else if (method == BidPaymentMethod.wave) {
       label = 'Payer via Wave';
-      icon = Icons.waves_rounded;
+      iconAsset = 'waves';
     } else if (method == BidPaymentMethod.orangeMoney) {
       label = 'Payer via Orange Money';
-      icon = Icons.phone_android_rounded;
+      iconAsset = 'smartphone';
     } else {
       final total = _computeStripeTotal();
       label =
           'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(total)} & payer';
-      icon = Icons.lock_rounded;
+      iconAsset = 'lock';
     }
 
     widget.btnConfigNotifier.value = _BtnConfig(
       label: label,
-      icon: icon,
+      iconAsset: iconAsset,
       onPressed: mmOk ? _confirmPayment : null,
     );
   }
@@ -632,8 +634,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                       child: hasSelection
                           ? Row(
                               children: [
-                                Icon(
-                                  Icons.check_circle_rounded,
+                                DonyIcon(
+                                  'circle-check',
                                   color:
                                       Theme.of(context).colorScheme.success,
                                   size: 18,
@@ -682,12 +684,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                             )
                           : Row(
                               children: [
-                                Icon(
-                                  Icons.inventory_2_outlined,
-                                  color:
-                                      Theme.of(context).colorScheme.warning,
-                                  size: 18,
-                                ),
+                                const DonyEmoji.parcel(size: 18),
                                 const SizedBox(width: DonySpacing.sm),
                                 Expanded(
                                   child: Column(
@@ -718,8 +715,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                                     ],
                                   ),
                                 ),
-                                Icon(
-                                  Icons.chevron_right_rounded,
+                                DonyIcon(
+                                  'chevron-right',
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurfaceVariant,
@@ -885,7 +882,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                           const SizedBox(height: DonySpacing.xs),
                           Row(
                             children: [
-                              const Icon(Icons.check_circle_rounded,
+                              const DonyIcon('circle-check',
                                   size: 16, color: Color(0xFF16A34A)),
                               const SizedBox(width: 6),
                               Expanded(
@@ -904,7 +901,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                           const SizedBox(height: DonySpacing.xs),
                           Row(
                             children: [
-                              const Icon(Icons.error_outline_rounded,
+                              const DonyIcon('circle-alert',
                                   size: 16, color: Color(0xFFE53935)),
                               const SizedBox(width: 6),
                               Expanded(
@@ -983,7 +980,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
           onTap: () => _stepNotifier.value = _FormStep.form,
           child: Row(
             children: [
-              Icon(Icons.arrow_back_ios_rounded,
+              DonyIcon('chevron-left',
                   size: 16, color: cs.primary),
               const SizedBox(width: DonySpacing.xs),
               Text(
@@ -1292,7 +1289,7 @@ class _WeightSectionState extends State<_WeightSection> {
           children: [
             _StepperButton(
               key: const Key('weight-decrement'),
-              icon: Icons.remove_rounded,
+              iconAsset: 'minus',
               onPressed: canDecrement
                   ? () => _setWeight(weightKg - 1)
                   : null,
@@ -1340,7 +1337,7 @@ class _WeightSectionState extends State<_WeightSection> {
             const SizedBox(width: DonySpacing.base),
             _StepperButton(
               key: const Key('weight-increment'),
-              icon: Icons.add_rounded,
+              iconAsset: 'plus',
               onPressed: () => _setWeight(weightKg + 1),
             ),
           ],
@@ -1454,11 +1451,11 @@ class _WeightSectionState extends State<_WeightSection> {
 class _StepperButton extends StatelessWidget {
   const _StepperButton({
     super.key,
-    required this.icon,
+    required this.iconAsset,
     required this.onPressed,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final VoidCallback? onPressed;
 
   @override
@@ -1477,10 +1474,12 @@ class _StepperButton extends StatelessWidget {
           child: SizedBox(
             width: 48,
             height: 48,
-            child: Icon(
-              icon,
-              size: 22,
-              color: enabled ? cs.primary : cs.onSurfaceVariant,
+            child: Center(
+              child: DonyIcon(
+                iconAsset,
+                size: 22,
+                color: enabled ? cs.primary : cs.onSurfaceVariant,
+              ),
             ),
           ),
         ),
@@ -1525,7 +1524,7 @@ class _CategoryChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selected) ...[
-              Icon(Icons.check_rounded, size: 14, color: cs.surface),
+              DonyIcon('check', size: 14, color: cs.surface),
               const SizedBox(width: DonySpacing.xxs),
             ],
             Text(
@@ -1572,7 +1571,7 @@ class _DisclaimerCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.warning_amber_rounded,
+              DonyIcon('triangle-alert',
                   size: 20, color: cs.secondary),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
@@ -1649,7 +1648,7 @@ class _PaymentMethodSelector extends StatelessWidget {
       Expanded(
         child: _MethodTile(
           key: const Key('payment-method-stripe'),
-          icon: Icons.lock_rounded,
+          iconAsset: 'lock',
           label: 'Paiement sécurisé',
           sublabel: 'Via Stripe',
           selected: selectedMethod == BidPaymentMethod.stripe,
@@ -1661,7 +1660,7 @@ class _PaymentMethodSelector extends StatelessWidget {
         Expanded(
           child: _MethodTile(
             key: const Key('payment-method-cash'),
-            icon: Icons.payments_rounded,
+            iconAsset: 'banknote',
             label: 'En espèces',
             sublabel: 'Remise directe',
             selected: selectedMethod == BidPaymentMethod.cash,
@@ -1674,7 +1673,7 @@ class _PaymentMethodSelector extends StatelessWidget {
         Expanded(
           child: _MethodTile(
             key: const Key('payment-method-wave'),
-            icon: Icons.waves_rounded,
+            iconAsset: 'waves',
             label: 'Wave',
             sublabel: 'Mobile Money',
             selected: selectedMethod == BidPaymentMethod.wave,
@@ -1687,7 +1686,7 @@ class _PaymentMethodSelector extends StatelessWidget {
         Expanded(
           child: _MethodTile(
             key: const Key('payment-method-orange-money'),
-            icon: Icons.phone_android_rounded,
+            iconAsset: 'smartphone',
             label: 'Orange Money',
             sublabel: 'Mobile Money',
             selected: selectedMethod == BidPaymentMethod.orangeMoney,
@@ -1719,14 +1718,14 @@ class _PaymentMethodSelector extends StatelessWidget {
 class _MethodTile extends StatelessWidget {
   const _MethodTile({
     super.key,
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.sublabel,
     required this.selected,
     required this.onTap,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final String sublabel;
   final bool selected;
@@ -1752,8 +1751,8 @@ class _MethodTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
+            DonyIcon(
+              iconAsset,
               color: selected ? cs.primary : cs.onSurfaceVariant,
               size: 20,
             ),
@@ -1816,8 +1815,8 @@ class _WalletTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.account_balance_wallet_rounded,
+            DonyIcon(
+              'wallet',
               color: hasBalance ? cs.primary : cs.onSurfaceVariant,
               size: 20,
             ),
@@ -1847,8 +1846,8 @@ class _WalletTile extends StatelessWidget {
               ),
             ),
             if (!hasBalance)
-              Icon(
-                Icons.chevron_right_rounded,
+              DonyIcon(
+                'chevron-right',
                 color: cs.onSurfaceVariant,
                 size: 20,
               ),

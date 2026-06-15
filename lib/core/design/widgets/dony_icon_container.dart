@@ -1,19 +1,30 @@
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Icône centrée dans un conteneur circulaire coloré.
 /// Usage : illustrations d'état, en-têtes de section, badges d'action.
+///
+/// Deux sources d'icône possibles (exactement une requise) :
+/// - [icon] : `IconData` Material classique.
+/// - [iconAsset] : nom d'un SVG Lucide dans `assets/icons/` (sans extension),
+///   rendu via [DonyIcon] et teinté par [iconColor].
 class DonyIconContainer extends StatelessWidget {
   const DonyIconContainer({
     super.key,
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     this.size = DonyIconContainerSize.md,
     this.backgroundColor,
     this.iconColor,
     this.borderRadius,
-  });
+  }) : assert(
+          icon != null || iconAsset != null,
+          'DonyIconContainer requiert icon ou iconAsset',
+        );
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final DonyIconContainerSize size;
   final Color? backgroundColor;
   final Color? iconColor;
@@ -42,7 +53,11 @@ class DonyIconContainer extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(radius),
       ),
-      child: Icon(icon, size: iconSize, color: ic),
+      child: Center(
+        child: iconAsset != null
+            ? DonyIcon(iconAsset!, size: iconSize, color: ic)
+            : Icon(icon, size: iconSize, color: ic),
+      ),
     );
   }
 }

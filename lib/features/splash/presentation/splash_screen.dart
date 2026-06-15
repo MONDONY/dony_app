@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -179,7 +180,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.wifi_off_rounded,
+                        DonyIcon('wifi-off',
                             color: cs.onSurfaceVariant, size: 16),
                         const SizedBox(width: DonySpacing.sm),
                         Text(
@@ -193,7 +194,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     const SizedBox(height: DonySpacing.lg),
                     OutlinedButton.icon(
                       onPressed: _retry,
-                      icon: Icon(Icons.refresh_rounded,
+                      icon: DonyIcon('refresh-cw',
                           color: cs.primary, size: 16),
                       label: const Text('Réessayer'),
                       style: OutlinedButton.styleFrom(

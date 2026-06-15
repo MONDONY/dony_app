@@ -46,7 +46,7 @@ class DataSettingsScreen extends StatelessWidget {
                 builder: (context, state) {
                   final isLoading = state is DataExportLoading;
                   return DonyListTile(
-                    icon: Icons.download_rounded,
+                    iconAsset: 'download',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Télécharger mes données',
@@ -76,7 +76,7 @@ class DataSettingsScreen extends StatelessWidget {
             DonyListSection(
               tiles: [
                 DonyListTile(
-                  icon: Icons.delete_forever_rounded,
+                  iconAsset: 'trash',
                   iconColor: cs.error,
                   iconBgColor: cs.errorContainer,
                   label: 'Supprimer mon compte',

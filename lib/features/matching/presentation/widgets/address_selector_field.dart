@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/delivery_address_picker_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/pickup_address_picker_sheet.dart';
@@ -102,7 +103,7 @@ class _EmptyCard extends StatelessWidget {
                 color: containerColor,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
-              child: Icon(Icons.location_on_rounded, color: color, size: 20),
+              child: DonyIcon('map-pin', color: color, size: 20),
             ),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -120,7 +121,7 @@ class _EmptyCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
+            DonyIcon('chevron-right', color: cs.onSurfaceVariant),
           ],
         ),
       ),
@@ -164,7 +165,7 @@ class _FilledCard extends StatelessWidget {
                 color: containerColor,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
-              child: Icon(Icons.location_on_rounded, color: color, size: 20),
+              child: DonyIcon('map-pin', color: color, size: 20),
             ),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -179,7 +180,7 @@ class _FilledCard extends StatelessWidget {
               width: 24,
               height: 24,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              child: const Icon(Icons.check_rounded,
+              child: const DonyIcon('check',
                   color: Colors.white, size: 14),
             ),
           ],

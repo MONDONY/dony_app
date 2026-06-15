@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:flutter/material.dart';
 
@@ -46,7 +47,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.verified_rounded, color: cs.primary, size: 16),
+                DonyIcon('badge-check', color: cs.primary, size: 16),
                 const SizedBox(width: 4),
                 Text(
                   'Identité vérifiée',
@@ -72,7 +73,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.star_rounded, color: cs.warning, size: 22),
+                      DonyIcon('star', color: cs.warning, size: 22),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         sender.averageRating.toStringAsFixed(1),
@@ -93,8 +94,8 @@ class _SenderPublicProfileContent extends StatelessWidget {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.person_outline_rounded,
+                      DonyIcon(
+                        'user',
                         color: cs.onSurfaceVariant,
                         size: 18,
                       ),

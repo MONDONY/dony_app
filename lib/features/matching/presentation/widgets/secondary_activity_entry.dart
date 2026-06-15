@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Additive entry to the other activity (Suivre un colis / Scanner un trajet).
@@ -9,14 +10,22 @@ import 'package:flutter/material.dart';
 class SecondaryActivityEntry extends StatelessWidget {
   const SecondaryActivityEntry({
     super.key,
-    required this.icon,
     required this.label,
     required this.onTap,
-  });
+    this.icon,
+    this.iconAsset,
+  }) : assert(
+          icon != null || iconAsset != null,
+          'Fournir icon ou iconAsset.',
+        );
 
-  final IconData icon;
+  final IconData? icon;
   final String label;
   final VoidCallback onTap;
+
+  /// SVG teintable (`assets/icons/<name>.svg`) prioritaire sur [icon] dans la
+  /// pastille colorée. Null = utilise [icon].
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +64,9 @@ class SecondaryActivityEntry extends StatelessWidget {
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                   ),
-                  child: Icon(icon, size: 20, color: cs.primary),
+                  child: iconAsset != null
+                      ? DonyIcon(iconAsset!, size: 20, color: cs.primary)
+                      : Icon(icon, size: 20, color: cs.primary),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -68,8 +79,8 @@ class SecondaryActivityEntry extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
+                DonyIcon(
+                  'chevron-right',
                   size: 20,
                   color: cs.onSurfaceVariant,
                 ),

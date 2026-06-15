@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -160,26 +162,26 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── NOM DU MODÈLE ───────────────────────────────────────────
-              const _SectionLabel(label: 'NOM DU MODÈLE', icon: Icons.bookmark_rounded),
+              const _SectionLabel(label: 'NOM DU MODÈLE', iconAsset: 'bookmark'),
               const SizedBox(height: DonySpacing.sm),
               DonyTextField(
                 controller: _labelCtrl,
                 label: 'Nom',
                 hint: 'Ex : Mon Paris → Dakar',
-                prefixIcon: Icons.sell_outlined,
+                prefixWidget: DonyIcon('tag', size: 20, color: cs.onSurfaceVariant),
                 onChanged: (_) => setState(() {}),
               ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.xxl),
 
               // ── TRAJET ──────────────────────────────────────────────────
-              const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+              const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
               const SizedBox(height: DonySpacing.sm),
               BlocProvider(
                 create: (_) => getIt<CitySearchBloc>(),
                 child: CityAutocompleteField(
                   label: 'Ville de départ',
                   requiredLabel: true,
-                  prefixIcon: Icon(Icons.flight_takeoff_rounded, color: cs.primary, size: 20),
+                  prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                   initialValue: _departureCity,
                   onSelected: (CityModel city) =>
                       setState(() => _departureCity = city.name),
@@ -191,7 +193,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                 child: CityAutocompleteField(
                   label: "Ville d'arrivée",
                   requiredLabel: true,
-                  prefixIcon: Icon(Icons.flight_land_rounded, color: cs.secondary, size: 20),
+                  prefixIcon: const DonyEmoji.planeLanding(size: 20),
                   initialValue: _arrivalCity,
                   onSelected: (CityModel city) =>
                       setState(() => _arrivalCity = city.name),
@@ -200,7 +202,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── TYPE DE CAPACITÉ ────────────────────────────────────────
-              const _SectionLabel(label: 'TYPE DE CAPACITÉ', icon: Icons.luggage_rounded),
+              const _SectionLabel(label: 'TYPE DE CAPACITÉ', iconAsset: 'luggage'),
               const SizedBox(height: DonySpacing.sm),
               Column(
                 children: _capacityOptions.map((opt) {
@@ -236,10 +238,8 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                                 ],
                               ),
                             ),
-                            Icon(
-                              selected
-                                  ? Icons.radio_button_checked_rounded
-                                  : Icons.radio_button_unchecked_rounded,
+                            DonyIcon(
+                              selected ? 'circle-dot' : 'circle',
                               color: selected ? cs.primary : cs.outline,
                               size: 22,
                             ),
@@ -253,7 +253,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.lg),
 
               // ── POIDS DISPONIBLE ────────────────────────────────────────
-              const _SectionLabel(label: 'POIDS DISPONIBLE', icon: Icons.scale_rounded),
+              const _SectionLabel(label: 'POIDS DISPONIBLE', iconAsset: 'scale'),
               const SizedBox(height: DonySpacing.base),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -298,7 +298,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── PRIX PAR KG ─────────────────────────────────────────────
-              const _SectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
+              const _SectionLabel(label: 'PRIX PAR KG', iconAsset: 'tag'),
               const SizedBox(height: DonySpacing.md),
               Row(
                 children: List.generate(_priceOptions.length, (i) {
@@ -355,7 +355,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── MODE DE TRANSPORT ───────────────────────────────────────
-              const _SectionLabel(label: 'MODE DE TRANSPORT', icon: Icons.commute_rounded),
+              const _SectionLabel(label: 'MODE DE TRANSPORT', iconAsset: 'route'),
               const SizedBox(height: DonySpacing.sm),
               Wrap(
                 spacing: DonySpacing.sm,
@@ -374,7 +374,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
               // ── CE QUE J'ACCEPTE ────────────────────────────────────────
               const _SectionLabel(
-                  label: "CE QUE J'ACCEPTE", icon: Icons.check_circle_outline_rounded),
+                  label: "CE QUE J'ACCEPTE", iconAsset: 'circle-check'),
               const SizedBox(height: DonySpacing.sm),
               Wrap(
                 spacing: DonySpacing.xs,
@@ -402,7 +402,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (isSelected) ...[
-                            const Icon(Icons.check_rounded, size: 12, color: Colors.white),
+                            const DonyIcon('check', size: 12, color: Colors.white),
                             const SizedBox(width: DonySpacing.xs),
                           ],
                           Text(
@@ -421,7 +421,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── HEURE D'ARRIVÉE ─────────────────────────────────────────
-              const _SectionLabel(label: "HEURE D'ARRIVÉE", icon: Icons.flight_land_rounded),
+              const _SectionLabel(label: "HEURE D'ARRIVÉE", iconAsset: 'plane-landing'),
               const SizedBox(height: DonySpacing.sm),
               GestureDetector(
                 onTap: () async {
@@ -441,7 +441,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time_rounded, color: cs.primary, size: 20),
+                      DonyIcon('clock', color: cs.primary, size: 20),
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
@@ -454,7 +454,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                       if (_arrivalTime != null)
                         GestureDetector(
                           onTap: () => setState(() => _arrivalTime = null),
-                          child: Icon(Icons.close_rounded, size: 18, color: cs.onSurfaceVariant),
+                          child: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
                         ),
                     ],
                   ),
@@ -463,7 +463,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── PAIEMENT ────────────────────────────────────────────────
-              const _SectionLabel(label: 'PAIEMENT', icon: Icons.payments_outlined),
+              const _SectionLabel(label: 'PAIEMENT', iconAsset: 'banknote'),
               const SizedBox(height: DonySpacing.sm),
               GestureDetector(
                 onTap: () => setState(() => _cashAccepted = !_cashAccepted),
@@ -503,17 +503,17 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label, required this.icon});
+  const _SectionLabel({required this.label, required this.iconAsset});
 
   final String label;
-  final IconData icon;
+  final String iconAsset;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 18, color: cs.primary),
+        DonyIcon(iconAsset, size: 18, color: cs.primary),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,

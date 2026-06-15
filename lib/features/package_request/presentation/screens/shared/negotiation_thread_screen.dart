@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -103,7 +104,7 @@ class _ThreadView extends StatelessWidget {
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                   ),
-                  child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+                  child: DonyIcon('chevron-left', size: 20, color: cs.primary),
                 ),
               );
             }),
@@ -126,7 +127,7 @@ class _ThreadView extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: DonySpacing.sm),
           child: IconButton(
-            icon: const Icon(Icons.more_horiz_rounded,
+            icon: const DonyIcon('ellipsis',
                 color: DonyColors.textPrimary, size: 22),
             onPressed: () {},
           ),

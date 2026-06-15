@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -1160,7 +1161,7 @@ class _CreateAnnouncementContentState
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CaSectionLabel(label: 'Mes modèles', icon: Icons.bookmark_rounded),
+            const CaSectionLabel(label: 'Mes modèles', iconAsset: 'bookmark'),
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Applique un modèle pour pré-remplir le trajet',
@@ -1178,7 +1179,7 @@ class _CreateAnnouncementContentState
                   return ActionChip(
                     avatar: t.emoji != null
                         ? Text(t.emoji!)
-                        : Icon(Icons.bookmark_border_rounded, size: 16, color: cs.primary),
+                        : DonyIcon('bookmark', size: 16, color: cs.primary),
                     label: Text('${t.label} · ${t.pricePerKg.toStringAsFixed(0)}€/kg'),
                     onPressed: () => _applyTemplate(t),
                   );
@@ -1219,7 +1220,7 @@ class _CreateAnnouncementContentState
         lockDate: widget.lockCorridorAndDate,
       ),
       const SizedBox(height: DonySpacing.lg),
-      const CaSectionLabel(label: 'FENÊTRE DE REMISE', icon: Icons.schedule_rounded),
+      const CaSectionLabel(label: 'FENÊTRE DE REMISE', iconAsset: 'clock'),
       const SizedBox(height: DonySpacing.xs),
       CaSectionCard(
         child: Column(
@@ -1232,7 +1233,7 @@ class _CreateAnnouncementContentState
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
                 ),
-                leading: Icon(Icons.schedule_rounded, size: 20,
+                leading: DonyIcon('clock', size: 20,
                     color: Theme.of(context).colorScheme.primary),
                 title: const Text('Début de remise'),
                 trailing: Text(dt != null
@@ -1248,7 +1249,7 @@ class _CreateAnnouncementContentState
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
                 ),
-                leading: Icon(Icons.schedule_rounded, size: 20,
+                leading: DonyIcon('clock', size: 20,
                     color: Theme.of(context).colorScheme.primary),
                 title: const Text('Fin de remise'),
                 trailing: Text(dt != null
@@ -1276,7 +1277,7 @@ class _CreateAnnouncementContentState
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.error_outline_rounded,
+                      DonyIcon('circle-alert',
                           size: 16,
                           color: Theme.of(context).colorScheme.error),
                       const SizedBox(width: DonySpacing.xs),
@@ -1427,7 +1428,7 @@ class _LockedBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lock_rounded, size: 20, color: cs.primary),
+          DonyIcon('lock', size: 20, color: cs.primary),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(

@@ -60,7 +60,9 @@ void main() {
     whenListen(bloc, Stream.value(CommissionMethodNotConfigured()),
         initialState: CommissionMethodNotConfigured());
     await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
-    await tester.pump();
+    // pumpAndSettle : laisse l'animation flutter_animate de la mascotte
+    // (empty state) se terminer, sinon "A Timer is still pending" au teardown.
+    await tester.pumpAndSettle();
     expect(find.text('Ajouter une carte'), findsOneWidget);
   });
 
@@ -86,7 +88,7 @@ void main() {
     whenListen(bloc, Stream.value(CommissionMethodNotConfigured()),
         initialState: CommissionMethodNotConfigured());
     await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Ajouter une carte'));
     verify(() => bloc.add(any(that: isA<CommissionMethodSetupRequested>()))).called(1);
   });

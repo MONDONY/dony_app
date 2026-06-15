@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// Dialogue standardisé dony.
@@ -25,6 +26,7 @@ abstract final class DonyDialog {
     String cancelLabel = 'Annuler',
     DonyDialogVariant variant = DonyDialogVariant.info,
     IconData? icon,
+    String? iconAsset,
   }) {
     return showDialog<bool>(
       context: context,
@@ -36,6 +38,7 @@ abstract final class DonyDialog {
         cancelLabel: cancelLabel,
         variant: variant,
         icon: icon,
+        iconAsset: iconAsset,
       ),
     );
   }
@@ -50,6 +53,7 @@ class _DonyDialogWidget extends StatelessWidget {
     required this.cancelLabel,
     required this.variant,
     this.icon,
+    this.iconAsset,
   });
 
   final String title;
@@ -59,6 +63,7 @@ class _DonyDialogWidget extends StatelessWidget {
   final String cancelLabel;
   final DonyDialogVariant variant;
   final IconData? icon;
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +100,7 @@ class _DonyDialogWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (icon != null) ...[
+            if (icon != null || iconAsset != null) ...[
               Center(
                 child: Container(
                   width: 52,
@@ -104,7 +109,11 @@ class _DonyDialogWidget extends StatelessWidget {
                     color: iconBg,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: iconColor, size: 26),
+                  child: Center(
+                    child: iconAsset != null
+                        ? DonyIcon(iconAsset!, color: iconColor, size: 26)
+                        : Icon(icon, color: iconColor, size: 26),
+                  ),
                 ),
               ),
               const SizedBox(height: DonySpacing.base),
@@ -112,14 +121,18 @@ class _DonyDialogWidget extends StatelessWidget {
             Text(
               title,
               style: tt.headlineSmall,
-              textAlign: icon != null ? TextAlign.center : TextAlign.left,
+              textAlign: (icon != null || iconAsset != null)
+                  ? TextAlign.center
+                  : TextAlign.left,
             ),
             if (message != null) ...[
               const SizedBox(height: DonySpacing.sm),
               Text(
                 message!,
                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                textAlign: icon != null ? TextAlign.center : TextAlign.left,
+                textAlign: (icon != null || iconAsset != null)
+                    ? TextAlign.center
+                    : TextAlign.left,
               ),
             ],
             if (content != null) ...[

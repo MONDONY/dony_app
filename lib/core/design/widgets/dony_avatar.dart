@@ -1,4 +1,5 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 enum DonyAvatarSize { xs, sm, md, lg, xl }
@@ -109,8 +110,8 @@ class _VerifiedBadge extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Icon(Icons.verified_rounded, size: size, color: DonyColors.white),
-          Icon(Icons.verified_rounded, size: size * 0.88, color: color),
+          DonyIcon('badge-check', size: size, color: DonyColors.white),
+          DonyIcon('badge-check', size: size * 0.88, color: color),
         ],
       ),
     );

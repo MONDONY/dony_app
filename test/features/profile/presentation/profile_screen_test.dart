@@ -20,6 +20,7 @@ import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -761,7 +762,7 @@ void main() {
           );
           await tester.pump(const Duration(milliseconds: 600));
 
-          expect(find.byIcon(Icons.verified_rounded), findsWidgets);
+          expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsWidgets);
           await tester.pumpAndSettle(const Duration(seconds: 5));
         },
       );

@@ -14,6 +14,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -256,7 +257,7 @@ void main() {
 
       // Taper sur l'icône d'ajout (Icons.add_rounded) dans la section refus
       await tester.tap(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.add_rounded).last,
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plus').last,
       );
       await tester.pump();
 
@@ -280,7 +281,7 @@ void main() {
 
       // Tap sur la croix du chip
       await tester.tap(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.close_rounded).last,
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x').last,
       );
       await tester.pump();
 
@@ -310,7 +311,7 @@ void main() {
       // Taper sur l'icône d'ajout — le premier add_rounded dans le tree
       // appartient à la section "Ce que j'accepte"
       await tester.tap(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.add_rounded).first,
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plus').first,
         warnIfMissed: false,
       );
       await tester.pump();
@@ -333,7 +334,7 @@ void main() {
 
       // Tap sur la croix du chip
       await tester.tap(
-        find.byWidgetPredicate((w) => w is Icon && w.icon == Icons.close_rounded).first,
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x').first,
         warnIfMissed: false,
       );
       await tester.pump();

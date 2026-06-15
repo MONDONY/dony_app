@@ -2,6 +2,7 @@
 // Ce fichier est interne à la feature matching — ne pas importer depuis l'extérieur.
 // Ca = préfixe CreateAnnouncement — widgets internes à la feature, ne pas importer ailleurs.
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -75,7 +76,13 @@ class CaRowDivider extends StatelessWidget {
 class CaSectionLabel extends StatelessWidget {
   final String label;
   final IconData? icon;
-  const CaSectionLabel({super.key, required this.label, this.icon});
+  final String? iconAsset;
+  const CaSectionLabel({
+    super.key,
+    required this.label,
+    this.icon,
+    this.iconAsset,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -88,11 +95,13 @@ class CaSectionLabel extends StatelessWidget {
         fontWeight: FontWeight.w600,
       ),
     );
-    if (icon == null) return labelWidget;
+    if (icon == null && iconAsset == null) return labelWidget;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: cs.onSurfaceVariant),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant)
+            : Icon(icon, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         labelWidget,
       ],
@@ -161,7 +170,7 @@ class CaInlineAddRow extends StatelessWidget {
                     color: accentColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.add_rounded,
+                  child: const DonyIcon('plus',
                       size: 18, color: DonyColors.white),
                 ),
               ),
@@ -215,7 +224,7 @@ class CaRemovableChip extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(Icons.close_rounded, size: 14, color: accentColor),
+            child: DonyIcon('x', size: 14, color: accentColor),
           ),
         ],
       ),
@@ -253,7 +262,7 @@ class CaTimeRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time_rounded,
+            DonyIcon('clock',
                 size: 14, color: color.withValues(alpha: 0.7)),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -275,11 +284,11 @@ class CaTimeRow extends StatelessWidget {
             if (time != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: Icon(Icons.close_rounded,
+                child: DonyIcon('x',
                     size: 16, color: cs.onSurfaceVariant),
               )
             else
-              Icon(Icons.chevron_right_rounded,
+              DonyIcon('chevron-right',
                   size: 18, color: cs.onSurfaceVariant),
           ],
         ),
@@ -376,7 +385,7 @@ class CaStepNode extends StatelessWidget {
       ),
       child: Center(
         child: isDone
-            ? Icon(Icons.check_rounded, size: 14, color: cs.onPrimary)
+            ? DonyIcon('check', size: 14, color: cs.onPrimary)
             : Text(
                 '${index + 1}',
                 style: tt.labelSmall?.copyWith(
@@ -410,7 +419,7 @@ class CaDateRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today_rounded,
+            DonyIcon('calendar',
                 size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -427,7 +436,7 @@ class CaDateRow extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
+            DonyIcon('chevron-right',
                 size: 18, color: cs.onSurfaceVariant),
           ],
         ),

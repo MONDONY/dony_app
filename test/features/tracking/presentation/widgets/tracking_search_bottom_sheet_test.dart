@@ -2,6 +2,7 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_search_bottom_sheet.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +41,7 @@ void main() {
 
     expect(find.text('Numéro de suivi'), findsOneWidget);
     expect(find.text('Rechercher'), findsOneWidget);
-    expect(find.byIcon(Icons.search_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'search'), findsOneWidget);
   });
 
   testWidgets('envoie TrackingSearchRequested avec le numéro normalisé',

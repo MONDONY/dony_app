@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -62,7 +63,7 @@ class _CancellationScreenState extends State<CancellationScreen> {
       message:
           'Cette action annulera votre trajet et remboursera automatiquement tous les expéditeurs concernés.',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.warning_amber_rounded,
+      iconAsset: 'triangle-alert',
     ).then((confirmed) {
       if (confirmed == true) {
         bloc.add(CancellationTripRequested(
@@ -162,7 +163,7 @@ class _WarningBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: cs.error, size: 20),
+              DonyIcon('triangle-alert', color: cs.error, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
                 'Attention',

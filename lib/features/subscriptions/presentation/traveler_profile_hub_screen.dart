@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
@@ -56,7 +58,7 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
                   elevation: 0,
                   scrolledUnderElevation: 0,
                   leading: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+                    icon: const DonyIcon('chevron-left', size: 20),
                     onPressed: () => context.pop(),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
@@ -190,19 +192,19 @@ class _LoadedProfileHeader extends StatelessWidget {
                     children: [
                       if (profile.isProAccount)
                         _ProfileBadge(
-                          icon: Icons.star_rounded,
+                          lucideIcon: 'star',
                           label: 'Compte PRO',
                           iconColor: cs.warning,
                         ),
                       if (profile.isKiloPro)
                         _ProfileBadge(
-                          icon: Icons.local_shipping_rounded,
+                          iconAsset: 'package',
                           label: 'Kilo Pro',
                           iconColor: cs.warning,
                         ),
                       if (profile.kycVerified)
                         _ProfileBadge(
-                          icon: Icons.verified_rounded,
+                          lucideIcon: 'badge-check',
                           label: 'Identité vérifiée',
                           iconColor: cs.primary,
                         ),
@@ -220,12 +222,14 @@ class _LoadedProfileHeader extends StatelessWidget {
 
 class _ProfileBadge extends StatelessWidget {
   const _ProfileBadge({
-    required this.icon,
+    this.lucideIcon,
+    this.iconAsset,
     required this.label,
     required this.iconColor,
   });
 
-  final IconData icon;
+  final String? lucideIcon;
+  final String? iconAsset;
   final String label;
   final Color iconColor;
 
@@ -244,7 +248,9 @@ class _ProfileBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: iconColor),
+          iconAsset != null
+              ? const DonyEmoji.parcel(size: 11)
+              : DonyIcon(lucideIcon!, size: 11, color: iconColor),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -261,13 +267,15 @@ class _ProfileBadge extends StatelessWidget {
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
-    required this.icon,
+    this.lucideIcon,
+    this.iconAsset,
     required this.iconColor,
     required this.value,
     required this.label,
   });
 
-  final IconData icon;
+  final String? lucideIcon;
+  final String? iconAsset;
   final Color iconColor;
   final String value;
   final String label;
@@ -288,7 +296,9 @@ class _StatCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: iconColor),
+          iconAsset != null
+              ? const DonyEmoji.parcel(size: 14)
+              : DonyIcon(lucideIcon!, size: 14, color: iconColor),
           Text(
             value,
             style: tt.titleSmall?.copyWith(
@@ -362,7 +372,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
                     children: [
                       Expanded(
                         child: _StatCard(
-                          icon: Icons.star_rounded,
+                          lucideIcon: 'star',
                           iconColor: cs.warning,
                           value: profile.averageRating > 0
                               ? profile.averageRating.toStringAsFixed(1)
@@ -373,7 +383,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: _StatCard(
-                          icon: Icons.inventory_2_rounded,
+                          iconAsset: 'package',
                           iconColor: cs.primary,
                           value: '${profile.completedBidsCount}',
                           label: 'Livraisons',
@@ -382,7 +392,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: _StatCard(
-                          icon: Icons.timer_rounded,
+                          lucideIcon: 'timer',
                           iconColor: cs.success,
                           value: profile.responseDelayHours != null
                               ? '<${profile.responseDelayHours}h'
@@ -461,7 +471,7 @@ class _SubscribedRow extends StatelessWidget {
           'Vous ne recevrez plus les notifications de ce voyageur.',
       confirmLabel: 'Se désabonner',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.notifications_off_rounded,
+      iconAsset: 'bell-off',
     );
     if ((confirmed ?? false) && context.mounted) {
       context
@@ -487,10 +497,8 @@ class _SubscribedRow extends StatelessWidget {
           tooltip: pushEnabled
               ? 'Désactiver les notifications'
               : 'Activer les notifications',
-          icon: Icon(
-            pushEnabled
-                ? Icons.notifications_active_rounded
-                : Icons.notifications_off_rounded,
+          icon: DonyIcon(
+            pushEnabled ? 'bell' : 'bell-off',
             color: Theme.of(context).colorScheme.primary,
           ),
           onPressed: () => context
@@ -519,7 +527,7 @@ class _TripsTab extends StatelessWidget {
             child: DonyEmptyState(
               type: DonyEmptyStateType.error,
               mascotte: DonyMascotteType.assis,
-              icon: Icons.error_outline_rounded,
+              iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
               description: 'Impossible de charger les trajets. Réessayez dans un instant.',
               actionLabel: 'Réessayer',
@@ -535,7 +543,7 @@ class _TripsTab extends StatelessWidget {
         if (announcements.isEmpty) {
           return const DonyEmptyState(
             mascotte: DonyMascotteType.assis,
-            icon: Icons.flight_takeoff_rounded,
+            iconAsset: 'plane-takeoff',
             title: 'Aucun trajet en cours',
             description: 'Ce voyageur n\'a pas encore publié de trajet.',
           );
@@ -580,7 +588,7 @@ class _ReviewsTab extends StatelessWidget {
           return DonyEmptyState(
             type: DonyEmptyStateType.error,
             mascotte: DonyMascotteType.assis,
-            icon: Icons.error_outline_rounded,
+            iconAsset: 'circle-alert',
             title: 'Impossible de charger les avis',
             description: state.message,
           );
@@ -610,7 +618,7 @@ class _ReviewsList extends StatelessWidget {
     if (items.isEmpty) {
       return const DonyEmptyState(
         mascotte: DonyMascotteType.assis,
-        icon: Icons.star_border_rounded,
+        iconAsset: 'star',
         title: 'Aucun avis',
         description: 'Ce voyageur n\'a pas encore reçu d\'avis.',
       );
@@ -634,7 +642,7 @@ class _ReviewsList extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.star_rounded, color: cs.warning, size: 28),
+              DonyIcon('star', color: cs.warning, size: 28),
               const SizedBox(width: DonySpacing.sm),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,10 +701,8 @@ class _ReviewCard extends StatelessWidget {
           Row(
             children: [
               ...List.generate(5, (i) {
-                return Icon(
-                  i < item.stars
-                      ? Icons.star_rounded
-                      : Icons.star_border_rounded,
+                return DonyIcon(
+                  'star',
                   size: 14,
                   color: i < item.stars
                       ? cs.warning

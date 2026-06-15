@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class DisclaimerCard extends StatelessWidget {
       title: 'Responsabilité légale',
       child: Row(
         children: [
-          Icon(Icons.verified_outlined, color: cs.success, size: 20),
+          DonyIcon('badge-check', color: cs.success, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(

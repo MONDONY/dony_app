@@ -1,6 +1,7 @@
 // dony_app/lib/features/settings/presentation/widgets/delete_account_bottom_sheet.dart
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_confirmation_sheet.dart';
 import 'package:dony/features/settings/presentation/widgets/escrow_block_dialog.dart';
@@ -98,7 +99,7 @@ class _DeleteAccountBottomSheetState
         message:
             'Votre compte sera suspendu pendant 30 jours. Vous pourrez le réactiver depuis votre profil.',
         variant: DonyDialogVariant.info,
-        icon: Icons.hourglass_empty_rounded,
+        iconAsset: 'hourglass',
       ).then((confirmed) {
         if (confirmed == true && mounted) bloc.add(const RequestDeletion());
       });
@@ -137,7 +138,7 @@ class _DeleteAccountBottomSheetState
           _ModeCard(
             mode: DeleteMode.soft,
             modeNotifier: widget.modeNotifier,
-            icon: Icons.hourglass_empty_rounded,
+            iconAsset: 'hourglass',
             title: 'Pause 30 jours',
             badge: 'RÉVERSIBLE',
             isDestructive: false,
@@ -148,7 +149,7 @@ class _DeleteAccountBottomSheetState
           _ModeCard(
             mode: DeleteMode.hard,
             modeNotifier: widget.modeNotifier,
-            icon: Icons.delete_forever_rounded,
+            iconAsset: 'trash',
             title: 'Supprimer définitivement',
             badge: 'IRRÉVERSIBLE',
             isDestructive: true,
@@ -178,7 +179,7 @@ class _DeleteAccountBottomSheetState
 class _ModeCard extends StatelessWidget {
   final DeleteMode mode;
   final ValueNotifier<DeleteMode?> modeNotifier;
-  final IconData icon;
+  final String iconAsset;
   final String title;
   final String badge;
   final bool isDestructive;
@@ -187,7 +188,7 @@ class _ModeCard extends StatelessWidget {
   const _ModeCard({
     required this.mode,
     required this.modeNotifier,
-    required this.icon,
+    required this.iconAsset,
     required this.title,
     required this.badge,
     required this.isDestructive,
@@ -225,7 +226,7 @@ class _ModeCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(icon, size: 20, color: badgeColor),
+                    DonyIcon(iconAsset, size: 20, color: badgeColor),
                     const SizedBox(width: DonySpacing.sm),
                     Expanded(
                       child: Text(title,

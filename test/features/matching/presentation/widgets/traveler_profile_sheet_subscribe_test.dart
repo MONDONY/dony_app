@@ -8,6 +8,7 @@ import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -114,7 +115,7 @@ void main() {
     await _openSheet(tester);
 
     expect(find.text('Abonné ✓'), findsOneWidget);
-    expect(find.byIcon(Icons.notifications_active_rounded), findsWidgets);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'), findsWidgets);
   });
 
   testWidgets('la barre est masquée tant que le statut n\'est pas chargé',

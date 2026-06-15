@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -295,8 +296,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         width: 2,
                                       ),
                                     ),
-                                    child: Icon(
-                                      Icons.camera_alt_rounded,
+                                    child: DonyIcon(
+                                      'camera',
                                       size: 14,
                                       color: Theme.of(context).colorScheme.onPrimary,
                                     ),
@@ -324,14 +325,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 DonyTextField(
                   controller: _firstNameCtrl,
                   label: 'Prénom',
-                  prefixIcon: Icons.person_outline_rounded,
+                  prefixWidget: DonyIcon(
+                    'user',
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   enabled: !isSaving,
                 ),
                 const SizedBox(height: DonySpacing.md),
                 DonyTextField(
                   controller: _lastNameCtrl,
                   label: 'Nom de famille',
-                  prefixIcon: Icons.person_outline_rounded,
+                  prefixWidget: DonyIcon(
+                    'user',
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   enabled: !isSaving,
                 ),
                 const SizedBox(height: DonySpacing.xxl),
@@ -360,7 +369,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 DonyTextField(
                   controller: _emailCtrl,
                   label: 'Email (optionnel)',
-                  prefixIcon: Icons.email_outlined,
+                  prefixWidget: DonyIcon(
+                    'mail',
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   keyboardType: TextInputType.emailAddress,
                   enabled: !isSaving,
                 ),
@@ -378,7 +391,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 DonyTextField(
                   controller: _cityCtrl,
                   label: "Ville / lieu d'habitation",
-                  prefixIcon: Icons.location_city_outlined,
+                  prefixWidget: DonyIcon(
+                    'building-2',
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   enabled: !isSaving,
                 ),
                 const SizedBox(height: DonySpacing.xxl),
@@ -501,7 +518,7 @@ class _BirthDatePicker extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.cake_outlined, color: cs.onSurfaceVariant, size: 20),
+            DonyIcon('cake', color: cs.onSurfaceVariant, size: 20),
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Text(
@@ -514,7 +531,7 @@ class _BirthDatePicker extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant, size: 18),
+            DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
           ],
         ),
       ),

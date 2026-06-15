@@ -87,7 +87,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   const _SectionLabel('PAIEMENTS'),
                   DonyListSection(tiles: [
                     DonyListTile(
-                      icon: Icons.fingerprint_rounded,
+                      iconAsset: 'fingerprint',
                       iconColor: biometricAvailable
                           ? cs.primary
                           : cs.onSurfaceVariant,
@@ -125,7 +125,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   const _SectionLabel('APPLICATION'),
                   DonyListSection(tiles: [
                     DonyListTile(
-                      icon: Icons.lock_rounded,
+                      iconAsset: 'lock',
                       iconColor: biometricAvailable
                           ? cs.primary
                           : cs.onSurfaceVariant,
@@ -164,7 +164,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   const _SectionLabel('AUTHENTIFICATION'),
                   DonyListSection(tiles: [
                     DonyListTile(
-                      icon: Icons.pin_rounded,
+                      iconAsset: 'key-round',
                       iconColor: cs.primary,
                       iconBgColor: cs.primaryContainer,
                       label: 'Modifier le code PIN',
@@ -181,7 +181,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   const _SectionLabel('SESSION'),
                   DonyListSection(tiles: [
                     DonyListTile(
-                      icon: Icons.devices_rounded,
+                      iconAsset: 'smartphone',
                       iconColor: cs.primary,
                       iconBgColor: cs.primaryContainer,
                       label: 'Appareils connectés',

@@ -408,36 +408,23 @@ void main() {
   // ---------------------------------------------------------------------------
   group('P3/P4 — Couleurs sémantiques icônes départ/arrivée', () {
     testWidgets(
-      'icône ville d\'arrivée reçoit colorScheme.secondary (terracotta)',
+      'champ ville d\'arrivée affiche l\'emoji atterrissage 🛬',
       (tester) async {
-        // L'icône de la ville d'arrivée est un Icon widget passé en prefixIcon
-        // à CityAutocompleteField. On trouve l'Icon dont la couleur est secondary.
-        // Le thème MaterialApp par défaut expose un ColorScheme — secondary est
-        // la couleur terracotta #D96A3A de l'app.
-        // On vérifie que le prefixIconColor passé à DonyIcons.arrivalCity est
-        // secondary et non primary (qui serait pour le départ).
+        // Les prefixIcon des champs ville (CityAutocompleteField) utilisent
+        // désormais l'emoji décollage/atterrissage (DonyEmoji) au lieu d'un Icon
+        // teinté. L'emoji n'est pas teintable : on vérifie sa présence.
         await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        // L'Icon arrivée est rendu avec DonyIcons.arrivalCity et color secondary
-        // On utilise find.byWidgetPredicate pour cibler l'Icon dont l'iconData
-        // est DonyIcons.arrivalCity et vérifier sa couleur.
-        final arrivalIconFinder = find.byWidgetPredicate((widget) {
-          if (widget is! Icon) return false;
-          if (widget.icon != DonyIcons.arrivalCity) return false;
-          // La couleur passée doit être secondary (non primary)
-          final cs = Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
-          return widget.color == cs.secondary;
-        });
-        expect(arrivalIconFinder, findsOneWidget);
+        expect(find.text('🛬'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'icône ville de départ reçoit colorScheme.primary (bleu)',
+      'champ ville de départ affiche l\'emoji décollage 🛫',
       (tester) async {
         await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
@@ -445,13 +432,7 @@ void main() {
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        final departureCityIconFinder = find.byWidgetPredicate((widget) {
-          if (widget is! Icon) return false;
-          if (widget.icon != DonyIcons.departureCity) return false;
-          final cs = Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
-          return widget.color == cs.primary;
-        });
-        expect(departureCityIconFinder, findsOneWidget);
+        expect(find.text('🛫'), findsOneWidget);
       },
     );
 

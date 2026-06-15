@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -247,7 +248,7 @@ class _OwnRequestBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.person_rounded, size: 10, color: Colors.white),
+          const DonyIcon('user', size: 10, color: Colors.white),
           const SizedBox(width: 3),
           Text(
             'Ma demande',
@@ -287,7 +288,7 @@ class _DistanceBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.location_on_rounded, size: 10, color: Colors.white),
+          const DonyIcon('map-pin', size: 10, color: Colors.white),
           const SizedBox(width: 3),
           Text(
             label,
@@ -343,7 +344,7 @@ class _InfoSection extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(Icons.star_rounded, size: 12, color: cs.warning),
+              DonyIcon('star', size: 12, color: cs.warning),
               const SizedBox(width: 2),
               Text(
                 item.sender.averageRating.toStringAsFixed(1),
@@ -369,7 +370,7 @@ class _InfoSection extends StatelessWidget {
           // Ligne 2 : date · catégorie
           Row(
             children: [
-              Icon(Icons.calendar_today_rounded, size: 11, color: cs.onSurfaceVariant),
+              DonyIcon('calendar', size: 11, color: cs.onSurfaceVariant),
               const SizedBox(width: 3),
               Text(
                 '$dateStr$toleranceStr',

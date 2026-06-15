@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class OfflineQueueBottomSheet extends StatelessWidget {
       wrapper: (child) => BlocProvider.value(value: trackingBloc, child: child),
       stickyBottom: DonyButton(
         label: 'Synchroniser',
-        icon: Icons.sync_rounded,
+        iconAsset: 'refresh-cw',
         onPressed: () {
           trackingBloc.add(OfflineSyncRequested());
           Navigator.of(context, rootNavigator: true).pop();
@@ -118,8 +119,8 @@ class _EventIconBox extends StatelessWidget {
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
-      child: Icon(
-        Icons.qr_code_rounded,
+      child: DonyIcon(
+        'qr-code',
         size: 18,
         color: cs.onPrimaryContainer,
       ),

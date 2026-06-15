@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -31,17 +32,17 @@ class NotificationSettingsScreen extends StatelessWidget {
                   title: 'PROTECTIONS CRITIQUES',
                   titleColor: Theme.of(context).colorScheme.error),
               _buildLockedTile(context,
-                icon: Icons.verified_rounded,
+                iconAsset: 'badge-check',
                 label: 'Livraison confirmée',
                 subtitle: 'SMS automatique si push non reçu',
               ),
               _buildLockedTile(context,
-                icon: Icons.payments_rounded,
+                iconAsset: 'banknote',
                 label: 'Paiement reçu',
                 subtitle: 'SMS automatique si push non reçu',
               ),
               _buildLockedTile(context,
-                icon: Icons.gavel_rounded,
+                iconAsset: 'gavel',
                 label: 'Litige ouvert',
                 subtitle: 'SMS automatique si push non reçu',
               ),
@@ -138,7 +139,7 @@ class NotificationSettingsScreen extends StatelessWidget {
 
   Widget _buildLockedTile(
     BuildContext context, {
-    required IconData icon,
+    required String iconAsset,
     required String label,
     required String subtitle,
   }) {
@@ -150,7 +151,7 @@ class NotificationSettingsScreen extends StatelessWidget {
       ),
       margin: const EdgeInsets.only(bottom: 4),
       child: DonyListTile(
-        icon: icon,
+        iconAsset: iconAsset,
         iconColor: cs.error,
         iconBgColor: cs.errorContainer,
         label: label,
@@ -185,7 +186,7 @@ class NotificationSettingsScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, size: 16, color: cs.error),
+          DonyIcon('info', size: 16, color: cs.error),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
@@ -213,9 +214,7 @@ class NotificationSettingsScreen extends StatelessWidget {
     final isOn = prefs[key] ?? false;
 
     return DonyListTile(
-      icon: isOn
-          ? Icons.notifications_active_rounded
-          : Icons.notifications_off_outlined,
+      iconAsset: isOn ? 'bell' : 'bell-off',
       iconColor: isOn ? cs.primary : cs.onSurfaceVariant,
       iconBgColor: isOn
           ? cs.primaryContainer

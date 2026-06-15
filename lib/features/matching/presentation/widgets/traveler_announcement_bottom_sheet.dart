@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
@@ -71,7 +73,7 @@ void showTravelerAnnouncementSheet(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.info_outline_rounded,
+                    DonyIcon('info',
                         size: 16, color: cs.onSurfaceVariant),
                     const SizedBox(width: DonySpacing.xs),
                     Flexible(
@@ -87,7 +89,7 @@ void showTravelerAnnouncementSheet(
               DonyButton(
                 key: const Key('see-my-parcel-btn'),
                 label: 'Voir mon colis',
-                icon: Icons.inventory_2_rounded,
+                iconAsset: 'package',
                 onPressed: resolvedBid == null
                     ? null
                     : () {
@@ -103,7 +105,7 @@ void showTravelerAnnouncementSheet(
         }
         return DonyButton(
           label: 'Faire une demande',
-          icon: Icons.send_rounded,
+          iconAsset: 'send',
           onPressed: () async {
             final navigator = Navigator.of(innerCtx, rootNavigator: true);
             final rootCtx = navigator.context;
@@ -193,7 +195,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                       const SizedBox(height: DonySpacing.xxs),
                       Row(
                         children: [
-                          Icon(Icons.star_rounded, size: 14, color: cs.warning),
+                          DonyIcon('star', size: 14, color: cs.warning),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
                             rating != null ? '${rating.toStringAsFixed(1)}/5' : 'Nouveau',
@@ -212,8 +214,8 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
+                DonyIcon(
+                  'chevron-right',
                   size: 20,
                   color: cs.onSurfaceVariant,
                 ),
@@ -243,7 +245,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                 children: [
                   Container(width: 6, height: 6, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)),
                   Container(width: 28, height: 1.5, color: cs.primary.withValues(alpha: 0.3)),
-                  Icon(Icons.flight_takeoff_rounded, size: 16, color: cs.primary),
+                  const DonyEmoji.planeTakeoff(size: 16),
                   Container(width: 28, height: 1.5, color: cs.primary.withValues(alpha: 0.3)),
                   Container(width: 6, height: 6, decoration: const BoxDecoration(color: DonyColors.accent, shape: BoxShape.circle)),
                 ],
@@ -263,17 +265,17 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.lg),
 
         // Détails
-        _InfoRow(icon: Icons.calendar_today_outlined, label: dateStr),
+        _InfoRow(iconAsset: 'calendar', label: dateStr),
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
-          icon: Icons.inventory_2_outlined,
+          iconAsset: 'package',
           label: announcement.isKgFree
               ? 'Kg libre'
               : '${announcement.availableKg.toStringAsFixed(0)} kg disponibles',
         ),
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
-          icon: Icons.euro_rounded,
+          iconAsset: 'euro',
           label: announcement.pricingMode == 'MIXED'
               ? 'Grille tarifaire'
               : '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
@@ -284,7 +286,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             announcement.handoverWindowEnd != null) ...[
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
-            icon: Icons.schedule_rounded,
+            iconAsset: 'clock',
             label: 'Remise : '
                 '${_handoverRangeLabel(announcement.handoverWindowStart!.toLocal(), announcement.handoverWindowEnd!.toLocal())}',
           ),
@@ -360,8 +362,8 @@ String _handoverRangeLabel(DateTime start, DateTime end) {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, this.labelStyle});
-  final IconData icon;
+  const _InfoRow({required this.iconAsset, required this.label, this.labelStyle});
+  final String iconAsset;
   final String label;
   final TextStyle? labelStyle;
 
@@ -371,7 +373,7 @@ class _InfoRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 16, color: cs.onSurfaceVariant),
+        DonyIcon(iconAsset, size: 16, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
@@ -424,8 +426,8 @@ class _KycVerifiedBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.verified_rounded,
+          DonyIcon(
+            'badge-check',
             size: 11,
             color: cs.success,
           ),

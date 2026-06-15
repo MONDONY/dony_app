@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -167,7 +168,7 @@ class _DistanceChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.place_rounded, color: Colors.white, size: 10),
+          const DonyIcon('map-pin', color: Colors.white, size: 10),
           const SizedBox(width: 3),
           Text(
             label,
@@ -269,7 +270,7 @@ class _CompactInfo extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 3),
-                  Icon(Icons.arrow_forward_rounded,
+                  DonyIcon('arrow-right',
                       color: cs.onPrimary, size: 12),
                 ],
               ),

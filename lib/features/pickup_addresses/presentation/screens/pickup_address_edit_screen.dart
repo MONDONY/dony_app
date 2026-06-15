@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/address/address_default_toggle.dart';
 import 'package:dony/core/widgets/address/address_label_chips.dart';
 import 'package:dony/core/widgets/address/address_location_status.dart';
 import 'package:dony/core/widgets/address/address_section_label.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
@@ -195,8 +196,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                 controller: _labelCtrl,
                 label: "Nom de l'adresse",
                 hint: 'Ex : Maison, Bureau…',
-                prefixIcon: Icons.sell_outlined,
-                prefixIconColor: cs.primary,
+                prefixWidget: DonyIcon('tag', size: 20, color: cs.primary),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -245,8 +245,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                       controller: _cityCtrl,
                       label: 'Ville',
                       hint: 'Paris',
-                      prefixIcon: Icons.location_city_rounded,
-                      prefixIconColor: cs.primary,
+                      prefixWidget:
+                          DonyIcon('building-2', size: 20, color: cs.primary),
                       onChanged: (_) => setState(() {}),
                     ),
                   ),
@@ -260,8 +260,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                 controller: _floorCtrl,
                 label: 'Étage / Appartement',
                 hint: 'Optionnel — Ex : Bât. B, 3ème étage',
-                prefixIcon: Icons.meeting_room_outlined,
-                prefixIconColor: cs.primary,
+                prefixWidget:
+                    DonyIcon('door-open', size: 20, color: cs.primary),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: DonySpacing.xl),
@@ -279,7 +279,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                       left: DonySpacing.md,
                       right: DonySpacing.xs,
                     ),
-                    child: Icon(Icons.chat_bubble_outline_rounded,
+                    child: DonyIcon('message-circle',
                         size: 18, color: cs.onSurfaceVariant),
                   ),
                   prefixIconConstraints: const BoxConstraints(minWidth: 40),

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -260,8 +261,8 @@ class _TimelineItem extends StatelessWidget {
                     color: stepColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check_rounded,
+                  child: const DonyIcon(
+                    'check',
                     color: DonyColors.white,
                     size: 16,
                   ),
@@ -308,7 +309,7 @@ class _TimelineItem extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xs),
                     Row(
                       children: [
-                        Icon(Icons.location_on_rounded,
+                        DonyIcon('map-pin',
                             size: 12, color: cs.onSurfaceVariant),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
@@ -345,7 +346,7 @@ class _TimelineItem extends StatelessWidget {
                           height: 60,
                           color: cs.surfaceContainerHighest,
                           child: Center(
-                              child: Icon(Icons.broken_image_rounded,
+                              child: DonyIcon('image-off',
                                   color: cs.onSurfaceVariant)),
                         ),
                       ),
@@ -355,7 +356,7 @@ class _TimelineItem extends StatelessWidget {
                     const SizedBox(height: DonySpacing.sm),
                     Row(
                       children: [
-                        Icon(Icons.wifi_off_rounded,
+                        DonyIcon('wifi-off',
                             size: 12, color: cs.warning),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
@@ -393,7 +394,7 @@ class _PendingConfirmationBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.hourglass_top_rounded,
+          DonyIcon('hourglass',
               color: cs.warning, size: 22),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -434,14 +435,9 @@ class _EmptyTimeline extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.md),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.lg),
-            ),
-            child: Icon(Icons.hourglass_empty_rounded,
-                color: cs.primary, size: 32),
+          const DonyMascotteAnimated(
+            type: DonyMascotteType.donneColis,
+            size: DonyMascotteSize.md,
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
@@ -483,7 +479,7 @@ class _ApplessBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.check_circle_outline_rounded,
+              const DonyIcon('circle-check',
                   color: DonyColors.terra500, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
@@ -504,7 +500,7 @@ class _ApplessBanner extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
           DonyButton(
             label: 'Voir mon code de livraison',
-            icon: Icons.lock_open_rounded,
+            iconAsset: 'lock-open',
             onPressed: () => _showCodeSheet(context),
           ),
         ],
@@ -563,7 +559,7 @@ class _ConfirmationCodeSheetBody extends StatelessWidget {
             child: Center(
               child: DonyButton(
                 label: 'Réessayer',
-                icon: Icons.refresh_rounded,
+                iconAsset: 'refresh-cw',
                 fullWidth: false,
                 onPressed: () => context
                     .read<TrackingBloc>()
@@ -706,8 +702,8 @@ class _GlassRefreshButton extends StatelessWidget {
                       color: cs.onPrimaryContainer,
                     ),
                   )
-                : Icon(
-                    Icons.refresh_rounded,
+                : DonyIcon(
+                    'refresh-cw',
                     size: 18,
                     color: cs.onPrimaryContainer.withValues(alpha: 0.8),
                   ),
@@ -736,8 +732,10 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded,
-                color: cs.error, size: 40),
+            const DonyMascotteAnimated(
+              type: DonyMascotteType.assis,
+              size: DonyMascotteSize.lg,
+            ),
             const SizedBox(height: DonySpacing.md),
             Text(
               message,
@@ -747,7 +745,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: DonySpacing.lg),
             DonyButton(
               label: 'Réessayer',
-              icon: Icons.refresh_rounded,
+              iconAsset: 'refresh-cw',
               onPressed: onRetry,
               fullWidth: false,
             ),

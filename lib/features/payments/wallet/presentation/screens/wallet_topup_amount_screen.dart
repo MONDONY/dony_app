@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
@@ -171,7 +172,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           surfaceTintColor: Colors.transparent,
           centerTitle: false,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, size: 20),
+            icon: const DonyIcon('arrow-left', size: 20),
             tooltip: 'Retour',
             onPressed: () => context.pop(),
           ),

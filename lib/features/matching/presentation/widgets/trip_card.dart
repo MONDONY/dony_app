@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:flutter/material.dart';
@@ -225,14 +227,14 @@ class _ActiveCardContent extends StatelessWidget {
         children: [
           if (accepted > 0)
             _BidStatChip(
-              icon: Icons.check_circle_rounded,
+              iconAsset: 'circle-check',
               fg: cs.success,
               bg: cs.successLight,
               label: '$accepted ${plural(accepted, 'acceptée', 'acceptées')}',
             ),
           if (pending > 0)
             _BidStatChip(
-              icon: Icons.schedule_rounded,
+              iconAsset: 'clock',
               fg: cs.warning,
               bg: cs.warningLight,
               label: '$pending en attente',
@@ -313,11 +315,7 @@ class _ActiveCardContent extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 14,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  const DonyEmoji.parcel(size: 14),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     announcement.isKgFree
@@ -483,8 +481,8 @@ class _RouteTitle extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-          child: Icon(
-            Icons.arrow_forward_rounded,
+          child: DonyIcon(
+            'arrow-right',
             size: 16,
             color: cs.primary,
           ),
@@ -564,13 +562,15 @@ class _StatusBadge extends StatelessWidget {
 
 class _BidStatChip extends StatelessWidget {
   const _BidStatChip({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.fg,
     required this.bg,
     required this.label,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color fg;
   final Color bg;
   final String label;
@@ -591,7 +591,9 @@ class _BidStatChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: fg),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 14, color: fg)
+              : Icon(icon, size: 14, color: fg),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -635,11 +637,11 @@ class _FlightTimeline extends StatelessWidget {
                 size: Size(double.infinity, 2),
                 painter: _DashedLinePainter(color: DonyColors.blue200),
               ),
-              // Plane icon rotated to point right (Icons.flight points up by default)
+              // Plane icon rotated to point right (Lucide 'plane' points up-left by default)
               RotatedBox(
                 quarterTurns: 1,
-                child: Icon(
-                  Icons.flight_rounded,
+                child: DonyIcon(
+                  'plane',
                   size: 16,
                   color: cs.primary,
                 ),

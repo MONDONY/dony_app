@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -82,8 +84,7 @@ class DonyTripCard extends StatelessWidget {
                     if (rating != null)
                       Row(
                         children: [
-                          Icon(
-                            Icons.star_rounded,
+                          DonyIcon('star',
                             size: 13,
                             color: cs.warning,
                           ),
@@ -121,8 +122,7 @@ class DonyTripCard extends StatelessWidget {
           // — Pied : date + prix
           Row(
             children: [
-              Icon(
-                Icons.calendar_today_outlined,
+              DonyIcon('calendar',
                 size: 13,
                 color: cs.onSurfaceVariant,
               ),
@@ -201,7 +201,7 @@ class _RouteDisplay extends StatelessWidget {
                 height: 1.5,
                 color: cs.primary.withValues(alpha: 0.3),
               ),
-              Icon(Icons.flight_takeoff_rounded, size: 16, color: cs.primary),
+              const DonyEmoji.planeTakeoff(size: 16),
               Container(
                 width: 32,
                 height: 1.5,

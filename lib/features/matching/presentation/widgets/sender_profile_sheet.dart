@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -86,8 +87,8 @@ class _SenderProfileSheet extends StatelessWidget {
                 Positioned(
                   right: DonySpacing.sm,
                   child: IconButton(
-                    icon: Icon(
-                      Icons.more_horiz_rounded,
+                    icon: DonyIcon(
+                      'ellipsis',
                       color: cs.onSurfaceVariant,
                     ),
                     tooltip: 'Plus d\'options',
@@ -136,8 +137,8 @@ class _SenderProfileSheet extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.phone_rounded,
+                            DonyIcon(
+                              'phone',
                               size: 13,
                               color: cs.onSurfaceVariant,
                             ),
@@ -169,7 +170,7 @@ class _SenderProfileSheet extends StatelessWidget {
                           children: [
                             if (bid.senderIsProAccount)
                               _SheetBadge(
-                                icon: Icons.star_rounded,
+                                iconAsset: 'star',
                                 label: 'Compte PRO',
                                 iconColor: cs.warning,
                                 bgColor: cs.warningLight,
@@ -177,7 +178,7 @@ class _SenderProfileSheet extends StatelessWidget {
                               ),
                             if (bid.senderKiloPro)
                               const _SheetBadge(
-                                icon: Icons.star_rounded,
+                                iconAsset: 'star',
                                 label: 'Kilo Pro',
                                 iconColor: DonyColors.amberDark,
                                 bgColor: DonyColors.amberLight,
@@ -185,7 +186,7 @@ class _SenderProfileSheet extends StatelessWidget {
                               ),
                             if (bid.senderKycVerified)
                               _SheetBadge(
-                                icon: Icons.verified_rounded,
+                                iconAsset: 'badge-check',
                                 label: 'Identité vérifiée',
                                 iconColor: cs.primary,
                                 bgColor: cs.primaryContainer,
@@ -224,7 +225,7 @@ class _SenderProfileSheet extends StatelessWidget {
                           _SheetStat(
                             value: noteValue,
                             label: 'Note',
-                            icon: Icons.star_rounded,
+                            iconAsset: 'star',
                             iconColor: cs.warning,
                           ),
                           Container(width: 1, height: 36, color: cs.outline),
@@ -233,7 +234,7 @@ class _SenderProfileSheet extends StatelessWidget {
                                 ? '${bid.senderTotalShipments}'
                                 : '–',
                             label: 'Envois',
-                            icon: Icons.local_shipping_rounded,
+                            iconAsset: 'package',
                             iconColor: cs.primary,
                           ),
                         ],
@@ -294,7 +295,7 @@ class _SenderProfileSheet extends StatelessWidget {
                           onPressed: () => context.read<RatingBloc>().add(
                                 UserRatingsLoadRequested(userId: bid.senderId),
                               ),
-                          icon: const Icon(Icons.refresh_rounded),
+                          icon: const DonyIcon('refresh-cw'),
                           label: const Text('Réessayer'),
                         ),
                       );
@@ -315,14 +316,16 @@ class _SenderProfileSheet extends StatelessWidget {
 
 class _SheetBadge extends StatelessWidget {
   const _SheetBadge({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.label,
     required this.iconColor,
     required this.bgColor,
     required this.textColor,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final Color iconColor;
   final Color bgColor;
@@ -343,7 +346,9 @@ class _SheetBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: iconColor),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 13, color: iconColor)
+              : Icon(icon, size: 13, color: iconColor),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -364,13 +369,15 @@ class _SheetStat extends StatelessWidget {
   const _SheetStat({
     required this.value,
     required this.label,
-    required this.icon,
     required this.iconColor,
-  });
+    this.icon,
+    this.iconAsset,
+  }) : assert(icon != null || iconAsset != null);
 
   final String value;
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color iconColor;
 
   @override
@@ -379,7 +386,9 @@ class _SheetStat extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Column(
       children: [
-        Icon(icon, size: 16, color: iconColor),
+        iconAsset != null
+            ? DonyIcon(iconAsset!, size: 16, color: iconColor)
+            : Icon(icon, size: 16, color: iconColor),
         const SizedBox(height: DonySpacing.xs),
         Text(
           value,

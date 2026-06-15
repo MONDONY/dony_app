@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_expiration_banner.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,10 @@ void main() {
       ),
     );
     expect(find.textContaining('01/2025'), findsOneWidget);
-    expect(find.byIcon(Icons.warning), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'triangle-alert'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('shows red error when expired', (tester) async {
@@ -45,6 +49,9 @@ void main() {
       ),
     );
     expect(find.textContaining('expiré'), findsOneWidget);
-    expect(find.byIcon(Icons.error), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'circle-alert'),
+      findsOneWidget,
+    );
   });
 }

@@ -346,7 +346,7 @@ class _WindowExpiredHero extends StatelessWidget {
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
           label: "Signaler l'absence",
-          icon: Icons.person_off_rounded,
+          iconAsset: 'user-x',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
       ),

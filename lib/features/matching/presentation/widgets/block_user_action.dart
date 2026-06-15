@@ -1,5 +1,6 @@
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -32,7 +33,7 @@ void showBlockMenu(
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.block_rounded, color: Color(0xFFE53935)),
+            leading: const DonyIcon('ban', color: Color(0xFFE53935)),
             title: Text(
               'Bloquer $displayName',
               style: GoogleFonts.plusJakartaSans(

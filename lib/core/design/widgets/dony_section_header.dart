@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
 /// En-tête de section avec titre et action optionnelle.
@@ -76,7 +77,7 @@ class DonySectionHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: DonySpacing.xxs),
-                  Icon(Icons.arrow_forward_rounded, size: 14, color: cs.primary),
+                  DonyIcon('arrow-right', size: 14, color: cs.primary),
                 ],
               ),
             ),

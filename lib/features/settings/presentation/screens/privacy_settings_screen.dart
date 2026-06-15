@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -399,9 +400,9 @@ class _BlockedUsersCard extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.xs),
               ],
-              Icon(
-                Icons.chevron_right_rounded,
-                color: const Color(0xFF1A6B3C),
+              const DonyIcon(
+                'chevron-right',
+                color: Color(0xFF1A6B3C),
                 size: 20,
               ),
             ],

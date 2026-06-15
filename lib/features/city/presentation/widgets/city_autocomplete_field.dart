@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -143,8 +144,8 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
                 prefixIcon: widget.prefixIcon,
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
-                        icon: Icon(
-                          Icons.close,
+                        icon: DonyIcon(
+                          'x',
                           size: 18,
                           color: cs.onSurfaceVariant,
                         ),

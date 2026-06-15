@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
@@ -262,7 +264,7 @@ class _FilterEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.inbox_rounded, size: 48, color: DonyColors.neutral300),
+            const DonyEmoji.parcel(size: 48),
             const SizedBox(height: DonySpacing.sm + 4),
             Text(
               _msg,
@@ -583,7 +585,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
+            const DonyIcon('circle-alert',
                 size: 48, color: DonyColors.danger500),
             const SizedBox(height: DonySpacing.sm + 4),
             Text(

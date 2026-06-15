@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -11,13 +12,15 @@ import 'package:flutter/material.dart';
 class ThreadStateBanner extends StatelessWidget {
   const ThreadStateBanner({
     super.key,
-    required this.icon,
     required this.message,
     required this.tint,
+    this.icon,
+    this.iconAsset,
     this.subtitle,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String message;
   final String? subtitle;
 
@@ -37,7 +40,9 @@ class ThreadStateBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: tint, size: 22),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, color: tint, size: 22)
+              : Icon(icon, color: tint, size: 22),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(

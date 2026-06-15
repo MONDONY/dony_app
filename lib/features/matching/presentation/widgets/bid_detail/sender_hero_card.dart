@@ -414,7 +414,7 @@ class _WindowExpiredHero extends StatelessWidget {
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
           label: "Signaler l'absence",
-          icon: Icons.person_off_rounded,
+          iconAsset: 'user-x',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
       ),
@@ -553,7 +553,7 @@ class _ContestationHeroState extends State<_ContestationHero> {
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
           label: 'Confirmer la contestation',
-          icon: Icons.gavel_rounded,
+          iconAsset: 'gavel',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -17,19 +18,19 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
 
   static const _methods = [
     _MethodDef(
-      icon: Icons.credit_card_rounded,
+      iconAsset: 'credit-card',
       label: 'Carte bancaire',
       subtitle: 'Via Stripe · Visa, Mastercard',
       value: 'STRIPE',
     ),
     _MethodDef(
-      icon: Icons.waves_rounded,
+      iconAsset: 'waves',
       label: 'Wave',
       subtitle: 'Paiement Mobile Money',
       value: 'WAVE',
     ),
     _MethodDef(
-      icon: Icons.signal_cellular_alt_rounded,
+      iconAsset: 'signal',
       label: 'Orange Money',
       subtitle: 'Paiement Mobile Money',
       value: 'ORANGE_MONEY',
@@ -50,7 +51,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, size: 20),
+          icon: const DonyIcon('arrow-left', size: 20),
           tooltip: 'Retour',
           onPressed: () => context.pop(),
         ),
@@ -160,13 +161,15 @@ class _StepProgressBar extends StatelessWidget {
 
 class _MethodDef {
   const _MethodDef({
-    required this.icon,
     required this.label,
     required this.subtitle,
     required this.value,
+    this.icon,
+    this.iconAsset,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final String subtitle;
   final String value;
@@ -230,11 +233,17 @@ class _MethodCard extends StatelessWidget {
                   color: isSelected ? DonyColors.blue100 : DonyColors.neutral100,
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
-                child: Icon(
-                  def.icon,
-                  color: isSelected ? cs.primary : cs.onSurfaceVariant,
-                  size: 20,
-                ),
+                child: def.iconAsset != null
+                    ? DonyIcon(
+                        def.iconAsset!,
+                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                        size: 20,
+                      )
+                    : Icon(
+                        def.icon,
+                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                        size: 20,
+                      ),
               ),
               const SizedBox(width: DonySpacing.base),
               // Labels
@@ -259,10 +268,8 @@ class _MethodCard extends StatelessWidget {
               // Radio indicator
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 150),
-                child: Icon(
-                  isSelected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
+                child: DonyIcon(
+                  isSelected ? 'circle-dot' : 'circle',
                   key: ValueKey(isSelected),
                   color: isSelected ? cs.primary : cs.outline,
                   size: 22,

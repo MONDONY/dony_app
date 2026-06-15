@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -46,11 +48,7 @@ class SuiviButton extends StatelessWidget {
                 color: cs.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
-              child: Icon(
-                Icons.local_shipping_rounded,
-                color: cs.primary,
-                size: 22,
-              ),
+              child: const DonyEmoji.parcel(size: 22),
             ),
             const SizedBox(width: DonySpacing.md),
             // Labels
@@ -77,7 +75,7 @@ class SuiviButton extends StatelessWidget {
               ),
             ),
             // Trailing chevron
-            Icon(Icons.chevron_right_rounded, color: cs.primary, size: 22),
+            DonyIcon('chevron-right', color: cs.primary, size: 22),
           ],
         ),
       ),

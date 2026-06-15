@@ -1,3 +1,4 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,7 +24,7 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const DonyIcon('x'),
           onPressed: () => context.pop(),
         ),
         title: const Text('Compte désactivé'),
@@ -36,7 +37,7 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 48, color: Color(0xFFF59E0B)),
+                const DonyIcon('triangle-alert', size: 48, color: Color(0xFFF59E0B)),
                 const SizedBox(height: 16),
                 Text(
                   'Compte temporairement désactivé',

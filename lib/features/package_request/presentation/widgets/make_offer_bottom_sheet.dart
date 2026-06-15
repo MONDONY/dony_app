@@ -3,6 +3,7 @@ import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
@@ -212,9 +213,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   Expanded(
                     child: _FieldTile(
                       label: widget.isFirmPrice ? 'PRIX FERME' : 'VOTRE PRIX',
-                      icon: widget.isFirmPrice
-                          ? Icons.lock_outline_rounded
-                          : Icons.payments_rounded,
+                      iconAsset: widget.isFirmPrice ? 'lock' : 'banknote',
                       iconBgKey: _TileColor.blue,
                       suffix: '€',
                       child: TextFormField(
@@ -243,7 +242,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   Expanded(
                     child: _FieldTile(
                       label: 'CAPACITÉ',
-                      icon: Icons.scale_rounded,
+                      iconAsset: 'scale',
                       iconBgKey: _TileColor.green,
                       suffix: 'kg',
                       child: TextFormField(
@@ -275,7 +274,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               valueListenable: _dateNotifier,
               builder: (ctx, date, _) => _FieldTile(
                 label: 'DATE DE VOYAGE',
-                icon: Icons.event_rounded,
+                iconAsset: 'calendar',
                 iconBgKey: _TileColor.amber,
                 suffix: null,
                 child: InkWell(
@@ -310,8 +309,8 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                             ),
                           ),
                         ),
-                        Icon(
-                          Icons.chevron_right_rounded,
+                        DonyIcon(
+                          'chevron-right',
                           size: 18,
                           color: Theme.of(context)
                               .colorScheme
@@ -328,7 +327,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
             // ── Message ───────────────────────────────────────────────────
             _FieldTile(
               label: 'MESSAGE',
-              icon: Icons.chat_bubble_outline_rounded,
+              iconAsset: 'message-circle',
               iconBgKey: _TileColor.violet,
               suffix: null,
               sublabel: 'optionnel',
@@ -414,7 +413,7 @@ class _EstimationBanner extends StatelessWidget {
               color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.sm),
             ),
-            child: Icon(Icons.trending_up_rounded,
+            child: DonyIcon('trending-up',
                 color: cs.primary, size: 18),
           ),
           const SizedBox(width: DonySpacing.md),
@@ -468,7 +467,7 @@ enum _TileColor { blue, green, amber, violet }
 class _FieldTile extends StatelessWidget {
   const _FieldTile({
     required this.label,
-    required this.icon,
+    required this.iconAsset,
     required this.iconBgKey,
     required this.child,
     this.suffix,
@@ -477,7 +476,7 @@ class _FieldTile extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
+  final String iconAsset;
   final _TileColor iconBgKey;
   final Widget child;
   final String? suffix;
@@ -548,7 +547,7 @@ class _FieldTile extends StatelessWidget {
                     color: iconBg,
                     borderRadius: BorderRadius.circular(DonyRadius.sm),
                   ),
-                  child: Icon(icon, size: 18, color: iconColor),
+                  child: DonyIcon(iconAsset, size: 18, color: iconColor),
                 ),
               ),
               // Input

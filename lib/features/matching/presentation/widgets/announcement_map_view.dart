@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -538,10 +539,8 @@ class _NearMeFab extends StatelessWidget {
                       color: isActive ? Colors.white : cs.primary,
                     ),
                   )
-                : Icon(
-                    isActive
-                        ? Icons.near_me_rounded
-                        : Icons.near_me_outlined,
+                : DonyIcon(
+                    'navigation',
                     size: 22,
                     color: isActive ? Colors.white : cs.primary,
                   ),

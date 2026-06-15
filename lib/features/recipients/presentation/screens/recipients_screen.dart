@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:flutter/material.dart';
@@ -11,12 +12,13 @@ class RecipientsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return DonyPageScaffold(
       title: 'Mes destinataires',
       scrollable: false,
       appBarActions: [
         IconButton(
-          icon: const Icon(Icons.add_rounded),
+          icon: DonyIcon('plus', color: cs.primary),
           tooltip: 'Ajouter un destinataire',
           onPressed: () async {
             final changed = await context.push<bool>('/profile/recipients/new');
@@ -38,8 +40,9 @@ class RecipientsScreen extends StatelessWidget {
           if (state.status == RecipientStatus.error &&
               state.recipients.isEmpty) {
             return DonyEmptyState(
+              mascotte: DonyMascotteType.assis,
               type: DonyEmptyStateType.error,
-              icon: Icons.error_outline_rounded,
+              iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
               description: state.error ?? 'Une erreur est survenue.',
               actionLabel: 'Réessayer',
@@ -142,8 +145,7 @@ class _RecipientCard extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xs),
                     Row(
                       children: [
-                        Icon(Icons.phone_outlined,
-                            size: 14, color: cs.primary),
+                        DonyIcon('phone', size: 14, color: cs.primary),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           recipient.phoneE164,
@@ -154,7 +156,7 @@ class _RecipientCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.location_on_outlined,
+                        DonyIcon('map-pin',
                             size: 14, color: cs.onSurfaceVariant),
                         const SizedBox(width: DonySpacing.xs),
                         Expanded(
@@ -200,7 +202,7 @@ class _KebabMenu extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return PopupMenuButton<_RecipientAction>(
-      icon: Icon(Icons.more_vert_rounded, color: cs.onSurfaceVariant, size: 20),
+      icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
@@ -217,7 +219,7 @@ class _KebabMenu extends StatelessWidget {
               title: 'Supprimer le destinataire',
               message:
                   'Es-tu sûr de vouloir supprimer "${recipient.fullName}" ? Cette action est irréversible.',
-              icon: Icons.delete_outline_rounded,
+              iconAsset: 'trash-2',
               confirmLabel: 'Supprimer',
               variant: DonyDialogVariant.destructive,
               cancelLabel: 'Annuler',
@@ -234,7 +236,7 @@ class _KebabMenu extends StatelessWidget {
           value: _RecipientAction.edit,
           child: Row(
             children: [
-              Icon(Icons.edit_outlined, size: 18),
+              DonyIcon('square-pen', size: 18),
               SizedBox(width: DonySpacing.sm),
               Text('Modifier'),
             ],
@@ -244,7 +246,7 @@ class _KebabMenu extends StatelessWidget {
           value: _RecipientAction.delete,
           child: Row(
             children: [
-              Icon(Icons.delete_outline_rounded,
+              DonyIcon('trash-2',
                   size: 18, color: Theme.of(context).colorScheme.error),
               const SizedBox(width: DonySpacing.sm),
               Text(

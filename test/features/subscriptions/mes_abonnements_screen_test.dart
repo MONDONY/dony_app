@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_state.dart';
@@ -159,8 +160,9 @@ void main() {
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    // The bell icon button is inside SubscriptionTile
-    final bellFinder = find.byIcon(Icons.notifications_off_rounded);
+    // The bell icon button is inside SubscriptionTile (DonyIcon 'bell-off')
+    final bellFinder =
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off');
     expect(bellFinder, findsOneWidget);
     await tester.tap(bellFinder);
     await tester.pump();

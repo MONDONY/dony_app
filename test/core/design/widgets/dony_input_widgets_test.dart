@@ -3,6 +3,7 @@ import 'package:dony/core/design/widgets/dony_checkbox.dart';
 import 'package:dony/core/design/widgets/dony_chip.dart';
 import 'package:dony/core/design/widgets/dony_radio_group.dart';
 import 'package:dony/core/design/widgets/dony_search_field.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -679,14 +680,14 @@ void main() {
 
     testWidgets('clear button is NOT shown when field is empty', (tester) async {
       await tester.pumpWidget(_wrap(const DonySearchField()));
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsNothing);
     });
 
     testWidgets('clear button appears after typing text', (tester) async {
       await tester.pumpWidget(_wrap(const DonySearchField()));
       await tester.enterText(find.byType(TextField), 'Dakar');
       await tester.pump();
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
     });
 
     testWidgets('onChanged fires when text is entered', (tester) async {
@@ -712,14 +713,14 @@ void main() {
       await tester.pumpWidget(_wrap(const DonySearchField()));
       await tester.enterText(find.byType(TextField), 'Douala');
       await tester.pump();
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
       await tester.pump();
 
       final tf = tester.widget<TextField>(find.byType(TextField));
       expect(tf.controller?.text ?? '', equals(''));
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsNothing);
     });
 
     testWidgets('onClear fires when clear button is tapped', (tester) async {
@@ -729,7 +730,7 @@ void main() {
       ));
       await tester.enterText(find.byType(TextField), 'Test');
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
       expect(cleared, isTrue);
     });
 
@@ -741,7 +742,7 @@ void main() {
       ));
       await tester.enterText(find.byType(TextField), 'Hello');
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
       expect(lastValue, equals(''));
     });
 
@@ -755,7 +756,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Préchargé');
       await tester.pump();
       // Clear icon should now be visible since the field has text
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
       // The controller still holds the text
       expect(controller.text, equals('Préchargé'));
     });

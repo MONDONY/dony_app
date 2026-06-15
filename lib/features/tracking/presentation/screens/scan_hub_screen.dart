@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:flutter/material.dart';
@@ -11,13 +13,13 @@ import 'package:intl/intl.dart';
 class _EtapeInfo {
   final String code;
   final String label;
-  final IconData icon;
+  final String? iconAsset;
   final bool photoRequired;
 
   const _EtapeInfo(
     this.code,
-    this.label,
-    this.icon, {
+    this.label, {
+    this.iconAsset,
     required this.photoRequired,
   });
 }
@@ -26,19 +28,19 @@ const _etapes = [
   _EtapeInfo(
     'DEPART',
     'Départ',
-    Icons.flight_takeoff_rounded,
+    iconAsset: 'plane-takeoff',
     photoRequired: true,
   ),
   _EtapeInfo(
     'TRANSIT',
     'Transit',
-    Icons.sync_alt_rounded,
+    iconAsset: 'arrow-left-right',
     photoRequired: false,
   ),
   _EtapeInfo(
     'ARRIVEE',
     'Arrivée',
-    Icons.flight_land_rounded,
+    iconAsset: 'plane-landing',
     photoRequired: true,
   ),
 ];
@@ -113,7 +115,7 @@ class ScanHubView extends StatelessWidget {
                       [
                             if (onTrackParcel != null) ...[
                               SecondaryActivityEntry(
-                                icon: Icons.inventory_2_rounded,
+                                iconAsset: 'package',
                                 label: 'Suivre un colis',
                                 onTap: onTrackParcel!,
                               ),
@@ -278,6 +280,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DonyEmptyState(
+      mascotte: DonyMascotteType.assis,
       title: 'Impossible de charger les trajets',
       description: message,
       type: DonyEmptyStateType.error,
@@ -355,7 +358,12 @@ class _EtapeChip extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(etape.icon, size: 24, color: cs.onSurface),
+            switch (etape.iconAsset) {
+              'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 24),
+              'plane-landing' => const DonyEmoji.planeLanding(size: 24),
+              final String asset => DonyIcon(asset, size: 24, color: cs.onSurface),
+              _ => const SizedBox(width: 24, height: 24),
+            },
             const SizedBox(height: DonySpacing.sm),
             Text(
               etape.label,
@@ -406,7 +414,7 @@ class _PhotoBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.photo_camera_rounded, size: 11, color: cs.error),
+          DonyIcon('camera', size: 11, color: cs.error),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             'Photo',
@@ -444,7 +452,7 @@ class _QuickActionsSection extends StatelessWidget {
           children: [
             Expanded(
               child: _QuickBtn(
-                icon: Icons.qr_code_scanner_rounded,
+                iconAsset: 'scan-line',
                 label: 'Scanner QR',
                 subtitle: 'Caméra directe',
                 onTap: () => context.push('/tracking/scan'),
@@ -453,7 +461,7 @@ class _QuickActionsSection extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _QuickBtn(
-                icon: Icons.dialpad_rounded,
+                iconAsset: 'grid-3x3',
                 label: 'Numéro',
                 subtitle: 'DON-XXXXXX',
                 onTap: () => context.push(
@@ -471,12 +479,12 @@ class _QuickActionsSection extends StatelessWidget {
 
 class _QuickBtn extends StatelessWidget {
   const _QuickBtn({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.subtitle,
     required this.onTap,
   });
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final String subtitle;
   final VoidCallback onTap;
@@ -498,7 +506,7 @@ class _QuickBtn extends StatelessWidget {
                 color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
-              child: Icon(icon, color: cs.primary, size: 20),
+              child: DonyIcon(iconAsset, color: cs.primary, size: 20),
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(

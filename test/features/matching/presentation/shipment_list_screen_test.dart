@@ -3,6 +3,7 @@ import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -511,7 +512,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Find the clear icon button (DonySearchField uses Icons.close_rounded)
-    final clearIcon = find.byIcon(Icons.close_rounded);
+    final clearIcon = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x');
     expect(clearIcon, findsOneWidget);
     await tester.tap(clearIcon);
     await tester.pump(const Duration(milliseconds: 300));
@@ -616,6 +617,11 @@ void main() {
 
     expect(find.text('Mes envois'), findsOneWidget);
     // Back button appears because canPop is true (pushed route)
-    expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is DonyIcon && w.name == 'chevron-left',
+      ),
+      findsOneWidget,
+    );
   });
 }

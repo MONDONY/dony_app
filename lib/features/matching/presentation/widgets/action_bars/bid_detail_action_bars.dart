@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -55,7 +56,7 @@ class TravelerPendingBar extends StatelessWidget {
           Expanded(
             child: OutlinedButton.icon(
               onPressed: isLoading ? null : () => _showRejectDialog(context),
-              icon: const Icon(Icons.close_rounded),
+              icon: DonyIcon('x', size: 20, color: cs.error),
               label: const FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text('Refuser', maxLines: 1),
@@ -93,7 +94,7 @@ class TravelerPendingBar extends StatelessWidget {
                         color: DonyColors.white,
                       ),
                     )
-                  : const Icon(Icons.check_rounded),
+                  : DonyIcon('check', size: 24, color: DonyColors.white),
               label: const FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text('Accepter', maxLines: 1),
@@ -244,7 +245,7 @@ class ConfirmPresenceBar extends StatelessWidget {
       ),
       child: DonyButton(
         label: 'Confirmer ma présence',
-        icon: Icons.location_on_rounded,
+        iconAsset: 'map-pin',
         onPressed: isLoading
             ? null
             : () => context.read<BidBloc>().add(
@@ -310,7 +311,7 @@ class SenderActionBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
                 ),
               ),
-              child: const Icon(Icons.more_horiz_rounded, size: 22),
+              child: DonyIcon('ellipsis', size: 22, color: cs.onSurfaceVariant),
             ),
           ),
           if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') ...[
@@ -347,7 +348,7 @@ class SenderActionBar extends StatelessWidget {
                   : FilledButton.icon(
                       onPressed: () =>
                           context.push('/payments/pay', extra: bid),
-                      icon: const Icon(Icons.lock_rounded, size: 18),
+                      icon: DonyIcon('lock', size: 18, color: DonyColors.white),
                       label: const FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text('Payer mon envoi', maxLines: 1),
@@ -398,7 +399,7 @@ class TravelerRejectedBar extends StatelessWidget {
       ),
       child: DonyButton(
         label: 'Supprimer cette demande',
-        icon: Icons.delete_outline_rounded,
+        iconAsset: 'trash-2',
         variant: DonyButtonVariant.destructive,
         onPressed: isLoading ? null : () => _showDeleteDialog(context),
         isLoading: isLoading,
@@ -462,7 +463,7 @@ class EscrowBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final (IconData icon, Color color, String label) = _resolve(cs);
+    final (String icon, Color color, String label) = _resolve(cs);
 
     return Container(
       height: 52,
@@ -474,7 +475,7 @@ class EscrowBadge extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 18),
+          DonyIcon(icon, color: color, size: 18),
           const SizedBox(width: DonySpacing.sm),
           Flexible(
             child: Text(
@@ -489,35 +490,35 @@ class EscrowBadge extends StatelessWidget {
     );
   }
 
-  (IconData, Color, String) _resolve(ColorScheme cs) {
+  (String, Color, String) _resolve(ColorScheme cs) {
     final amount = payment.amount.toStringAsFixed(2);
     return switch (payment.status) {
       PaymentStatus.released => (
-        Icons.check_circle_rounded,
+        'circle-check',
         cs.success,
         'Voyageur payé — $amount €',
       ),
       PaymentStatus.refunded => (
-        Icons.replay_rounded,
+        'refresh-cw',
         cs.onSurfaceVariant,
         'Remboursé — $amount €',
       ),
       PaymentStatus.failed => (
-        Icons.error_outline_rounded,
+        'circle-alert',
         cs.error,
         'Paiement échoué',
       ),
       _ when bidStatus == 'PENDING' => (
-        Icons.lock_clock_rounded,
+        'clock',
         cs.warning,
         'Paiement sécurisé · En attente du voyageur',
       ),
       _ when bidStatus == 'ACCEPTED' => (
-        Icons.lock_rounded,
+        'lock',
         cs.success,
         'Paiement sécurisé — $amount €',
       ),
-      _ => (Icons.lock_rounded, cs.success, 'Paiement sécurisé — $amount €'),
+      _ => ('lock', cs.success, 'Paiement sécurisé — $amount €'),
     };
   }
 }
@@ -545,7 +546,7 @@ class _CashBadge extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.payments_outlined, color: color, size: 18),
+          DonyIcon('banknote', color: color, size: 18),
           const SizedBox(width: DonySpacing.sm),
           Flexible(
             child: Text(
@@ -600,7 +601,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           Text('Options', style: tt.headlineMedium),
           const SizedBox(height: DonySpacing.base),
           _OptionTile(
-            icon: Icons.flag_outlined,
+            iconAsset: 'flag',
             iconColor: cs.error,
             iconBg: cs.errorLight,
             label: 'Signaler ce trajet',
@@ -612,7 +613,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           _OptionTile(
-            icon: Icons.chat_bubble_outline_rounded,
+            iconAsset: 'message-circle',
             iconColor: cs.primary,
             iconBg: cs.primaryContainer,
             label: 'Contacter le voyageur',
@@ -627,7 +628,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           if (bid.trackingToken != null) ...[
             _OptionTile(
-              icon: Icons.share_rounded,
+              iconAsset: 'share-2',
               iconColor: cs.primary,
               iconBg: cs.primaryContainer,
               label: 'Partager le suivi',
@@ -641,7 +642,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           ],
           if (bid.canCancelBeforeHandover) ...[
             _OptionTile(
-              icon: Icons.block_rounded,
+              iconAsset: 'ban',
               iconColor: cs.error,
               iconBg: cs.errorLight,
               label: 'Annuler la demande',
@@ -657,7 +658,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           // départ. L'expéditeur récupère son colis via le code de retour.
           if (bid.canCancelAfterHandover) ...[
             _OptionTile(
-              icon: Icons.block_rounded,
+              iconAsset: 'ban',
               iconColor: cs.error,
               iconBg: cs.errorLight,
               label: 'Annuler la demande',
@@ -673,7 +674,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               bid.status == 'REJECTED' ||
               bid.status == 'CANCELLED') ...[
             _OptionTile(
-              icon: Icons.delete_outline_rounded,
+              iconAsset: 'trash-2',
               iconColor: cs.error,
               iconBg: cs.errorLight,
               label: 'Supprimer cette demande',
@@ -910,7 +911,7 @@ class _SenderOptionsSheet extends StatelessWidget {
 }
 
 class _OptionTile extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
   final Color iconColor;
   final Color iconBg;
   final String label;
@@ -918,7 +919,7 @@ class _OptionTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _OptionTile({
-    required this.icon,
+    required this.iconAsset,
     required this.iconColor,
     required this.iconBg,
     required this.label,
@@ -947,7 +948,7 @@ class _OptionTile extends StatelessWidget {
                 color: iconBg,
                 borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
-              child: Icon(icon, color: iconColor, size: 18),
+              child: DonyIcon(iconAsset, color: iconColor, size: 18),
             ),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -965,8 +966,8 @@ class _OptionTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
+            DonyIcon(
+              'chevron-right',
               color: cs.onSurfaceVariant,
               size: 18,
             ),
