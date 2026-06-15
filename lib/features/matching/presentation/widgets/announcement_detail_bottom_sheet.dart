@@ -302,7 +302,7 @@ class _AnnouncementDetailContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── 3 info pills ────────────────────────────────────────────────────
+        // ── 2 info pills (capacité · prix) ───────────────────────────────────
         IntrinsicHeight(
           child: Row(
             children: [
@@ -323,16 +323,16 @@ class _AnnouncementDetailContent extends StatelessWidget {
                   label: a.pricingMode == 'MIXED' ? 'tarifaire' : 'prix',
                 ),
               ),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(
-                child: _InfoPill(
-                  value: '${a.bidsCount ?? 0}',
-                  label: 'demande${(a.bidsCount ?? 0) > 1 ? 's' : ''}',
-                ),
-              ),
             ],
           ),
         ).animate().fadeIn(delay: 60.ms),
+        const SizedBox(height: DonySpacing.sm),
+
+        // ── Colis : acceptés vs en attente ───────────────────────────────────
+        _ParcelStatsRow(
+          accepted: a.confirmedParcelCount,
+          pending: a.bidsCount ?? 0,
+        ).animate().fadeIn(delay: 80.ms),
         const SizedBox(height: DonySpacing.lg),
 
         // ── Lieux de remise (orange) ─────────────────────────────────────────
@@ -594,6 +594,112 @@ class _InfoPill extends StatelessWidget {
           Text(
             label,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Deux compteurs côte à côte : colis acceptés (vert) vs demandes en attente
+/// (ambre). Affiché sous les pills de capacité/prix dans le détail du trajet.
+class _ParcelStatsRow extends StatelessWidget {
+  final int accepted;
+  final int pending;
+  const _ParcelStatsRow({required this.accepted, required this.pending});
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          Expanded(
+            child: _ParcelStatCell(
+              iconAsset: 'circle-check',
+              value: accepted,
+              label: accepted > 1 ? 'colis acceptés' : 'colis accepté',
+              tint: const Color(0xFFE7F6EC),
+              accent: const Color(0xFF16A34A),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: _ParcelStatCell(
+              iconAsset: 'hourglass',
+              value: pending,
+              label: 'en attente',
+              tint: const Color(0xFFFEF9C3),
+              accent: const Color(0xFFB45309),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ParcelStatCell extends StatelessWidget {
+  final String iconAsset;
+  final int value;
+  final String label;
+  final Color tint;
+  final Color accent;
+
+  const _ParcelStatCell({
+    required this.iconAsset,
+    required this.value,
+    required this.label,
+    required this.tint,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.sm),
+      decoration: BoxDecoration(
+        color: tint,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: accent.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            child: Center(child: DonyIcon(iconAsset, size: 17, color: accent)),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$value',
+                  style: tt.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                    height: 1,
+                    fontFeatures: [const FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
