@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -278,7 +279,7 @@ class _NetPreview extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, size: 16, color: cs.success),
+          DonyIcon('info', size: 16, color: cs.success),
           const SizedBox(width: DonySpacing.xs),
           Expanded(
             child: Text(

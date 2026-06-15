@@ -184,8 +184,8 @@ class _FlightPath extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Icon(
-              Icons.flight_rounded,
+            child: DonyIcon(
+              'plane',
               color: Colors.white.withValues(alpha: 0.9),
               size: 18,
             ),
@@ -252,7 +252,7 @@ class _PriceBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.payments_rounded, color: DonyColors.primary, size: 14),
+          const DonyIcon('banknote', color: DonyColors.primary, size: 14),
           const SizedBox(width: DonySpacing.xs),
           Text(
             _libre ? 'Libre' : '${price.toStringAsFixed(0)} €',
@@ -290,7 +290,7 @@ class _DatePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.calendar_month_rounded,
+          DonyIcon('calendar',
               color: Colors.white.withValues(alpha: 0.9), size: 13),
           const SizedBox(width: DonySpacing.xs),
           Text(
@@ -327,7 +327,7 @@ class _InfoGrid extends StatelessWidget {
           children: [
             Expanded(
               child: _InfoTile(
-                icon: Icons.scale_rounded,
+                iconAsset: 'scale',
                 label: 'Poids',
                 value: '${item.weightKg.toStringAsFixed(0)} kg',
               ),
@@ -335,7 +335,7 @@ class _InfoGrid extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _InfoTile(
-                icon: Icons.open_in_full_rounded,
+                iconAsset: 'maximize-2',
                 label: 'Taille',
                 value: _sizeLabel,
               ),
@@ -356,7 +356,7 @@ class _InfoGrid extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: _InfoTile(
-                icon: Icons.pin_drop_rounded,
+                iconAsset: 'map-pin',
                 label: item.pickupNeighborhood != null ? 'Remise' : 'Livraison',
                 value: item.pickupNeighborhood ??
                     item.deliveryNeighborhood ??
@@ -373,13 +373,15 @@ class _InfoGrid extends StatelessWidget {
 
 class _InfoTile extends StatelessWidget {
   const _InfoTile({
-    required this.icon,
     required this.label,
     required this.value,
+    this.icon,
+    this.iconAsset,
     this.isUrgent = false,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final String value;
   final bool isUrgent;
@@ -417,7 +419,9 @@ class _InfoTile extends StatelessWidget {
               color: iconBg,
               borderRadius: BorderRadius.circular(DonyRadius.sm),
             ),
-            child: Icon(icon, size: 16, color: iconColor),
+            child: iconAsset != null
+                ? DonyIcon(iconAsset!, size: 16, color: iconColor)
+                : Icon(icon, size: 16, color: iconColor),
           ),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
@@ -542,7 +546,7 @@ class _SenderCard extends StatelessWidget {
                 if (sender.totalRatings > 0)
                   Row(
                     children: [
-                      Icon(Icons.star_rounded, color: cs.warning, size: 14),
+                      DonyIcon('star', color: cs.warning, size: 14),
                       const SizedBox(width: 3),
                       Text(
                         sender.averageRating.toStringAsFixed(1),
@@ -573,8 +577,8 @@ class _SenderCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
-            Icons.chevron_right_rounded,
+          DonyIcon(
+            'chevron-right',
             color: cs.onSurfaceVariant.withValues(alpha: 0.5),
             size: 20,
           ),

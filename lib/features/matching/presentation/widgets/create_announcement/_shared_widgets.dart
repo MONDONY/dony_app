@@ -170,7 +170,7 @@ class CaInlineAddRow extends StatelessWidget {
                     color: accentColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.add_rounded,
+                  child: const DonyIcon('plus',
                       size: 18, color: DonyColors.white),
                 ),
               ),
@@ -224,7 +224,7 @@ class CaRemovableChip extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(Icons.close_rounded, size: 14, color: accentColor),
+            child: DonyIcon('x', size: 14, color: accentColor),
           ),
         ],
       ),
@@ -262,7 +262,7 @@ class CaTimeRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.access_time_rounded,
+            DonyIcon('clock',
                 size: 14, color: color.withValues(alpha: 0.7)),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -284,11 +284,11 @@ class CaTimeRow extends StatelessWidget {
             if (time != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: Icon(Icons.close_rounded,
+                child: DonyIcon('x',
                     size: 16, color: cs.onSurfaceVariant),
               )
             else
-              Icon(Icons.chevron_right_rounded,
+              DonyIcon('chevron-right',
                   size: 18, color: cs.onSurfaceVariant),
           ],
         ),
@@ -385,7 +385,7 @@ class CaStepNode extends StatelessWidget {
       ),
       child: Center(
         child: isDone
-            ? Icon(Icons.check_rounded, size: 14, color: cs.onPrimary)
+            ? DonyIcon('check', size: 14, color: cs.onPrimary)
             : Text(
                 '${index + 1}',
                 style: tt.labelSmall?.copyWith(
@@ -419,7 +419,7 @@ class CaDateRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today_rounded,
+            DonyIcon('calendar',
                 size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -436,7 +436,7 @@ class CaDateRow extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
+            DonyIcon('chevron-right',
                 size: 18, color: cs.onSurfaceVariant),
           ],
         ),

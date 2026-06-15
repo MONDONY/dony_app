@@ -123,23 +123,23 @@ class PackageRequestCard extends StatelessWidget {
                   runSpacing: DonySpacing.xs,
                   children: [
                     _Pill(
-                      icon: Icons.calendar_today_rounded,
+                      iconAsset: 'calendar',
                       label:
                           '$dateStr  ±${item.dateToleranceDays}j',
                     ),
                     _Pill(
-                      icon: Icons.scale_rounded,
+                      iconAsset: 'scale',
                       label: '${item.weightKg.toStringAsFixed(item.weightKg.truncateToDouble() == item.weightKg ? 0 : 1)} kg',
                     ),
                     if (item.targetPriceEur != null)
                       _Pill(
-                        icon: Icons.payments_rounded,
+                        iconAsset: 'banknote',
                         label:
                             '${item.targetPriceEur!.toStringAsFixed(0)} €',
                         accent: true,
                       ),
                     _Pill(
-                      icon: Icons.label_outline_rounded,
+                      iconAsset: 'tag',
                       label: item.contentCategory.label,
                     ),
                   ],
@@ -174,7 +174,7 @@ class PackageRequestCard extends StatelessWidget {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.star_rounded,
+                                DonyIcon('star',
                                     size: 13, color: cs.warning),
                                 const SizedBox(width: 2),
                                 Text(
@@ -246,8 +246,8 @@ class PackageRequestCard extends StatelessWidget {
 }
 
 class _Pill extends StatelessWidget {
-  const _Pill({required this.icon, required this.label, this.accent = false});
-  final IconData icon;
+  const _Pill({required this.iconAsset, required this.label, this.accent = false});
+  final String iconAsset;
   final String label;
   final bool accent;
 
@@ -259,7 +259,7 @@ class _Pill extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
+        DonyIcon(iconAsset, size: 14, color: color),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,

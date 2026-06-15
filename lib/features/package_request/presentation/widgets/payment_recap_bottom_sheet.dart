@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -306,10 +307,8 @@ class _TrustBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            isCash
-                ? Icons.payments_outlined
-                : Icons.lock_outlined,
+          DonyIcon(
+            isCash ? 'banknote' : 'lock',
             size: 18,
             color: iconColor,
           ),

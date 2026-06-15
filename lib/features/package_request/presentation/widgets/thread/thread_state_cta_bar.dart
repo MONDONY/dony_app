@@ -81,7 +81,7 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.open:
         if (_lastFromMe) {
           return const ThreadStateBanner(
-            icon: Icons.hourglass_top_rounded,
+            iconAsset: 'hourglass',
             tint: kWarning,
             message: 'En attente de la réponse',
             subtitle: 'Tu seras notifié dès que la partie adverse répondra.',
@@ -100,7 +100,7 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingTrip:
         if (_isSender) {
           return const ThreadStateBanner(
-            icon: Icons.hourglass_top_rounded,
+            iconAsset: 'hourglass',
             tint: kWarning,
             message: 'Le voyageur prépare son trajet',
             subtitle: "Tu seras notifié dès qu'il l'aura confirmé.",
@@ -141,7 +141,7 @@ class ThreadStateCtaBar extends StatelessWidget {
                     : () => _completeDetailsThenPay(context, thread),
               )
             : const ThreadStateBanner(
-                icon: Icons.payments_outlined,
+                iconAsset: 'banknote',
                 tint: kGreenPrimary,
                 message: "En attente du paiement de l'expéditeur",
                 subtitle: "Tu seras notifié dès qu'il aura réglé.",
@@ -156,7 +156,7 @@ class ThreadStateCtaBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ThreadStateBanner(
-              icon: Icons.check_circle_rounded,
+              iconAsset: 'circle-check',
               tint: kSuccess,
               message:
                   paidOnline ? 'Demande acceptée et payée' : 'Demande acceptée',

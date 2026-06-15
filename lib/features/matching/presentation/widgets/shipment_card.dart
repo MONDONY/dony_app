@@ -10,7 +10,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 // Design direction: « Éditorial calme » (cohérent avec TripCard)
 // • Route en headline Hanken Grotesk bold avec flèche primaire.
 // • Badge statut pill (dot + label uppercase) — même pattern que TripCard.
-// • ShipmentStepper 4 étapes (icônes Material en pastilles) pour les
+// • ShipmentStepper 4 étapes (icônes Lucide en pastilles) pour les
 //   statuts post-acceptation ; masqué en pré-acceptation.
 // • Footer DonyAvatar sm + nom voyageur + CTA contextuel.
 // • Motion : fadeIn + slideY staggeré par index, easeOutCubic 300 ms.
@@ -264,18 +264,11 @@ class ShipmentStepper extends StatelessWidget {
   /// Current step in the range 1..4.
   final int currentStep;
 
-  static const _icons = <IconData?>[
-    Icons.check_rounded, // step 1 — handover
-    null,                // step 2 — embarked (uses _iconAssets[1])
-    Icons.flight_rounded, // step 3 — in transit
-    Icons.home_rounded,   // step 4 — delivered
-  ];
-
-  static const _iconAssets = <String?>[
-    null,        // step 1
-    'package',   // step 2 — embarked (colis)
-    null,        // step 3
-    null,        // step 4
+  static const _iconAssets = <String>[
+    'check',   // step 1 — handover
+    'package', // step 2 — embarked (colis)
+    'plane',   // step 3 — in transit
+    'house',   // step 4 — delivered
   ];
 
   static const _labels = [
@@ -297,7 +290,6 @@ class ShipmentStepper extends StatelessWidget {
           _StepPastille(
             stepNumber: i + 1,
             currentStep: currentStep,
-            icon: _icons[i],
             iconAsset: _iconAssets[i],
             label: _labels[i],
             cs: cs,
@@ -334,17 +326,15 @@ class _StepPastille extends StatelessWidget {
   const _StepPastille({
     required this.stepNumber,
     required this.currentStep,
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.cs,
     required this.tt,
-    this.iconAsset,
-  }) : assert(icon != null || iconAsset != null);
+  });
 
   final int stepNumber;
   final int currentStep;
-  final IconData? icon;
-  final String? iconAsset;
+  final String iconAsset;
   final String label;
   final ColorScheme cs;
   final TextTheme tt;
@@ -360,16 +350,14 @@ class _StepPastille extends StatelessWidget {
     final Color bg;
     final Color iconColor;
     // Done steps always show the check glyph; current/pending show this step's
-    // own icon (Material) or asset (e.g. 'package' for the colis step).
-    final IconData displayIcon;
-    final String? displayAsset;
+    // own Lucide asset (e.g. 'package' for the colis step).
+    final String displayAsset;
     BoxDecoration decoration;
 
     if (_isDone) {
       bg = cs.primary;
       iconColor = cs.onPrimary;
-      displayIcon = Icons.check_rounded;
-      displayAsset = null;
+      displayAsset = 'check';
       decoration = BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
@@ -377,7 +365,6 @@ class _StepPastille extends StatelessWidget {
     } else if (_isCurrent) {
       bg = cs.primary;
       iconColor = cs.onPrimary;
-      displayIcon = icon ?? Icons.check_rounded;
       displayAsset = iconAsset;
       decoration = BoxDecoration(
         color: bg,
@@ -391,7 +378,6 @@ class _StepPastille extends StatelessWidget {
       // Pending/future step
       bg = DonyColors.neutral100;
       iconColor = cs.onSurfaceVariant;
-      displayIcon = icon ?? Icons.check_rounded;
       displayAsset = iconAsset;
       decoration = BoxDecoration(
         color: bg,
@@ -407,13 +393,7 @@ class _StepPastille extends StatelessWidget {
           height: size,
           decoration: decoration,
           child: Center(
-            child: displayAsset != null
-                ? DonyIcon(displayAsset, size: iconSize, color: iconColor)
-                : Icon(
-                    displayIcon,
-                    size: iconSize,
-                    color: iconColor,
-                  ),
+            child: DonyIcon(displayAsset, size: iconSize, color: iconColor),
           ),
         ),
         const SizedBox(height: 4),
@@ -460,8 +440,8 @@ class _RouteRow extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-          child: Icon(
-            Icons.arrow_forward_rounded,
+          child: DonyIcon(
+            'arrow-right',
             size: 16,
             color: cs.primary,
           ),

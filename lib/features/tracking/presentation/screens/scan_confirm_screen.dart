@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -12,9 +13,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-const _etapeLabels = <String, (String, IconData?, String?)>{
+const _etapeLabels = <String, (String, String?, String?)>{
   'DEPART': ('Départ', null, 'plane-takeoff'),
-  'TRANSIT': ('Transit', Icons.sync_alt_rounded, null),
+  'TRANSIT': ('Transit', 'arrow-left-right', null),
   'ARRIVEE': ('Arrivée', null, 'plane-landing'),
 };
 
@@ -128,7 +129,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                       avatar: switch (etapeInfo.$3) {
                         'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 14),
                         'plane-landing' => const DonyEmoji.planeLanding(size: 14),
-                        _ => Icon(etapeInfo.$2, size: 14, color: cs.primary),
+                        _ => DonyIcon(etapeInfo.$2!, size: 14, color: cs.primary),
                       },
                       label: Text('${etapeInfo.$1} enregistrée'),
                       labelStyle: tt.labelSmall?.copyWith(
@@ -195,7 +196,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.location_on_rounded,
+                                    DonyIcon('map-pin',
                                         color: cs.primary, size: 13),
                                     const SizedBox(width: DonySpacing.xs),
                                     Text(
@@ -229,7 +230,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline_rounded,
+                        DonyIcon('info',
                             color: cs.primary, size: 15),
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
@@ -280,7 +281,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                 // Bouton principal
                 DonyButton(
                   label: _isArrivee ? 'Confirmer la livraison' : 'Valider le scan',
-                  icon: _isArrivee ? Icons.verified_rounded : Icons.check_rounded,
+                  iconAsset: _isArrivee ? 'badge-check' : 'check',
                   onPressed: isSubmitting ? null : () => _submit(context),
                   isLoading: isSubmitting,
                 ),
@@ -291,7 +292,8 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                 if (widget.photoPath != null)
                   TextButton.icon(
                     onPressed: isSubmitting ? null : () => context.pop(),
-                    icon: const Icon(Icons.replay_rounded, size: 16),
+                    icon: DonyIcon('refresh-cw',
+                        size: 16, color: cs.onSurfaceVariant),
                     label: const Text('Reprendre la photo'),
                     style: TextButton.styleFrom(
                         foregroundColor: cs.onSurfaceVariant),
@@ -404,7 +406,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                 color: cs.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.wifi_off_rounded, color: cs.warning, size: 40),
+              child: DonyIcon('wifi-off', color: cs.warning, size: 40),
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -454,7 +456,7 @@ class _PhotoPlaceholder extends StatelessWidget {
       height: 100,
       color: cs.surfaceContainerHighest,
       child: Center(
-        child: Icon(Icons.camera_alt_outlined,
+        child: DonyIcon('camera',
             color: cs.onSurfaceVariant, size: 32),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
@@ -95,7 +96,7 @@ class _SearchViewState extends State<_SearchView> {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 IconButton.filled(
-                  icon: const Icon(Icons.search_rounded),
+                  icon: const DonyIcon('search'),
                   onPressed: _applyFilters,
                   style: IconButton.styleFrom(
                     backgroundColor: cs.primary,
@@ -263,16 +264,16 @@ class _PublicRequestCard extends StatelessWidget {
                 runSpacing: DonySpacing.xs,
                 children: [
                   _Pill(
-                    icon: Icons.calendar_today_rounded,
+                    iconAsset: 'calendar',
                     label:
                         '${request.desiredDate.day}/${request.desiredDate.month} ±${request.dateToleranceDays}j',
                   ),
                   _Pill(
-                    icon: Icons.scale_rounded,
+                    iconAsset: 'scale',
                     label: '${request.weightKg} kg',
                   ),
                   _Pill(
-                    icon: Icons.label_rounded,
+                    iconAsset: 'tag',
                     label: request.contentCategory.label,
                   ),
                 ],
@@ -297,8 +298,8 @@ class _PublicRequestCard extends StatelessWidget {
 }
 
 class _Pill extends StatelessWidget {
-  const _Pill({required this.icon, required this.label});
-  final IconData icon;
+  const _Pill({required this.iconAsset, required this.label});
+  final String iconAsset;
   final String label;
 
   @override
@@ -306,7 +307,7 @@ class _Pill extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: kTextSecondary),
+        DonyIcon(iconAsset, size: 13, color: kTextSecondary),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,

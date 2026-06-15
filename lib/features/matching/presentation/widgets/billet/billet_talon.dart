@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/retrait_code_sheet.dart';
@@ -122,8 +123,8 @@ class _CancelledBlock extends StatelessWidget {
       onPressed: () => isSender
           ? ReturnCodeSheet.show(context, bid: bid)
           : ReturnEntrySheet.show(context, bid: bid),
-      icon: Icon(
-        isSender ? Icons.vpn_key_rounded : Icons.assignment_turned_in_rounded,
+      icon: DonyIcon(
+        isSender ? 'key-round' : 'clipboard-check',
         size: 20,
         color: cs.primary,
       ),
@@ -155,7 +156,7 @@ class _ReturnedBlock extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: DonySpacing.sm),
-        Icon(Icons.check_circle_rounded, size: 40, color: cs.success),
+        DonyIcon('circle-check', size: 40, color: cs.success),
         const SizedBox(height: DonySpacing.sm),
         Text(
           'Colis restitué',
@@ -189,7 +190,7 @@ class _QrTalonButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return OutlinedButton.icon(
       onPressed: () => QrSheet.show(context, bidId: bid.id, status: bid.status),
-      icon: Icon(Icons.qr_code_2_rounded, size: 20, color: cs.primary),
+      icon: DonyIcon('qr-code', size: 20, color: cs.primary),
       label: Text(
         compact
             ? 'QR du colis'
@@ -222,7 +223,7 @@ class _RetraitTalonButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return OutlinedButton.icon(
       onPressed: () => RetraitCodeSheet.show(context, bid: bid),
-      icon: Icon(Icons.pin_rounded, size: 20, color: cs.primary),
+      icon: DonyIcon('key-round', size: 20, color: cs.primary),
       label: const Text('Code de retrait', textAlign: TextAlign.center),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
@@ -247,7 +248,7 @@ class _TravelerScanStepsButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return OutlinedButton.icon(
       onPressed: () => context.push('/tracking/scan-hub'),
-      icon: Icon(Icons.qr_code_scanner_rounded, size: 20, color: cs.primary),
+      icon: DonyIcon('scan-line', size: 20, color: cs.primary),
       label: const Text('Scanner les étapes', textAlign: TextAlign.center),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
@@ -273,7 +274,7 @@ class _PendingPlaceholder extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: DonySpacing.sm),
-        Icon(Icons.hourglass_top_rounded, size: 32, color: cs.onSurfaceVariant),
+        DonyIcon('hourglass', size: 32, color: cs.onSurfaceVariant),
         const SizedBox(height: DonySpacing.sm),
         Text(
           'En attente de confirmation du voyageur',
@@ -298,7 +299,7 @@ class _DoneBlock extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: DonySpacing.sm),
-        Icon(Icons.check_circle_rounded, size: 40, color: cs.success),
+        DonyIcon('circle-check', size: 40, color: cs.success),
         const SizedBox(height: DonySpacing.sm),
         Text(
           'Colis livré',

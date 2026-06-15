@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class AddressSuggestField extends StatefulWidget {
     this.label,
     this.hint,
     this.prefixIcon,
+    this.prefixIconAsset,
     this.prefixIconColor,
     this.onChanged,
     this.onResolved,
@@ -40,6 +42,11 @@ class AddressSuggestField extends StatefulWidget {
   final String? label;
   final String? hint;
   final IconData? prefixIcon;
+
+  /// Variante Lucide du préfixe : si non-null, rend un [DonyIcon] avec cet
+  /// asset au lieu de [prefixIcon]. Permet aux appelants de passer une icône
+  /// Lucide tout en gardant la compatibilité avec l'API [IconData] existante.
+  final String? prefixIconAsset;
   final Color? prefixIconColor;
 
   /// Appelé à chaque changement de texte (pour la validité côté parent).
@@ -272,7 +279,7 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
                               color: ics.primaryContainer,
                               borderRadius: BorderRadius.circular(DonyRadius.sm),
                             ),
-                            child: Icon(Icons.place_rounded,
+                            child: DonyIcon('map-pin',
                                 size: 16, color: ics.primary),
                           ),
                           const SizedBox(width: DonySpacing.md),
@@ -362,18 +369,27 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
                   DonySpacing.base,
                   DonySpacing.md,
                 ),
-                prefixIcon: widget.prefixIcon == null
+                prefixIcon: (widget.prefixIcon == null &&
+                        widget.prefixIconAsset == null)
                     ? null
                     : Padding(
                         padding: const EdgeInsets.only(
                           left: DonySpacing.md,
                           right: DonySpacing.xs,
                         ),
-                        child: Icon(
-                          widget.prefixIcon,
-                          size: 18,
-                          color: isFocused ? cs.primary : neutralIconColor,
-                        ),
+                        child: widget.prefixIconAsset != null
+                            ? DonyIcon(
+                                widget.prefixIconAsset!,
+                                size: 18,
+                                color:
+                                    isFocused ? cs.primary : neutralIconColor,
+                              )
+                            : Icon(
+                                widget.prefixIcon,
+                                size: 18,
+                                color:
+                                    isFocused ? cs.primary : neutralIconColor,
+                              ),
                       ),
                 prefixIconConstraints: const BoxConstraints(minWidth: 40),
                 suffixIcon: _loading
@@ -398,7 +414,7 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.wifi_off_rounded, size: 12, color: cs.warning),
+                  DonyIcon('wifi-off', size: 12, color: cs.warning),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     "Connexion requise pour la recherche d'adresse",

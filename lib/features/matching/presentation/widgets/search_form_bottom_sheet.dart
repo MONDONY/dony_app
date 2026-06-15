@@ -25,14 +25,14 @@ const _contentTypes = [
   'Cosmétiques',
 ];
 
-const _contentTypeIcons = <String, IconData>{
-  'Vêtements': Icons.checkroom_rounded,
-  'Médicaments': Icons.medication_rounded,
-  'Alim. sèche': Icons.kitchen_rounded,
-  'Hi-fi': Icons.speaker_rounded,
-  'Documents': Icons.description_rounded,
-  'Téléphone': Icons.smartphone_rounded,
-  'Cosmétiques': Icons.face_retouching_natural_rounded,
+const _contentTypeIcons = <String, String>{
+  'Vêtements': 'shirt',
+  'Médicaments': 'pill',
+  'Alim. sèche': 'refrigerator',
+  'Hi-fi': 'speaker',
+  'Documents': 'file-text',
+  'Téléphone': 'smartphone',
+  'Cosmétiques': 'scan-face',
 };
 
 class SearchFormBottomSheet {
@@ -363,25 +363,25 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               children: [
                 _QuickChip(
                   label: 'Kilo Pro',
-                  icon: Icons.workspace_premium_rounded,
+                  iconAsset: 'award',
                   active: _kiloProOnlyNotifier.value,
                   onChanged: (v) => _kiloProOnlyNotifier.value = v,
                 ),
                 _QuickChip(
                   label: 'Note ≥ 4.5',
-                  icon: Icons.star_rounded,
+                  iconAsset: 'star',
                   active: _ratingFilterNotifier.value,
                   onChanged: (v) => _ratingFilterNotifier.value = v,
                 ),
                 _QuickChip(
                   label: 'Week-end',
-                  icon: Icons.weekend_rounded,
+                  iconAsset: 'sofa',
                   active: _weekendFilterNotifier.value,
                   onChanged: (v) => _weekendFilterNotifier.value = v,
                 ),
                 _QuickChip(
                   label: 'KYC vérifié',
-                  icon: Icons.verified_user_rounded,
+                  iconAsset: 'shield-check',
                   active: _kycVerifiedOnlyNotifier.value,
                   onChanged: (v) => _kycVerifiedOnlyNotifier.value = v,
                 ),
@@ -402,9 +402,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                 final isSelected = _contentTypeNotifier.value == type;
                 return _ContentTypeChip(
                   label: type,
-                  icon: _contentTypeIcons[type],
-                  iconAsset:
-                      _contentTypeIcons.containsKey(type) ? null : 'package',
+                  iconAsset: _contentTypeIcons[type] ?? 'package',
                   selected: isSelected,
                   onTap: () {
                     _contentTypeNotifier.value = isSelected ? null : type;
@@ -607,7 +605,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                             ),
                           ),
                           if (selected)
-                            Icon(Icons.check_circle_rounded,
+                            DonyIcon('circle-check',
                                 size: 18, color: cs.primary),
                         ],
                       ),
@@ -703,7 +701,7 @@ class _PriceField extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
-                Icon(Icons.euro_rounded,
+                DonyIcon('euro',
                     size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
@@ -749,11 +747,17 @@ class _TransportModeField extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
-                Icon(
-                  active ? mode!.icon : Icons.commute_rounded,
-                  size: 14,
-                  color: active ? cs.primary : cs.onSurfaceVariant,
-                ),
+                active
+                    ? Icon(
+                        mode!.icon,
+                        size: 14,
+                        color: cs.primary,
+                      )
+                    : DonyIcon(
+                        'route',
+                        size: 14,
+                        color: cs.onSurfaceVariant,
+                      ),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
@@ -765,7 +769,7 @@ class _TransportModeField extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
+                DonyIcon('chevron-right',
                     size: 16, color: cs.onSurfaceVariant),
               ],
             ),
@@ -781,13 +785,11 @@ class _ContentTypeChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    this.icon,
-    this.iconAsset,
+    required this.iconAsset,
   });
 
   final String label;
-  final IconData? icon;
-  final String? iconAsset;
+  final String iconAsset;
   final bool selected;
   final VoidCallback onTap;
 
@@ -810,13 +812,9 @@ class _ContentTypeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            iconAsset != null
-                ? DonyIcon(iconAsset!,
-                    size: 14,
-                    color: selected ? cs.primary : cs.onSurfaceVariant)
-                : Icon(icon,
-                    size: 14,
-                    color: selected ? cs.primary : cs.onSurfaceVariant),
+            DonyIcon(iconAsset,
+                size: 14,
+                color: selected ? cs.primary : cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.xs),
             Text(
               label,
@@ -837,13 +835,13 @@ class _QuickChip extends StatelessWidget {
     required this.label,
     required this.active,
     required this.onChanged,
-    this.icon,
+    this.iconAsset,
   });
 
   final String label;
   final bool active;
   final ValueChanged<bool> onChanged;
-  final IconData? icon;
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -867,8 +865,9 @@ class _QuickChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
-              Icon(icon, size: 14, color: active ? cs.primary : cs.onSurfaceVariant),
+            if (iconAsset != null) ...[
+              DonyIcon(iconAsset!,
+                  size: 14, color: active ? cs.primary : cs.onSurfaceVariant),
               const SizedBox(width: DonySpacing.xs),
             ],
             Text(
@@ -927,7 +926,7 @@ class _DateField extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
-                Icon(Icons.calendar_today_rounded,
+                DonyIcon('calendar',
                     size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
@@ -975,7 +974,7 @@ class _WeightField extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
-                Icon(Icons.scale_rounded,
+                DonyIcon('scale',
                     size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(

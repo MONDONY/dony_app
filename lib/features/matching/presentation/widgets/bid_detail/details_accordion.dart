@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
@@ -102,8 +103,8 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                     turns: _open ? 0.5 : 0,
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOutCubic,
-                    child: Icon(
-                      Icons.expand_more_rounded,
+                    child: DonyIcon(
+                      'chevron-down',
                       color: cs.onSurfaceVariant,
                     ),
                   ),
@@ -243,7 +244,7 @@ class _TrackingUrlRow extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(Icons.link_rounded, color: cs.primary, size: 16),
+        DonyIcon('link', color: cs.primary, size: 16),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
@@ -254,7 +255,7 @@ class _TrackingUrlRow extends StatelessWidget {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.copy_rounded, size: 16),
+          icon: DonyIcon('copy', size: 16, color: cs.primary),
           tooltip: 'Copier le lien',
           color: cs.primary,
           onPressed: () {
@@ -295,7 +296,7 @@ class _DisclaimerRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(Icons.verified_outlined, color: cs.success, size: 20),
+        DonyIcon('badge-check', color: cs.success, size: 20),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(

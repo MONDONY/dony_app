@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
@@ -454,7 +455,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                           ),
                           child: Column(
                             children: [
-                              const Icon(Icons.flight_outlined,
+                              const DonyIcon('plane',
                                   size: 36, color: kTextHint),
                               const SizedBox(height: DonySpacing.sm),
                               Text(
@@ -485,7 +486,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       const SizedBox(height: DonySpacing.base),
                       OutlinedButton.icon(
                         onPressed: _createNewTrip,
-                        icon: const Icon(Icons.add_rounded),
+                        icon: const DonyIcon('plus'),
                         label: const Text('Créer un nouveau trajet'),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 52),
@@ -606,7 +607,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: kError),
+            const DonyIcon('circle-alert', size: 48, color: kError),
             const SizedBox(height: DonySpacing.base),
             Text(
               message,

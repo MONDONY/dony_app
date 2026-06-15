@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
@@ -159,7 +160,7 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
                 valueListenable: _tabIndex,
                 builder: (context, tab, _) => DonyButton(
                   label: 'Confirmer la réception',
-                  icon: Icons.check_rounded,
+                  iconAsset: 'check',
                   onPressed:
                       (tab == 1 && complete) ? () => _confirm(context) : null,
                 ),
@@ -276,8 +277,8 @@ class _QrTabContent extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.qr_code_scanner_rounded,
+          DonyIcon(
+            'scan-line',
             size: 48,
             color: cs.primary,
           ),
@@ -415,8 +416,8 @@ class _LegalNote extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.shield_outlined,
+          DonyIcon(
+            'shield',
             size: DonySpacing.iconSm,
             color: cs.onSurfaceVariant,
           ),

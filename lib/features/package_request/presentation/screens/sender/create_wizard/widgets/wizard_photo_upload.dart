@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
@@ -72,8 +73,8 @@ class WizardPhotoUpload extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.add_a_photo_outlined,
+              DonyIcon(
+                'image-plus',
                 size: 28,
                 color: DonyColors.textPrimary.withValues(alpha: 0.7),
               ),
@@ -125,7 +126,7 @@ class WizardPhotoUpload extends StatelessWidget {
         ),
         IconButton(
           tooltip: 'Retirer la photo',
-          icon: const Icon(Icons.close_rounded),
+          icon: const DonyIcon('x', color: DonyColors.error),
           color: DonyColors.error,
           onPressed: () => onPhotoPicked(null),
         ),
@@ -142,12 +143,12 @@ class WizardPhotoUpload extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
+              leading: const DonyIcon('camera'),
               title: const Text('Prendre une photo'),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const DonyIcon('image'),
               title: const Text('Choisir depuis la galerie'),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),

@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -82,7 +83,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                             DonySpacing.lg,
                           ),
                           child: SecondaryActivityEntry(
-                            icon: Icons.qr_code_scanner_rounded,
+                            iconAsset: 'scan-line',
                             label: 'Scanner un trajet',
                             onTap: widget.onScanTrip!,
                           ),
@@ -95,7 +96,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                       DonyButton(
                         label: 'Rechercher',
                         onPressed: () => _search(context),
-                        icon: Icons.search_rounded,
+                        iconAsset: 'search',
                       ),
                       const SizedBox(height: DonySpacing.xxl),
                       BlocBuilder<TrackingBloc, TrackingState>(
@@ -171,7 +172,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
           color: cs.outline,
           letterSpacing: 1.5,
         ),
-        prefixIcon: Icon(Icons.qr_code_rounded, color: cs.primary),
+        prefixIcon: DonyIcon('qr-code', size: 20, color: cs.primary),
         filled: true,
         fillColor: cs.surface,
         border: OutlineInputBorder(
@@ -203,7 +204,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: cs.error, size: 22),
+          DonyIcon('circle-alert', color: cs.error, size: 22),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Text(
@@ -228,7 +229,7 @@ class _TrackingResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final (IconData? icon, Color color, _, String? iconAsset) = _stepVisuals(
+    final (String? icon, Color color, _, String? iconAsset) = _stepVisuals(
       result.currentStep,
       cs,
     );
@@ -291,8 +292,8 @@ class _TrackingResultCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                             horizontal: DonySpacing.base,
                           ),
-                          child: Icon(
-                            Icons.arrow_forward_rounded,
+                          child: DonyIcon(
+                            'arrow-right',
                             color: Colors.white.withValues(alpha: 0.7),
                             size: 24,
                           ),
@@ -333,7 +334,7 @@ class _TrackingResultCard extends StatelessWidget {
                             'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 22),
                             'plane-landing' => const DonyEmoji.planeLanding(size: 22),
                             'package' => const DonyEmoji.parcel(size: 22),
-                            _ => Icon(icon, color: color, size: 22),
+                            _ => DonyIcon(icon!, color: color, size: 22),
                           },
                           const SizedBox(width: DonySpacing.md),
                           Expanded(
@@ -359,7 +360,7 @@ class _TrackingResultCard extends StatelessWidget {
                         );
                       },
                       variant: DonyButtonVariant.secondary,
-                      icon: Icons.timeline_rounded,
+                      iconAsset: 'chart-line',
                     ),
                   ],
                 ),
@@ -372,16 +373,16 @@ class _TrackingResultCard extends StatelessWidget {
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 
-  (IconData?, Color, String, String?) _stepVisuals(String step, ColorScheme cs) {
+  (String?, Color, String, String?) _stepVisuals(String step, ColorScheme cs) {
     return switch (step) {
-      'DELIVERED' => (Icons.check_circle_rounded, cs.success, step, null),
+      'DELIVERED' => ('circle-check', cs.success, step, null),
       'IN_TRANSIT' => (null, cs.primary, step, 'package'),
       'DEPARTED' => (null, cs.primary, step, 'plane-takeoff'),
-      'PAYMENT_SECURED' => (Icons.lock_rounded, cs.primary, step, null),
-      'ACCEPTED' => (Icons.handshake_outlined, cs.warning, step, null),
-      'REJECTED' => (Icons.cancel_outlined, cs.error, step, null),
-      'CANCELLED' => (Icons.block_outlined, cs.onSurfaceVariant, step, null),
-      _ => (Icons.hourglass_empty_rounded, cs.warning, step, null),
+      'PAYMENT_SECURED' => ('lock', cs.primary, step, null),
+      'ACCEPTED' => ('handshake', cs.warning, step, null),
+      'REJECTED' => ('circle-x', cs.error, step, null),
+      'CANCELLED' => ('ban', cs.onSurfaceVariant, step, null),
+      _ => ('hourglass', cs.warning, step, null),
     };
   }
 }

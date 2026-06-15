@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -130,7 +131,7 @@ class TravelerCard extends StatelessWidget {
                         spacing: DonySpacing.xxs,
                         runSpacing: DonySpacing.xxs,
                         children: [
-                          Icon(Icons.star_rounded, size: 13, color: cs.warning),
+                          DonyIcon('star', size: 13, color: cs.warning),
                           Text(rating != null ? rating.toStringAsFixed(1) : '—', style: tt.titleSmall),
                           Text(
                             '· ${totalTrips ?? 0} trajet${(totalTrips ?? 0) > 1 ? 's' : ''}',
@@ -157,7 +158,7 @@ class TravelerCard extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             Row(
               children: [
-                Icon(Icons.calendar_today_rounded, size: 13, color: cs.onSurfaceVariant),
+                DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xxs),
                 Text(dateStr, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                 const SizedBox(width: DonySpacing.md),
@@ -216,7 +217,7 @@ class _ExistingBidChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle_rounded, size: 13, color: fg),
+          DonyIcon('circle-check', size: 13, color: fg),
           const SizedBox(width: DonySpacing.xs),
           Flexible(
             child: Text(
@@ -253,7 +254,7 @@ class _DistanceBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.location_on_rounded, size: 11, color: cs.surface),
+          DonyIcon('map-pin', size: 11, color: cs.surface),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             label,
@@ -286,7 +287,7 @@ class _ProBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.star_rounded, size: 10, color: cs.warning),
+          DonyIcon('star', size: 10, color: cs.warning),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             'PRO',

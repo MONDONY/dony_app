@@ -5,6 +5,7 @@ import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -288,8 +289,8 @@ class _ShipmentFilterBar extends StatelessWidget {
             equals: setEquals,
             onSelected: (s) => cubit.applyQuickPreset(s),
             trailing: IconButton(
-              icon: Icon(
-                Icons.tune_rounded,
+              icon: DonyIcon(
+                'sliders-horizontal',
                 size: 18,
                 color: cs.onSurfaceVariant,
               ),
@@ -386,8 +387,8 @@ class _DarkHeader extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                       ),
-                      child: const Icon(
-                        Icons.chevron_left_rounded,
+                      child: const DonyIcon(
+                        'chevron-left',
                         size: 20,
                         color: Colors.white,
                       ),
@@ -509,7 +510,7 @@ Future<bool> _confirmDelete(BuildContext context) async {
         'Il sera retiré de votre historique. Cette action est irréversible.',
     confirmLabel: 'Supprimer',
     variant: DonyDialogVariant.destructive,
-    icon: Icons.delete_outline_rounded,
+    iconAsset: 'trash-2',
   );
   return confirmed == true;
 }
@@ -529,8 +530,8 @@ class _DeleteBackground extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.delete_outline_rounded,
+          const DonyIcon(
+            'trash-2',
             color: DonyColors.white,
             size: 26,
           ),
@@ -625,7 +626,7 @@ class _FilteredEmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.filter_alt_off_rounded, size: 40, color: cs.outline),
+            DonyIcon('filter-x', size: 40, color: cs.outline),
             const SizedBox(height: DonySpacing.base),
             Text(
               'Aucun envoi ne correspond à tes filtres',
@@ -685,7 +686,7 @@ class _ErrorView extends StatelessWidget {
                 color: cs.errorContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.wifi_off_rounded, size: 32, color: cs.error),
+              child: DonyIcon('wifi-off', size: 32, color: cs.error),
             ),
             const SizedBox(height: DonySpacing.lg),
             Text(

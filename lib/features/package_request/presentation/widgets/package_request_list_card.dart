@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
@@ -201,7 +202,7 @@ class _InfoColumn extends StatelessWidget {
           children: [
             Expanded(
               child: _MiniInfoTile(
-                icon: Icons.scale_rounded,
+                iconAsset: 'scale',
                 label: 'Poids',
                 value: '${item.weightKg.toStringAsFixed(0)} kg',
                 cs: cs,
@@ -211,7 +212,7 @@ class _InfoColumn extends StatelessWidget {
             const SizedBox(width: DonySpacing.xs),
             Expanded(
               child: _MiniInfoTile(
-                icon: Icons.open_in_full_rounded,
+                iconAsset: 'maximize-2',
                 label: 'Taille',
                 value: sizeLabel,
                 cs: cs,
@@ -225,7 +226,7 @@ class _InfoColumn extends StatelessWidget {
           children: [
             Expanded(
               child: _MiniInfoTile(
-                icon: Icons.calendar_today_rounded,
+                iconAsset: 'calendar',
                 label: 'Date',
                 value: '$dateStr$toleranceStr',
                 cs: cs,
@@ -277,7 +278,7 @@ class _InfoColumn extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          Icon(Icons.star_rounded,
+                          DonyIcon('star',
                               size: 12, color: cs.warning),
                           const SizedBox(width: 2),
                           Text(
@@ -298,8 +299,8 @@ class _InfoColumn extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
+                DonyIcon(
+                  'chevron-right',
                   size: 16,
                   color: cs.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
@@ -316,15 +317,17 @@ class _InfoColumn extends StatelessWidget {
 
 class _MiniInfoTile extends StatelessWidget {
   const _MiniInfoTile({
-    required this.icon,
     required this.label,
     required this.value,
     required this.cs,
     required this.tt,
+    this.icon,
+    this.iconAsset,
     this.isUrgent = false,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final String value;
   final ColorScheme cs;
@@ -357,7 +360,9 @@ class _MiniInfoTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 13, color: iconColor),
+          iconAsset != null
+              ? DonyIcon(iconAsset!, size: 13, color: iconColor)
+              : Icon(icon, size: 13, color: iconColor),
           const SizedBox(width: DonySpacing.xs),
           Expanded(
             child: Column(
@@ -414,7 +419,7 @@ class _OwnRequestChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.person_rounded, size: 13, color: cs.primary),
+              DonyIcon('user', size: 13, color: cs.primary),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 'Ma demande',

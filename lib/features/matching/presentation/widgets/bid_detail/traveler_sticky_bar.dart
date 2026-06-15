@@ -96,7 +96,7 @@ class _ScanBar extends StatelessWidget {
       // confirm), cohérent avec le flux d'étapes du Suivi.
       child: DonyButton(
         label: 'Scanner le colis',
-        icon: Icons.qr_code_scanner_rounded,
+        iconAsset: 'scan-line',
         onPressed: () => context.push(
           '/tracking/scan/identify',
           extra: <String, dynamic>{'etape': 'DEPART', 'focusNumber': false},
@@ -127,7 +127,7 @@ class _TransitBar extends StatelessWidget {
       // IN_TRANSIT et la barre affiche « Valider la remise » (étape Arrivée).
       child: DonyButton(
         label: 'Scanner le transit',
-        icon: Icons.sync_alt_rounded,
+        iconAsset: 'arrow-left-right',
         onPressed: () => context.push(
           '/tracking/scan/identify',
           extra: <String, dynamic>{'etape': 'TRANSIT', 'focusNumber': false},
@@ -159,7 +159,7 @@ class _DeliverBar extends StatelessWidget {
       // l'écran de réception autonome (/tracking/confirm).
       child: DonyButton(
         label: 'Valider la remise',
-        icon: Icons.verified_rounded,
+        iconAsset: 'badge-check',
         variant: DonyButtonVariant.success,
         onPressed: () => context.push(
           '/tracking/scan/identify',

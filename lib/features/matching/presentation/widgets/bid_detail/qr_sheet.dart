@@ -7,6 +7,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -167,7 +168,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
                     builder: (context, isSharing, _) {
                       return DonyButton(
                         label: 'Enregistrer',
-                        icon: Icons.download_rounded,
+                        iconAsset: 'download',
                         isLoading: isSaving,
                         onPressed: (isSaving || isSharing)
                             ? null
@@ -188,7 +189,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
                       return DonyButton(
                         label: 'Partager',
                         variant: DonyButtonVariant.secondary,
-                        icon: Icons.share_rounded,
+                        iconAsset: 'share-2',
                         isLoading: isSharing,
                         onPressed: (isSaving || isSharing)
                             ? null
@@ -301,7 +302,7 @@ class _QrErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline_rounded, color: cs.error, size: 48),
+          DonyIcon('circle-alert', color: cs.error, size: 48),
           const SizedBox(height: DonySpacing.md),
           Text(
             presentation.message,

@@ -1,5 +1,6 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_status_stamp.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.dart';
@@ -151,8 +152,8 @@ class _BilletCorridor extends StatelessWidget {
               children: [
                 _DashedLine(color: cs.outline),
                 const SizedBox(width: DonySpacing.xs),
-                Icon(
-                  Icons.flight_rounded,
+                DonyIcon(
+                  'plane',
                   size: 20,
                   color: cs.onSurfaceVariant,
                 ),

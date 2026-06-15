@@ -8,9 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:native_exif/native_exif.dart';
 
-const _etapeLabels = <String, (String, IconData?, String?)>{
+const _etapeLabels = <String, (String, String?, String?)>{
   'DEPART': ('Départ', null, 'plane-takeoff'),
-  'TRANSIT': ('Transit', Icons.sync_alt_rounded, null),
+  'TRANSIT': ('Transit', 'arrow-left-right', null),
   'ARRIVEE': ('Arrivée', null, 'plane-landing'),
 };
 
@@ -167,7 +167,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.close_rounded,
+                          icon: const DonyIcon('x',
                               color: DonyColors.neutral0),
                           onPressed: () => context.pop(),
                         ),
@@ -237,7 +237,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                   DonyIcon(etapeInfo.$3!,
                                       color: DonyColors.neutral0, size: 12)
                                 else
-                                  Icon(etapeInfo.$2,
+                                  DonyIcon(etapeInfo.$2!,
                                       color: DonyColors.neutral0, size: 12),
                                 const SizedBox(width: DonySpacing.xs),
                                 Text(
@@ -265,7 +265,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.camera_alt_rounded,
+                                const DonyIcon('camera',
                                     color: DonyColors.neutral0, size: 11),
                                 const SizedBox(width: 2),
                                 Text(
@@ -323,7 +323,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                                     color: DonyColors.neutral0,
                                   ),
                                 )
-                              : const Icon(Icons.camera_alt_rounded),
+                              : const DonyIcon('camera'),
                           label: Text(
                             loading ? 'Ouverture...' : 'Prendre la photo',
                           ),
@@ -369,8 +369,8 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.location_on_rounded,
+                          DonyIcon(
+                            'map-pin',
                             color: DonyColors.neutral0.withValues(alpha: 0.5),
                             size: 12,
                           ),

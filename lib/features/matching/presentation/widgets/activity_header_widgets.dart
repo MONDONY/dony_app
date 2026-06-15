@@ -401,8 +401,8 @@ class ActivitySearchField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-        prefixIcon: Icon(
-          Icons.search_rounded,
+        prefixIcon: DonyIcon(
+          'search',
           size: 18,
           color: cs.onSurfaceVariant,
         ),

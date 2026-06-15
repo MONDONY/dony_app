@@ -5,6 +5,7 @@ import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
@@ -207,7 +208,7 @@ class TrajetStep extends StatelessWidget {
                       label: 'Ville de départ',
                       value: departureCityNotifier.value,
                       prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
-                      trailing: Icon(Icons.lock_rounded,
+                      trailing: DonyIcon('lock',
                           size: 16, color: cs.onSurfaceVariant),
                       onTap: () {},
                     )
@@ -255,7 +256,7 @@ class TrajetStep extends StatelessWidget {
                       label: 'Ville d\'arrivée',
                       value: arrivalCityNotifier.value,
                       prefixWidget: const DonyEmoji.planeLanding(size: 20),
-                      trailing: Icon(Icons.lock_rounded,
+                      trailing: DonyIcon('lock',
                           size: 16, color: cs.onSurfaceVariant),
                       onTap: () {},
                     )
@@ -316,8 +317,8 @@ class TrajetStep extends StatelessWidget {
                     : null,
                 prefixIcon: DonyIcons.date,
                 prefixIconColor: Theme.of(context).colorScheme.primary,
-                trailing: Icon(
-                  lockDate ? Icons.lock_rounded : DonyIcons.chevron,
+                trailing: DonyIcon(
+                  lockDate ? 'lock' : 'chevron-right',
                   size: lockDate ? 16 : 18,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -333,7 +334,7 @@ class TrajetStep extends StatelessWidget {
       // ── MODE DE TRANSPORT ─────────────────────────────────────────────────
       const CaSectionLabel(
         label: 'Mode de transport',
-        icon: Icons.commute_rounded,
+        iconAsset: 'route',
       ),
       const SizedBox(height: DonySpacing.sm),
       ValueListenableBuilder<TransportMode?>(

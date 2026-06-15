@@ -30,19 +30,19 @@ class TalonTravelerActionView extends StatelessWidget {
     final (
       String label,
       String hint,
-      IconData icon,
+      String iconAsset,
       DonyButtonVariant variant,
     ) = switch (action) {
       TalonTravelerAction.scan => (
         'Scanner le colis',
         "À la remise, scannez le QR de l'expéditeur.",
-        Icons.qr_code_scanner_rounded,
+        'scan-line',
         DonyButtonVariant.primary,
       ),
       TalonTravelerAction.confirmDelivery => (
         'Confirmer la livraison',
         "À l'arrivée, saisissez le code de retrait de l'expéditeur.",
-        Icons.verified_rounded,
+        'badge-check',
         DonyButtonVariant.success,
       ),
     };
@@ -58,7 +58,7 @@ class TalonTravelerActionView extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
           label: label,
-          icon: icon,
+          iconAsset: iconAsset,
           variant: variant,
           onPressed: switch (action) {
             TalonTravelerAction.scan => () => context.push('/tracking/scan'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -57,7 +58,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
           // Address header
           Row(
             children: [
-              Icon(Icons.place_rounded, size: 18, color: cs.primary),
+              DonyIcon('map-pin', size: 18, color: cs.primary),
               const SizedBox(width: DonySpacing.xs),
               Expanded(
                 child: Text(

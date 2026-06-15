@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
@@ -98,7 +99,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
                                 ?.copyWith(fontWeight: FontWeight.w700)),
                         const Spacer(),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded),
+                          icon: const DonyIcon('x'),
                           onPressed: () => Navigator.of(context).pop(),
                           style: IconButton.styleFrom(
                               backgroundColor: cs.surfaceContainerHighest),
@@ -148,7 +149,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
                                     color: cs.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(DonyRadius.md),
                                   ),
-                                  child: const Icon(Icons.search_rounded),
+                                  child: const DonyIcon('search'),
                                 ),
                                 title: Text('Chercher une autre adresse',
                                     style: tt.bodyMedium
@@ -176,7 +177,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
                                     color: cs.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(DonyRadius.md),
                                   ),
-                                  child: const Icon(Icons.add_rounded),
+                                  child: const DonyIcon('plus'),
                                 ),
                                 title: Text('Ajouter une adresse',
                                     style: tt.bodyMedium
@@ -313,7 +314,7 @@ class _AddressRow extends StatelessWidget {
               : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
-        child: Icon(Icons.home_rounded,
+        child: DonyIcon('house',
             color: isSelected ? activeColor : cs.onSurfaceVariant),
       ),
       title: Row(
@@ -352,7 +353,7 @@ class _AddressRow extends StatelessWidget {
               Border.all(color: isSelected ? activeColor : cs.outline, width: 2),
         ),
         child: isSelected
-            ? const Icon(Icons.check_rounded, color: Colors.white, size: 12)
+            ? const DonyIcon('check', color: Colors.white, size: 12)
             : null,
       ),
     );

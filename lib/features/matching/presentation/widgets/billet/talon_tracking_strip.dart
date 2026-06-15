@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -51,7 +50,7 @@ class TalonTrackingStrip extends StatelessWidget {
           ),
           IconButton(
             key: const Key('talon-copy-button'),
-            icon: Icon(Icons.copy_rounded, color: cs.primary, size: 20),
+            icon: DonyIcon('copy', color: cs.primary, size: 20),
             tooltip: 'Copier',
             onPressed: () {
               Clipboard.setData(ClipboardData(text: trackingNumber));
@@ -64,8 +63,8 @@ class TalonTrackingStrip extends StatelessWidget {
           ),
           IconButton(
             key: const Key('talon-share-button'),
-            icon: Icon(
-              Platform.isIOS ? Icons.ios_share_rounded : Icons.share_rounded,
+            icon: DonyIcon(
+              'share-2',
               color: cs.primary,
               size: 20,
             ),

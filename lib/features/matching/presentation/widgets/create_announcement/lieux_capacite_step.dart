@@ -2,6 +2,7 @@
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur pour la partie
 // lieux ; swap CapacitySelector → CapacityControl pour la partie capacité.
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -62,7 +63,7 @@ class LieuxCapaciteStep extends StatelessWidget {
         // ── LIEUX DE REMISE ─────────────────────────────────────────────────
         const CaSectionLabel(
           label: 'Lieux de remise',
-          icon: Icons.swap_horiz_rounded,
+          iconAsset: 'arrow-left-right',
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
@@ -102,7 +103,7 @@ class LieuxCapaciteStep extends StatelessWidget {
         // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────────────
         const CaSectionLabel(
           label: 'Capacité disponible',
-          icon: Icons.luggage_rounded,
+          iconAsset: 'luggage',
         ),
         const SizedBox(height: DonySpacing.base),
         // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
@@ -136,7 +137,7 @@ class _LockedCapacityDisplay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.luggage_rounded, size: 24, color: cs.onSurfaceVariant),
+          DonyIcon('luggage', size: 24, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
@@ -159,7 +160,7 @@ class _LockedCapacityDisplay extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.lock_rounded, size: 16, color: cs.onSurfaceVariant),
+          DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
         ],
       ),
     );

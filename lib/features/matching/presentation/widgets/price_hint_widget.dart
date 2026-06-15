@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:flutter/material.dart';
 
@@ -23,7 +24,7 @@ class PriceHintWidget extends StatelessWidget {
       return _buildHintCard(
         cs: cs,
         tt: tt,
-        icon: Icons.warning_amber_rounded,
+        iconAsset: 'triangle-alert',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
         message: 'Prix bas — risque de méfiance de l\'expéditeur',
@@ -34,7 +35,7 @@ class PriceHintWidget extends StatelessWidget {
       return _buildHintCard(
         cs: cs,
         tt: tt,
-        icon: Icons.warning_amber_rounded,
+        iconAsset: 'triangle-alert',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
         message: 'Prix élevé — peu de demandes attendues',
@@ -46,7 +47,7 @@ class PriceHintWidget extends StatelessWidget {
       return _buildHintCard(
         cs: cs,
         tt: tt,
-        icon: Icons.lightbulb_outline_rounded,
+        iconAsset: 'lightbulb',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
         leading: 'Marché $corridorStr',
@@ -61,7 +62,8 @@ class PriceHintWidget extends StatelessWidget {
   Widget _buildHintCard({
     required ColorScheme cs,
     required TextTheme tt,
-    required IconData icon,
+    IconData? icon,
+    String? iconAsset,
     required Color iconColor,
     required Color bgColor,
     String? leading,
@@ -81,7 +83,9 @@ class PriceHintWidget extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: iconColor),
+          iconAsset != null
+              ? DonyIcon(iconAsset, size: 16, color: iconColor)
+              : Icon(icon, size: 16, color: iconColor),
           const SizedBox(width: DonySpacing.xs),
           Expanded(
             child: highlight != null

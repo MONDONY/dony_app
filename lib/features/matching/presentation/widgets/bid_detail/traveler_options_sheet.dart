@@ -70,7 +70,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
 
             // ── Contacter l'expéditeur (always) ────────────────────────────
             _OptionTile(
-              icon: Icons.chat_bubble_outline_rounded,
+              iconAsset: 'message-circle',
               iconColor: cs.primary,
               iconBg: cs.primaryContainer,
               label: "Contacter l'expéditeur",
@@ -101,7 +101,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
             // ── Partager le suivi (only if trackingToken available) ─────────
             if (bid.trackingToken != null) ...[
               _OptionTile(
-                icon: Icons.share_rounded,
+                iconAsset: 'share-2',
                 iconColor: cs.primary,
                 iconBg: cs.primaryContainer,
                 label: 'Partager le suivi',
@@ -116,7 +116,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
 
             // ── Signaler l'expéditeur (always) ──────────────────────────────
             _OptionTile(
-              icon: Icons.flag_outlined,
+              iconAsset: 'flag',
               iconColor: cs.error,
               iconBg: cs.errorLight,
               label: "Signaler l'expéditeur",
@@ -132,7 +132,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
             // Le voyageur renonce à transporter CE colis (pas tout son trajet).
             if (_canCancel(bid)) ...[
               _OptionTile(
-                icon: Icons.block_rounded,
+                iconAsset: 'ban',
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: 'Annuler ce transport',
@@ -150,7 +150,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
             // ── Supprimer cette demande (REJECTED / CANCELLED) ──────────────
             if (_dismissableStatuses.contains(bid.status)) ...[
               _OptionTile(
-                icon: Icons.delete_outline_rounded,
+                iconAsset: 'trash-2',
                 iconColor: cs.error,
                 iconBg: cs.errorLight,
                 label: 'Supprimer cette demande',
@@ -412,8 +412,8 @@ class _OptionTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
+            DonyIcon(
+              'chevron-right',
               color: cs.onSurfaceVariant,
               size: 18,
             ),

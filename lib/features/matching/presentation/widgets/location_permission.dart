@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -117,7 +118,7 @@ class LocationDeniedSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.location_off_rounded, size: 48, color: cs.primary),
+          DonyIcon('map-pin-off', size: 48, color: cs.primary),
           const SizedBox(height: DonySpacing.md),
           Text(_title, style: tt.titleLarge, textAlign: TextAlign.center),
           const SizedBox(height: DonySpacing.sm),

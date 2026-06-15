@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class PaiementCard extends StatelessWidget {
       // Cash / Wave / Orange Money — règlement en personne (net voyageur)
       body = Row(
         children: [
-          Icon(Icons.payments_outlined, color: cs.warning, size: 20),
+          DonyIcon('banknote', color: cs.warning, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
@@ -79,7 +80,7 @@ class PaiementCard extends StatelessWidget {
       // Montant effectivement versé au voyageur = net.
       return Row(
         children: [
-          Icon(Icons.check_circle_outline_rounded, color: cs.success, size: 20),
+          DonyIcon('circle-check', color: cs.success, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
@@ -95,8 +96,8 @@ class PaiementCard extends StatelessWidget {
       // L'expéditeur récupère ce qu'il a payé = net + commission.
       return Row(
         children: [
-          Icon(
-            Icons.replay_rounded,
+          DonyIcon(
+            'refresh-cw',
             color: cs.onSurfaceVariant,
             size: 20,
           ),
@@ -114,7 +115,7 @@ class PaiementCard extends StatelessWidget {
     // Default — en séquestre : montant payé par l'expéditeur (net + commission).
     return Row(
       children: [
-        Icon(Icons.lock_outline_rounded, color: cs.primary, size: 20),
+        DonyIcon('lock', color: cs.primary, size: 20),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(

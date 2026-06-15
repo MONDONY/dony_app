@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -343,11 +344,11 @@ class _PaymentMethodChoice extends StatelessWidget {
   final PaymentMethod? selected;
   final ValueChanged<PaymentMethod> onChanged;
 
-  IconData _icon(PaymentMethod m) => switch (m) {
-        PaymentMethod.stripe => Icons.credit_card_rounded,
-        PaymentMethod.cash => Icons.payments_rounded,
-        PaymentMethod.wave => Icons.waves_rounded,
-        PaymentMethod.orangeMoney => Icons.phone_android_rounded,
+  String _icon(PaymentMethod m) => switch (m) {
+        PaymentMethod.stripe => 'credit-card',
+        PaymentMethod.cash => 'banknote',
+        PaymentMethod.wave => 'waves',
+        PaymentMethod.orangeMoney => 'smartphone',
       };
 
   @override
@@ -390,7 +391,7 @@ class _PaymentMethodChoice extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(_icon(method),
+                DonyIcon(_icon(method),
                     size: 14,
                     color: isSelected ? cs.primary : cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xs),
@@ -403,7 +404,7 @@ class _PaymentMethodChoice extends StatelessWidget {
                 ),
                 if (single && isSelected) ...[
                   const SizedBox(width: DonySpacing.xs),
-                  Icon(Icons.check_rounded, size: 14, color: cs.primary),
+                  DonyIcon('check', size: 14, color: cs.primary),
                 ],
               ],
             ),

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -195,8 +196,8 @@ class _LockedAirplaneBlock extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.flight_rounded,
+          DonyIcon(
+            'plane',
             size: 22,
             color: cs.onSurfaceVariant,
           ),
@@ -221,8 +222,8 @@ class _LockedAirplaneBlock extends StatelessWidget {
               ],
             ),
           ),
-          Icon(
-            Icons.lock_outline_rounded,
+          DonyIcon(
+            'lock',
             size: 16,
             color: cs.onSurfaceVariant,
           ),
@@ -277,7 +278,7 @@ class _RouteCard extends StatelessWidget {
               children: [
                 const _CityHeader(
                   label: 'DÉPART',
-                  icon: Icons.my_location_rounded,
+                  iconAsset: 'locate-fixed',
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 departureField,
@@ -302,7 +303,7 @@ class _RouteCard extends StatelessWidget {
               children: [
                 const _CityHeader(
                   label: 'ARRIVÉE',
-                  icon: Icons.location_on_rounded,
+                  iconAsset: 'map-pin',
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 arrivalField,
@@ -316,10 +317,10 @@ class _RouteCard extends StatelessWidget {
 }
 
 class _CityHeader extends StatelessWidget {
-  const _CityHeader({required this.label, required this.icon});
+  const _CityHeader({required this.label, required this.iconAsset});
 
   final String label;
-  final IconData icon;
+  final String iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -335,7 +336,7 @@ class _CityHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.sm),
           ),
           child: Center(
-            child: Icon(icon, size: 14, color: cs.primary),
+            child: DonyIcon(iconAsset, size: 14, color: cs.primary),
           ),
         ),
         const SizedBox(width: DonySpacing.sm),
@@ -476,7 +477,7 @@ class _ToleranceField extends StatelessWidget {
                       ? 'Date exacte'
                       : '± $t ${t > 1 ? "jours" : "jour"}'),
                   trailing: t == tolerance
-                      ? const Icon(Icons.check_rounded,
+                      ? const DonyIcon('check',
                           color: DonyColors.primary)
                       : null,
                   onTap: () {

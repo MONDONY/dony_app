@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/widgets/offline_queue_bottom_sheet.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_search_bottom_sheet.dart';
@@ -72,12 +73,12 @@ class _TrackingHubView extends StatelessWidget {
 
             // ── Section voyageur ────────────────────────────────────────
             const _HubSectionTitle(
-              icon: Icons.qr_code_scanner_rounded,
+              iconAsset: 'scan-line',
               label: 'Je suis voyageur',
             ),
             const SizedBox(height: DonySpacing.md),
             _HubCard(
-              icon: Icons.qr_code_scanner_rounded,
+              iconAsset: 'scan-line',
               iconBg: cs.primaryContainer,
               iconColor: cs.primary,
               title: 'Scanner le QR code d\'un colis',
@@ -88,12 +89,12 @@ class _TrackingHubView extends StatelessWidget {
 
             // ── Section expéditeur / destinataire ───────────────────────
             const _HubSectionTitle(
-              icon: Icons.search_rounded,
+              iconAsset: 'search',
               label: 'Je suis expéditeur ou destinataire',
             ),
             const SizedBox(height: DonySpacing.md),
             _HubCard(
-              icon: Icons.search_rounded,
+              iconAsset: 'search',
               iconBg: cs.surfaceContainerHighest,
               iconColor: cs.onSurfaceVariant,
               title: 'Suivre un colis par numéro',
@@ -132,8 +133,8 @@ class _OfflineBanner extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.wifi_off_rounded,
+            DonyIcon(
+              'wifi-off',
               color: cs.secondary,
               size: DonySpacing.iconSm,
             ),
@@ -157,8 +158,8 @@ class _OfflineBanner extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
+            DonyIcon(
+              'chevron-right',
               color: cs.secondary,
               size: DonySpacing.iconSm,
             ),
@@ -172,9 +173,12 @@ class _OfflineBanner extends StatelessWidget {
 // ── Section title ─────────────────────────────────────────────────────────────
 
 class _HubSectionTitle extends StatelessWidget {
-  const _HubSectionTitle({required this.icon, required this.label});
+  const _HubSectionTitle({
+    required this.iconAsset,
+    required this.label,
+  });
 
-  final IconData icon;
+  final String iconAsset;
   final String label;
 
   @override
@@ -184,7 +188,7 @@ class _HubSectionTitle extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(icon, size: 14, color: cs.onSurfaceVariant),
+        DonyIcon(iconAsset, size: 14, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label.toUpperCase(),
@@ -202,7 +206,7 @@ class _HubSectionTitle extends StatelessWidget {
 
 class _HubCard extends StatelessWidget {
   const _HubCard({
-    required this.icon,
+    required this.iconAsset,
     required this.iconBg,
     required this.iconColor,
     required this.title,
@@ -210,7 +214,7 @@ class _HubCard extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final String iconAsset;
   final Color iconBg;
   final Color iconColor;
   final String title;
@@ -239,7 +243,7 @@ class _HubCard extends StatelessWidget {
                 color: iconBg,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
-              child: Icon(icon, color: iconColor, size: 24),
+              child: DonyIcon(iconAsset, color: iconColor, size: 24),
             ),
             const SizedBox(width: DonySpacing.base - 2),
             Expanded(
@@ -258,8 +262,8 @@ class _HubCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
+            DonyIcon(
+              'chevron-right',
               color: cs.onSurfaceVariant,
               size: DonySpacing.iconSm,
             ),

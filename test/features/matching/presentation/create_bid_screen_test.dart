@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -232,7 +233,9 @@ void main() {
           MaterialApp.router(routerConfig: router, theme: AppTheme.light));
       await tester.pump(_kSettle);
 
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Écran parent'), findsOneWidget);
@@ -259,7 +262,7 @@ void main() {
       await tester.tap(find.text('Médicaments'));
       await tester.pump();
 
-      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check'), findsOneWidget);
     });
 
     testWidgets('double-tap sur même catégorie → chip désélectionné',
@@ -271,7 +274,7 @@ void main() {
       await tester.tap(find.text('Documents'));
       await tester.pump();
 
-      expect(find.byIcon(Icons.check_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check'), findsNothing);
     });
 
     testWidgets('sélection multiple → plusieurs icônes check', (tester) async {
@@ -282,7 +285,7 @@ void main() {
       await tester.tap(find.text('Médicaments'));
       await tester.pump();
 
-      expect(find.byIcon(Icons.check_rounded), findsNWidgets(2));
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check'), findsNWidgets(2));
     });
   });
 

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -150,7 +151,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.lock_rounded,
+                                const DonyIcon('lock',
                                     size: 12, color: Colors.white),
                                 const SizedBox(width: 4),
                                 Text(
@@ -170,7 +171,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const Icon(Icons.arrow_downward_rounded,
+                    const DonyIcon('arrow-down',
                         color: Colors.white70, size: 28),
                     Text(
                       r.arrivalCity,
@@ -195,13 +196,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.base),
               _detailCard(context, 'Colis', [
-                _kv(context, Icons.scale_rounded, 'Poids', '${r.weightKg} kg'),
-                _kv(context, Icons.archive_rounded, 'Taille',
+                _kv(context, 'scale', 'Poids', '${r.weightKg} kg'),
+                _kv(context, 'archive', 'Taille',
                     r.parcelSize.name.toUpperCase()),
-                _kv(context, Icons.label_rounded, 'Catégorie',
+                _kv(context, 'tag', 'Catégorie',
                     r.contentCategory.label),
                 if (r.description != null)
-                  _kv(context, Icons.notes_rounded, 'Description',
+                  _kv(context, 'file-text', 'Description',
                       r.description!),
               ]),
               if (r.targetPriceEur != null) ...[
@@ -209,7 +210,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 _detailCard(context, 'Budget', [
                   _kv(
                     context,
-                    Icons.payments_rounded,
+                    'banknote',
                     r.negotiable ? 'Prix cible' : 'Prix ferme',
                     PriceDisplay.eur(r.targetPriceEur!),
                   ),
@@ -224,10 +225,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 const SizedBox(height: DonySpacing.md),
                 _detailCard(context, 'Zones', [
                   if (r.pickupNeighborhood != null)
-                    _kv(context, Icons.location_on_rounded, 'Pickup',
+                    _kv(context, 'map-pin', 'Pickup',
                         r.pickupNeighborhood!),
                   if (r.deliveryNeighborhood != null)
-                    _kv(context, Icons.location_on_rounded, 'Livraison',
+                    _kv(context, 'map-pin', 'Livraison',
                         r.deliveryNeighborhood!),
                 ]),
               ],
@@ -287,12 +288,12 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   }
 
   static Widget _kv(
-      BuildContext context, IconData icon, String label, String value) {
+      BuildContext context, String iconAsset, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: kTextSecondary),
+          DonyIcon(iconAsset, size: 18, color: kTextSecondary),
           const SizedBox(width: DonySpacing.md),
           SizedBox(
             width: 90,

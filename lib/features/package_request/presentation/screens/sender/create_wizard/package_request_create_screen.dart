@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -240,7 +241,7 @@ class _Header extends StatelessWidget {
                         color: cs.primaryContainer,
                         borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                       ),
-                      child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+                      child: DonyIcon('chevron-left', size: 20, color: cs.primary),
                     ),
                   );
                 }),
@@ -343,9 +344,9 @@ class _StickyCta extends StatelessWidget {
                 : isFinalStep
                     ? 'Publier ma demande'
                     : 'Continuer',
-            iconRight: isFinalStep
-                ? Icons.send_rounded
-                : Icons.arrow_forward_rounded,
+            iconRightAsset: isFinalStep
+                ? 'send'
+                : 'arrow-right',
             onPressed: isSubmitting ? null : onPressed,
             isLoading: isSubmitting,
           ),

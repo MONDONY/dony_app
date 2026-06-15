@@ -73,7 +73,7 @@ void showTravelerAnnouncementSheet(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.info_outline_rounded,
+                    DonyIcon('info',
                         size: 16, color: cs.onSurfaceVariant),
                     const SizedBox(width: DonySpacing.xs),
                     Flexible(
@@ -105,7 +105,7 @@ void showTravelerAnnouncementSheet(
         }
         return DonyButton(
           label: 'Faire une demande',
-          icon: Icons.send_rounded,
+          iconAsset: 'send',
           onPressed: () async {
             final navigator = Navigator.of(innerCtx, rootNavigator: true);
             final rootCtx = navigator.context;
@@ -195,7 +195,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                       const SizedBox(height: DonySpacing.xxs),
                       Row(
                         children: [
-                          Icon(Icons.star_rounded, size: 14, color: cs.warning),
+                          DonyIcon('star', size: 14, color: cs.warning),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
                             rating != null ? '${rating.toStringAsFixed(1)}/5' : 'Nouveau',
@@ -214,8 +214,8 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
+                DonyIcon(
+                  'chevron-right',
                   size: 20,
                   color: cs.onSurfaceVariant,
                 ),
@@ -265,7 +265,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.lg),
 
         // Détails
-        _InfoRow(icon: Icons.calendar_today_outlined, label: dateStr),
+        _InfoRow(iconAsset: 'calendar', label: dateStr),
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
           iconAsset: 'package',
@@ -275,7 +275,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
-          icon: Icons.euro_rounded,
+          iconAsset: 'euro',
           label: announcement.pricingMode == 'MIXED'
               ? 'Grille tarifaire'
               : '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
@@ -286,7 +286,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             announcement.handoverWindowEnd != null) ...[
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
-            icon: Icons.schedule_rounded,
+            iconAsset: 'clock',
             label: 'Remise : '
                 '${_handoverRangeLabel(announcement.handoverWindowStart!.toLocal(), announcement.handoverWindowEnd!.toLocal())}',
           ),
@@ -362,9 +362,8 @@ String _handoverRangeLabel(DateTime start, DateTime end) {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({this.icon, this.iconAsset, required this.label, this.labelStyle});
-  final IconData? icon;
-  final String? iconAsset;
+  const _InfoRow({required this.iconAsset, required this.label, this.labelStyle});
+  final String iconAsset;
   final String label;
   final TextStyle? labelStyle;
 
@@ -374,9 +373,7 @@ class _InfoRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        iconAsset != null
-            ? DonyIcon(iconAsset!, size: 16, color: cs.onSurfaceVariant)
-            : Icon(icon, size: 16, color: cs.onSurfaceVariant),
+        DonyIcon(iconAsset, size: 16, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
@@ -429,8 +426,8 @@ class _KycVerifiedBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.verified_rounded,
+          DonyIcon(
+            'badge-check',
             size: 11,
             color: cs.success,
           ),

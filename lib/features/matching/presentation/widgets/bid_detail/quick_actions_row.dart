@@ -77,7 +77,7 @@ class QuickActionsRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: _ActionTile(
-              icon: Icons.share_rounded,
+              iconAsset: 'share-2',
               label: 'Partager le suivi',
               cs: cs,
               tt: tt,

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -81,7 +82,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.close_rounded,
+                      icon: const DonyIcon('x',
                           color: DonyColors.neutral0),
                       onPressed: () => context.pop<String?>(),
                     ),
@@ -96,7 +97,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.flash_on_rounded,
+                      icon: const DonyIcon('zap',
                           color: DonyColors.neutral0),
                       onPressed: () => _scanner.toggleTorch(),
                     ),
@@ -159,8 +160,8 @@ class _QrFrame extends StatelessWidget {
                   color: cs.success,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.check_rounded,
+                child: const DonyIcon(
+                  'check',
                   color: DonyColors.neutral0,
                   size: 40,
                 ),

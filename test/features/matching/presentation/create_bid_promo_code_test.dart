@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -239,7 +240,7 @@ void main() {
 
     expect(
       find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.check_circle_rounded,
+        (w) => w is DonyIcon && w.name == 'circle-check',
       ),
       findsOneWidget,
     );
@@ -269,7 +270,7 @@ void main() {
     expect(find.text('Code promo invalide ou expiré'), findsOneWidget);
     expect(
       find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.error_outline_rounded,
+        (w) => w is DonyIcon && w.name == 'circle-alert',
       ),
       findsOneWidget,
     );

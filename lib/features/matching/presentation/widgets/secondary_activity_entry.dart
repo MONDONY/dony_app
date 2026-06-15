@@ -10,13 +10,16 @@ import 'package:flutter/material.dart';
 class SecondaryActivityEntry extends StatelessWidget {
   const SecondaryActivityEntry({
     super.key,
-    required this.icon,
     required this.label,
     required this.onTap,
+    this.icon,
     this.iconAsset,
-  });
+  }) : assert(
+          icon != null || iconAsset != null,
+          'Fournir icon ou iconAsset.',
+        );
 
-  final IconData icon;
+  final IconData? icon;
   final String label;
   final VoidCallback onTap;
 
@@ -76,8 +79,8 @@ class SecondaryActivityEntry extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
+                DonyIcon(
+                  'chevron-right',
                   size: 20,
                   color: cs.onSurfaceVariant,
                 ),

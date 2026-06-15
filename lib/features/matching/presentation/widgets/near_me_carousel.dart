@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -119,7 +120,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                       color: cs.primaryContainer,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.near_me_rounded,
+                    child: DonyIcon('navigation',
                         color: cs.primary, size: 26),
                   );
                 },

@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -46,7 +47,7 @@ abstract final class OpenSurplusBottomSheet {
             valueListenable: canSubmit,
             builder: (context, valid, _) => DonyButton(
               label: loading ? 'Publication…' : 'Publier',
-              icon: loading ? null : Icons.public_rounded,
+              iconAsset: loading ? null : 'globe',
               isLoading: loading,
               onPressed: (valid && !loading) ? () => submitFn?.call() : null,
             ),
@@ -165,7 +166,7 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
             const SizedBox(height: DonySpacing.lg),
 
             // ── Capacité supplémentaire ────────────────────────────────────
-            const _SectionLabel(label: 'KG À OUVRIR', icon: Icons.add_box_outlined),
+            const _SectionLabel(label: 'KG À OUVRIR', iconAsset: 'square-plus'),
             const SizedBox(height: DonySpacing.sm),
             _KgField(
               controller: _kgCtrl,
@@ -183,7 +184,7 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
             const SizedBox(height: DonySpacing.lg),
 
             // ── Prix par kg (chips preset + autre) ─────────────────────────
-            const _SectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
+            const _SectionLabel(label: 'PRIX PAR KG', iconAsset: 'tag'),
             const SizedBox(height: DonySpacing.sm),
             ValueListenableBuilder<int>(
               valueListenable: _priceOptionNotifier,
@@ -285,7 +286,7 @@ class _ReservedBanner extends StatelessWidget {
               color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.sm),
             ),
-            child: Icon(Icons.lock_outline_rounded, color: cs.primary, size: 18),
+            child: DonyIcon('lock', color: cs.primary, size: 18),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -317,9 +318,9 @@ class _ReservedBanner extends StatelessWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label, required this.icon});
+  const _SectionLabel({required this.label, required this.iconAsset});
   final String label;
-  final IconData icon;
+  final String iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -327,7 +328,7 @@ class _SectionLabel extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Row(
       children: [
-        Icon(icon, size: 16, color: cs.onSurfaceVariant),
+        DonyIcon(iconAsset, size: 16, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,
@@ -503,7 +504,7 @@ class _PublicPricePreview extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.visibility_outlined, size: 18, color: cs.success),
+          DonyIcon('eye', size: 18, color: cs.success),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(

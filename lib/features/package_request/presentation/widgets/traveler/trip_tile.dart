@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
@@ -64,8 +65,8 @@ class TripTile extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: isSelected
-                            ? Icon(
-                                Icons.check_rounded,
+                            ? DonyIcon(
+                                'check',
                                 color: cs.onPrimary,
                                 size: 20,
                               )
@@ -102,10 +103,8 @@ class TripTile extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Icon(
-                        isSelected
-                            ? Icons.radio_button_checked_rounded
-                            : Icons.radio_button_unchecked_rounded,
+                      DonyIcon(
+                        isSelected ? 'circle-dot' : 'circle',
                         color: isSelected ? cs.primary : kTextHint,
                       ),
                     ],
@@ -164,7 +163,7 @@ class _ModifyButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.edit_rounded,
+              DonyIcon('square-pen',
                   size: 14,
                   color: enabled ? cs.primary : cs.onSurfaceVariant),
               const SizedBox(width: DonySpacing.xs),
@@ -204,8 +203,8 @@ class _CashChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            enabled ? Icons.payments_rounded : Icons.payments_outlined,
+          DonyIcon(
+            'banknote',
             size: 13,
             color: enabled ? cs.success : cs.onSurfaceVariant,
           ),

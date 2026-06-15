@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -91,7 +92,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           'Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.',
       confirmLabel: 'Supprimer',
       variant: DonyDialogVariant.destructive,
-      icon: Icons.delete_outline_rounded,
+      iconAsset: 'trash-2',
     );
   }
 
@@ -286,7 +287,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.delete_rounded,
+                                    DonyIcon('trash',
                                         color: cs.onError, size: 26),
                                     const SizedBox(height: DonySpacing.xs),
                                     Text(
@@ -411,8 +412,8 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                               minWidth: 40,
                               minHeight: 40,
                             ),
-                            icon: Icon(
-                              Icons.arrow_back_ios_new_rounded,
+                            icon: DonyIcon(
+                              'chevron-left',
                               size: 20,
                               color: cs.primary,
                             ),
@@ -475,7 +476,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 56, color: cs.outline),
+            DonyIcon('wifi-off', size: 56, color: cs.outline),
             const SizedBox(height: DonySpacing.base),
             Text(
               'Impossible de charger vos trajets',
@@ -490,7 +491,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xl),
             OutlinedButton.icon(
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const DonyIcon('refresh-cw'),
               label: const Text('Réessayer'),
               onPressed: () => context
                   .read<AnnouncementBloc>()

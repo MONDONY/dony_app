@@ -644,9 +644,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   bool _photoTooBig = false;
   final _codeController = TextEditingController();
 
-  final _eventTypes = <(String, String, IconData?, String?)>[
+  final _eventTypes = <(String, String, String?, String?)>[
     ('DEPART', 'Départ', null, 'plane-takeoff'),
-    ('TRANSIT', 'Transit', Icons.sync_alt_rounded, null),
+    ('TRANSIT', 'Transit', 'arrow-left-right', null),
     ('ARRIVEE', 'Arrivée', null, 'plane-landing'),
   ];
 
@@ -803,7 +803,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   ),
                   if (!isSubmitting)
                     IconButton(
-                      icon: Icon(Icons.close_rounded,
+                      icon: DonyIcon('x',
                           color: cs.onSurfaceVariant),
                       onPressed: () {
                         context.pop();
@@ -855,7 +855,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                                       : cs.onSurfaceVariant,
                                   size: 20)
                             else
-                              Icon(type.$3,
+                              DonyIcon(type.$3!,
                                   color: isSelected
                                       ? cs.onPrimary
                                       : cs.onSurfaceVariant,
@@ -898,7 +898,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline_rounded,
+                      DonyIcon('info',
                           color: cs.primary, size: 15),
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
@@ -972,7 +972,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.camera_alt_rounded,
+                                  DonyIcon('camera',
                                       color: cs.primary, size: 20),
                                   const SizedBox(width: DonySpacing.sm),
                                   Text(
@@ -999,7 +999,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             height: 120,
                             color: cs.primaryContainer,
                             child: Center(
-                                child: Icon(Icons.image_rounded,
+                                child: DonyIcon('image',
                                     color: cs.primary, size: 32)),
                           ),
                         ),
@@ -1015,7 +1015,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                               decoration: BoxDecoration(
                                   color: DonyColors.ink900.withValues(alpha: 0.54),
                                   shape: BoxShape.circle),
-                              child: const Icon(Icons.close_rounded,
+                              child: const DonyIcon('x',
                                   color: DonyColors.white, size: 16),
                             ),
                           ),
@@ -1027,7 +1027,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   const SizedBox(height: DonySpacing.sm),
                   Row(
                     children: [
-                      Icon(Icons.location_on_rounded,
+                      DonyIcon('map-pin',
                           color: cs.success, size: 14),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
@@ -1041,7 +1041,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   const SizedBox(height: DonySpacing.sm),
                   Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded,
+                      DonyIcon('triangle-alert',
                           color: cs.error, size: 14),
                       const SizedBox(width: DonySpacing.xs),
                       Expanded(
@@ -1065,9 +1065,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 label: isSubmitting
                     ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
                     : (isArrivee ? 'Confirmer la livraison' : 'Confirmer le scan'),
-                icon: isArrivee
-                    ? Icons.verified_rounded
-                    : Icons.check_rounded,
+                iconAsset: isArrivee ? 'badge-check' : 'check',
                 onPressed: isSubmitting ? null : () => _submit(context),
                 isLoading: isSubmitting,
               ),

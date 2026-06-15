@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -27,7 +28,7 @@ class TrackingSearchBottomSheet extends StatefulWidget {
           final isLoading = state is TrackingSearchLoading;
           return DonyButton(
             label: 'Rechercher',
-            icon: Icons.search_rounded,
+            iconAsset: 'search',
             isLoading: isLoading,
             onPressed: isLoading ? null : () => submit?.call(),
           );
@@ -83,7 +84,7 @@ class _TrackingSearchBottomSheetState extends State<TrackingSearchBottomSheet> {
           decoration: InputDecoration(
             labelText: 'Numéro de suivi',
             hintText: 'DON-481234',
-            prefixIcon: const Icon(Icons.qr_code_rounded),
+            prefixIcon: const DonyIcon('qr-code', size: 20),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(DonyRadius.md),
               borderSide: BorderSide(color: cs.outline),

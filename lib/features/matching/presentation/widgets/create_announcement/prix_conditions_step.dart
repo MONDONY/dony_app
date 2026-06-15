@@ -3,6 +3,7 @@
 // de comportement.
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
@@ -143,7 +144,7 @@ class PrixConditionsStep extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const CaSectionLabel(
-                    label: 'Prix par kg', icon: Icons.sell_rounded),
+                    label: 'Prix par kg', iconAsset: 'tag'),
                 const SizedBox(height: DonySpacing.md),
                 // ── Toggle "Tarif au kilo" (MIXED uniquement) ─────────────
                 if (isMixed)
@@ -269,8 +270,8 @@ class PrixConditionsStep extends StatelessWidget {
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(
-                                      Icons.edit_outlined,
+                                    DonyIcon(
+                                      'square-pen',
                                       size: 16,
                                       color: isCustom
                                           ? cs.success
@@ -470,7 +471,7 @@ class PrixConditionsStep extends StatelessWidget {
         if (showPaymentMethods) ...[
         const CaSectionLabel(
           label: 'Modes de paiement acceptés',
-          icon: Icons.payments_rounded,
+          iconAsset: 'banknote',
         ),
         const SizedBox(height: DonySpacing.sm),
         BlocBuilder<StripeAccountBloc, StripeAccountState>(
@@ -492,7 +493,7 @@ class PrixConditionsStep extends StatelessWidget {
                         activeThumbColor: cs.primary,
                         title: Row(
                           children: [
-                            const Icon(Icons.credit_card_rounded, size: 18),
+                            const DonyIcon('credit-card', size: 18),
                             const SizedBox(width: DonySpacing.sm),
                             Text(
                               'Carte bancaire (Stripe)',
@@ -502,7 +503,7 @@ class PrixConditionsStep extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: DonySpacing.xs),
-                            Icon(Icons.lock_rounded,
+                            DonyIcon('lock',
                                 size: 14, color: cs.onSurfaceVariant),
                           ],
                         ),
@@ -532,7 +533,7 @@ class PrixConditionsStep extends StatelessWidget {
                                 activeThumbColor: cs.primary,
                                 title: Row(
                                   children: [
-                                    const Icon(Icons.payments_rounded,
+                                    const DonyIcon('banknote',
                                         size: 18),
                                     const SizedBox(width: DonySpacing.sm),
                                     Text(
@@ -587,7 +588,7 @@ class PrixConditionsStep extends StatelessWidget {
         // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
         const CaSectionLabel(
             label: 'Ce que j\'accepte',
-            icon: Icons.check_circle_outline_rounded),
+            iconAsset: 'circle-check'),
         const SizedBox(height: DonySpacing.sm),
         ListenableBuilder(
           listenable: Listenable.merge([
@@ -642,7 +643,7 @@ class PrixConditionsStep extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (isSelected) ...[
-                                  const Icon(Icons.check_rounded,
+                                  const DonyIcon('check',
                                       size: 12, color: DonyColors.white),
                                   const SizedBox(width: DonySpacing.xs),
                                 ],
@@ -711,7 +712,7 @@ class PrixConditionsStep extends StatelessWidget {
 
         // ── CE QUE JE REFUSE ──────────────────────────────────────────────────
         const CaSectionLabel(
-            label: 'Ce que je refuse', icon: Icons.block_rounded),
+            label: 'Ce que je refuse', iconAsset: 'ban'),
         const SizedBox(height: DonySpacing.sm),
         ValueListenableBuilder<Set<String>>(
           valueListenable: refusedTypesNotifier,
@@ -765,7 +766,7 @@ class PrixConditionsStep extends StatelessWidget {
 
         // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────────────
         const CaSectionLabel(
-            label: 'Note aux expéditeurs', icon: Icons.edit_note_rounded),
+            label: 'Note aux expéditeurs', iconAsset: 'notebook-pen'),
         const SizedBox(height: DonySpacing.sm),
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: descriptionCtrl,
@@ -848,7 +849,7 @@ class PrixConditionsStep extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.warning_amber_rounded, color: cs.warning, size: 18),
+                DonyIcon('triangle-alert', color: cs.warning, size: 18),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
@@ -897,7 +898,7 @@ class PrixConditionsStep extends StatelessWidget {
             onChanged: null,
             title: Row(
               children: [
-                Icon(Icons.credit_card_rounded,
+                DonyIcon('credit-card',
                     size: 18, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
@@ -925,7 +926,7 @@ class PrixConditionsStep extends StatelessWidget {
             onChanged: null,
             title: Row(
               children: [
-                Icon(Icons.payments_rounded,
+                DonyIcon('banknote',
                     size: 18, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
@@ -1021,7 +1022,7 @@ class _LockedPriceNote extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lock_rounded, size: 18, color: cs.onSurfaceVariant),
+          DonyIcon('lock', size: 18, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Column(
@@ -1068,7 +1069,7 @@ class _LockedAgreedPriceCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.check_circle_rounded, color: cs.success, size: 28),
+          DonyIcon('circle-check', color: cs.success, size: 28),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
@@ -1088,7 +1089,7 @@ class _LockedAgreedPriceCard extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.lock_rounded, size: 16, color: cs.onSurfaceVariant),
+          DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
         ],
       ),
     );

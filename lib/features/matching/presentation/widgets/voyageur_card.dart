@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -115,13 +116,13 @@ class VoyageurCard extends StatelessWidget {
                   ),
                 ),
                 // Actions
-                _IconActionButton(icon: Icons.phone_rounded, onTap: () {}),
+                _IconActionButton(iconAsset: 'phone', onTap: () {}),
                 const SizedBox(width: DonySpacing.sm),
                 BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
                   builder: (context, openState) {
                     final isOpening = openState is ConversationOpenLoading;
                     return _IconActionButton(
-                      icon: Icons.chat_bubble_outline_rounded,
+                      iconAsset: 'message-circle',
                       isLoading: isOpening,
                       onTap: isOpening
                           ? null
@@ -133,8 +134,8 @@ class VoyageurCard extends StatelessWidget {
                 ),
                 if (canOpenProfile) ...[
                   const SizedBox(width: DonySpacing.xs),
-                  Icon(
-                    Icons.chevron_right_rounded,
+                  DonyIcon(
+                    'chevron-right',
                     color: cs.onSurfaceVariant,
                     size: 18,
                   ),
@@ -151,15 +152,17 @@ class VoyageurCard extends StatelessWidget {
 // ── Bouton icône circulaire (contact voyageur) ─────────────────────────────────
 
 class _IconActionButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final VoidCallback? onTap;
   final bool isLoading;
 
   const _IconActionButton({
-    required this.icon,
     required this.onTap,
+    this.icon,
+    this.iconAsset,
     this.isLoading = false,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +184,9 @@ class _IconActionButton extends StatelessWidget {
                   strokeWidth: 2,
                 ),
               )
-            : Icon(icon, color: cs.primary, size: 18),
+            : iconAsset != null
+                ? DonyIcon(iconAsset!, color: cs.primary, size: 18)
+                : Icon(icon, color: cs.primary, size: 18),
       ),
     );
   }
