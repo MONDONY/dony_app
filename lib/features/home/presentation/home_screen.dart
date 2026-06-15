@@ -1025,7 +1025,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       child: SafeArea(
                         child: SizedBox(
                           height: (MediaQuery.of(context).size.height * 0.40)
-                              .clamp(360.0, 450.0),
+                              .clamp(384.0, 470.0),
                           child: showBothTypes
                               ? DefaultTabController(
                                   length: 2,
