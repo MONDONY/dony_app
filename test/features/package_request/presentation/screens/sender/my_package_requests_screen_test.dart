@@ -8,6 +8,7 @@ import 'package:dony/features/package_request/data/models/content_category.dart'
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -527,7 +528,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap clear button (DonySearchField uses Icons.close_rounded)
-      final clearIcon = find.byIcon(Icons.close_rounded);
+      final clearIcon = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x');
       expect(clearIcon, findsOneWidget);
       await tester.tap(clearIcon);
       await tester.pump(const Duration(milliseconds: 300));

@@ -3,6 +3,7 @@ import 'package:dony/features/package_request/data/models/content_category.dart'
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -101,7 +102,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Marie Diop'), findsOneWidget);
       // DonyAvatar superpose 2 icônes verified_rounded (blanc + couleur)
-      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsWidgets);
       expect(find.text('4.9'), findsOneWidget);
     });
 
@@ -110,7 +111,7 @@ void main() {
         item: _item(kycVerified: false),
       )));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.verified_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'), findsNothing);
     });
 
     testWidgets('tap → callback onTap invoqué', (tester) async {
