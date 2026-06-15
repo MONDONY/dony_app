@@ -1,4 +1,5 @@
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -99,7 +100,7 @@ void main() {
   testWidgets('icône close présente', (tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: _router('DEPART')));
     await tester.pump();
-    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
   });
 
   // ─── Titre écran ─────────────────────────────────────────────────────────

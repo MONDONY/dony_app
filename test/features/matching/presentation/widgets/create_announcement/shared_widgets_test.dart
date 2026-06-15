@@ -3,6 +3,7 @@
 // CaSectionLabel, CaInlineAddRow, CaRemovableChip, CaTimeRow, CaStepperHeader,
 // CaStepNode, CaDateRow.
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -223,7 +224,8 @@ void main() {
           onRemove: () {},
         ),
       ));
-      expect(find.byType(Icon), findsOneWidget);
+      // CaRemovableChip rend désormais un DonyIcon('x') SVG, pas un Icon Material.
+      expect(find.byType(DonyIcon), findsOneWidget);
     });
   });
 
@@ -290,7 +292,7 @@ void main() {
       ));
       // La croix (close_rounded) est rendue — on la tape directement
       final closeIconFinder = find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.close_rounded,
+        (w) => w is DonyIcon && w.name == 'x',
       );
       expect(closeIconFinder, findsOneWidget);
       await tester.tap(closeIconFinder);
@@ -309,7 +311,7 @@ void main() {
       // La flèche est Icons.chevron_right_rounded
       expect(
         find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.chevron_right_rounded,
+          (w) => w is DonyIcon && w.name == 'chevron-right',
         ),
         findsOneWidget,
       );
@@ -365,7 +367,7 @@ void main() {
       await tester.pump();
       expect(
         find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.check_rounded,
+          (w) => w is DonyIcon && w.name == 'check',
         ),
         findsOneWidget,
       );
@@ -423,7 +425,7 @@ void main() {
       ));
       expect(
         find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.calendar_today_rounded,
+          (w) => w is DonyIcon && w.name == 'calendar',
         ),
         findsOneWidget,
       );
@@ -435,7 +437,7 @@ void main() {
       ));
       expect(
         find.byWidgetPredicate(
-          (w) => w is Icon && w.icon == Icons.chevron_right_rounded,
+          (w) => w is DonyIcon && w.name == 'chevron-right',
         ),
         findsOneWidget,
       );

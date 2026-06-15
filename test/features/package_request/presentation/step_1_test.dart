@@ -8,6 +8,7 @@ import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -82,7 +83,7 @@ void main() {
     // 5. Airplane lock indicator is visible
     testWidgets('airplane lock indicator is visible', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.byIcon(Icons.flight_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'), findsOneWidget);
       expect(find.text('Avion'), findsOneWidget);
     });
 

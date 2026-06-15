@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -62,7 +63,7 @@ void main() {
 
         expect(find.text('Payer mon envoi'), findsNothing);
         expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
-        expect(find.byIcon(Icons.payments_outlined), findsOneWidget);
+        expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'banknote'), findsOneWidget);
       },
     );
 

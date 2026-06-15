@@ -5,6 +5,7 @@ import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 
 class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
@@ -50,7 +51,7 @@ void main() {
 
   testWidgets('bouton GPS est visible', (tester) async {
     await tester.pumpWidget(buildWidget());
-    expect(find.byIcon(Icons.my_location_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'), findsOneWidget);
   });
 
   testWidgets('validation échoue si aucune adresse sélectionnée', (tester) async {
@@ -225,7 +226,7 @@ void main() {
 
   testWidgets('showGpsButton: true par défaut → bouton GPS visible', (tester) async {
     await tester.pumpWidget(buildWidget());
-    expect(find.byIcon(Icons.my_location_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'), findsOneWidget);
   });
 
   testWidgets('showGpsButton: false → bouton GPS masqué', (tester) async {
@@ -241,7 +242,7 @@ void main() {
         ),
       ),
     ));
-    expect(find.byIcon(Icons.my_location_rounded), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'), findsNothing);
     expect(find.text('Utiliser ma position actuelle'), findsNothing);
   });
 }

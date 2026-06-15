@@ -8,6 +8,7 @@ import 'package:dony/features/matching/presentation/widgets/billet/billet_talon.
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -85,7 +86,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'), true);
-    expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
     expect(find.textContaining('QR du colis'), findsOneWidget);
     // Pas de bouton code de retrait tant que le code n'existe pas.
     expect(find.text('Code de retrait'), findsNothing);
@@ -99,9 +100,9 @@ void main() {
         _bid(status: 'HANDED_OVER', confirmationCode: '4729'),
         true,
       );
-      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
       expect(find.text('Code de retrait'), findsOneWidget);
-      expect(find.byIcon(Icons.pin_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'key-round'), findsOneWidget);
       // La carte du code n'est PAS inline : elle vit dans le bottom sheet.
       expect(find.text('CODE DE RETRAIT'), findsNothing);
     },
@@ -111,7 +112,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
-    expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
     expect(find.text('Code de retrait'), findsNothing);
   });
 
@@ -123,7 +124,7 @@ void main() {
         _bid(status: 'IN_TRANSIT', confirmationCode: '4729'),
         true,
       );
-      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
       expect(find.text('Code de retrait'), findsOneWidget);
     },
   );
@@ -180,7 +181,7 @@ void main() {
         true,
       );
       expect(find.text('Code de retour'), findsOneWidget);
-      expect(find.byIcon(Icons.vpn_key_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'key-round'), findsOneWidget);
     },
   );
 
@@ -211,7 +212,7 @@ void main() {
     );
     // Accès au scan depuis le détail → redirige vers les étapes du Suivi.
     expect(find.text('Scanner les étapes'), findsOneWidget);
-    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'), findsOneWidget);
     // La bande de suivi reste.
     expect(find.text('N° DE SUIVI'), findsOneWidget);
   });
@@ -251,7 +252,7 @@ void main() {
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
     // Redirige vers les étapes du Suivi (ScanHub).
     expect(find.text('Scanner les étapes'), findsOneWidget);
-    expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'), findsOneWidget);
   });
 
   testWidgets('voyageur + IN_TRANSIT → lien "Scanner les étapes" (Suivi)', (
@@ -288,7 +289,7 @@ void main() {
         false,
       );
       expect(find.text('Confirmer le retour'), findsOneWidget);
-      expect(find.byIcon(Icons.assignment_turned_in_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'clipboard-check'), findsOneWidget);
     },
   );
 

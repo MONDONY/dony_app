@@ -5,6 +5,7 @@ import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteu
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,29 +60,29 @@ void main() {
     await _pump(tester, _bid());
     expect(find.text('EXPÉDITEUR'), findsOneWidget);
     expect(find.text('Mariama D.'), findsOneWidget);
-    expect(find.byIcon(Icons.chat_bubble_outline_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.phone_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsOneWidget);
   });
 
   testWidgets('pas de 📞 si pas de téléphone', (tester) async {
     await _pump(tester, _bid(senderPhone: null));
-    expect(find.byIcon(Icons.phone_rounded), findsNothing);
-    expect(find.byIcon(Icons.chat_bubble_outline_rounded), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'), findsOneWidget);
   });
 
   testWidgets('pas de 📞 quand statut terminal (COMPLETED)', (tester) async {
     await _pump(tester, _bid(status: 'COMPLETED'));
-    expect(find.byIcon(Icons.phone_rounded), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
   });
 
   testWidgets('pas de 📞 quand statut terminal (DELIVERED)', (tester) async {
     await _pump(tester, _bid(status: 'DELIVERED'));
-    expect(find.byIcon(Icons.phone_rounded), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
   });
 
   testWidgets('pas de 📞 si téléphone vide (chaîne vide)', (tester) async {
     await _pump(tester, _bid(senderPhone: ''));
-    expect(find.byIcon(Icons.phone_rounded), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
   });
 
   testWidgets('chip KYC affiché si senderKycVerified=true', (tester) async {
@@ -249,7 +250,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byIcon(Icons.chat_bubble_outline_rounded));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'));
     await tester.pumpAndSettle();
     verify(() => conv.add(any(that: isA<ConversationOpenRequested>()))).called(1);
   });
@@ -282,7 +283,7 @@ void main() {
       ),
     );
     // When senderId is empty, there's no chevron and no tap target for profile
-    expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
   });
 
   testWidgets('senderTotalShipments null → pas de texte envois',
@@ -328,7 +329,7 @@ void main() {
     });
 
     await _pump(tester, _bid());
-    await tester.tap(find.byIcon(Icons.phone_rounded));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -348,7 +349,7 @@ void main() {
     });
 
     await _pump(tester, _bid());
-    await tester.tap(find.byIcon(Icons.phone_rounded));
+    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 

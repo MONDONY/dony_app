@@ -5,6 +5,7 @@ import 'package:dony/features/package_request/data/models/negotiation_message.da
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_recap_bottom_sheet.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -142,7 +143,7 @@ void main() {
           find.textContaining('Sécurisé · bloqué en escrow'),
           findsOneWidget,
         );
-        expect(find.byIcon(Icons.lock_outlined), findsOneWidget);
+        expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'lock'), findsOneWidget);
       },
     );
   });
@@ -193,7 +194,7 @@ void main() {
           find.textContaining('Paiement en main propre'),
           findsOneWidget,
         );
-        expect(find.byIcon(Icons.payments_outlined), findsOneWidget);
+        expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'banknote'), findsOneWidget);
       },
     );
   });

@@ -8,6 +8,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,7 +60,7 @@ void main() {
       expect(find.text('TRAJET & COLIS'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
       // Avion verrouillé remplace les 6 OptionButton
-      expect(find.byIcon(Icons.flight_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'), findsOneWidget);
       expect(find.text('Avion'), findsOneWidget);
       expect(find.byType(OptionButton), findsNothing);
     });

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_photo_upload.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -66,7 +67,7 @@ void main() {
 
       expect(find.text('Ajouter une photo (optionnel)'), findsOneWidget);
       expect(find.text('Aide les voyageurs à se projeter'), findsOneWidget);
-      expect(find.byIcon(Icons.add_a_photo_outlined), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'image-plus'), findsOneWidget);
     });
 
     testWidgets('shows preview when photoFile is provided', (tester) async {
@@ -89,7 +90,7 @@ void main() {
       );
 
       expect(find.text('Photo ajoutée'), findsOneWidget);
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
     });
 
     testWidgets('calls onPhotoPicked(null) when remove button is tapped',
@@ -116,7 +117,7 @@ void main() {
       );
 
       // Tap the remove icon
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
       await tester.pump();
 
       // After tapping remove, the widget should show the empty state
