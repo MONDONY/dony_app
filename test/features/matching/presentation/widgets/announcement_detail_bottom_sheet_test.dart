@@ -31,6 +31,7 @@ AnnouncementModel _ann({
   bool surplusPublished = false,
   double availableKg = 10,
   int bidsCount = 0,
+  int confirmedParcelCount = 0,
 }) =>
     AnnouncementModel(
       id: 'ann-1',
@@ -43,6 +44,7 @@ AnnouncementModel _ann({
       pricePerKg: 7,
       status: 'ACTIVE',
       bidsCount: bidsCount,
+      confirmedParcelCount: confirmedParcelCount,
       createdAt: DateTime(2026, 7),
       updatedAt: DateTime(2026, 7),
       reservedKg: reservedKg,
@@ -183,5 +185,24 @@ void main() {
       find.widgetWithText(DonyButton, 'Ouvrir les kg restants'),
       findsNothing,
     );
+  });
+
+  testWidgets('détail affiche colis acceptés + en attente',
+      (tester) async {
+    seedDetail(_ann(confirmedParcelCount: 3, bidsCount: 5));
+    await open(tester);
+
+    expect(find.text('colis acceptés'), findsOneWidget);
+    expect(find.text('en attente'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('5'), findsOneWidget);
+  });
+
+  testWidgets('un seul colis accepté → libellé au singulier',
+      (tester) async {
+    seedDetail(_ann(confirmedParcelCount: 1));
+    await open(tester);
+
+    expect(find.text('colis accepté'), findsOneWidget);
   });
 }
