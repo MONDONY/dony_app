@@ -33,15 +33,25 @@ class DonyIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.asset(
-      'assets/icons/$name.svg',
-      width: size,
-      height: size,
-      colorFilter:
-          color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
-      semanticsLabel: semanticLabel,
-      // Fond transparent pendant le décodage → pas de flash.
-      placeholderBuilder: (_) => SizedBox(width: size, height: size),
+    // Center(widthFactor/heightFactor: 1) : protège la taille du SVG.
+    // Sans ça, un slot qui impose une contrainte min plus grande (ex:
+    // InputDecoration.prefixIcon force min 48×48, ou un Container surdimensionné)
+    // étirerait le SvgPicture pour remplir la boîte — contrairement à un glyphe
+    // Material qui reste à taille fixe. Le widthFactor shrink-wrap évite aussi
+    // l'erreur « infinite width » en usage inline non borné.
+    return Center(
+      widthFactor: 1,
+      heightFactor: 1,
+      child: SvgPicture.asset(
+        'assets/icons/$name.svg',
+        width: size,
+        height: size,
+        colorFilter:
+            color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
+        semanticsLabel: semanticLabel,
+        // Fond transparent pendant le décodage → pas de flash.
+        placeholderBuilder: (_) => SizedBox(width: size, height: size),
+      ),
     );
   }
 }

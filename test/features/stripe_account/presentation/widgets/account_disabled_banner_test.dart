@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_disabled_banner.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
@@ -27,7 +28,10 @@ void main() {
   group('AccountDisabledBanner', () {
     testWidgets('renders warning icon and message', (tester) async {
       await tester.pumpWidget(buildWidget(const AccountDisabledBanner()));
-      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'triangle-alert'),
+        findsOneWidget,
+      );
       expect(find.textContaining('temporairement désactivé'), findsOneWidget);
     });
 
@@ -40,7 +44,10 @@ void main() {
   group('AccountRejectedBanner', () {
     testWidgets('renders error icon and message', (tester) async {
       await tester.pumpWidget(buildWidget(const AccountRejectedBanner()));
-      expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'circle-alert'),
+        findsOneWidget,
+      );
       expect(find.textContaining('rejeté'), findsOneWidget);
     });
 
