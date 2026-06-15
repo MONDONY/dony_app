@@ -1,5 +1,6 @@
 import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -87,7 +88,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.star_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsNothing);
     });
   });
 
@@ -114,13 +115,13 @@ void main() {
         host(buildItem(index: 4, currentIndex: 4, isPro: true)),
       );
 
-      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsOneWidget);
     });
 
     testWidgets('pas d\'étoile PRO si isPro=false', (tester) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
 
-      expect(find.byIcon(Icons.star_rounded), findsNothing);
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsNothing);
     });
   });
 

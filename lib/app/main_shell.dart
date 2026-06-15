@@ -184,13 +184,12 @@ class _DonyBottomNav extends StatelessWidget {
             // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
             // dans MatchingManagementScreen — Phase 2)
             const tab1Label = 'Activités';
-            const tab1Icon = Icons.bolt_rounded;
-            const tab1IconOutlined = Icons.bolt_outlined;
+            const tab1IconAsset = 'zap';
 
             // Tab 2 — Suivi (libellé + icône figés ; contenu adapté au profil
             // dans SuiviScreen — voir spec Phase 3). Icône « cible/radar » =
             // sens suivi/tracking neutre (ni scan ni colis).
-            const tab2Icon = Icons.track_changes_rounded;
+            const tab2IconAsset = 'target';
 
             return ClipRect(
               child: BackdropFilter(
@@ -211,8 +210,7 @@ class _DonyBottomNav extends StatelessWidget {
                           // 0 — Accueil
                           Expanded(
                             child: DonyNavItem(
-                              icon: Icons.home_rounded,
-                              outlinedIcon: Icons.home_outlined,
+                              iconAsset: 'house',
                               label: 'Accueil',
                               index: 0,
                               currentIndex: currentIndex,
@@ -222,8 +220,7 @@ class _DonyBottomNav extends StatelessWidget {
                           // 1 — Envoyer (sender) | Trajets (traveler)
                           Expanded(
                             child: DonyNavItem(
-                              icon: tab1Icon,
-                              outlinedIcon: tab1IconOutlined,
+                              iconAsset: tab1IconAsset,
                               label: tab1Label,
                               index: 1,
                               currentIndex: currentIndex,
@@ -233,8 +230,7 @@ class _DonyBottomNav extends StatelessWidget {
                           // 2 — Suivi (toujours in-shell ; SuiviScreen adapte le contenu au profil)
                           Expanded(
                             child: DonyNavItem(
-                              icon: tab2Icon,
-                              outlinedIcon: tab2Icon,
+                              iconAsset: tab2IconAsset,
                               label: 'Suivi',
                               index: 2,
                               currentIndex: currentIndex,
@@ -248,9 +244,7 @@ class _DonyBottomNav extends StatelessWidget {
                                 final uid =
                                     FirebaseAuth.instance.currentUser?.uid;
                                 final messagesItem = DonyNavItem(
-                                  icon: Icons.chat_bubble_rounded,
-                                  outlinedIcon:
-                                      Icons.chat_bubble_outline_rounded,
+                                  iconAsset: 'message-circle',
                                   label: 'Messages',
                                   index: 3,
                                   currentIndex: currentIndex,
@@ -265,9 +259,7 @@ class _DonyBottomNav extends StatelessWidget {
                                       .totalUnreadStream(uid),
                                   builder: (context, snapshot) {
                                     return DonyNavItem(
-                                      icon: Icons.chat_bubble_rounded,
-                                      outlinedIcon:
-                                          Icons.chat_bubble_outline_rounded,
+                                      iconAsset: 'message-circle',
                                       label: 'Messages',
                                       index: 3,
                                       currentIndex: currentIndex,
@@ -282,8 +274,7 @@ class _DonyBottomNav extends StatelessWidget {
                           // 4 — Moi (photo de profil style Facebook)
                           Expanded(
                             child: DonyNavItem(
-                              icon: Icons.person_rounded,
-                              outlinedIcon: Icons.person_outline_rounded,
+                              iconAsset: 'user',
                               label: 'Moi',
                               index: 4,
                               currentIndex: currentIndex,
