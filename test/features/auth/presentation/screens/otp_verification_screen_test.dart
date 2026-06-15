@@ -7,6 +7,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -324,7 +325,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       // The back button icon should be visible (DonyBackCircle uses arrow_back_rounded)
-      final backBtn = find.byIcon(Icons.arrow_back_rounded);
+      final backBtn = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'arrow-left');
       expect(backBtn, findsOneWidget);
       await tester.tap(backBtn);
       await tester.pumpAndSettle();

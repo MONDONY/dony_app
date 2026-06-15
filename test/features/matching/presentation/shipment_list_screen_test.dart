@@ -512,7 +512,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Find the clear icon button (DonySearchField uses Icons.close_rounded)
-    final clearIcon = find.byIcon(Icons.close_rounded);
+    final clearIcon = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x');
     expect(clearIcon, findsOneWidget);
     await tester.tap(clearIcon);
     await tester.pump(const Duration(milliseconds: 300));
