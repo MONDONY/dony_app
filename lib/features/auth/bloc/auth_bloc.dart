@@ -65,6 +65,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthAddEmailFromProfileRequested>(_onAddEmailFromProfileRequested);
     on<AuthUserSynced>(_onUserSynced);
     on<AuthAvatarUploadRequested>(_onAvatarUploadRequested);
+    on<AuthProfileRefreshRequested>(_onProfileRefreshRequested);
   }
 
   @override
@@ -555,6 +556,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   void _onUserSynced(AuthUserSynced event, Emitter<AuthState> emit) {
     emit(AuthProfileUpdated(event.user));
+  }
+
+  Future<void> _onProfileRefreshRequested(
+    AuthProfileRefreshRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      final user = await _authRepository.getProfile();
+      emit(AuthProfileUpdated(user));
+    } catch (_) {
+      // Refresh silencieux — ne pas afficher d'erreur si le rechargement échoue
+    }
   }
 
   Future<void> _checkProfileAfterOAuth(Emitter<AuthState> emit) async {

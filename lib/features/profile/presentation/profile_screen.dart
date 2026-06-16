@@ -57,6 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _scroll.addListener(_onScroll);
     context.read<BidBloc>().add(BidMyListRequested());
     context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+    context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
   }
 
   void _onScroll() => setState(() {});
@@ -508,6 +509,7 @@ class _ActivityTab extends StatelessWidget {
               totalTrips: user?.totalTrips ?? 0,
               totalShipments: user?.totalShipments ?? 0,
               isLoading: isLoading,
+              averageRating: user?.averageRating,
             )
             .animate()
             .fadeIn(delay: 100.ms)
@@ -1191,12 +1193,14 @@ class _ActivitySection extends StatelessWidget {
     required this.totalTrips,
     required this.totalShipments,
     required this.isLoading,
+    this.averageRating,
   });
 
   final bool isTraveler;
   final int totalTrips;
   final int totalShipments;
   final bool isLoading;
+  final double? averageRating;
 
   @override
   Widget build(BuildContext context) {
@@ -1205,8 +1209,11 @@ class _ActivitySection extends StatelessWidget {
         ? '—'
         : '${isTraveler ? totalTrips : totalShipments}';
     final mainLabel = isTraveler ? 'Trajets' : 'Envois';
-    final thirdValue = isTraveler ? '98%' : '0€';
+    final ratingValue = averageRating != null
+        ? averageRating!.toStringAsFixed(1)
+        : '—';
     final thirdLabel = isTraveler ? 'Livraison' : 'Économisés';
+    // thirdValue est '—' tant que le backend n'expose pas deliveryRate / savings
 
     return DonyCard(
       padding: const EdgeInsets.symmetric(
@@ -1227,11 +1234,11 @@ class _ActivitySection extends StatelessWidget {
             height: 28,
             color: cs.outline.withValues(alpha: 0.4),
           ),
-          const Expanded(
+          Expanded(
             child: _ActivityStat(
-              value: '4.9',
+              value: ratingValue,
               label: 'Ma note',
-              isLoading: false,
+              isLoading: isLoading,
             ),
           ),
           Container(
@@ -1241,7 +1248,7 @@ class _ActivitySection extends StatelessWidget {
           ),
           Expanded(
             child: _ActivityStat(
-              value: thirdValue,
+              value: '—',
               label: thirdLabel,
               isLoading: false,
             ),
