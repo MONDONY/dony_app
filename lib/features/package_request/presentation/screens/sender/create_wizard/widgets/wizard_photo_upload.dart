@@ -1,55 +1,36 @@
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-
-/// Compresses [input] to JPEG, max 1280×1280, quality 80.
-/// Returns a new [XFile] pointing to the compressed bytes saved in the temp
-/// directory. Falls back to the original file if compression fails.
-Future<XFile> defaultCompressForUpload(XFile input) async {
-  final bytes = await input.readAsBytes();
-  final compressed = await FlutterImageCompress.compressWithList(
-    bytes,
-    minWidth: 1280,
-    minHeight: 1280,
-    quality: 80,
-  );
-  final dir = await getTemporaryDirectory();
-  final outPath = '${dir.path}/${input.name}_compressed.jpg';
-  final outFile = File(outPath)..writeAsBytesSync(compressed);
-  return XFile(outFile.path);
-}
-
-/// Signature for an image compressor — injectable for testing.
-typedef ImageCompressor = Future<XFile> Function(XFile input);
 
 /// Slot photo optionnel pour le wizard étape 3.
 ///
 /// - Tap → bottom sheet "Caméra | Galerie".
-/// - Compresse la photo (max 1280×1280, qualité 80 %) via [compressor]
-///   avant de remonter le fichier au parent.
-/// - Affiche un preview circulaire à coins arrondis si une photo est choisie.
-/// - Le parent contrôle l'état via [photoFile] + [onPhotoPicked].
+/// - Compresse la photo via [DonyMediaService] avant de remonter le fichier.
+/// - Affiche un preview à coins arrondis si une photo est choisie.
+/// - [mediaService] est injectable pour les tests.
 class WizardPhotoUpload extends StatelessWidget {
   const WizardPhotoUpload({
     super.key,
     required this.photoFile,
     required this.onPhotoPicked,
-    ImageCompressor? compressor,
-  }) : _compress = compressor ?? defaultCompressForUpload;
+    DonyMediaService? mediaService,
+  }) : _mediaService = mediaService;
 
   final File? photoFile;
   final ValueChanged<File?> onPhotoPicked;
-  final ImageCompressor _compress;
+  final DonyMediaService? _mediaService;
+
+  DonyMediaService get _service => _mediaService ?? getIt<DonyMediaService>();
 
   @override
   Widget build(BuildContext context) {
     return DonyCard(
-            padding: const EdgeInsets.all(DonySpacing.md),
+      padding: const EdgeInsets.all(DonySpacing.md),
       child: photoFile == null ? _empty(context) : _preview(context),
     );
   }
@@ -156,19 +137,19 @@ class WizardPhotoUpload extends StatelessWidget {
         ),
       ),
     );
-    if (source == null) {
-      return;
-    }
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: source,
-      maxWidth: 1920,
-      maxHeight: 1080,
-      imageQuality: 85,
-    );
-    if (picked != null) {
-      final compressed = await _compress(picked);
-      onPhotoPicked(File(compressed.path));
+    if (source == null) return;
+
+    try {
+      final picked = await _service.pick(source: source);
+      if (picked != null) onPhotoPicked(File(picked.path));
+    } on MediaFileTooLargeException catch (e) {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Photo trop lourde (max ${e.maxMb} Mo).',
+          type: DonySnackbarType.error,
+        );
+      }
     }
   }
 }

@@ -45,6 +45,7 @@ dependencies:
 
   # Media
   image_picker: ^1.1.0
+  image_cropper: ^9.1.0
   native_exif: ^0.7.0
   flutter_image_compress: ^2.4.0
 

@@ -1,6 +1,6 @@
-import 'dart:io';
-
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -67,34 +67,24 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
     _loading.value = true;
     await _gpsFuture;
     try {
-      final picker = ImagePicker();
-      final picked = await picker.pickImage(
+      final picked = await getIt<DonyMediaService>().pick(
         source: ImageSource.camera,
-        imageQuality: 85,
-        maxWidth: 1920,
-        maxHeight: 1080,
       );
       if (picked == null || !mounted) {
         _loading.value = false;
         return;
       }
-
-      final fileSize = await File(picked.path).length();
-      if (fileSize > 10 * 1024 * 1024) {
-        if (!mounted) return;
-        _loading.value = false;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Photo trop lourde (max 10 MB). Réessayez.'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ));
-        return;
-      }
-
       if (_position != null) await _writeGpsExif(picked.path, _position!);
-
       if (!mounted) return;
       _navigateToConfirm(photoPath: picked.path);
+    } on MediaFileTooLargeException catch (e) {
+      if (!mounted) return;
+      _loading.value = false;
+      DonySnackbar.show(
+        context,
+        message: 'Photo trop lourde (max ${e.maxMb} Mo). Réessayez.',
+        type: DonySnackbarType.error,
+      );
     } catch (_) {
       if (mounted) _loading.value = false;
     }

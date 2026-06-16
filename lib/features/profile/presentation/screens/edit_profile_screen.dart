@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -9,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -21,12 +24,12 @@ import 'package:intl/intl.dart';
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({
     super.key,
-    @visibleForTesting Future<XFile?> Function()? pickImageOverride,
-  }) : _pickImageOverride = pickImageOverride;
+    @visibleForTesting DonyMediaService? mediaService,
+  }) : _mediaService = mediaService;
 
-  /// Seam for widget-testing: override the image-pick call without hitting
-  /// a real platform channel. Defaults to [ImagePicker.pickImage] from gallery.
-  final Future<XFile?> Function()? _pickImageOverride;
+  /// Seam for widget-testing: inject a mock [DonyMediaService] to avoid
+  /// hitting platform channels. Defaults to the GetIt singleton.
+  final DonyMediaService? _mediaService;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -51,8 +54,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   /// [AuthProfileUpdated]). Only pop the screen on a save, not on avatar upload.
   bool _saving = false;
 
-  /// The real image picker (lazy-initialized, reused across calls).
-  late final ImagePicker _imagePicker = ImagePicker();
+  DonyMediaService get _mediaService =>
+      widget._mediaService ?? getIt<DonyMediaService>();
 
   static const _kAvailableLanguages = [
     'Français',
@@ -147,38 +150,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
-    final XFile? xfile;
-    if (widget._pickImageOverride != null) {
-      xfile = await widget._pickImageOverride!();
-    } else {
-      xfile = await _imagePicker.pickImage(
+    try {
+      final xfile = await _mediaService.pick(
         source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 1024,
-        maxHeight: 1024,
+        withCrop: true,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
       );
-    }
-    if (xfile == null) {
-      return;
-    }
-
-    final size = await xfile.length();
-    const maxBytes = 10 * 1024 * 1024; // 10 MB
-    if (size > maxBytes) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('La photo est trop grande (max 10 Mo).'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      return;
-    }
-
-    if (mounted) {
-      // _saving stays false — avatar upload must NOT close the screen.
+      if (xfile == null || !mounted) return;
       context.read<AuthBloc>().add(AuthAvatarUploadRequested(xfile.path));
+    } on MediaFileTooLargeException catch (e) {
+      if (!mounted) return;
+      DonySnackbar.show(
+        context,
+        message: 'Photo trop lourde (max ${e.maxMb} Mo).',
+        type: DonySnackbarType.error,
+      );
     }
   }
 
