@@ -2,26 +2,25 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dony/core/services/media_service.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockImagePicker extends Mock implements ImagePicker {}
 
-class _MockImageCropper extends Mock implements ImageCropper {}
-
 void main() {
   late _MockImagePicker mockPicker;
-  late _MockImageCropper mockCropper;
   late Directory tempDir;
 
-  // Passthrough compressor: returns the XFile unchanged (no native channel).
   XFile passthrough(XFile f) => f;
 
-  DonyMediaService makeService() => DonyMediaService(
+  DonyMediaService makeService({
+    Future<XFile?> Function(BuildContext?, XFile, double?)? cropOverride,
+  }) =>
+      DonyMediaService(
         imagePicker: mockPicker,
-        imageCropper: mockCropper,
+        cropOverride: cropOverride,
         compressor: (f) async => passthrough(f),
       );
 
@@ -34,7 +33,6 @@ void main() {
   setUpAll(() async {
     tempDir = await Directory.systemTemp.createTemp('media_svc_test_');
     registerFallbackValue(ImageSource.gallery);
-    registerFallbackValue(const CropAspectRatio(ratioX: 1, ratioY: 1));
   });
 
   tearDownAll(() async {
@@ -43,7 +41,6 @@ void main() {
 
   setUp(() {
     mockPicker = _MockImagePicker();
-    mockCropper = _MockImageCropper();
   });
 
   group('pick — user cancels at picker', () {
@@ -88,81 +85,92 @@ void main() {
   });
 
   group('pick — withCrop: false', () {
-    test('returns XFile without calling ImageCropper', () async {
+    test('returns XFile without calling cropOverride', () async {
       final small = fakeXFile('photo.jpg', 512);
+      bool cropCalled = false;
       when(() => mockPicker.pickImage(
             source: any(named: 'source'),
             imageQuality: any(named: 'imageQuality'),
           )).thenAnswer((_) async => small);
 
-      final result =
-          await makeService().pick(source: ImageSource.camera);
+      final result = await makeService(
+        cropOverride: (_, f, __) async {
+          cropCalled = true;
+          return f;
+        },
+      ).pick(source: ImageSource.camera);
 
       expect(result, isNotNull);
-      verifyNever(() => mockCropper.cropImage(
-            sourcePath: any(named: 'sourcePath'),
-            aspectRatio: any(named: 'aspectRatio'),
-            uiSettings: any(named: 'uiSettings'),
-          ));
+      expect(cropCalled, isFalse);
     });
   });
 
   group('pick — withCrop: true', () {
-    test('returns null when user cancels crop', () async {
+    test('returns null when cropOverride returns null (user cancels)', () async {
       final small = fakeXFile('avatar.jpg', 512);
       when(() => mockPicker.pickImage(
             source: any(named: 'source'),
             imageQuality: any(named: 'imageQuality'),
           )).thenAnswer((_) async => small);
-      when(() => mockCropper.cropImage(
-            sourcePath: any(named: 'sourcePath'),
-            aspectRatio: any(named: 'aspectRatio'),
-            uiSettings: any(named: 'uiSettings'),
-          )).thenAnswer((_) async => null);
 
-      final result = await makeService().pick(
-        source: ImageSource.gallery,
-        withCrop: true,
-      );
+      final result = await makeService(
+        cropOverride: (_, __, ___) async => null,
+      ).pick(source: ImageSource.gallery, withCrop: true);
 
       expect(result, isNull);
     });
 
-    test('calls ImageCropper with correct sourcePath', () async {
+    test('cropOverride is called with correct file', () async {
       final small = fakeXFile('src.jpg', 512);
+      XFile? receivedFile;
       when(() => mockPicker.pickImage(
             source: any(named: 'source'),
             imageQuality: any(named: 'imageQuality'),
           )).thenAnswer((_) async => small);
-      when(() => mockCropper.cropImage(
-            sourcePath: any(named: 'sourcePath'),
-            aspectRatio: any(named: 'aspectRatio'),
-            uiSettings: any(named: 'uiSettings'),
-          )).thenAnswer((_) async => null);
 
-      await makeService().pick(source: ImageSource.gallery, withCrop: true);
+      await makeService(
+        cropOverride: (_, f, __) async {
+          receivedFile = f;
+          return null;
+        },
+      ).pick(source: ImageSource.gallery, withCrop: true);
 
-      verify(() => mockCropper.cropImage(
-            sourcePath: small.path,
-            aspectRatio: any(named: 'aspectRatio'),
-            uiSettings: any(named: 'uiSettings'),
-          )).called(1);
+      expect(receivedFile?.path, equals(small.path));
     });
 
-    test('returns compressed file when crop succeeds', () async {
-      final srcFile = fakeXFile('src2.jpg', 512);
+    test('cropOverride receives the aspect ratio', () async {
+      final small = fakeXFile('src2.jpg', 512);
+      double? receivedRatio;
+      when(() => mockPicker.pickImage(
+            source: any(named: 'source'),
+            imageQuality: any(named: 'imageQuality'),
+          )).thenAnswer((_) async => small);
+
+      await makeService(
+        cropOverride: (_, f, ratio) async {
+          receivedRatio = ratio;
+          return null;
+        },
+      ).pick(
+        source: ImageSource.gallery,
+        withCrop: true,
+        cropAspectRatio: 1.0,
+      );
+
+      expect(receivedRatio, equals(1.0));
+    });
+
+    test('returns compressed file when cropOverride returns a file', () async {
+      final srcFile = fakeXFile('src3.jpg', 512);
       final croppedFile = fakeXFile('cropped.jpg', 256);
       when(() => mockPicker.pickImage(
             source: any(named: 'source'),
             imageQuality: any(named: 'imageQuality'),
           )).thenAnswer((_) async => srcFile);
-      when(() => mockCropper.cropImage(
-            sourcePath: any(named: 'sourcePath'),
-            aspectRatio: any(named: 'aspectRatio'),
-            uiSettings: any(named: 'uiSettings'),
-          )).thenAnswer((_) async => CroppedFile(croppedFile.path));
 
-      final result = await makeService().pick(
+      final result = await makeService(
+        cropOverride: (_, __, ___) async => croppedFile,
+      ).pick(
         source: ImageSource.gallery,
         withCrop: true,
       );

@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -154,12 +153,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final xfile = await _mediaService.pick(
         source: ImageSource.gallery,
         withCrop: true,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        cropAspectRatio: 1.0,
+        context: context,
       );
-      if (xfile == null || !mounted) return;
+      if (xfile == null || !mounted) {
+        return;
+      }
       context.read<AuthBloc>().add(AuthAvatarUploadRequested(xfile.path));
     } on MediaFileTooLargeException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       DonySnackbar.show(
         context,
         message: 'Photo trop lourde (max ${e.maxMb} Mo).',

@@ -1,8 +1,8 @@
 import 'dart:io';
 
+import 'package:dony/core/services/media_crop_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -27,10 +27,10 @@ class MediaFileTooLargeException implements Exception {
 ///
 /// ## Rules
 /// - Raw input > [maxInputBytes] (15 MB) → throws [MediaFileTooLargeException].
-/// - Crop is opt-in per call site (avatar: yes, scan photo: no).
+/// - Crop is opt-in per call site. Pass `withCrop: true` + `context` to enable.
 /// - Output is always JPEG, max [_maxDimensionPx]×[_maxDimensionPx], quality [_quality].
 ///
-/// Inject [imagePicker] / [imageCropper] / [compressor] in tests to avoid platform channels.
+/// Inject [imagePicker] / [cropOverride] / [compressor] in tests to avoid platform channels.
 class DonyMediaService {
   static const int maxInputBytes = 15 * 1024 * 1024; // 15 MB
   static const int _maxDimensionPx = 1920;
@@ -38,15 +38,14 @@ class DonyMediaService {
 
   DonyMediaService({
     ImagePicker? imagePicker,
-    ImageCropper? imageCropper,
-    // ignore: invalid_use_of_visible_for_testing_member
+    Future<XFile?> Function(BuildContext?, XFile, double?)? cropOverride,
     Future<XFile> Function(XFile)? compressor,
   })  : _imagePicker = imagePicker ?? ImagePicker(),
-        _imageCropper = imageCropper ?? ImageCropper(),
+        _cropOverride = cropOverride,
         _compressorOverride = compressor;
 
   final ImagePicker _imagePicker;
-  final ImageCropper _imageCropper;
+  final Future<XFile?> Function(BuildContext?, XFile, double?)? _cropOverride;
   final Future<XFile> Function(XFile)? _compressorOverride;
 
   /// Picks an image from [source], optionally crops it, then compresses it.
@@ -54,15 +53,20 @@ class DonyMediaService {
   /// Returns `null` if the user cancelled at any step.
   /// Throws [MediaFileTooLargeException] if the raw file is > 15 MB.
   ///
-  /// [withCrop] — show a crop UI after picking (useful for avatar, KYC).
-  /// [aspectRatio] — lock the crop to a fixed ratio (e.g. 1:1 for avatar).
-  /// [cropToolbarColor] — optional colour for the Android crop toolbar.
+  /// [withCrop] — show the full-screen crop UI after picking.
+  /// [cropAspectRatio] — lock the crop aspect ratio (e.g. `1.0` for a square avatar).
+  /// [context] — required when [withCrop] is `true`.
   Future<XFile?> pick({
     required ImageSource source,
     bool withCrop = false,
-    CropAspectRatio? aspectRatio,
-    Color? cropToolbarColor,
+    double? cropAspectRatio,
+    BuildContext? context,
   }) async {
+    assert(
+      !withCrop || _cropOverride != null || context != null,
+      'context is required when withCrop is true',
+    );
+
     final raw = await _imagePicker.pickImage(source: source, imageQuality: 100);
     if (raw == null) {
       return null;
@@ -76,27 +80,20 @@ class DonyMediaService {
     XFile current = raw;
 
     if (withCrop) {
-      final cropped = await _imageCropper.cropImage(
-        sourcePath: current.path,
-        aspectRatio: aspectRatio,
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Recadrer',
-            toolbarColor: cropToolbarColor,
-            lockAspectRatio: aspectRatio != null,
-            initAspectRatio: CropAspectRatioPreset.original,
-          ),
-          IOSUiSettings(
-            title: 'Recadrer',
-            aspectRatioLockEnabled: aspectRatio != null,
-            resetAspectRatioEnabled: aspectRatio == null,
-          ),
-        ],
-      );
+      final cropFn = _cropOverride;
+      final XFile? cropped;
+      if (cropFn != null) {
+        cropped = await cropFn(context, current, cropAspectRatio); // ignore: use_build_context_synchronously
+      } else {
+        cropped = await MediaCropScreen.push(context!, // ignore: use_build_context_synchronously
+          file: current,
+          aspectRatio: cropAspectRatio,
+        );
+      }
       if (cropped == null) {
         return null;
       }
-      current = XFile(cropped.path);
+      current = cropped;
     }
 
     final override = _compressorOverride;
