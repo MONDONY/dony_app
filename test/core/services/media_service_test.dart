@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dony/core/services/media_service.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
@@ -15,12 +14,8 @@ void main() {
 
   XFile passthrough(XFile f) => f;
 
-  DonyMediaService makeService({
-    Future<XFile?> Function(BuildContext?, XFile, double?)? cropOverride,
-  }) =>
-      DonyMediaService(
+  DonyMediaService makeService() => DonyMediaService(
         imagePicker: mockPicker,
-        cropOverride: cropOverride,
         compressor: (f) async => passthrough(f),
       );
 
@@ -57,7 +52,7 @@ void main() {
   });
 
   group('pick — file too large', () {
-    test('throws MediaFileTooLargeException when raw file > 15 MB', () async {
+    test('throws MediaFileTooLargeException when raw file > 50 MB', () async {
       final bigFile =
           fakeXFile('big.jpg', DonyMediaService.maxInputBytes + 1);
       when(() => mockPicker.pickImage(
@@ -71,10 +66,10 @@ void main() {
       );
     });
 
-    test('exception exposes maxMb = 15', () {
-      const ex =
-          MediaFileTooLargeException(20 * 1024 * 1024, 15 * 1024 * 1024);
-      expect(ex.maxMb, equals(15));
+    test('exception exposes maxMb from the configured cap', () {
+      const ex = MediaFileTooLargeException(
+          60 * 1024 * 1024, DonyMediaService.maxInputBytes);
+      expect(ex.maxMb, equals(50));
     });
 
     test('exception toString contains byte counts', () {
@@ -84,99 +79,33 @@ void main() {
     });
   });
 
-  group('pick — withCrop: false', () {
-    test('returns XFile without calling cropOverride', () async {
-      final small = fakeXFile('photo.jpg', 512);
-      bool cropCalled = false;
+  group('pick — rejects videos', () {
+    test('throws UnsupportedMediaTypeException for a video file', () async {
+      final video = fakeXFile('clip.mp4', 1024);
       when(() => mockPicker.pickImage(
             source: any(named: 'source'),
             imageQuality: any(named: 'imageQuality'),
-          )).thenAnswer((_) async => small);
+          )).thenAnswer((_) async => video);
 
-      final result = await makeService(
-        cropOverride: (_, f, __) async {
-          cropCalled = true;
-          return f;
-        },
-      ).pick(source: ImageSource.camera);
-
-      expect(result, isNotNull);
-      expect(cropCalled, isFalse);
+      await expectLater(
+        makeService().pick(source: ImageSource.gallery),
+        throwsA(isA<UnsupportedMediaTypeException>()),
+      );
     });
   });
 
-  group('pick — withCrop: true', () {
-    test('returns null when cropOverride returns null (user cancels)', () async {
-      final small = fakeXFile('avatar.jpg', 512);
+  group('pick — success', () {
+    test('returns the compressed file', () async {
+      final small = fakeXFile('photo.jpg', 512);
       when(() => mockPicker.pickImage(
             source: any(named: 'source'),
             imageQuality: any(named: 'imageQuality'),
           )).thenAnswer((_) async => small);
 
-      final result = await makeService(
-        cropOverride: (_, __, ___) async => null,
-      ).pick(source: ImageSource.gallery, withCrop: true);
-
-      expect(result, isNull);
-    });
-
-    test('cropOverride is called with correct file', () async {
-      final small = fakeXFile('src.jpg', 512);
-      XFile? receivedFile;
-      when(() => mockPicker.pickImage(
-            source: any(named: 'source'),
-            imageQuality: any(named: 'imageQuality'),
-          )).thenAnswer((_) async => small);
-
-      await makeService(
-        cropOverride: (_, f, __) async {
-          receivedFile = f;
-          return null;
-        },
-      ).pick(source: ImageSource.gallery, withCrop: true);
-
-      expect(receivedFile?.path, equals(small.path));
-    });
-
-    test('cropOverride receives the aspect ratio', () async {
-      final small = fakeXFile('src2.jpg', 512);
-      double? receivedRatio;
-      when(() => mockPicker.pickImage(
-            source: any(named: 'source'),
-            imageQuality: any(named: 'imageQuality'),
-          )).thenAnswer((_) async => small);
-
-      await makeService(
-        cropOverride: (_, f, ratio) async {
-          receivedRatio = ratio;
-          return null;
-        },
-      ).pick(
-        source: ImageSource.gallery,
-        withCrop: true,
-        cropAspectRatio: 1.0,
-      );
-
-      expect(receivedRatio, equals(1.0));
-    });
-
-    test('returns compressed file when cropOverride returns a file', () async {
-      final srcFile = fakeXFile('src3.jpg', 512);
-      final croppedFile = fakeXFile('cropped.jpg', 256);
-      when(() => mockPicker.pickImage(
-            source: any(named: 'source'),
-            imageQuality: any(named: 'imageQuality'),
-          )).thenAnswer((_) async => srcFile);
-
-      final result = await makeService(
-        cropOverride: (_, __, ___) async => croppedFile,
-      ).pick(
-        source: ImageSource.gallery,
-        withCrop: true,
-      );
+      final result = await makeService().pick(source: ImageSource.gallery);
 
       expect(result, isNotNull);
-      expect(result!.path, equals(croppedFile.path));
+      expect(result!.path, equals(small.path));
     });
   });
 }

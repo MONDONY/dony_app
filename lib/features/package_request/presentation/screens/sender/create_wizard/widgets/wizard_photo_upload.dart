@@ -142,6 +142,14 @@ class WizardPhotoUpload extends StatelessWidget {
     try {
       final picked = await _service.pick(source: source);
       if (picked != null) onPhotoPicked(File(picked.path));
+    } on UnsupportedMediaTypeException {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Seules les images sont acceptées (pas de vidéo).',
+          type: DonySnackbarType.error,
+        );
+      }
     } on MediaFileTooLargeException catch (e) {
       if (context.mounted) {
         DonySnackbar.show(

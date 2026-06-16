@@ -136,6 +136,13 @@ class _ChatScreenState extends State<ChatScreen> {
           filename: xfile.name,
         ),
       );
+    } on UnsupportedMediaTypeException {
+      if (!mounted) return;
+      DonySnackbar.show(
+        context,
+        message: 'Seules les images sont acceptées (pas de vidéo).',
+        type: DonySnackbarType.error,
+      );
     } on MediaFileTooLargeException catch (e) {
       if (!mounted) return;
       DonySnackbar.show(

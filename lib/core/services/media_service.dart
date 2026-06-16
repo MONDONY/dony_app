@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:dony/core/services/media_crop_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,56 +18,69 @@ class MediaFileTooLargeException implements Exception {
       'MediaFileTooLargeException: file is $actualBytes bytes, max allowed is $maxBytes bytes';
 }
 
+/// Thrown when the picked file is not a supported image (e.g. a video).
+class UnsupportedMediaTypeException implements Exception {
+  const UnsupportedMediaTypeException(this.name);
+
+  /// Original filename, for context/logging.
+  final String name;
+
+  @override
+  String toString() =>
+      'UnsupportedMediaTypeException: "$name" is not a supported image';
+}
+
 /// Central media-picking service — **single source of truth** for all image
 /// imports in the app.
 ///
-/// Flow: pick → validate size → [optional crop] → compress → return XFile.
+/// Flow: pick → reject non-images → validate size → compress/resize → return XFile.
 ///
 /// ## Rules
-/// - Raw input > [maxInputBytes] (15 MB) → throws [MediaFileTooLargeException].
-/// - Crop is opt-in per call site. Pass `withCrop: true` + `context` to enable.
+/// - Only images are accepted. `pickImage` already filters to images, but a
+///   video that slips through (third-party file manager, renamed file) is
+///   rejected → throws [UnsupportedMediaTypeException].
+/// - Any picked image is always resized/compressed (see [_compress]); a 20 MB
+///   photo is downscaled, not rejected.
+/// - [maxInputBytes] (50 MB) is only an out-of-memory safety net for absurd
+///   files → throws [MediaFileTooLargeException].
 /// - Output is always JPEG, max [_maxDimensionPx]×[_maxDimensionPx], quality [_quality].
 ///
-/// Inject [imagePicker] / [cropOverride] / [compressor] in tests to avoid platform channels.
+/// Inject [imagePicker] / [compressor] in tests to avoid platform channels.
 class DonyMediaService {
-  static const int maxInputBytes = 15 * 1024 * 1024; // 15 MB
+  static const int maxInputBytes = 50 * 1024 * 1024; // 50 MB
   static const int _maxDimensionPx = 1920;
   static const int _quality = 85;
 
+  /// File extensions that are explicitly rejected (videos / non-images).
+  static const Set<String> _videoExtensions = {
+    'mp4', 'mov', 'avi', 'mkv', 'webm', '3gp', '3gpp', 'm4v',
+    'flv', 'wmv', 'mpeg', 'mpg', 'm2ts', 'ts', 'mts',
+  };
+
   DonyMediaService({
     ImagePicker? imagePicker,
-    Future<XFile?> Function(BuildContext?, XFile, double?)? cropOverride,
     Future<XFile> Function(XFile)? compressor,
   })  : _imagePicker = imagePicker ?? ImagePicker(),
-        _cropOverride = cropOverride,
         _compressorOverride = compressor;
 
   final ImagePicker _imagePicker;
-  final Future<XFile?> Function(BuildContext?, XFile, double?)? _cropOverride;
   final Future<XFile> Function(XFile)? _compressorOverride;
 
-  /// Picks an image from [source], optionally crops it, then compresses it.
+  /// Picks an image from [source], rejects videos, then compresses/resizes it.
   ///
-  /// Returns `null` if the user cancelled at any step.
-  /// Throws [MediaFileTooLargeException] if the raw file is > 15 MB.
-  ///
-  /// [withCrop] — show the full-screen crop UI after picking.
-  /// [cropAspectRatio] — lock the crop aspect ratio (e.g. `1.0` for a square avatar).
-  /// [context] — required when [withCrop] is `true`.
-  Future<XFile?> pick({
-    required ImageSource source,
-    bool withCrop = false,
-    double? cropAspectRatio,
-    BuildContext? context,
-  }) async {
-    assert(
-      !withCrop || _cropOverride != null || context != null,
-      'context is required when withCrop is true',
-    );
-
+  /// Returns `null` if the user cancelled.
+  /// Throws [UnsupportedMediaTypeException] if the file is not an image.
+  /// Throws [MediaFileTooLargeException] only if the raw file is > 50 MB
+  /// (out-of-memory safety net); any smaller image is resized, never rejected.
+  Future<XFile?> pick({required ImageSource source}) async {
     final raw = await _imagePicker.pickImage(source: source, imageQuality: 100);
     if (raw == null) {
       return null;
+    }
+
+    // Reject videos / non-images up front.
+    if (_isVideo(raw.name, raw.mimeType)) {
+      throw UnsupportedMediaTypeException(raw.name);
     }
 
     final size = await raw.length();
@@ -77,27 +88,20 @@ class DonyMediaService {
       throw MediaFileTooLargeException(size, maxInputBytes);
     }
 
-    XFile current = raw;
-
-    if (withCrop) {
-      final cropFn = _cropOverride;
-      final XFile? cropped;
-      if (cropFn != null) {
-        cropped = await cropFn(context, current, cropAspectRatio); // ignore: use_build_context_synchronously
-      } else {
-        cropped = await MediaCropScreen.push(context!, // ignore: use_build_context_synchronously
-          file: current,
-          aspectRatio: cropAspectRatio,
-        );
-      }
-      if (cropped == null) {
-        return null;
-      }
-      current = cropped;
-    }
-
     final override = _compressorOverride;
-    return override != null ? await override(current) : await _compress(current);
+    return override != null ? await override(raw) : await _compress(raw);
+  }
+
+  /// `true` when the file is a known video, by MIME type or extension.
+  bool _isVideo(String name, String? mimeType) {
+    if (mimeType != null && mimeType.startsWith('video/')) {
+      return true;
+    }
+    final dot = name.lastIndexOf('.');
+    if (dot == -1) {
+      return false;
+    }
+    return _videoExtensions.contains(name.substring(dot + 1).toLowerCase());
   }
 
   Future<XFile> _compress(XFile source) async {
@@ -109,6 +113,11 @@ class DonyMediaService {
       minHeight: _maxDimensionPx,
       quality: _quality,
     );
+    // An empty result means the file could not be decoded as an image
+    // (e.g. a video renamed with an image extension).
+    if (compressed.isEmpty) {
+      throw UnsupportedMediaTypeException(source.name);
+    }
     final dir = await getTemporaryDirectory();
     final stamp = source.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
     final outPath = '${dir.path}/dony_media_$stamp.jpg';

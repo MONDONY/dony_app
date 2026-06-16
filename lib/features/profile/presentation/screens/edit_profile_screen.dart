@@ -155,16 +155,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
     _pickingAvatar = true;
     try {
+      // Upload direct sans recadrage : DonyMediaService redimensionne toute
+      // image a 1920x1920 (qualite 85, JPEG). Une photo de 20 Mo est donc
+      // resizee, pas rejetee ; seul un fichier > 50 Mo (garde anti-OOM) leve
+      // MediaFileTooLargeException.
       final xfile = await _mediaService.pick(
         source: ImageSource.gallery,
-        withCrop: true,
-        cropAspectRatio: 1.0,
-        context: context,
       );
       if (xfile == null || !mounted) {
         return;
       }
       context.read<AuthBloc>().add(AuthAvatarUploadRequested(xfile.path));
+    } on UnsupportedMediaTypeException {
+      if (!mounted) {
+        return;
+      }
+      DonySnackbar.show(
+        context,
+        message: 'Seules les images sont acceptées (pas de vidéo).',
+        type: DonySnackbarType.error,
+      );
     } on MediaFileTooLargeException catch (e) {
       if (!mounted) {
         return;
