@@ -52,6 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   /// profile-save update from an avatar-upload update (both emit
   /// [AuthProfileUpdated]). Only pop the screen on a save, not on avatar upload.
   bool _saving = false;
+  bool _pickingAvatar = false;
 
   DonyMediaService get _mediaService =>
       widget._mediaService ?? getIt<DonyMediaService>();
@@ -149,6 +150,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
+    if (_pickingAvatar) {
+      return;
+    }
+    _pickingAvatar = true;
     try {
       final xfile = await _mediaService.pick(
         source: ImageSource.gallery,
@@ -169,6 +174,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         message: 'Photo trop lourde (max ${e.maxMb} Mo).',
         type: DonySnackbarType.error,
       );
+    } finally {
+      _pickingAvatar = false;
     }
   }
 
