@@ -22,6 +22,7 @@ class UserModel extends Equatable {
   final String? avatarUrl;
   final List<String> languages;
   final String? transportMode;
+  final double? averageRating;
 
   const UserModel({
     required this.id,
@@ -45,6 +46,7 @@ class UserModel extends Equatable {
     this.avatarUrl,
     this.languages = const [],
     this.transportMode,
+    this.averageRating,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -77,6 +79,7 @@ class UserModel extends Equatable {
             .toList() ??
         const [],
     transportMode: json['transportMode'] as String?,
+    averageRating: (json['averageRating'] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -101,6 +104,7 @@ class UserModel extends Equatable {
     'avatarUrl': avatarUrl,
     'languages': languages,
     'transportMode': transportMode,
+    'averageRating': averageRating,
   };
 
   UserModel copyWith({
@@ -125,6 +129,7 @@ class UserModel extends Equatable {
     String? avatarUrl,
     List<String>? languages,
     String? transportMode,
+    double? averageRating,
   }) => UserModel(
     id: id ?? this.id,
     phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -147,6 +152,7 @@ class UserModel extends Equatable {
     avatarUrl: avatarUrl ?? this.avatarUrl,
     languages: languages ?? this.languages,
     transportMode: transportMode ?? this.transportMode,
+    averageRating: averageRating ?? this.averageRating,
   );
 
   String get displayName {
@@ -233,5 +239,6 @@ class UserModel extends Equatable {
     avatarUrl,
     languages,
     transportMode,
+    averageRating,
   ];
 }

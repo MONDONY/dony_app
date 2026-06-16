@@ -178,3 +178,10 @@ class AuthUserSynced extends AuthEvent {
   @override
   List<Object?> get props => [user];
 }
+
+/// Recharge le profil depuis le backend sans passer par AuthLoading.
+/// Utilisé pour rafraîchir les stats (totalTrips, averageRating, etc.)
+/// sans clignotement UI.
+class AuthProfileRefreshRequested extends AuthEvent {
+  const AuthProfileRefreshRequested();
+}
