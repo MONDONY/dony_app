@@ -4,6 +4,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -372,7 +374,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     isTravelerRating: true,
                   );
                 }
-                if (context.mounted) context.go('/tracking');
+                if (!context.mounted) return;
+                if (isFinal) {
+                  context
+                      .read<AuthBloc>()
+                      .add(const AuthProfileRefreshRequested());
+                }
+                context.go('/tracking');
               },
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,

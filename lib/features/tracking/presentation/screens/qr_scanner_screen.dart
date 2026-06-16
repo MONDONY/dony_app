@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
@@ -673,27 +674,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
         }
       } catch (_) {}
 
-      final picker = ImagePicker();
-      final picked = await picker.pickImage(
-          source: ImageSource.camera,
-          imageQuality: 85,
-          maxWidth: 1920,
-          maxHeight: 1080);
+      final picked = await getIt<DonyMediaService>().pick(
+        source: ImageSource.camera,
+      );
 
       if (picked != null && mounted) {
-        final fileSize = await File(picked.path).length();
-        if (fileSize > 10 * 1024 * 1024) {
-          setState(() {
-            _photoTooBig = true;
-            _loadingLocation = false;
-          });
-          return;
-        }
-
-        if (pos != null) {
-          await _writeGpsExif(picked.path, pos);
-        }
-
+        if (pos != null) await _writeGpsExif(picked.path, pos);
         setState(() {
           _photo = picked;
           _position = pos;
@@ -701,6 +687,18 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
         });
       } else {
         if (mounted) setState(() => _loadingLocation = false);
+      }
+    } on MediaFileTooLargeException catch (e) {
+      if (mounted) {
+        setState(() {
+          _photoTooBig = true;
+          _loadingLocation = false;
+        });
+        DonySnackbar.show(
+          context,
+          message: 'Photo trop lourde (max ${e.maxMb} Mo). Réessayez.',
+          type: DonySnackbarType.error,
+        );
       }
     } catch (_) {
       if (mounted) setState(() => _loadingLocation = false);

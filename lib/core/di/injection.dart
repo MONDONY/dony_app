@@ -68,6 +68,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -159,6 +160,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );
   getIt.registerLazySingleton<DeviceIdService>(() => DeviceIdService());
+  getIt.registerLazySingleton<DonyMediaService>(() => DonyMediaService());
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(
       baseUrl: apiBaseUrl,

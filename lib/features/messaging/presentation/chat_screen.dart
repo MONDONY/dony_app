@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -120,24 +121,36 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _pickAndSendImage() async {
     final bloc = context.read<ChatBloc>();
-    final picker = ImagePicker();
-    final xfile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1920,
-      maxHeight: 1080,
-    );
-    if (xfile == null || !mounted) return;
-    final bytes = await xfile.readAsBytes();
-    bloc.add(
-      ChatImageSendRequested(
-        firestoreConversationId: widget.conversation.firestoreConversationId,
-        conversationId: widget.conversation.id,
-        senderFirebaseUid: _myUid,
-        bytes: bytes,
-        filename: xfile.name,
-      ),
-    );
+    try {
+      final xfile = await getIt<DonyMediaService>().pick(
+        source: ImageSource.gallery,
+      );
+      if (xfile == null || !mounted) return;
+      final bytes = await xfile.readAsBytes();
+      bloc.add(
+        ChatImageSendRequested(
+          firestoreConversationId: widget.conversation.firestoreConversationId,
+          conversationId: widget.conversation.id,
+          senderFirebaseUid: _myUid,
+          bytes: bytes,
+          filename: xfile.name,
+        ),
+      );
+    } on UnsupportedMediaTypeException {
+      if (!mounted) return;
+      DonySnackbar.show(
+        context,
+        message: 'Seules les images sont acceptées (pas de vidéo).',
+        type: DonySnackbarType.error,
+      );
+    } on MediaFileTooLargeException catch (e) {
+      if (!mounted) return;
+      DonySnackbar.show(
+        context,
+        message: 'Image trop lourde (max ${e.maxMb} Mo).',
+        type: DonySnackbarType.error,
+      );
+    }
   }
 
   Future<void> _sendLocation() async {
