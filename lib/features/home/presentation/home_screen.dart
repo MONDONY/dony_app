@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/nav_visibility_notifier.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -81,6 +82,10 @@ class HomeScreen extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════════════════
 // MAP SENDER VIEW
 // ══════════════════════════════════════════════════════════════════════════════
+
+/// Marge basse réservée sous les listes pour que le dernier item dépasse la
+/// bottom nav flottante (île ~62 + marge ~28) au lieu d'être caché dessous.
+const double _kFloatingNavClearance = 96;
 
 class _MapSenderView extends StatefulWidget {
   const _MapSenderView();
@@ -273,13 +278,47 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!_sheetController.isAttached) return;
     final newSize = _sheetController.size;
     final wasHidden = _isMapHidden;
+    final wasNavVisible = _sheetSize <= 0.45;
     _sheetSize = newSize;
-    // Rebuild uniquement quand l'état caché/visible change, pas à chaque frame
-    if (wasHidden != _isMapHidden) setState(() {});
+    // Masque la bottom nav flottante dès que le sheet dépasse le peek : la
+    // liste passe au premier plan sans que l'île intercepte le geste.
+    final navVisible = newSize <= 0.45;
+    getIt<NavVisibilityNotifier>().value = navVisible;
+    // Rebuild quand l'état plein écran OU nav change (pas à chaque frame).
+    if (wasHidden != _isMapHidden || wasNavVisible != navVisible) {
+      setState(() {});
+    }
+  }
+
+  /// Drag manuel de la poignée → pilote directement la taille du sheet (un
+  /// DraggableScrollableSheet seul ne réagit qu'au scroll de sa liste interne,
+  /// pas au drag sur le header).
+  void _onHandleDrag(BuildContext context, DragUpdateDetails d) {
+    if (!_sheetController.isAttached) return;
+    final h = MediaQuery.of(context).size.height;
+    final next = (_sheetController.size - d.primaryDelta! / h).clamp(0.30, 1.0);
+    _sheetController.jumpTo(next);
+  }
+
+  /// Aimante le sheet au snap le plus proche au relâcher de la poignée.
+  void _snapSheet() {
+    if (!_sheetController.isAttached) return;
+    const snaps = [0.30, 0.6, 1.0];
+    final s = _sheetController.size;
+    var best = snaps.first;
+    for (final v in snaps) {
+      if ((v - s).abs() < (best - s).abs()) best = v;
+    }
+    _sheetController.animateTo(
+      best,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   void dispose() {
+    getIt<NavVisibilityNotifier>().show();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
     _sheetController.dispose();
@@ -1004,10 +1043,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   if (!_isNearMeActive || _nearMeShowList)
                     DraggableScrollableSheet(
                       controller: _sheetController,
-                      initialChildSize: 0.20,
-                      minChildSize: 0.15,
+                      initialChildSize: 0.30,
+                      minChildSize: 0.30,
                       snap: true,
-                      snapSizes: const [0.20, 0.45, 1.0],
+                      snapSizes: const [0.30, 0.6, 1.0],
                       builder: (ctx, scrollCtrl) => _buildSheet(
                         ctx,
                         scrollCtrl,
@@ -1356,14 +1395,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
         children: [
           // Padding status bar quand le sheet est en plein écran
           if (_isMapHidden) SizedBox(height: statusBarHeight),
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outline,
-                borderRadius: BorderRadius.circular(2),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onVerticalDragUpdate: (d) => _onHandleDrag(ctx, d),
+            onVerticalDragEnd: (_) => _snapSheet(),
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: cs.outline,
+                  borderRadius: BorderRadius.circular(3),
+                ),
               ),
             ),
           ),
@@ -1479,7 +1523,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   DonySpacing.base,
                                   DonySpacing.sm,
                                   DonySpacing.base,
-                                  bottomPad + DonySpacing.huge,
+                                  bottomPad + DonySpacing.huge + _kFloatingNavClearance,
                                 ),
                                 sliver: SliverList.separated(
                                   itemCount: totalCount,
@@ -1628,7 +1672,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               DonySpacing.base,
                               DonySpacing.sm,
                               DonySpacing.base,
-                              bottomPad + DonySpacing.huge,
+                              bottomPad + DonySpacing.huge + _kFloatingNavClearance,
                             ),
                             sliver: SliverList.separated(
                               itemCount: prState.results.length,
@@ -1697,7 +1741,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           DonySpacing.base,
                           DonySpacing.sm,
                           DonySpacing.base,
-                          bottomPad + DonySpacing.huge,
+                          bottomPad + DonySpacing.huge + _kFloatingNavClearance,
                         ),
                         sliver: BlocBuilder<BidBloc, BidState>(
                           buildWhen: (prev, curr) =>

@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/nav_visibility_notifier.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -190,6 +191,9 @@ void main() {
       () => hive.listenUserPrefs(keys: any(named: 'keys')),
     ).thenReturn(ValueNotifier<Box>(box));
     getIt.registerSingleton<HiveService>(hive);
+    getIt.registerLazySingleton<NavVisibilityNotifier>(
+      () => NavVisibilityNotifier(),
+    );
 
     getIt.registerFactory<PackageRequestSearchBloc>(() {
       final mock = MockPackageRequestSearchBloc();

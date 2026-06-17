@@ -57,6 +57,7 @@ import 'package:dony/features/settings/data/connected_devices_repository.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
+import 'package:dony/core/di/nav_visibility_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -187,6 +188,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<EnvoisRefreshNotifier>(
     () => EnvoisRefreshNotifier(),
+  );
+  getIt.registerLazySingleton<NavVisibilityNotifier>(
+    () => NavVisibilityNotifier(),
   );
   getIt.registerLazySingleton<PendingSearchNotifier>(
     () => PendingSearchNotifier(),
