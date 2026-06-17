@@ -10,6 +10,15 @@ class BidRemoteDatasource {
 
   BidRemoteDatasource(this._apiClient);
 
+  /// Upload une photo de colis (multipart) → renvoie la clé S3.
+  Future<String> uploadBidPhoto(String filePath) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: 'colis.jpg'),
+    });
+    final response = await _apiClient.dio.post('/bids/photos', data: formData);
+    return (response.data as Map<String, dynamic>)['key'] as String;
+  }
+
   Future<BidCheckoutResponseModel> checkoutBid({
     required String announcementId,
     required double weightKg,
@@ -18,6 +27,7 @@ class BidRemoteDatasource {
     required String contentCategory,
     required String recipientName,
     required String recipientPhone,
+    List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
   }) async {
     final body = <String, dynamic>{
@@ -31,6 +41,9 @@ class BidRemoteDatasource {
     };
     // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
     if (weightKg > 0) body['weightKg'] = weightKg;
+    if (photoKeys != null && photoKeys.isNotEmpty) {
+      body['photoKeys'] = photoKeys;
+    }
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
@@ -71,6 +84,7 @@ class BidRemoteDatasource {
     String? phoneNumber,
     String? countryCode,
     String? promoCode,
+    List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
   }) async {
     final body = <String, dynamic>{
@@ -88,6 +102,9 @@ class BidRemoteDatasource {
     if (countryCode != null) body['countryCode'] = countryCode;
     if (promoCode != null && promoCode.isNotEmpty) {
       body['promoCode'] = promoCode.trim().toUpperCase();
+    }
+    if (photoKeys != null && photoKeys.isNotEmpty) {
+      body['photoKeys'] = photoKeys;
     }
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;

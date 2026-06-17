@@ -10,6 +10,9 @@ class BidRepository {
 
   BidRepository(this._datasource);
 
+  Future<String> uploadBidPhoto(String filePath) =>
+      _datasource.uploadBidPhoto(filePath);
+
   Future<BidCheckoutResponseModel> checkoutBid({
     required String announcementId,
     required double weightKg,
@@ -18,6 +21,7 @@ class BidRepository {
     required String contentCategory,
     required String recipientName,
     required String recipientPhone,
+    List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
   }) =>
       _datasource.checkoutBid(
@@ -28,6 +32,7 @@ class BidRepository {
         contentCategory: contentCategory,
         recipientName: recipientName,
         recipientPhone: recipientPhone,
+        photoKeys: photoKeys,
         gridItems: gridItems,
       );
 
@@ -56,6 +61,7 @@ class BidRepository {
     String? phoneNumber,
     String? countryCode,
     String? promoCode,
+    List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
   }) =>
       _datasource.createBid(
@@ -70,6 +76,7 @@ class BidRepository {
         phoneNumber: phoneNumber,
         countryCode: countryCode,
         promoCode: promoCode,
+        photoKeys: photoKeys,
         gridItems: gridItems,
       );
 
