@@ -162,22 +162,31 @@ class _PhotoThumb extends StatelessWidget {
                 ),
               ),
             ),
+          // Visuel 20×20 mais zone tap 44×44 (HIG) : box centré, décalé pour
+          // garder le cercle à ~top:-6/right:-6 du thumbnail.
           Positioned(
-            top: -6,
-            right: -6,
+            top: -18,
+            right: -18,
             child: GestureDetector(
               onTap: onRemove,
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: cs.onSurface,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.close_rounded,
-                  size: 13,
-                  color: Colors.white,
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Center(
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: cs.onSurface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 13,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ),
