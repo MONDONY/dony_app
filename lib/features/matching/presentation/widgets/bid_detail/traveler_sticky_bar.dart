@@ -26,7 +26,11 @@ class TravelerStickyBar extends StatelessWidget {
   static _TravelerAction? _resolve(BidModel bid) {
     final now = DateTime.now();
     switch (bid.status) {
+      // PENDING (cash / Mobile Money) ET PAYMENT_ESCROWED (carte, paiement
+      // séquestré) : le voyageur doit pouvoir accepter/refuser depuis le détail,
+      // comme la carte de liste (bid_list_screen._isPending couvre les deux).
       case 'PENDING':
+      case 'PAYMENT_ESCROWED':
         return _TravelerAction.decide;
       case 'REJECTED':
         return _TravelerAction.delete;
