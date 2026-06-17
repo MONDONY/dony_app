@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -44,10 +46,10 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
     _controller = PageController(initialPage: widget.initialIndex);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (getIt.isRegistered<AnalyticsService>()) {
-        getIt<AnalyticsService>().logEvent(
+        unawaited(getIt<AnalyticsService>().logEvent(
           AnalyticsEvents.bidPhotosViewed,
           properties: {'photo_count': widget.photos.length},
-        );
+        ));
       }
     });
   }
