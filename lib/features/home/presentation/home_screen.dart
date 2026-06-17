@@ -479,21 +479,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return;
     }
 
-    final positionFuture = Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
-    );
-
-    final radiusKm = await NearMeRadiusSheet.show(
-      context,
-      initialRadiusKm: _nearMeRadiusKm ?? 25,
-    );
-
-    if (radiusKm == null || !mounted) return;
-
+    // Toggle simple : on active directement avec le rayon par défaut (ou le
+    // dernier utilisé) sans ré-ouvrir le sélecteur. Le rayon se change ensuite
+    // via la pastille _NearMeRadiusPill ; un 2e tap sur le FAB désactive.
     setState(() => _isLocatingNearMe = true);
     final Position pos;
     try {
-      pos = await positionFuture;
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+        ),
+      );
     } catch (_) {
       if (mounted) {
         setState(() => _isLocatingNearMe = false);
@@ -510,7 +506,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     setState(() {
       _isLocatingNearMe = false;
       _isNearMeActive = true;
-      _nearMeRadiusKm = radiusKm;
+      _nearMeRadiusKm = _nearMeRadiusKm ?? 25;
       _userPosition = LatLng(pos.latitude, pos.longitude);
     });
     _dispatchForActiveRole();

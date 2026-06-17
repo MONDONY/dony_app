@@ -310,9 +310,6 @@ void main() {
         await tester.tap(find.byKey(const Key('near-me-fab')));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Activer le filtre'));
-        await tester.pumpAndSettle();
-
         expect(find.byType(NearMeCarousel), findsOneWidget);
         expect(find.byType(DraggableScrollableSheet), findsNothing);
       },
@@ -330,8 +327,6 @@ void main() {
 
       // Activate near-me.
       await tester.tap(find.byKey(const Key('near-me-fab')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Activer le filtre'));
       await tester.pumpAndSettle();
       expect(find.byType(NearMeCarousel), findsOneWidget);
 
@@ -387,8 +382,6 @@ void main() {
         await tester.pump();
 
         await tester.tap(find.byKey(const Key('near-me-fab')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Activer le filtre'));
         await tester.pumpAndSettle();
 
         // Traveler near-me drives the package-request search (radius applied).
