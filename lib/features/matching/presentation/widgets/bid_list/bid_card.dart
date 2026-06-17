@@ -21,6 +21,11 @@ class BidCard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
 
+  /// Tap sur la carte. Par défaut, ouvre le détail du bid. Surchargé par les
+  /// écrans qui doivent rafraîchir leur liste au retour du détail (où le statut
+  /// du bid peut changer via accept/refus/scan).
+  final VoidCallback? onTap;
+
   /// Requête de recherche courante — pour le surlignage. Vide hors recherche.
   final String query;
 
@@ -30,6 +35,7 @@ class BidCard extends StatelessWidget {
     required this.isProcessing,
     this.onAccept,
     this.onReject,
+    this.onTap,
     this.query = '',
   });
 
@@ -56,7 +62,7 @@ class BidCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        onTap: () => context.push('/bids/${bid.id}', extra: bid),
+        onTap: onTap ?? () => context.push('/bids/${bid.id}', extra: bid),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DonyRadius.card),

@@ -325,6 +325,16 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
     }
   }
 
+  // Ouvre le détail et recharge la liste au retour : le statut du bid peut
+  // changer côté détail (accept/refus/scan) et l'écran « À traiter » doit se
+  // mettre à jour seul (règle CLAUDE.md — rafraîchissement après navigation).
+  Future<void> _openDetail(BuildContext context, BidModel bid) async {
+    await context.push('/bids/${bid.id}', extra: bid);
+    if (context.mounted) {
+      context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+    }
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
@@ -463,6 +473,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
               processingBidIds: _processingBidIds,
               onAccept: (bidId) => _onAccept(context, pendingBids, bidId),
               onReject: (bidId) => _showRejectDialog(context, bidId),
+              onOpenDetail: (bid) => _openDetail(context, bid),
               confirmDelete: () => _confirmDelete(context),
               onDelete: (bidId) => context.read<BidBloc>().add(
                 BidTravelerDismissRequested(bidId),
@@ -492,6 +503,7 @@ class _PendingList extends StatelessWidget {
   final Set<String> processingBidIds;
   final void Function(String bidId) onAccept;
   final void Function(String bidId) onReject;
+  final void Function(BidModel bid) onOpenDetail;
   final Future<bool> Function() confirmDelete;
   final void Function(String bidId) onDelete;
 
@@ -500,6 +512,7 @@ class _PendingList extends StatelessWidget {
     required this.processingBidIds,
     required this.onAccept,
     required this.onReject,
+    required this.onOpenDetail,
     required this.confirmDelete,
     required this.onDelete,
   });
@@ -527,6 +540,7 @@ class _PendingList extends StatelessWidget {
                   isProcessing: processingBidIds.contains(bid.id),
                   onAccept: () => onAccept(bid.id),
                   onReject: () => onReject(bid.id),
+                  onTap: () => onOpenDetail(bid),
                 )
                 .animate(delay: Duration(milliseconds: i * 60))
                 .fadeIn(duration: 300.ms)

@@ -251,7 +251,10 @@ class _BidListView extends StatelessWidget {
     }
 
     if (state is BidListLoaded) {
-      return _AcceptedList(acceptedBids: acceptedBids);
+      return _AcceptedList(
+        acceptedBids: acceptedBids,
+        announcementId: announcementId,
+      );
     }
 
     return const SizedBox.shrink();
@@ -333,7 +336,11 @@ class _PendingTodoButton extends StatelessWidget {
 
 class _AcceptedList extends StatefulWidget {
   final List<BidModel> acceptedBids;
-  const _AcceptedList({required this.acceptedBids});
+  final String announcementId;
+  const _AcceptedList({
+    required this.acceptedBids,
+    required this.announcementId,
+  });
 
   @override
   State<_AcceptedList> createState() => _AcceptedListState();
@@ -414,6 +421,7 @@ class _AcceptedListState extends State<_AcceptedList> {
                       bid: displayed[i],
                       isProcessing: false,
                       query: filter.query,
+                      onTap: () => _openDetail(context, displayed[i]),
                     ),
                   ),
                 ),
@@ -429,6 +437,16 @@ class _AcceptedListState extends State<_AcceptedList> {
         .animate(delay: Duration(milliseconds: index * 60))
         .fadeIn(duration: 300.ms)
         .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
+  }
+
+  // Recharge la liste au retour du détail : le statut d'un bid accepté peut
+  // évoluer (confirmation de présence, scan, annulation) et l'écran doit se
+  // mettre à jour seul (règle CLAUDE.md — rafraîchissement après navigation).
+  Future<void> _openDetail(BuildContext context, BidModel bid) async {
+    await context.push('/bids/${bid.id}', extra: bid);
+    if (context.mounted) {
+      context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+    }
   }
 }
 
