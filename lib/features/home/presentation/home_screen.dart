@@ -893,180 +893,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               ],
                             ),
                             const SizedBox(height: DonySpacing.xs),
-                            !showParcelControls
-                                ? _HomeFilterChipsRow(
-                                    leadingChildren: [
-                                      if (isTraveler) ...[
-                                        _SmallChip(
-                                          label: '📦 Colis',
-                                          isActive:
-                                              _mapFocus == HomeMapFocus.parcels,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.parcels
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.parcels,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                        _SmallChip(
-                                          label: '✈️ Trajets',
-                                          isActive:
-                                              _mapFocus == HomeMapFocus.trips,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.trips
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.trips,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                      ],
-                                    ],
-                                    datePreset: _datePreset,
-                                    customDate: _customDate,
-                                    kiloProOnly: _kiloProOnly,
-                                    allCorridors: _allCorridors,
-                                    minRating: _minRating,
-                                    weightMin: _weightMin,
-                                    weightMax: _weightMax,
-                                    maxPricePerKg: _maxPricePerKg,
-                                    onDateTap: _showDatePresetSheet,
-                                    onRatingTap: _showRatingSheet,
-                                    onWeightTap: _showWeightSheet,
-                                    onPriceTap: _showPriceSheet,
-                                    onDateClear: () {
-                                      setState(() {
-                                        _datePreset = _DatePreset.none;
-                                        _customDate = null;
-                                      });
-                                      _dispatchSearch();
-                                    },
-                                    onRatingClear: () {
-                                      setState(() => _minRating = null);
-                                      _dispatchSearch();
-                                    },
-                                    onWeightClear: () {
-                                      setState(() {
-                                        _weightMin = null;
-                                        _weightMax = null;
-                                      });
-                                      _dispatchSearch();
-                                    },
-                                    onPriceClear: () {
-                                      setState(() => _maxPricePerKg = null);
-                                      _dispatchSearch();
-                                    },
-                                    onKiloProToggle: () {
-                                      setState(
-                                        () => _kiloProOnly = !_kiloProOnly,
-                                      );
-                                      _dispatchSearch();
-                                    },
-                                    onAllCorridorsToggle: () {
-                                      setState(
-                                        () => _allCorridors = !_allCorridors,
-                                      );
-                                      _dispatchSearch();
-                                    },
-                                  )
-                                : _PackageRequestFilterChipsRow(
-                                    leadingChildren: [
-                                      if (isTraveler) ...[
-                                        _SmallChip(
-                                          label: '📦 Colis',
-                                          isActive:
-                                              _mapFocus == HomeMapFocus.parcels,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.parcels
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.parcels,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                        _SmallChip(
-                                          label: '✈️ Trajets',
-                                          isActive:
-                                              _mapFocus == HomeMapFocus.trips,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.trips
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.trips,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                      ],
-                                    ],
-                                    dateFrom: _prDateFrom,
-                                    dateTo: _prDateTo,
-                                    maxWeight: _prMaxWeight,
-                                    parcelSize: _prParcelSize,
-                                    onDateTap: () async {
-                                      final picked = await showDateRangePicker(
-                                        context: context,
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(
-                                          const Duration(days: 365),
-                                        ),
-                                        initialDateRange:
-                                            _prDateFrom != null &&
-                                                _prDateTo != null
-                                            ? DateTimeRange(
-                                                start: _prDateFrom!,
-                                                end: _prDateTo!,
-                                              )
-                                            : null,
-                                        locale: const Locale('fr'),
-                                        builder: (ctx, child) => Theme(
-                                          data: Theme.of(ctx),
-                                          child: child!,
-                                        ),
-                                      );
-                                      if (picked != null) {
-                                        setState(() {
-                                          _prDateFrom = picked.start;
-                                          _prDateTo = picked.end;
-                                        });
-                                        _dispatchPackageRequestSearch();
-                                      }
-                                    },
-                                    onWeightTap: () async {
-                                      final result = await _showMaxWeightSheet(
-                                        context,
-                                      );
-                                      if (result != null) {
-                                        setState(() => _prMaxWeight = result);
-                                        _dispatchPackageRequestSearch();
-                                      }
-                                    },
-                                    onSizeTap: () async {
-                                      final result = await _showParcelSizeSheet(
-                                        context,
-                                      );
-                                      if (result != null) {
-                                        setState(
-                                          () => _prParcelSize =
-                                              result == _prParcelSize
-                                              ? null
-                                              : result,
-                                        );
-                                        _dispatchPackageRequestSearch();
-                                      }
-                                    },
-                                    onDateClear: () {
-                                      setState(() {
-                                        _prDateFrom = null;
-                                        _prDateTo = null;
-                                      });
-                                      _dispatchPackageRequestSearch();
-                                    },
-                                    onWeightClear: () {
-                                      setState(() => _prMaxWeight = null);
-                                      _dispatchPackageRequestSearch();
-                                    },
-                                    onSizeClear: () {
-                                      setState(() => _prParcelSize = null);
-                                      _dispatchPackageRequestSearch();
-                                    },
-                                  ),
+                            _filterChipsRow(
+                              isTraveler: isTraveler,
+                              showParcelControls: showParcelControls,
+                            ),
                           ],
                         ),
                       ),
@@ -1431,6 +1261,162 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _dispatchSearch();
   }
 
+  Widget _filterChipsRow({
+    required bool isTraveler,
+    required bool showParcelControls,
+  }) {
+    return !showParcelControls
+        ? _HomeFilterChipsRow(
+            leadingChildren: [
+              if (isTraveler) ...[
+                _SmallChip(
+                  label: '📦 Colis',
+                  isActive: _mapFocus == HomeMapFocus.parcels,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.parcels
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.parcels,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                _SmallChip(
+                  label: '✈️ Trajets',
+                  isActive: _mapFocus == HomeMapFocus.trips,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.trips
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.trips,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+              ],
+            ],
+            datePreset: _datePreset,
+            customDate: _customDate,
+            kiloProOnly: _kiloProOnly,
+            allCorridors: _allCorridors,
+            minRating: _minRating,
+            weightMin: _weightMin,
+            weightMax: _weightMax,
+            maxPricePerKg: _maxPricePerKg,
+            onDateTap: _showDatePresetSheet,
+            onRatingTap: _showRatingSheet,
+            onWeightTap: _showWeightSheet,
+            onPriceTap: _showPriceSheet,
+            onDateClear: () {
+              setState(() {
+                _datePreset = _DatePreset.none;
+                _customDate = null;
+              });
+              _dispatchSearch();
+            },
+            onRatingClear: () {
+              setState(() => _minRating = null);
+              _dispatchSearch();
+            },
+            onWeightClear: () {
+              setState(() {
+                _weightMin = null;
+                _weightMax = null;
+              });
+              _dispatchSearch();
+            },
+            onPriceClear: () {
+              setState(() => _maxPricePerKg = null);
+              _dispatchSearch();
+            },
+            onKiloProToggle: () {
+              setState(() => _kiloProOnly = !_kiloProOnly);
+              _dispatchSearch();
+            },
+            onAllCorridorsToggle: () {
+              setState(() => _allCorridors = !_allCorridors);
+              _dispatchSearch();
+            },
+          )
+        : _PackageRequestFilterChipsRow(
+            leadingChildren: [
+              if (isTraveler) ...[
+                _SmallChip(
+                  label: '📦 Colis',
+                  isActive: _mapFocus == HomeMapFocus.parcels,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.parcels
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.parcels,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                _SmallChip(
+                  label: '✈️ Trajets',
+                  isActive: _mapFocus == HomeMapFocus.trips,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.trips
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.trips,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+              ],
+            ],
+            dateFrom: _prDateFrom,
+            dateTo: _prDateTo,
+            maxWeight: _prMaxWeight,
+            parcelSize: _prParcelSize,
+            onDateTap: () async {
+              final picked = await showDateRangePicker(
+                context: context,
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+                initialDateRange: _prDateFrom != null && _prDateTo != null
+                    ? DateTimeRange(start: _prDateFrom!, end: _prDateTo!)
+                    : null,
+                locale: const Locale('fr'),
+                builder: (ctx, child) =>
+                    Theme(data: Theme.of(ctx), child: child!),
+              );
+              if (picked != null) {
+                setState(() {
+                  _prDateFrom = picked.start;
+                  _prDateTo = picked.end;
+                });
+                _dispatchPackageRequestSearch();
+              }
+            },
+            onWeightTap: () async {
+              final result = await _showMaxWeightSheet(context);
+              if (result != null) {
+                setState(() => _prMaxWeight = result);
+                _dispatchPackageRequestSearch();
+              }
+            },
+            onSizeTap: () async {
+              final result = await _showParcelSizeSheet(context);
+              if (result != null) {
+                setState(
+                  () => _prParcelSize = result == _prParcelSize ? null : result,
+                );
+                _dispatchPackageRequestSearch();
+              }
+            },
+            onDateClear: () {
+              setState(() {
+                _prDateFrom = null;
+                _prDateTo = null;
+              });
+              _dispatchPackageRequestSearch();
+            },
+            onWeightClear: () {
+              setState(() => _prMaxWeight = null);
+              _dispatchPackageRequestSearch();
+            },
+            onSizeClear: () {
+              setState(() => _prParcelSize = null);
+              _dispatchPackageRequestSearch();
+            },
+          );
+  }
+
   Widget _buildSheet(
     BuildContext ctx,
     ScrollController scrollCtrl,
@@ -1499,6 +1485,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 onTap: () => showParcelControls
                     ? _showPrFilterSheet(ctx)
                     : _showFilterSheet(ctx),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: DonySpacing.lg,
+                right: DonySpacing.lg,
+                bottom: DonySpacing.sm,
+              ),
+              child: _filterChipsRow(
+                isTraveler: _isTraveler,
+                showParcelControls: showParcelControls,
               ),
             ),
           ],
