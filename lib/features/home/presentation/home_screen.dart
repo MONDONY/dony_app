@@ -108,7 +108,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   List<_CorridorOpt> _corridorOptions = List.of(_defaultCorridorOptions);
   _CorridorOpt _corridor = _defaultCorridorOptions.first;
 
-  _DatePreset _datePreset = _DatePreset.thisWeek;
+  _DatePreset _datePreset = _DatePreset.none;
   DateTime? _customDate;
   bool _kiloProOnly = false;
   bool _allCorridors = true;
@@ -165,7 +165,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (_kycVerifiedOnly) n++;
     if (_contentType != null) n++;
     if (_isNearMeActive) n++;
-    if (_datePreset != _DatePreset.thisWeek) n++;
+    if (_datePreset != _DatePreset.none) n++;
     if (_urgencyFilter != null) n++;
     return n;
   }
@@ -1252,7 +1252,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _kycVerifiedOnly = false;
       _contentType = null;
       _urgencyFilter = null;
-      _datePreset = _DatePreset.thisWeek;
+      _datePreset = _DatePreset.none;
     });
     _dispatchSearch();
   }
