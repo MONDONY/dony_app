@@ -299,6 +299,50 @@ void main() {
     verify(() => bidBloc.add(any(that: isA<BidRejectRequested>()))).called(1);
   });
 
+  // ── Rafraîchissement après action ───────────────────────────────────────────
+
+  testWidgets(
+      'après BidRejected puis BidAccepted, recharge la liste (BidListRequested)',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 'b1')]));
+    await tester.pumpAndSettle();
+
+    // Refus réussi (réponse serveur) → la liste doit se recharger.
+    ctrl.add(BidRejected(_makeBid(status: 'REJECTED', id: 'b1')));
+    await tester.pumpAndSettle();
+    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+
+    // Acceptation réussie → idem.
+    ctrl.add(BidAccepted(_makeBid(status: 'ACCEPTED', id: 'b1')));
+    await tester.pumpAndSettle();
+    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+  });
+
+  testWidgets(
+      'tap carte → détail → retour recharge la liste (refresh après navigation)',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 'b1')]));
+    await tester.pumpAndSettle();
+
+    // Tap le corps de la carte (nom expéditeur) → ouvre le détail.
+    await tester.tap(find.text('Moussa Traoré'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bid detail b1'), findsOneWidget);
+
+    // Retour depuis le détail → la liste doit se recharger seule.
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+  });
+
   // ── Empty state ─────────────────────────────────────────────────────────────
 
   testWidgets('liste vide → « Aucune demande à traiter »', (tester) async {
