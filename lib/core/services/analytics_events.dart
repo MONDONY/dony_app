@@ -18,9 +18,12 @@ abstract final class AnalyticsEvents {
   static const surplusOpened       = 'surplus_opened';
 
   // Bids
-  static const bidSubmitted = 'bid_submitted';
-  static const bidAccepted  = 'bid_accepted';
-  static const bidRejected  = 'bid_rejected';
+  static const bidSubmitted    = 'bid_submitted';
+  static const bidAccepted     = 'bid_accepted';
+  static const bidRejected     = 'bid_rejected';
+  static const bidPhotoAdded   = 'bid_photo_added';
+  static const bidPhotoRemoved = 'bid_photo_removed';
+  static const bidPhotosViewed = 'bid_photos_viewed';
 
   // Payments
   static const paymentInitiated    = 'payment_initiated';

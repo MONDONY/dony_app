@@ -112,6 +112,7 @@ import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
@@ -270,6 +271,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<BidBloc>(
     () => BidBloc(getIt<BidRepository>(), getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<BidPhotosCubit>(
+    () => BidPhotosCubit(getIt<BidRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<ShipmentFilterCubit>(
     () => ShipmentFilterCubit(getIt<AnalyticsService>()),
