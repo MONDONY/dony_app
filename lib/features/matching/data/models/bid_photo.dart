@@ -14,4 +14,12 @@ class BidPhoto {
       _$BidPhotoFromJson(json);
 
   Map<String, dynamic> toJson() => _$BidPhotoToJson(this);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BidPhoto && other.id == id && other.url == url;
+
+  @override
+  int get hashCode => Object.hash(id, url);
 }
