@@ -61,6 +61,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
+        photoKeys: event.photoKeys,
         gridItems: event.gridItems,
       );
       emit(BidCheckoutReady(response));
@@ -89,6 +90,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         phoneNumber: event.phoneNumber,
         countryCode: event.countryCode,
         promoCode: event.promoCode,
+        photoKeys: event.photoKeys,
         gridItems: event.gridItems,
       );
       emit(BidCreated(bid));

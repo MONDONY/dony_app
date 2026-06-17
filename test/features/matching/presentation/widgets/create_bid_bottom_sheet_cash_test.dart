@@ -6,6 +6,8 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
+import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -31,15 +33,19 @@ class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
 class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
 
+class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
+    implements BidPhotosCubit {}
+
 // ── GetIt captures ─────────────────────────────────────────────────────────────
 //
-// CreateBidBottomSheet.show() calls getIt<BidBloc>(), getIt<PaymentBloc>() and
-// getIt<WalletBloc>(). We register factories that return the _current_ mock
-// (set in setUp) so each test controls its own bloc behavior.
+// CreateBidBottomSheet.show() calls getIt<BidBloc>(), getIt<PaymentBloc>(),
+// getIt<WalletBloc>() and getIt<BidPhotosCubit>(). We register factories that
+// return the _current_ mock (set in setUp) so each test controls its own bloc.
 
 late _MockBidBloc _currentBidBloc;
 late _MockPaymentBloc _currentPaymentBloc;
 late _MockWalletBloc _currentWalletBloc;
+late _MockBidPhotosCubit _currentPhotosCubit;
 
 // ── Fixtures ───────────────────────────────────────────────────────────────────
 
@@ -259,6 +265,9 @@ void main() {
     if (!getIt.isRegistered<WalletBloc>()) {
       getIt.registerFactory<WalletBloc>(() => _currentWalletBloc);
     }
+    if (!getIt.isRegistered<BidPhotosCubit>()) {
+      getIt.registerFactory<BidPhotosCubit>(() => _currentPhotosCubit);
+    }
   });
 
   setUp(() {
@@ -279,6 +288,13 @@ void main() {
     when(() => _currentWalletBloc.stream)
         .thenAnswer((_) => const Stream.empty());
     when(() => _currentWalletBloc.close()).thenAnswer((_) async {});
+
+    _currentPhotosCubit = _MockBidPhotosCubit();
+    when(() => _currentPhotosCubit.state).thenReturn(const <BidPhotoUpload>[]);
+    when(() => _currentPhotosCubit.stream)
+        .thenAnswer((_) => const Stream.empty());
+    when(() => _currentPhotosCubit.close()).thenAnswer((_) async {});
+    when(() => _currentPhotosCubit.readyKeys).thenReturn(const <String>[]);
   });
 
   // ── 1. Visibilité du sélecteur ─────────────────────────────────────────────

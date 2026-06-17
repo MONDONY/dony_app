@@ -10,10 +10,12 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -63,6 +65,7 @@ class _CollectedFormData {
     required this.recipientPhone,
     this.gridItems,
     this.promoCode,
+    this.photoKeys,
   });
   final double weightKg;
   final double declaredValueEur;
@@ -72,6 +75,7 @@ class _CollectedFormData {
   final String recipientPhone;
   final List<Map<String, dynamic>>? gridItems;
   final String? promoCode;
+  final List<String>? photoKeys;
 }
 
 const _mmCountries = {
@@ -103,6 +107,7 @@ class CreateBidBottomSheet {
 
     final bidBloc = getIt<BidBloc>();
     final paymentBloc = getIt<PaymentBloc>();
+    final photosCubit = getIt<BidPhotosCubit>();
 
     return DonyBottomSheet.show(
       context,
@@ -111,6 +116,7 @@ class CreateBidBottomSheet {
         providers: [
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<PaymentBloc>.value(value: paymentBloc),
+          BlocProvider<BidPhotosCubit>.value(value: photosCubit),
           BlocProvider<WalletBloc>(
             create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
           ),
@@ -145,6 +151,7 @@ class CreateBidBottomSheet {
       btnConfigNotifier.dispose();
       bidBloc.close();
       paymentBloc.close();
+      photosCubit.close();
       // walletBloc.close() — géré automatiquement par BlocProvider
     });
   }
@@ -203,6 +210,81 @@ class _CreateBidContentState extends State<_CreateBidContent> {
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
+
+  // ── Content section helpers ────────────────────────────────────────────────
+
+  /// Catégories acceptées = annonce si fournies, sinon liste statique de secours.
+  List<String> get _acceptedCategories {
+    final accepted = widget.announcement.acceptedContentTypes;
+    if (accepted != null && accepted.isNotEmpty) return accepted;
+    return _contentCategories;
+  }
+
+  List<String> get _refusedCategories =>
+      widget.announcement.refusedTypes ?? const [];
+
+  void _toggleCategory(Set<String> categories, String cat) {
+    final updated = Set<String>.from(categories);
+    if (updated.contains(cat)) {
+      updated.remove(cat);
+    } else {
+      updated.add(cat);
+    }
+    _categoriesNotifier.value = updated;
+  }
+
+  Widget _buildContentSection(Set<String> categories) {
+    final accepted = _acceptedCategories;
+    final refused = _refusedCategories;
+    // Éléments custom = sélectionnés qui ne sont pas dans la liste acceptée.
+    final custom = categories.where((c) => !accepted.contains(c)).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel(label: 'CONTENU DU COLIS'),
+        const SizedBox(height: DonySpacing.md),
+        Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: [
+            for (final cat in accepted)
+              _CategoryChip(
+                label: cat,
+                selected: categories.contains(cat),
+                onTap: () => _toggleCategory(categories, cat),
+              ),
+            for (final cat in custom)
+              _CategoryChip(
+                label: cat,
+                selected: true,
+                onTap: () => _toggleCategory(categories, cat),
+              ),
+            _AddCustomChip(onAdd: (value) {
+              final v = value.trim();
+              if (v.isEmpty) return;
+              if (_refusedCategories
+                  .map((e) => e.toLowerCase())
+                  .contains(v.toLowerCase())) {
+                return; // refusé → ignoré
+              }
+              final updated = Set<String>.from(categories)..add(v);
+              _categoriesNotifier.value = updated;
+            }),
+          ],
+        ).animate().fadeIn(delay: 60.ms),
+        if (refused.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.md),
+          const _SectionLabel(label: 'REFUSÉ PAR LE VOYAGEUR'),
+          const SizedBox(height: DonySpacing.sm),
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.sm,
+            children: [for (final cat in refused) _RefusedChip(label: cat)],
+          ),
+        ],
+      ],
+    );
+  }
 
   /// Articles sélectionnés au format attendu par l'API (`null` si aucun).
   List<Map<String, dynamic>>? _selectedGridItems() {
@@ -388,6 +470,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       recipientPhone: _recipientPhoneCtrl.text.trim(),
       gridItems: _selectedGridItems(),
       promoCode: promoCode,
+      photoKeys: context.read<BidPhotosCubit>().readyKeys,
     );
 
     // If only Stripe is available, skip the picker and go straight to checkout.
@@ -430,6 +513,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         countryCode: _mmCountryNotifier.value,
         promoCode: data.promoCode,
         gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
       ));
     } else if (method == BidPaymentMethod.cash) {
       widget.bidBloc.add(BidCreateRequested(
@@ -443,6 +527,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         paymentMethod: BidPaymentMethod.cash,
         promoCode: data.promoCode,
         gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
       ));
     } else {
       widget.bidBloc.add(BidCheckoutRequested(
@@ -454,6 +539,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         recipientName: data.recipientName,
         recipientPhone: data.recipientPhone,
         gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
       ));
     }
   }
@@ -563,7 +649,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       ]),
       builder: (context, _) {
         final weightKg = _weightNotifier.value;
-        final categories = _categoriesNotifier.value;
         final disclaimerAccepted = _disclaimerNotifier.value;
         final gridQuantities = _gridQuantitiesNotifier.value;
         final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
@@ -743,27 +828,16 @@ class _CreateBidContentState extends State<_CreateBidContent> {
             ],
 
             // ── Contenu ─────────────────────────────────────────────────────
-            const _SectionLabel(label: 'CONTENU DU COLIS'),
+            ValueListenableBuilder<Set<String>>(
+              valueListenable: _categoriesNotifier,
+              builder: (_, categories, __) => _buildContentSection(categories),
+            ),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Photos du colis ──────────────────────────────────────────────
+            const _SectionLabel(label: 'PHOTOS DU COLIS (OPTIONNEL)'),
             const SizedBox(height: DonySpacing.md),
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: _contentCategories
-                  .map((cat) => _CategoryChip(
-                        label: cat,
-                        selected: categories.contains(cat),
-                        onTap: () {
-                          final updated = Set<String>.from(categories);
-                          if (updated.contains(cat)) {
-                            updated.remove(cat);
-                          } else {
-                            updated.add(cat);
-                          }
-                          _categoriesNotifier.value = updated;
-                        },
-                      ))
-                  .toList(),
-            ).animate().fadeIn(delay: 60.ms),
+            const PhotoSection(),
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Description ─────────────────────────────────────────────────
@@ -1989,4 +2063,98 @@ class _PriceBreakdown extends StatelessWidget {
           Text(value, style: tt.titleMedium),
         ],
       );
+}
+
+// ── Add custom chip ───────────────────────────────────────────────────────────
+
+class _AddCustomChip extends StatelessWidget {
+  const _AddCustomChip({required this.onAdd});
+  final ValueChanged<String> onAdd;
+
+  Future<void> _prompt(BuildContext context) async {
+    final ctrl = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ajouter un élément'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(hintText: 'Ex : Épices maison'),
+          onSubmitted: (v) => Navigator.of(ctx).pop(v),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(ctrl.text),
+            child: const Text('Ajouter'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (value != null) onAdd(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () => _prompt(context),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: cs.primary, width: 1.4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add_rounded, size: 16, color: cs.primary),
+            const SizedBox(width: 4),
+            Text('Ajouter',
+                style: TextStyle(
+                    color: cs.primary, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Refused chip ──────────────────────────────────────────────────────────────
+
+class _RefusedChip extends StatelessWidget {
+  const _RefusedChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 36),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: cs.onSurfaceVariant,
+          decoration: TextDecoration.lineThrough,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
 }

@@ -15,6 +15,8 @@ class BidCheckoutRequested extends BidEvent {
   /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
   /// Format: [{'announcementGridItemId': String, 'quantity': int}]
   final List<Map<String, dynamic>>? gridItems;
+  /// Clés S3 des photos déjà uploadées (≤ 4). Null/empty si aucune.
+  final List<String>? photoKeys;
 
   BidCheckoutRequested({
     required this.announcementId,
@@ -25,6 +27,7 @@ class BidCheckoutRequested extends BidEvent {
     required this.recipientName,
     required this.recipientPhone,
     this.gridItems,
+    this.photoKeys,
   });
 }
 
@@ -48,6 +51,8 @@ class BidCreateRequested extends BidEvent {
 
   /// Code promo optionnel — stocké sur le bid, validé au paiement.
   final String? promoCode;
+  /// Clés S3 des photos déjà uploadées (≤ 4). Null/empty si aucune.
+  final List<String>? photoKeys;
 
   BidCreateRequested({
     required this.announcementId,
@@ -62,6 +67,7 @@ class BidCreateRequested extends BidEvent {
     this.countryCode,
     this.promoCode,
     this.gridItems,
+    this.photoKeys,
   });
 }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -12,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart' show XFile;
+import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -20,6 +21,8 @@ import 'package:mocktail/mocktail.dart';
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class FakeAuthEvent extends Fake implements AuthEvent {}
+
+class _MockImagePicker extends Mock implements ImagePicker {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -69,6 +72,7 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeAuthEvent());
+    registerFallbackValue(ImageSource.gallery);
   });
 
   late MockAuthBloc mockAuthBloc;
@@ -337,10 +341,23 @@ void main() {
       final tmpPath = '${Directory.systemTemp.path}/dony_test_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
       File(tmpPath).writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0]);
 
-      // Use the pickImageOverride seam — no platform channel required.
-      final screen = EditProfileScreen(
-        pickImageOverride: () async => XFile(tmpPath),
+      // Use the mediaService seam — inject a DonyMediaService with a mock
+      // ImagePicker that returns the test file without hitting platform channels.
+      final mockPicker = _MockImagePicker();
+      when(
+        () => mockPicker.pickImage(
+          source: any(named: 'source'),
+          imageQuality: any(named: 'imageQuality'),
+        ),
+      ).thenAnswer((_) async => XFile(tmpPath));
+
+      final fakeMediaService = DonyMediaService(
+        imagePicker: mockPicker,
+        // Pass-through compressor: avoids FlutterImageCompress platform channel.
+        compressor: (f) async => f,
       );
+
+      final screen = EditProfileScreen(mediaService: fakeMediaService);
       await tester.pumpWidget(_wrap(screen, mockAuthBloc));
       await tester.pumpAndSettle();
 
