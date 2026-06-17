@@ -61,6 +61,7 @@ class AnnouncementMapView extends StatefulWidget {
   });
 
   final List<AnnouncementModel> announcements;
+
   /// Additional markers to render alongside announcement markers (e.g. package requests).
   /// They bypass the cluster logic and are drawn as-is.
   final Set<Marker> extraMarkers;
@@ -71,16 +72,21 @@ class AnnouncementMapView extends StatefulWidget {
   final double? activeRadiusKm;
   final LatLng? userPosition;
   final double fabBottomPadding;
+
   /// Style JSON Google Maps. Null = style par défaut Google Maps.
   final String? mapStyle;
+
   /// ID of the currently selected announcement (highlighted marker).
   final String? selectedAnnouncementId;
+
   /// Called when user taps a single marker.
   final void Function(String id)? onAnnouncementSelected;
+
   /// Called when the user taps the single "Près de moi" FAB. When null, the
   /// FAB is hidden. The parent owns the near-me filter lifecycle (permission,
   /// radius, search) — this widget only renders the toggle and frames the map.
   final VoidCallback? onNearMeToggle;
+
   /// True while the parent acquires the position after a FAB tap (FAB spinner).
   final bool isLocating;
 
@@ -129,8 +135,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     // (e.g. user toggled it from the filter sheet).
     final nearMeChanged =
         oldWidget.isNearMeActive != widget.isNearMeActive ||
-            oldWidget.activeRadiusKm != widget.activeRadiusKm ||
-            oldWidget.userPosition != widget.userPosition;
+        oldWidget.activeRadiusKm != widget.activeRadiusKm ||
+        oldWidget.userPosition != widget.userPosition;
     if (nearMeChanged &&
         widget.isNearMeActive &&
         widget.userPosition != null &&
@@ -187,13 +193,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
     final me = _myLocation;
     if (me != null) {
-      final points = _pickupPoints().map((p) => p.location).toList();
-      final bounds = computeHybridBounds(me, points);
-      if (bounds != null) {
-        controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
-      } else {
-        controller.animateCamera(CameraUpdate.newLatLngZoom(me, 12));
-      }
+      // Cadre ~1000 km autour de la position : l'user voit sa zone + les
+      // annonces dans ce rayon, sans zoomer trop près (échelle région/pays).
+      controller.animateCamera(
+        CameraUpdate.newLatLngBounds(boundsAround(me, 1000), 60.0),
+      );
     } else if (!_awaitingFirstLocation) {
       _fitInitialBounds();
     }
@@ -238,15 +242,21 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     _lastMarkerSignature = signature;
     final allPoints = [..._pickupPoints()];
     final rawClusters = gridCluster<_AnnouncementPoint>(
-        allPoints, _currentZoom, (p) => p.location);
+      allPoints,
+      _currentZoom,
+      (p) => p.location,
+    );
     // Merge singleton clusters that straddle a grid-cell boundary but share
     // the same physical address (within the kSameSpot threshold).
     final clusters = mergeSameSpotSingletons<_AnnouncementPoint>(
-        rawClusters, (p) => p.location);
+      rawClusters,
+      (p) => p.location,
+    );
     final futures = clusters.map((c) => _buildMarker(c));
     final built = await Future.wait(futures);
     if (!mounted) {
-      _lastMarkerSignature = null; // unmounted mid-build → don't suppress a later rebuild
+      _lastMarkerSignature =
+          null; // unmounted mid-build → don't suppress a later rebuild
       return;
     }
     setState(() => _markers = built.toSet());
@@ -264,10 +274,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);
-        final urgencyColor = MarkerUrgencyColor.fromDeparture(earliest,
-            brightness: _brightness);
-        final isSelected = cluster.items
-            .any((it) => it.announcement.id == widget.selectedAnnouncementId);
+        final urgencyColor = MarkerUrgencyColor.fromDeparture(
+          earliest,
+          brightness: _brightness,
+        );
+        final isSelected = cluster.items.any(
+          (it) => it.announcement.id == widget.selectedAnnouncementId,
+        );
         final icon = await MarkerBitmapFactory.stackedPricePill(
           pricePerKg: cheapest,
           count: cluster.count,
@@ -278,7 +291,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         );
         return Marker(
           markerId: MarkerId(
-              'same_spot_${cluster.centroid.latitude}_${cluster.centroid.longitude}'),
+            'same_spot_${cluster.centroid.latitude}_${cluster.centroid.longitude}',
+          ),
           position: cluster.centroid,
           icon: icon,
           anchor: const Offset(0.5, 1.0),
@@ -290,7 +304,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       final icon = await _getClusterIcon(cluster.count);
       return Marker(
         markerId: MarkerId(
-            'cluster_${cluster.centroid.latitude}_${cluster.centroid.longitude}_${cluster.count}'),
+          'cluster_${cluster.centroid.latitude}_${cluster.centroid.longitude}_${cluster.count}',
+        ),
         position: cluster.centroid,
         icon: icon,
         anchor: const Offset(0.5, 0.5),
@@ -301,8 +316,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     // Single marker.
     final item = cluster.items.first;
     final urgencyColor = MarkerUrgencyColor.fromDeparture(
-        item.announcement.departureDate,
-        brightness: _brightness);
+      item.announcement.departureDate,
+      brightness: _brightness,
+    );
     final isSelected = item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
       pricePerKg: item.announcement.senderPricePerKg,
@@ -332,8 +348,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   void _onMarkerTapped(AnnouncementModel a) {
     widget.onAnnouncementSelected?.call(a.id);
     final authState = context.read<AuthBloc>().state;
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : null;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
     final isOwn = currentUserId != null && a.travelerId == currentUserId;
     if (isOwn) return;
     showTravelerAnnouncementSheet(context, announcement: a);
@@ -347,8 +364,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           ? firstItem.announcement.pickupAddress
           : firstItem.announcement.deliveryAddress;
       final authState = context.read<AuthBloc>().state;
-      final currentUserId =
-          authState is AuthAuthenticated ? authState.user.id : null;
+      final currentUserId = authState is AuthAuthenticated
+          ? authState.user.id
+          : null;
       showModalBottomSheet<void>(
         context: context,
         useRootNavigator: true,
@@ -368,7 +386,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       // Proximity cluster → zoom in to separate the pins.
       _mapController?.animateCamera(
         CameraUpdate.newLatLngZoom(
-            cluster.centroid, math.min(_currentZoom + 2, 18)),
+          cluster.centroid,
+          math.min(_currentZoom + 2, 18),
+        ),
       );
     }
   }
@@ -446,13 +466,17 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
     // 1° latitude ≈ 111 km ; longitude shrinks by cos(lat) towards the poles.
     final latDelta = radiusKm / 111.0;
-    final lngDelta = radiusKm /
-        (111.0 * math.cos(center.latitude * math.pi / 180).abs());
+    final lngDelta =
+        radiusKm / (111.0 * math.cos(center.latitude * math.pi / 180).abs());
     final bounds = LatLngBounds(
-      southwest:
-          LatLng(center.latitude - latDelta, center.longitude - lngDelta),
-      northeast:
-          LatLng(center.latitude + latDelta, center.longitude + lngDelta),
+      southwest: LatLng(
+        center.latitude - latDelta,
+        center.longitude - lngDelta,
+      ),
+      northeast: LatLng(
+        center.latitude + latDelta,
+        center.longitude + lngDelta,
+      ),
     );
     await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
   }
@@ -462,9 +486,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     if (controller == null) {
       return;
     }
-    final allPoints = <LatLng>[
-      ..._pickupPoints().map((it) => it.location),
-    ];
+    final allPoints = <LatLng>[..._pickupPoints().map((it) => it.location)];
     if (allPoints.isEmpty) {
       return;
     }
@@ -518,9 +540,7 @@ class _NearMeFab extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? cs.primary : cs.surface,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: isActive ? cs.primary : cs.outline,
-            ),
+            border: Border.all(color: isActive ? cs.primary : cs.outline),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),
@@ -550,4 +570,3 @@ class _NearMeFab extends StatelessWidget {
     );
   }
 }
-
