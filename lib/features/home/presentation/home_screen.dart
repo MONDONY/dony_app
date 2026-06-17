@@ -82,6 +82,10 @@ class HomeScreen extends StatelessWidget {
 // MAP SENDER VIEW
 // ══════════════════════════════════════════════════════════════════════════════
 
+/// Marge basse réservée sous les listes pour que le dernier item dépasse la
+/// bottom nav flottante (île ~62 + marge ~28) au lieu d'être caché dessous.
+const double _kFloatingNavClearance = 96;
+
 class _MapSenderView extends StatefulWidget {
   const _MapSenderView();
 
@@ -274,8 +278,81 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final newSize = _sheetController.size;
     final wasHidden = _isMapHidden;
     _sheetSize = newSize;
-    // Rebuild uniquement quand l'état caché/visible change, pas à chaque frame
+    // Rebuild quand l'état plein écran change (swap indications / filtres).
     if (wasHidden != _isMapHidden) setState(() {});
+  }
+
+  /// Drag manuel de la poignée → pilote directement la taille du sheet (un
+  /// DraggableScrollableSheet seul ne réagit qu'au scroll de sa liste interne,
+  /// pas au drag sur le header).
+  void _onHandleDrag(BuildContext context, DragUpdateDetails d) {
+    if (!_sheetController.isAttached) return;
+    final h = MediaQuery.of(context).size.height;
+    final next = (_sheetController.size - d.primaryDelta! / h).clamp(0.30, 1.0);
+    _sheetController.jumpTo(next);
+  }
+
+  /// Aimante le sheet au snap le plus proche au relâcher de la poignée.
+  void _snapSheet() {
+    if (!_sheetController.isAttached) return;
+    const snaps = [0.30, 0.6, 1.0];
+    final s = _sheetController.size;
+    var best = snaps.first;
+    for (final v in snaps) {
+      if ((v - s).abs() < (best - s).abs()) best = v;
+    }
+    _sheetController.animateTo(
+      best,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// Indication de drag dans le header du sheet selon l'état : peek → « tirer
+  /// pour voir les N résultats », plein écran → « tirer pour voir la carte ».
+  Widget _pullHint(ColorScheme cs, {required bool down, required int count}) {
+    final text = down
+        ? 'Tirer vers le bas pour voir la carte'
+        : 'Tirer pour voir les $count résultat${count > 1 ? 's' : ''}';
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (!_sheetController.isAttached) return;
+        _sheetController.animateTo(
+          down ? 0.30 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: DonySpacing.lg,
+          right: DonySpacing.lg,
+          bottom: DonySpacing.xs,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              down
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.keyboard_arrow_up_rounded,
+              size: 18,
+              color: cs.primary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: cs.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -622,8 +699,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   _dispatchPackageRequestSearch();
                   Navigator.of(ctx, rootNavigator: true).pop();
                 },
-                icon: DonyIcon('x',
-                    size: 16, color: Theme.of(ctx).colorScheme.primary),
+                icon: DonyIcon(
+                  'x',
+                  size: 16,
+                  color: Theme.of(ctx).colorScheme.primary,
+                ),
                 label: const Text('Effacer tous les filtres'),
               ),
           ],
@@ -804,173 +884,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               ],
                             ),
                             const SizedBox(height: DonySpacing.xs),
-                            !showParcelControls
-                                ? _HomeFilterChipsRow(
-                                    leadingChildren: [
-                                      if (isTraveler) ...[
-                                        _SmallChip(
-                                          label: '📦 Colis',
-                                          isActive: _mapFocus == HomeMapFocus.parcels,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.parcels
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.parcels,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                        _SmallChip(
-                                          label: '✈️ Trajets',
-                                          isActive: _mapFocus == HomeMapFocus.trips,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.trips
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.trips,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                      ],
-                                    ],
-                                    datePreset: _datePreset,
-                                    customDate: _customDate,
-                                    kiloProOnly: _kiloProOnly,
-                                    allCorridors: _allCorridors,
-                                    minRating: _minRating,
-                                    weightMin: _weightMin,
-                                    weightMax: _weightMax,
-                                    maxPricePerKg: _maxPricePerKg,
-                                    onDateTap: _showDatePresetSheet,
-                                    onRatingTap: _showRatingSheet,
-                                    onWeightTap: _showWeightSheet,
-                                    onPriceTap: _showPriceSheet,
-                                    onDateClear: () {
-                                      setState(() {
-                                        _datePreset = _DatePreset.none;
-                                        _customDate = null;
-                                      });
-                                      _dispatchSearch();
-                                    },
-                                    onRatingClear: () {
-                                      setState(() => _minRating = null);
-                                      _dispatchSearch();
-                                    },
-                                    onWeightClear: () {
-                                      setState(() {
-                                        _weightMin = null;
-                                        _weightMax = null;
-                                      });
-                                      _dispatchSearch();
-                                    },
-                                    onPriceClear: () {
-                                      setState(() => _maxPricePerKg = null);
-                                      _dispatchSearch();
-                                    },
-                                    onKiloProToggle: () {
-                                      setState(() => _kiloProOnly = !_kiloProOnly);
-                                      _dispatchSearch();
-                                    },
-                                    onAllCorridorsToggle: () {
-                                      setState(
-                                        () => _allCorridors = !_allCorridors,
-                                      );
-                                      _dispatchSearch();
-                                    },
-                                  )
-                                : _PackageRequestFilterChipsRow(
-                                    leadingChildren: [
-                                      if (isTraveler) ...[
-                                        _SmallChip(
-                                          label: '📦 Colis',
-                                          isActive: _mapFocus == HomeMapFocus.parcels,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.parcels
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.parcels,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                        _SmallChip(
-                                          label: '✈️ Trajets',
-                                          isActive: _mapFocus == HomeMapFocus.trips,
-                                          onTap: () => _onFocusChanged(
-                                            _mapFocus == HomeMapFocus.trips
-                                                ? HomeMapFocus.all
-                                                : HomeMapFocus.trips,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                      ],
-                                    ],
-                                    dateFrom: _prDateFrom,
-                                    dateTo: _prDateTo,
-                                    maxWeight: _prMaxWeight,
-                                    parcelSize: _prParcelSize,
-                                    onDateTap: () async {
-                                      final picked = await showDateRangePicker(
-                                        context: context,
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(
-                                          const Duration(days: 365),
-                                        ),
-                                        initialDateRange:
-                                            _prDateFrom != null && _prDateTo != null
-                                            ? DateTimeRange(
-                                                start: _prDateFrom!,
-                                                end: _prDateTo!,
-                                              )
-                                            : null,
-                                        locale: const Locale('fr'),
-                                        builder: (ctx, child) => Theme(
-                                          data: Theme.of(ctx),
-                                          child: child!,
-                                        ),
-                                      );
-                                      if (picked != null) {
-                                        setState(() {
-                                          _prDateFrom = picked.start;
-                                          _prDateTo = picked.end;
-                                        });
-                                        _dispatchPackageRequestSearch();
-                                      }
-                                    },
-                                    onWeightTap: () async {
-                                      final result = await _showMaxWeightSheet(
-                                        context,
-                                      );
-                                      if (result != null) {
-                                        setState(() => _prMaxWeight = result);
-                                        _dispatchPackageRequestSearch();
-                                      }
-                                    },
-                                    onSizeTap: () async {
-                                      final result = await _showParcelSizeSheet(
-                                        context,
-                                      );
-                                      if (result != null) {
-                                        setState(
-                                          () => _prParcelSize =
-                                              result == _prParcelSize
-                                              ? null
-                                              : result,
-                                        );
-                                        _dispatchPackageRequestSearch();
-                                      }
-                                    },
-                                    onDateClear: () {
-                                      setState(() {
-                                        _prDateFrom = null;
-                                        _prDateTo = null;
-                                      });
-                                      _dispatchPackageRequestSearch();
-                                    },
-                                    onWeightClear: () {
-                                      setState(() => _prMaxWeight = null);
-                                      _dispatchPackageRequestSearch();
-                                    },
-                                    onSizeClear: () {
-                                      setState(() => _prParcelSize = null);
-                                      _dispatchPackageRequestSearch();
-                                    },
-                                  ),
+                            _filterChipsRow(
+                              isTraveler: isTraveler,
+                              showParcelControls: showParcelControls,
+                            ),
                           ],
                         ),
                       ),
@@ -1004,10 +921,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   if (!_isNearMeActive || _nearMeShowList)
                     DraggableScrollableSheet(
                       controller: _sheetController,
-                      initialChildSize: 0.20,
-                      minChildSize: 0.15,
+                      initialChildSize: 0.30,
+                      minChildSize: 0.30,
                       snap: true,
-                      snapSizes: const [0.20, 0.45, 1.0],
+                      snapSizes: const [0.30, 0.6, 1.0],
                       builder: (ctx, scrollCtrl) => _buildSheet(
                         ctx,
                         scrollCtrl,
@@ -1028,92 +945,101 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               .clamp(384.0, 470.0),
                           child: showBothTypes
                               ? DefaultTabController(
-                                  length: 2,
-                                  child: Column(
-                                    children: [
-                                      TabBar(
-                                        tabs: [
-                                          Tab(
-                                            text:
-                                                '📦 ${prState.results.length} colis',
+                                      length: 2,
+                                      child: Column(
+                                        children: [
+                                          TabBar(
+                                            tabs: [
+                                              Tab(
+                                                text:
+                                                    '📦 ${prState.results.length} colis',
+                                              ),
+                                              Tab(
+                                                text:
+                                                    '✈️ ${announcements.length} trajets',
+                                              ),
+                                            ],
                                           ),
-                                          Tab(text: '✈️ ${announcements.length} trajets'),
+                                          Expanded(
+                                            child: TabBarView(
+                                              children: [
+                                                NearMePackageRequestCarousel(
+                                                  items: prState.results,
+                                                  userPosition:
+                                                      _userPosition != null
+                                                      ? (
+                                                          lat: _userPosition!
+                                                              .latitude,
+                                                          lng: _userPosition!
+                                                              .longitude,
+                                                        )
+                                                      : null,
+                                                  currentUserId: currentUserId,
+                                                  selectedRequestId:
+                                                      _selectedAnnouncementId,
+                                                  onCardChanged: (id) => setState(
+                                                    () =>
+                                                        _selectedAnnouncementId =
+                                                            id,
+                                                  ),
+                                                  onSeeAll: _openNearMeList,
+                                                  onTapCard: (it) =>
+                                                      PackageRequestPreviewBottomSheet.show(
+                                                        context,
+                                                        item: it,
+                                                        isOwnRequest:
+                                                            currentUserId !=
+                                                                null &&
+                                                            it.sender.id ==
+                                                                currentUserId,
+                                                      ),
+                                                  onMakeOffer: (it) =>
+                                                      currentUserId == null ||
+                                                          it.sender.id !=
+                                                              currentUserId
+                                                      ? PackageRequestPreviewBottomSheet.show(
+                                                          context,
+                                                          item: it,
+                                                        )
+                                                      : null,
+                                                ),
+                                                NearMeCarousel(
+                                                  announcements: announcements,
+                                                  userPosition:
+                                                      _userPosition != null
+                                                      ? (
+                                                          lat: _userPosition!
+                                                              .latitude,
+                                                          lng: _userPosition!
+                                                              .longitude,
+                                                        )
+                                                      : null,
+                                                  selectedAnnouncementId:
+                                                      _selectedAnnouncementId,
+                                                  onCardChanged: (id) => setState(
+                                                    () =>
+                                                        _selectedAnnouncementId =
+                                                            id,
+                                                  ),
+                                                  onSeeAll: _openNearMeList,
+                                                  onTapCard: (a) =>
+                                                      _onTravelerCardTap(
+                                                        context,
+                                                        a,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                      Expanded(
-                                        child: TabBarView(
-                                          children: [
-                                            NearMePackageRequestCarousel(
-                                              items: prState.results,
-                                              userPosition: _userPosition !=
-                                                      null
-                                                  ? (
-                                                      lat: _userPosition!
-                                                          .latitude,
-                                                      lng: _userPosition!
-                                                          .longitude,
-                                                    )
-                                                  : null,
-                                              currentUserId: currentUserId,
-                                              selectedRequestId:
-                                                  _selectedAnnouncementId,
-                                              onCardChanged: (id) => setState(
-                                                () => _selectedAnnouncementId =
-                                                    id,
-                                              ),
-                                              onSeeAll: _openNearMeList,
-                                              onTapCard: (it) =>
-                                                  PackageRequestPreviewBottomSheet.show(
-                                                    context,
-                                                    item: it,
-                                                    isOwnRequest:
-                                                        currentUserId != null &&
-                                                        it.sender.id ==
-                                                            currentUserId,
-                                                  ),
-                                              onMakeOffer: (it) =>
-                                                  currentUserId == null ||
-                                                      it.sender.id !=
-                                                          currentUserId
-                                                  ? PackageRequestPreviewBottomSheet.show(
-                                                      context,
-                                                      item: it,
-                                                    )
-                                                  : null,
-                                            ),
-                                            NearMeCarousel(
-                                              announcements: announcements,
-                                              userPosition: _userPosition !=
-                                                      null
-                                                  ? (
-                                                      lat: _userPosition!
-                                                          .latitude,
-                                                      lng: _userPosition!
-                                                          .longitude,
-                                                    )
-                                                  : null,
-                                              selectedAnnouncementId:
-                                                  _selectedAnnouncementId,
-                                              onCardChanged: (id) => setState(
-                                                () => _selectedAnnouncementId =
-                                                    id,
-                                              ),
-                                              onSeeAll: _openNearMeList,
-                                              onTapCard: (a) =>
-                                                  _onTravelerCardTap(
-                                                    context,
-                                                    a,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ).animate().fadeIn(duration: 250.ms).slideY(
-                                  begin: 0.1,
-                                  curve: Curves.easeOutCubic,
-                                )
+                                    )
+                                    .animate()
+                                    .fadeIn(duration: 250.ms)
+                                    .slideY(
+                                      begin: 0.1,
+                                      curve: Curves.easeOutCubic,
+                                    )
                               : showParcelControls
                               ? NearMePackageRequestCarousel(
                                       items: prState.results,
@@ -1326,6 +1252,162 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _dispatchSearch();
   }
 
+  Widget _filterChipsRow({
+    required bool isTraveler,
+    required bool showParcelControls,
+  }) {
+    return !showParcelControls
+        ? _HomeFilterChipsRow(
+            leadingChildren: [
+              if (isTraveler) ...[
+                _SmallChip(
+                  label: '📦 Colis',
+                  isActive: _mapFocus == HomeMapFocus.parcels,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.parcels
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.parcels,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                _SmallChip(
+                  label: '✈️ Trajets',
+                  isActive: _mapFocus == HomeMapFocus.trips,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.trips
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.trips,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+              ],
+            ],
+            datePreset: _datePreset,
+            customDate: _customDate,
+            kiloProOnly: _kiloProOnly,
+            allCorridors: _allCorridors,
+            minRating: _minRating,
+            weightMin: _weightMin,
+            weightMax: _weightMax,
+            maxPricePerKg: _maxPricePerKg,
+            onDateTap: _showDatePresetSheet,
+            onRatingTap: _showRatingSheet,
+            onWeightTap: _showWeightSheet,
+            onPriceTap: _showPriceSheet,
+            onDateClear: () {
+              setState(() {
+                _datePreset = _DatePreset.none;
+                _customDate = null;
+              });
+              _dispatchSearch();
+            },
+            onRatingClear: () {
+              setState(() => _minRating = null);
+              _dispatchSearch();
+            },
+            onWeightClear: () {
+              setState(() {
+                _weightMin = null;
+                _weightMax = null;
+              });
+              _dispatchSearch();
+            },
+            onPriceClear: () {
+              setState(() => _maxPricePerKg = null);
+              _dispatchSearch();
+            },
+            onKiloProToggle: () {
+              setState(() => _kiloProOnly = !_kiloProOnly);
+              _dispatchSearch();
+            },
+            onAllCorridorsToggle: () {
+              setState(() => _allCorridors = !_allCorridors);
+              _dispatchSearch();
+            },
+          )
+        : _PackageRequestFilterChipsRow(
+            leadingChildren: [
+              if (isTraveler) ...[
+                _SmallChip(
+                  label: '📦 Colis',
+                  isActive: _mapFocus == HomeMapFocus.parcels,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.parcels
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.parcels,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                _SmallChip(
+                  label: '✈️ Trajets',
+                  isActive: _mapFocus == HomeMapFocus.trips,
+                  onTap: () => _onFocusChanged(
+                    _mapFocus == HomeMapFocus.trips
+                        ? HomeMapFocus.all
+                        : HomeMapFocus.trips,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+              ],
+            ],
+            dateFrom: _prDateFrom,
+            dateTo: _prDateTo,
+            maxWeight: _prMaxWeight,
+            parcelSize: _prParcelSize,
+            onDateTap: () async {
+              final picked = await showDateRangePicker(
+                context: context,
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+                initialDateRange: _prDateFrom != null && _prDateTo != null
+                    ? DateTimeRange(start: _prDateFrom!, end: _prDateTo!)
+                    : null,
+                locale: const Locale('fr'),
+                builder: (ctx, child) =>
+                    Theme(data: Theme.of(ctx), child: child!),
+              );
+              if (picked != null) {
+                setState(() {
+                  _prDateFrom = picked.start;
+                  _prDateTo = picked.end;
+                });
+                _dispatchPackageRequestSearch();
+              }
+            },
+            onWeightTap: () async {
+              final result = await _showMaxWeightSheet(context);
+              if (result != null) {
+                setState(() => _prMaxWeight = result);
+                _dispatchPackageRequestSearch();
+              }
+            },
+            onSizeTap: () async {
+              final result = await _showParcelSizeSheet(context);
+              if (result != null) {
+                setState(
+                  () => _prParcelSize = result == _prParcelSize ? null : result,
+                );
+                _dispatchPackageRequestSearch();
+              }
+            },
+            onDateClear: () {
+              setState(() {
+                _prDateFrom = null;
+                _prDateTo = null;
+              });
+              _dispatchPackageRequestSearch();
+            },
+            onWeightClear: () {
+              setState(() => _prMaxWeight = null);
+              _dispatchPackageRequestSearch();
+            },
+            onSizeClear: () {
+              setState(() => _prParcelSize = null);
+              _dispatchPackageRequestSearch();
+            },
+          );
+  }
+
   Widget _buildSheet(
     BuildContext ctx,
     ScrollController scrollCtrl,
@@ -1356,17 +1438,58 @@ class _MapSenderViewState extends State<_MapSenderView> {
         children: [
           // Padding status bar quand le sheet est en plein écran
           if (_isMapHidden) SizedBox(height: statusBarHeight),
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outline,
-                borderRadius: BorderRadius.circular(2),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onVerticalDragUpdate: (d) => _onHandleDrag(ctx, d),
+            onVerticalDragEnd: (_) => _snapSheet(),
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: cs.outline,
+                  borderRadius: BorderRadius.circular(3),
+                ),
               ),
             ),
           ),
+          if (_isMapHidden) ...[
+            _pullHint(cs, down: true, count: count),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                0,
+                DonySpacing.lg,
+                DonySpacing.sm,
+              ),
+              child: _CorridorBar(
+                key: const Key('corridor-bar-sheet'),
+                label: showParcelControls
+                    ? (_prDeparture != null
+                          ? '$_prDeparture → $_prArrival'
+                          : 'Tous les corridors')
+                    : (_allCorridors ? 'Tous les corridors' : _corridor.label),
+                activeFilterCount: showParcelControls
+                    ? _prActiveFilterCount
+                    : _activeFilterCount,
+                onTap: () => showParcelControls
+                    ? _showPrFilterSheet(ctx)
+                    : _showFilterSheet(ctx),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: DonySpacing.lg,
+                right: DonySpacing.lg,
+                bottom: DonySpacing.sm,
+              ),
+              child: _filterChipsRow(
+                isTraveler: _isTraveler,
+                showParcelControls: showParcelControls,
+              ),
+            ),
+          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
@@ -1425,6 +1548,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ],
             ),
           ),
+          if (!_isMapHidden) _pullHint(cs, down: false, count: count),
           Divider(height: 1, color: cs.outline),
           Expanded(
             child: CustomScrollView(
@@ -1441,15 +1565,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 if (!showParcelControls && _sheetSize > 0.20)
                   const SliverToBoxAdapter(child: _SenderHeroCard()),
                 if (showBothTypes)
-                  BlocBuilder<PackageRequestSearchBloc,
-                      PackageRequestSearchState>(
+                  BlocBuilder<
+                    PackageRequestSearchBloc,
+                    PackageRequestSearchState
+                  >(
                     builder: (ctx, prState) {
                       return BlocBuilder<BidBloc, BidState>(
                         buildWhen: (prev, curr) =>
                             curr is BidListLoaded || prev is BidListLoaded,
                         builder: (ctx, bidState) {
-                          final myActiveBids =
-                              bidState.activeBidsByAnnouncement();
+                          final myActiveBids = bidState
+                              .activeBidsByAnnouncement();
                           final parcels = prState.results;
                           final totalCount = count + parcels.length;
 
@@ -1467,8 +1593,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           }
 
                           // Interleave 1:1 — paires trip/parcel puis reste
-                          final minLen =
-                              count < parcels.length ? count : parcels.length;
+                          final minLen = count < parcels.length
+                              ? count
+                              : parcels.length;
                           final pairedCount = minLen * 2;
                           final tripsLonger = count >= parcels.length;
 
@@ -1479,13 +1606,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   DonySpacing.base,
                                   DonySpacing.sm,
                                   DonySpacing.base,
-                                  bottomPad + DonySpacing.huge,
+                                  bottomPad +
+                                      DonySpacing.huge +
+                                      _kFloatingNavClearance,
                                 ),
                                 sliver: SliverList.separated(
                                   itemCount: totalCount,
-                                  separatorBuilder: (_, _) => const SizedBox(
-                                    height: DonySpacing.md,
-                                  ),
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(height: DonySpacing.md),
                                   itemBuilder: (ctx, i) {
                                     final bool isTrip;
                                     final int itemIndex;
@@ -1500,23 +1628,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
                                     if (isTrip) {
                                       final a = announcements[itemIndex];
-                                      final authState =
-                                          context.read<AuthBloc>().state;
-                                      final uid =
-                                          authState is AuthAuthenticated
+                                      final authState = context
+                                          .read<AuthBloc>()
+                                          .state;
+                                      final uid = authState is AuthAuthenticated
                                           ? authState.user.id
                                           : null;
                                       final isOwn =
-                                          uid != null &&
-                                          a.travelerId == uid;
-                                      final existingBid =
-                                          myActiveBids[a.id];
+                                          uid != null && a.travelerId == uid;
+                                      final existingBid = myActiveBids[a.id];
                                       return TravelerCard(
                                         announcement: a,
                                         index: itemIndex,
                                         isOwnAnnouncement: isOwn,
-                                        existingBidStatus:
-                                            existingBid?.status,
+                                        existingBidStatus: existingBid?.status,
                                         onTap: isOwn
                                             ? null
                                             : existingBid != null
@@ -1628,7 +1753,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               DonySpacing.base,
                               DonySpacing.sm,
                               DonySpacing.base,
-                              bottomPad + DonySpacing.huge,
+                              bottomPad +
+                                  DonySpacing.huge +
+                                  _kFloatingNavClearance,
                             ),
                             sliver: SliverList.separated(
                               itemCount: prState.results.length,
@@ -1697,7 +1824,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           DonySpacing.base,
                           DonySpacing.sm,
                           DonySpacing.base,
-                          bottomPad + DonySpacing.huge,
+                          bottomPad + DonySpacing.huge + _kFloatingNavClearance,
                         ),
                         sliver: BlocBuilder<BidBloc, BidState>(
                           buildWhen: (prev, curr) =>
@@ -1989,8 +2116,11 @@ class _NearMeRadiusPill extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: DonySpacing.xs),
-              DonyIcon('sliders-horizontal',
-                  size: 15, color: cs.onSurfaceVariant),
+              DonyIcon(
+                'sliders-horizontal',
+                size: 15,
+                color: cs.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -2102,7 +2232,9 @@ class _HomeFilterChipsRow extends StatelessWidget {
             label: _weightLabel,
             isActive: weightMin != null || weightMax != null,
             iconAsset: 'dumbbell',
-            onTap: (weightMin != null || weightMax != null) ? onWeightClear : onWeightTap,
+            onTap: (weightMin != null || weightMax != null)
+                ? onWeightClear
+                : onWeightTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
@@ -2537,8 +2669,7 @@ class _PresetOption extends StatelessWidget {
                 ),
               ),
             ),
-            if (isSelected)
-              DonyIcon('check', size: 18, color: cs.primary),
+            if (isSelected) DonyIcon('check', size: 18, color: cs.primary),
           ],
         ),
       ),

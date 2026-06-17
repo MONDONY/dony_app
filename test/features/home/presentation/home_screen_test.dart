@@ -278,6 +278,23 @@ void main() {
 
       expect(find.byType(DraggableScrollableSheet), findsOneWidget);
       expect(find.byType(NearMeCarousel), findsNothing);
+      // Indication de drag (peek) avec le compteur d'éléments.
+      expect(find.textContaining('Tirer pour voir'), findsOneWidget);
+    });
+
+    testWidgets('tap sur l\'indication peek agrandit le sheet en plein écran', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.textContaining('Tirer pour voir'));
+      await tester.pumpAndSettle();
+
+      // En plein écran, l'indication bascule sur « voir la carte ».
+      expect(find.textContaining('voir la carte'), findsOneWidget);
     });
 
     testWidgets(

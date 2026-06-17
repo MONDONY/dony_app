@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:dony/app/widgets/dony_nav_item.dart';
+import 'package:dony/app/widgets/dony_nav_orb.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
@@ -138,6 +139,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             }
           }
           return Scaffold(
+            // Le contenu passe DERRIÈRE la bottom nav flottante (île
+            // glass) : pas de bande opaque qui masque la liste. Scaffold
+            // injecte la hauteur de la nav dans MediaQuery.padding.bottom
+            // du body, donc les écrans en SafeArea réservent l'espace.
+            extendBody: true,
             body: Column(
               children: [
                 ?banner,
@@ -155,6 +161,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   }
 }
 
+/// Bottom nav « île flottante » : barre arrondie détachée du bord, en glass
+/// (BackdropFilter), avec une pastille pleine sur l'onglet actif et un orb
+/// central glossy (onglet Suivi / scan QR) en relief. Theme-aware : couleurs et
+/// translucidité dérivées du [ColorScheme] / brightness courants.
 class _DonyBottomNav extends StatelessWidget {
   const _DonyBottomNav({required this.currentIndex, required this.onTap});
 
@@ -163,7 +173,16 @@ class _DonyBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    final islandBg = cs.surface.withValues(alpha: isDark ? 0.82 : 0.74);
+    final islandBorder = isDark
+        ? Colors.white.withValues(alpha: 0.09)
+        : Colors.white.withValues(alpha: 0.65);
+
     return BlocBuilder<AuthBloc, AuthState>(
       buildWhen: (p, c) =>
           (p is AuthAuthenticated) != (c is AuthAuthenticated) ||
@@ -179,115 +198,147 @@ class _DonyBottomNav extends StatelessWidget {
 
         return BlocBuilder<ActiveRoleCubit, ActiveRole>(
           builder: (context, activeRole) {
-            final isTraveler = activeRole == ActiveRole.traveler;
-
-            // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
-            // dans MatchingManagementScreen — Phase 2)
+            // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au
+            // profil dans MatchingManagementScreen — Phase 2)
             const tab1Label = 'Activités';
             const tab1IconAsset = 'zap';
 
-            // Tab 2 — Suivi (libellé + icône figés ; contenu adapté au profil
-            // dans SuiviScreen — voir spec Phase 3). Icône « cible/radar » =
-            // sens suivi/tracking neutre (ni scan ni colis).
-            const tab2IconAsset = 'target';
-
-            return ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xB8FFFFFF),
-                    border: Border(
-                      top: BorderSide(color: Color(0x99FFFFFF), width: 1),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: bottomPadding),
-                    child: SizedBox(
-                      height: 68,
-                      child: Row(
-                        children: [
-                          // 0 — Accueil
-                          Expanded(
-                            child: DonyNavItem(
-                              iconAsset: 'house',
-                              label: 'Accueil',
-                              index: 0,
-                              currentIndex: currentIndex,
-                              onTap: () => onTap(0),
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                14,
+                16,
+                14,
+                bottomPadding > 0 ? bottomPadding : 14,
+              ),
+              child: SizedBox(
+                height: 76,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Barre île (glass) alignée en bas
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(34),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.50)
+                                  : DonyColors.ink800.withValues(alpha: 0.16),
+                              blurRadius: 24,
+                              offset: const Offset(0, 12),
+                              spreadRadius: -6,
                             ),
-                          ),
-                          // 1 — Envoyer (sender) | Trajets (traveler)
-                          Expanded(
-                            child: DonyNavItem(
-                              iconAsset: tab1IconAsset,
-                              label: tab1Label,
-                              index: 1,
-                              currentIndex: currentIndex,
-                              onTap: () => onTap(1),
-                            ),
-                          ),
-                          // 2 — Suivi (toujours in-shell ; SuiviScreen adapte le contenu au profil)
-                          Expanded(
-                            child: DonyNavItem(
-                              iconAsset: tab2IconAsset,
-                              label: 'Suivi',
-                              index: 2,
-                              currentIndex: currentIndex,
-                              onTap: () => onTap(2),
-                            ),
-                          ),
-                          // 3 — Messages
-                          Expanded(
-                            child: Builder(
-                              builder: (context) {
-                                final uid =
-                                    FirebaseAuth.instance.currentUser?.uid;
-                                final messagesItem = DonyNavItem(
-                                  iconAsset: 'message-circle',
-                                  label: 'Messages',
-                                  index: 3,
-                                  currentIndex: currentIndex,
-                                  onTap: () => onTap(3),
-                                );
-                                if (uid == null || uid.isEmpty) {
-                                  // Pendant le sign-out : pas de stream Firestore (path vide invalide).
-                                  return messagesItem;
-                                }
-                                return StreamBuilder<int>(
-                                  stream: getIt<FirestoreChatRepository>()
-                                      .totalUnreadStream(uid),
-                                  builder: (context, snapshot) {
-                                    return DonyNavItem(
-                                      iconAsset: 'message-circle',
-                                      label: 'Messages',
-                                      index: 3,
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(34),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+                            child: Container(
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: islandBg,
+                                borderRadius: BorderRadius.circular(34),
+                                border: Border.all(color: islandBorder),
+                              ),
+                              child: Row(
+                                children: [
+                                  // 0 — Accueil
+                                  Expanded(
+                                    child: DonyNavItem(
+                                      iconAsset: 'house',
+                                      label: 'Accueil',
+                                      index: 0,
                                       currentIndex: currentIndex,
-                                      onTap: () => onTap(3),
-                                      badgeCount: snapshot.data ?? 0,
-                                    );
-                                  },
-                                );
-                              },
+                                      onTap: () => onTap(0),
+                                    ),
+                                  ),
+                                  // 1 — Activités
+                                  Expanded(
+                                    child: DonyNavItem(
+                                      iconAsset: tab1IconAsset,
+                                      label: tab1Label,
+                                      index: 1,
+                                      currentIndex: currentIndex,
+                                      onTap: () => onTap(1),
+                                    ),
+                                  ),
+                                  // 2 — Suivi : remplacé par l'orb central (overlay)
+                                  const Expanded(child: SizedBox.shrink()),
+                                  // 3 — Messages
+                                  Expanded(
+                                    child: Builder(
+                                      builder: (context) {
+                                        final uid = FirebaseAuth
+                                            .instance
+                                            .currentUser
+                                            ?.uid;
+                                        if (uid == null || uid.isEmpty) {
+                                          // Pendant le sign-out : pas de stream
+                                          // Firestore (path vide invalide).
+                                          return DonyNavItem(
+                                            iconAsset: 'message-circle',
+                                            label: 'Messages',
+                                            index: 3,
+                                            currentIndex: currentIndex,
+                                            onTap: () => onTap(3),
+                                          );
+                                        }
+                                        return StreamBuilder<int>(
+                                          stream:
+                                              getIt<FirestoreChatRepository>()
+                                                  .totalUnreadStream(uid),
+                                          builder: (context, snapshot) {
+                                            return DonyNavItem(
+                                              iconAsset: 'message-circle',
+                                              label: 'Messages',
+                                              index: 3,
+                                              currentIndex: currentIndex,
+                                              onTap: () => onTap(3),
+                                              badgeCount: snapshot.data ?? 0,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  // 4 — Moi (photo de profil style Facebook)
+                                  Expanded(
+                                    child: DonyNavItem(
+                                      iconAsset: 'user',
+                                      label: 'Moi',
+                                      index: 4,
+                                      currentIndex: currentIndex,
+                                      onTap: () => onTap(4),
+                                      isPro: isProAccount,
+                                      avatarUrl: authUser?.avatarUrl,
+                                      avatarName: authUser?.displayName,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          // 4 — Moi (photo de profil style Facebook)
-                          Expanded(
-                            child: DonyNavItem(
-                              iconAsset: 'user',
-                              label: 'Moi',
-                              index: 4,
-                              currentIndex: currentIndex,
-                              onTap: () => onTap(4),
-                              isPro: isProAccount,
-                              avatarUrl: authUser?.avatarUrl,
-                              avatarName: authUser?.displayName,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    // Orb central (onglet Suivi / scan QR) en relief
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 12,
+                      child: Center(
+                        child: DonyNavOrb(
+                          active: currentIndex == 2,
+                          onTap: () => onTap(2),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
