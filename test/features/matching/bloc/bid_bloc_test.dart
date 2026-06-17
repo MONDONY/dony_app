@@ -68,6 +68,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
             )).thenAnswer((_) async => checkoutResponse);
         return buildBloc();
       },
@@ -98,6 +99,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
               gridItems: any(named: 'gridItems'),
             )).thenAnswer((_) async => checkoutResponse);
         return buildBloc();
@@ -131,6 +133,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
             )).thenAnswer((_) async => checkoutResponse);
         return buildBloc();
       },
@@ -157,6 +160,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/checkout'),
           error: const ValidationException('Valeur maximum : 500 €'),
@@ -195,6 +199,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
             )).thenThrow(Exception('Network error'));
         return buildBloc();
       },
@@ -225,6 +230,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
             )).thenAnswer((_) async => buildBid());
         return buildBloc();
       },
@@ -254,6 +260,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids'),
           error: const ValidationException('Valeur maximum : 500 €'),
@@ -291,6 +298,7 @@ void main() {
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
               recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
@@ -304,6 +312,46 @@ void main() {
         recipientPhone: '+221',
       )),
       expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'photoKeys forwarded → repo.createBid reçoit photoKeys',
+      build: () {
+        when(() => mockRepo.createBid(
+              announcementId: any(named: 'announcementId'),
+              weightKg: any(named: 'weightKg'),
+              declaredValueEur: any(named: 'declaredValueEur'),
+              description: any(named: 'description'),
+              contentCategory: any(named: 'contentCategory'),
+              recipientName: any(named: 'recipientName'),
+              recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: any(named: 'photoKeys'),
+            )).thenAnswer((_) async => buildBid());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidCreateRequested(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Aminata Diallo',
+        recipientPhone: '+221701234567',
+        photoKeys: ['bids/s/1.jpg'],
+      )),
+      expect: () => [isA<BidLoading>(), isA<BidCreated>()],
+      verify: (_) {
+        verify(() => mockRepo.createBid(
+              announcementId: any(named: 'announcementId'),
+              weightKg: any(named: 'weightKg'),
+              declaredValueEur: any(named: 'declaredValueEur'),
+              description: any(named: 'description'),
+              contentCategory: any(named: 'contentCategory'),
+              recipientName: any(named: 'recipientName'),
+              recipientPhone: any(named: 'recipientPhone'),
+              photoKeys: ['bids/s/1.jpg'],
+            )).called(1);
+      },
     );
   });
 
