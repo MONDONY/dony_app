@@ -10,10 +10,12 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -63,6 +65,7 @@ class _CollectedFormData {
     required this.recipientPhone,
     this.gridItems,
     this.promoCode,
+    this.photoKeys,
   });
   final double weightKg;
   final double declaredValueEur;
@@ -72,6 +75,7 @@ class _CollectedFormData {
   final String recipientPhone;
   final List<Map<String, dynamic>>? gridItems;
   final String? promoCode;
+  final List<String>? photoKeys;
 }
 
 const _mmCountries = {
@@ -103,6 +107,7 @@ class CreateBidBottomSheet {
 
     final bidBloc = getIt<BidBloc>();
     final paymentBloc = getIt<PaymentBloc>();
+    final photosCubit = getIt<BidPhotosCubit>();
 
     return DonyBottomSheet.show(
       context,
@@ -111,6 +116,7 @@ class CreateBidBottomSheet {
         providers: [
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<PaymentBloc>.value(value: paymentBloc),
+          BlocProvider<BidPhotosCubit>.value(value: photosCubit),
           BlocProvider<WalletBloc>(
             create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
           ),
@@ -145,6 +151,7 @@ class CreateBidBottomSheet {
       btnConfigNotifier.dispose();
       bidBloc.close();
       paymentBloc.close();
+      photosCubit.close();
       // walletBloc.close() — géré automatiquement par BlocProvider
     });
   }
@@ -388,6 +395,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       recipientPhone: _recipientPhoneCtrl.text.trim(),
       gridItems: _selectedGridItems(),
       promoCode: promoCode,
+      photoKeys: context.read<BidPhotosCubit>().readyKeys,
     );
 
     // If only Stripe is available, skip the picker and go straight to checkout.
@@ -430,6 +438,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         countryCode: _mmCountryNotifier.value,
         promoCode: data.promoCode,
         gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
       ));
     } else if (method == BidPaymentMethod.cash) {
       widget.bidBloc.add(BidCreateRequested(
@@ -443,6 +452,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         paymentMethod: BidPaymentMethod.cash,
         promoCode: data.promoCode,
         gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
       ));
     } else {
       widget.bidBloc.add(BidCheckoutRequested(
@@ -454,6 +464,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         recipientName: data.recipientName,
         recipientPhone: data.recipientPhone,
         gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
       ));
     }
   }
@@ -764,6 +775,12 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                       ))
                   .toList(),
             ).animate().fadeIn(delay: 60.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Photos du colis ──────────────────────────────────────────────
+            const _SectionLabel(label: 'PHOTOS DU COLIS (OPTIONNEL)'),
+            const SizedBox(height: DonySpacing.md),
+            const PhotoSection(),
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Description ─────────────────────────────────────────────────

@@ -8,6 +8,8 @@ import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
+import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -36,6 +38,9 @@ class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
 
 class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
+
+class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
+    implements BidPhotosCubit {}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -348,6 +353,7 @@ void main() {
     late _MockBidBloc mockBidBloc;
     late _MockPaymentBloc mockPaymentBloc;
     late _MockWalletBloc mockWalletBloc;
+    late _MockBidPhotosCubit mockPhotosCubit;
 
     setUp(() {
       GetIt.I.reset();
@@ -372,10 +378,18 @@ void main() {
           .thenAnswer((_) => const Stream.empty());
       when(() => mockWalletBloc.state).thenReturn(WalletInitial());
 
+      mockPhotosCubit = _MockBidPhotosCubit();
+      when(() => mockPhotosCubit.stream)
+          .thenAnswer((_) => const Stream.empty());
+      when(() => mockPhotosCubit.state).thenReturn(const <BidPhotoUpload>[]);
+      when(() => mockPhotosCubit.close()).thenAnswer((_) async {});
+      when(() => mockPhotosCubit.readyKeys).thenReturn(const <String>[]);
+
       GetIt.I.registerFactory<KycBloc>(() => mockKycBloc);
       GetIt.I.registerFactory<BidBloc>(() => mockBidBloc);
       GetIt.I.registerFactory<PaymentBloc>(() => mockPaymentBloc);
       GetIt.I.registerFactory<WalletBloc>(() => mockWalletBloc);
+      GetIt.I.registerFactory<BidPhotosCubit>(() => mockPhotosCubit);
     });
 
     tearDown(() => GetIt.I.reset());

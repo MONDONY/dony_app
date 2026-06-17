@@ -6,6 +6,8 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
+import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -28,6 +30,9 @@ class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
 
 class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
+
+class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
+    implements BidPhotosCubit {}
 
 class _FakeBidEvent extends Fake implements BidEvent {}
 
@@ -72,6 +77,7 @@ void main() {
   late _MockBidBloc bidBloc;
   late _MockPaymentBloc paymentBloc;
   late _MockWalletBloc walletBloc;
+  late _MockBidPhotosCubit photosCubit;
   late StreamController<BidState> bidStream;
 
   setUpAll(() {
@@ -83,12 +89,15 @@ void main() {
     bidBloc = _MockBidBloc();
     paymentBloc = _MockPaymentBloc();
     walletBloc = _MockWalletBloc();
+    photosCubit = _MockBidPhotosCubit();
 
     whenListen(bidBloc, bidStream.stream, initialState: BidInitial());
     whenListen(paymentBloc, const Stream<PaymentState>.empty(),
         initialState: PaymentInitial());
     whenListen(walletBloc, const Stream<WalletState>.empty(),
         initialState: WalletInitial());
+    whenListen(photosCubit, const Stream<List<BidPhotoUpload>>.empty(),
+        initialState: const <BidPhotoUpload>[]);
 
     // Enregistrement dans getIt
     void _register<T extends Object>(T mock) {
@@ -99,6 +108,7 @@ void main() {
     _register<BidBloc>(bidBloc);
     _register<PaymentBloc>(paymentBloc);
     _register<WalletBloc>(walletBloc);
+    _register<BidPhotosCubit>(photosCubit);
   });
 
   tearDown(() async {
@@ -106,6 +116,7 @@ void main() {
     if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
     if (getIt.isRegistered<PaymentBloc>()) getIt.unregister<PaymentBloc>();
     if (getIt.isRegistered<WalletBloc>()) getIt.unregister<WalletBloc>();
+    if (getIt.isRegistered<BidPhotosCubit>()) getIt.unregister<BidPhotosCubit>();
   });
 
   /// App de test avec GoRouter (requis par create_bid_bottom_sheet pour
