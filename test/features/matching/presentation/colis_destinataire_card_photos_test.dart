@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
@@ -27,6 +28,8 @@ void main() {
     ));
     await tester.pump();
     expect(find.byType(ColisDestinataireCard), findsOneWidget);
+    // La galerie est réellement rendue (1 thumbnail = 1 CachedNetworkImage).
+    expect(find.byType(CachedNetworkImage), findsOneWidget);
   });
 
   testWidgets('no gallery when no photos', (tester) async {
@@ -39,5 +42,7 @@ void main() {
     ));
     await tester.pump();
     expect(find.byType(ColisDestinataireCard), findsOneWidget);
+    // Aucune galerie quand pas de photos.
+    expect(find.byType(CachedNetworkImage), findsNothing);
   });
 }
