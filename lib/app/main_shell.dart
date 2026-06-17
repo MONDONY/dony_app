@@ -139,6 +139,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             }
           }
           return Scaffold(
+            // Le contenu passe DERRIÈRE la bottom nav flottante (île
+            // glass) : pas de bande opaque qui masque la liste. Scaffold
+            // injecte la hauteur de la nav dans MediaQuery.padding.bottom
+            // du body, donc les écrans en SafeArea réservent l'espace.
+            extendBody: true,
             body: Column(
               children: [
                 ?banner,
