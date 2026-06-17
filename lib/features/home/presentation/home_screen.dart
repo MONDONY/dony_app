@@ -322,32 +322,43 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final text = down
         ? 'Tirer vers le bas pour voir la carte'
         : 'Tirer pour voir les $count résultat${count > 1 ? 's' : ''}';
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: DonySpacing.lg,
-        right: DonySpacing.lg,
-        bottom: DonySpacing.xs,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            down
-                ? Icons.keyboard_arrow_down_rounded
-                : Icons.keyboard_arrow_up_rounded,
-            size: 18,
-            color: cs.primary,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (!_sheetController.isAttached) return;
+        _sheetController.animateTo(
+          down ? 0.30 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: DonySpacing.lg,
+          right: DonySpacing.lg,
+          bottom: DonySpacing.xs,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              down
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.keyboard_arrow_up_rounded,
+              size: 18,
               color: cs.primary,
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: cs.primary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -697,8 +708,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   _dispatchPackageRequestSearch();
                   Navigator.of(ctx, rootNavigator: true).pop();
                 },
-                icon: DonyIcon('x',
-                    size: 16, color: Theme.of(ctx).colorScheme.primary),
+                icon: DonyIcon(
+                  'x',
+                  size: 16,
+                  color: Theme.of(ctx).colorScheme.primary,
+                ),
                 label: const Text('Effacer tous les filtres'),
               ),
           ],
@@ -885,7 +899,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       if (isTraveler) ...[
                                         _SmallChip(
                                           label: '📦 Colis',
-                                          isActive: _mapFocus == HomeMapFocus.parcels,
+                                          isActive:
+                                              _mapFocus == HomeMapFocus.parcels,
                                           onTap: () => _onFocusChanged(
                                             _mapFocus == HomeMapFocus.parcels
                                                 ? HomeMapFocus.all
@@ -895,7 +910,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         const SizedBox(width: DonySpacing.xs),
                                         _SmallChip(
                                           label: '✈️ Trajets',
-                                          isActive: _mapFocus == HomeMapFocus.trips,
+                                          isActive:
+                                              _mapFocus == HomeMapFocus.trips,
                                           onTap: () => _onFocusChanged(
                                             _mapFocus == HomeMapFocus.trips
                                                 ? HomeMapFocus.all
@@ -940,7 +956,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       _dispatchSearch();
                                     },
                                     onKiloProToggle: () {
-                                      setState(() => _kiloProOnly = !_kiloProOnly);
+                                      setState(
+                                        () => _kiloProOnly = !_kiloProOnly,
+                                      );
                                       _dispatchSearch();
                                     },
                                     onAllCorridorsToggle: () {
@@ -955,7 +973,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       if (isTraveler) ...[
                                         _SmallChip(
                                           label: '📦 Colis',
-                                          isActive: _mapFocus == HomeMapFocus.parcels,
+                                          isActive:
+                                              _mapFocus == HomeMapFocus.parcels,
                                           onTap: () => _onFocusChanged(
                                             _mapFocus == HomeMapFocus.parcels
                                                 ? HomeMapFocus.all
@@ -965,7 +984,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         const SizedBox(width: DonySpacing.xs),
                                         _SmallChip(
                                           label: '✈️ Trajets',
-                                          isActive: _mapFocus == HomeMapFocus.trips,
+                                          isActive:
+                                              _mapFocus == HomeMapFocus.trips,
                                           onTap: () => _onFocusChanged(
                                             _mapFocus == HomeMapFocus.trips
                                                 ? HomeMapFocus.all
@@ -987,7 +1007,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                           const Duration(days: 365),
                                         ),
                                         initialDateRange:
-                                            _prDateFrom != null && _prDateTo != null
+                                            _prDateFrom != null &&
+                                                _prDateTo != null
                                             ? DateTimeRange(
                                                 start: _prDateFrom!,
                                                 end: _prDateTo!,
@@ -1103,92 +1124,101 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               .clamp(384.0, 470.0),
                           child: showBothTypes
                               ? DefaultTabController(
-                                  length: 2,
-                                  child: Column(
-                                    children: [
-                                      TabBar(
-                                        tabs: [
-                                          Tab(
-                                            text:
-                                                '📦 ${prState.results.length} colis',
+                                      length: 2,
+                                      child: Column(
+                                        children: [
+                                          TabBar(
+                                            tabs: [
+                                              Tab(
+                                                text:
+                                                    '📦 ${prState.results.length} colis',
+                                              ),
+                                              Tab(
+                                                text:
+                                                    '✈️ ${announcements.length} trajets',
+                                              ),
+                                            ],
                                           ),
-                                          Tab(text: '✈️ ${announcements.length} trajets'),
+                                          Expanded(
+                                            child: TabBarView(
+                                              children: [
+                                                NearMePackageRequestCarousel(
+                                                  items: prState.results,
+                                                  userPosition:
+                                                      _userPosition != null
+                                                      ? (
+                                                          lat: _userPosition!
+                                                              .latitude,
+                                                          lng: _userPosition!
+                                                              .longitude,
+                                                        )
+                                                      : null,
+                                                  currentUserId: currentUserId,
+                                                  selectedRequestId:
+                                                      _selectedAnnouncementId,
+                                                  onCardChanged: (id) => setState(
+                                                    () =>
+                                                        _selectedAnnouncementId =
+                                                            id,
+                                                  ),
+                                                  onSeeAll: _openNearMeList,
+                                                  onTapCard: (it) =>
+                                                      PackageRequestPreviewBottomSheet.show(
+                                                        context,
+                                                        item: it,
+                                                        isOwnRequest:
+                                                            currentUserId !=
+                                                                null &&
+                                                            it.sender.id ==
+                                                                currentUserId,
+                                                      ),
+                                                  onMakeOffer: (it) =>
+                                                      currentUserId == null ||
+                                                          it.sender.id !=
+                                                              currentUserId
+                                                      ? PackageRequestPreviewBottomSheet.show(
+                                                          context,
+                                                          item: it,
+                                                        )
+                                                      : null,
+                                                ),
+                                                NearMeCarousel(
+                                                  announcements: announcements,
+                                                  userPosition:
+                                                      _userPosition != null
+                                                      ? (
+                                                          lat: _userPosition!
+                                                              .latitude,
+                                                          lng: _userPosition!
+                                                              .longitude,
+                                                        )
+                                                      : null,
+                                                  selectedAnnouncementId:
+                                                      _selectedAnnouncementId,
+                                                  onCardChanged: (id) => setState(
+                                                    () =>
+                                                        _selectedAnnouncementId =
+                                                            id,
+                                                  ),
+                                                  onSeeAll: _openNearMeList,
+                                                  onTapCard: (a) =>
+                                                      _onTravelerCardTap(
+                                                        context,
+                                                        a,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                      Expanded(
-                                        child: TabBarView(
-                                          children: [
-                                            NearMePackageRequestCarousel(
-                                              items: prState.results,
-                                              userPosition: _userPosition !=
-                                                      null
-                                                  ? (
-                                                      lat: _userPosition!
-                                                          .latitude,
-                                                      lng: _userPosition!
-                                                          .longitude,
-                                                    )
-                                                  : null,
-                                              currentUserId: currentUserId,
-                                              selectedRequestId:
-                                                  _selectedAnnouncementId,
-                                              onCardChanged: (id) => setState(
-                                                () => _selectedAnnouncementId =
-                                                    id,
-                                              ),
-                                              onSeeAll: _openNearMeList,
-                                              onTapCard: (it) =>
-                                                  PackageRequestPreviewBottomSheet.show(
-                                                    context,
-                                                    item: it,
-                                                    isOwnRequest:
-                                                        currentUserId != null &&
-                                                        it.sender.id ==
-                                                            currentUserId,
-                                                  ),
-                                              onMakeOffer: (it) =>
-                                                  currentUserId == null ||
-                                                      it.sender.id !=
-                                                          currentUserId
-                                                  ? PackageRequestPreviewBottomSheet.show(
-                                                      context,
-                                                      item: it,
-                                                    )
-                                                  : null,
-                                            ),
-                                            NearMeCarousel(
-                                              announcements: announcements,
-                                              userPosition: _userPosition !=
-                                                      null
-                                                  ? (
-                                                      lat: _userPosition!
-                                                          .latitude,
-                                                      lng: _userPosition!
-                                                          .longitude,
-                                                    )
-                                                  : null,
-                                              selectedAnnouncementId:
-                                                  _selectedAnnouncementId,
-                                              onCardChanged: (id) => setState(
-                                                () => _selectedAnnouncementId =
-                                                    id,
-                                              ),
-                                              onSeeAll: _openNearMeList,
-                                              onTapCard: (a) =>
-                                                  _onTravelerCardTap(
-                                                    context,
-                                                    a,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ).animate().fadeIn(duration: 250.ms).slideY(
-                                  begin: 0.1,
-                                  curve: Curves.easeOutCubic,
-                                )
+                                    )
+                                    .animate()
+                                    .fadeIn(duration: 250.ms)
+                                    .slideY(
+                                      begin: 0.1,
+                                      curve: Curves.easeOutCubic,
+                                    )
                               : showParcelControls
                               ? NearMePackageRequestCarousel(
                                       items: prState.results,
@@ -1547,15 +1577,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 if (!showParcelControls && _sheetSize > 0.20)
                   const SliverToBoxAdapter(child: _SenderHeroCard()),
                 if (showBothTypes)
-                  BlocBuilder<PackageRequestSearchBloc,
-                      PackageRequestSearchState>(
+                  BlocBuilder<
+                    PackageRequestSearchBloc,
+                    PackageRequestSearchState
+                  >(
                     builder: (ctx, prState) {
                       return BlocBuilder<BidBloc, BidState>(
                         buildWhen: (prev, curr) =>
                             curr is BidListLoaded || prev is BidListLoaded,
                         builder: (ctx, bidState) {
-                          final myActiveBids =
-                              bidState.activeBidsByAnnouncement();
+                          final myActiveBids = bidState
+                              .activeBidsByAnnouncement();
                           final parcels = prState.results;
                           final totalCount = count + parcels.length;
 
@@ -1573,8 +1605,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           }
 
                           // Interleave 1:1 — paires trip/parcel puis reste
-                          final minLen =
-                              count < parcels.length ? count : parcels.length;
+                          final minLen = count < parcels.length
+                              ? count
+                              : parcels.length;
                           final pairedCount = minLen * 2;
                           final tripsLonger = count >= parcels.length;
 
@@ -1585,13 +1618,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   DonySpacing.base,
                                   DonySpacing.sm,
                                   DonySpacing.base,
-                                  bottomPad + DonySpacing.huge + _kFloatingNavClearance,
+                                  bottomPad +
+                                      DonySpacing.huge +
+                                      _kFloatingNavClearance,
                                 ),
                                 sliver: SliverList.separated(
                                   itemCount: totalCount,
-                                  separatorBuilder: (_, _) => const SizedBox(
-                                    height: DonySpacing.md,
-                                  ),
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(height: DonySpacing.md),
                                   itemBuilder: (ctx, i) {
                                     final bool isTrip;
                                     final int itemIndex;
@@ -1606,23 +1640,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
                                     if (isTrip) {
                                       final a = announcements[itemIndex];
-                                      final authState =
-                                          context.read<AuthBloc>().state;
-                                      final uid =
-                                          authState is AuthAuthenticated
+                                      final authState = context
+                                          .read<AuthBloc>()
+                                          .state;
+                                      final uid = authState is AuthAuthenticated
                                           ? authState.user.id
                                           : null;
                                       final isOwn =
-                                          uid != null &&
-                                          a.travelerId == uid;
-                                      final existingBid =
-                                          myActiveBids[a.id];
+                                          uid != null && a.travelerId == uid;
+                                      final existingBid = myActiveBids[a.id];
                                       return TravelerCard(
                                         announcement: a,
                                         index: itemIndex,
                                         isOwnAnnouncement: isOwn,
-                                        existingBidStatus:
-                                            existingBid?.status,
+                                        existingBidStatus: existingBid?.status,
                                         onTap: isOwn
                                             ? null
                                             : existingBid != null
@@ -1734,7 +1765,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               DonySpacing.base,
                               DonySpacing.sm,
                               DonySpacing.base,
-                              bottomPad + DonySpacing.huge + _kFloatingNavClearance,
+                              bottomPad +
+                                  DonySpacing.huge +
+                                  _kFloatingNavClearance,
                             ),
                             sliver: SliverList.separated(
                               itemCount: prState.results.length,
@@ -2095,8 +2128,11 @@ class _NearMeRadiusPill extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: DonySpacing.xs),
-              DonyIcon('sliders-horizontal',
-                  size: 15, color: cs.onSurfaceVariant),
+              DonyIcon(
+                'sliders-horizontal',
+                size: 15,
+                color: cs.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -2208,7 +2244,9 @@ class _HomeFilterChipsRow extends StatelessWidget {
             label: _weightLabel,
             isActive: weightMin != null || weightMax != null,
             iconAsset: 'dumbbell',
-            onTap: (weightMin != null || weightMax != null) ? onWeightClear : onWeightTap,
+            onTap: (weightMin != null || weightMax != null)
+                ? onWeightClear
+                : onWeightTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
@@ -2643,8 +2681,7 @@ class _PresetOption extends StatelessWidget {
                 ),
               ),
             ),
-            if (isSelected)
-              DonyIcon('check', size: 18, color: cs.primary),
+            if (isSelected) DonyIcon('check', size: 18, color: cs.primary),
           ],
         ),
       ),
