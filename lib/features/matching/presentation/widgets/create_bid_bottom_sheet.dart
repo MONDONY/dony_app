@@ -2096,6 +2096,7 @@ class _AddCustomChip extends StatelessWidget {
         ],
       ),
     );
+    ctrl.dispose();
     if (value != null) onAdd(value);
   }
 
