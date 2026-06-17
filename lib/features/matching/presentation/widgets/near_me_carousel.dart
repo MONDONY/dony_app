@@ -22,7 +22,11 @@ String? buildDistanceBadge(
   if (pickup == null) return null;
 
   final distanceM = Geolocator.distanceBetween(
-      userPos.lat, userPos.lng, pickup.lat, pickup.lng);
+    userPos.lat,
+    userPos.lng,
+    pickup.lat,
+    pickup.lng,
+  );
   final distanceKm = (distanceM / 1000).round();
 
   final allMatches = RegExp(r'\b([A-Z]{3})\b').allMatches(pickup.label);
@@ -50,6 +54,7 @@ class NearMeCarousel extends StatefulWidget {
   final VoidCallback onSeeAll;
   final String? selectedAnnouncementId;
   final void Function(String id)? onCardChanged;
+
   /// Gestionnaire de tap custom. Si null, ouvre [showTravelerAnnouncementSheet].
   final void Function(AnnouncementModel)? onTapCard;
 
@@ -120,8 +125,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                       color: cs.primaryContainer,
                       shape: BoxShape.circle,
                     ),
-                    child: DonyIcon('navigation',
-                        color: cs.primary, size: 26),
+                    child: DonyIcon('navigation', color: cs.primary, size: 26),
                   );
                 },
               ),
@@ -135,7 +139,9 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
               Builder(
                 builder: (context) => Text(
                   "Essaie d'augmenter le rayon ou de changer de date.",
-                  style: tt.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  style: tt.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -158,47 +164,47 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
               final a = widget.announcements[i];
               final badge = buildDistanceBadge(a, widget.userPosition);
               final authState = context.read<AuthBloc>().state;
-              final currentUserId =
-                  authState is AuthAuthenticated ? authState.user.id : null;
+              final currentUserId = authState is AuthAuthenticated
+                  ? authState.user.id
+                  : null;
               final isOwn =
                   currentUserId != null && a.travelerId == currentUserId;
               return BlocBuilder<BidBloc, BidState>(
                 buildWhen: (prev, curr) =>
                     curr is BidListLoaded || prev is BidListLoaded,
                 builder: (context, bidState) {
-                  final existingBid =
-                      bidState.activeBidsByAnnouncement()[a.id];
+                  final existingBid = bidState.activeBidsByAnnouncement()[a.id];
                   return Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm),
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: TravelerCard(
-                      key: Key('near-me-card-${a.id}'),
-                      announcement: a,
-                      index: i,
-                      isOwnAnnouncement: isOwn,
-                      distanceBadge: badge,
-                      existingBidStatus: existingBid?.status,
-                      onTap: isOwn
-                          ? null
-                          : existingBid != null
-                              ? () => context.push(
-                                    '/bids/${existingBid.id}',
-                                    extra: existingBid,
-                                  )
-                              : () {
-                                  if (widget.onTapCard != null) {
-                                    widget.onTapCard!(a);
-                                  } else {
-                                    showTravelerAnnouncementSheet(
-                                      context,
-                                      announcement: a,
-                                      existingBidStatus: existingBid?.status,
-                                    );
-                                  }
-                                },
+                      horizontal: DonySpacing.sm,
                     ),
+                    child: SingleChildScrollView(
+                      child: TravelerCard(
+                        key: Key('near-me-card-${a.id}'),
+                        announcement: a,
+                        index: i,
+                        isOwnAnnouncement: isOwn,
+                        distanceBadge: badge,
+                        existingBidStatus: existingBid?.status,
+                        onTap: isOwn
+                            ? null
+                            : existingBid != null
+                            ? () => context.push(
+                                '/bids/${existingBid.id}',
+                                extra: existingBid,
+                              )
+                            : () {
+                                if (widget.onTapCard != null) {
+                                  widget.onTapCard!(a);
+                                } else {
+                                  showTravelerAnnouncementSheet(
+                                    context,
+                                    announcement: a,
+                                    existingBidStatus: existingBid?.status,
+                                  );
+                                }
+                              },
+                      ),
                     ),
                   );
                 },
@@ -208,7 +214,11 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
+            DonySpacing.lg,
+            DonySpacing.md,
+            DonySpacing.lg,
+            DonySpacing.md,
+          ),
           child: GestureDetector(
             onTap: widget.onSeeAll,
             child: Container(
@@ -218,15 +228,16 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
               decoration: BoxDecoration(
                 color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(DonyRadius.card),
-                border: Border.all(
-                    color: cs.primary.withValues(alpha: 0.3)),
+                border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 widget.announcements.length == 1
                     ? 'Voir l\'annonce'
                     : 'Voir les ${widget.announcements.length} annonces',
                 style: tt.labelLarge?.copyWith(
-                    color: cs.primary, fontWeight: FontWeight.w700),
+                  color: cs.primary,
+                  fontWeight: FontWeight.w700,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
