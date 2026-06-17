@@ -1,8 +1,9 @@
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_photo_upload.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_photo_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,10 +14,11 @@ void main() {
         home: Scaffold(body: child),
       );
 
-  group('defaultCompressForUpload', () {
-    test('compressor typedef accepts a function with the right signature', () {
-      // Verify the typedef is callable with a mock compressor — compilation
-      // check: the type system ensures the signature matches.
+  group('DonyMediaService compressor seam', () {
+    test('compressor function accepts a function with the right signature', () {
+      // Verify the compressor seam is callable with the correct signature —
+      // compilation check: the type system ensures the signature matches
+      // Future<XFile> Function(XFile).
       var callCount = 0;
 
       Future<XFile> mockCompressor(XFile input) async {
@@ -24,7 +26,10 @@ void main() {
         return input;
       }
 
-      expect(mockCompressor, isA<ImageCompressor>());
+      // DonyMediaService accepts `Future<XFile> Function(XFile)?` as compressor.
+      // Constructing with the function verifies the signature is compatible.
+      final svc = DonyMediaService(compressor: mockCompressor);
+      expect(svc, isA<DonyMediaService>());
       expect(callCount, 0);
     });
   });
@@ -125,7 +130,7 @@ void main() {
     });
 
     testWidgets(
-        'accepts custom compressor via constructor — widget renders correctly',
+        'accepts injected DonyMediaService with custom compressor — widget renders correctly',
         (tester) async {
       bool compressorCalled = false;
 
@@ -134,17 +139,21 @@ void main() {
         return input;
       }
 
+      // WizardPhotoUpload now accepts a DonyMediaService directly (the
+      // compressor is injected into DonyMediaService, not the widget).
+      final fakeService = DonyMediaService(compressor: trackingCompressor);
+
       await tester.pumpWidget(
         wrap(
           WizardPhotoUpload(
             photoFile: null,
             onPhotoPicked: (_) {},
-            compressor: trackingCompressor,
+            mediaService: fakeService,
           ),
         ),
       );
 
-      // Widget renders correctly with injected compressor
+      // Widget renders correctly with injected mediaService
       expect(find.text('Ajouter une photo (optionnel)'), findsOneWidget);
       // The compressor has not been called yet (no photo picked)
       expect(compressorCalled, isFalse);
