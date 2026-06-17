@@ -315,6 +315,29 @@ void main() {
       },
     );
 
+    testWidgets('2e tap sur le FAB désactive le filtre Près de moi', (
+      tester,
+    ) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
+      await tester.pump();
+
+      // 1er tap : active → carousel.
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+      expect(find.byType(NearMeCarousel), findsOneWidget);
+
+      // 2e tap : le FAB doit rester tappable (au-dessus du carousel) et
+      // désactiver → retour à la liste + carte.
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+      expect(find.byType(NearMeCarousel), findsNothing);
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+    });
+
     testWidgets('radius pill re-opens the slider without losing the filter', (
       tester,
     ) async {

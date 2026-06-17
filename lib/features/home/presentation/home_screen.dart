@@ -833,8 +833,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       onNearMeToggle: () => _isNearMeActive
                           ? _deactivateNearMe()
                           : _activateNearMe(),
-                      fabBottomPadding:
-                          MediaQuery.of(context).size.height * 0.45,
+                      // Quand « Près de moi » est actif, le carousel (min 384px)
+                      // recouvre le bas : on remonte le FAB juste au-dessus pour
+                      // qu'il reste tappable (2e tap = désactiver le filtre).
+                      fabBottomPadding: _isNearMeActive
+                          ? (MediaQuery.of(context).size.height * 0.40).clamp(
+                                  384.0,
+                                  470.0,
+                                ) +
+                                MediaQuery.of(context).padding.bottom +
+                                DonySpacing.base
+                          : MediaQuery.of(context).size.height * 0.45,
                       selectedAnnouncementId: _selectedAnnouncementId,
                       onAnnouncementSelected: (id) =>
                           setState(() => _selectedAnnouncementId = id),
