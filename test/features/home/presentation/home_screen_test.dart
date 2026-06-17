@@ -282,6 +282,8 @@ void main() {
 
       expect(find.byType(DraggableScrollableSheet), findsOneWidget);
       expect(find.byType(NearMeCarousel), findsNothing);
+      // Indication de drag (peek) avec le compteur d'éléments.
+      expect(find.textContaining('Tirer pour voir'), findsOneWidget);
     });
 
     testWidgets(

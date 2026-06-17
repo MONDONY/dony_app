@@ -316,6 +316,42 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// Indication de drag dans le header du sheet selon l'état : peek → « tirer
+  /// pour voir les N résultats », plein écran → « tirer pour voir la carte ».
+  Widget _pullHint(ColorScheme cs, {required bool down, required int count}) {
+    final text = down
+        ? 'Tirer vers le bas pour voir la carte'
+        : 'Tirer pour voir les $count résultat${count > 1 ? 's' : ''}';
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: DonySpacing.lg,
+        right: DonySpacing.lg,
+        bottom: DonySpacing.xs,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            down
+                ? Icons.keyboard_arrow_down_rounded
+                : Icons.keyboard_arrow_up_rounded,
+            size: 18,
+            color: cs.primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: cs.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     getIt<NavVisibilityNotifier>().show();
@@ -1411,6 +1447,31 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ),
             ),
           ),
+          if (_isMapHidden) ...[
+            _pullHint(cs, down: true, count: count),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                0,
+                DonySpacing.lg,
+                DonySpacing.sm,
+              ),
+              child: _CorridorBar(
+                key: const Key('corridor-bar-sheet'),
+                label: showParcelControls
+                    ? (_prDeparture != null
+                          ? '$_prDeparture → $_prArrival'
+                          : 'Tous les corridors')
+                    : (_allCorridors ? 'Tous les corridors' : _corridor.label),
+                activeFilterCount: showParcelControls
+                    ? _prActiveFilterCount
+                    : _activeFilterCount,
+                onTap: () => showParcelControls
+                    ? _showPrFilterSheet(ctx)
+                    : _showFilterSheet(ctx),
+              ),
+            ),
+          ],
           Padding(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
@@ -1469,6 +1530,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ],
             ),
           ),
+          if (!_isMapHidden) _pullHint(cs, down: false, count: count),
           Divider(height: 1, color: cs.outline),
           Expanded(
             child: CustomScrollView(
