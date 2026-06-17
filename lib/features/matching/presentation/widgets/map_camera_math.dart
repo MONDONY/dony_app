@@ -10,7 +10,8 @@ double distanceKm(LatLng a, LatLng b) {
   final dLng = rad(b.longitude - a.longitude);
   final lat1 = rad(a.latitude);
   final lat2 = rad(b.latitude);
-  final h = math.sin(dLat / 2) * math.sin(dLat / 2) +
+  final h =
+      math.sin(dLat / 2) * math.sin(dLat / 2) +
       math.cos(lat1) * math.cos(lat2) * math.sin(dLng / 2) * math.sin(dLng / 2);
   return 2 * earthR * math.asin(math.min(1.0, math.sqrt(h)));
 }
@@ -62,5 +63,22 @@ LatLngBounds? computeHybridBounds(
   return LatLngBounds(
     southwest: LatLng(minLat, minLng),
     northeast: LatLng(maxLat, maxLng),
+  );
+}
+
+/// Cadre carré d'environ [radiusKm] de rayon autour de [center].
+///
+/// Sert au cadrage initial de la carte : centrer sur l'utilisateur tout en
+/// montrant une large zone (≈ région / pays) au lieu d'un zoom serré.
+LatLngBounds boundsAround(LatLng center, double radiusKm) {
+  const kmPerDegLat = 111.0;
+  final latDelta = radiusKm / kmPerDegLat;
+  final cosLat = math.cos(center.latitude * math.pi / 180.0).abs();
+  final lngDelta = radiusKm / (kmPerDegLat * math.max(0.01, cosLat));
+  final swLat = (center.latitude - latDelta).clamp(-85.0, 85.0);
+  final neLat = (center.latitude + latDelta).clamp(-85.0, 85.0);
+  return LatLngBounds(
+    southwest: LatLng(swLat, center.longitude - lngDelta),
+    northeast: LatLng(neLat, center.longitude + lngDelta),
   );
 }

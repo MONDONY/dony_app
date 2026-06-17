@@ -42,4 +42,19 @@ void main() {
       expect(computeHybridBounds(paris, const [paris]), isNull);
     });
   });
+
+  group('boundsAround', () {
+    test('cadre carré centré sur le point, sw < ne', () {
+      final b = boundsAround(paris, 1000);
+      expect(b.contains(paris), isTrue);
+      expect(b.southwest.latitude, lessThan(b.northeast.latitude));
+      expect(b.southwest.longitude, lessThan(b.northeast.longitude));
+    });
+
+    test('rayon ~1000 km : inclut Lyon (~392 km), exclut Dakar (~4200 km)', () {
+      final b = boundsAround(paris, 1000);
+      expect(b.contains(lyon), isTrue);
+      expect(b.contains(dakar), isFalse);
+    });
+  });
 }

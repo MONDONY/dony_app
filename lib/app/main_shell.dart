@@ -250,8 +250,8 @@ class _DonyBottomNav extends StatelessWidget {
                                   // 0 — Accueil
                                   Expanded(
                                     child: DonyNavItem(
-                                      iconAsset: 'house',
-                                      label: 'Accueil',
+                                      iconAsset: 'search',
+                                      label: 'Rechercher',
                                       index: 0,
                                       currentIndex: currentIndex,
                                       onTap: () => onTap(0),

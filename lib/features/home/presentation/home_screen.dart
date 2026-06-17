@@ -108,7 +108,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   List<_CorridorOpt> _corridorOptions = List.of(_defaultCorridorOptions);
   _CorridorOpt _corridor = _defaultCorridorOptions.first;
 
-  _DatePreset _datePreset = _DatePreset.thisWeek;
+  _DatePreset _datePreset = _DatePreset.none;
   DateTime? _customDate;
   bool _kiloProOnly = false;
   bool _allCorridors = true;
@@ -165,7 +165,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (_kycVerifiedOnly) n++;
     if (_contentType != null) n++;
     if (_isNearMeActive) n++;
-    if (_datePreset != _DatePreset.thisWeek) n++;
+    if (_datePreset != _DatePreset.none) n++;
     if (_urgencyFilter != null) n++;
     return n;
   }
@@ -479,21 +479,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return;
     }
 
-    final positionFuture = Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
-    );
-
-    final radiusKm = await NearMeRadiusSheet.show(
-      context,
-      initialRadiusKm: _nearMeRadiusKm ?? 25,
-    );
-
-    if (radiusKm == null || !mounted) return;
-
+    // Toggle simple : on active directement avec le rayon par défaut (ou le
+    // dernier utilisé) sans ré-ouvrir le sélecteur. Le rayon se change ensuite
+    // via la pastille _NearMeRadiusPill ; un 2e tap sur le FAB désactive.
     setState(() => _isLocatingNearMe = true);
     final Position pos;
     try {
-      pos = await positionFuture;
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+        ),
+      );
     } catch (_) {
       if (mounted) {
         setState(() => _isLocatingNearMe = false);
@@ -510,7 +506,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     setState(() {
       _isLocatingNearMe = false;
       _isNearMeActive = true;
-      _nearMeRadiusKm = radiusKm;
+      _nearMeRadiusKm = _nearMeRadiusKm ?? 25;
       _userPosition = LatLng(pos.latitude, pos.longitude);
     });
     _dispatchForActiveRole();
@@ -837,8 +833,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       onNearMeToggle: () => _isNearMeActive
                           ? _deactivateNearMe()
                           : _activateNearMe(),
-                      fabBottomPadding:
-                          MediaQuery.of(context).size.height * 0.45,
+                      // Quand « Près de moi » est actif, le carousel (min 384px)
+                      // recouvre le bas : on remonte le FAB juste au-dessus pour
+                      // qu'il reste tappable (2e tap = désactiver le filtre).
+                      fabBottomPadding: _isNearMeActive
+                          ? (MediaQuery.of(context).size.height * 0.40).clamp(
+                                  384.0,
+                                  470.0,
+                                ) +
+                                MediaQuery.of(context).padding.bottom +
+                                DonySpacing.base
+                          : MediaQuery.of(context).size.height * 0.45,
                       selectedAnnouncementId: _selectedAnnouncementId,
                       onAnnouncementSelected: (id) =>
                           setState(() => _selectedAnnouncementId = id),
@@ -1247,7 +1252,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _kycVerifiedOnly = false;
       _contentType = null;
       _urgencyFilter = null;
-      _datePreset = _DatePreset.thisWeek;
+      _datePreset = _DatePreset.none;
     });
     _dispatchSearch();
   }
@@ -1562,8 +1567,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     hiveService: getIt<HiveService>(),
                   ),
                 ),
-                if (!showParcelControls && _sheetSize > 0.20)
-                  const SliverToBoxAdapter(child: _SenderHeroCard()),
                 if (showBothTypes)
                   BlocBuilder<
                     PackageRequestSearchBloc,
@@ -1747,7 +1750,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       }
                       return SliverMainAxisGroup(
                         slivers: [
-                          const SliverToBoxAdapter(child: _TrustBanner()),
                           SliverPadding(
                             padding: EdgeInsets.fromLTRB(
                               DonySpacing.base,
@@ -1818,7 +1820,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 else
                   SliverMainAxisGroup(
                     slivers: [
-                      const SliverToBoxAdapter(child: _TrustBanner()),
                       SliverPadding(
                         padding: EdgeInsets.fromLTRB(
                           DonySpacing.base,
@@ -3077,76 +3078,6 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
   }
 }
 
-// ── Hero card expéditeur — style B (Alan Warm) ────────────────────────────────
-
-class _SenderHeroCard extends StatelessWidget {
-  const _SenderHeroCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-          margin: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.sm,
-            DonySpacing.lg,
-            DonySpacing.xs,
-          ),
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [DonyColors.terra500, DonyColors.terra700],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.base,
-                    DonySpacing.base,
-                    DonySpacing.xs,
-                    DonySpacing.base,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Envoyez vers l\'Afrique',
-                        style: DonyTypography.caveat(
-                          fontSize: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.xs),
-                      Text(
-                        'Voyageurs vérifiés · Paiement sécurisé',
-                        style: tt.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const DonyMascotteAnimated(
-                type: DonyMascotteType.tenantColis,
-                size: DonyMascotteSize.sm,
-              ),
-            ],
-          ),
-        )
-        .animate()
-        .fadeIn(duration: 350.ms)
-        .slideY(begin: 0.06, curve: Curves.easeOutCubic);
-  }
-}
-
 // ── _PackageRequestFilterChipsRow ─────────────────────────────────────────────
 
 class _PackageRequestFilterChipsRow extends StatelessWidget {
@@ -3218,90 +3149,6 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── _TrustBanner ──────────────────────────────────────────────────────────────
-
-class _TrustBanner extends StatelessWidget {
-  const _TrustBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(
-        DonySpacing.base,
-        DonySpacing.xs,
-        DonySpacing.base,
-        DonySpacing.xs,
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.md,
-        vertical: DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _TrustPill(
-            iconAsset: 'shield-check',
-            label: 'Utilisateurs vérifiés',
-            cs: cs,
-            tt: tt,
-          ),
-          Container(
-            width: 1,
-            height: 18,
-            margin: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-            color: cs.primary.withValues(alpha: 0.25),
-          ),
-          _TrustPill(
-            iconAsset: 'lock',
-            label: 'Paiement sécurisé',
-            cs: cs,
-            tt: tt,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrustPill extends StatelessWidget {
-  const _TrustPill({
-    required this.iconAsset,
-    required this.label,
-    required this.cs,
-    required this.tt,
-  });
-
-  final String iconAsset;
-  final String label;
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DonyIcon(iconAsset, size: 14, color: cs.primary),
-        const SizedBox(width: DonySpacing.xs),
-        Text(
-          label,
-          style: tt.labelSmall?.copyWith(
-            color: cs.primary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 }
