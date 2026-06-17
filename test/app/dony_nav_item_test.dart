@@ -2,12 +2,21 @@ import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // Hôte minimal : DonyNavItem utilise Column(mainAxisSize.max) + Expanded,
-  // il lui faut donc une hauteur bornée (comme dans la vraie bottom nav).
+  // ColorScheme minimal calé sur les tokens dony — évite google_fonts (réseau)
+  // tout en garantissant cs.primary == DonyColors.primary pour les assertions.
+  const scheme = ColorScheme.light(
+    primary: DonyColors.primary,
+    onPrimary: Colors.white,
+    surface: DonyColors.surface,
+    onSurfaceVariant: DonyColors.textSubtle,
+  );
+
   Widget host(Widget child) => MaterialApp(
+    theme: ThemeData(useMaterial3: true, colorScheme: scheme),
     home: Scaffold(
       body: Center(child: SizedBox(height: 80, width: 120, child: child)),
     ),
@@ -34,13 +43,21 @@ void main() {
     avatarName: avatarName,
   );
 
-  // Récupère la décoration de l'anneau (AnimatedContainer ancêtre du DonyAvatar).
+  // Décoration de l'anneau (AnimatedContainer ancêtre du DonyAvatar).
   BoxDecoration ringDecoration(WidgetTester tester) {
     final container = tester.widget<AnimatedContainer>(
       find.ancestor(
         of: find.byType(DonyAvatar),
         matching: find.byType(AnimatedContainer),
       ),
+    );
+    return container.decoration! as BoxDecoration;
+  }
+
+  // Décoration de la pastille (l'unique AnimatedContainer en mode icône).
+  BoxDecoration pillDecoration(WidgetTester tester) {
+    final container = tester.widget<AnimatedContainer>(
+      find.byType(AnimatedContainer),
     );
     return container.decoration! as BoxDecoration;
   }
@@ -54,10 +71,11 @@ void main() {
       expect(find.byType(DonyAvatar), findsOneWidget);
       expect(find.byIcon(Icons.person_rounded), findsNothing);
       expect(find.byIcon(Icons.person_outline_rounded), findsNothing);
-      expect(find.text('Moi'), findsOneWidget);
+      // Le libellé n'est plus rendu visuellement (exposé via Semantics).
+      expect(find.text('Moi'), findsNothing);
     });
 
-    testWidgets('anneau bleu quand actif', (tester) async {
+    testWidgets('anneau primary quand actif', (tester) async {
       await tester.pumpWidget(
         host(buildItem(index: 4, currentIndex: 4, avatarName: 'Abou Diakite')),
       );
@@ -88,26 +106,50 @@ void main() {
         ),
       );
 
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+        findsNothing,
+      );
     });
   });
 
-  group('DonyNavItem — mode icône (avatarName null)', () {
-    testWidgets('icône outlined quand inactif', (tester) async {
+  group('DonyNavItem — mode icône (pastille pleine)', () {
+    testWidgets('pastille transparente quand inactif', (tester) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
+      await tester.pumpAndSettle();
+
+      expect(pillDecoration(tester).color, Colors.transparent);
+    });
+
+    testWidgets('pastille primary pleine quand actif', (tester) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+      await tester.pumpAndSettle();
+
+      expect(pillDecoration(tester).color, DonyColors.primary);
+    });
+
+    testWidgets('icône outlined + couleur subtle quand inactif', (
+      tester,
+    ) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.person_outline_rounded), findsOneWidget);
       expect(find.byIcon(Icons.person_rounded), findsNothing);
-      expect(find.byType(DonyAvatar), findsNothing);
+      final icon = tester.widget<Icon>(
+        find.byIcon(Icons.person_outline_rounded),
+      );
+      expect(icon.color, DonyColors.textSubtle);
     });
 
-    testWidgets('icône filled quand actif', (tester) async {
+    testWidgets('icône filled + couleur blanche quand actif', (tester) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.person_rounded), findsOneWidget);
       expect(find.byIcon(Icons.person_outline_rounded), findsNothing);
+      final icon = tester.widget<Icon>(find.byIcon(Icons.person_rounded));
+      expect(icon.color, Colors.white);
     });
 
     testWidgets('étoile PRO affichée en mode icône', (tester) async {
@@ -115,13 +157,19 @@ void main() {
         host(buildItem(index: 4, currentIndex: 4, isPro: true)),
       );
 
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('pas d\'étoile PRO si isPro=false', (tester) async {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
 
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+        findsNothing,
+      );
     });
   });
 
@@ -149,7 +197,17 @@ void main() {
     });
   });
 
-  group('DonyNavItem — interaction', () {
+  group('DonyNavItem — accessibilité & interaction', () {
+    testWidgets('expose le libellé + état sélectionné via Semantics', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+
+      final node = tester.getSemantics(find.bySemanticsLabel('Moi'));
+      expect(node.hasFlag(SemanticsFlag.isButton), isTrue);
+      expect(node.hasFlag(SemanticsFlag.isSelected), isTrue);
+    });
+
     testWidgets('onTap déclenché au tap', (tester) async {
       var tapped = false;
       await tester.pumpWidget(
