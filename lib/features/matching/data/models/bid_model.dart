@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'bid_model.g.dart';
@@ -127,6 +128,10 @@ class BidModel {
   /// URL de l'avatar du voyageur (nullable, fourni par le backend).
   final String? travelerAvatarUrl;
 
+  /// Photos du colis (présignées, ACTIVE). Vide si aucune ou après passage DELETING serveur.
+  @JsonKey(defaultValue: <BidPhoto>[])
+  final List<BidPhoto> photos;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -188,6 +193,7 @@ class BidModel {
     this.promoCodeId,
     this.senderAvatarUrl,
     this.travelerAvatarUrl,
+    this.photos = const [],
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>
