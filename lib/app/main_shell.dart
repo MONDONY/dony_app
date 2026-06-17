@@ -5,7 +5,6 @@ import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/app/widgets/dony_nav_orb.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
-import 'package:dony/core/di/nav_visibility_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -45,9 +44,6 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   void _onTap(int index) {
     HapticFeedback.selectionClick();
-    // Toute (ré)sélection d'onglet réaffiche la bottom nav (au cas où un
-    // sheet plein écran l'avait masquée).
-    getIt<NavVisibilityNotifier>().show();
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
     }
@@ -154,22 +150,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
                 Expanded(child: widget.navigationShell),
               ],
             ),
-            bottomNavigationBar: ValueListenableBuilder<bool>(
-              valueListenable: getIt<NavVisibilityNotifier>(),
-              builder: (context, visible, child) => AnimatedSlide(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                offset: visible ? Offset.zero : const Offset(0, 1.4),
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 180),
-                  opacity: visible ? 1 : 0,
-                  child: IgnorePointer(ignoring: !visible, child: child),
-                ),
-              ),
-              child: _DonyBottomNav(
-                currentIndex: widget.navigationShell.currentIndex,
-                onTap: _onTap,
-              ),
+            bottomNavigationBar: _DonyBottomNav(
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: _onTap,
             ),
           );
         },
@@ -291,7 +274,9 @@ class _DonyBottomNav extends StatelessWidget {
                                     child: Builder(
                                       builder: (context) {
                                         final uid = FirebaseAuth
-                                            .instance.currentUser?.uid;
+                                            .instance
+                                            .currentUser
+                                            ?.uid;
                                         if (uid == null || uid.isEmpty) {
                                           // Pendant le sign-out : pas de stream
                                           // Firestore (path vide invalide).

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/di/nav_visibility_notifier.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -278,16 +277,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!_sheetController.isAttached) return;
     final newSize = _sheetController.size;
     final wasHidden = _isMapHidden;
-    final wasNavVisible = _sheetSize <= 0.45;
     _sheetSize = newSize;
-    // Masque la bottom nav flottante dès que le sheet dépasse le peek : la
-    // liste passe au premier plan sans que l'île intercepte le geste.
-    final navVisible = newSize <= 0.45;
-    getIt<NavVisibilityNotifier>().value = navVisible;
-    // Rebuild quand l'état plein écran OU nav change (pas à chaque frame).
-    if (wasHidden != _isMapHidden || wasNavVisible != navVisible) {
-      setState(() {});
-    }
+    // Rebuild quand l'état plein écran change (swap indications / filtres).
+    if (wasHidden != _isMapHidden) setState(() {});
   }
 
   /// Drag manuel de la poignée → pilote directement la taille du sheet (un
@@ -365,7 +357,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   @override
   void dispose() {
-    getIt<NavVisibilityNotifier>().show();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
     _sheetController.dispose();
