@@ -343,6 +343,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `bid_photo_added` | BidPhotosCubit.add() — photo de colis uploadée à la création de l'offre |
 | `bid_photo_removed` | BidPhotosCubit.remove() — photo retirée avant soumission |
 | `bid_photos_viewed` | BidPhotoViewerModal.initState — ouverture de la visionneuse (propriété `photo_count`) |
+| `pending_requests_opened` | PendingBidsScreen — ouverture de l'écran « À traiter » depuis le bouton de la liste des demandes (propriété `count`) |
 | `traveler_call_initiated` | Tap 📞 sur la carte voyageur (propriété `status`) |
 | `tracking_link_shared` | Partage de l'URL de suivi (app bar ou carte) |
 | `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriété `route`) |

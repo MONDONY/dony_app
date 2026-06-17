@@ -32,6 +32,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/envoye
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
+import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
@@ -613,6 +614,15 @@ final appRouter = GoRouter(
           announcementId: id,
           initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
         );
+      },
+    ),
+
+    // ── Demandes « À traiter » d'une annonce (hors shell — plein écran) ───
+    GoRoute(
+      path: '/announcements/:id/bids/pending',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return PendingBidsScreen(announcementId: id);
       },
     ),
 

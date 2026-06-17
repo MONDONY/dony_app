@@ -101,6 +101,9 @@ abstract final class AnalyticsEvents {
   static const annoncesTripsOpened = 'annonces_trips_opened';
   static const annoncesSendOpened  = 'annonces_send_opened';
 
+  // Demandes voyageur
+  static const pendingRequestsOpened = 'pending_requests_opened';
+
   // Détail d'envoi (vue expéditeur)
   static const bidQrSheetOpened       = 'bid_qr_sheet_opened';
   static const bidQrDownloaded        = 'bid_qr_downloaded';
