@@ -116,104 +116,75 @@ class TravelerPendingBar extends StatelessWidget {
   }
 
   void _showRejectDialog(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final reasonCtrl = TextEditingController();
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(ctx).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(DonyRadius.xl),
+    // DonyBottomSheet (useRootNavigator: true + contenu scrollable inset-aware) :
+    // un showModalBottomSheet brut avec un TextField autofocus gérait mal le
+    // clavier et figeait la feuille sur device réel. Bouton dans stickyBottom
+    // (règle CLAUDE.md). Le refus est dispatché sur le BidBloc du détail via le
+    // [context] capturé (la feuille root-navigator n'a pas le provider).
+    final reasonNotifier = ValueNotifier<String>('');
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Refuser la demande',
+      subtitle: 'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
+      isDanger: true,
+      stickyBottom: DonyButton(
+        label: 'Confirmer le refus',
+        variant: DonyButtonVariant.destructive,
+        onPressed: () {
+          final reason = reasonNotifier.value.trim();
+          context.pop();
+          context.read<BidBloc>().add(
+            BidRejectRequested(
+              bid.id,
+              reason: reason.isEmpty ? null : reason,
             ),
-          ),
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.base,
-            DonySpacing.base,
-            DonySpacing.base,
-            DonySpacing.xl,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outline,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.base),
-              Text('Refuser la demande', style: tt.headlineMedium),
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              TextField(
-                controller: reasonCtrl,
-                maxLines: 3,
-                autofocus: true,
-                scrollPadding: const EdgeInsets.only(bottom: 120),
-                decoration: InputDecoration(
-                  hintText: 'Raison (optionnelle)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.base),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => ctx.pop(),
-                    child: Text(
-                      'Annuler',
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  FilledButton(
-                    onPressed: () {
-                      ctx.pop();
-                      context.read<BidBloc>().add(
-                        BidRejectRequested(
-                          bid.id,
-                          reason: reasonCtrl.text.trim().isEmpty
-                              ? null
-                              : reasonCtrl.text.trim(),
-                        ),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: cs.error,
-                      foregroundColor: DonyColors.white,
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Confirmer le refus',
-                      style: tt.labelLarge?.copyWith(color: DonyColors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          );
+        },
+      ),
+      child: _RejectReasonField(onChanged: (v) => reasonNotifier.value = v),
+    ).whenComplete(reasonNotifier.dispose);
+  }
+}
+
+// ── Reject reason field ───────────────────────────────────────────────────────
+
+/// Champ de saisie de la raison de refus. StatefulWidget pour posséder le
+/// `TextEditingController` (disposé proprement à son retrait) au lieu d'un
+/// controller créé dans la closure du sheet, qui levait
+/// « used after being disposed » pendant l'animation de fermeture.
+class _RejectReasonField extends StatefulWidget {
+  const _RejectReasonField({required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_RejectReasonField> createState() => _RejectReasonFieldState();
+}
+
+class _RejectReasonFieldState extends State<_RejectReasonField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return TextField(
+      controller: _controller,
+      maxLines: 3,
+      autofocus: true,
+      onChanged: widget.onChanged,
+      decoration: InputDecoration(
+        hintText: 'Raison (optionnelle)',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
+        hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
     );
   }
