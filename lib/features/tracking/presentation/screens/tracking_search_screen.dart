@@ -67,7 +67,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
               h,
               DonySpacing.xxl,
               h,
-              DonySpacing.huge,
+              100 + MediaQuery.paddingOf(context).bottom,
             ),
             child: DonyLayout.constrained(
               context,
