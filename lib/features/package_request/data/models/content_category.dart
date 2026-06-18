@@ -9,8 +9,18 @@ import 'package:flutter/material.dart';
 /// (immutable — le back-end attend ces strings exactes).
 enum ContentCategory {
   vetements('VETEMENTS', 'Vêtements', '👕', Icons.checkroom_rounded),
-  medicaments('MEDICAMENTS', 'Médicaments', '💊', Icons.medical_services_rounded),
-  alimentation('ALIMENTATION', 'Alim. sèche', '🍞', Icons.bakery_dining_rounded),
+  medicaments(
+    'MEDICAMENTS',
+    'Médicaments',
+    '💊',
+    Icons.medical_services_rounded,
+  ),
+  alimentation(
+    'ALIMENTATION',
+    'Alim. sèche',
+    '🍞',
+    Icons.bakery_dining_rounded,
+  ),
   hifi('HIFI', 'Hi-fi', '🎧', Icons.headphones_rounded),
   documents('DOCUMENTS', 'Documents', '📄', Icons.description_rounded),
   telephone('TELEPHONE', 'Téléphone', '📱', Icons.smartphone_rounded),
@@ -42,6 +52,33 @@ enum ContentCategory {
       if (c.wireName == s) return c;
     }
     return ContentCategory.autre;
+  }
+
+  /// Libellés prédéfinis proposés dans le wizard (hors « Autre »).
+  static List<String> get predefinedLabels =>
+      values.where((c) => c != autre).map((c) => c.label).toList();
+
+  /// Découpe la chaîne wire (libellés joints par virgule) en liste propre.
+  static List<String> splitWire(String? raw) => (raw ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+
+  /// Emoji associé à un libellé (libre ou prédéfini). 📦 par défaut.
+  static String emojiForLabel(String? label) {
+    for (final c in values) {
+      if (c.label == label) return c.emoji;
+    }
+    return '📦';
+  }
+
+  /// Icône associée à un libellé (inventory par défaut pour les libres).
+  static IconData iconForLabel(String? label) {
+    for (final c in values) {
+      if (c.label == label) return c.icon;
+    }
+    return Icons.inventory_2_rounded;
   }
 
   /// Médicaments → flag URGENT par défaut sur les cards de découverte.

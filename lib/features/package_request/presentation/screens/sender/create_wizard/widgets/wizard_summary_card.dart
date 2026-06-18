@@ -17,9 +17,7 @@ class WizardSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(
-          color: cs.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
       ),
       padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
@@ -39,11 +37,8 @@ class WizardSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _divider(ColorScheme cs) => Divider(
-        height: 12,
-        thickness: 1,
-        color: cs.outlineVariant,
-      );
+  Widget _divider(ColorScheme cs) =>
+      Divider(height: 12, thickness: 1, color: cs.outlineVariant);
 
   Widget _line(BuildContext context, String label, String value) {
     final tt = Theme.of(context).textTheme;
@@ -94,9 +89,7 @@ class WizardSummaryCard extends StatelessWidget {
     final wStr = w == null
         ? ''
         : ' · ${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)} kg';
-    final cat = s.contentCategory?.label != null
-        ? ' · ${s.contentCategory!.label.split(' ').first}.'
-        : '';
+    final cat = s.categories.isEmpty ? '' : ' · ${s.categories.first}';
     return '$size$wStr$cat';
   }
 }

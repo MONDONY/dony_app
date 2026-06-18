@@ -16,22 +16,23 @@ const _event = CompleteDetailsSubmitted(
   recipientName: 'Ibrahima Diallo',
   recipientPhone: '+221771234567',
   recipientCity: 'Dakar',
+  declaredValueEur: 120.0,
 );
 
 PackageRequest _fakeRequest() => PackageRequest(
-      id: 'pr-1',
-      senderId: 'sender-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 8, 15),
-      dateToleranceDays: 3,
-      weightKg: 5,
-      parcelSize: ParcelSize.medium,
-      transportMode: TransportMode.plane,
-      contentCategory: ContentCategory.vetements,
-      status: PackageRequestStatus.negotiating,
-      createdAt: DateTime(2026, 1, 1),
-    );
+  id: 'pr-1',
+  senderId: 'sender-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 8, 15),
+  dateToleranceDays: 3,
+  weightKg: 5,
+  parcelSize: ParcelSize.medium,
+  transportMode: TransportMode.plane,
+  categories: const ['Vêtements'],
+  status: PackageRequestStatus.negotiating,
+  createdAt: DateTime(2026, 1, 1),
+);
 
 void main() {
   late _MockPackageRequestRepository repo;
@@ -62,7 +63,7 @@ void main() {
           weightKg: 5,
           parcelSize: ParcelSize.medium,
           transportMode: TransportMode.plane,
-          contentCategory: ContentCategory.vetements,
+          categories: const ['Vêtements'],
           status: PackageRequestStatus.negotiating,
           createdAt: DateTime(2026, 1, 1),
         );
@@ -72,6 +73,7 @@ void main() {
             recipientName: any(named: 'recipientName'),
             recipientPhone: any(named: 'recipientPhone'),
             recipientCity: any(named: 'recipientCity'),
+            declaredValueEur: any(named: 'declaredValueEur'),
           ),
         ).thenAnswer((_) async => fakeRequest);
         return CompleteDetailsBloc(repo);
@@ -81,13 +83,25 @@ void main() {
         const CompleteDetailsState(status: CompleteDetailsStatus.loading),
         const CompleteDetailsState(status: CompleteDetailsStatus.success),
       ],
+      verify: (_) {
+        verify(
+          () => repo.completeDetails(
+            'pr-1',
+            recipientName: 'Ibrahima Diallo',
+            recipientPhone: '+221771234567',
+            recipientCity: 'Dakar',
+            declaredValueEur: 120.0,
+          ),
+        ).called(1);
+      },
     );
 
     blocTest<CompleteDetailsBloc, CompleteDetailsState>(
       'CompleteDetailsStarted loads the request into state',
       build: () {
-        when(() => repo.getById('pr-1'))
-            .thenAnswer((_) async => _fakeRequest());
+        when(
+          () => repo.getById('pr-1'),
+        ).thenAnswer((_) async => _fakeRequest());
         return CompleteDetailsBloc(repo);
       },
       act: (bloc) => bloc.add(const CompleteDetailsStarted('pr-1')),
@@ -121,6 +135,7 @@ void main() {
             recipientName: any(named: 'recipientName'),
             recipientPhone: any(named: 'recipientPhone'),
             recipientCity: any(named: 'recipientCity'),
+            declaredValueEur: any(named: 'declaredValueEur'),
           ),
         ).thenThrow(Exception('Server error'));
         return CompleteDetailsBloc(repo);
@@ -130,11 +145,7 @@ void main() {
         const CompleteDetailsState(status: CompleteDetailsStatus.loading),
         isA<CompleteDetailsState>()
             .having((s) => s.status, 'status', CompleteDetailsStatus.error)
-            .having(
-              (s) => s.errorMessage,
-              'errorMessage',
-              isNotNull,
-            ),
+            .having((s) => s.errorMessage, 'errorMessage', isNotNull),
       ],
     );
 
@@ -166,12 +177,14 @@ void main() {
         recipientName: 'John',
         recipientPhone: '+33612345678',
         recipientCity: 'Dakar',
+        declaredValueEur: 120.0,
       );
       const e2 = CompleteDetailsSubmitted(
         requestId: 'pr-1',
         recipientName: 'John',
         recipientPhone: '+33612345678',
         recipientCity: 'Dakar',
+        declaredValueEur: 120.0,
       );
       expect(e1, equals(e2));
     });
@@ -181,6 +194,7 @@ void main() {
         requestId: 'pr-1',
         recipientName: 'John',
         recipientPhone: '+33612345678',
+        declaredValueEur: 120.0,
       );
       expect(e.recipientCity, isNull);
       expect(e.props, contains(null));

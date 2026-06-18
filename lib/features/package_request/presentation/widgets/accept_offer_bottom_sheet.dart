@@ -183,15 +183,6 @@ class AcceptOfferBottomSheet {
                         color: kGreenPrimary,
                       ),
                     ),
-                    if (!isTraveler && grossPriceEur != null) ...[
-                      const SizedBox(height: DonySpacing.xs),
-                      Text(
-                        'dont ${PriceDisplay.eur(PriceDisplay.feeFromNet(priceEur))} de commission Dony',
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: kGreenDark.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),

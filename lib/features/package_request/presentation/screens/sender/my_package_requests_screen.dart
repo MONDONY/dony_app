@@ -18,7 +18,8 @@ class MyPackageRequestsScreen extends StatefulWidget {
   const MyPackageRequestsScreen({super.key});
 
   @override
-  State<MyPackageRequestsScreen> createState() => _MyPackageRequestsScreenState();
+  State<MyPackageRequestsScreen> createState() =>
+      _MyPackageRequestsScreenState();
 }
 
 class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
@@ -26,7 +27,8 @@ class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<PackageRequestBloc>().add(const FetchMyRequests());
+      if (mounted)
+        context.read<PackageRequestBloc>().add(const FetchMyRequests());
     });
   }
 
@@ -74,7 +76,9 @@ class _ListContentState extends State<_ListContent> {
   void _onQuery(String q) {
     _debounce?.cancel();
     _debounce = Timer(
-        const Duration(milliseconds: 250), () => _filterCubit.setQuery(q));
+      const Duration(milliseconds: 250),
+      () => _filterCubit.setQuery(q),
+    );
   }
 
   @override
@@ -90,20 +94,21 @@ class _ListContentState extends State<_ListContent> {
     final body = BlocProvider.value(
       value: _filterCubit,
       child: BlocBuilder<RequestFilterCubit, RequestFilterState>(
-        builder: (context, filter) =>
-            BlocBuilder<PackageRequestBloc, PackageRequestState>(
+        builder: (context, filter) => BlocBuilder<PackageRequestBloc, PackageRequestState>(
           builder: (context, state) {
             if (state.status == PackageRequestListStatus.loading) {
               return Center(
                 child: CircularProgressIndicator(
-                    color: Theme.of(context).colorScheme.primary),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               );
             }
             if (state.status == PackageRequestListStatus.error) {
               return _ErrorView(
                 message: state.errorMessage ?? 'Erreur',
-                onRetry: () =>
-                    context.read<PackageRequestBloc>().add(const FetchMyRequests()),
+                onRetry: () => context.read<PackageRequestBloc>().add(
+                  const FetchMyRequests(),
+                ),
               );
             }
             // Demandes = uniquement celles « en recherche » (ouvertes / en négo
@@ -120,23 +125,27 @@ class _ListContentState extends State<_ListContent> {
                 onAction: () async {
                   await PackageRequestCreateWizard.show(context);
                   if (context.mounted) {
-                    context
-                        .read<PackageRequestBloc>()
-                        .add(const RefreshMyRequests());
+                    context.read<PackageRequestBloc>().add(
+                      const RefreshMyRequests(),
+                    );
                   }
                 },
               );
             }
 
             final openCount = visible
-                .where((r) =>
-                    r.status == PackageRequestStatus.open ||
-                    r.status == PackageRequestStatus.negotiating)
+                .where(
+                  (r) =>
+                      r.status == PackageRequestStatus.open ||
+                      r.status == PackageRequestStatus.negotiating,
+                )
                 .length;
             final closedCount = visible
-                .where((r) =>
-                    r.status == PackageRequestStatus.expired ||
-                    r.status == PackageRequestStatus.cancelled)
+                .where(
+                  (r) =>
+                      r.status == PackageRequestStatus.expired ||
+                      r.status == PackageRequestStatus.cancelled,
+                )
                 .length;
             final filtered = applyRequestFilters(state.requests, filter);
 
@@ -145,7 +154,11 @@ class _ListContentState extends State<_ListContent> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, 0),
+                    DonySpacing.lg,
+                    DonySpacing.sm,
+                    DonySpacing.lg,
+                    0,
+                  ),
                   child: DonySearchField(
                     hint: 'Ville, catégorie…',
                     controller: _searchController,
@@ -161,18 +174,21 @@ class _ListContentState extends State<_ListContent> {
                   total: visible.length,
                   openCount: openCount,
                   closedCount: closedCount,
-                  onChanged: (p) => context.read<RequestFilterCubit>().setPreset(p),
+                  onChanged: (p) =>
+                      context.read<RequestFilterCubit>().setPreset(p),
                 ),
                 Expanded(
                   child: filtered.isEmpty
                       ? _FilterEmptyState(
-                          preset: filter.preset, hasQuery: filter.query.isNotEmpty)
+                          preset: filter.preset,
+                          hasQuery: filter.query.isNotEmpty,
+                        )
                       : RefreshIndicator(
                           color: Theme.of(context).colorScheme.primary,
                           onRefresh: () async {
-                            context
-                                .read<PackageRequestBloc>()
-                                .add(const RefreshMyRequests());
+                            context.read<PackageRequestBloc>().add(
+                              const RefreshMyRequests(),
+                            );
                           },
                           child: ListView.separated(
                             padding: EdgeInsets.fromLTRB(
@@ -188,7 +204,10 @@ class _ListContentState extends State<_ListContent> {
                               return _RequestCard(request: filtered[i])
                                   .animate()
                                   .fadeIn(duration: 200.ms, delay: (50 * i).ms)
-                                  .slideY(begin: 0.03, curve: Curves.easeOutCubic);
+                                  .slideY(
+                                    begin: 0.03,
+                                    curve: Curves.easeOutCubic,
+                                  );
                             },
                           ),
                         ),
@@ -217,10 +236,10 @@ class _ListContentState extends State<_ListContent> {
             icon: const DonyIcon('plus', size: 24, color: Colors.white),
             label: Text(
               'Nouvelle demande',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontWeight: FontWeight.w600, color: Colors.white),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
@@ -248,12 +267,14 @@ class _FilterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(
-          DonySpacing.base, DonySpacing.sm, DonySpacing.base, DonySpacing.sm + 2),
+        DonySpacing.base,
+        DonySpacing.sm,
+        DonySpacing.base,
+        DonySpacing.sm + 2,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: DonyColors.neutral200),
-        ),
+        border: Border(bottom: BorderSide(color: DonyColors.neutral200)),
       ),
       child: Row(
         children: [
@@ -317,10 +338,10 @@ class _FilterChip extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: active ? Colors.white : DonyColors.textMuted,
-                ),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: active ? Colors.white : DonyColors.textMuted,
+            ),
           ),
         ),
       ),
@@ -356,9 +377,9 @@ class _FilterEmptyState extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: DonyColors.textMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: DonyColors.textMuted,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -374,11 +395,11 @@ class _RequestCard extends StatelessWidget {
   final PackageRequest request;
 
   Color _accentColor(ColorScheme cs) => switch (request.status) {
-        PackageRequestStatus.open => cs.primary,
-        PackageRequestStatus.negotiating => DonyColors.warning500,
-        PackageRequestStatus.accepted => DonyColors.success500,
-        _ => DonyColors.neutral300,
-      };
+    PackageRequestStatus.open => cs.primary,
+    PackageRequestStatus.negotiating => DonyColors.warning500,
+    PackageRequestStatus.accepted => DonyColors.success500,
+    _ => DonyColors.neutral300,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -493,23 +514,22 @@ class _CardAction extends StatelessWidget {
 
     return switch (request.status) {
       PackageRequestStatus.open ||
-      PackageRequestStatus.negotiating =>
-        GestureDetector(
-          key: Key('edit-request-${request.id}'),
-          onTap: () async {
-            final bloc = context.read<PackageRequestBloc>();
-            await PackageRequestCreateWizard.show(context, initial: request);
-            bloc.add(const RefreshMyRequests());
-          },
-          child: Text(
-            'Modifier →',
-            style: tt.labelSmall?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
+      PackageRequestStatus.negotiating => GestureDetector(
+        key: Key('edit-request-${request.id}'),
+        onTap: () async {
+          final bloc = context.read<PackageRequestBloc>();
+          await PackageRequestCreateWizard.show(context, initial: request);
+          bloc.add(const RefreshMyRequests());
+        },
+        child: Text(
+          'Modifier →',
+          style: tt.labelSmall?.copyWith(
+            color: cs.primary,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
           ),
         ),
+      ),
       _ => const SizedBox.shrink(),
     };
   }
@@ -520,44 +540,46 @@ class _StatusBadge extends StatelessWidget {
   final PackageRequestStatus status;
 
   ({Color bg, Color fg, String label}) get _config => switch (status) {
-        PackageRequestStatus.open => (
-            bg: DonyColors.success50,
-            fg: DonyColors.success500,
-            label: 'OUVERTE'
-          ),
-        PackageRequestStatus.negotiating => (
-            bg: DonyColors.warning50,
-            fg: DonyColors.warning500,
-            label: 'NÉGOCIATION'
-          ),
-        PackageRequestStatus.accepted => (
-            bg: DonyColors.success50,
-            fg: DonyColors.success500,
-            label: 'ACCEPTÉE'
-          ),
-        PackageRequestStatus.completed => (
-            bg: DonyColors.success50,
-            fg: DonyColors.success500,
-            label: 'LIVRÉE'
-          ),
-        PackageRequestStatus.expired => (
-            bg: DonyColors.neutral100,
-            fg: DonyColors.neutral500,
-            label: 'EXPIRÉE'
-          ),
-        PackageRequestStatus.cancelled => (
-            bg: DonyColors.danger50,
-            fg: DonyColors.danger500,
-            label: 'ANNULÉE'
-          ),
-      };
+    PackageRequestStatus.open => (
+      bg: DonyColors.success50,
+      fg: DonyColors.success500,
+      label: 'OUVERTE',
+    ),
+    PackageRequestStatus.negotiating => (
+      bg: DonyColors.warning50,
+      fg: DonyColors.warning500,
+      label: 'NÉGOCIATION',
+    ),
+    PackageRequestStatus.accepted => (
+      bg: DonyColors.success50,
+      fg: DonyColors.success500,
+      label: 'ACCEPTÉE',
+    ),
+    PackageRequestStatus.completed => (
+      bg: DonyColors.success50,
+      fg: DonyColors.success500,
+      label: 'LIVRÉE',
+    ),
+    PackageRequestStatus.expired => (
+      bg: DonyColors.neutral100,
+      fg: DonyColors.neutral500,
+      label: 'EXPIRÉE',
+    ),
+    PackageRequestStatus.cancelled => (
+      bg: DonyColors.danger50,
+      fg: DonyColors.danger500,
+      label: 'ANNULÉE',
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
     final cfg = _config;
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: cfg.bg,
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -574,11 +596,11 @@ class _StatusBadge extends StatelessWidget {
           Text(
             cfg.label,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: cfg.fg,
-                  letterSpacing: 0.3,
-                ),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: cfg.fg,
+              letterSpacing: 0.3,
+            ),
           ),
         ],
       ),
@@ -601,13 +623,19 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const DonyIcon('circle-alert',
-                size: 48, color: DonyColors.danger500),
+            const DonyIcon(
+              'circle-alert',
+              size: 48,
+              color: DonyColors.danger500,
+            ),
             const SizedBox(height: DonySpacing.base),
-            Text(message,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: DonySpacing.base),
             DonyButton(label: 'Réessayer', onPressed: onRetry),
           ],
@@ -632,7 +660,7 @@ String _buildDetails(PackageRequest r) {
   final parts = [
     '$date ±${r.dateToleranceDays}j',
     '${r.weightKg.toStringAsFixed(0)} kg',
-    _shortCat(r.contentCategory.label),
+    if (r.categories.isNotEmpty) _shortCat(r.categories.first),
     if (r.targetPriceEur != null) '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
   ];
   return parts.join(' · ');

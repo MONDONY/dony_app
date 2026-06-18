@@ -296,7 +296,7 @@ class _TravelerSheet extends StatelessWidget {
                   return PackageRequestListCard(
                     item: item,
                     isOwnRequest: isOwn,
-                    onTap: isOwn ? null : () => onTapItem(item),
+                    onTap: () => onTapItem(item),
                     onMakeOffer: isOwn ? null : () => onTapItem(item),
                   );
                 },

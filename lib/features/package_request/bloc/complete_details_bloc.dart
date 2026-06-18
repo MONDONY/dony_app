@@ -33,12 +33,14 @@ class CompleteDetailsSubmitted extends CompleteDetailsEvent {
     required this.recipientName,
     required this.recipientPhone,
     this.recipientCity,
+    required this.declaredValueEur,
   });
 
   final String requestId;
   final String recipientName;
   final String recipientPhone;
   final String? recipientCity;
+  final double declaredValueEur;
 
   @override
   List<Object?> get props => [
@@ -46,6 +48,7 @@ class CompleteDetailsSubmitted extends CompleteDetailsEvent {
         recipientName,
         recipientPhone,
         recipientCity,
+        declaredValueEur,
       ];
 }
 
@@ -124,6 +127,7 @@ class CompleteDetailsBloc
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
         recipientCity: event.recipientCity,
+        declaredValueEur: event.declaredValueEur,
       );
       emit(state.copyWith(status: CompleteDetailsStatus.success));
     } catch (err) {

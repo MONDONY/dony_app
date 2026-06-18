@@ -10,40 +10,64 @@ PackageRequest _req({
   String arrivee = 'Dakar',
   ContentCategory cat = ContentCategory.vetements,
   PackageRequestStatus status = PackageRequestStatus.open,
-}) =>
-    PackageRequest(
-      id: 'r_${arrivee}_${status.name}',
-      senderId: 's1',
-      departureCity: depart,
-      arrivalCity: arrivee,
-      desiredDate: DateTime(2026, 6, 8),
-      dateToleranceDays: 2,
-      weightKg: 5,
-      parcelSize: ParcelSize.medium,
-      transportMode: TransportMode.plane,
-      contentCategory: cat,
-      status: status,
-      createdAt: DateTime(2026, 5, 1),
-    );
+}) => PackageRequest(
+  id: 'r_${arrivee}_${status.name}',
+  senderId: 's1',
+  departureCity: depart,
+  arrivalCity: arrivee,
+  desiredDate: DateTime(2026, 6, 8),
+  dateToleranceDays: 2,
+  weightKg: 5,
+  parcelSize: ParcelSize.medium,
+  transportMode: TransportMode.plane,
+  categories: [cat.label],
+  status: status,
+  createdAt: DateTime(2026, 5, 1),
+);
 
 void main() {
   group('requestMatchesQuery', () {
     test('vide -> tout', () => expect(requestMatchesQuery(_req(), ''), isTrue));
-    test('ville (accents)', () => expect(requestMatchesQuery(_req(arrivee: 'Dákar'), 'dakar'), isTrue));
-    test('catégorie', () => expect(requestMatchesQuery(_req(cat: ContentCategory.documents), 'doc'), isTrue));
+    test(
+      'ville (accents)',
+      () =>
+          expect(requestMatchesQuery(_req(arrivee: 'Dákar'), 'dakar'), isTrue),
+    );
+    test(
+      'catégorie',
+      () => expect(
+        requestMatchesQuery(_req(cat: ContentCategory.documents), 'doc'),
+        isTrue,
+      ),
+    );
     test('rien', () => expect(requestMatchesQuery(_req(), 'zzz'), isFalse));
   });
 
   group('isSearchRequest', () {
     test('open / negotiating / expired / cancelled = en recherche', () {
       expect(isSearchRequest(_req(status: PackageRequestStatus.open)), isTrue);
-      expect(isSearchRequest(_req(status: PackageRequestStatus.negotiating)), isTrue);
-      expect(isSearchRequest(_req(status: PackageRequestStatus.expired)), isTrue);
-      expect(isSearchRequest(_req(status: PackageRequestStatus.cancelled)), isTrue);
+      expect(
+        isSearchRequest(_req(status: PackageRequestStatus.negotiating)),
+        isTrue,
+      );
+      expect(
+        isSearchRequest(_req(status: PackageRequestStatus.expired)),
+        isTrue,
+      );
+      expect(
+        isSearchRequest(_req(status: PackageRequestStatus.cancelled)),
+        isTrue,
+      );
     });
     test('accepted / completed = parties dans Envois', () {
-      expect(isSearchRequest(_req(status: PackageRequestStatus.accepted)), isFalse);
-      expect(isSearchRequest(_req(status: PackageRequestStatus.completed)), isFalse);
+      expect(
+        isSearchRequest(_req(status: PackageRequestStatus.accepted)),
+        isFalse,
+      );
+      expect(
+        isSearchRequest(_req(status: PackageRequestStatus.completed)),
+        isFalse,
+      );
     });
   });
 
@@ -59,16 +83,24 @@ void main() {
       expect(r.map((e) => e.arrivalCity), isNot(contains('Abidjan')));
     });
     test('preset open = open + negotiating', () {
-      final r = applyRequestFilters(all, const RequestFilterState(preset: RequestQuickFilter.open));
+      final r = applyRequestFilters(
+        all,
+        const RequestFilterState(preset: RequestQuickFilter.open),
+      );
       expect(r.map((e) => e.arrivalCity).toSet(), {'Dakar', 'Lyon'});
     });
     test('preset closed = expired + cancelled', () {
-      final r = applyRequestFilters(all, const RequestFilterState(preset: RequestQuickFilter.closed));
+      final r = applyRequestFilters(
+        all,
+        const RequestFilterState(preset: RequestQuickFilter.closed),
+      );
       expect(r.single.arrivalCity, 'Douala');
     });
     test('recherche + preset (ET)', () {
-      final r = applyRequestFilters(all,
-          const RequestFilterState(preset: RequestQuickFilter.all, query: 'lyon'));
+      final r = applyRequestFilters(
+        all,
+        const RequestFilterState(preset: RequestQuickFilter.all, query: 'lyon'),
+      );
       expect(r.single.arrivalCity, 'Lyon');
     });
   });

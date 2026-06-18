@@ -54,8 +54,8 @@ class _NearMePackageRequestCarouselState
     final initialIndex = foundIdx < 0
         ? 0
         : foundIdx > widget.items.length - 1
-            ? math.max(0, widget.items.length - 1)
-            : foundIdx;
+        ? math.max(0, widget.items.length - 1)
+        : foundIdx;
     _currentIndex = initialIndex;
     _controller = PageController(
       viewportFraction: 0.85,
@@ -68,8 +68,9 @@ class _NearMePackageRequestCarouselState
     super.didUpdateWidget(oldWidget);
     if (widget.selectedRequestId != oldWidget.selectedRequestId &&
         widget.selectedRequestId != null) {
-      final idx =
-          widget.items.indexWhere((it) => it.id == widget.selectedRequestId);
+      final idx = widget.items.indexWhere(
+        (it) => it.id == widget.selectedRequestId,
+      );
       if (idx >= 0 && idx != _currentIndex && _controller.hasClients) {
         _controller.animateToPage(
           idx,
@@ -122,20 +123,24 @@ class _NearMePackageRequestCarouselState
             },
             itemBuilder: (_, i) {
               final item = widget.items[i];
-              final isOwn = widget.currentUserId != null &&
+              final isOwn =
+                  widget.currentUserId != null &&
                   item.sender.id == widget.currentUserId;
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DonySpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: DonySpacing.sm,
+                ),
                 child: PackageRequestCarouselCard(
                   item: item,
                   index: i,
                   distanceLabel: _formatDistance(item),
                   isOwnRequest: isOwn,
-                  onTap: isOwn
-                      ? null
-                      : widget.onTapCard != null
-                          ? () => widget.onTapCard!(item)
-                          : null,
+                  // Le propriétaire peut désormais ouvrir SA propre demande
+                  // (détail plein écran → boutons « Modifier » / « Offres reçues »).
+                  onTap: widget.onTapCard != null
+                      ? () => widget.onTapCard!(item)
+                      : null,
                 ),
               );
             },
@@ -145,8 +150,10 @@ class _NearMePackageRequestCarouselState
         GestureDetector(
           onTap: widget.onSeeAll,
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: DonySpacing.base, vertical: DonySpacing.sm),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.sm,
+            ),
             decoration: BoxDecoration(
               color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.xl),
@@ -182,8 +189,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIcon('locate-fixed',
-                color: cs.onSurfaceVariant, size: 32),
+            DonyIcon('locate-fixed', color: cs.onSurfaceVariant, size: 32),
             const SizedBox(height: DonySpacing.sm),
             Text(
               'Aucune demande à proximité',
@@ -216,7 +222,8 @@ double _haversineKm(double lat1, double lon1, double lat2, double lon2) {
   const r = 6371.0;
   final dLat = _deg2rad(lat2 - lat1);
   final dLon = _deg2rad(lon2 - lon1);
-  final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+  final a =
+      math.sin(dLat / 2) * math.sin(dLat / 2) +
       math.cos(_deg2rad(lat1)) *
           math.cos(_deg2rad(lat2)) *
           math.sin(dLon / 2) *

@@ -156,10 +156,9 @@ void main() {
     });
 
     testWidgets(
-        'récap : l\'expéditeur paie le net + commission (net × 1,12), commission AJOUTÉE',
+        'récap expéditeur : seul le brut (total + tarif/kg), jamais le net ni la commission',
         (tester) async {
-      // bid = 5 kg × 6 €/kg = 30 € net. L'expéditeur paie 30 × 1,12 = 33,60 € ;
-      // la commission Dony (3,60 €) est ajoutée, jamais déduite (cf. backend).
+      // bid = 5 kg × 6 €/kg NET. Brut = 30 × 1,12 = 33,60 €. Tarif/kg brut = 6,72.
       await tester.pumpWidget(
         _wrap(
           PaymentScreen(
@@ -173,12 +172,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Bouton + ligne « Vous payez » = total commission incluse.
+      // L'expéditeur voit le total brut + le tarif/kg brut.
       expect(find.text('Payer 33.60 €'), findsOneWidget);
       expect(find.text('33.60 €'), findsOneWidget);
-      // Commission présentée comme un AJOUT (+), pas une déduction (−).
-      expect(find.text('+ 3.60 €'), findsOneWidget);
-      expect(find.textContaining('− 3.60'), findsNothing);
+      expect(find.text('6.72 €/kg'), findsOneWidget);
+      // Il ne voit JAMAIS le net voyageur (30 €) ni la commission isolée.
+      expect(find.text('30.00 €'), findsNothing);
+      expect(find.text('6.00 €/kg'), findsNothing);
+      expect(find.textContaining('Commission'), findsNothing);
+      expect(find.text('+ 3.60 €'), findsNothing);
     });
 
     testWidgets('dispatches PaymentInitiated after successful biometric',

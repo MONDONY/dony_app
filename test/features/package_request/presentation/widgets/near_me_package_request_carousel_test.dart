@@ -17,7 +17,7 @@ PackageRequestSearchItem _item(String id, String city) =>
       dateToleranceDays: 2,
       weightKg: 5,
       parcelSize: ParcelSize.medium,
-      contentCategory: ContentCategory.vetements,
+      categories: const ['Vêtements'],
       targetPriceEur: 35,
       sender: const SenderPublicProfile(
         id: 's1',
@@ -34,19 +34,24 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(body: SizedBox(height: 260, child: child)),
-      );
+    theme: AppTheme.light,
+    home: Scaffold(body: SizedBox(height: 260, child: child)),
+  );
 
   group('NearMePackageRequestCarousel', () {
-    testWidgets('items vides → empty state avec bouton "Élargir la zone"',
-        (tester) async {
+    testWidgets('items vides → empty state avec bouton "Élargir la zone"', (
+      tester,
+    ) async {
       var seeAllCalled = false;
-      await tester.pumpWidget(wrap(NearMePackageRequestCarousel(
-        items: const [],
-        userPosition: null,
-        onSeeAll: () => seeAllCalled = true,
-      )));
+      await tester.pumpWidget(
+        wrap(
+          NearMePackageRequestCarousel(
+            items: const [],
+            userPosition: null,
+            onSeeAll: () => seeAllCalled = true,
+          ),
+        ),
+      );
       expect(find.text('Aucune demande à proximité'), findsOneWidget);
       expect(find.text('Élargir la zone'), findsOneWidget);
       await tester.tap(find.text('Élargir la zone'));
@@ -54,18 +59,23 @@ void main() {
       expect(seeAllCalled, isTrue);
     });
 
-    testWidgets('items N → PageView rend N cards + bouton "Voir les N"',
-        (tester) async {
+    testWidgets('items N → PageView rend N cards + bouton "Voir les N"', (
+      tester,
+    ) async {
       final items = [
         _item('1', 'Paris'),
         _item('2', 'Lyon'),
         _item('3', 'Marseille'),
       ];
-      await tester.pumpWidget(wrap(NearMePackageRequestCarousel(
-        items: items,
-        userPosition: null,
-        onSeeAll: () {},
-      )));
+      await tester.pumpWidget(
+        wrap(
+          NearMePackageRequestCarousel(
+            items: items,
+            userPosition: null,
+            onSeeAll: () {},
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(PackageRequestCarouselCard), findsWidgets);
       expect(find.text('Voir les 3 demandes'), findsOneWidget);
@@ -73,11 +83,15 @@ void main() {
 
     testWidgets('onSeeAll appelé au tap sur le bouton', (tester) async {
       var called = false;
-      await tester.pumpWidget(wrap(NearMePackageRequestCarousel(
-        items: [_item('1', 'Paris')],
-        userPosition: null,
-        onSeeAll: () => called = true,
-      )));
+      await tester.pumpWidget(
+        wrap(
+          NearMePackageRequestCarousel(
+            items: [_item('1', 'Paris')],
+            userPosition: null,
+            onSeeAll: () => called = true,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       // Pour une seule demande, le widget affiche le libellé singulier.
       await tester.tap(find.text('Voir la demande'));

@@ -174,13 +174,13 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                           label: 'Date de départ',
                           value: _formatDepartureDate(bid.departureDate),
                         ),
-                        if (bid.pricePerKg != null && bid.pricePerKg! > 0) ...[
+                        if (bid.senderPricePerKg != null &&
+                            bid.senderPricePerKg! > 0) ...[
                           const SizedBox(height: DonySpacing.sm),
-                          // Prix affiché à l'expéditeur = net × commission (incluse)
+                          // Tarif BRUT affiché à l'expéditeur (jamais le net).
                           InfoRow(
                             label: 'Tarif par kg',
-                            value:
-                                '${formatKgPrice(netToSenderPrice(bid.pricePerKg!))} €',
+                            value: '${formatKgPrice(bid.senderPricePerKg!)} €',
                           ),
                         ],
                         // Section 3 — LIEN DE SUIVI (conditionnel)

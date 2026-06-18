@@ -36,13 +36,11 @@ class _SearchViewState extends State<_SearchView> {
 
   void _applyFilters() {
     context.read<PackageRequestSearchBloc>().add(
-          SearchFiltersChanged(
-            departure:
-                _depCtrl.text.trim().isEmpty ? null : _depCtrl.text.trim(),
-            arrival:
-                _arrCtrl.text.trim().isEmpty ? null : _arrCtrl.text.trim(),
-          ),
-        );
+      SearchFiltersChanged(
+        departure: _depCtrl.text.trim().isEmpty ? null : _depCtrl.text.trim(),
+        arrival: _arrCtrl.text.trim().isEmpty ? null : _arrCtrl.text.trim(),
+      ),
+    );
   }
 
   @override
@@ -63,14 +61,21 @@ class _SearchViewState extends State<_SearchView> {
         title: Text(
           'Demandes ouvertes',
           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontWeight: FontWeight.w700, fontSize: 18),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
         ),
         centerTitle: false,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.base, DonySpacing.lg, DonySpacing.sm),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.base,
+              DonySpacing.lg,
+              DonySpacing.sm,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -98,107 +103,120 @@ class _SearchViewState extends State<_SearchView> {
                 IconButton.filled(
                   icon: const DonyIcon('search'),
                   onPressed: _applyFilters,
-                  style: IconButton.styleFrom(
-                    backgroundColor: cs.primary,
-                  ),
+                  style: IconButton.styleFrom(backgroundColor: cs.primary),
                 ),
               ],
             ),
           ),
           Divider(height: 1, color: cs.outline),
           Expanded(
-            child: BlocBuilder<PackageRequestSearchBloc,
-                PackageRequestSearchState>(
-              builder: (context, state) {
-                if (state.status == SearchStatus.loading) {
-                  return Center(
-                      child: CircularProgressIndicator(color: cs.primary));
-                }
-                if (state.status == SearchStatus.error) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: Text(
-                        state.errorMessage ?? 'Erreur',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 14,
-                          color: kError,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                if (state.results.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const DonyMascotteAnimated(
-                            type: DonyMascotteType.assis,
-                            size: DonyMascotteSize.lg,
-                          ),
-                          const SizedBox(height: DonySpacing.base),
-                          Text(
-                            'Aucune demande ne correspond à votre filtre',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 14,
-                              color: kTextSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-                return NotificationListener<ScrollNotification>(
-                  onNotification: (n) {
-                    if (n.metrics.pixels >=
-                            n.metrics.maxScrollExtent - 200 &&
-                        state.status == SearchStatus.loaded &&
-                        state.hasMore) {
-                      context
-                          .read<PackageRequestSearchBloc>()
-                          .add(const SearchLoadMore());
+            child:
+                BlocBuilder<
+                  PackageRequestSearchBloc,
+                  PackageRequestSearchState
+                >(
+                  builder: (context, state) {
+                    if (state.status == SearchStatus.loading) {
+                      return Center(
+                        child: CircularProgressIndicator(color: cs.primary),
+                      );
                     }
-                    return false;
-                  },
-                  child: RefreshIndicator(
-                    color: cs.primary,
-                    onRefresh: () async {
-                      context
-                          .read<PackageRequestSearchBloc>()
-                          .add(const SearchRefresh());
-                    },
-                    child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md, DonySpacing.lg, 40),
-                      itemCount: state.results.length +
-                          (state.status == SearchStatus.loadingMore ? 1 : 0),
-                      separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
-                      itemBuilder: (context, i) {
-                        if (i >= state.results.length) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                  color: cs.primary),
-                            ),
+                    if (state.status == SearchStatus.error) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Text(
+                            state.errorMessage ?? 'Erreur',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(fontSize: 14, color: kError),
+                          ),
+                        ),
+                      );
+                    }
+                    if (state.results.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const DonyMascotteAnimated(
+                                type: DonyMascotteType.assis,
+                                size: DonyMascotteSize.lg,
+                              ),
+                              const SizedBox(height: DonySpacing.base),
+                              Text(
+                                'Aucune demande ne correspond à votre filtre',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium!
+                                    .copyWith(
+                                      fontSize: 14,
+                                      color: kTextSecondary,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return NotificationListener<ScrollNotification>(
+                      onNotification: (n) {
+                        if (n.metrics.pixels >=
+                                n.metrics.maxScrollExtent - 200 &&
+                            state.status == SearchStatus.loaded &&
+                            state.hasMore) {
+                          context.read<PackageRequestSearchBloc>().add(
+                            const SearchLoadMore(),
                           );
                         }
-                        final r = state.results[i];
-                        return _PublicRequestCard(request: r)
-                            .animate()
-                            .fadeIn(duration: 200.ms, delay: (40 * i).ms)
-                            .slideY(begin: 0.04);
+                        return false;
                       },
-                    ),
-                  ),
-                );
-              },
-            ),
+                      child: RefreshIndicator(
+                        color: cs.primary,
+                        onRefresh: () async {
+                          context.read<PackageRequestSearchBloc>().add(
+                            const SearchRefresh(),
+                          );
+                        },
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(
+                            DonySpacing.lg,
+                            DonySpacing.md,
+                            DonySpacing.lg,
+                            40,
+                          ),
+                          itemCount:
+                              state.results.length +
+                              (state.status == SearchStatus.loadingMore
+                                  ? 1
+                                  : 0),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: DonySpacing.md),
+                          itemBuilder: (context, i) {
+                            if (i >= state.results.length) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: DonySpacing.base,
+                                ),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: cs.primary,
+                                  ),
+                                ),
+                              );
+                            }
+                            final r = state.results[i];
+                            return _PublicRequestCard(request: r)
+                                .animate()
+                                .fadeIn(duration: 200.ms, delay: (40 * i).ms)
+                                .slideY(begin: 0.04);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
           ),
         ],
       ),
@@ -218,8 +236,7 @@ class _PublicRequestCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        onTap: () =>
-            context.push('/package-requests/${request.id}/public'),
+        onTap: () => context.push('/package-requests/${request.id}/public'),
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.base),
           decoration: BoxDecoration(
@@ -242,7 +259,9 @@ class _PublicRequestCard extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+                      horizontal: DonySpacing.sm,
+                      vertical: DonySpacing.xs,
+                    ),
                     decoration: BoxDecoration(
                       color: cs.primaryContainer,
                       borderRadius: BorderRadius.circular(6),
@@ -268,14 +287,9 @@ class _PublicRequestCard extends StatelessWidget {
                     label:
                         '${request.desiredDate.day}/${request.desiredDate.month} ±${request.dateToleranceDays}j',
                   ),
-                  _Pill(
-                    iconAsset: 'scale',
-                    label: '${request.weightKg} kg',
-                  ),
-                  _Pill(
-                    iconAsset: 'tag',
-                    label: request.contentCategory.label,
-                  ),
+                  _Pill(iconAsset: 'scale', label: '${request.weightKg} kg'),
+                  if (request.categories.isNotEmpty)
+                    _Pill(iconAsset: 'tag', label: request.categories.first),
                 ],
               ),
               if (request.targetPriceEur != null) ...[
@@ -311,10 +325,9 @@ class _Pill extends StatelessWidget {
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 12,
-            color: kTextSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium!.copyWith(fontSize: 12, color: kTextSecondary),
         ),
       ],
     );

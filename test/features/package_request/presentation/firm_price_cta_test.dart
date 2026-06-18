@@ -26,46 +26,44 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockNegotiationBloc
-    extends MockBloc<NegotiationEvent, NegotiationState>
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
-
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 PackageRequest _firmRequest({double targetPriceEur = 35}) => PackageRequest(
-      id: 'pr-1',
-      senderId: 'sender-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 8, 1),
-      dateToleranceDays: 3,
-      weightKg: 5,
-      parcelSize: ParcelSize.small,
-      transportMode: TransportMode.plane,
-      contentCategory: ContentCategory.vetements,
-      status: PackageRequestStatus.open,
-      createdAt: DateTime(2026, 6, 1),
-      negotiable: false,
-      targetPriceEur: targetPriceEur,
-    );
+  id: 'pr-1',
+  senderId: 'sender-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 8, 1),
+  dateToleranceDays: 3,
+  weightKg: 5,
+  parcelSize: ParcelSize.small,
+  transportMode: TransportMode.plane,
+  categories: const ['Vêtements'],
+  status: PackageRequestStatus.open,
+  createdAt: DateTime(2026, 6, 1),
+  negotiable: false,
+  targetPriceEur: targetPriceEur,
+);
 
 PackageRequest _negotiableRequest() => PackageRequest(
-      id: 'pr-2',
-      senderId: 'sender-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 8, 1),
-      dateToleranceDays: 3,
-      weightKg: 5,
-      parcelSize: ParcelSize.small,
-      transportMode: TransportMode.plane,
-      contentCategory: ContentCategory.vetements,
-      status: PackageRequestStatus.open,
-      createdAt: DateTime(2026, 6, 1),
-      negotiable: true,
-      targetPriceEur: 35,
-    );
+  id: 'pr-2',
+  senderId: 'sender-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 8, 1),
+  dateToleranceDays: 3,
+  weightKg: 5,
+  parcelSize: ParcelSize.small,
+  transportMode: TransportMode.plane,
+  categories: const ['Vêtements'],
+  status: PackageRequestStatus.open,
+  createdAt: DateTime(2026, 6, 1),
+  negotiable: true,
+  targetPriceEur: 35,
+);
 
 PackageRequest _requestWithPayments(Set<PaymentMethod> methods) =>
     PackageRequest(
@@ -78,7 +76,7 @@ PackageRequest _requestWithPayments(Set<PaymentMethod> methods) =>
       weightKg: 5,
       parcelSize: ParcelSize.small,
       transportMode: TransportMode.plane,
-      contentCategory: ContentCategory.vetements,
+      categories: const ['Vêtements'],
       status: PackageRequestStatus.open,
       createdAt: DateTime(2026, 6, 1),
       negotiable: true,
@@ -126,10 +124,12 @@ void main() {
 
   setUp(() {
     mockNegotiationBloc = _MockNegotiationBloc();
-    when(() => mockNegotiationBloc.state)
-        .thenReturn(const NegotiationInitial());
-    when(() => mockNegotiationBloc.stream)
-        .thenAnswer((_) => const Stream<NegotiationState>.empty());
+    when(
+      () => mockNegotiationBloc.state,
+    ).thenReturn(const NegotiationInitial());
+    when(
+      () => mockNegotiationBloc.stream,
+    ).thenAnswer((_) => const Stream<NegotiationState>.empty());
 
     if (getIt.isRegistered<NegotiationBloc>()) {
       getIt.unregister<NegotiationBloc>();
@@ -145,21 +145,18 @@ void main() {
 
   group('PackageRequestPublicDetailBody — firm price (negotiable=false)', () {
     Widget wrap(PackageRequest request) => MaterialApp(
-          theme: AppTheme.light,
-          home: Scaffold(
-            body: PackageRequestPublicDetailBody(request: request),
-          ),
-        );
-
-    testWidgets(
-      'negotiable=false → bouton Key("take-firm-price") visible',
-      (tester) async {
-        await tester.pumpWidget(wrap(_firmRequest()));
-        await tester.pumpAndSettle();
-
-        expect(find.byKey(const Key('take-firm-price')), findsOneWidget);
-      },
+      theme: AppTheme.light,
+      home: Scaffold(body: PackageRequestPublicDetailBody(request: request)),
     );
+
+    testWidgets('negotiable=false → bouton Key("take-firm-price") visible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(_firmRequest()));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('take-firm-price')), findsOneWidget);
+    });
 
     testWidgets(
       'negotiable=false, targetPriceEur=35 → texte "Prendre à 35,00 €" visible',
@@ -172,25 +169,21 @@ void main() {
       },
     );
 
-    testWidgets(
-      'negotiable=false → "Faire une offre" masqué',
-      (tester) async {
-        await tester.pumpWidget(wrap(_firmRequest()));
-        await tester.pumpAndSettle();
+    testWidgets('negotiable=false → "Faire une offre" masqué', (tester) async {
+      await tester.pumpWidget(wrap(_firmRequest()));
+      await tester.pumpAndSettle();
 
-        expect(find.text('Faire une offre'), findsNothing);
-      },
-    );
+      expect(find.text('Faire une offre'), findsNothing);
+    });
 
-    testWidgets(
-      'negotiable=false → badge "PRIX FERME" affiché',
-      (tester) async {
-        await tester.pumpWidget(wrap(_firmRequest()));
-        await tester.pumpAndSettle();
+    testWidgets('negotiable=false → badge "PRIX FERME" affiché', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(_firmRequest()));
+      await tester.pumpAndSettle();
 
-        expect(find.textContaining('PRIX FERME'), findsOneWidget);
-      },
-    );
+      expect(find.textContaining('PRIX FERME'), findsOneWidget);
+    });
 
     testWidgets(
       'negotiable=true → "Faire une offre" visible (comportement inchangé)',
@@ -198,7 +191,7 @@ void main() {
         await tester.pumpWidget(wrap(_negotiableRequest()));
         await tester.pumpAndSettle();
 
-        expect(find.text('Faire une offre'), findsOneWidget);
+        expect(find.text('Proposer mon trajet'), findsOneWidget);
         expect(find.byKey(const Key('take-firm-price')), findsNothing);
       },
     );
@@ -207,53 +200,57 @@ void main() {
   // ─── Mode de paiement souhaité par l'expéditeur ──────────────────────────
   group('PackageRequestPublicDetailBody — mode de paiement', () {
     Widget wrap(PackageRequest request) => MaterialApp(
-          theme: AppTheme.light,
-          home: Scaffold(
-            body: PackageRequestPublicDetailBody(request: request),
-          ),
-        );
+      theme: AppTheme.light,
+      home: Scaffold(body: PackageRequestPublicDetailBody(request: request)),
+    );
 
     testWidgets(
       'acceptedPaymentMethods {Carte, Cash} → carte + chips visibles',
       (tester) async {
-        await tester.pumpWidget(wrap(_requestWithPayments(
-            {PaymentMethod.stripe, PaymentMethod.cash})));
+        await tester.pumpWidget(
+          wrap(
+            _requestWithPayments({PaymentMethod.stripe, PaymentMethod.cash}),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('payment-methods-card')), findsOneWidget);
-        expect(find.text('Mode de paiement'), findsOneWidget);
+        expect(find.text('Mode de paiement souhaité'), findsOneWidget);
         expect(find.text('Carte'), findsOneWidget);
         expect(find.text('Cash'), findsOneWidget);
         expect(
-            find.byKey(const Key('payment-method-chip-stripe')), findsOneWidget);
+          find.byKey(const Key('payment-method-chip-stripe')),
+          findsOneWidget,
+        );
         expect(
-            find.byKey(const Key('payment-method-chip-cash')), findsOneWidget);
+          find.byKey(const Key('payment-method-chip-cash')),
+          findsOneWidget,
+        );
       },
     );
 
-    testWidgets(
-      'mobile money {Wave, Orange Money} → labels affichés',
-      (tester) async {
-        await tester.pumpWidget(wrap(_requestWithPayments(
-            {PaymentMethod.wave, PaymentMethod.orangeMoney})));
-        await tester.pumpAndSettle();
+    testWidgets('mobile money {Wave, Orange Money} → labels affichés', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          _requestWithPayments({PaymentMethod.wave, PaymentMethod.orangeMoney}),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('Wave'), findsOneWidget);
-        expect(find.text('Orange Money'), findsOneWidget);
-        expect(find.byKey(const Key('payment-method-chip-stripe')), findsNothing);
-      },
-    );
+      expect(find.text('Wave'), findsOneWidget);
+      expect(find.text('Orange Money'), findsOneWidget);
+      expect(find.byKey(const Key('payment-method-chip-stripe')), findsNothing);
+    });
 
-    testWidgets(
-      'acceptedPaymentMethods vide → carte masquée',
-      (tester) async {
-        await tester.pumpWidget(wrap(_requestWithPayments(const {})));
-        await tester.pumpAndSettle();
+    testWidgets('acceptedPaymentMethods vide → carte masquée', (tester) async {
+      await tester.pumpWidget(wrap(_requestWithPayments(const {})));
+      await tester.pumpAndSettle();
 
-        expect(find.byKey(const Key('payment-methods-card')), findsNothing);
-        expect(find.text('Mode de paiement'), findsNothing);
-      },
-    );
+      expect(find.byKey(const Key('payment-methods-card')), findsNothing);
+      expect(find.text('Mode de paiement souhaité'), findsNothing);
+    });
   });
 
   // ─── Test 2 — ThreadStateCtaBar canCounter=false (sender) ─────────────────
@@ -274,43 +271,47 @@ void main() {
           ),
         );
 
-    testWidgets(
-      'sender · canCounter=false → "Contre-offre" masqué',
-      (tester) async {
-        await tester.pumpWidget(wrapCtaBar(
+    testWidgets('sender · canCounter=false → "Contre-offre" masqué', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapCtaBar(
           _thread(canCounter: false, canAccept: true, viewer: 'sender-1'),
           'sender-1',
-        ));
-        await tester.pump();
+        ),
+      );
+      await tester.pump();
 
-        expect(find.text('Contre-offre'), findsNothing);
-      },
-    );
+      expect(find.text('Contre-offre'), findsNothing);
+    });
 
     testWidgets(
       'sender · canCounter=false → bouton "Accepter" toujours présent',
       (tester) async {
-        await tester.pumpWidget(wrapCtaBar(
-          _thread(canCounter: false, canAccept: true, viewer: 'sender-1'),
-          'sender-1',
-        ));
+        await tester.pumpWidget(
+          wrapCtaBar(
+            _thread(canCounter: false, canAccept: true, viewer: 'sender-1'),
+            'sender-1',
+          ),
+        );
         await tester.pump();
 
         expect(find.textContaining('Accepter'), findsOneWidget);
       },
     );
 
-    testWidgets(
-      'sender · canCounter=true → "Contre-offre" visible',
-      (tester) async {
-        await tester.pumpWidget(wrapCtaBar(
+    testWidgets('sender · canCounter=true → "Contre-offre" visible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapCtaBar(
           _thread(canCounter: true, canAccept: true, viewer: 'sender-1'),
           'sender-1',
-        ));
-        await tester.pump();
+        ),
+      );
+      await tester.pump();
 
-        expect(find.text('Contre-offre'), findsOneWidget);
-      },
-    );
+      expect(find.text('Contre-offre'), findsOneWidget);
+    });
   });
 }

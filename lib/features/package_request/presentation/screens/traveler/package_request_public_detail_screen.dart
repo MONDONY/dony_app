@@ -1,14 +1,25 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -33,6 +44,11 @@ class _PackageRequestPublicDetailScreenState
   @override
   void initState() {
     super.initState();
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.packageRequestDetailOpened,
+      ),
+    );
     _load();
   }
 
@@ -42,13 +58,94 @@ class _PackageRequestPublicDetailScreenState
       _error = null;
     });
     try {
-      final r = await getIt<PackageRequestRepository>().getById(widget.requestId);
-      if (mounted) setState(() => _request = r);
+      final r = await getIt<PackageRequestRepository>().getById(
+        widget.requestId,
+      );
+      if (mounted) {
+        setState(() => _request = r);
+      }
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (mounted) {
+        setState(() => _error = e.toString());
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
+  }
+
+  Future<void> _report(String reason) async {
+    try {
+      await getIt<PackageRequestRepository>().report(
+        widget.requestId,
+        reason: reason,
+      );
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.packageRequestReported,
+          properties: {'reason': reason},
+        ),
+      );
+      if (mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Demande signalée. Merci.',
+          type: DonySnackbarType.success,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Impossible de signaler pour le moment',
+          type: DonySnackbarType.error,
+        );
+      }
+    }
+  }
+
+  void _showReportSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
+      ),
+      builder: (sheetCtx) {
+        const reasons = <(String, String)>[
+          ('PROHIBITED', 'Contenu interdit'),
+          ('SCAM', 'Arnaque / fraude'),
+          ('INAPPROPRIATE', 'Contenu inapproprié'),
+          ('OTHER', 'Autre raison'),
+        ];
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: DonySpacing.md),
+              Text(
+                'Signaler la demande',
+                style: Theme.of(sheetCtx).textTheme.titleLarge,
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              for (final (code, label) in reasons)
+                ListTile(
+                  leading: const DonyIcon('flag', size: 18),
+                  title: Text(label),
+                  onTap: () {
+                    Navigator.of(sheetCtx).pop();
+                    _report(code);
+                  },
+                ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -56,29 +153,48 @@ class _PackageRequestPublicDetailScreenState
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
     final announcement = extra?['announcement'] as AnnouncementModel?;
     final cs = Theme.of(context).colorScheme;
+    final authState = context.read<AuthBloc>().state;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : authState is AuthProfileUpdated
+        ? authState.user.id
+        : null;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const DonyAppBar(title: 'Demande'),
+      appBar: DonyAppBar(
+        title: 'Demande d\'envoi',
+        actions: [
+          const DonyFeedbackButton(),
+          IconButton(
+            tooltip: 'Signaler',
+            icon: const DonyIcon('flag', size: 20),
+            onPressed: _showReportSheet,
+          ),
+        ],
+      ),
       body: _loading
           ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Text(_error!,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium!
-                            .copyWith(fontSize: 14, color: kError)),
-                  ),
-                )
-              : _request == null
-                  ? const SizedBox.shrink()
-                  : PackageRequestPublicDetailBody(
-                      request: _request!,
-                      announcement: announcement,
-                    ),
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(40),
+                child: Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium!.copyWith(fontSize: 14, color: kError),
+                ),
+              ),
+            )
+          : _request == null
+          ? const SizedBox.shrink()
+          : PackageRequestPublicDetailBody(
+              request: _request!,
+              announcement: announcement,
+              currentUserId: currentUserId,
+              onChanged: _load,
+            ),
     );
   }
 }
@@ -90,128 +206,210 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     super.key,
     required this.request,
     this.announcement,
+    this.currentUserId,
+    this.onChanged,
   });
 
   final PackageRequest request;
   final AnnouncementModel? announcement;
 
+  /// UID backend de l'utilisateur courant — sert à détecter le propriétaire
+  /// de la demande (`currentUserId == request.senderId`). Null si non connecté.
+  final String? currentUserId;
+
+  /// Appelé après une action propriétaire (édition de la demande ou retour
+  /// depuis l'écran « Offres reçues ») pour rafraîchir le détail.
+  final VoidCallback? onChanged;
+
+  String get _sizeLabel => switch (request.parcelSize.name.toUpperCase()) {
+    'SMALL' => 'S',
+    'MEDIUM' => 'M',
+    'LARGE' => 'L',
+    _ => request.parcelSize.name.toUpperCase(),
+  };
+
+  String get _parcelHint => switch (request.parcelSize.name.toUpperCase()) {
+    'SMALL' => 'Sac',
+    'MEDIUM' => 'Carton',
+    'LARGE' => 'Valise',
+    _ => 'Taille',
+  };
+
   @override
   Widget build(BuildContext context) {
     final r = request;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final depFlag = cityFlag(r.departureCity);
+    final arrFlag = cityFlag(r.arrivalCity);
     return Stack(
       children: [
         SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              MediaQuery.of(context).padding.bottom + 100),
+            DonySpacing.lg,
+            DonySpacing.lg,
+            DonySpacing.lg,
+            MediaQuery.of(context).padding.bottom + 100,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(DonySpacing.lg),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [DonyColors.blue500, DonyColors.blue700],
-                  ),
-                  borderRadius: BorderRadius.circular(DonyRadius.xl),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            r.departureCity,
-                            style:
-                                Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        // 🔒 PRIX FERME badge — shown when not negotiable
-                        if (!r.negotiable)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.full),
-                              border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.5)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const DonyIcon('lock',
-                                    size: 12, color: Colors.white),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'PRIX FERME',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: 0.6,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    const DonyIcon('arrow-down',
-                        color: Colors.white70, size: 28),
-                    Text(
-                      r.arrivalCity,
-                      style:
-                          Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 24,
+              // ── Photos colis (carousel) ──────────────────────────────────
+              if (r.photoUrls.isNotEmpty) ...[
+                _PhotoCarousel(urls: r.photoUrls),
+                const SizedBox(height: DonySpacing.base),
+              ],
+
+              // ── Identité demande + statut ────────────────────────────────
+              Row(
+                children: [
+                  DonyIcon('package', size: 14, color: cs.warning),
+                  const SizedBox(width: DonySpacing.xxs),
+                  Flexible(
+                    child: Text(
+                      'DEMANDE D\'ENVOI',
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.labelSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        letterSpacing: 0.6,
+                        color: cs.warning,
                       ),
                     ),
-                    const SizedBox(height: DonySpacing.md),
-                    Text(
-                      'Souhaité le ${r.desiredDate.day}/${r.desiredDate.month}/${r.desiredDate.year} (±${r.dateToleranceDays}j)',
-                      style:
-                          Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  if (!r.negotiable) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.xxs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(DonyRadius.sm),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          DonyIcon(
+                            'lock',
+                            size: 11,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: DonySpacing.xxs),
+                          Text(
+                            'PRIX FERME',
+                            style: tt.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.4,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(width: DonySpacing.xs),
                   ],
+                  packageStatusChip(context, r.status),
+                ],
+              ),
+              const SizedBox(height: DonySpacing.sm),
+
+              // ── Titre corridor ───────────────────────────────────────────
+              Text(
+                '${depFlag != null ? '$depFlag ' : ''}${r.departureCity} → '
+                '${r.arrivalCity}${arrFlag != null ? ' $arrFlag' : ''}',
+                style: tt.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurface,
+                  letterSpacing: -0.4,
                 ),
               ),
+              const SizedBox(height: DonySpacing.xs),
+              Row(
+                children: [
+                  Icon(
+                    Icons.flight_rounded,
+                    size: 15,
+                    color: cs.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
+                    child: Text(
+                      'le ${r.desiredDate.day}/${r.desiredDate.month}/${r.desiredDate.year} '
+                      '(±${r.dateToleranceDays}j)',
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: DonySpacing.base),
-              _detailCard(context, 'Colis', [
-                _kv(context, 'scale', 'Poids', '${r.weightKg} kg'),
-                _kv(context, 'archive', 'Taille',
-                    r.parcelSize.name.toUpperCase()),
-                _kv(context, 'tag', 'Catégorie',
-                    r.contentCategory.label),
-                if (r.description != null)
-                  _kv(context, 'file-text', 'Description',
-                      r.description!),
-              ]),
+
+              // ── Poids / Taille (tuiles) ──────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatTile(
+                      icon: 'scale',
+                      value:
+                          '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
+                      label: 'Poids',
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: _StatTile(
+                      icon: 'package',
+                      value: _sizeLabel,
+                      label: _parcelHint,
+                    ),
+                  ),
+                ],
+              ),
+
+              // ── Catégories (chips) ───────────────────────────────────────
+              if (r.categories.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  'CATÉGORIES',
+                  style: tt.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: kTextSecondary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                Wrap(
+                  spacing: DonySpacing.sm,
+                  runSpacing: DonySpacing.sm,
+                  children: [
+                    for (final cat in r.categories) _CategoryChip(label: cat),
+                  ],
+                ),
+              ],
+
+              // ── Description ──────────────────────────────────────────────
+              if (r.description != null && r.description!.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                _detailCard(context, 'Description', [
+                  Text(
+                    r.description!,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurface,
+                      height: 1.5,
+                    ),
+                  ),
+                ]),
+              ],
+
               if (r.targetPriceEur != null) ...[
                 const SizedBox(height: DonySpacing.md),
                 _detailCard(context, 'Budget', [
                   _kv(
                     context,
                     'banknote',
-                    r.negotiable ? 'Prix cible' : 'Prix ferme',
+                    r.negotiable ? 'Budget' : 'Prix ferme',
                     PriceDisplay.eur(r.targetPriceEur!),
                   ),
                 ]),
@@ -225,11 +423,14 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 const SizedBox(height: DonySpacing.md),
                 _detailCard(context, 'Zones', [
                   if (r.pickupNeighborhood != null)
-                    _kv(context, 'map-pin', 'Pickup',
-                        r.pickupNeighborhood!),
+                    _kv(context, 'map-pin', 'Pickup', r.pickupNeighborhood!),
                   if (r.deliveryNeighborhood != null)
-                    _kv(context, 'map-pin', 'Livraison',
-                        r.deliveryNeighborhood!),
+                    _kv(
+                      context,
+                      'map-pin',
+                      'Livraison',
+                      r.deliveryNeighborhood!,
+                    ),
                 ]),
               ],
             ],
@@ -239,9 +440,21 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
           left: 20,
           right: 20,
           bottom: MediaQuery.of(context).padding.bottom + 20,
-          child: r.negotiable
+          child: currentUserId != null && currentUserId == r.senderId
+              ? _OwnerCta(request: r, onChanged: onChanged)
+              : r.viewerThreadId != null
               ? DonyButton(
-                  label: 'Faire une offre',
+                  // Le voyageur a déjà une offre en cours → on bascule vers sa
+                  // négociation (négociable) / proposition de trajet (prix ferme).
+                  label: r.negotiable
+                      ? 'Voir ma négociation'
+                      : 'Proposer mon trajet',
+                  onPressed: () =>
+                      context.push('/negotiations/${r.viewerThreadId}'),
+                )
+              : r.negotiable
+              ? DonyButton(
+                  label: 'Proposer mon trajet',
                   onPressed: () => MakeOfferBottomSheet.show(
                     context,
                     packageRequestId: r.id,
@@ -259,9 +472,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   }
 
   static Widget _detailCard(
-      BuildContext context, String title, List<Widget> children) {
+    BuildContext context,
+    String title,
+    List<Widget> children,
+  ) {
     final cs = Theme.of(context).colorScheme;
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: cs.surface,
@@ -274,11 +491,11 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: kTextSecondary,
-                  letterSpacing: 0.5,
-                ),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: kTextSecondary,
+              letterSpacing: 0.5,
+            ),
           ),
           const SizedBox(height: DonySpacing.md),
           ...children,
@@ -288,10 +505,15 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   }
 
   static Widget _kv(
-      BuildContext context, String iconAsset, String label, String value) {
+    BuildContext context,
+    String iconAsset,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DonyIcon(iconAsset, size: 18, color: kTextSecondary),
           const SizedBox(width: DonySpacing.md),
@@ -299,19 +521,19 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
             width: 90,
             child: Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 13, color: kTextSecondary),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                fontSize: 13,
+                color: kTextSecondary,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -320,11 +542,258 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   }
 }
 
+/// Tuile statistique (Poids / Taille) — icône + grande valeur + libellé.
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+  final String icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: DonySpacing.base,
+        horizontal: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Center(child: DonyIcon(icon, size: 18, color: cs.primary)),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            value,
+            style: tt.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chip catégorie (lecture seule) — emoji + libellé.
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            ContentCategory.emojiForLabel(label),
+            style: const TextStyle(fontSize: 13),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: tt.labelMedium?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Photo carousel ───────────────────────────────────────────────────────────
+
+class _PhotoCarousel extends StatefulWidget {
+  const _PhotoCarousel({required this.urls});
+  final List<String> urls;
+
+  @override
+  State<_PhotoCarousel> createState() => _PhotoCarouselState();
+}
+
+class _PhotoCarouselState extends State<_PhotoCarousel> {
+  final _controller = PageController();
+  int _index = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: AspectRatio(
+        aspectRatio: 4 / 3,
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: widget.urls.length,
+              onPageChanged: (i) => setState(() => _index = i),
+              itemBuilder: (_, i) => CachedNetworkImage(
+                imageUrl: widget.urls[i],
+                fit: BoxFit.cover,
+                placeholder: (_, _) =>
+                    ColoredBox(color: cs.surfaceContainerHighest),
+                errorWidget: (_, _, _) => ColoredBox(
+                  color: cs.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image_rounded,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(DonyRadius.xl),
+                ),
+                child: Text(
+                  '📷 ${_index + 1} / ${widget.urls.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            if (widget.urls.length > 1)
+              Positioned(
+                bottom: 12,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < widget.urls.length; i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: i == _index ? 18 : 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: i == _index
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(DonyRadius.full),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// CTA affiché au **propriétaire** de la demande : « Modifier » (visible
+/// uniquement tant que la demande est éditable — OPEN/NEGOTIATING) +
+/// « Offres reçues » (accès rapide aux négociations reçues). Quand la demande
+/// n'est plus modifiable, seul « Offres reçues » reste.
+class _OwnerCta extends StatelessWidget {
+  const _OwnerCta({required this.request, this.onChanged});
+
+  final PackageRequest request;
+  final VoidCallback? onChanged;
+
+  bool get _editable =>
+      request.status == PackageRequestStatus.open ||
+      request.status == PackageRequestStatus.negotiating;
+
+  Future<void> _openOffers(BuildContext context) async {
+    await context.push('/package-requests/${request.id}');
+    if (context.mounted) {
+      onChanged?.call();
+    }
+  }
+
+  Future<void> _edit(BuildContext context) async {
+    await PackageRequestCreateWizard.show(context, initial: request);
+    if (context.mounted) {
+      onChanged?.call();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final offers = DonyButton(
+      key: const Key('owner-offers'),
+      label: 'Offres reçues',
+      onPressed: () => _openOffers(context),
+    );
+    if (!_editable) {
+      return offers;
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: DonyButton(
+            key: const Key('owner-edit'),
+            label: 'Modifier',
+            variant: DonyButtonVariant.secondary,
+            onPressed: () => _edit(context),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.md),
+        Expanded(child: offers),
+      ],
+    );
+  }
+}
+
 /// CTA button for firm-price requests — tapping dispatches
 /// [NegotiationStartRequested] with [proposedPriceEur = targetPriceEur].
-///
-/// Wrapped in a [BlocProvider] internally so it can live either inside or
-/// outside an existing negotiation scope.
 class _FirmPriceCta extends StatelessWidget {
   const _FirmPriceCta({required this.request, this.announcement});
 
@@ -351,9 +820,9 @@ class _FirmPriceCta extends StatelessWidget {
                 ),
               );
             } else if (state is NegotiationError) {
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                SnackBar(content: Text(state.error.message)),
-              );
+              ScaffoldMessenger.of(
+                ctx,
+              ).showSnackBar(SnackBar(content: Text(state.error.message)));
             }
           },
           builder: (ctx, state) {
@@ -365,16 +834,11 @@ class _FirmPriceCta extends StatelessWidget {
               onPressed: isLoading || price == null
                   ? null
                   : () {
-                      // For firm-price, traveler date = now+7 as default;
-                      // MakeOfferBottomSheet would normally capture the date.
-                      // Here we open the full offer sheet pre-filled but
-                      // locked at the firm price.
                       MakeOfferBottomSheet.show(
                         ctx,
                         packageRequestId: request.id,
                         targetPriceEur: price,
-                        weightKg:
-                            announcement?.availableKg ?? request.weightKg,
+                        weightKg: announcement?.availableKg ?? request.weightKg,
                         departureCity: request.departureCity,
                         arrivalCity: request.arrivalCity,
                         initialDate: announcement?.departureDate,
@@ -390,8 +854,6 @@ class _FirmPriceCta extends StatelessWidget {
 }
 
 /// Carte lecture-seule listant les moyens de paiement que l'expéditeur accepte.
-/// Le voyageur voit ainsi, avant de faire son offre, comment il sera réglé
-/// (le choix effectif de la méthode se fait au moment de lier le trajet).
 class _PaymentMethodsCard extends StatelessWidget {
   const _PaymentMethodsCard({required this.methods});
 
@@ -415,7 +877,7 @@ class _PaymentMethodsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mode de paiement',
+            'Mode de paiement souhaité',
             style: tt.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,

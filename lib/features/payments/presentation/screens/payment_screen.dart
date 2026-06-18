@@ -4,6 +4,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -112,7 +113,9 @@ class _PaymentSummaryView extends StatelessWidget {
   // réellement facturé par le backend (PaymentService : amount = net × 1,12).
   double get _amount => bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
   double get _commission => _amount * commissionRate;
-  double get _total => _amount + _commission;
+  // Total payé par l'expéditeur = BRUT fourni par le backend (qui ne renvoie
+  // jamais le net au sender) ; repli sur la dérivation net × (1 + taux).
+  double get _total => bid.totalSenderAmountEur ?? (_amount + _commission);
 
   Future<void> _pay(BuildContext context) async {
     final authenticated = await requirePaymentAuth(
@@ -243,27 +246,18 @@ class _SummaryCard extends StatelessWidget {
                   const DonyInfoRow.divider(),
                   DonyInfoRow(
                     label: 'Prix/kg',
-                    value: bid.pricePerKg != null ? '${bid.pricePerKg!.toStringAsFixed(2)} €/kg' : '—',
+                    // Tarif BRUT (net + commission). Le backend ne renvoie
+                    // jamais le tarif net à l'expéditeur.
+                    value: bid.senderPricePerKg != null
+                        ? '${formatKgPrice(bid.senderPricePerKg!)} €/kg'
+                        : '—',
                   ),
-                  const DonyInfoRow.divider(),
-                ],
-                if (bid.pricingMode == BidPricingMode.grid) ...[
+                ] else if (bid.pricingMode == BidPricingMode.grid) ...[
                   DonyInfoRow(
                     label: 'Type',
                     value: 'Forfait articles',
                   ),
-                  const DonyInfoRow.divider(),
                 ],
-                DonyInfoRow(
-                  label: 'Montant',
-                  value: '${amount.toStringAsFixed(2)} €',
-                ),
-                const DonyInfoRow.divider(),
-                DonyInfoRow(
-                  label: 'Commission dony (${(commissionRate * 100).toStringAsFixed(0)}%)',
-                  value: '+ ${commission.toStringAsFixed(2)} €',
-                  valueStyle: DonyInfoRowValueStyle.muted,
-                ),
               ],
             ),
           ),
