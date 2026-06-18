@@ -14,6 +14,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/payments/presentation/widgets/payment_brand_marks.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
@@ -315,6 +316,8 @@ void main() {
       expect(find.text('Comment veux-tu payer ?'), findsOneWidget);
       expect(find.byKey(const Key('payment-method-stripe')), findsOneWidget);
       expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+      // La tuile STRIPE annonce les wallets via les logos de marque.
+      expect(find.byType(PaymentBrandMarks), findsOneWidget);
     });
 
     testWidgets('Stripe sélectionné par défaut → bouton affiche Bloquer',

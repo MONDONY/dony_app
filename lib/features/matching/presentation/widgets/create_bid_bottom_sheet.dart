@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/features/payments/presentation/widgets/payment_brand_marks.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
@@ -1722,6 +1723,7 @@ class _PaymentMethodSelector extends StatelessWidget {
           key: const Key('payment-method-stripe'),
           iconAsset: 'lock',
           label: 'Paiement sécurisé',
+          marks: const PaymentBrandMarks(),
           sublabel: 'Via Stripe',
           selected: selectedMethod == BidPaymentMethod.stripe,
           onTap: () => onChanged(BidPaymentMethod.stripe),
@@ -1795,6 +1797,7 @@ class _MethodTile extends StatelessWidget {
     required this.sublabel,
     required this.selected,
     required this.onTap,
+    this.marks,
   });
 
   final String iconAsset;
@@ -1802,6 +1805,7 @@ class _MethodTile extends StatelessWidget {
   final String sublabel;
   final bool selected;
   final VoidCallback onTap;
+  final Widget? marks;
 
   @override
   Widget build(BuildContext context) {
@@ -1837,6 +1841,10 @@ class _MethodTile extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            if (marks != null) ...[
+              const SizedBox(height: DonySpacing.xs),
+              marks!,
+            ],
             Text(
               sublabel,
               style: tt.bodySmall?.copyWith(
