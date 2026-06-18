@@ -1,52 +1,54 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-/// Noms lisibles des moyens couverts par le rail Stripe, plateforme-aware.
-///
-/// Carte + PayPal partout ; Apple Pay sur iOS, Google Pay sur Android. Le choix
-/// réel de l'instrument se fait dans la PaymentSheet Stripe — ces puces ne font
-/// que l'annoncer lisiblement dans le sélecteur dony (les logos étaient trop
-/// petits pour être identifiables).
+/// Liste verticale des moyens couverts par le rail Stripe : logo(s) + nom, une
+/// ligne par moyen. Plateforme-aware : Apple Pay (iOS) / Google Pay (Android) ;
+/// carte (Visa/Mastercard) + PayPal partout. Le choix réel de l'instrument se
+/// fait dans la PaymentSheet Stripe — cette liste ne fait que l'annoncer.
 class PaymentMethodNames extends StatelessWidget {
   const PaymentMethodNames({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
-    final names = <String>[
-      'Carte',
-      if (isIOS) 'Apple Pay' else 'Google Pay',
-      'PayPal',
-    ];
-    return Wrap(
-      spacing: DonySpacing.xs,
-      runSpacing: DonySpacing.xs,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final n in names)
-          Container(
-            key: Key('payment-name-${n.toLowerCase().replaceAll(' ', '-')}'),
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.sm,
-              vertical: 3,
-            ),
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-              border: Border.all(color: cs.outlineVariant),
-            ),
-            child: Text(
-              n,
-              style: tt.labelMedium?.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface,
-              ),
+        _row(context, const ['visa', 'mastercard'], 'Carte'),
+        _row(
+          context,
+          [isIOS ? 'apple-pay' : 'google-pay'],
+          isIOS ? 'Apple Pay' : 'Google Pay',
+        ),
+        _row(context, const ['paypal'], 'PayPal'),
+      ],
+    );
+  }
+
+  Widget _row(BuildContext context, List<String> logos, String name) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      key: Key('payment-row-${name.toLowerCase().replaceAll(' ', '-')}'),
+      padding: const EdgeInsets.only(top: DonySpacing.xs),
+      child: Row(
+        children: [
+          for (final logo in logos) ...[
+            SvgPicture.asset('assets/logos/payment/$logo.svg', height: 16),
+            const SizedBox(width: DonySpacing.xs),
+          ],
+          Text(
+            name,
+            style: tt.labelMedium?.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }

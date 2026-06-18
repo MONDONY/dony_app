@@ -1718,74 +1718,55 @@ class _PaymentMethodSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tiles = <Widget>[
-      Expanded(
-        child: _MethodTile(
-          key: const Key('payment-method-stripe'),
-          iconAsset: 'lock',
-          label: 'Paiement sécurisé',
-          marks: const PaymentMethodNames(),
-          sublabel: 'Via Stripe',
-          selected: selectedMethod == BidPaymentMethod.stripe,
-          onTap: () => onChanged(BidPaymentMethod.stripe),
-        ),
+      _MethodTile(
+        key: const Key('payment-method-stripe'),
+        iconAsset: 'lock',
+        label: 'Paiement sécurisé',
+        marks: const PaymentMethodNames(),
+        sublabel: 'Via Stripe',
+        selected: selectedMethod == BidPaymentMethod.stripe,
+        onTap: () => onChanged(BidPaymentMethod.stripe),
       ),
-      if (isCashAvailable) ...[
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: _MethodTile(
-            key: const Key('payment-method-cash'),
-            iconAsset: 'banknote',
-            label: 'En espèces',
-            sublabel: 'Remise directe',
-            selected: selectedMethod == BidPaymentMethod.cash,
-            onTap: () => onChanged(BidPaymentMethod.cash),
-          ),
+      if (isCashAvailable)
+        _MethodTile(
+          key: const Key('payment-method-cash'),
+          iconAsset: 'banknote',
+          label: 'En espèces',
+          sublabel: 'Remise directe',
+          selected: selectedMethod == BidPaymentMethod.cash,
+          onTap: () => onChanged(BidPaymentMethod.cash),
         ),
-      ],
-      if (isWaveAvailable) ...[
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: _MethodTile(
-            key: const Key('payment-method-wave'),
-            iconAsset: 'waves',
-            label: 'Wave',
-            sublabel: 'Mobile Money',
-            selected: selectedMethod == BidPaymentMethod.wave,
-            onTap: () => onChanged(BidPaymentMethod.wave),
-          ),
+      if (isWaveAvailable)
+        _MethodTile(
+          key: const Key('payment-method-wave'),
+          iconAsset: 'waves',
+          label: 'Wave',
+          sublabel: 'Mobile Money',
+          selected: selectedMethod == BidPaymentMethod.wave,
+          onTap: () => onChanged(BidPaymentMethod.wave),
         ),
-      ],
-      if (isOrangeMoneyAvailable) ...[
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: _MethodTile(
-            key: const Key('payment-method-orange-money'),
-            iconAsset: 'smartphone',
-            label: 'Orange Money',
-            sublabel: 'Mobile Money',
-            selected: selectedMethod == BidPaymentMethod.orangeMoney,
-            onTap: () => onChanged(BidPaymentMethod.orangeMoney),
-          ),
+      if (isOrangeMoneyAvailable)
+        _MethodTile(
+          key: const Key('payment-method-orange-money'),
+          iconAsset: 'smartphone',
+          label: 'Orange Money',
+          sublabel: 'Mobile Money',
+          selected: selectedMethod == BidPaymentMethod.orangeMoney,
+          onTap: () => onChanged(BidPaymentMethod.orangeMoney),
         ),
-      ],
     ];
 
-    final expandedCount = tiles.whereType<Expanded>().length;
-    if (expandedCount > 2) {
-      return Wrap(
-        spacing: DonySpacing.sm,
-        runSpacing: DonySpacing.sm,
-        children: tiles
-            .whereType<Expanded>()
-            .map((e) => SizedBox(
-                  width: (MediaQuery.of(context).size.width - 60) / 2,
-                  child: e.child,
-                ))
-            .toList(),
-      );
-    }
-
-    return Row(children: tiles);
+    // Tuiles empilées verticalement (pleine largeur) — laisse la place
+    // d'afficher logo + nom de chaque moyen dans la tuile Stripe.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (int i = 0; i < tiles.length; i++) ...[
+          if (i > 0) const SizedBox(height: DonySpacing.sm),
+          tiles[i],
+        ],
+      ],
+    );
   }
 }
 
