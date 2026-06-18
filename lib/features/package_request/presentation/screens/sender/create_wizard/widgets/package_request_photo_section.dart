@@ -173,7 +173,7 @@ class _PhotoThumb extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(DonyRadius.md),
-            child: upload.remoteUrl != null && upload.localPath.isEmpty
+            child: upload.isRemote
                 ? CachedNetworkImage(
                     imageUrl: upload.remoteUrl!,
                     width: 64,

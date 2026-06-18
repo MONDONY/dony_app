@@ -41,7 +41,7 @@ class PackageRequestPhotosCubit extends Cubit<List<PackageRequestPhotoUpload>> {
   /// [readyKeys] pour ne pas être perdues à la sauvegarde. No-op si l'état
   /// n'est pas vide (évite de re-seeder au retour d'étape).
   void seed(List<({String key, String url})> existing) {
-    if (state.isNotEmpty || existing.isEmpty) {
+    if (state.isNotEmpty) {
       return;
     }
     emit([

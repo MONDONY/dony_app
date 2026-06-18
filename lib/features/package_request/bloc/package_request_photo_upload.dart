@@ -23,6 +23,10 @@ class PackageRequestPhotoUpload {
     this.error,
   });
 
+  /// true si la photo provient du serveur (mode édition) — rendu réseau au
+  /// lieu d'un fichier local.
+  bool get isRemote => localPath.isEmpty && remoteUrl != null;
+
   PackageRequestPhotoUpload copyWith({
     PackageRequestPhotoUploadStatus? status,
     String? remoteKey,

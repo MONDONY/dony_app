@@ -62,15 +62,8 @@ abstract final class PackageRequestCreateWizard {
               create: (_) {
                 final cubit = getIt<PackageRequestPhotosCubit>();
                 // Mode édition : pré-charger les photos déjà attachées.
-                if (initial != null && initial.photoKeys.isNotEmpty) {
-                  final count =
-                      initial.photoKeys.length < initial.photoUrls.length
-                      ? initial.photoKeys.length
-                      : initial.photoUrls.length;
-                  cubit.seed([
-                    for (var i = 0; i < count; i++)
-                      (key: initial.photoKeys[i], url: initial.photoUrls[i]),
-                  ]);
+                if (initial != null && initial.photos.isNotEmpty) {
+                  cubit.seed(initial.photos);
                 }
                 return cubit;
               },
