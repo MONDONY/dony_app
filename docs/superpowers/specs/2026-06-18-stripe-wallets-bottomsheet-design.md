@@ -90,6 +90,10 @@ Les tuiles Cash/Wave/Orange passent `marks: null` → rendu inchangé (le slot n
 - **Web/desktop** : `defaultTargetPlatform` renvoie autre chose qu'iOS/Android → la branche `else` (Google Pay) s'applique. Acceptable (dony est mobile-only ; pas de cible web/desktop).
 - **Accessibilité** : `semanticsLabel` obligatoire sur chaque mark.
 
+## 6bis. Mise à jour — marks réels en place
+
+Les 4 placeholders ont été remplacés par de vrais marks d'acceptation : Visa/Mastercard/PayPal pleine couleur (aaronfagan, MIT) + Apple Pay/Google Pay mark monochrome officiel (simple-icons, CC0). Le widget rend désormais **4 marks** : `visa`, `mastercard`, wallet plateforme, `paypal`. Provenance : `assets/logos/payment/SOURCES.md`. Pour conformité stricte des chartes, substituer les téléchargements officiels.
+
 ## 7. Critères d'acceptation
 
 - [ ] La tuile « Stripe » du sélecteur de bid affiche cadenas + « Paiement sécurisé » + logos (carte + wallet plateforme + PayPal) + « Via Stripe ».
