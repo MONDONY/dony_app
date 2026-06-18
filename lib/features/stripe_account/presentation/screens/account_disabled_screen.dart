@@ -37,19 +37,41 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const DonyIcon('triangle-alert', size: 48, color: Color(0xFFF59E0B)),
+                // Texte scrollable, boutons épinglés en bas (anti-overflow
+                // petit écran / gros text scale).
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const DonyIcon(
+                              'triangle-alert',
+                              size: 48,
+                              color: Color(0xFFF59E0B),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Compte temporairement désactivé',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Votre compte Stripe est temporairement désactivé. '
+                              "La création de nouvelles annonces est bloquée jusqu'à "
+                              'la réactivation automatique par Stripe.',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
-                Text(
-                  'Compte temporairement désactivé',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Votre compte Stripe est temporairement désactivé. '
-                  "La création de nouvelles annonces est bloquée jusqu'à "
-                  'la réactivation automatique par Stripe.',
-                ),
-                const Spacer(),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -57,7 +79,10 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
                       _tapCount.value++;
                       final uri = Uri.parse('https://dashboard.stripe.com/');
                       if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
                       }
                     },
                     child: const Text('Voir mon compte Stripe'),

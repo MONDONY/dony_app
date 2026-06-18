@@ -103,11 +103,11 @@ class ScanHubView extends StatelessWidget {
               // rafraîchissement de progression est ajouté un jour, sortir le
               // `.animate()` du sous-arbre piloté par l'état pour éviter le replay.
               return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   DonySpacing.lg,
                   DonySpacing.xl,
                   DonySpacing.lg,
-                  DonySpacing.huge,
+                  100 + MediaQuery.paddingOf(context).bottom,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

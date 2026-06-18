@@ -470,11 +470,13 @@ class _ActivityTab extends StatelessWidget {
 
     return ListView(
       key: const Key('profile_activity_tab'),
-      padding: const EdgeInsets.fromLTRB(
+      // Bottom = hauteur nav flottante (~100) + safe area pour que le bas
+      // des onglets passe au-dessus de l'île de nav.
+      padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.xl,
         DonySpacing.lg,
-        DonySpacing.huge,
+        100 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         if (user != null &&
@@ -680,11 +682,13 @@ class _AccountTab extends StatelessWidget {
 
     return ListView(
       key: const Key('profile_account_tab'),
-      padding: const EdgeInsets.fromLTRB(
+      // Bottom = hauteur nav flottante (~100) + safe area pour que le bas
+      // des onglets passe au-dessus de l'île de nav.
+      padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.xl,
         DonySpacing.lg,
-        DonySpacing.huge,
+        100 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         // ── CTA Devenir voyageur (non-voyageur uniquement) ──────────────
@@ -898,11 +902,13 @@ class _SettingsTab extends StatelessWidget {
 
     return ListView(
       key: const Key('profile_settings_tab'),
-      padding: const EdgeInsets.fromLTRB(
+      // Bottom = hauteur nav flottante (~100) + safe area pour que le bas
+      // des onglets passe au-dessus de l'île de nav.
+      padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.xl,
         DonySpacing.lg,
-        DonySpacing.huge,
+        100 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         // ── PRÉFÉRENCES ─────────────────────────────────────────────────

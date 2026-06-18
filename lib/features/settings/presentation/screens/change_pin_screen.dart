@@ -105,10 +105,10 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
   }
 
   String get _subtitle => switch (_step) {
-        _PinStep.verifyOld => 'Saisissez votre code actuel',
-        _PinStep.enterNew => 'Créez votre nouveau code',
-        _PinStep.confirmNew => 'Confirmez le nouveau code',
-      };
+    _PinStep.verifyOld => 'Saisissez votre code actuel',
+    _PinStep.enterNew => 'Créez votre nouveau code',
+    _PinStep.confirmNew => 'Confirmez le nouveau code',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -125,39 +125,57 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
             padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
             child: Column(
               children: [
-                const SizedBox(height: DonySpacing.xl),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: Text(
-                    _subtitle,
-                    key: ValueKey(_step),
-                    style: tt.headlineLarge?.copyWith(
-                      color: cs.onSurface,
+                // Zone haute scrollable : évite que le keypad (~356px) +
+                // titre + dots dépassent l'écran sur petit device / gros
+                // text scale (mode overflow corrigé identique au pin_setup).
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: DonySpacing.xl),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 250),
+                              child: Text(
+                                _subtitle,
+                                key: ValueKey(_step),
+                                style: tt.headlineLarge?.copyWith(
+                                  color: cs.onSurface,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(height: DonySpacing.lg),
+                            _buildStepIndicator(cs),
+                            const SizedBox(height: DonySpacing.xxl),
+                            _buildPinDots(cs),
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 200),
+                              child: _hasError
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: DonySpacing.md,
+                                      ),
+                                      child: Text(
+                                        _errorMessage,
+                                        style: tt.bodySmall?.copyWith(
+                                          color: cs.error,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ).animate().fadeIn(duration: 200.ms),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: DonySpacing.lg),
-                _buildStepIndicator(cs),
-                const SizedBox(height: DonySpacing.xxl),
-                _buildPinDots(cs),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  child: _hasError
-                      ? Padding(
-                          padding:
-                              const EdgeInsets.only(top: DonySpacing.md),
-                          child: Text(
-                            _errorMessage,
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.error,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ).animate().fadeIn(duration: 200.ms),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                const Spacer(),
                 DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
                 SizedBox(height: DonySpacing.xxl + bottom),
               ],
@@ -204,8 +222,8 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
             color: _hasError
                 ? cs.error
                 : filled
-                    ? cs.primary
-                    : cs.outline,
+                ? cs.primary
+                : cs.outline,
           ),
         );
       }),

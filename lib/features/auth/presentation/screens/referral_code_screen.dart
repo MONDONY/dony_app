@@ -105,21 +105,37 @@ class _FormView extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: DonyStepPill(current: 4, total: 4, label: 'Parrainage'),
         ),
-        const Spacer(flex: 2),
-        const DonyMascotteAnimated(type: DonyMascotteType.joyeux),
-        const SizedBox(height: DonySpacing.lg),
-        Text(
-          'Tu as été invité par un ami ?',
-          style: tt.headlineLarge?.copyWith(color: cs.onSurface),
-          textAlign: TextAlign.center,
-        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
-        const SizedBox(height: DonySpacing.sm),
-        Text(
-          'Entre son code pour qu\'il soit récompensé à ta première livraison.',
-          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
-        const Spacer(flex: 2),
+        // Zone haute scrollable : mascotte + textes se centrent ou scrollent
+        // (clavier ouvert / gros text scale) ; le champ + boutons restent en bas.
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const DonyMascotteAnimated(type: DonyMascotteType.joyeux),
+                    const SizedBox(height: DonySpacing.lg),
+                    Text(
+                      'Tu as été invité par un ami ?',
+                      style: tt.headlineLarge?.copyWith(color: cs.onSurface),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
+                    const SizedBox(height: DonySpacing.sm),
+                    Text(
+                      'Entre son code pour qu\'il soit récompensé à ta première livraison.',
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
         DonyTextField(
           controller: ctrl,
           label: 'Code parrain',
@@ -160,34 +176,47 @@ class _SuccessView extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Spacer(flex: 2),
-        const DonyMascotteAnimated(
-          type: DonyMascotteType.joyeux,
-          size: DonyMascotteSize.lg,
-          withGlow: true,
-        ).animate().scale(
-          duration: 400.ms,
-          curve: Curves.elasticOut,
-          begin: const Offset(0.5, 0.5),
-        ),
-        const SizedBox(height: DonySpacing.lg),
-        Text(
-          'Code appliqué !',
-          style: tt.headlineLarge?.copyWith(
-            color: cs.success,
-            fontWeight: FontWeight.w800,
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const DonyMascotteAnimated(
+                      type: DonyMascotteType.joyeux,
+                      size: DonyMascotteSize.lg,
+                      withGlow: true,
+                    ).animate().scale(
+                      duration: 400.ms,
+                      curve: Curves.elasticOut,
+                      begin: const Offset(0.5, 0.5),
+                    ),
+                    const SizedBox(height: DonySpacing.lg),
+                    Text(
+                      'Code appliqué !',
+                      style: tt.headlineLarge?.copyWith(
+                        color: cs.success,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+                    const SizedBox(height: DonySpacing.sm),
+                    Text(
+                      'Ton ami sera récompensé dès que tu complètes ta première livraison.',
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
+                  ],
+                ),
+              ),
+            ),
           ),
-          textAlign: TextAlign.center,
-        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-        const SizedBox(height: DonySpacing.sm),
-        Text(
-          'Ton ami sera récompensé dès que tu complètes ta première livraison.',
-          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
-        const Spacer(flex: 2),
+        ),
         DonyButton(
           label: 'Continuer vers l\'accueil',
           onPressed: onContinue,

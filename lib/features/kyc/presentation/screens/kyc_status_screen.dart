@@ -22,8 +22,8 @@ class KycStatusScreen extends StatefulWidget {
 
 class _KycStatusScreenState extends State<KycStatusScreen> {
   Timer? _pollingTimer;
-  Timer? _autoNavTimer;   // 1.5s delay before auto-navigating on VERIFIED
-  Timer? _timeoutTimer;   // 5min hard timeout on PENDING
+  Timer? _autoNavTimer; // 1.5s delay before auto-navigating on VERIFIED
+  Timer? _timeoutTimer; // 5min hard timeout on PENDING
   bool _timedOut = false;
 
   @override
@@ -88,14 +88,17 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
       body: BlocConsumer<KycBloc, KycState>(
         listener: (context, state) {
           if (state is KycSessionCreated) {
-          context.go('/kyc/verify', extra: state.stripeUrl);
-          return;
-        }
-        if (state is! KycStatusLoaded) return;
+            context.go('/kyc/verify', extra: state.stripeUrl);
+            return;
+          }
+          if (state is! KycStatusLoaded) return;
           if (state.kycStatus == 'VERIFIED') {
             _stopPolling();
             // Cancellable timer: auto-navigate after a short visual delay.
-            _autoNavTimer = Timer(const Duration(milliseconds: 1500), _navigateHome);
+            _autoNavTimer = Timer(
+              const Duration(milliseconds: 1500),
+              _navigateHome,
+            );
           } else if (state.kycStatus == 'NOT_STARTED') {
             // KYC not started — stop any polling that may have been running.
             _stopPolling();
@@ -112,17 +115,29 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
               context,
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: h),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (state is KycLoading || state is KycInitial)
-                      CircularProgressIndicator(color: cs.primary)
-                    else if (state is KycStatusLoaded)
-                      _buildStatusContent(context, cs, tt, state)
-                    else if (state is KycError)
-                      _buildErrorContent(
-                          cs, tt, ErrorPresenter.resolve(state.error).message),
-                  ],
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (state is KycLoading || state is KycInitial)
+                            CircularProgressIndicator(color: cs.primary)
+                          else if (state is KycStatusLoaded)
+                            _buildStatusContent(context, cs, tt, state)
+                          else if (state is KycError)
+                            _buildErrorContent(
+                              cs,
+                              tt,
+                              ErrorPresenter.resolve(state.error).message,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ).animate().fadeIn(duration: 300.ms),
               ),
             ),
@@ -152,7 +167,11 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     }
   }
 
-  Widget _buildNotStartedContent(BuildContext context, ColorScheme cs, TextTheme tt) {
+  Widget _buildNotStartedContent(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -174,13 +193,17 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         const SizedBox(height: DonySpacing.md),
         Text(
           'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de dony.',
-          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.5,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.huge),
         DonyButton(
           label: 'Commencer la vérification',
-          onPressed: () => context.read<KycBloc>().add(const KycSessionRequested()),
+          onPressed: () =>
+              context.read<KycBloc>().add(const KycSessionRequested()),
         ),
       ],
     );
@@ -205,7 +228,10 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         const SizedBox(height: DonySpacing.md),
         Text(
           'Votre identité a été vérifiée avec succès. Redirection en cours…',
-          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.5,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.huge),
@@ -218,7 +244,11 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     );
   }
 
-  Widget _buildPendingContent(BuildContext context, ColorScheme cs, TextTheme tt) {
+  Widget _buildPendingContent(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -229,7 +259,9 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
             color: cs.warningLight,
             shape: BoxShape.circle,
           ),
-          child: Center(child: DonyIcon('hourglass', color: cs.warning, size: 48)),
+          child: Center(
+            child: DonyIcon('hourglass', color: cs.warning, size: 48),
+          ),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
         const SizedBox(height: DonySpacing.xxl),
         Text(
@@ -241,7 +273,10 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         Text(
           "Cela prend généralement moins d'une minute, parfois quelques minutes. "
           'Vous pouvez fermer cet écran — vous serez notifié du résultat.',
-          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.5,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.xl),
@@ -261,7 +296,11 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     );
   }
 
-  Widget _buildTimedOutContent(BuildContext context, ColorScheme cs, TextTheme tt) {
+  Widget _buildTimedOutContent(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -284,7 +323,10 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         Text(
           'Vous pouvez fermer cet écran et revenir plus tard. '
           'Votre badge ✓ apparaîtra automatiquement dès que la vérification sera terminée.',
-          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.5,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.huge),
@@ -296,7 +338,11 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     );
   }
 
-  Widget _buildRejectedContent(BuildContext context, ColorScheme cs, TextTheme tt) {
+  Widget _buildRejectedContent(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -318,13 +364,17 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         const SizedBox(height: DonySpacing.md),
         Text(
           "Nous n'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.",
-          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.5,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.huge),
         DonyButton(
           label: 'Réessayer la vérification',
-          onPressed: () => context.read<KycBloc>().add(const KycSessionRequested()),
+          onPressed: () =>
+              context.read<KycBloc>().add(const KycSessionRequested()),
         ),
       ],
     );
