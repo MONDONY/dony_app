@@ -5,9 +5,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 /// Rangée de logos des moyens couverts par le rail Stripe, plateforme-aware.
 ///
-/// Carte + PayPal partout ; Apple Pay sur iOS, Google Pay sur Android. Le choix
-/// réel de l'instrument se fait dans la PaymentSheet Stripe — ces marks ne font
-/// que l'annoncer dans le sélecteur dony.
+/// Visa + Mastercard + PayPal partout ; Apple Pay sur iOS, Google Pay sur
+/// Android. Le choix réel de l'instrument se fait dans la PaymentSheet Stripe —
+/// ces marks ne font que l'annoncer dans le sélecteur dony.
+///
+/// Marks officiels : Visa/Mastercard/PayPal (pleine couleur), Apple Pay /
+/// Google Pay (mark monochrome officiel). Voir `assets/logos/payment/`.
 class PaymentBrandMarks extends StatelessWidget {
   const PaymentBrandMarks({super.key});
 
@@ -15,19 +18,21 @@ class PaymentBrandMarks extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
     final names = <String>[
-      'card',
+      'visa',
+      'mastercard',
       if (isIOS) 'apple-pay' else 'google-pay',
       'paypal',
     ];
     return Wrap(
       spacing: DonySpacing.xs,
       runSpacing: DonySpacing.xs,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         for (final n in names)
           SvgPicture.asset(
             'assets/logos/payment/$n.svg',
             key: Key('payment-mark-$n'),
-            height: 16,
+            height: 18,
             semanticsLabel: _label(n),
           ),
       ],
@@ -38,7 +43,8 @@ class PaymentBrandMarks extends StatelessWidget {
   /// [names] sans label — un trou d'accessibilité silencieux devient un crash
   /// de dev (cf. checklist HIG « Semantics sur icônes sans label »).
   String _label(String name) => switch (name) {
-        'card' => 'Carte bancaire',
+        'visa' => 'Visa',
+        'mastercard' => 'Mastercard',
         'apple-pay' => 'Apple Pay',
         'google-pay' => 'Google Pay',
         'paypal' => 'PayPal',
