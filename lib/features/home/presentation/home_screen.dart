@@ -1677,13 +1677,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         item: pr,
                                         index: itemIndex,
                                         isOwnRequest: isOwn,
-                                        onTap: isOwn
-                                            ? null
-                                            : () =>
-                                                  PackageRequestPreviewBottomSheet.show(
-                                                    ctx,
-                                                    item: pr,
-                                                  ),
+                                        onTap: () =>
+                                            PackageRequestPreviewBottomSheet.show(
+                                              ctx,
+                                              item: pr,
+                                            ),
                                         onMakeOffer: isOwn
                                             ? null
                                             : () =>
@@ -1772,13 +1770,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   item: pr,
                                   index: i,
                                   isOwnRequest: isOwn,
-                                  onTap: isOwn
-                                      ? null
-                                      : () =>
-                                            PackageRequestPreviewBottomSheet.show(
-                                              ctx,
-                                              item: pr,
-                                            ),
+                                  onTap: () =>
+                                      PackageRequestPreviewBottomSheet.show(
+                                        ctx,
+                                        item: pr,
+                                      ),
                                   onMakeOffer: isOwn
                                       ? null
                                       : () =>
