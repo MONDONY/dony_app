@@ -17,27 +17,25 @@ import 'package:mocktail/mocktail.dart';
 class _MockPackageRequestRepository extends Mock
     implements PackageRequestRepository {}
 
-class _MockNegotiationBloc
-    extends MockBloc<NegotiationEvent, NegotiationState>
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
 PackageRequest _fakeRequest({
   PackageRequestStatus status = PackageRequestStatus.open,
-}) =>
-    PackageRequest(
-      id: 'pr-1',
-      senderId: 'sender-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 8, 15),
-      dateToleranceDays: 3,
-      weightKg: 5.0,
-      parcelSize: ParcelSize.medium,
-      transportMode: TransportMode.plane,
-      contentCategory: ContentCategory.vetements,
-      status: status,
-      createdAt: DateTime(2026, 1, 1),
-    );
+}) => PackageRequest(
+  id: 'pr-1',
+  senderId: 'sender-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 8, 15),
+  dateToleranceDays: 3,
+  weightKg: 5.0,
+  parcelSize: ParcelSize.medium,
+  transportMode: TransportMode.plane,
+  categories: const ['Vêtements'],
+  status: status,
+  createdAt: DateTime(2026, 1, 1),
+);
 
 Widget _buildApp({required String requestId}) {
   final router = GoRouter(
@@ -45,16 +43,12 @@ Widget _buildApp({required String requestId}) {
     routes: [
       GoRoute(
         path: '/package-requests/:id',
-        builder: (ctx, state) => PackageRequestDetailScreen(
-          requestId: state.pathParameters['id']!,
-        ),
+        builder: (ctx, state) =>
+            PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
       ),
     ],
   );
-  return MaterialApp.router(
-    routerConfig: router,
-    theme: AppTheme.light,
-  );
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
 }
 
 void main() {
@@ -68,8 +62,9 @@ void main() {
     negotiationBloc = _MockNegotiationBloc();
 
     when(() => negotiationBloc.state).thenReturn(const NegotiationInitial());
-    when(() => negotiationBloc.stream)
-        .thenAnswer((_) => const Stream<NegotiationState>.empty());
+    when(
+      () => negotiationBloc.stream,
+    ).thenAnswer((_) => const Stream<NegotiationState>.empty());
 
     if (!getIt.isRegistered<PackageRequestRepository>()) {
       getIt.registerSingleton<PackageRequestRepository>(repo);
@@ -89,10 +84,8 @@ void main() {
   });
 
   testWidgets('renders app bar title "Ma demande"', (tester) async {
-    when(() => repo.getById('pr-1'))
-        .thenAnswer((_) async => _fakeRequest());
-    when(() => repo.listThreadsForRequest('pr-1'))
-        .thenAnswer((_) async => []);
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
@@ -102,8 +95,7 @@ void main() {
 
   testWidgets('shows error view when getById throws', (tester) async {
     when(() => repo.getById('pr-1')).thenThrow(Exception('Network error'));
-    when(() => repo.listThreadsForRequest('pr-1'))
-        .thenAnswer((_) async => []);
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
@@ -116,10 +108,8 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    when(() => repo.getById('pr-1'))
-        .thenAnswer((_) async => _fakeRequest());
-    when(() => repo.listThreadsForRequest('pr-1'))
-        .thenAnswer((_) async => []);
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
@@ -131,10 +121,10 @@ void main() {
   });
 
   testWidgets('shows Annuler button when status is open', (tester) async {
-    when(() => repo.getById('pr-1'))
-        .thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.open));
-    when(() => repo.listThreadsForRequest('pr-1'))
-        .thenAnswer((_) async => []);
+    when(
+      () => repo.getById('pr-1'),
+    ).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.open));
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
@@ -142,12 +132,13 @@ void main() {
     expect(find.text('Annuler la demande'), findsOneWidget);
   });
 
-  testWidgets('aucun CTA « Compléter les détails » pour une demande acceptée',
-      (tester) async {
+  testWidgets('aucun CTA « Compléter les détails » pour une demande acceptée', (
+    tester,
+  ) async {
     when(() => repo.getById('pr-1')).thenAnswer(
-        (_) async => _fakeRequest(status: PackageRequestStatus.accepted));
-    when(() => repo.listThreadsForRequest('pr-1'))
-        .thenAnswer((_) async => []);
+      (_) async => _fakeRequest(status: PackageRequestStatus.accepted),
+    );
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
@@ -165,8 +156,7 @@ void main() {
       if (callCount == 1) throw Exception('Network error');
       return _fakeRequest();
     });
-    when(() => repo.listThreadsForRequest('pr-1'))
-        .thenAnswer((_) async => []);
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();

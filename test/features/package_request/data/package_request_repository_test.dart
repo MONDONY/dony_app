@@ -17,10 +17,10 @@ class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
 
 Response<T> _ok<T>(T data, String path) => Response(
-      data: data,
-      statusCode: 200,
-      requestOptions: RequestOptions(path: path),
-    );
+  data: data,
+  statusCode: 200,
+  requestOptions: RequestOptions(path: path),
+);
 
 const _prJson = <String, dynamic>{
   'id': 'pr-1',
@@ -72,7 +72,7 @@ void main() {
         weightKg: 5.0,
         parcelSize: ParcelSize.small,
         transportMode: TransportMode.plane,
-        contentCategory: ContentCategory.vetements,
+        categories: const ['Vêtements'],
         negotiable: true,
         acceptedPaymentMethods: {PaymentMethod.stripe},
       );
@@ -82,43 +82,53 @@ void main() {
       expect(result.status, PackageRequestStatus.open);
     });
 
-    test('create payload includes negotiable, acceptedPaymentMethods and totalBudgetEur', () async {
-      Map<String, dynamic>? capturedBody;
+    test(
+      'create payload includes negotiable, acceptedPaymentMethods and totalBudgetEur',
+      () async {
+        Map<String, dynamic>? capturedBody;
 
-      when(
-        () => mockDio.post<Map<String, dynamic>>(
-          '/package-requests',
-          data: any(named: 'data'),
-        ),
-      ).thenAnswer((invocation) async {
-        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
-        return _ok(_prJson, '/package-requests');
-      });
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/package-requests',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedBody =
+              invocation.namedArguments[#data] as Map<String, dynamic>;
+          return _ok(_prJson, '/package-requests');
+        });
 
-      await repo.create(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        desiredDate: DateTime(2026, 6, 15),
-        dateToleranceDays: 2,
-        weightKg: 5.0,
-        parcelSize: ParcelSize.small,
-        transportMode: TransportMode.plane,
-        contentCategory: ContentCategory.vetements,
-        negotiable: true,
-        acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
-        totalBudgetEur: 50.0,
-      );
+        await repo.create(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          weightKg: 5.0,
+          parcelSize: ParcelSize.small,
+          transportMode: TransportMode.plane,
+          categories: const ['Vêtements', 'Médicaments', 'Fragile'],
+          negotiable: true,
+          acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
+          totalBudgetEur: 50.0,
+        );
 
-      expect(capturedBody, isNotNull);
-      expect(capturedBody!['negotiable'], true);
-      expect(capturedBody!['totalBudgetEur'], 50.0);
-      final methods = capturedBody!['acceptedPaymentMethods'] as List<dynamic>;
-      expect(methods, containsAll(['STRIPE', 'CASH']));
-      // Régression : le backend exige parcelSize + transportMode (@NotNull).
-      // Les omettre renvoyait un 422 « Validation failed » à la publication.
-      expect(capturedBody!['parcelSize'], 'SMALL');
-      expect(capturedBody!['transportMode'], 'PLANE');
-    });
+        expect(capturedBody, isNotNull);
+        expect(capturedBody!['negotiable'], true);
+        expect(capturedBody!['totalBudgetEur'], 50.0);
+        final methods =
+            capturedBody!['acceptedPaymentMethods'] as List<dynamic>;
+        expect(methods, containsAll(['STRIPE', 'CASH']));
+        // Régression : le backend exige parcelSize + transportMode (@NotNull).
+        // Les omettre renvoyait un 422 « Validation failed » à la publication.
+        expect(capturedBody!['parcelSize'], 'SMALL');
+        expect(capturedBody!['transportMode'], 'PLANE');
+        // Catégories multiples → chaîne jointe par virgule côté wire.
+        expect(
+          capturedBody!['contentCategory'],
+          'Vêtements,Médicaments,Fragile',
+        );
+      },
+    );
   });
 
   group('findMine', () {
@@ -154,9 +164,7 @@ void main() {
 
   group('cancel', () {
     test('DELETEs /package-requests/:id', () async {
-      when(
-        () => mockDio.delete<void>('/package-requests/pr-1'),
-      ).thenAnswer(
+      when(() => mockDio.delete<void>('/package-requests/pr-1')).thenAnswer(
         (_) async => Response<void>(
           statusCode: 204,
           requestOptions: RequestOptions(path: '/package-requests/pr-1'),
@@ -277,12 +285,14 @@ void main() {
           '/package-requests',
           queryParameters: any(named: 'queryParameters'),
         ),
-      ).thenAnswer((_) async => _ok({
-            'content': [searchItemJson],
-            'totalElements': 1,
-            'number': 0,
-            'size': 20,
-          }, '/package-requests'));
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': [searchItemJson],
+          'totalElements': 1,
+          'number': 0,
+          'size': 20,
+        }, '/package-requests'),
+      );
 
       final page = await repo.search(departure: 'Paris', arrival: 'Dakar');
 
@@ -294,40 +304,59 @@ void main() {
   group('photoKeys', () {
     test('create sends photoKeys when provided', () async {
       Map<String, dynamic>? body;
-      when(() => mockDio.post<Map<String, dynamic>>('/package-requests',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
         body = inv.namedArguments[#data] as Map<String, dynamic>;
         return _ok(_prJson, '/package-requests');
       });
       await repo.create(
-        departureCity: 'Paris', arrivalCity: 'Dakar',
-        desiredDate: DateTime(2026, 6, 15), dateToleranceDays: 2,
-        weightKg: 5.0, parcelSize: ParcelSize.small,
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
         transportMode: TransportMode.plane,
-        contentCategory: ContentCategory.vetements,
-        negotiable: true, acceptedPaymentMethods: {PaymentMethod.stripe},
-        photoKeys: const ['package_requests/s/1.jpg', 'package_requests/s/2.jpg'],
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+        photoKeys: const [
+          'package_requests/s/1.jpg',
+          'package_requests/s/2.jpg',
+        ],
       );
-      expect(body!['photoKeys'],
-          ['package_requests/s/1.jpg', 'package_requests/s/2.jpg']);
+      expect(body!['photoKeys'], [
+        'package_requests/s/1.jpg',
+        'package_requests/s/2.jpg',
+      ]);
     });
 
     test('create omits photoKeys when empty', () async {
       Map<String, dynamic>? body;
-      when(() => mockDio.post<Map<String, dynamic>>('/package-requests',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
         body = inv.namedArguments[#data] as Map<String, dynamic>;
         return _ok(_prJson, '/package-requests');
       });
       await repo.create(
-        departureCity: 'Paris', arrivalCity: 'Dakar',
-        desiredDate: DateTime(2026, 6, 15), dateToleranceDays: 2,
-        weightKg: 5.0, parcelSize: ParcelSize.small,
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
         transportMode: TransportMode.plane,
-        contentCategory: ContentCategory.vetements,
-        negotiable: true, acceptedPaymentMethods: {PaymentMethod.stripe},
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
         photoKeys: const [],
       );
       expect(body!.containsKey('photoKeys'), false);
@@ -335,19 +364,27 @@ void main() {
 
     test('update sends photoKeys', () async {
       Map<String, dynamic>? body;
-      when(() => mockDio.put<Map<String, dynamic>>('/package-requests/pr-1',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
+      when(
+        () => mockDio.put<Map<String, dynamic>>(
+          '/package-requests/pr-1',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
         body = inv.namedArguments[#data] as Map<String, dynamic>;
         return _ok(_prJson, '/package-requests/pr-1');
       });
-      await repo.update('pr-1',
-        departureCity: 'Paris', arrivalCity: 'Dakar',
-        desiredDate: DateTime(2026, 6, 15), dateToleranceDays: 2,
-        weightKg: 5.0, parcelSize: ParcelSize.small,
+      await repo.update(
+        'pr-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
         transportMode: TransportMode.plane,
-        contentCategory: ContentCategory.vetements,
-        negotiable: true, acceptedPaymentMethods: {PaymentMethod.stripe},
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
         photoKeys: const ['package_requests/s/9.jpg'],
       );
       expect(body!['photoKeys'], ['package_requests/s/9.jpg']);
@@ -355,16 +392,23 @@ void main() {
 
     test('uploadPhotoKey returns the S3 key', () async {
       final tmp = File(
-          '${Directory.systemTemp.path}/dony_t_${DateTime.now().microsecondsSinceEpoch}.jpg');
+        '${Directory.systemTemp.path}/dony_t_${DateTime.now().microsecondsSinceEpoch}.jpg',
+      );
       await tmp.writeAsBytes([1, 2, 3]);
       addTearDown(() {
         if (tmp.existsSync()) tmp.deleteSync();
       });
-      when(() => mockDio.post<Map<String, dynamic>>(
-              '/storage/upload/package-request', data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(
-              {'key': 'package_requests/s/x.jpg', 'url': 'https://signed/x'},
-              '/storage/upload/package-request'));
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/storage/upload/package-request',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'key': 'package_requests/s/x.jpg',
+          'url': 'https://signed/x',
+        }, '/storage/upload/package-request'),
+      );
       final key = await repo.uploadPhotoKey(tmp);
       expect(key, 'package_requests/s/x.jpg');
     });
@@ -373,13 +417,17 @@ void main() {
   group('report', () {
     test('POSTs reason + details to /package-requests/:id/report', () async {
       Map<String, dynamic>? body;
-      when(() => mockDio.post<void>('/package-requests/pr-1/report',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
+      when(
+        () => mockDio.post<void>(
+          '/package-requests/pr-1/report',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
         body = inv.namedArguments[#data] as Map<String, dynamic>;
         return Response<void>(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: '/package-requests/pr-1/report'));
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/package-requests/pr-1/report'),
+        );
       });
       await repo.report('pr-1', reason: 'SCAM', details: 'arnaque');
       expect(body!['reason'], 'SCAM');
@@ -388,13 +436,17 @@ void main() {
 
     test('omits details when null', () async {
       Map<String, dynamic>? body;
-      when(() => mockDio.post<void>('/package-requests/pr-1/report',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
+      when(
+        () => mockDio.post<void>(
+          '/package-requests/pr-1/report',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
         body = inv.namedArguments[#data] as Map<String, dynamic>;
         return Response<void>(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: '/package-requests/pr-1/report'));
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/package-requests/pr-1/report'),
+        );
       });
       await repo.report('pr-1', reason: 'OTHER');
       expect(body!.containsKey('details'), false);
@@ -420,29 +472,43 @@ void main() {
       };
       final pr = PackageRequest.fromJson(json);
       expect(pr.photoUrls, ['https://signed/1', 'https://signed/2']);
-      expect(pr.photoKeys,
-          ['package_requests/s/1.jpg', 'package_requests/s/2.jpg']);
+      expect(pr.photoKeys, [
+        'package_requests/s/1.jpg',
+        'package_requests/s/2.jpg',
+      ]);
     });
 
-    test('PackageRequestSearchItem.fromJson maps photos; empty when absent', () {
-      final base = <String, dynamic>{
-        'id': 'pr-1', 'departureCity': 'Paris', 'arrivalCity': 'Dakar',
-        'desiredDate': '2026-06-15', 'dateToleranceDays': 2,
-        'weightKg': 5.0, 'parcelSize': 'SMALL', 'contentCategory': 'vetements',
-        'sender': {
-          'id': 's', 'displayName': 'A', 'averageRating': 4.5,
-          'totalRatings': 3, 'kycVerified': true,
-        },
-      };
-      final withPhotos = <String, dynamic>{
-        ...base,
-        'photos': [
-          {'id': 'p1', 'url': 'https://s/1'}
-        ],
-      };
-      expect(PackageRequestSearchItem.fromJson(withPhotos).photoUrls,
-          ['https://s/1']);
-      expect(PackageRequestSearchItem.fromJson(base).photoUrls, isEmpty);
-    });
+    test(
+      'PackageRequestSearchItem.fromJson maps photos; empty when absent',
+      () {
+        final base = <String, dynamic>{
+          'id': 'pr-1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'desiredDate': '2026-06-15',
+          'dateToleranceDays': 2,
+          'weightKg': 5.0,
+          'parcelSize': 'SMALL',
+          'contentCategory': 'vetements',
+          'sender': {
+            'id': 's',
+            'displayName': 'A',
+            'averageRating': 4.5,
+            'totalRatings': 3,
+            'kycVerified': true,
+          },
+        };
+        final withPhotos = <String, dynamic>{
+          ...base,
+          'photos': [
+            {'id': 'p1', 'url': 'https://s/1'},
+          ],
+        };
+        expect(PackageRequestSearchItem.fromJson(withPhotos).photoUrls, [
+          'https://s/1',
+        ]);
+        expect(PackageRequestSearchItem.fromJson(base).photoUrls, isEmpty);
+      },
+    );
   });
 }

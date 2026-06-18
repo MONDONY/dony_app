@@ -11,19 +11,19 @@ import 'package:mocktail/mocktail.dart';
 class _MockRepo extends Mock implements PackageRequestRepository {}
 
 PackageRequest _fakeRequest(String id) => PackageRequest(
-      id: id,
-      senderId: 's-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 6, 15),
-      dateToleranceDays: 2,
-      weightKg: 5,
-      parcelSize: ParcelSize.small,
-      transportMode: TransportMode.plane,
-      contentCategory: ContentCategory.vetements,
-      status: PackageRequestStatus.open,
-      createdAt: DateTime(2026, 5, 10),
-    );
+  id: id,
+  senderId: 's-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 6, 15),
+  dateToleranceDays: 2,
+  weightKg: 5,
+  parcelSize: ParcelSize.small,
+  transportMode: TransportMode.plane,
+  categories: const ['Vêtements'],
+  status: PackageRequestStatus.open,
+  createdAt: DateTime(2026, 5, 10),
+);
 
 void main() {
   late _MockRepo repo;
@@ -35,18 +35,23 @@ void main() {
   blocTest<PackageRequestBloc, PackageRequestState>(
     'FetchMyRequests emits loading then loaded with requests',
     build: () {
-      when(() => repo.findMine()).thenAnswer((_) async => PackageRequestPage(
-            content: [_fakeRequest('r-1'), _fakeRequest('r-2')],
-            totalElements: 2,
-            page: 0,
-            size: 20,
-          ));
+      when(() => repo.findMine()).thenAnswer(
+        (_) async => PackageRequestPage(
+          content: [_fakeRequest('r-1'), _fakeRequest('r-2')],
+          totalElements: 2,
+          page: 0,
+          size: 20,
+        ),
+      );
       return PackageRequestBloc(repo);
     },
     act: (bloc) => bloc.add(const FetchMyRequests()),
     expect: () => [
-      isA<PackageRequestState>()
-          .having((s) => s.status, 'status', PackageRequestListStatus.loading),
+      isA<PackageRequestState>().having(
+        (s) => s.status,
+        'status',
+        PackageRequestListStatus.loading,
+      ),
       isA<PackageRequestState>()
           .having((s) => s.status, 'status', PackageRequestListStatus.loaded)
           .having((s) => s.requests.length, 'requests.length', 2),
@@ -63,8 +68,11 @@ void main() {
     },
     act: (bloc) => bloc.add(const FetchMyRequests()),
     expect: () => [
-      isA<PackageRequestState>()
-          .having((s) => s.status, 'status', PackageRequestListStatus.loading),
+      isA<PackageRequestState>().having(
+        (s) => s.status,
+        'status',
+        PackageRequestListStatus.loading,
+      ),
       isA<PackageRequestState>()
           .having((s) => s.status, 'status', PackageRequestListStatus.error)
           .having((s) => s.errorMessage, 'errorMessage', isNotNull),
@@ -77,12 +85,14 @@ void main() {
     'CancelRequest calls repo.cancel then refetches',
     build: () {
       when(() => repo.cancel('r-1')).thenAnswer((_) async {});
-      when(() => repo.findMine()).thenAnswer((_) async => PackageRequestPage(
-            content: [_fakeRequest('r-2')],
-            totalElements: 1,
-            page: 0,
-            size: 20,
-          ));
+      when(() => repo.findMine()).thenAnswer(
+        (_) async => PackageRequestPage(
+          content: [_fakeRequest('r-2')],
+          totalElements: 1,
+          page: 0,
+          size: 20,
+        ),
+      );
       return PackageRequestBloc(repo);
     },
     seed: () => PackageRequestState(
@@ -91,12 +101,19 @@ void main() {
     ),
     act: (bloc) => bloc.add(const CancelRequest('r-1')),
     expect: () => [
-      isA<PackageRequestState>()
-          .having((s) => s.status, 'status', PackageRequestListStatus.cancelling),
+      isA<PackageRequestState>().having(
+        (s) => s.status,
+        'status',
+        PackageRequestListStatus.cancelling,
+      ),
       isA<PackageRequestState>()
           .having((s) => s.status, 'status', PackageRequestListStatus.loaded)
           .having((s) => s.requests.length, 'requests.length', 1)
-          .having((s) => s.fetchedAt.isAfter(DateTime(2000)), 'fetchedAt fresh', true),
+          .having(
+            (s) => s.fetchedAt.isAfter(DateTime(2000)),
+            'fetchedAt fresh',
+            true,
+          ),
     ],
     verify: (_) {
       verify(() => repo.cancel('r-1')).called(1);
@@ -114,10 +131,16 @@ void main() {
     },
     act: (bloc) => bloc.add(const CancelRequest('r-1')),
     expect: () => [
-      isA<PackageRequestState>()
-          .having((s) => s.status, 'status', PackageRequestListStatus.cancelling),
-      isA<PackageRequestState>()
-          .having((s) => s.status, 'status', PackageRequestListStatus.error),
+      isA<PackageRequestState>().having(
+        (s) => s.status,
+        'status',
+        PackageRequestListStatus.cancelling,
+      ),
+      isA<PackageRequestState>().having(
+        (s) => s.status,
+        'status',
+        PackageRequestListStatus.error,
+      ),
     ],
   );
 
@@ -126,12 +149,14 @@ void main() {
   blocTest<PackageRequestBloc, PackageRequestState>(
     'RefreshMyRequests updates requests without showing loading',
     build: () {
-      when(() => repo.findMine()).thenAnswer((_) async => PackageRequestPage(
-            content: [_fakeRequest('r-fresh')],
-            totalElements: 1,
-            page: 0,
-            size: 20,
-          ));
+      when(() => repo.findMine()).thenAnswer(
+        (_) async => PackageRequestPage(
+          content: [_fakeRequest('r-fresh')],
+          totalElements: 1,
+          page: 0,
+          size: 20,
+        ),
+      );
       return PackageRequestBloc(repo);
     },
     seed: () => PackageRequestState(

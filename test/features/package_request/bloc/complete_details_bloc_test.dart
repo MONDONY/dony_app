@@ -19,19 +19,19 @@ const _event = CompleteDetailsSubmitted(
 );
 
 PackageRequest _fakeRequest() => PackageRequest(
-      id: 'pr-1',
-      senderId: 'sender-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 8, 15),
-      dateToleranceDays: 3,
-      weightKg: 5,
-      parcelSize: ParcelSize.medium,
-      transportMode: TransportMode.plane,
-      contentCategory: ContentCategory.vetements,
-      status: PackageRequestStatus.negotiating,
-      createdAt: DateTime(2026, 1, 1),
-    );
+  id: 'pr-1',
+  senderId: 'sender-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 8, 15),
+  dateToleranceDays: 3,
+  weightKg: 5,
+  parcelSize: ParcelSize.medium,
+  transportMode: TransportMode.plane,
+  categories: const ['Vêtements'],
+  status: PackageRequestStatus.negotiating,
+  createdAt: DateTime(2026, 1, 1),
+);
 
 void main() {
   late _MockPackageRequestRepository repo;
@@ -62,7 +62,7 @@ void main() {
           weightKg: 5,
           parcelSize: ParcelSize.medium,
           transportMode: TransportMode.plane,
-          contentCategory: ContentCategory.vetements,
+          categories: const ['Vêtements'],
           status: PackageRequestStatus.negotiating,
           createdAt: DateTime(2026, 1, 1),
         );
@@ -86,8 +86,9 @@ void main() {
     blocTest<CompleteDetailsBloc, CompleteDetailsState>(
       'CompleteDetailsStarted loads the request into state',
       build: () {
-        when(() => repo.getById('pr-1'))
-            .thenAnswer((_) async => _fakeRequest());
+        when(
+          () => repo.getById('pr-1'),
+        ).thenAnswer((_) async => _fakeRequest());
         return CompleteDetailsBloc(repo);
       },
       act: (bloc) => bloc.add(const CompleteDetailsStarted('pr-1')),
@@ -130,11 +131,7 @@ void main() {
         const CompleteDetailsState(status: CompleteDetailsStatus.loading),
         isA<CompleteDetailsState>()
             .having((s) => s.status, 'status', CompleteDetailsStatus.error)
-            .having(
-              (s) => s.errorMessage,
-              'errorMessage',
-              isNotNull,
-            ),
+            .having((s) => s.errorMessage, 'errorMessage', isNotNull),
       ],
     );
 

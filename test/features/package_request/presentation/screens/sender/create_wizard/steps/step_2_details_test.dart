@@ -30,52 +30,60 @@ void main() {
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
     registerFallbackValue(ContentCategory.vetements);
-    registerFallbackValue(FormStep1Submitted(
-      departureCity: 'a',
-      arrivalCity: 'b',
-      desiredDate: DateTime(2026),
-      dateToleranceDays: 0,
-      transportMode: TransportMode.plane,
-    ));
+    registerFallbackValue(
+      FormStep1Submitted(
+        departureCity: 'a',
+        arrivalCity: 'b',
+        desiredDate: DateTime(2026),
+        dateToleranceDays: 0,
+        transportMode: TransportMode.plane,
+      ),
+    );
   });
 
   setUp(() {
     repo = _MockRepo();
     mockBloc = _MockFormBloc();
     when(() => mockBloc.state).thenReturn(const PackageRequestFormState());
-    when(() => mockBloc.stream)
-        .thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
+    when(
+      () => mockBloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
   });
 
   Widget wrap(Widget child, {PackageRequestFormBloc? bloc}) => MaterialApp(
-        theme: AppTheme.light,
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider<PackageRequestFormBloc>.value(
-              value: bloc ??
-                  PackageRequestFormBloc(
-                    repo,
-                    analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-                  ),
-            ),
-            BlocProvider<PackageRequestPhotosCubit>(
-              create: (_) => PackageRequestPhotosCubit(
-                  repo, makeDisabledAnalytics(MockAnalyticsBackend())),
-            ),
-          ],
-          child: Scaffold(body: child),
+    theme: AppTheme.light,
+    home: MultiBlocProvider(
+      providers: [
+        BlocProvider<PackageRequestFormBloc>.value(
+          value:
+              bloc ??
+              PackageRequestFormBloc(
+                repo,
+                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+              ),
         ),
-      );
+        BlocProvider<PackageRequestPhotosCubit>(
+          create: (_) => PackageRequestPhotosCubit(
+            repo,
+            makeDisabledAnalytics(MockAnalyticsBackend()),
+          ),
+        ),
+      ],
+      child: Scaffold(body: child),
+    ),
+  );
 
   group('Step2Details', () {
     testWidgets('rend titre + sous-titre + labels de section', (tester) async {
       await tester.pumpWidget(wrap(const Step2Details()));
       expect(find.text('Décris ton colis'), findsOneWidget);
       expect(
-          find.textContaining('Ces infos aident les voyageurs'), findsOneWidget);
+        find.textContaining('Ces infos aident les voyageurs'),
+        findsOneWidget,
+      );
       expect(find.text('Poids approximatif'), findsOneWidget);
       expect(find.text('Taille'), findsOneWidget);
-      expect(find.text('Catégorie principale'), findsOneWidget);
+      expect(find.text('Catégories'), findsOneWidget);
     });
 
     testWidgets('rend 3 cards de taille (S/M/L)', (tester) async {
@@ -88,10 +96,21 @@ void main() {
       expect(find.text('Valise'), findsOneWidget);
     });
 
-    testWidgets('rend 9 OptionButton de catégorie', (tester) async {
+    testWidgets('rend 8 OptionButton de catégorie prédéfinie', (tester) async {
       await tester.pumpWidget(wrap(const Step2Details()));
-      // ContentCategory.values.length == 9 — chacune rendue en OptionButton
-      expect(find.byType(OptionButton), findsNWidgets(9));
+      // 8 prédéfinies (les 9 valeurs moins « Autre », qui passe par l'input libre)
+      expect(find.byType(OptionButton), findsNWidgets(8));
+    });
+
+    testWidgets('submit sans catégorie → message d'
+        "'"
+        'erreur', (tester) async {
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key)));
+      await tester.enterText(find.byType(TextFormField).first, '5');
+      key.currentState!.submit();
+      await tester.pump();
+      expect(find.text('Choisis au moins une catégorie'), findsOneWidget);
     });
 
     testWidgets('validation poids échoue si vide', (tester) async {
@@ -117,8 +136,9 @@ void main() {
       expect(find.byKey(const Key('description-input')), findsOneWidget);
     });
 
-    testWidgets('saisir une description → state.description après submit',
-        (tester) async {
+    testWidgets('saisir une description → state.description après submit', (
+      tester,
+    ) async {
       final bloc = PackageRequestFormBloc(
         repo,
         analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
@@ -130,6 +150,9 @@ void main() {
         find.byKey(const Key('description-input')),
         'Colis fragile, vases en verre',
       );
+      await tester.ensureVisible(find.text('Vêtements'));
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
       key.currentState!.submit();
       await tester.pump();
       expect(bloc.state.description, 'Colis fragile, vases en verre');
@@ -143,15 +166,20 @@ void main() {
       final key = GlobalKey<Step2DetailsState>();
       await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
       await tester.enterText(find.byType(TextFormField).first, '5');
+      await tester.ensureVisible(find.text('Vêtements'));
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
       key.currentState!.submit();
       await tester.pump();
       expect(bloc.state.description, isNull);
     });
 
-    testWidgets('prefill : state.description affichée dans le champ',
-        (tester) async {
-      when(() => mockBloc.state).thenReturn(
-          const PackageRequestFormState(description: 'Déjà écrit'));
+    testWidgets('prefill : state.description affichée dans le champ', (
+      tester,
+    ) async {
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const PackageRequestFormState(description: 'Déjà écrit'));
       await tester.pumpWidget(wrap(const Step2Details(), bloc: mockBloc));
       expect(find.text('Déjà écrit'), findsOneWidget);
     });

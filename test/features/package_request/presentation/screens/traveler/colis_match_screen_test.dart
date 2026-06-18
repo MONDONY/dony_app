@@ -32,20 +32,19 @@ AnnouncementModel _ann({
   String status = 'ACTIVE',
   double availableKg = 15,
   double totalKg = 23,
-}) =>
-    AnnouncementModel(
-      id: id,
-      travelerId: 'u-1',
-      departureCity: departure,
-      arrivalCity: arrival,
-      departureDate: DateTime(2026, 6, 12),
-      availableKg: availableKg,
-      totalKg: totalKg,
-      pricePerKg: 5,
-      status: status,
-      createdAt: DateTime(2026, 5, 1),
-      updatedAt: DateTime(2026, 5, 1),
-    );
+}) => AnnouncementModel(
+  id: id,
+  travelerId: 'u-1',
+  departureCity: departure,
+  arrivalCity: arrival,
+  departureDate: DateTime(2026, 6, 12),
+  availableKg: availableKg,
+  totalKg: totalKg,
+  pricePerKg: 5,
+  status: status,
+  createdAt: DateTime(2026, 5, 1),
+  updatedAt: DateTime(2026, 5, 1),
+);
 
 PackageRequestSearchItem _searchItem({String id = 'pr-1'}) =>
     PackageRequestSearchItem(
@@ -56,7 +55,7 @@ PackageRequestSearchItem _searchItem({String id = 'pr-1'}) =>
       dateToleranceDays: 2,
       weightKg: 3,
       parcelSize: ParcelSize.small,
-      contentCategory: ContentCategory.vetements,
+      categories: const ['Vêtements'],
       sender: const SenderPublicProfile(
         id: 's-1',
         displayName: 'Fatou Ba',
@@ -81,12 +80,13 @@ void main() {
     searchBloc = _MockPackageRequestSearchBloc();
 
     when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-    when(() => announcementBloc.stream)
-        .thenAnswer((_) => const Stream<AnnouncementState>.empty());
-    when(() => searchBloc.state)
-        .thenReturn(const PackageRequestSearchState());
-    when(() => searchBloc.stream)
-        .thenAnswer((_) => const Stream<PackageRequestSearchState>.empty());
+    when(
+      () => announcementBloc.stream,
+    ).thenAnswer((_) => const Stream<AnnouncementState>.empty());
+    when(() => searchBloc.state).thenReturn(const PackageRequestSearchState());
+    when(
+      () => searchBloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestSearchState>.empty());
 
     if (getIt.isRegistered<AnnouncementBloc>()) {
       getIt.unregister<AnnouncementBloc>();
@@ -108,34 +108,43 @@ void main() {
   });
 
   Widget wrap() => MaterialApp.router(
-        routerConfig: GoRouter(routes: [
-          GoRoute(
-              path: '/', builder: (_, __) => const ColisMatchScreen()),
-          GoRoute(
-              path: '/announcements/create',
-              builder: (_, __) =>
-                  const Scaffold(body: Text('Créer trajet'))),
-          GoRoute(
-              path: '/package-requests/:id/public',
-              builder: (_, __) =>
-                  const Scaffold(body: Text('Détail colis'))),
-        ]),
-        theme: AppTheme.light,
-      );
+    routerConfig: GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const ColisMatchScreen()),
+        GoRoute(
+          path: '/announcements/create',
+          builder: (_, __) => const Scaffold(body: Text('Créer trajet')),
+        ),
+        GoRoute(
+          path: '/package-requests/:id/public',
+          builder: (_, __) => const Scaffold(body: Text('Détail colis')),
+        ),
+      ],
+    ),
+    theme: AppTheme.light,
+  );
 
   group('ColisMatchScreen', () {
-    testWidgets('chips générés depuis annonces ACTIVE et FULL seulement',
-        (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementListLoaded([
-        _ann(id: 'a1', departure: 'Paris', arrival: 'Dakar', status: 'ACTIVE'),
-        _ann(id: 'a2', departure: 'Lyon', arrival: 'Abidjan', status: 'FULL'),
-        _ann(
+    testWidgets('chips générés depuis annonces ACTIVE et FULL seulement', (
+      tester,
+    ) async {
+      when(() => announcementBloc.state).thenReturn(
+        AnnouncementListLoaded([
+          _ann(
+            id: 'a1',
+            departure: 'Paris',
+            arrival: 'Dakar',
+            status: 'ACTIVE',
+          ),
+          _ann(id: 'a2', departure: 'Lyon', arrival: 'Abidjan', status: 'FULL'),
+          _ann(
             id: 'a3',
             departure: 'Nice',
             arrival: 'Bamako',
-            status: 'CLOSED'),
-      ]));
+            status: 'CLOSED',
+          ),
+        ]),
+      );
 
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 500));
@@ -146,70 +155,95 @@ void main() {
     });
 
     testWidgets(
-        'sélection chip → SearchFiltersChanged avec bons departure/arrival',
-        (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementListLoaded([
-        _ann(id: 'a1', departure: 'Paris', arrival: 'Dakar', status: 'ACTIVE'),
-        _ann(
-            id: 'a2',
-            departure: 'Lyon',
-            arrival: 'Abidjan',
-            status: 'ACTIVE'),
-      ]));
+      'sélection chip → SearchFiltersChanged avec bons departure/arrival',
+      (tester) async {
+        when(() => announcementBloc.state).thenReturn(
+          AnnouncementListLoaded([
+            _ann(
+              id: 'a1',
+              departure: 'Paris',
+              arrival: 'Dakar',
+              status: 'ACTIVE',
+            ),
+            _ann(
+              id: 'a2',
+              departure: 'Lyon',
+              arrival: 'Abidjan',
+              status: 'ACTIVE',
+            ),
+          ]),
+        );
 
-      await tester.pumpWidget(wrap());
-      await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpWidget(wrap());
+        await tester.pump(const Duration(milliseconds: 500));
 
-      await tester.tap(find.textContaining('Lyon→Abidjan'));
-      await tester.pump();
+        await tester.tap(find.textContaining('Lyon→Abidjan'));
+        await tester.pump();
 
-      verify(() => searchBloc.add(any(
-            that: isA<SearchFiltersChanged>()
-                .having((e) => e.departure, 'departure', 'Lyon')
-                .having((e) => e.arrival, 'arrival', 'Abidjan'),
-          ))).called(greaterThanOrEqualTo(1));
-    });
-
-    testWidgets(
-        'état vide "Aucun trajet actif" quand AnnouncementListLoaded([])',
-        (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementListLoaded([]));
-
-      await tester.pumpWidget(wrap());
-      await tester.pump(const Duration(milliseconds: 500));
-
-      verifyNever(() => searchBloc.add(any()));
-
-      expect(find.text('Aucun trajet actif'), findsOneWidget);
-      expect(find.text('Publier un trajet'), findsOneWidget);
-    });
+        verify(
+          () => searchBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>()
+                  .having((e) => e.departure, 'departure', 'Lyon')
+                  .having((e) => e.arrival, 'arrival', 'Abidjan'),
+            ),
+          ),
+        ).called(greaterThanOrEqualTo(1));
+      },
+    );
 
     testWidgets(
-        'état vide "Aucun colis ne correspond" quand search loaded vide',
-        (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementListLoaded([_ann()]));
-      when(() => searchBloc.state).thenReturn(const PackageRequestSearchState(
-        status: SearchStatus.loaded,
-        results: [],
-      ));
+      'état vide "Aucun trajet actif" quand AnnouncementListLoaded([])',
+      (tester) async {
+        when(
+          () => announcementBloc.state,
+        ).thenReturn(AnnouncementListLoaded([]));
 
-      await tester.pumpWidget(wrap());
-      await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpWidget(wrap());
+        await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.textContaining('Aucun colis ne correspond'), findsOneWidget);
-    });
+        verifyNever(() => searchBloc.add(any()));
 
-    testWidgets('tap carte → navigation vers /package-requests/:id/public',
-        (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementListLoaded([_ann()]));
-      when(() => searchBloc.state).thenReturn(PackageRequestSearchState(
-        status: SearchStatus.loaded,
-        results: [_searchItem()],
-      ));
+        expect(find.text('Aucun trajet actif'), findsOneWidget);
+        expect(find.text('Publier un trajet'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'état vide "Aucun colis ne correspond" quand search loaded vide',
+      (tester) async {
+        when(
+          () => announcementBloc.state,
+        ).thenReturn(AnnouncementListLoaded([_ann()]));
+        when(() => searchBloc.state).thenReturn(
+          const PackageRequestSearchState(
+            status: SearchStatus.loaded,
+            results: [],
+          ),
+        );
+
+        await tester.pumpWidget(wrap());
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(
+          find.textContaining('Aucun colis ne correspond'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('tap carte → navigation vers /package-requests/:id/public', (
+      tester,
+    ) async {
+      when(
+        () => announcementBloc.state,
+      ).thenReturn(AnnouncementListLoaded([_ann()]));
+      when(() => searchBloc.state).thenReturn(
+        PackageRequestSearchState(
+          status: SearchStatus.loaded,
+          results: [_searchItem()],
+        ),
+      );
 
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 500));
@@ -220,11 +254,12 @@ void main() {
       expect(find.text('Détail colis'), findsOneWidget);
     });
 
-    testWidgets('CapacityBanner affiche availableKg et totalKg de l\'annonce',
-        (tester) async {
-      when(() => announcementBloc.state).thenReturn(AnnouncementListLoaded([
-        _ann(availableKg: 15.0, totalKg: 23.0),
-      ]));
+    testWidgets('CapacityBanner affiche availableKg et totalKg de l\'annonce', (
+      tester,
+    ) async {
+      when(() => announcementBloc.state).thenReturn(
+        AnnouncementListLoaded([_ann(availableKg: 15.0, totalKg: 23.0)]),
+      );
 
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 500));
@@ -233,14 +268,16 @@ void main() {
       expect(find.textContaining('23.0 kg total'), findsOneWidget);
     });
 
-    testWidgets('spinner footer affiché en état loadingMore',
-        (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementListLoaded([_ann()]));
-      when(() => searchBloc.state).thenReturn(PackageRequestSearchState(
-        status: SearchStatus.loadingMore,
-        results: [_searchItem()],
-      ));
+    testWidgets('spinner footer affiché en état loadingMore', (tester) async {
+      when(
+        () => announcementBloc.state,
+      ).thenReturn(AnnouncementListLoaded([_ann()]));
+      when(() => searchBloc.state).thenReturn(
+        PackageRequestSearchState(
+          status: SearchStatus.loadingMore,
+          results: [_searchItem()],
+        ),
+      );
 
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 500));

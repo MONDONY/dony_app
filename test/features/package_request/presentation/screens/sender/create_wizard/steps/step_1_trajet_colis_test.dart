@@ -43,30 +43,35 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-        theme: AppTheme.light,
-        home: BlocProvider(
-          create: (_) => PackageRequestFormBloc(
-            packageRepo,
-            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-          ),
-          child: Scaffold(body: child),
-        ),
-      );
+    theme: AppTheme.light,
+    home: BlocProvider(
+      create: (_) => PackageRequestFormBloc(
+        packageRepo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      ),
+      child: Scaffold(body: child),
+    ),
+  );
 
   group('Step1TrajetColis', () {
-    testWidgets('rend le label section + titre + avion verrouillé',
-        (tester) async {
+    testWidgets('rend le label section + titre + avion verrouillé', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('TRAJET & COLIS'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
       // Avion verrouillé remplace les 6 OptionButton
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'),
+        findsOneWidget,
+      );
       expect(find.text('Avion'), findsOneWidget);
       expect(find.byType(OptionButton), findsNothing);
     });
 
-    testWidgets('rend les labels de section Départ / Arrivée / Date',
-        (tester) async {
+    testWidgets('rend les labels de section Départ / Arrivée / Date', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('DÉPART'), findsOneWidget);
       expect(find.text('ARRIVÉE'), findsOneWidget);
@@ -86,34 +91,40 @@ void main() {
       expect(find.text('Choisis une date souhaitée'), findsOneWidget);
     });
 
-    testWidgets('mode édition : pré-remplit les villes depuis l\'état du bloc',
-        (tester) async {
-      final req = PackageRequest(
-        id: 'r-edit', senderId: 's-1',
-        departureCity: 'Lyon', arrivalCity: 'Bamako',
-        desiredDate: DateTime(2026, 7, 20),
-        dateToleranceDays: 3,
-        weightKg: 8,
-        parcelSize: ParcelSize.medium,
-        transportMode: TransportMode.plane,
-        contentCategory: ContentCategory.vetements,
-        status: PackageRequestStatus.open,
-        createdAt: DateTime(2026, 5, 10),
-      );
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: BlocProvider(
-          create: (_) => PackageRequestFormBloc(
-            packageRepo,
-            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-            editing: req,
+    testWidgets(
+      'mode édition : pré-remplit les villes depuis l\'état du bloc',
+      (tester) async {
+        final req = PackageRequest(
+          id: 'r-edit',
+          senderId: 's-1',
+          departureCity: 'Lyon',
+          arrivalCity: 'Bamako',
+          desiredDate: DateTime(2026, 7, 20),
+          dateToleranceDays: 3,
+          weightKg: 8,
+          parcelSize: ParcelSize.medium,
+          transportMode: TransportMode.plane,
+          categories: const ['Vêtements'],
+          status: PackageRequestStatus.open,
+          createdAt: DateTime(2026, 5, 10),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light,
+            home: BlocProvider(
+              create: (_) => PackageRequestFormBloc(
+                packageRepo,
+                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+                editing: req,
+              ),
+              child: const Scaffold(body: Step1TrajetColis()),
+            ),
           ),
-          child: const Scaffold(body: Step1TrajetColis()),
-        ),
-      ));
-      await tester.pumpAndSettle();
-      expect(find.text('Lyon'), findsOneWidget);
-      expect(find.text('Bamako'), findsOneWidget);
-    });
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Lyon'), findsOneWidget);
+        expect(find.text('Bamako'), findsOneWidget);
+      },
+    );
   });
 }

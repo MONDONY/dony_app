@@ -11,6 +11,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
@@ -227,6 +228,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     _ => request.parcelSize.name.toUpperCase(),
   };
 
+  String get _parcelHint => switch (request.parcelSize.name.toUpperCase()) {
+    'SMALL' => 'Sac',
+    'MEDIUM' => 'Carton',
+    'LARGE' => 'Valise',
+    _ => 'Taille',
+  };
+
   @override
   Widget build(BuildContext context) {
     final r = request;
@@ -306,9 +314,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
 
-              // ── Titre colis-first ────────────────────────────────────────
+              // ── Titre corridor ───────────────────────────────────────────
               Text(
-                '${r.weightKg.toStringAsFixed(0)} kg · ${r.contentCategory.label} · $_sizeLabel',
+                '${depFlag != null ? '$depFlag ' : ''}${r.departureCity} → '
+                '${r.arrivalCity}${arrFlag != null ? ' $arrFlag' : ''}',
                 style: tt.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: cs.onSurface,
@@ -326,8 +335,6 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text(
-                      '${depFlag != null ? '$depFlag ' : ''}${r.departureCity} → '
-                      '${r.arrivalCity}${arrFlag != null ? ' $arrFlag' : ''} · '
                       'le ${r.desiredDate.day}/${r.desiredDate.month}/${r.desiredDate.year} '
                       '(±${r.dateToleranceDays}j)',
                       style: tt.bodyMedium?.copyWith(
@@ -339,19 +346,62 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.base),
 
-              // ── Colis ────────────────────────────────────────────────────
-              _detailCard(context, 'Colis', [
-                _kv(context, 'scale', 'Poids', '${r.weightKg} kg'),
-                _kv(
-                  context,
-                  'archive',
-                  'Taille',
-                  r.parcelSize.name.toUpperCase(),
+              // ── Poids / Taille (tuiles) ──────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatTile(
+                      icon: 'scale',
+                      value:
+                          '${r.weightKg.toStringAsFixed(r.weightKg % 1 == 0 ? 0 : 1)} kg',
+                      label: 'Poids',
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: _StatTile(
+                      icon: 'package',
+                      value: _sizeLabel,
+                      label: _parcelHint,
+                    ),
+                  ),
+                ],
+              ),
+
+              // ── Catégories (chips) ───────────────────────────────────────
+              if (r.categories.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  'CATÉGORIES',
+                  style: tt.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: kTextSecondary,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-                _kv(context, 'tag', 'Catégorie', r.contentCategory.label),
-                if (r.description != null && r.description!.isNotEmpty)
-                  _kv(context, 'file-text', 'Description', r.description!),
-              ]),
+                const SizedBox(height: DonySpacing.sm),
+                Wrap(
+                  spacing: DonySpacing.sm,
+                  runSpacing: DonySpacing.sm,
+                  children: [
+                    for (final cat in r.categories) _CategoryChip(label: cat),
+                  ],
+                ),
+              ],
+
+              // ── Description ──────────────────────────────────────────────
+              if (r.description != null && r.description!.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                _detailCard(context, 'Description', [
+                  Text(
+                    r.description!,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurface,
+                      height: 1.5,
+                    ),
+                  ),
+                ]),
+              ],
 
               if (r.targetPriceEur != null) ...[
                 const SizedBox(height: DonySpacing.md),
@@ -484,6 +534,101 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tuile statistique (Poids / Taille) — icône + grande valeur + libellé.
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+  final String icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: DonySpacing.base,
+        horizontal: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Center(child: DonyIcon(icon, size: 18, color: cs.primary)),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            value,
+            style: tt.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chip catégorie (lecture seule) — emoji + libellé.
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            ContentCategory.emojiForLabel(label),
+            style: const TextStyle(fontSize: 13),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: tt.labelMedium?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
-import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
@@ -11,10 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Étape 2 / 3 — Détails du colis (match maquette `v3/expéditeur_publie`).
+/// Étape 2 / 3 — Détails du colis.
 ///
-/// Layout : titre "Décris ton colis" · poids (big input) · taille (3 cards
-/// S/M/L) · catégorie principale (boutons option) · champ libre "Autre…".
+/// Layout : poids (big input) · taille (3 cards S/M/L) · catégories MULTIPLES
+/// (chips prédéfinies multi-sélection + chips libres supprimables + input
+/// toujours visible pour en ajouter, comme la création d'un trajet) · description.
 class Step2Details extends StatefulWidget {
   const Step2Details({super.key});
 
@@ -25,19 +25,21 @@ class Step2Details extends StatefulWidget {
 class Step2DetailsState extends State<Step2Details> {
   final _formKey = GlobalKey<FormState>();
   final _weightCtrl = TextEditingController();
-  final _customCategoryCtrl = TextEditingController();
+  final _customCatCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
 
-  /// Tracks whether the "Autre…" free-text field is visible.
-  /// A [ValueNotifier] is used here (not setState) to toggle visibility
-  /// without triggering a full rebuild unnecessarily.
-  final _showCustomField = ValueNotifier<bool>(false);
-
   ParcelSize _size = ParcelSize.medium;
-  ContentCategory _category = ContentCategory.vetements;
 
-  /// The set of predefined categories shown as chips (excludes `autre`
-  /// because "Autre…" gets its own special chip at the end of the row).
+  /// Catégories prédéfinies cochées (libellés).
+  final Set<String> _selectedCats = {};
+
+  /// Catégories libres ajoutées par l'utilisateur (ordonnées).
+  final List<String> _customCats = [];
+
+  /// Message d'erreur si aucune catégorie n'est choisie à la soumission.
+  String? _catError;
+
+  /// Catégories prédéfinies (hors « Autre ») proposées en chips.
   static final _predefined = ContentCategory.values
       .where((c) => c != ContentCategory.autre)
       .toList(growable: false);
@@ -54,10 +56,12 @@ class Step2DetailsState extends State<Step2Details> {
           : w.toString();
     }
     if (s.parcelSize != null) _size = s.parcelSize!;
-    if (s.contentCategory != null) _category = s.contentCategory!;
-    if (s.customCategoryLabel != null && s.customCategoryLabel!.isNotEmpty) {
-      _customCategoryCtrl.text = s.customCategoryLabel!;
-      _showCustomField.value = true;
+    for (final cat in s.categories) {
+      if (ContentCategory.predefinedLabels.contains(cat)) {
+        _selectedCats.add(cat);
+      } else {
+        _customCats.add(cat);
+      }
     }
     if (s.description != null && s.description!.isNotEmpty) {
       _descriptionCtrl.text = s.description!;
@@ -67,39 +71,57 @@ class Step2DetailsState extends State<Step2Details> {
   @override
   void dispose() {
     _weightCtrl.dispose();
-    _customCategoryCtrl.dispose();
+    _customCatCtrl.dispose();
     _descriptionCtrl.dispose();
-    _showCustomField.dispose();
     super.dispose();
   }
 
+  void _toggleCat(String label) {
+    setState(() {
+      if (_selectedCats.contains(label)) {
+        _selectedCats.remove(label);
+      } else {
+        _selectedCats.add(label);
+      }
+      _catError = null;
+    });
+  }
+
+  void _addCustom() {
+    final v = _customCatCtrl.text.trim();
+    if (v.isEmpty) return;
+    if (!_customCats.contains(v) && !_selectedCats.contains(v)) {
+      setState(() {
+        _customCats.add(v);
+        _catError = null;
+      });
+    }
+    _customCatCtrl.clear();
+  }
+
+  void _removeCustom(String label) {
+    setState(() => _customCats.remove(label));
+  }
+
+  List<String> get _allCategories => [..._selectedCats, ..._customCats];
+
   void submit() {
-    if (!_formKey.currentState!.validate()) return;
+    final formOk = _formKey.currentState!.validate();
+    final cats = _allCategories;
+    if (cats.isEmpty) {
+      setState(() => _catError = 'Choisis au moins une catégorie');
+    }
+    if (!formOk || cats.isEmpty) return;
     final w = double.parse(_weightCtrl.text.replaceAll(',', '.'));
     final desc = _descriptionCtrl.text.trim();
     context.read<PackageRequestFormBloc>().add(
       FormStep2Submitted(
         weightKg: w,
         parcelSize: _size,
-        contentCategory: _category,
+        categories: cats,
         description: desc.isEmpty ? null : desc,
       ),
     );
-  }
-
-  void _selectPredefined(ContentCategory c) {
-    _category = c;
-    _showCustomField.value = false;
-    _customCategoryCtrl.clear();
-    // Clear custom label in BLoC state by dispatching empty change.
-    context.read<PackageRequestFormBloc>().add(
-      const FormStep2CategoryChanged(null),
-    );
-  }
-
-  void _selectCustom() {
-    _category = ContentCategory.autre;
-    _showCustomField.value = true;
   }
 
   @override
@@ -168,93 +190,51 @@ class Step2DetailsState extends State<Step2Details> {
             ),
             const SizedBox(height: DonySpacing.base),
 
-            // ── Catégorie ──────────────────────────────────────────────────
-            _FieldLabel('Catégorie principale'),
-            const SizedBox(height: DonySpacing.sm),
-            BlocBuilder<PackageRequestFormBloc, PackageRequestFormState>(
-              builder: (context, state) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Wrap(
-                      spacing: DonySpacing.sm,
-                      runSpacing: DonySpacing.sm,
-                      children: [
-                        // Predefined category chips
-                        ..._predefined.map((c) {
-                          return OptionButton(
-                            label: c.label,
-                            emoji: c.emoji,
-                            selected: _category == c,
-                            onTap: () => _selectPredefined(c),
-                          );
-                        }),
-                        // "Autre…" free-text chip
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _showCustomField,
-                          builder: (context, showCustom, _) {
-                            return OptionButton(
-                              label: 'Autre…',
-                              emoji: ContentCategory.autre.emoji,
-                              selected: showCustom,
-                              onTap: _selectCustom,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    // Free-text input — only visible when "Autre…" is selected
-                    ValueListenableBuilder<bool>(
-                      valueListenable: _showCustomField,
-                      builder: (context, showCustom, _) {
-                        if (!showCustom) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: DonySpacing.sm),
-                          child: TextField(
-                            key: const Key('custom-category-input'),
-                            controller: _customCategoryCtrl,
-                            maxLength: 60,
-                            textCapitalization: TextCapitalization.sentences,
-                            decoration: InputDecoration(
-                              hintText: 'Décrivez le contenu…',
-                              filled: true,
-                              fillColor: Colors.white,
-                              counterText: '',
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.base,
-                                vertical: DonySpacing.md,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  DonyRadius.md,
-                                ),
-                                borderSide: const BorderSide(
-                                  color: DonyColors.neutral200,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  DonyRadius.md,
-                                ),
-                                borderSide: const BorderSide(
-                                  color: DonyColors.primary,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            onChanged: (value) {
-                              context.read<PackageRequestFormBloc>().add(
-                                FormStep2CategoryChanged(value),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
+            // ── Catégories (multiples) ─────────────────────────────────────
+            _FieldLabel('Catégories'),
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              'Choisis une ou plusieurs catégories, ou ajoute la tienne.',
+              style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
             ),
+            const SizedBox(height: DonySpacing.sm),
+            Wrap(
+              spacing: DonySpacing.sm,
+              runSpacing: DonySpacing.sm,
+              children: [
+                for (final c in _predefined)
+                  OptionButton(
+                    label: c.label,
+                    emoji: c.emoji,
+                    selected: _selectedCats.contains(c.label),
+                    onTap: () => _toggleCat(c.label),
+                  ),
+              ],
+            ),
+            if (_customCats.isNotEmpty) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Wrap(
+                spacing: DonySpacing.sm,
+                runSpacing: DonySpacing.sm,
+                children: [
+                  for (final c in _customCats)
+                    _RemovableChip(label: c, onRemove: () => _removeCustom(c)),
+                ],
+              ),
+            ],
+            const SizedBox(height: DonySpacing.sm),
+            _InlineAddRow(
+              controller: _customCatCtrl,
+              hint: 'Autre catégorie…',
+              onAdd: _addCustom,
+            ),
+            if (_catError != null) ...[
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                _catError!,
+                style: tt.bodySmall?.copyWith(color: DonyColors.error),
+              ),
+            ],
             const SizedBox(height: DonySpacing.base),
 
             // ── Description (optionnel) ────────────────────────────────────
@@ -269,6 +249,116 @@ class Step2DetailsState extends State<Step2Details> {
 }
 
 // ─── Atoms ──────────────────────────────────────────────────────────────────
+
+/// Input + bouton « + » toujours visible pour ajouter une catégorie libre.
+class _InlineAddRow extends StatelessWidget {
+  const _InlineAddRow({
+    required this.controller,
+    required this.hint,
+    required this.onAdd,
+  });
+  final TextEditingController controller;
+  final String hint;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            key: const Key('custom-category-input'),
+            controller: controller,
+            maxLength: 40,
+            textCapitalization: TextCapitalization.sentences,
+            onSubmitted: (_) => onAdd(),
+            decoration: InputDecoration(
+              hintText: hint,
+              filled: true,
+              fillColor: Colors.white,
+              counterText: '',
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.md,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                borderSide: const BorderSide(color: DonyColors.neutral200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                borderSide: const BorderSide(
+                  color: DonyColors.primary,
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        Material(
+          color: DonyColors.primary,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          child: InkWell(
+            key: const Key('add-category-btn'),
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            onTap: onAdd,
+            child: const SizedBox(
+              width: 52,
+              height: 52,
+              child: Icon(Icons.add_rounded, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Chip catégorie libre, supprimable via la croix.
+class _RemovableChip extends StatelessWidget {
+  const _RemovableChip({required this.label, required this.onRemove});
+  final String label;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.only(
+        left: DonySpacing.md,
+        right: DonySpacing.sm,
+        top: 8,
+        bottom: 8,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            key: Key('remove-cat-$label'),
+            onTap: onRemove,
+            child: Icon(Icons.close_rounded, size: 16, color: cs.primary),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _DescriptionInput extends StatelessWidget {
   const _DescriptionInput({required this.controller});

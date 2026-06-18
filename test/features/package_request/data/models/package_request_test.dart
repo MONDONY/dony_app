@@ -14,7 +14,7 @@ void main() {
       'dateToleranceDays': 2,
       'weightKg': 5.0,
       'parcelSize': 'SMALL',
-      'contentCategory': 'vetements',
+      'contentCategory': 'Vêtements,Médicaments,Fragile',
       'description': 'Cadeau',
       'targetPriceEur': 25.5,
       'photoUrl': null,
@@ -31,29 +31,49 @@ void main() {
     expect(pr.status, PackageRequestStatus.open);
     expect(pr.weightKg, 5.0);
     expect(pr.targetPriceEur, 25.5);
+    // Catégories multiples : la chaîne wire est découpée par virgule.
+    expect(pr.categories, ['Vêtements', 'Médicaments', 'Fragile']);
+    expect(pr.primaryCategory, 'Vêtements');
   });
 
   test('fromJson parses negotiable + acceptedPaymentMethods', () {
     final json = {
-      'id': '1', 'senderId': 's', 'departureCity': 'Paris', 'arrivalCity': 'Dakar',
-      'desiredDate': '2026-06-12', 'dateToleranceDays': 2, 'weightKg': 23,
-      'parcelSize': 'LARGE', 'transportMode': 'PLANE', 'contentCategory': 'MEDICAMENTS',
-      'status': 'OPEN', 'createdAt': '2026-06-04T10:00:00',
+      'id': '1',
+      'senderId': 's',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'desiredDate': '2026-06-12',
+      'dateToleranceDays': 2,
+      'weightKg': 23,
+      'parcelSize': 'LARGE',
+      'transportMode': 'PLANE',
+      'contentCategory': 'MEDICAMENTS',
+      'status': 'OPEN',
+      'createdAt': '2026-06-04T10:00:00',
       'negotiable': false,
       'acceptedPaymentMethods': ['STRIPE', 'CASH'],
     };
     final r = PackageRequest.fromJson(json);
     expect(r.negotiable, isFalse);
-    expect(r.acceptedPaymentMethods, {PaymentMethod.stripe, PaymentMethod.cash});
+    expect(r.acceptedPaymentMethods, {
+      PaymentMethod.stripe,
+      PaymentMethod.cash,
+    });
   });
 
   test('PackageRequest equality via Equatable', () {
     final json = {
-      'id': 'a', 'senderId': 's',
-      'departureCity': 'A', 'arrivalCity': 'B',
-      'desiredDate': '2026-06-15', 'dateToleranceDays': 2,
-      'weightKg': 5.0, 'parcelSize': 'SMALL', 'contentCategory': 'cat',
-      'status': 'OPEN', 'createdAt': '2026-05-10T10:00:00Z',
+      'id': 'a',
+      'senderId': 's',
+      'departureCity': 'A',
+      'arrivalCity': 'B',
+      'desiredDate': '2026-06-15',
+      'dateToleranceDays': 2,
+      'weightKg': 5.0,
+      'parcelSize': 'SMALL',
+      'contentCategory': 'cat',
+      'status': 'OPEN',
+      'createdAt': '2026-05-10T10:00:00Z',
     };
     expect(PackageRequest.fromJson(json), PackageRequest.fromJson(json));
   });

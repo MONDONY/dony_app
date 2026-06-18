@@ -35,12 +35,16 @@ void main() {
     repo = _MockRepo();
     mockBloc = _MockFormBloc();
     when(() => mockBloc.state).thenReturn(const PackageRequestFormState());
-    when(() => mockBloc.stream)
-        .thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
+    when(
+      () => mockBloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
   });
 
-  Widget wrap(Widget child,
-      {PackageRequestFormState? seed, bool useMock = false}) {
+  Widget wrap(
+    Widget child, {
+    PackageRequestFormState? seed,
+    bool useMock = false,
+  }) {
     if (useMock && seed != null) {
       when(() => mockBloc.state).thenReturn(seed);
     }
@@ -57,7 +61,9 @@ void main() {
           BlocProvider<PackageRequestFormBloc>.value(value: bloc),
           BlocProvider(
             create: (_) => PackageRequestPhotosCubit(
-                repo, makeDisabledAnalytics(MockAnalyticsBackend())),
+              repo,
+              makeDisabledAnalytics(MockAnalyticsBackend()),
+            ),
           ),
         ],
         child: Scaffold(body: child),
@@ -74,8 +80,9 @@ void main() {
       expect(find.byType(TextFormField), findsOneWidget);
     });
 
-    testWidgets('le récap reflète les choix précédents stockés dans le state',
-        (tester) async {
+    testWidgets('le récap reflète les choix précédents stockés dans le state', (
+      tester,
+    ) async {
       final seed = PackageRequestFormState(
         currentStep: 2,
         departureCity: 'Paris',
@@ -85,10 +92,11 @@ void main() {
         transportMode: TransportMode.plane,
         weightKg: 5,
         parcelSize: ParcelSize.medium,
-        contentCategory: ContentCategory.vetements,
+        categories: const ['Vêtements'],
       );
-      await tester
-          .pumpWidget(wrap(const Step3RecapBudget(), seed: seed, useMock: true));
+      await tester.pumpWidget(
+        wrap(const Step3RecapBudget(), seed: seed, useMock: true),
+      );
       expect(find.text('Paris → Dakar'), findsOneWidget);
       // La ligne "Colis" contient la catégorie en suffixe (ex: "MEDIUM · 5 kg · Vêtements.")
       expect(find.textContaining('Vêtements'), findsOneWidget);

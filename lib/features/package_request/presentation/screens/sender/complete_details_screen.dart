@@ -24,7 +24,11 @@ import 'package:intl/intl.dart';
 /// On success the screen pops the chosen [PaymentMethod] so the caller
 /// (`ThreadStateCtaBar`) can open the payment recap with that method.
 class CompleteDetailsScreen extends StatelessWidget {
-  const CompleteDetailsScreen({required this.requestId, this.thread, super.key});
+  const CompleteDetailsScreen({
+    required this.requestId,
+    this.thread,
+    super.key,
+  });
   final String requestId;
   final NegotiationThread? thread;
 
@@ -86,12 +90,14 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   void _submit() {
     if (!_form.currentState!.validate()) return;
     final city = _recipientCityCtrl.text.trim();
-    context.read<CompleteDetailsBloc>().add(CompleteDetailsSubmitted(
-          requestId: widget.requestId,
-          recipientName: _recipientNameCtrl.text.trim(),
-          recipientPhone: _recipientPhoneCtrl.text.trim(),
-          recipientCity: city.isEmpty ? null : city,
-        ));
+    context.read<CompleteDetailsBloc>().add(
+      CompleteDetailsSubmitted(
+        requestId: widget.requestId,
+        recipientName: _recipientNameCtrl.text.trim(),
+        recipientPhone: _recipientPhoneCtrl.text.trim(),
+        recipientCity: city.isEmpty ? null : city,
+      ),
+    );
   }
 
   @override
@@ -111,7 +117,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
             ),
           );
           // Return the chosen method so the caller opens the payment recap with it.
-          final method = _selectedMethod.value ??
+          final method =
+              _selectedMethod.value ??
               widget.thread?.paymentMethod ??
               PaymentMethod.stripe;
           context.pop(method);
@@ -131,13 +138,18 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
           body: !state.loaded
               ? Center(
                   child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.primary))
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                )
               : Stack(
                   children: [
                     SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(DonySpacing.lg,
-                          DonySpacing.xl, DonySpacing.lg,
-                          MediaQuery.of(context).padding.bottom + 100),
+                      padding: EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.xl,
+                        DonySpacing.lg,
+                        MediaQuery.of(context).padding.bottom + 100,
+                      ),
                       child: Form(
                         key: _form,
                         child: Column(
@@ -145,14 +157,17 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                           children: [
                             if (state.request != null) ...[
                               _RecapCard(
-                                  request: state.request!, thread: widget.thread),
+                                request: state.request!,
+                                thread: widget.thread,
+                              ),
                               const SizedBox(height: DonySpacing.xl),
                             ],
                             _section('Destinataire'),
                             TextFormField(
                               controller: _recipientNameCtrl,
                               decoration: const InputDecoration(
-                                  labelText: 'Nom complet'),
+                                labelText: 'Nom complet',
+                              ),
                               validator: _required,
                             ),
                             const SizedBox(height: DonySpacing.md),
@@ -167,8 +182,9 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Requis';
                                 }
-                                if (!RegExp(r'^\+[1-9]\d{6,14}$')
-                                    .hasMatch(v.trim())) {
+                                if (!RegExp(
+                                  r'^\+[1-9]\d{6,14}$',
+                                ).hasMatch(v.trim())) {
                                   return 'Format E.164 (+221…)';
                                 }
                                 return null;
@@ -183,7 +199,9 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                               ),
                             ),
                             if (state.request != null &&
-                                state.request!.acceptedPaymentMethods
+                                state
+                                    .request!
+                                    .acceptedPaymentMethods
                                     .isNotEmpty) ...[
                               const SizedBox(height: DonySpacing.xl),
                               _section('Mode de paiement'),
@@ -191,12 +209,12 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 valueListenable: _selectedMethod,
                                 builder: (context, selected, _) =>
                                     _PaymentMethodChoice(
-                                  methods: state
-                                      .request!.acceptedPaymentMethods,
-                                  selected: selected,
-                                  onChanged: (m) =>
-                                      _selectedMethod.value = m,
-                                ),
+                                      methods:
+                                          state.request!.acceptedPaymentMethods,
+                                      selected: selected,
+                                      onChanged: (m) =>
+                                          _selectedMethod.value = m,
+                                    ),
                               ),
                             ],
                           ],
@@ -208,7 +226,9 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                       right: 20,
                       bottom: MediaQuery.of(context).padding.bottom + 20,
                       child: DonyButton(
-                        label: state.isLoading ? 'Envoi…' : 'Continuer vers le paiement',
+                        label: state.isLoading
+                            ? 'Envoi…'
+                            : 'Continuer vers le paiement',
                         isLoading: state.isLoading,
                         onPressed: state.isLoading ? null : _submit,
                       ),
@@ -221,27 +241,27 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   }
 
   Widget _section(String label) => Padding(
-        padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-        child: Text(
-          label.toUpperCase(),
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: kTextSecondary,
-                letterSpacing: 1.2,
-              ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+    child: Text(
+      label.toUpperCase(),
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: kTextSecondary,
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
 
   String? _required(String? v) =>
       (v == null || v.trim().isEmpty) ? 'Requis' : null;
 }
 
 String _sizeLabel(ParcelSize s) => switch (s) {
-      ParcelSize.small => 'Petit',
-      ParcelSize.medium => 'Moyen',
-      ParcelSize.large => 'Grand',
-    };
+  ParcelSize.small => 'Petit',
+  ParcelSize.medium => 'Moyen',
+  ParcelSize.large => 'Grand',
+};
 
 /// Read-only recap of everything already known about the shipment + trip.
 class _RecapCard extends StatelessWidget {
@@ -256,17 +276,23 @@ class _RecapCard extends StatelessWidget {
 
     final double? gross = thread != null
         ? (thread!.grossPriceEur ??
-            PriceDisplay.grossFromNet(thread!.currentPriceEur))
+              PriceDisplay.grossFromNet(thread!.currentPriceEur))
         : request.targetPriceEur;
 
     final rows = <(String, String)>[
       ('Trajet', '${request.departureCity} → ${request.arrivalCity}'),
       if (thread != null)
-        ('Date du voyage',
-            DateFormat('d MMM yyyy', 'fr').format(thread!.travelerTravelDate)),
-      ('Poids', '${request.weightKg.toStringAsFixed(request.weightKg % 1 == 0 ? 0 : 1)} kg'),
+        (
+          'Date du voyage',
+          DateFormat('d MMM yyyy', 'fr').format(thread!.travelerTravelDate),
+        ),
+      (
+        'Poids',
+        '${request.weightKg.toStringAsFixed(request.weightKg % 1 == 0 ? 0 : 1)} kg',
+      ),
       ('Taille', _sizeLabel(request.parcelSize)),
-      ('Contenu', request.contentCategory.label),
+      if (request.categories.isNotEmpty)
+        ('Contenu', request.categories.join(', ')),
       if (gross != null) ('Prix à payer', PriceDisplay.eur(gross)),
     ];
 
@@ -296,35 +322,37 @@ class _RecapCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DonySpacing.sm),
-          ...rows.map((r) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 110,
-                      child: Text(
-                        r.$1,
-                        style: tt.bodySmall?.copyWith(
-                          color: kTextSecondary,
-                          fontSize: 13,
-                        ),
+          ...rows.map(
+            (r) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(
+                      r.$1,
+                      style: tt.bodySmall?.copyWith(
+                        color: kTextSecondary,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Expanded(
-                      child: Text(
-                        r.$2,
-                        style: tt.bodyMedium?.copyWith(
-                          color: kTextPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: Text(
+                      r.$2,
+                      style: tt.bodyMedium?.copyWith(
+                        color: kTextPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -345,11 +373,11 @@ class _PaymentMethodChoice extends StatelessWidget {
   final ValueChanged<PaymentMethod> onChanged;
 
   String _icon(PaymentMethod m) => switch (m) {
-        PaymentMethod.stripe => 'credit-card',
-        PaymentMethod.cash => 'banknote',
-        PaymentMethod.wave => 'waves',
-        PaymentMethod.orangeMoney => 'smartphone',
-      };
+    PaymentMethod.stripe => 'credit-card',
+    PaymentMethod.cash => 'banknote',
+    PaymentMethod.wave => 'waves',
+    PaymentMethod.orangeMoney => 'smartphone',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -391,9 +419,11 @@ class _PaymentMethodChoice extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DonyIcon(_icon(method),
-                    size: 14,
-                    color: isSelected ? cs.primary : cs.onSurfaceVariant),
+                DonyIcon(
+                  _icon(method),
+                  size: 14,
+                  color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                ),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   method.displayLabel,

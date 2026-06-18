@@ -25,22 +25,21 @@ PackageRequest _request({
   PackageRequestStatus status = PackageRequestStatus.open,
   ContentCategory contentCategory = ContentCategory.vetements,
   double? targetPriceEur = 35,
-}) =>
-    PackageRequest(
-      id: 'pr-${arrivalCity.toLowerCase()}-${status.name}',
-      senderId: 's-1',
-      departureCity: departureCity,
-      arrivalCity: arrivalCity,
-      desiredDate: DateTime(2026, 6, 15),
-      dateToleranceDays: 2,
-      weightKg: 5,
-      parcelSize: ParcelSize.medium,
-      transportMode: TransportMode.plane,
-      contentCategory: contentCategory,
-      targetPriceEur: targetPriceEur,
-      status: status,
-      createdAt: DateTime(2026, 5, 10),
-    );
+}) => PackageRequest(
+  id: 'pr-${arrivalCity.toLowerCase()}-${status.name}',
+  senderId: 's-1',
+  departureCity: departureCity,
+  arrivalCity: arrivalCity,
+  desiredDate: DateTime(2026, 6, 15),
+  dateToleranceDays: 2,
+  weightKg: 5,
+  parcelSize: ParcelSize.medium,
+  transportMode: TransportMode.plane,
+  categories: [contentCategory.label],
+  targetPriceEur: targetPriceEur,
+  status: status,
+  createdAt: DateTime(2026, 5, 10),
+);
 
 void main() {
   late _MockPackageRequestBloc bloc;
@@ -53,8 +52,9 @@ void main() {
   setUp(() {
     bloc = _MockPackageRequestBloc();
     when(() => bloc.state).thenReturn(PackageRequestState());
-    when(() => bloc.stream)
-        .thenAnswer((_) => const Stream<PackageRequestState>.empty());
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestState>.empty());
 
     if (!getIt.isRegistered<RequestFilterCubit>()) {
       getIt.registerFactory<RequestFilterCubit>(() => RequestFilterCubit());
@@ -68,108 +68,129 @@ void main() {
   });
 
   Widget wrap() => MaterialApp(
-        theme: AppTheme.light,
-        home: BlocProvider<PackageRequestBloc>.value(
-          value: bloc,
-          child: const Scaffold(body: MyPackageRequestsBody()),
-        ),
-      );
+    theme: AppTheme.light,
+    home: BlocProvider<PackageRequestBloc>.value(
+      value: bloc,
+      child: const Scaffold(body: MyPackageRequestsBody()),
+    ),
+  );
 
   group('MyPackageRequestsBody', () {
-    testWidgets('affiche CircularProgressIndicator en état loading',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loading,
-      ));
+    testWidgets('affiche CircularProgressIndicator en état loading', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(status: PackageRequestListStatus.loading),
+      );
       await tester.pumpWidget(wrap());
       await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('affiche _EmptyView quand la liste est vide', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [],
-      ));
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [],
+        ),
+      );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('Tu n\'as encore rien envoyé'), findsOneWidget);
     });
 
-    testWidgets('affiche le texte d\'erreur quand status = error',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.error,
-        errorMessage: 'Erreur réseau',
-      ));
+    testWidgets('affiche le texte d\'erreur quand status = error', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.error,
+          errorMessage: 'Erreur réseau',
+        ),
+      );
       await tester.pumpWidget(wrap());
       await tester.pump();
       expect(find.text('Erreur réseau'), findsOneWidget);
       expect(find.text('Réessayer'), findsOneWidget);
     });
 
-    testWidgets('affiche les cards quand des demandes existent', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [
-          _request(),
-          _request(status: PackageRequestStatus.negotiating),
-        ],
-      ));
+    testWidgets('affiche les cards quand des demandes existent', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [
+            _request(),
+            _request(status: PackageRequestStatus.negotiating),
+          ],
+        ),
+      );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('Paris → Dakar'), findsWidgets);
     });
 
-    testWidgets('la barre de recherche est visible quand des demandes existent',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request()],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
-      expect(find.text('Ville, catégorie…'), findsOneWidget);
-    });
+    testWidgets(
+      'la barre de recherche est visible quand des demandes existent',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request()],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.text('Ville, catégorie…'), findsOneWidget);
+      },
+    );
   });
 
   group('_RequestCard', () {
     Widget wrapCard(PackageRequest r) => MaterialApp(
-          theme: AppTheme.light,
-          home: BlocProvider<PackageRequestBloc>.value(
-            value: bloc,
-            child: const Scaffold(body: MyPackageRequestsBody()),
-          ),
-        );
+      theme: AppTheme.light,
+      home: BlocProvider<PackageRequestBloc>.value(
+        value: bloc,
+        child: const Scaffold(body: MyPackageRequestsBody()),
+      ),
+    );
 
     testWidgets('affiche le badge OUVERTE pour status=open', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.open)],
-      ));
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request(status: PackageRequestStatus.open)],
+        ),
+      );
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
       expect(find.text('OUVERTE'), findsOneWidget);
     });
 
-    testWidgets('affiche le badge NÉGOCIATION pour status=negotiating',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.negotiating)],
-      ));
+    testWidgets('affiche le badge NÉGOCIATION pour status=negotiating', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request(status: PackageRequestStatus.negotiating)],
+        ),
+      );
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
       expect(find.text('NÉGOCIATION'), findsOneWidget);
     });
 
-    testWidgets(
-        'n\'affiche pas les demandes acceptées (parties dans Envois)',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.accepted)],
-      ));
+    testWidgets('n\'affiche pas les demandes acceptées (parties dans Envois)', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request(status: PackageRequestStatus.accepted)],
+        ),
+      );
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
       // La carte n'est pas rendue → on retombe sur l'état vide global.
@@ -178,32 +199,40 @@ void main() {
     });
 
     testWidgets('affiche le badge EXPIRÉE pour status=expired', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.expired)],
-      ));
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request(status: PackageRequestStatus.expired)],
+        ),
+      );
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
       expect(find.text('EXPIRÉE'), findsOneWidget);
     });
 
-    testWidgets('affiche "Modifier →" dans le footer pour open',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.open)],
-      ));
+    testWidgets('affiche "Modifier →" dans le footer pour open', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request(status: PackageRequestStatus.open)],
+        ),
+      );
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
       expect(find.textContaining('Modifier'), findsOneWidget);
     });
 
-    testWidgets('affiche "Modifier →" dans le footer pour negotiating',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.negotiating)],
-      ));
+    testWidgets('affiche "Modifier →" dans le footer pour negotiating', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request(status: PackageRequestStatus.negotiating)],
+        ),
+      );
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
       expect(find.textContaining('Modifier'), findsOneWidget);
@@ -221,14 +250,17 @@ void main() {
     );
 
     setUp(() {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [dakarRequest, abidjanRequest],
-      ));
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [dakarRequest, abidjanRequest],
+        ),
+      );
     });
 
-    testWidgets('la saisie dans le champ de recherche filtre après 250ms',
-        (tester) async {
+    testWidgets('la saisie dans le champ de recherche filtre après 250ms', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
 
@@ -251,50 +283,58 @@ void main() {
       expect(find.text('Paris → Dakar'), findsNothing);
     });
 
-    testWidgets('le chip Terminées filtre les demandes terminées (annulées/expirées)',
-        (tester) async {
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'le chip Terminées filtre les demandes terminées (annulées/expirées)',
+      (tester) async {
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
 
-      // Both requests visible
-      expect(find.text('Paris → Dakar'), findsOneWidget);
-      expect(find.text('Paris → Abidjan'), findsOneWidget);
+        // Both requests visible
+        expect(find.text('Paris → Dakar'), findsOneWidget);
+        expect(find.text('Paris → Abidjan'), findsOneWidget);
 
-      // Tap "Terminées" chip (1 = Abidjan annulée)
-      await tester.tap(find.text('Terminées (1)'));
-      await tester.pumpAndSettle();
+        // Tap "Terminées" chip (1 = Abidjan annulée)
+        await tester.tap(find.text('Terminées (1)'));
+        await tester.pumpAndSettle();
 
-      // Only the closed request (Abidjan cancelled) should be visible
-      expect(find.text('Paris → Abidjan'), findsOneWidget);
-      expect(find.text('Paris → Dakar'), findsNothing);
-    });
+        // Only the closed request (Abidjan cancelled) should be visible
+        expect(find.text('Paris → Abidjan'), findsOneWidget);
+        expect(find.text('Paris → Dakar'), findsNothing);
+      },
+    );
 
-    testWidgets('recherche sans correspondance affiche l\'état vide de recherche',
-        (tester) async {
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'recherche sans correspondance affiche l\'état vide de recherche',
+      (tester) async {
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
 
-      // Type a query with no matching results
-      await tester.enterText(find.byType(TextField), 'zzzzz');
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump();
+        // Type a query with no matching results
+        await tester.enterText(find.byType(TextField), 'zzzzz');
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
 
-      expect(find.text('Aucun résultat pour cette recherche'), findsOneWidget);
-    });
+        expect(
+          find.text('Aucun résultat pour cette recherche'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('_StatusBadge — tous les statuts', () {
-    for (final entry in [
-      (PackageRequestStatus.cancelled, 'ANNULÉE'),
-    ]) {
+    for (final entry in [(PackageRequestStatus.cancelled, 'ANNULÉE')]) {
       final status = entry.$1;
       final label = entry.$2;
-      testWidgets('affiche le badge $label pour status=${status.name}',
-          (tester) async {
-        when(() => bloc.state).thenReturn(PackageRequestState(
-          status: PackageRequestListStatus.loaded,
-          requests: [_request(status: status)],
-        ));
+      testWidgets('affiche le badge $label pour status=${status.name}', (
+        tester,
+      ) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request(status: status)],
+          ),
+        );
         await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
         expect(find.text(label), findsOneWidget);
@@ -302,66 +342,88 @@ void main() {
     }
   });
 
-  group('_CardAction — pas de CTA « Compléter » (détails faits au paiement)', () {
-    testWidgets('n\'affiche pas de CTA pour status=expired', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.expired)],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
-      // No CTA for expired (SizedBox.shrink)
-      expect(find.text('Modifier →'), findsNothing);
-      expect(find.text('Compléter →'), findsNothing);
-    });
+  group(
+    '_CardAction — pas de CTA « Compléter » (détails faits au paiement)',
+    () {
+      testWidgets('n\'affiche pas de CTA pour status=expired', (tester) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request(status: PackageRequestStatus.expired)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        // No CTA for expired (SizedBox.shrink)
+        expect(find.text('Modifier →'), findsNothing);
+        expect(find.text('Compléter →'), findsNothing);
+      });
 
-    testWidgets('n\'affiche pas de CTA pour status=cancelled', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.cancelled)],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
-      expect(find.text('Modifier →'), findsNothing);
-      expect(find.text('Compléter →'), findsNothing);
-    });
+      testWidgets('n\'affiche pas de CTA pour status=cancelled', (
+        tester,
+      ) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request(status: PackageRequestStatus.cancelled)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.text('Modifier →'), findsNothing);
+        expect(find.text('Compléter →'), findsNothing);
+      });
 
-    testWidgets('n\'affiche pas de CTA pour status=completed', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.completed)],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
-      expect(find.text('Modifier →'), findsNothing);
-      expect(find.text('Compléter →'), findsNothing);
-    });
-  });
+      testWidgets('n\'affiche pas de CTA pour status=completed', (
+        tester,
+      ) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request(status: PackageRequestStatus.completed)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.text('Modifier →'), findsNothing);
+        expect(find.text('Compléter →'), findsNothing);
+      });
+    },
+  );
 
   group('showFab', () {
-    testWidgets('showFab: true affiche le FAB « Nouvelle demande »',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request()],
-      ));
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: BlocProvider<PackageRequestBloc>.value(
-          value: bloc,
-          child: const Scaffold(body: MyPackageRequestsBody(showFab: true)),
+    testWidgets('showFab: true affiche le FAB « Nouvelle demande »', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request()],
         ),
-      ));
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: BlocProvider<PackageRequestBloc>.value(
+            value: bloc,
+            child: const Scaffold(body: MyPackageRequestsBody(showFab: true)),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Nouvelle demande'), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets('showFab: false (défaut) n\'affiche pas le FAB', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request()],
-      ));
+    testWidgets('showFab: false (défaut) n\'affiche pas le FAB', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request()],
+        ),
+      );
       await tester.pumpWidget(wrap()); // showFab: false
       await tester.pumpAndSettle();
       expect(find.byType(FloatingActionButton), findsNothing);
@@ -369,11 +431,15 @@ void main() {
   });
 
   group('État vide global', () {
-    testWidgets('affiche le CTA de création quand aucune demande', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [],
-      ));
+    testWidgets('affiche le CTA de création quand aucune demande', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [],
+        ),
+      );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('+ Publier ma première demande'), findsOneWidget);
@@ -381,123 +447,160 @@ void main() {
   });
 
   group('_FilterEmptyState', () {
-    testWidgets('chip Ouvertes + aucune ouverte affiche « Aucune demande ouverte »',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.cancelled)],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'chip Ouvertes + aucune ouverte affiche « Aucune demande ouverte »',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request(status: PackageRequestStatus.cancelled)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Ouvertes (0)'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Ouvertes (0)'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Aucune demande ouverte'), findsOneWidget);
-    });
+        expect(find.text('Aucune demande ouverte'), findsOneWidget);
+      },
+    );
 
-    testWidgets('chip Terminées + aucune terminée affiche « Aucune demande terminée »',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.open)],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'chip Terminées + aucune terminée affiche « Aucune demande terminée »',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request(status: PackageRequestStatus.open)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Terminées (0)'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Terminées (0)'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Aucune demande terminée'), findsOneWidget);
-    });
+        expect(find.text('Aucune demande terminée'), findsOneWidget);
+      },
+    );
 
-    testWidgets('preset=all + aucun résultat après recherche affiche « Aucune demande »',
-        (tester) async {
-      // Use a request that won't match search
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(arrivalCity: 'Dakar', status: PackageRequestStatus.open)],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'preset=all + aucun résultat après recherche affiche « Aucune demande »',
+      (tester) async {
+        // Use a request that won't match search
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [
+              _request(arrivalCity: 'Dakar', status: PackageRequestStatus.open),
+            ],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
 
-      // First filter to make it open only, then switch back to all
-      await tester.tap(find.text('Ouvertes (1)'));
-      await tester.pumpAndSettle();
-      // Now switch to Toutes while keeping no match - instead, search zzz
-      await tester.enterText(find.byType(TextField), 'zzzzz');
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump();
-      // Clear search to get preset=open + no query empty state
-      // Then tap Toutes
-      await tester.tap(find.text('Toutes (1)'));
-      await tester.pumpAndSettle();
+        // First filter to make it open only, then switch back to all
+        await tester.tap(find.text('Ouvertes (1)'));
+        await tester.pumpAndSettle();
+        // Now switch to Toutes while keeping no match - instead, search zzz
+        await tester.enterText(find.byType(TextField), 'zzzzz');
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
+        // Clear search to get preset=open + no query empty state
+        // Then tap Toutes
+        await tester.tap(find.text('Toutes (1)'));
+        await tester.pumpAndSettle();
 
-      // After tapping Toutes the search is still active with 'zzzzz'
-      // So filtered is empty with preset=all and hasQuery=true
-      // => 'Aucun résultat pour cette recherche'
-      expect(find.text('Aucun résultat pour cette recherche'), findsOneWidget);
-    });
+        // After tapping Toutes the search is still active with 'zzzzz'
+        // So filtered is empty with preset=all and hasQuery=true
+        // => 'Aucun résultat pour cette recherche'
+        expect(
+          find.text('Aucun résultat pour cette recherche'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('MyPackageRequestsScreen (écran complet)', () {
-    testWidgets('rend le Scaffold avec appBar « Mes demandes »', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loading,
-      ));
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: BlocProvider<PackageRequestBloc>.value(
-          value: bloc,
-          child: const MyPackageRequestsScreen(),
+    testWidgets('rend le Scaffold avec appBar « Mes demandes »', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(status: PackageRequestListStatus.loading),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: BlocProvider<PackageRequestBloc>.value(
+            value: bloc,
+            child: const MyPackageRequestsScreen(),
+          ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.text('Mes demandes'), findsOneWidget);
     });
   });
 
   group('onRetry et CardAction snackbar', () {
-    testWidgets('taper Réessayer dans _ErrorView déclenche FetchMyRequests',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.error,
-        errorMessage: 'Erreur réseau',
-      ));
+    testWidgets('taper Réessayer dans _ErrorView déclenche FetchMyRequests', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.error,
+          errorMessage: 'Erreur réseau',
+        ),
+      );
       await tester.pumpWidget(wrap());
       await tester.pump();
       expect(find.text('Réessayer'), findsOneWidget);
       await tester.tap(find.text('Réessayer'));
       await tester.pump();
-      verify(() => bloc.add(const FetchMyRequests())).called(greaterThanOrEqualTo(1));
+      verify(
+        () => bloc.add(const FetchMyRequests()),
+      ).called(greaterThanOrEqualTo(1));
     });
 
-    testWidgets('« Modifier → » expose la clé d\'édition (open) et plus de placeholder',
-        (tester) async {
-      final req = _request(status: PackageRequestStatus.open);
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [req],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
-      // Le bouton d'édition est câblé (ouvre le wizard pré-rempli).
-      expect(find.byKey(Key('edit-request-${req.id}')), findsOneWidget);
-      // L'ancien placeholder « Modification à venir » n'existe plus.
-      expect(find.text('Modification à venir'), findsNothing);
-    });
+    testWidgets(
+      '« Modifier → » expose la clé d\'édition (open) et plus de placeholder',
+      (tester) async {
+        final req = _request(status: PackageRequestStatus.open);
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [req],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        // Le bouton d'édition est câblé (ouvre le wizard pré-rempli).
+        expect(find.byKey(Key('edit-request-${req.id}')), findsOneWidget);
+        // L'ancien placeholder « Modification à venir » n'existe plus.
+        expect(find.text('Modification à venir'), findsNothing);
+      },
+    );
   });
 
   group('chip Toutes et onClear', () {
-    testWidgets('chip Toutes réinitialise le filtre depuis Terminées', (tester) async {
+    testWidgets('chip Toutes réinitialise le filtre depuis Terminées', (
+      tester,
+    ) async {
       final requests = [
         _request(arrivalCity: 'Dakar', status: PackageRequestStatus.open),
-        _request(arrivalCity: 'Abidjan', status: PackageRequestStatus.cancelled),
+        _request(
+          arrivalCity: 'Abidjan',
+          status: PackageRequestStatus.cancelled,
+        ),
       ];
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: requests,
-      ));
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: requests,
+        ),
+      );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
 
@@ -514,12 +617,15 @@ void main() {
       expect(find.text('Paris → Abidjan'), findsOneWidget);
     });
 
-    testWidgets('bouton clear dans la barre de recherche efface la requête',
-        (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request()],
-      ));
+    testWidgets('bouton clear dans la barre de recherche efface la requête', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request()],
+        ),
+      );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
 
@@ -528,7 +634,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap clear button (DonySearchField uses Icons.close_rounded)
-      final clearIcon = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x');
+      final clearIcon = find.byWidgetPredicate(
+        (w) => w is DonyIcon && w.name == 'x',
+      );
       expect(clearIcon, findsOneWidget);
       await tester.tap(clearIcon);
       await tester.pump(const Duration(milliseconds: 300));

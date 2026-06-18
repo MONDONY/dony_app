@@ -7,27 +7,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 PackageRequestSearchItem _item() => PackageRequestSearchItem(
-      id: 'pr-42',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 6, 15),
-      dateToleranceDays: 2,
-      weightKg: 5,
-      parcelSize: ParcelSize.medium,
-      contentCategory: ContentCategory.vetements,
-      targetPriceEur: 50,
-      sender: const SenderPublicProfile(
-        id: 's1',
-        displayName: 'Fatou',
-        averageRating: 4.5,
-        totalRatings: 3,
-        kycVerified: true,
-      ),
-    );
+  id: 'pr-42',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 6, 15),
+  dateToleranceDays: 2,
+  weightKg: 5,
+  parcelSize: ParcelSize.medium,
+  categories: const ['Vêtements'],
+  targetPriceEur: 50,
+  sender: const SenderPublicProfile(
+    id: 's1',
+    displayName: 'Fatou',
+    averageRating: 4.5,
+    totalRatings: 3,
+    kycVerified: true,
+  ),
+);
 
 void main() {
-  testWidgets('show() pousse l\'écran plein /package-requests/:id/public',
-      (tester) async {
+  testWidgets('show() pousse l\'écran plein /package-requests/:id/public', (
+    tester,
+  ) async {
     final router = GoRouter(
       initialLocation: '/home',
       routes: [

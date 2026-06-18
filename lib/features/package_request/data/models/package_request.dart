@@ -30,7 +30,7 @@ class PackageRequest extends Equatable {
     required this.weightKg,
     required this.parcelSize,
     required this.transportMode,
-    required this.contentCategory,
+    this.categories = const [],
     this.description,
     this.targetPriceEur,
     this.photoUrl,
@@ -55,7 +55,12 @@ class PackageRequest extends Equatable {
   final double weightKg;
   final ParcelSize parcelSize;
   final TransportMode transportMode;
-  final ContentCategory contentCategory;
+
+  /// Catégories de colis (libellés libres, comme une annonce). Vide si aucune.
+  final List<String> categories;
+
+  /// 1ère catégorie pour les affichages compacts (titre, emoji). Null si vide.
+  String? get primaryCategory => categories.isEmpty ? null : categories.first;
   final String? description;
   final double? targetPriceEur;
   final String? photoUrl;
@@ -115,9 +120,7 @@ class PackageRequest extends Equatable {
       transportMode:
           transportModeFromWire(json['transportMode'] as String?) ??
           TransportMode.plane,
-      contentCategory: ContentCategory.fromWire(
-        json['contentCategory'] as String?,
-      ),
+      categories: ContentCategory.splitWire(json['contentCategory'] as String?),
       description: json['description'] as String?,
       targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
       photoUrl: json['photoUrl'] as String?,
@@ -147,7 +150,7 @@ class PackageRequest extends Equatable {
     weightKg,
     parcelSize,
     transportMode,
-    contentCategory,
+    categories,
     description,
     targetPriceEur,
     photoUrl,

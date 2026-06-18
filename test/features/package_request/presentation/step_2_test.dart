@@ -1,7 +1,4 @@
-// Step 2 widget test — custom free-text content category ("Autre…").
-//
-// Placed in test/features/package_request/presentation/
-// per the task specification.
+// Step 2 widget test — catégories multiples (chips multi + input libre + ajout).
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -22,109 +19,83 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider(
-              create: (_) => PackageRequestFormBloc(
-                packageRepo,
-                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-              ),
-            ),
-            BlocProvider(
-              create: (_) => PackageRequestPhotosCubit(
-                  packageRepo, makeDisabledAnalytics(MockAnalyticsBackend())),
-            ),
-          ],
-          child: Scaffold(body: child),
-        ),
-      );
-
-  group('Step2Details — custom free-text category', () {
-    // 1. "Autre…" chip is visible
-    testWidgets('shows an "Autre…" chip', (tester) async {
-      await tester.pumpWidget(wrap(const Step2Details()));
-      await tester.pumpAndSettle();
-      expect(find.text('Autre…'), findsOneWidget);
-    });
-
-    // 2. Custom text field is NOT shown initially
-    testWidgets('custom-category-input is not shown initially', (tester) async {
-      await tester.pumpWidget(wrap(const Step2Details()));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('custom-category-input')), findsNothing);
-    });
-
-    // 3. After tapping "Autre…", the custom text field appears
-    testWidgets('tapping "Autre…" reveals custom-category-input field',
-        (tester) async {
-      await tester.pumpWidget(wrap(const Step2Details()));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Autre…'));
-      await tester.tap(find.text('Autre…'));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('custom-category-input')), findsOneWidget);
-    });
-
-    // 4. Typing in the custom field dispatches FormStep2CategoryChanged with
-    //    the typed value (verified via the BLoC state's customCategoryLabel).
-    testWidgets(
-        'typing in custom field dispatches category change event and updates state',
-        (tester) async {
-      final bloc = PackageRequestFormBloc(
-        packageRepo,
-        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-      );
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiBlocProvider(
-            providers: [
-              BlocProvider<PackageRequestFormBloc>.value(value: bloc),
-              BlocProvider(
-                create: (_) => PackageRequestPhotosCubit(
-                    packageRepo, makeDisabledAnalytics(MockAnalyticsBackend())),
-              ),
-            ],
-            child: const Scaffold(body: Step2Details()),
+    home: MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => PackageRequestFormBloc(
+            packageRepo,
+            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
+        BlocProvider(
+          create: (_) => PackageRequestPhotosCubit(
+            packageRepo,
+            makeDisabledAnalytics(MockAnalyticsBackend()),
+          ),
+        ),
+      ],
+      child: Scaffold(body: child),
+    ),
+  );
 
-      // Tap "Autre…" to show the text field
-      await tester.ensureVisible(find.text('Autre…'));
-      await tester.tap(find.text('Autre…'));
-      await tester.pumpAndSettle();
-
-      // Type in the custom category field
-      await tester.enterText(
-        find.byKey(const Key('custom-category-input')),
-        'Textile brodé',
-      );
-      await tester.pump();
-
-      // The BLoC state should reflect the custom category label
-      expect(bloc.state.customCategoryLabel, 'Textile brodé');
-    });
-
-    // 5. Selecting a predefined chip hides the custom field
-    testWidgets('selecting a predefined chip hides custom-category-input',
-        (tester) async {
+  group('Step2Details — catégories multiples', () {
+    testWidgets('input catégorie + bouton « + » toujours visibles', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const Step2Details()));
       await tester.pumpAndSettle();
-
-      // Show the custom field
-      await tester.ensureVisible(find.text('Autre…'));
-      await tester.tap(find.text('Autre…'));
-      await tester.pumpAndSettle();
       expect(find.byKey(const Key('custom-category-input')), findsOneWidget);
+      expect(find.byKey(const Key('add-category-btn')), findsOneWidget);
+    });
 
-      // Tap a predefined chip (e.g. "Vêtements")
+    testWidgets('chips prédéfinies en multi-sélection', (tester) async {
+      await tester.pumpWidget(wrap(const Step2Details()));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Vêtements'));
       await tester.tap(find.text('Vêtements'));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.ensureVisible(find.text('Documents'));
+      await tester.tap(find.text('Documents'));
+      await tester.pump();
+      // Les deux restent affichées (pas d'exclusivité).
+      expect(find.text('Vêtements'), findsOneWidget);
+      expect(find.text('Documents'), findsOneWidget);
+    });
 
-      // Custom field should disappear
-      expect(find.byKey(const Key('custom-category-input')), findsNothing);
+    testWidgets(
+      'ajouter une catégorie libre via « + » crée une chip supprimable',
+      (tester) async {
+        await tester.pumpWidget(wrap(const Step2Details()));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('custom-category-input')),
+          'Textile brodé',
+        );
+        await tester.ensureVisible(find.byKey(const Key('add-category-btn')));
+        await tester.tap(find.byKey(const Key('add-category-btn')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('remove-cat-Textile brodé')),
+          findsOneWidget,
+        );
+        expect(find.text('Textile brodé'), findsOneWidget);
+      },
+    );
+
+    testWidgets('retirer une catégorie libre', (tester) async {
+      await tester.pumpWidget(wrap(const Step2Details()));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('custom-category-input')),
+        'Fragile',
+      );
+      await tester.ensureVisible(find.byKey(const Key('add-category-btn')));
+      await tester.tap(find.byKey(const Key('add-category-btn')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('remove-cat-Fragile')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('remove-cat-Fragile')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('remove-cat-Fragile')), findsNothing);
     });
   });
 }

@@ -18,27 +18,26 @@ PackageRequestSearchItem _item({
   bool kycVerified = true,
   double rating = 4.9,
   int totalRatings = 12,
-}) =>
-    PackageRequestSearchItem(
-      id: 'pr1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 6, 15),
-      dateToleranceDays: 2,
-      weightKg: 5,
-      parcelSize: size,
-      contentCategory: category,
-      targetPriceEur: targetPrice,
-      photoUrl: photoUrl,
-      photoUrls: photoUrls,
-      sender: SenderPublicProfile(
-        id: 's1',
-        displayName: 'Marie Diop',
-        averageRating: rating,
-        totalRatings: totalRatings,
-        kycVerified: kycVerified,
-      ),
-    );
+}) => PackageRequestSearchItem(
+  id: 'pr1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 6, 15),
+  dateToleranceDays: 2,
+  weightKg: 5,
+  parcelSize: size,
+  categories: [category.label],
+  targetPriceEur: targetPrice,
+  photoUrl: photoUrl,
+  photoUrls: photoUrls,
+  sender: SenderPublicProfile(
+    id: 's1',
+    displayName: 'Marie Diop',
+    averageRating: rating,
+    totalRatings: totalRatings,
+    kycVerified: kycVerified,
+  ),
+);
 
 void main() {
   setUpAll(() async {
@@ -46,24 +45,24 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: SizedBox(width: 360, child: child),
-          ),
-        ),
-      );
+    theme: AppTheme.light,
+    home: Scaffold(
+      body: SingleChildScrollView(child: SizedBox(width: 360, child: child)),
+    ),
+  );
 
   group('PackageRequestListCard', () {
-    testWidgets('identité ticket : micro-label + titre colis + trajet + budget',
-        (tester) async {
-      await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
-      await tester.pumpAndSettle();
-      expect(find.text('Demande d\'envoi'), findsOneWidget);
-      expect(find.text('5 kg · Vêtements · M'), findsOneWidget);
-      expect(find.textContaining('Paris → Dakar'), findsOneWidget);
-      expect(find.text('35 €'), findsOneWidget);
-    });
+    testWidgets(
+      'identité ticket : micro-label + titre colis + trajet + budget',
+      (tester) async {
+        await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
+        await tester.pumpAndSettle();
+        expect(find.text('Demande d\'envoi'), findsOneWidget);
+        expect(find.text('5 kg · Vêtements · M'), findsOneWidget);
+        expect(find.textContaining('Paris → Dakar'), findsOneWidget);
+        expect(find.text('35 €'), findsOneWidget);
+      },
+    );
 
     testWidgets('chip statut « Ouverte » par défaut', (tester) async {
       await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
@@ -72,46 +71,58 @@ void main() {
     });
 
     testWidgets('chip statut reflète le statut passé', (tester) async {
-      await tester.pumpWidget(wrap(PackageRequestListCard(
-        item: _item(),
-        status: PackageRequestStatus.negotiating,
-      )));
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(),
+            status: PackageRequestStatus.negotiating,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('En négociation'), findsOneWidget);
     });
 
-    testWidgets('isOwnRequest → chip « Ma demande » au lieu du statut',
-        (tester) async {
-      await tester.pumpWidget(wrap(PackageRequestListCard(
-        item: _item(),
-        isOwnRequest: true,
-      )));
+    testWidgets('isOwnRequest → chip « Ma demande » au lieu du statut', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(), isOwnRequest: true)),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Ma demande'), findsOneWidget);
       expect(find.text('Ouverte'), findsNothing);
     });
 
-    testWidgets('rend « Budget libre » quand pas de targetPriceEur',
-        (tester) async {
+    testWidgets('rend « Budget libre » quand pas de targetPriceEur', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-          wrap(PackageRequestListCard(item: _item(targetPrice: null))));
+        wrap(PackageRequestListCard(item: _item(targetPrice: null))),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Budget libre'), findsOneWidget);
       expect(find.text('35 €'), findsNothing);
     });
 
     testWidgets('badge compteur photos quand plusieurs photos', (tester) async {
-      await tester.pumpWidget(wrap(PackageRequestListCard(
-        item: _item(photoUrls: const ['a', 'b', 'c']),
-      )));
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(item: _item(photoUrls: const ['a', 'b', 'c'])),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('📷 3'), findsOneWidget);
     });
 
     testWidgets('catégorie Médicaments rendue dans le titre', (tester) async {
-      await tester.pumpWidget(wrap(PackageRequestListCard(
-        item: _item(category: ContentCategory.medicaments),
-      )));
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(category: ContentCategory.medicaments),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.textContaining('Médicaments'), findsOneWidget);
       expect(find.text('URGENT'), findsNothing);
@@ -122,28 +133,28 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Marie Diop'), findsOneWidget);
       expect(
-          find.byWidgetPredicate(
-              (w) => w is DonyIcon && w.name == 'badge-check'),
-          findsWidgets);
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'),
+        findsWidgets,
+      );
       expect(find.text('4.9'), findsOneWidget);
     });
 
     testWidgets('pas d\'icône KYC quand non vérifié', (tester) async {
       await tester.pumpWidget(
-          wrap(PackageRequestListCard(item: _item(kycVerified: false))));
+        wrap(PackageRequestListCard(item: _item(kycVerified: false))),
+      );
       await tester.pumpAndSettle();
       expect(
-          find.byWidgetPredicate(
-              (w) => w is DonyIcon && w.name == 'badge-check'),
-          findsNothing);
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'badge-check'),
+        findsNothing,
+      );
     });
 
     testWidgets('tap → callback onTap invoqué', (tester) async {
       var tapped = false;
-      await tester.pumpWidget(wrap(PackageRequestListCard(
-        item: _item(),
-        onTap: () => tapped = true,
-      )));
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(), onTap: () => tapped = true)),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('5 kg · Vêtements · M'));
       await tester.pump();
@@ -151,10 +162,9 @@ void main() {
     });
 
     testWidgets('accepte onMakeOffer sans planter le rendu', (tester) async {
-      await tester.pumpWidget(wrap(PackageRequestListCard(
-        item: _item(),
-        onMakeOffer: () {},
-      )));
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(), onMakeOffer: () {})),
+      );
       await tester.pumpAndSettle();
       expect(find.text('5 kg · Vêtements · M'), findsOneWidget);
     });

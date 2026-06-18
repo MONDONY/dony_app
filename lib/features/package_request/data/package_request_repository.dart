@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -50,7 +49,10 @@ class PackageRequestSearchPage {
   factory PackageRequestSearchPage.fromJson(Map<String, dynamic> json) =>
       PackageRequestSearchPage(
         content: (json['content'] as List<dynamic>)
-            .map((e) => PackageRequestSearchItem.fromJson(e as Map<String, dynamic>))
+            .map(
+              (e) =>
+                  PackageRequestSearchItem.fromJson(e as Map<String, dynamic>),
+            )
             .toList(),
         totalElements: (json['totalElements'] as num?)?.toInt() ?? 0,
         page: ((json['number'] as num?) ?? 0).toInt(),
@@ -106,7 +108,7 @@ class PackageRequestRepository {
     required double weightKg,
     required ParcelSize parcelSize,
     required TransportMode transportMode,
-    required ContentCategory contentCategory,
+    required List<String> categories,
     required bool negotiable,
     required Set<PaymentMethod> acceptedPaymentMethods,
     double? totalBudgetEur,
@@ -126,15 +128,18 @@ class PackageRequestRepository {
         'weightKg': weightKg,
         'parcelSize': parcelSize.wireName,
         'transportMode': transportModeToWire(transportMode),
-        'contentCategory': contentCategory.wireName,
+        'contentCategory': categories.join(','),
         'negotiable': negotiable,
-        'acceptedPaymentMethods':
-            acceptedPaymentMethods.map((m) => m.wireName).toList(),
+        'acceptedPaymentMethods': acceptedPaymentMethods
+            .map((m) => m.wireName)
+            .toList(),
         if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
         if (description != null) 'description': description,
         if (photoUrl != null) 'photoUrl': photoUrl,
-        if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
-        if (deliveryNeighborhood != null) 'deliveryNeighborhood': deliveryNeighborhood,
+        if (pickupNeighborhood != null)
+          'pickupNeighborhood': pickupNeighborhood,
+        if (deliveryNeighborhood != null)
+          'deliveryNeighborhood': deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
       },
     );
@@ -152,7 +157,7 @@ class PackageRequestRepository {
     required double weightKg,
     required ParcelSize parcelSize,
     required TransportMode transportMode,
-    required ContentCategory contentCategory,
+    required List<String> categories,
     required bool negotiable,
     required Set<PaymentMethod> acceptedPaymentMethods,
     double? totalBudgetEur,
@@ -172,14 +177,16 @@ class PackageRequestRepository {
         'weightKg': weightKg,
         'parcelSize': parcelSize.wireName,
         'transportMode': transportModeToWire(transportMode),
-        'contentCategory': contentCategory.wireName,
+        'contentCategory': categories.join(','),
         'negotiable': negotiable,
-        'acceptedPaymentMethods':
-            acceptedPaymentMethods.map((m) => m.wireName).toList(),
+        'acceptedPaymentMethods': acceptedPaymentMethods
+            .map((m) => m.wireName)
+            .toList(),
         if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
         if (description != null) 'description': description,
         if (photoUrl != null) 'photoUrl': photoUrl,
-        if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
+        if (pickupNeighborhood != null)
+          'pickupNeighborhood': pickupNeighborhood,
         if (deliveryNeighborhood != null)
           'deliveryNeighborhood': deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
@@ -197,15 +204,19 @@ class PackageRequestRepository {
   }
 
   Future<PackageRequest> getById(String id) async {
-    final response = await _apiClient.dio
-        .get<Map<String, dynamic>>('/package-requests/$id');
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/package-requests/$id',
+    );
     return PackageRequest.fromJson(response.data!);
   }
 
   /// All negotiation threads attached to a request (sender inbox view).
-  Future<List<NegotiationThread>> listThreadsForRequest(String requestId) async {
-    final response = await _apiClient.dio
-        .get<List<dynamic>>('/package-requests/$requestId/threads');
+  Future<List<NegotiationThread>> listThreadsForRequest(
+    String requestId,
+  ) async {
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/package-requests/$requestId/threads',
+    );
     return (response.data ?? <dynamic>[])
         .map((e) => NegotiationThread.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -216,8 +227,11 @@ class PackageRequestRepository {
   }
 
   /// Signale une demande (modération). reason = code court (SCAM, PROHIBITED…).
-  Future<void> report(String id,
-      {required String reason, String? details}) async {
+  Future<void> report(
+    String id, {
+    required String reason,
+    String? details,
+  }) async {
     await _apiClient.dio.post<void>(
       '/package-requests/$id/report',
       data: {
@@ -263,7 +277,8 @@ class PackageRequestRepository {
       'size': size,
       if (departure != null) 'departure': departure,
       if (arrival != null) 'arrival': arrival,
-      if (dateFrom != null) 'dateFrom': dateFrom.toIso8601String().substring(0, 10),
+      if (dateFrom != null)
+        'dateFrom': dateFrom.toIso8601String().substring(0, 10),
       if (dateTo != null) 'dateTo': dateTo.toIso8601String().substring(0, 10),
       if (maxWeight != null) 'maxWeight': maxWeight,
       if (parcelSize != null) 'parcelSize': parcelSize.wireName,

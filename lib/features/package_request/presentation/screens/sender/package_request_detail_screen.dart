@@ -50,7 +50,11 @@ class _PackageRequestDetailScreenState
       try {
         threads = await repo.listThreadsForRequest(widget.requestId);
       } catch (_) {}
-      if (mounted) setState(() { _request = r; _threads = threads; });
+      if (mounted)
+        setState(() {
+          _request = r;
+          _threads = threads;
+        });
     } on DioException catch (e) {
       if (mounted) setState(() => _error = e.message ?? 'Erreur');
     } catch (e) {
@@ -69,8 +73,9 @@ class _PackageRequestDetailScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: DonyColors.danger500),
+            content: Text(e.toString()),
+            backgroundColor: DonyColors.danger500,
+          ),
         );
       }
     } finally {
@@ -88,35 +93,31 @@ class _PackageRequestDetailScreenState
         title: 'Ma demande',
         actions: [
           IconButton(
-            icon:
-                DonyIcon('ellipsis', color: cs.onSurface, size: 22),
+            icon: DonyIcon('ellipsis', color: cs.onSurface, size: 22),
             onPressed: () {},
           ),
         ],
       ),
       body: _loading
-          ? Center(
-              child:
-                  CircularProgressIndicator(color: cs.primary))
+          ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _error != null
-              ? _ErrorView(message: _error!, onRetry: _load)
-              : _request == null
-                  ? const SizedBox.shrink()
-                  : BlocProvider<NegotiationBloc>(
-                      create: (_) => getIt<NegotiationBloc>(),
-                      child: BlocListener<NegotiationBloc, NegotiationState>(
-                        listenWhen: (prev, curr) =>
-                            curr is NegotiationLoaded &&
-                            prev is! NegotiationLoaded,
-                        listener: (_, __) => _load(),
-                        child: _DetailBody(
-                          request: _request!,
-                          threads: _threads,
-                          cancelling: _cancelling,
-                          onCancel: _cancel,
-                        ),
-                      ),
-                    ),
+          ? _ErrorView(message: _error!, onRetry: _load)
+          : _request == null
+          ? const SizedBox.shrink()
+          : BlocProvider<NegotiationBloc>(
+              create: (_) => getIt<NegotiationBloc>(),
+              child: BlocListener<NegotiationBloc, NegotiationState>(
+                listenWhen: (prev, curr) =>
+                    curr is NegotiationLoaded && prev is! NegotiationLoaded,
+                listener: (_, __) => _load(),
+                child: _DetailBody(
+                  request: _request!,
+                  threads: _threads,
+                  cancelling: _cancelling,
+                  onCancel: _cancel,
+                ),
+              ),
+            ),
     );
   }
 }
@@ -150,20 +151,20 @@ class _DetailBody extends StatelessWidget {
             DonySpacing.lg,
             MediaQuery.of(context).padding.bottom + 120,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Hero card sombre
-              _HeroCard(request: request, threadsCount: threads.length),
-              const SizedBox(height: DonySpacing.xl),
-              // Section offres
-              _OffersSection(
-                threads: threads,
-                request: request,
-              ),
-            ],
-          ).animate().fadeIn(duration: 280.ms).slideY(
-              begin: 0.04, curve: Curves.easeOutCubic),
+          child:
+              Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Hero card sombre
+                      _HeroCard(request: request, threadsCount: threads.length),
+                      const SizedBox(height: DonySpacing.xl),
+                      // Section offres
+                      _OffersSection(threads: threads, request: request),
+                    ],
+                  )
+                  .animate()
+                  .fadeIn(duration: 280.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
         // CTA fixe en bas — seulement « Annuler » tant que la demande cherche
         // un voyageur. Une fois payée, elle vit dans l'onglet Envois.
@@ -205,8 +206,7 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final publishedAt =
-        DateFormat('HH:mm').format(request.createdAt);
+    final publishedAt = DateFormat('HH:mm').format(request.createdAt);
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -273,11 +273,12 @@ class _HeroCard extends StatelessWidget {
                     if (threadsCount > 0)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: DonyColors.primary.withValues(alpha: 0.35),
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.full),
+                          borderRadius: BorderRadius.circular(DonyRadius.full),
                           border: Border.all(
                             color: DonyColors.primary.withValues(alpha: 0.5),
                           ),
@@ -296,9 +297,7 @@ class _HeroCard extends StatelessWidget {
                             const SizedBox(width: 5),
                             Text(
                               '$threadsCount OFFRE${threadsCount > 1 ? 'S' : ''}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
+                              style: Theme.of(context).textTheme.bodyMedium!
                                   .copyWith(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
@@ -312,17 +311,16 @@ class _HeroCard extends StatelessWidget {
                     else
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.full),
+                          borderRadius: BorderRadius.circular(DonyRadius.full),
                         ),
                         child: Text(
                           'En attente d\'offres…',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium!
+                          style: Theme.of(context).textTheme.bodyMedium!
                               .copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -333,11 +331,10 @@ class _HeroCard extends StatelessWidget {
                     const Spacer(),
                     Text(
                       'publié à $publishedAt',
-                      style:
-                          Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                fontSize: 11,
-                                color: Colors.white.withValues(alpha: 0.55),
-                              ),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 11,
+                        color: Colors.white.withValues(alpha: 0.55),
+                      ),
                     ),
                   ],
                 ),
@@ -396,7 +393,9 @@ class _OffersSection extends StatelessWidget {
               'Tu seras notifié dès qu\'un voyageur fait une offre.',
               textAlign: TextAlign.center,
               style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant, height: 1.5),
+                color: cs.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -444,9 +443,7 @@ class _OffersSection extends StatelessWidget {
             child: _OfferTile(
               thread: t,
               isPrimary: i == 0,
-            ).animate().fadeIn(
-                duration: 200.ms,
-                delay: (60 * i).ms),
+            ).animate().fadeIn(duration: 200.ms, delay: (60 * i).ms),
           );
         }),
       ],
@@ -505,8 +502,11 @@ class _OfferTile extends StatelessWidget {
                       ),
                       if (rating != null) ...[
                         const SizedBox(width: 4),
-                        const DonyIcon('star',
-                            size: 13, color: DonyColors.warning500),
+                        const DonyIcon(
+                          'star',
+                          size: 13,
+                          color: DonyColors.warning500,
+                        ),
                         Text(
                           rating.toStringAsFixed(1),
                           style: tt.bodySmall?.copyWith(
@@ -574,9 +574,11 @@ class CandidatesSection extends StatelessWidget {
       // Tant qu'elle n'est pas payée, elle doit RESTER visible ici pour que
       // l'expéditeur la finalise — sinon l'offre disparaît de « Ma demande ».
       final chosen = threads
-          .where((t) =>
-              t.status == NegotiationThreadStatus.awaitingTrip ||
-              t.status == NegotiationThreadStatus.awaitingPayment)
+          .where(
+            (t) =>
+                t.status == NegotiationThreadStatus.awaitingTrip ||
+                t.status == NegotiationThreadStatus.awaitingPayment,
+          )
           .toList();
 
       // Une fois un voyageur choisi, on n'affiche que l'offre en cours à finaliser.
@@ -646,17 +648,23 @@ class CandidatesSection extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base, vertical: DonySpacing.sm),
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: DonyColors.warning500.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(DonyRadius.md),
                 border: Border.all(
-                    color: DonyColors.warning500.withValues(alpha: 0.30)),
+                  color: DonyColors.warning500.withValues(alpha: 0.30),
+                ),
               ),
               child: Row(
                 children: [
-                  const DonyIcon('info',
-                      size: 16, color: DonyColors.warning500),
+                  const DonyIcon(
+                    'info',
+                    size: 16,
+                    color: DonyColors.warning500,
+                  ),
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text(
@@ -699,11 +707,11 @@ class _CandidateCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final name = thread.travelerName ?? 'Voyageur';
     final rating = thread.travelerRating;
-    final date =
-        DateFormat('d MMM', 'fr').format(thread.travelerTravelDate);
+    final date = DateFormat('d MMM', 'fr').format(thread.travelerTravelDate);
 
     final grossPrice =
-        thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur);
+        thread.grossPriceEur ??
+        PriceDisplay.grossFromNet(thread.currentPriceEur);
     final priceLabel = 'Tu paies ${PriceDisplay.eur(grossPrice)}';
 
     // Toute la carte est tappable et ouvre la négociation (même cible que le
@@ -713,100 +721,105 @@ class _CandidateCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.md),
       onTap: onChoose,
       child: Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: DonyColors.neutral200),
-      ),
-      child: Row(
-        children: [
-          DonyAvatar(
-            name: name,
-            imageUrl: thread.travelerPhotoUrl,
-            size: DonyAvatarSize.md,
-            verified: (thread.travelerTripsCount ?? 0) > 0,
-          ),
-          const SizedBox(width: DonySpacing.sm + 4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Traveler name + rating
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        name,
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (rating != null) ...[
-                      const SizedBox(width: 4),
-                      const DonyIcon('star',
-                          size: 13, color: DonyColors.warning500),
-                      Text(
-                        rating.toStringAsFixed(1),
-                        style: tt.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+        padding: const EdgeInsets.all(DonySpacing.base),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: DonyColors.neutral200),
+        ),
+        child: Row(
+          children: [
+            DonyAvatar(
+              name: name,
+              imageUrl: thread.travelerPhotoUrl,
+              size: DonyAvatarSize.md,
+              verified: (thread.travelerTripsCount ?? 0) > 0,
+            ),
+            const SizedBox(width: DonySpacing.sm + 4),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Traveler name + rating
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (rating != null) ...[
+                        const SizedBox(width: 4),
+                        const DonyIcon(
+                          'star',
+                          size: 13,
+                          color: DonyColors.warning500,
+                        ),
+                        Text(
+                          rating.toStringAsFixed(1),
+                          style: tt.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                // Travel date
-                Text(
-                  date,
-                  style: tt.bodySmall?.copyWith(
-                    color: DonyColors.textMuted,
-                    fontSize: 11,
                   ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                // Price label
-                Text(
-                  priceLabel,
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: cs.primary,
+                  const SizedBox(height: 2),
+                  // Travel date
+                  Text(
+                    date,
+                    style: tt.bodySmall?.copyWith(
+                      color: DonyColors.textMuted,
+                      fontSize: 11,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          // Choose CTA
-          SizedBox(
-            height: 44,
-            child: ElevatedButton(
-              key: Key('choose-traveler-${thread.id}'),
-              onPressed: onChoose,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base, vertical: 0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                textStyle: tt.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+                  const SizedBox(height: DonySpacing.sm),
+                  // Price label
+                  Text(
+                    priceLabel,
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: cs.primary,
+                    ),
+                  ),
+                ],
               ),
-              child: Text(ctaLabel),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: DonySpacing.sm),
+            // Choose CTA
+            SizedBox(
+              height: 44,
+              child: ElevatedButton(
+                key: Key('choose-traveler-${thread.id}'),
+                onPressed: onChoose,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: DonyColors.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base,
+                    vertical: 0,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  textStyle: tt.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                child: Text(ctaLabel),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -827,19 +840,18 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const DonyIcon('circle-alert',
-                size: 48, color: DonyColors.danger500),
+            const DonyIcon(
+              'circle-alert',
+              size: 48,
+              color: DonyColors.danger500,
+            ),
             const SizedBox(height: DonySpacing.base),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: DonySpacing.base),
             DonyButton(label: 'Réessayer', onPressed: onRetry),
@@ -857,9 +869,8 @@ String _buildDetails(PackageRequest r) {
   final parts = [
     '$date ±${r.dateToleranceDays}j',
     '${r.weightKg.toStringAsFixed(0)} kg',
-    r.contentCategory.label,
-    if (r.targetPriceEur != null)
-      '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
+    if (r.categories.isNotEmpty) r.categories.first,
+    if (r.targetPriceEur != null) '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
   ];
   return parts.join(' · ');
 }
@@ -891,8 +902,9 @@ abstract final class PackageRequestDetailBottomSheet {
         btnNotifier: btnNotifier,
         child: _SheetBody(
           requestId: requestId,
-          onBtnConfig: (cfg) => WidgetsBinding.instance
-              .addPostFrameCallback((_) => btnNotifier.value = cfg),
+          onBtnConfig: (cfg) => WidgetsBinding.instance.addPostFrameCallback(
+            (_) => btnNotifier.value = cfg,
+          ),
         ),
       ),
     ).whenComplete(btnNotifier.dispose);
@@ -937,15 +949,14 @@ class _SheetFrame extends StatelessWidget {
           // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, DonySpacing.sm, DonySpacing.base, 0),
+              DonySpacing.lg,
+              DonySpacing.sm,
+              DonySpacing.base,
+              0,
+            ),
             child: Row(
               children: [
-                Expanded(
-                  child: Text(
-                    'Ma demande',
-                    style: tt.headlineSmall,
-                  ),
-                ),
+                Expanded(child: Text('Ma demande', style: tt.headlineSmall)),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const DonyIcon('x', size: 20),
@@ -1005,10 +1016,7 @@ class _SheetFrame extends StatelessWidget {
 }
 
 class _SheetBody extends StatefulWidget {
-  const _SheetBody({
-    required this.requestId,
-    required this.onBtnConfig,
-  });
+  const _SheetBody({required this.requestId, required this.onBtnConfig});
   final String requestId;
   final void Function(_SheetBtnConfig?) onBtnConfig;
 
@@ -1029,7 +1037,11 @@ class _SheetBodyState extends State<_SheetBody> {
   }
 
   Future<void> _load() async {
-    if (mounted) setState(() { _loading = true; _error = null; });
+    if (mounted)
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
     try {
       final repo = getIt<PackageRequestRepository>();
       final r = await repo.getById(widget.requestId);
@@ -1038,7 +1050,10 @@ class _SheetBodyState extends State<_SheetBody> {
         threads = await repo.listThreadsForRequest(widget.requestId);
       } catch (_) {}
       if (mounted) {
-        setState(() { _request = r; _threads = threads; });
+        setState(() {
+          _request = r;
+          _threads = threads;
+        });
         _syncBtn(r, false);
       }
     } on DioException catch (e) {
@@ -1051,16 +1066,19 @@ class _SheetBodyState extends State<_SheetBody> {
   }
 
   void _syncBtn(PackageRequest r, bool cancelling) {
-    final canCancel = r.status == PackageRequestStatus.open ||
+    final canCancel =
+        r.status == PackageRequestStatus.open ||
         r.status == PackageRequestStatus.negotiating;
 
     if (canCancel) {
-      widget.onBtnConfig(_SheetBtnConfig(
-        label: cancelling ? 'Annulation…' : 'Annuler la demande',
-        isDestructive: true,
-        isLoading: cancelling,
-        onPressed: _cancel,
-      ));
+      widget.onBtnConfig(
+        _SheetBtnConfig(
+          label: cancelling ? 'Annulation…' : 'Annuler la demande',
+          isDestructive: true,
+          isLoading: cancelling,
+          onPressed: _cancel,
+        ),
+      );
     } else {
       widget.onBtnConfig(null);
     }
@@ -1101,13 +1119,15 @@ class _SheetBodyState extends State<_SheetBody> {
     if (r == null) return const SizedBox.shrink();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _HeroCard(request: r, threadsCount: _threads.length),
-        const SizedBox(height: DonySpacing.lg),
-        _OffersSection(threads: _threads, request: r),
-      ],
-    ).animate().fadeIn(duration: 280.ms).slideY(
-        begin: 0.04, curve: Curves.easeOutCubic);
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _HeroCard(request: r, threadsCount: _threads.length),
+            const SizedBox(height: DonySpacing.lg),
+            _OffersSection(threads: _threads, request: r),
+          ],
+        )
+        .animate()
+        .fadeIn(duration: 280.ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }

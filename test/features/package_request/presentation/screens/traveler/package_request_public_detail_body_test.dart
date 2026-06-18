@@ -23,7 +23,7 @@ PackageRequest _req({
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
-  contentCategory: ContentCategory.vetements,
+  categories: const ['Vêtements'],
   status: status,
   createdAt: DateTime(2026, 6, 1),
   negotiable: negotiable,
@@ -45,7 +45,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('DEMANDE D\'ENVOI'), findsOneWidget);
     expect(find.text('Ouverte'), findsOneWidget);
-    expect(find.text('5 kg · Vêtements · M'), findsOneWidget);
+    expect(find.textContaining('Paris → Dakar'), findsOneWidget);
+    expect(find.text('Vêtements'), findsOneWidget);
+    expect(find.text('5 kg'), findsOneWidget);
     expect(find.text('Proposer mon trajet'), findsOneWidget);
   });
 

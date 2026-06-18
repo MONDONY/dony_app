@@ -19,7 +19,7 @@ class PackageRequestSearchItem extends Equatable {
     required this.dateToleranceDays,
     required this.weightKg,
     required this.parcelSize,
-    required this.contentCategory,
+    this.categories = const [],
     this.targetPriceEur,
     this.photoUrl,
     this.photoUrls = const [],
@@ -41,7 +41,10 @@ class PackageRequestSearchItem extends Equatable {
   final int dateToleranceDays;
   final double weightKg;
   final ParcelSize parcelSize;
-  final ContentCategory contentCategory;
+  final List<String> categories;
+
+  /// 1ère catégorie pour les affichages compacts (titre, emoji). Null si vide.
+  String? get primaryCategory => categories.isEmpty ? null : categories.first;
   final double? targetPriceEur;
 
   /// URL présignée de la 1ère photo (rétro-compat). Préférer [photoUrls].
@@ -69,11 +72,13 @@ class PackageRequestSearchItem extends Equatable {
         dateToleranceDays: json['dateToleranceDays'] as int,
         weightKg: (json['weightKg'] as num).toDouble(),
         parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
-        contentCategory:
-            ContentCategory.fromWire(json['contentCategory'] as String?),
+        categories: ContentCategory.splitWire(
+          json['contentCategory'] as String?,
+        ),
         targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
         photoUrl: json['photoUrl'] as String?,
-        photoUrls: (json['photos'] as List<dynamic>?)
+        photoUrls:
+            (json['photos'] as List<dynamic>?)
                 ?.map((e) => (e as Map<String, dynamic>)['url'] as String)
                 .toList() ??
             const [],
@@ -81,23 +86,36 @@ class PackageRequestSearchItem extends Equatable {
         deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
         negotiable: json['negotiable'] as bool? ?? true,
         acceptedPaymentMethods: PaymentMethod.setFromJson(
-            json['acceptedPaymentMethods'] as List<dynamic>?),
+          json['acceptedPaymentMethods'] as List<dynamic>?,
+        ),
         sender: SenderPublicProfile.fromJson(
-            json['sender'] as Map<String, dynamic>),
+          json['sender'] as Map<String, dynamic>,
+        ),
       );
 
   @override
   List<Object?> get props => [
-        id, departureCity, arrivalCity,
-        departureLat, departureLng, arrivalLat, arrivalLng,
-        desiredDate, dateToleranceDays,
-        weightKg, parcelSize, contentCategory,
-        targetPriceEur, photoUrl, photoUrls,
-        pickupNeighborhood, deliveryNeighborhood,
-        negotiable,
-        acceptedPaymentMethods,
-        sender,
-      ];
+    id,
+    departureCity,
+    arrivalCity,
+    departureLat,
+    departureLng,
+    arrivalLat,
+    arrivalLng,
+    desiredDate,
+    dateToleranceDays,
+    weightKg,
+    parcelSize,
+    categories,
+    targetPriceEur,
+    photoUrl,
+    photoUrls,
+    pickupNeighborhood,
+    deliveryNeighborhood,
+    negotiable,
+    acceptedPaymentMethods,
+    sender,
+  ];
 }
 
 class SenderPublicProfile extends Equatable {
@@ -130,6 +148,12 @@ class SenderPublicProfile extends Equatable {
       );
 
   @override
-  List<Object?> get props =>
-      [id, displayName, averageRating, totalRatings, kycVerified, avatarUrl];
+  List<Object?> get props => [
+    id,
+    displayName,
+    averageRating,
+    totalRatings,
+    kycVerified,
+    avatarUrl,
+  ];
 }

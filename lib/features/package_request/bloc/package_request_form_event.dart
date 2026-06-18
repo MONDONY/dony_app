@@ -1,6 +1,5 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
-import '../data/models/content_category.dart';
 import '../data/models/parcel_size.dart';
 import '../data/models/payment_method.dart';
 
@@ -25,23 +24,29 @@ class FormStep1Submitted extends PackageRequestFormEvent {
   final TransportMode transportMode;
 
   @override
-  List<Object?> get props => [departureCity, arrivalCity, desiredDate, dateToleranceDays, transportMode];
+  List<Object?> get props => [
+    departureCity,
+    arrivalCity,
+    desiredDate,
+    dateToleranceDays,
+    transportMode,
+  ];
 }
 
 class FormStep2Submitted extends PackageRequestFormEvent {
   const FormStep2Submitted({
     required this.weightKg,
     required this.parcelSize,
-    required this.contentCategory,
+    this.categories = const [],
     this.description,
   });
   final double weightKg;
   final ParcelSize parcelSize;
-  final ContentCategory contentCategory;
+  final List<String> categories;
   final String? description;
 
   @override
-  List<Object?> get props => [weightKg, parcelSize, contentCategory, description];
+  List<Object?> get props => [weightKg, parcelSize, categories, description];
 }
 
 class FormStep3Submitted extends PackageRequestFormEvent {
@@ -59,19 +64,11 @@ class FormStep3Submitted extends PackageRequestFormEvent {
   final String? deliveryNeighborhood;
 
   @override
-  List<Object?> get props => [targetPriceEur, pickupNeighborhood, deliveryNeighborhood];
-}
-
-/// Dispatched in real-time as the user types a free-text category label.
-/// [label] is the raw string from the text field.
-/// When [label] is null or empty, it means the user cleared the custom field
-/// or switched back to a predefined category.
-class FormStep2CategoryChanged extends PackageRequestFormEvent {
-  const FormStep2CategoryChanged(this.label);
-  final String? label;
-
-  @override
-  List<Object?> get props => [label];
+  List<Object?> get props => [
+    targetPriceEur,
+    pickupNeighborhood,
+    deliveryNeighborhood,
+  ];
 }
 
 class FormStepBack extends PackageRequestFormEvent {

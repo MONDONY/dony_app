@@ -50,42 +50,53 @@ class PackageRequestCarouselCard extends StatelessWidget {
       onTap: onTap,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final photoHeight = (constraints.maxWidth * _photoRatio).clamp(110.0, 180.0);
+          final photoHeight = (constraints.maxWidth * _photoRatio).clamp(
+            110.0,
+            180.0,
+          );
           return Container(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(color: cs.outlineVariant),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(DonyRadius.card),
+                  border: Border.all(color: cs.outlineVariant),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── Photo hero ──────────────────────────────────────────
-                _PhotoHero(
-                  item: item,
-                  height: photoHeight,
-                  distanceLabel: isOwnRequest ? null : distanceLabel,
-                  isOwnRequest: isOwnRequest,
-                  cs: cs,
-                  tt: tt,
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Photo hero ──────────────────────────────────────────
+                    _PhotoHero(
+                      item: item,
+                      height: photoHeight,
+                      distanceLabel: isOwnRequest ? null : distanceLabel,
+                      isOwnRequest: isOwnRequest,
+                      cs: cs,
+                      tt: tt,
+                    ),
+                    // ── Info section ────────────────────────────────────────
+                    Expanded(
+                      child: _InfoSection(
+                        item: item,
+                        cs: cs,
+                        tt: tt,
+                        sizeLabel: _sizeLabel,
+                      ),
+                    ),
+                  ],
                 ),
-                // ── Info section ────────────────────────────────────────
-                Expanded(
-                  child: _InfoSection(item: item, cs: cs, tt: tt, sizeLabel: _sizeLabel),
-                ),
-              ],
-            ),
-          )
+              )
               .animate()
-              .fadeIn(delay: Duration(milliseconds: 60 * index), duration: 250.ms)
+              .fadeIn(
+                delay: Duration(milliseconds: 60 * index),
+                duration: 250.ms,
+              )
               .slideY(begin: 0.06, curve: Curves.easeOutCubic);
         },
       ),
@@ -125,12 +136,15 @@ class _PhotoHero extends StatelessWidget {
               item.photoUrl!,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => _PhotoPlaceholder(
-                category: item.contentCategory,
+                emoji: ContentCategory.emojiForLabel(item.primaryCategory),
                 cs: cs,
               ),
             )
           else
-            _PhotoPlaceholder(category: item.contentCategory, cs: cs),
+            _PhotoPlaceholder(
+              emoji: ContentCategory.emojiForLabel(item.primaryCategory),
+              cs: cs,
+            ),
 
           // Gradient en bas → corridor + prix
           Positioned(
@@ -212,20 +226,15 @@ class _PhotoHero extends StatelessWidget {
 // ── Photo placeholder ────────────────────────────────────────────────────────
 
 class _PhotoPlaceholder extends StatelessWidget {
-  const _PhotoPlaceholder({required this.category, required this.cs});
-  final ContentCategory category;
+  const _PhotoPlaceholder({required this.emoji, required this.cs});
+  final String emoji;
   final ColorScheme cs;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: cs.surfaceContainerHighest,
-      child: Center(
-        child: Text(
-          category.emoji,
-          style: const TextStyle(fontSize: 36),
-        ),
-      ),
+      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 36))),
     );
   }
 }
@@ -322,7 +331,9 @@ class _InfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateStr = DateFormat('d MMM', 'fr').format(item.desiredDate);
-    final toleranceStr = item.dateToleranceDays > 0 ? ' ±${item.dateToleranceDays}j' : '';
+    final toleranceStr = item.dateToleranceDays > 0
+        ? ' ±${item.dateToleranceDays}j'
+        : '';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
@@ -380,21 +391,23 @@ class _InfoSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                item.contentCategory.emoji,
-                style: const TextStyle(fontSize: 11),
-              ),
-              const SizedBox(width: 3),
-              Expanded(
-                child: Text(
-                  item.contentCategory.label,
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontSize: 11,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              if (item.primaryCategory != null) ...[
+                Text(
+                  ContentCategory.emojiForLabel(item.primaryCategory),
+                  style: const TextStyle(fontSize: 11),
                 ),
-              ),
+                const SizedBox(width: 3),
+                Expanded(
+                  child: Text(
+                    item.primaryCategory!,
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ],
           ),
         ],
