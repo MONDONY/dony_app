@@ -6,6 +6,7 @@ import 'package:dony/features/package_request/data/models/content_category.dart'
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
     show OptionButton;
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -125,6 +126,10 @@ class Step2DetailsState extends State<Step2Details> {
               ),
             ),
             const SizedBox(height: DonySpacing.lg),
+
+            // ── Photos du colis (max 4) ────────────────────────────────────
+            const PackageRequestPhotoSection(),
+            const SizedBox(height: DonySpacing.base),
 
             // ── Poids ──────────────────────────────────────────────────────
             _FieldLabel('Poids approximatif'),

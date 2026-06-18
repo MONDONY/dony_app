@@ -112,28 +112,14 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
   }
 
   Future<void> _onStep3(FormStep3Submitted e, Emitter<PackageRequestFormState> emit) async {
-    emit(state.copyWith(submissionStatus: FormSubmissionStatus.submitting));
-
-    String? photoUrl;
-    if (e.photoFile != null) {
-      try {
-        photoUrl = await _repository.uploadPhoto(e.photoFile!);
-      } catch (_) {
-        // Upload non-bloquant : on publie sans photo plutôt que d'échouer
-      }
-    }
-
     emit(state.copyWith(
+      submissionStatus: FormSubmissionStatus.submitting,
       targetPriceEur: e.targetPriceEur,
-      photoUrl: photoUrl,
       pickupNeighborhood: e.pickupNeighborhood,
       deliveryNeighborhood: e.deliveryNeighborhood,
     ));
     try {
       final editingId = state.editingRequestId;
-      // En édition, conserver la photo existante si l'utilisateur n'en a pas
-      // re-uploadé une (photoUrl local null → garder state.photoUrl).
-      final resolvedPhotoUrl = photoUrl ?? (editingId != null ? state.photoUrl : null);
       final PackageRequest saved;
       if (editingId != null) {
         saved = await _repository.update(
@@ -150,9 +136,8 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
           acceptedPaymentMethods: state.acceptedPaymentMethods,
           totalBudgetEur: state.totalBudgetEur ?? e.targetPriceEur,
           description: state.description,
-          photoUrl: resolvedPhotoUrl,
-          // state.* conserve les quartiers pré-remplis (l'event step 3 ne les
-          // transmet pas → ne pas les écraser à null en édition).
+          // null → conserver les photos existantes ; liste → remplacer l'ensemble.
+          photoKeys: e.photoKeys,
           pickupNeighborhood: state.pickupNeighborhood,
           deliveryNeighborhood: state.deliveryNeighborhood,
         );
@@ -170,7 +155,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
           acceptedPaymentMethods: state.acceptedPaymentMethods,
           totalBudgetEur: state.totalBudgetEur ?? e.targetPriceEur,
           description: state.description,
-          photoUrl: photoUrl,
+          photoKeys: e.photoKeys,
           pickupNeighborhood: e.pickupNeighborhood,
           deliveryNeighborhood: e.deliveryNeighborhood,
         );

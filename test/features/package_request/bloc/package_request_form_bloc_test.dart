@@ -79,7 +79,7 @@ void main() {
             acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
             totalBudgetEur: any(named: 'totalBudgetEur'),
             description: any(named: 'description'),
-            photoUrl: any(named: 'photoUrl'),
+            photoKeys: any(named: 'photoKeys'),
             pickupNeighborhood: any(named: 'pickupNeighborhood'),
             deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
           )).thenAnswer((_) async => fakeRequest);
@@ -99,9 +99,7 @@ void main() {
       ..add(const FormStep3Submitted(targetPriceEur: 25)),
     skip: 2,
     expect: () => [
-      isA<PackageRequestFormState>()
-          .having((s) => s.submissionStatus, 'submissionStatus', FormSubmissionStatus.submitting),
-      // Intermediate state: targetPriceEur/photo/neighborhoods saved before repo.create
+      // submitting + targetPriceEur posés dans le même emit
       isA<PackageRequestFormState>()
           .having((s) => s.submissionStatus, 'submissionStatus', FormSubmissionStatus.submitting)
           .having((s) => s.targetPriceEur, 'targetPriceEur', 25.0),
@@ -123,7 +121,7 @@ void main() {
             acceptedPaymentMethods: {PaymentMethod.stripe},
             totalBudgetEur: 25,
             description: null,
-            photoUrl: null,
+            photoKeys: null,
             pickupNeighborhood: null,
             deliveryNeighborhood: null,
           )).called(1);

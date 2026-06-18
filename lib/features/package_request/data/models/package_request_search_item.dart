@@ -22,6 +22,7 @@ class PackageRequestSearchItem extends Equatable {
     required this.contentCategory,
     this.targetPriceEur,
     this.photoUrl,
+    this.photoUrls = const [],
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
     this.negotiable = true,
@@ -42,7 +43,13 @@ class PackageRequestSearchItem extends Equatable {
   final ParcelSize parcelSize;
   final ContentCategory contentCategory;
   final double? targetPriceEur;
+
+  /// URL présignée de la 1ère photo (rétro-compat). Préférer [photoUrls].
   final String? photoUrl;
+
+  /// Toutes les photos colis présignées (max 4, ordonnées). Vide si aucune.
+  final List<String> photoUrls;
+
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
   final bool negotiable;
@@ -66,6 +73,10 @@ class PackageRequestSearchItem extends Equatable {
             ContentCategory.fromWire(json['contentCategory'] as String?),
         targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
         photoUrl: json['photoUrl'] as String?,
+        photoUrls: (json['photos'] as List<dynamic>?)
+                ?.map((e) => (e as Map<String, dynamic>)['url'] as String)
+                .toList() ??
+            const [],
         pickupNeighborhood: json['pickupNeighborhood'] as String?,
         deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
         negotiable: json['negotiable'] as bool? ?? true,
@@ -81,7 +92,7 @@ class PackageRequestSearchItem extends Equatable {
         departureLat, departureLng, arrivalLat, arrivalLng,
         desiredDate, dateToleranceDays,
         weightKg, parcelSize, contentCategory,
-        targetPriceEur, photoUrl,
+        targetPriceEur, photoUrl, photoUrls,
         pickupNeighborhood, deliveryNeighborhood,
         negotiable,
         acceptedPaymentMethods,

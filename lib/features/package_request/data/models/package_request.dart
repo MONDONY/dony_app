@@ -34,12 +34,15 @@ class PackageRequest extends Equatable {
     this.description,
     this.targetPriceEur,
     this.photoUrl,
+    this.photoUrls = const [],
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
     required this.status,
     required this.createdAt,
     this.negotiable = true,
     this.acceptedPaymentMethods = const {},
+    this.viewerThreadId,
+    this.viewerThreadStatus,
   });
 
   final String id;
@@ -55,12 +58,21 @@ class PackageRequest extends Equatable {
   final String? description;
   final double? targetPriceEur;
   final String? photoUrl;
+
+  /// Toutes les photos colis présignées (max 4, ordonnées). Vide si aucune.
+  final List<String> photoUrls;
+
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
   final PackageRequestStatus status;
   final DateTime createdAt;
   final bool negotiable;
   final Set<PaymentMethod> acceptedPaymentMethods;
+
+  /// Thread de négociation ACTIF du voyageur courant sur cette demande (null sinon).
+  /// Permet de basculer le CTA « Proposer mon trajet » → « Voir ma négociation ».
+  final String? viewerThreadId;
+  final String? viewerThreadStatus;
 
   factory PackageRequest.fromJson(Map<String, dynamic> json) => PackageRequest(
         id: json['id'] as String,
@@ -77,6 +89,10 @@ class PackageRequest extends Equatable {
         description: json['description'] as String?,
         targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
         photoUrl: json['photoUrl'] as String?,
+        photoUrls: (json['photos'] as List<dynamic>?)
+                ?.map((e) => (e as Map<String, dynamic>)['url'] as String)
+                .toList() ??
+            const [],
         pickupNeighborhood: json['pickupNeighborhood'] as String?,
         deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
         status: PackageRequestStatus.fromJson(json['status'] as String),
@@ -84,6 +100,8 @@ class PackageRequest extends Equatable {
         negotiable: json['negotiable'] as bool? ?? true,
         acceptedPaymentMethods: PaymentMethod.setFromJson(
             json['acceptedPaymentMethods'] as List<dynamic>?),
+        viewerThreadId: json['viewerThreadId'] as String?,
+        viewerThreadStatus: json['viewerThreadStatus'] as String?,
       );
 
   @override
@@ -92,9 +110,10 @@ class PackageRequest extends Equatable {
         departureCity, arrivalCity,
         desiredDate, dateToleranceDays,
         weightKg, parcelSize, transportMode, contentCategory,
-        description, targetPriceEur, photoUrl,
+        description, targetPriceEur, photoUrl, photoUrls,
         pickupNeighborhood, deliveryNeighborhood,
         status, createdAt,
         negotiable, acceptedPaymentMethods,
+        viewerThreadId, viewerThreadStatus,
       ];
 }

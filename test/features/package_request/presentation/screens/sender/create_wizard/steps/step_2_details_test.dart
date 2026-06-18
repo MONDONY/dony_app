@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -48,12 +49,20 @@ void main() {
 
   Widget wrap(Widget child, {PackageRequestFormBloc? bloc}) => MaterialApp(
         theme: AppTheme.light,
-        home: BlocProvider<PackageRequestFormBloc>.value(
-          value: bloc ??
-              PackageRequestFormBloc(
-                repo,
-                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-              ),
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<PackageRequestFormBloc>.value(
+              value: bloc ??
+                  PackageRequestFormBloc(
+                    repo,
+                    analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+                  ),
+            ),
+            BlocProvider<PackageRequestPhotosCubit>(
+              create: (_) => PackageRequestPhotosCubit(
+                  repo, makeDisabledAnalytics(MockAnalyticsBackend())),
+            ),
+          ],
           child: Scaffold(body: child),
         ),
       );

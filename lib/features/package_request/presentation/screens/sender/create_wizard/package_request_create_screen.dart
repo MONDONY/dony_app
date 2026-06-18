@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
@@ -25,8 +26,15 @@ abstract final class PackageRequestCreateWizard {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (sheetContext) {
-        return BlocProvider(
-          create: (_) => getIt<PackageRequestFormBloc>(param1: initial),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) => getIt<PackageRequestFormBloc>(param1: initial),
+            ),
+            BlocProvider(
+              create: (_) => getIt<PackageRequestPhotosCubit>(),
+            ),
+          ],
           child: const _WizardSheet(),
         );
       },
@@ -338,18 +346,43 @@ class _StickyCta extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
           ],
-          DonyButton(
-            label: isSubmitting
-                ? 'Publication…'
-                : isFinalStep
-                    ? 'Publier ma demande'
-                    : 'Continuer',
-            iconRightAsset: isFinalStep
-                ? 'send'
-                : 'arrow-right',
-            onPressed: isSubmitting ? null : onPressed,
-            isLoading: isSubmitting,
-          ),
+          if (currentStep > 0)
+            Row(
+              children: [
+                SizedBox(
+                  width: 112,
+                  child: DonyButton(
+                    label: 'Retour',
+                    variant: DonyButtonVariant.secondary,
+                    onPressed: isSubmitting
+                        ? null
+                        : () => context
+                            .read<PackageRequestFormBloc>()
+                            .add(const FormStepBack()),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: DonyButton(
+                    label: isSubmitting
+                        ? 'Publication…'
+                        : isFinalStep
+                            ? 'Publier ma demande'
+                            : 'Continuer',
+                    iconRightAsset: isFinalStep ? 'send' : 'arrow-right',
+                    onPressed: isSubmitting ? null : onPressed,
+                    isLoading: isSubmitting,
+                  ),
+                ),
+              ],
+            )
+          else
+            DonyButton(
+              label: isSubmitting ? 'Publication…' : 'Continuer',
+              iconRightAsset: 'arrow-right',
+              onPressed: isSubmitting ? null : onPressed,
+              isLoading: isSubmitting,
+            ),
         ],
       ),
     );

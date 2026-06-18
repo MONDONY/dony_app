@@ -311,6 +311,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
 | `package_request_created` | PackageRequestFormBloc |
 | `package_request_updated` | PackageRequestFormBloc._onStep3() (mode édition) |
+| `package_request_photo_added` | PackageRequestPhotosCubit.add() — photo colis uploadée au wizard |
+| `package_request_photo_removed` | PackageRequestPhotosCubit.remove() — photo retirée avant publication |
+| `package_request_detail_opened` | PackageRequestPublicDetailScreen.initState — ouverture du détail plein écran |
+| `package_request_reported` | PackageRequestPublicDetailScreen._report() — signalement (propriété `reason`) |
 | `package_request_searched` | PackageRequestSearchBloc |
 | `negotiation_offer_made` | NegotiationBloc._onStart()/_onCounter() |
 | `negotiation_offer_accepted` | NegotiationBloc._onAccept() |

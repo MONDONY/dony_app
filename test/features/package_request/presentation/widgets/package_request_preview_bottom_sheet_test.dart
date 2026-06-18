@@ -1,250 +1,58 @@
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
-import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:go_router/go_router.dart';
 
-PackageRequestSearchItem _item({
-  double? targetPriceEur = 50.0,
-  String? pickupNeighborhood,
-  String? deliveryNeighborhood,
-  bool kycVerified = true,
-  int tolerance = 2,
-  bool negotiable = true,
-  Set<PaymentMethod> acceptedPaymentMethods = const {},
-}) =>
-    PackageRequestSearchItem(
-      id: 'pr-1',
+PackageRequestSearchItem _item() => PackageRequestSearchItem(
+      id: 'pr-42',
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 8, 15),
-      dateToleranceDays: tolerance,
-      weightKg: 5.0,
+      desiredDate: DateTime(2026, 6, 15),
+      dateToleranceDays: 2,
+      weightKg: 5,
       parcelSize: ParcelSize.medium,
       contentCategory: ContentCategory.vetements,
-      targetPriceEur: targetPriceEur,
-      pickupNeighborhood: pickupNeighborhood,
-      deliveryNeighborhood: deliveryNeighborhood,
-      negotiable: negotiable,
-      acceptedPaymentMethods: acceptedPaymentMethods,
-      sender: SenderPublicProfile(
-        id: 'sender-1',
-        displayName: 'Fatou Diallo',
-        averageRating: 4.8,
-        totalRatings: 12,
-        kycVerified: kycVerified,
-      ),
-    );
-
-Widget _buildApp(PackageRequestSearchItem item, {bool isOwnRequest = false}) =>
-    MaterialApp(
-      theme: AppTheme.light,
-      home: Scaffold(
-        body: Builder(
-          builder: (ctx) => ElevatedButton(
-            key: const Key('open'),
-            onPressed: () => PackageRequestPreviewBottomSheet.show(
-              ctx,
-              item: item,
-              isOwnRequest: isOwnRequest,
-            ),
-            child: const Text('Ouvrir'),
-          ),
-        ),
+      targetPriceEur: 50,
+      sender: const SenderPublicProfile(
+        id: 's1',
+        displayName: 'Fatou',
+        averageRating: 4.5,
+        totalRatings: 3,
+        kycVerified: true,
       ),
     );
 
 void main() {
-  setUpAll(() => initializeDateFormatting('fr'));
-
-  group('PackageRequestPreviewBottomSheet', () {
-    testWidgets('shows departure and arrival cities', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item()));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Paris'), findsWidgets);
-      expect(find.text('Dakar'), findsWidgets);
-    });
-
-    testWidgets('shows price badge when targetPriceEur is set', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item(targetPriceEur: 50.0)));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('50 €'), findsOneWidget);
-    });
-
-    testWidgets('shows "Libre" price badge when no targetPriceEur',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item(targetPriceEur: null)));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Libre'), findsOneWidget);
-    });
-
-    testWidgets('shows date with tolerance', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item(tolerance: 2)));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('±2j'), findsOneWidget);
-    });
-
-    testWidgets('shows sender name', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item()));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Fatou Diallo'), findsOneWidget);
-    });
-
-    testWidgets('shows weight info tile', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item()));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('5 kg'), findsOneWidget);
-    });
-
-    testWidgets('shows "Faire une offre" button when not own request',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item(), isOwnRequest: false));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Faire une offre'), findsOneWidget);
-    });
-
-    testWidgets('hides "Faire une offre" button when own request',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item(), isOwnRequest: true));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Faire une offre'), findsNothing);
-    });
-
-    testWidgets(
-        'shows "Prendre à …" CTA (not "Faire une offre") for firm price',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-          _buildApp(_item(negotiable: false, targetPriceEur: 50.0)));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Faire une offre'), findsNothing);
-      expect(find.text('Prendre à 50,00 €'), findsOneWidget);
-    });
-
-    testWidgets('shows "Faire une offre" CTA when negotiable', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-          _buildApp(_item(negotiable: true, targetPriceEur: 50.0)));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Faire une offre'), findsOneWidget);
-      expect(find.textContaining('Prendre à'), findsNothing);
-    });
-
-    testWidgets('shows "Faire une offre" CTA when firm but no target price',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-          _buildApp(_item(negotiable: false, targetPriceEur: null)));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Faire une offre'), findsOneWidget);
-      expect(find.textContaining('Prendre à'), findsNothing);
-    });
-
-    testWidgets('shows pickupNeighborhood label "Remise" when provided',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-          _buildApp(_item(pickupNeighborhood: 'Montmartre')));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Remise'), findsOneWidget);
-      expect(find.text('Montmartre'), findsOneWidget);
-    });
-
-    testWidgets('shows "Non précisé" when no neighborhood info',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item()));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Non précisé'), findsOneWidget);
-    });
-
-    testWidgets('shows no tolerance suffix when tolerance=0', (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item(tolerance: 0)));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('±'), findsNothing);
-    });
-
-    testWidgets('affiche les modes de paiement acceptés (chips)',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item(
-        acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
-      )));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Mode de paiement'), findsOneWidget);
-      expect(find.text('Carte'), findsOneWidget);
-      expect(find.text('Cash'), findsOneWidget);
-      expect(
-          find.byKey(const Key('payment-method-chip-stripe')), findsOneWidget);
-    });
-
-    testWidgets('masque la section paiement quand aucun mode n\'est fourni',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildApp(_item()));
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-      expect(find.text('Mode de paiement'), findsNothing);
-    });
+  testWidgets('show() pousse l\'écran plein /package-requests/:id/public',
+      (tester) async {
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(
+          path: '/home',
+          builder: (ctx, _) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    PackageRequestPreviewBottomSheet.show(ctx, item: _item()),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/package-requests/:id/public',
+          builder: (ctx, state) =>
+              Scaffold(body: Text('DETAIL ${state.pathParameters['id']}')),
+        ),
+      ],
+    );
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('DETAIL pr-42'), findsOneWidget);
   });
 }

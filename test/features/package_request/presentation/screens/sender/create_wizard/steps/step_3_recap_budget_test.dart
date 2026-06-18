@@ -8,7 +8,7 @@ import 'package:dony/features/package_request/data/models/content_category.dart'
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_photo_upload.dart';
+import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -52,20 +52,24 @@ void main() {
           );
     return MaterialApp(
       theme: AppTheme.light,
-      home: BlocProvider<PackageRequestFormBloc>.value(
-        value: bloc,
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<PackageRequestFormBloc>.value(value: bloc),
+          BlocProvider(
+            create: (_) => PackageRequestPhotosCubit(
+                repo, makeDisabledAnalytics(MockAnalyticsBackend())),
+          ),
+        ],
         child: Scaffold(body: child),
       ),
     );
   }
 
   group('Step3RecapBudget', () {
-    testWidgets('rend titre + récap + photo + budget', (tester) async {
+    testWidgets('rend titre + récap + budget', (tester) async {
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
-      expect(find.text('Budget & photo'), findsOneWidget);
-      expect(find.textContaining('Optionnel'), findsOneWidget);
+      expect(find.text('Budget'), findsOneWidget);
       expect(find.byType(WizardSummaryCard), findsOneWidget);
-      expect(find.byType(WizardPhotoUpload), findsOneWidget);
       // Budget input (1 TextFormField visible dans cette étape)
       expect(find.byType(TextFormField), findsOneWidget);
     });

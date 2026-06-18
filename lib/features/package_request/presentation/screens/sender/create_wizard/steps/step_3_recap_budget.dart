@@ -1,13 +1,11 @@
-import 'dart:io';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
+import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_photo_upload.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +26,6 @@ class Step3RecapBudget extends StatefulWidget {
 class Step3RecapBudgetState extends State<Step3RecapBudget> {
   final _formKey = GlobalKey<FormState>();
   final _budgetCtrl = TextEditingController();
-  File? _photo;
 
   @override
   void initState() {
@@ -63,8 +60,12 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
       );
       return;
     }
+    final photosCubit = context.read<PackageRequestPhotosCubit>();
     context.read<PackageRequestFormBloc>().add(
-          FormStep3Submitted(photoFile: _photo),
+          FormStep3Submitted(
+            // touched=false (aucune photo manipulée) → null = conserver en édition.
+            photoKeys: photosCubit.touched ? photosCubit.readyKeys : null,
+          ),
         );
   }
 
@@ -88,7 +89,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Budget & photo',
+                  'Budget',
                   style: tt.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -107,15 +108,6 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
 
                 // ── Récap (beige bg) ───────────────────────────────────────
                 WizardSummaryCard(state: state),
-                const SizedBox(height: DonySpacing.base),
-
-                // ── Photo ──────────────────────────────────────────────────
-                const _FieldLabel('Photo (optionnelle)'),
-                const SizedBox(height: DonySpacing.xs),
-                WizardPhotoUpload(
-                  photoFile: _photo,
-                  onPhotoPicked: (f) => setState(() => _photo = f),
-                ),
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Budget total ───────────────────────────────────────────

@@ -105,6 +105,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -654,6 +655,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<PackageRequestSearchBloc>(
     () => PackageRequestSearchBloc(
+      getIt<PackageRequestRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<PackageRequestPhotosCubit>(
+    () => PackageRequestPhotosCubit(
       getIt<PackageRequestRepository>(),
       getIt<AnalyticsService>(),
     ),

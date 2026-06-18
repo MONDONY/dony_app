@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 import '../data/models/content_category.dart';
@@ -49,12 +47,14 @@ class FormStep2Submitted extends PackageRequestFormEvent {
 class FormStep3Submitted extends PackageRequestFormEvent {
   const FormStep3Submitted({
     this.targetPriceEur,
-    this.photoFile,
+    this.photoKeys,
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
   });
   final double? targetPriceEur;
-  final File? photoFile;
+
+  /// Clés S3 des photos colis. null = conserver (édition) ; liste = remplacer.
+  final List<String>? photoKeys;
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
 

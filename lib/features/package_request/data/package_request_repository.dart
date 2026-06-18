@@ -80,6 +80,24 @@ class PackageRequestRepository {
     return response.data!['url'] as String;
   }
 
+  /// Upload une photo colis et renvoie la CLÉ S3 (pour photoKeys[] à la création/édition).
+  Future<String> uploadPhotoKey(File photo) async {
+    final bytes = await photo.readAsBytes();
+    final filename = '${DateTime.now().millisecondsSinceEpoch}_photo.jpg';
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(
+        bytes,
+        filename: filename,
+        contentType: DioMediaType('image', 'jpeg'),
+      ),
+    });
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/storage/upload/package-request',
+      data: formData,
+    );
+    return response.data!['key'] as String;
+  }
+
   Future<PackageRequest> create({
     required String departureCity,
     required String arrivalCity,
@@ -96,6 +114,7 @@ class PackageRequestRepository {
     String? photoUrl,
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
+    List<String>? photoKeys,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests',
@@ -116,6 +135,7 @@ class PackageRequestRepository {
         if (photoUrl != null) 'photoUrl': photoUrl,
         if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
         if (deliveryNeighborhood != null) 'deliveryNeighborhood': deliveryNeighborhood,
+        if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -140,6 +160,7 @@ class PackageRequestRepository {
     String? photoUrl,
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
+    List<String>? photoKeys,
   }) async {
     final response = await _apiClient.dio.put<Map<String, dynamic>>(
       '/package-requests/$id',
@@ -161,6 +182,7 @@ class PackageRequestRepository {
         if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
         if (deliveryNeighborhood != null)
           'deliveryNeighborhood': deliveryNeighborhood,
+        if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -191,6 +213,18 @@ class PackageRequestRepository {
 
   Future<void> cancel(String id) async {
     await _apiClient.dio.delete<void>('/package-requests/$id');
+  }
+
+  /// Signale une demande (modération). reason = code court (SCAM, PROHIBITED…).
+  Future<void> report(String id,
+      {required String reason, String? details}) async {
+    await _apiClient.dio.post<void>(
+      '/package-requests/$id/report',
+      data: {
+        'reason': reason,
+        if (details != null && details.isNotEmpty) 'details': details,
+      },
+    );
   }
 
   Future<PackageRequest> completeDetails(

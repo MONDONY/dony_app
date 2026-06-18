@@ -198,7 +198,7 @@ void main() {
         await tester.pumpWidget(wrap(_negotiableRequest()));
         await tester.pumpAndSettle();
 
-        expect(find.text('Faire une offre'), findsOneWidget);
+        expect(find.text('Proposer mon trajet'), findsOneWidget);
         expect(find.byKey(const Key('take-firm-price')), findsNothing);
       },
     );
@@ -221,7 +221,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('payment-methods-card')), findsOneWidget);
-        expect(find.text('Mode de paiement'), findsOneWidget);
+        expect(find.text('Mode de paiement souhaité'), findsOneWidget);
         expect(find.text('Carte'), findsOneWidget);
         expect(find.text('Cash'), findsOneWidget);
         expect(
@@ -251,7 +251,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('payment-methods-card')), findsNothing);
-        expect(find.text('Mode de paiement'), findsNothing);
+        expect(find.text('Mode de paiement souhaité'), findsNothing);
       },
     );
   });

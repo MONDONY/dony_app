@@ -3,6 +3,7 @@
 // Placed in test/features/package_request/presentation/
 // per the task specification.
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +22,19 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-        home: BlocProvider(
-          create: (_) => PackageRequestFormBloc(
-            packageRepo,
-            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-          ),
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) => PackageRequestFormBloc(
+                packageRepo,
+                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+              ),
+            ),
+            BlocProvider(
+              create: (_) => PackageRequestPhotosCubit(
+                  packageRepo, makeDisabledAnalytics(MockAnalyticsBackend())),
+            ),
+          ],
           child: Scaffold(body: child),
         ),
       );
@@ -67,8 +76,14 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
-          home: BlocProvider.value(
-            value: bloc,
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<PackageRequestFormBloc>.value(value: bloc),
+              BlocProvider(
+                create: (_) => PackageRequestPhotosCubit(
+                    packageRepo, makeDisabledAnalytics(MockAnalyticsBackend())),
+              ),
+            ],
             child: const Scaffold(body: Step2Details()),
           ),
         ),
