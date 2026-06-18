@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -1175,10 +1176,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
 
     try {
       await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: state.clientSecret,
-          merchantDisplayName: 'Dony',
-        ),
+        paymentSheetParameters: donyPaymentSheetParams(state.clientSecret),
       );
 
       await Stripe.instance.presentPaymentSheet();

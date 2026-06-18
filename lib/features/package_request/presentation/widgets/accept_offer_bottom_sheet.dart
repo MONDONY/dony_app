@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
@@ -101,10 +102,7 @@ class AcceptOfferBottomSheet {
                                 .initiatePayment(threadId);
                             await Stripe.instance.initPaymentSheet(
                               paymentSheetParameters:
-                                  SetupPaymentSheetParameters(
-                                paymentIntentClientSecret: init.clientSecret,
-                                merchantDisplayName: 'Dony',
-                              ),
+                                  donyPaymentSheetParams(init.clientSecret),
                             );
                             await Stripe.instance.presentPaymentSheet();
                             bloc.add(NegotiationCheckoutRequested(
