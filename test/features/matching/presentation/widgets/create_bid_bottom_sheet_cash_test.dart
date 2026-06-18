@@ -207,14 +207,14 @@ Future<void> _enableSubmitButton(WidgetTester tester) async {
 
 // Fills all mandatory text fields so _submit() passes validation.
 Future<void> _fillMandatoryFields(WidgetTester tester) async {
-  // TextField.at(0) = description, at(1) = valeur, at(2) = nom, at(3) = tel
-  await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+  // at(0) = input inline contenu (ignoré) ; at(1)=description, at(2)=valeur, at(3)=nom, at(4)=tel
+  await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(1), '100');
+  await tester.enterText(find.byType(TextField).at(2), '100');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(2), 'Amadou Diallo');
+  await tester.enterText(find.byType(TextField).at(3), 'Amadou Diallo');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(3), '+221 77 000 00 00');
+  await tester.enterText(find.byType(TextField).at(4), '+221 77 000 00 00');
   await tester.pump();
 }
 
@@ -548,11 +548,11 @@ void main() {
       await _openSheet(tester, _announcement());
       await _enableSubmitButton(tester);
       // Laisser la description vide, remplir le reste
-      await tester.enterText(find.byType(TextField).at(1), '100');
+      await tester.enterText(find.byType(TextField).at(2), '100');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.enterText(find.byType(TextField).at(3), 'Amadou');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(3), '+221770000000');
+      await tester.enterText(find.byType(TextField).at(4), '+221770000000');
       await tester.pump();
 
       await tester.tap(find.text('Envoyer'));
@@ -565,13 +565,13 @@ void main() {
         (tester) async {
       await _openSheet(tester, _announcement());
       await _enableSubmitButton(tester);
-      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(1), '501');
+      await tester.enterText(find.byType(TextField).at(2), '501');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.enterText(find.byType(TextField).at(3), 'Amadou');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(3), '+221770000000');
+      await tester.enterText(find.byType(TextField).at(4), '+221770000000');
       await tester.pump();
 
       await tester.tap(find.text('Envoyer'));
@@ -584,13 +584,13 @@ void main() {
         (tester) async {
       await _openSheet(tester, _announcement());
       await _enableSubmitButton(tester);
-      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(1), 'abc');
+      await tester.enterText(find.byType(TextField).at(2), 'abc');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.enterText(find.byType(TextField).at(3), 'Amadou');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(3), '+221770000000');
+      await tester.enterText(find.byType(TextField).at(4), '+221770000000');
       await tester.pump();
 
       await tester.tap(find.text('Envoyer'));
@@ -603,9 +603,9 @@ void main() {
         (tester) async {
       await _openSheet(tester, _announcement());
       await _enableSubmitButton(tester);
-      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(1), '100');
+      await tester.enterText(find.byType(TextField).at(2), '100');
       await tester.pump();
       // Laisser nom et téléphone vides
       await tester.tap(find.text('Envoyer'));
@@ -618,11 +618,11 @@ void main() {
         (tester) async {
       await _openSheet(tester, _announcement());
       await _enableSubmitButton(tester);
-      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(1), '100');
+      await tester.enterText(find.byType(TextField).at(2), '100');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.enterText(find.byType(TextField).at(3), 'Amadou');
       await tester.pump();
       // Laisser le téléphone vide
       await tester.tap(find.text('Envoyer'));

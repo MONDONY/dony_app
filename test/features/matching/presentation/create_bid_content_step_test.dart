@@ -160,7 +160,8 @@ void main() {
       expect(find.text('Hi-fi'), findsOneWidget);
     });
 
-    testWidgets('tapping Ajouter chip opens the add-item dialog', (tester) async {
+    testWidgets('saisie inline + bouton + ajoute un élément custom',
+        (tester) async {
       await openSheet(
         tester,
         _announcement(
@@ -169,12 +170,15 @@ void main() {
         ),
       );
 
-      // Tap the "Ajouter" chip.
-      await tester.tap(find.text('Ajouter'));
+      // Saisir dans l'input inline puis taper le bouton +.
+      await tester.enterText(
+          find.byKey(const Key('custom-item-input')), 'Épices maison');
+      await tester.tap(find.byKey(const Key('add-item-btn')));
       await tester.pumpAndSettle();
 
-      // The dialog should appear.
-      expect(find.text('Ajouter un élément'), findsOneWidget);
+      // Le chip custom apparaît ; aucun modal.
+      expect(find.text('Épices maison'), findsOneWidget);
+      expect(find.text('Ajouter un élément'), findsNothing);
     });
   });
 }

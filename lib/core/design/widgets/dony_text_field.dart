@@ -31,6 +31,8 @@ class DonyTextField extends StatelessWidget {
     this.enabled = true,
     this.requiredLabel = false,
     this.autofocus = false,
+    this.maxLines = 1,
+    this.minLines,
   })  : _variant = _DonyTextFieldVariant.text,
         _value = null,
         _onTap = null,
@@ -77,7 +79,9 @@ class DonyTextField extends StatelessWidget {
         validator = null,
         errorText = null,
         enabled = true,
-        autofocus = false;
+        autofocus = false,
+        maxLines = 1,
+        minLines = null;
 
   // ── Champs partagés ─────────────────────────────────────────────────────────
 
@@ -109,6 +113,8 @@ class DonyTextField extends StatelessWidget {
   final String? errorText;
   final bool enabled;
   final bool autofocus;
+  final int maxLines;
+  final int? minLines;
 
   // Tappable
   final String? _value;
@@ -167,6 +173,8 @@ class DonyTextField extends StatelessWidget {
           validator: validator,
           enabled: enabled,
           autofocus: autofocus,
+          maxLines: maxLines,
+          minLines: minLines,
           scrollPadding: const EdgeInsets.only(bottom: 120),
           decoration: _decoration(context),
         );
