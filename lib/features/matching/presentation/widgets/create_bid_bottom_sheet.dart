@@ -192,6 +192,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   final _recipientPhoneCtrl = TextEditingController();
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
+  final _customItemCtrl = TextEditingController();
   final _disclaimerNotifier = ValueNotifier<bool>(false);
   final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
 
@@ -235,6 +236,21 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _categoriesNotifier.value = updated;
   }
 
+  /// Ajoute l'élément saisi dans l'input inline (pas de modal).
+  void _addCustomItem() {
+    final v = _customItemCtrl.text.trim();
+    if (v.isEmpty) return;
+    if (_refusedCategories
+        .map((e) => e.toLowerCase())
+        .contains(v.toLowerCase())) {
+      _customItemCtrl.clear();
+      return; // refusé → ignoré
+    }
+    final updated = Set<String>.from(_categoriesNotifier.value)..add(v);
+    _categoriesNotifier.value = updated;
+    _customItemCtrl.clear();
+  }
+
   Widget _buildContentSection(Set<String> categories) {
     final accepted = _acceptedCategories;
     final refused = _refusedCategories;
@@ -261,19 +277,14 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                 selected: true,
                 onTap: () => _toggleCategory(categories, cat),
               ),
-            _AddCustomChip(onAdd: (value) {
-              final v = value.trim();
-              if (v.isEmpty) return;
-              if (_refusedCategories
-                  .map((e) => e.toLowerCase())
-                  .contains(v.toLowerCase())) {
-                return; // refusé → ignoré
-              }
-              final updated = Set<String>.from(categories)..add(v);
-              _categoriesNotifier.value = updated;
-            }),
           ],
         ).animate().fadeIn(delay: 60.ms),
+        const SizedBox(height: DonySpacing.sm),
+        _InlineAddRow(
+          controller: _customItemCtrl,
+          hint: 'Ex : Épices maison',
+          onAdd: _addCustomItem,
+        ),
         if (refused.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.md),
           const _SectionLabel(label: 'REFUSÉ PAR LE VOYAGEUR'),
@@ -554,6 +565,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _valueCtrl.dispose();
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
+    _customItemCtrl.dispose();
     _mmPhoneCtrl.dispose();
     _weightNotifier.removeListener(_syncFormButtonState);
     _categoriesNotifier.removeListener(_syncFormButtonState);
@@ -848,6 +860,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
             DonyTextField(
               controller: _descCtrl,
               hint: 'Médicaments pour diabète + 2 tee-shirts enfants',
+              maxLines: 4,
+              minLines: 2,
             ).animate().fadeIn(delay: 100.ms),
             const SizedBox(height: DonySpacing.xxl),
 
@@ -2052,66 +2066,67 @@ class _PriceBreakdown extends StatelessWidget {
       );
 }
 
-// ── Add custom chip ───────────────────────────────────────────────────────────
+// ── Inline add row (input + bouton +) ─────────────────────────────────────────
 
-class _AddCustomChip extends StatelessWidget {
-  const _AddCustomChip({required this.onAdd});
-  final ValueChanged<String> onAdd;
-
-  Future<void> _prompt(BuildContext context) async {
-    final ctrl = TextEditingController();
-    final value = await showDialog<String>(
-      context: context,
-      useRootNavigator: true,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Ajouter un élément'),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(hintText: 'Ex : Épices maison'),
-          onSubmitted: (v) => Navigator.of(ctx).pop(v),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Annuler')),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(ctrl.text),
-            child: const Text('Ajouter'),
-          ),
-        ],
-      ),
-    );
-    ctrl.dispose();
-    if (value != null) onAdd(value);
-  }
+class _InlineAddRow extends StatelessWidget {
+  const _InlineAddRow({
+    required this.controller,
+    required this.hint,
+    required this.onAdd,
+  });
+  final TextEditingController controller;
+  final String hint;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: () => _prompt(context),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 44),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: cs.primary, width: 1.4),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            key: const Key('custom-item-input'),
+            controller: controller,
+            maxLength: 40,
+            textCapitalization: TextCapitalization.sentences,
+            onSubmitted: (_) => onAdd(),
+            decoration: InputDecoration(
+              hintText: hint,
+              filled: true,
+              fillColor: cs.surface,
+              counterText: '',
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.md,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                borderSide: BorderSide(color: cs.outline),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                borderSide: BorderSide(color: cs.primary, width: 2),
+              ),
+            ),
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add_rounded, size: 16, color: cs.primary),
-            const SizedBox(width: 4),
-            Text('Ajouter',
-                style: TextStyle(
-                    color: cs.primary, fontWeight: FontWeight.w600)),
-          ],
+        const SizedBox(width: DonySpacing.sm),
+        Material(
+          color: cs.primary,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          child: InkWell(
+            key: const Key('add-item-btn'),
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            onTap: onAdd,
+            child: SizedBox(
+              width: 52,
+              height: 52,
+              child: Icon(Icons.add_rounded, color: cs.onPrimary),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
