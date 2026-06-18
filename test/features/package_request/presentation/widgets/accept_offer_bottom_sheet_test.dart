@@ -84,14 +84,14 @@ void main() {
     expect(find.text('Montant à régler'), findsOneWidget);
   });
 
-  testWidgets('shows commission breakdown when sender and grossPriceEur provided',
+  testWidgets('ne montre PAS le détail commission à l\'expéditeur (jamais le net)',
       (tester) async {
     await tester.pumpWidget(
       _buildApp(bloc: bloc, isTraveler: false, grossPriceEur: 39.20),
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('commission Dony'), findsOneWidget);
+    expect(find.textContaining('commission Dony'), findsNothing);
   });
 
   testWidgets('does NOT show commission breakdown for traveler',

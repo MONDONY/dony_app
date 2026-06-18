@@ -138,9 +138,9 @@ void main() {
     expect(find.text('Fatoumata Bah'), findsOneWidget);
     expect(find.text('Paris → Dakar'), findsOneWidget);
     expect(
-      find.textContaining('53'),
+      find.textContaining('59'),
       findsOneWidget,
-    ); // 3.5 * 15 = 52.5 → "52 €"
+    ); // brut = 52,5 net × 1,12 = 58,8 → « 59 € » (jamais le net)
     expect(find.textContaining('Médicaments'), findsOneWidget);
   });
 

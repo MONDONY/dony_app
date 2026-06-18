@@ -4,6 +4,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -243,27 +244,18 @@ class _SummaryCard extends StatelessWidget {
                   const DonyInfoRow.divider(),
                   DonyInfoRow(
                     label: 'Prix/kg',
-                    value: bid.pricePerKg != null ? '${bid.pricePerKg!.toStringAsFixed(2)} €/kg' : '—',
+                    // Tarif affiché à l'expéditeur = net voyageur + commission
+                    // Dony. L'expéditeur ne voit jamais le net du voyageur.
+                    value: bid.pricePerKg != null
+                        ? '${formatKgPrice(netToSenderPrice(bid.pricePerKg!))} €/kg'
+                        : '—',
                   ),
-                  const DonyInfoRow.divider(),
-                ],
-                if (bid.pricingMode == BidPricingMode.grid) ...[
+                ] else if (bid.pricingMode == BidPricingMode.grid) ...[
                   DonyInfoRow(
                     label: 'Type',
                     value: 'Forfait articles',
                   ),
-                  const DonyInfoRow.divider(),
                 ],
-                DonyInfoRow(
-                  label: 'Montant',
-                  value: '${amount.toStringAsFixed(2)} €',
-                ),
-                const DonyInfoRow.divider(),
-                DonyInfoRow(
-                  label: 'Commission dony (${(commissionRate * 100).toStringAsFixed(0)}%)',
-                  value: '+ ${commission.toStringAsFixed(2)} €',
-                  valueStyle: DonyInfoRowValueStyle.muted,
-                ),
               ],
             ),
           ),

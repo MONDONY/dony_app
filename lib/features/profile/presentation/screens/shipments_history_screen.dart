@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -105,9 +106,12 @@ class _DeliveryCard extends StatelessWidget {
     ].where((c) => c != null).join(' → ');
     final weight = (bid.weightKg ?? 0) > 0 ? '${bid.weightKg} kg' : null;
     final description = bid.description;
-    final price = bid.pricePerKg != null
-        ? '${(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
-        : null;
+    // Prix affiché à l'expéditeur = brut (net voyageur + commission Dony).
+    final price = bid.totalSenderAmountEur != null
+        ? '${bid.totalSenderAmountEur!.toStringAsFixed(0)} €'
+        : bid.pricePerKg != null
+            ? '${netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
+            : null;
 
     return GestureDetector(
       onTap: () => context.push('/bids/${bid.id}', extra: bid),

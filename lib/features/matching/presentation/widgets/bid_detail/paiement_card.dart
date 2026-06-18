@@ -77,14 +77,15 @@ class PaiementCard extends StatelessWidget {
     final status = bid.status;
 
     if (_terminalStatuses.contains(status)) {
-      // Montant effectivement versé au voyageur = net.
+      // Affiché à l'expéditeur : son paiement (brut) a été libéré. On ne
+      // montre jamais le net que touche le voyageur.
       return Row(
         children: [
           DonyIcon('circle-check', color: cs.success, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              '$netLabel libéré au voyageur ✓',
+              'Paiement libéré ✓',
               style: tt.bodySmall?.copyWith(color: cs.success),
             ),
           ),
