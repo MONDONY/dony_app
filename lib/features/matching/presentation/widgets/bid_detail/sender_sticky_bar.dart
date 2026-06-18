@@ -59,6 +59,10 @@ class SenderStickyBar extends StatelessWidget {
 
     final status = bid.status;
 
+    if (status == 'AWAITING_PAYMENT') {
+      return bid.paymentMethod == BidPaymentMethod.stripe;
+    }
+
     if (status == 'PENDING') {
       return bid.paymentMethod == BidPaymentMethod.stripe;
     }
@@ -130,6 +134,22 @@ class SenderStickyBar extends StatelessWidget {
     }
 
     final status = bid.status;
+
+    // 1.5 AWAITING_PAYMENT (stripe) : l'expéditeur a quitté la PaymentSheet
+    //     avant d'autoriser l'escrow → reprendre le paiement. Le backend
+    //     (createEscrow) recycle le PaymentIntent en attente et renvoie le
+    //     clientSecret existant. On ne gate PAS sur existingPayment : un bid
+    //     de checkout abandonné porte un PaymentEntity PENDING obsolète.
+    if (status == 'AWAITING_PAYMENT' &&
+        bid.paymentMethod == BidPaymentMethod.stripe) {
+      return DonyButton(
+        label: 'Payer mon envoi',
+        iconAsset: 'lock',
+        isLoading: isLoading,
+        onPressed:
+            isLoading ? null : () => context.push('/payments/pay', extra: bid),
+      );
+    }
 
     // 2. Stripe payment loading placeholder: show a skeleton while the payment
     //    status is being fetched so there is no layout shift when it resolves.
