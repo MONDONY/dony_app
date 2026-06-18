@@ -26,6 +26,7 @@ class Step2DetailsState extends State<Step2Details> {
   final _formKey = GlobalKey<FormState>();
   final _weightCtrl = TextEditingController();
   final _customCategoryCtrl = TextEditingController();
+  final _descriptionCtrl = TextEditingController();
 
   /// Tracks whether the "Autre…" free-text field is visible.
   /// A [ValueNotifier] is used here (not setState) to toggle visibility
@@ -48,8 +49,9 @@ class Step2DetailsState extends State<Step2Details> {
     final s = context.read<PackageRequestFormBloc>().state;
     if (s.weightKg != null) {
       final w = s.weightKg!;
-      _weightCtrl.text =
-          w == w.roundToDouble() ? w.toInt().toString() : w.toString();
+      _weightCtrl.text = w == w.roundToDouble()
+          ? w.toInt().toString()
+          : w.toString();
     }
     if (s.parcelSize != null) _size = s.parcelSize!;
     if (s.contentCategory != null) _category = s.contentCategory!;
@@ -57,12 +59,16 @@ class Step2DetailsState extends State<Step2Details> {
       _customCategoryCtrl.text = s.customCategoryLabel!;
       _showCustomField.value = true;
     }
+    if (s.description != null && s.description!.isNotEmpty) {
+      _descriptionCtrl.text = s.description!;
+    }
   }
 
   @override
   void dispose() {
     _weightCtrl.dispose();
     _customCategoryCtrl.dispose();
+    _descriptionCtrl.dispose();
     _showCustomField.dispose();
     super.dispose();
   }
@@ -70,13 +76,15 @@ class Step2DetailsState extends State<Step2Details> {
   void submit() {
     if (!_formKey.currentState!.validate()) return;
     final w = double.parse(_weightCtrl.text.replaceAll(',', '.'));
+    final desc = _descriptionCtrl.text.trim();
     context.read<PackageRequestFormBloc>().add(
-          FormStep2Submitted(
-            weightKg: w,
-            parcelSize: _size,
-            contentCategory: _category,
-          ),
-        );
+      FormStep2Submitted(
+        weightKg: w,
+        parcelSize: _size,
+        contentCategory: _category,
+        description: desc.isEmpty ? null : desc,
+      ),
+    );
   }
 
   void _selectPredefined(ContentCategory c) {
@@ -84,9 +92,9 @@ class Step2DetailsState extends State<Step2Details> {
     _showCustomField.value = false;
     _customCategoryCtrl.clear();
     // Clear custom label in BLoC state by dispatching empty change.
-    context
-        .read<PackageRequestFormBloc>()
-        .add(const FormStep2CategoryChanged(null));
+    context.read<PackageRequestFormBloc>().add(
+      const FormStep2CategoryChanged(null),
+    );
   }
 
   void _selectCustom() {
@@ -217,22 +225,27 @@ class Step2DetailsState extends State<Step2Details> {
                                 vertical: DonySpacing.md,
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.md),
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.md,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: DonyColors.neutral200),
+                                  color: DonyColors.neutral200,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.md),
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.md,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: DonyColors.primary, width: 2),
+                                  color: DonyColors.primary,
+                                  width: 2,
+                                ),
                               ),
                             ),
                             onChanged: (value) {
-                              context
-                                  .read<PackageRequestFormBloc>()
-                                  .add(FormStep2CategoryChanged(value));
+                              context.read<PackageRequestFormBloc>().add(
+                                FormStep2CategoryChanged(value),
+                              );
                             },
                           ),
                         );
@@ -242,6 +255,12 @@ class Step2DetailsState extends State<Step2Details> {
                 );
               },
             ),
+            const SizedBox(height: DonySpacing.base),
+
+            // ── Description (optionnel) ────────────────────────────────────
+            _FieldLabel('Description (optionnel)'),
+            const SizedBox(height: DonySpacing.xs),
+            _DescriptionInput(controller: _descriptionCtrl),
           ],
         ),
       ),
@@ -250,6 +269,41 @@ class Step2DetailsState extends State<Step2Details> {
 }
 
 // ─── Atoms ──────────────────────────────────────────────────────────────────
+
+class _DescriptionInput extends StatelessWidget {
+  const _DescriptionInput({required this.controller});
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      key: const Key('description-input'),
+      controller: controller,
+      maxLines: 4,
+      maxLength: 500,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        hintText:
+            'Précisions utiles : fragile, contenu exact, instructions de remise…',
+        filled: true,
+        fillColor: Colors.white,
+        alignLabelWithHint: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          borderSide: const BorderSide(color: DonyColors.neutral200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          borderSide: const BorderSide(color: DonyColors.primary, width: 2),
+        ),
+      ),
+    );
+  }
+}
 
 class _FieldLabel extends StatelessWidget {
   const _FieldLabel(this.text);
@@ -260,10 +314,10 @@ class _FieldLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: DonyColors.textPrimary,
-            fontSize: 14,
-          ),
+        fontWeight: FontWeight.w700,
+        color: DonyColors.textPrimary,
+        fontSize: 14,
+      ),
     );
   }
 }
@@ -278,9 +332,7 @@ class _WeightInput extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
-      ],
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 26,
@@ -333,10 +385,10 @@ class _SizeCard extends StatelessWidget {
   final VoidCallback onTap;
 
   ({String emoji, String label, String hint}) get _meta => switch (size) {
-        ParcelSize.small => (emoji: '📦', label: 'S', hint: 'Sac'),
-        ParcelSize.medium => (emoji: '📫', label: 'M', hint: 'Carton'),
-        ParcelSize.large => (emoji: '🧳', label: 'L', hint: 'Valise'),
-      };
+    ParcelSize.small => (emoji: '📦', label: 'S', hint: 'Sac'),
+    ParcelSize.medium => (emoji: '📫', label: 'M', hint: 'Carton'),
+    ParcelSize.large => (emoji: '🧳', label: 'L', hint: 'Valise'),
+  };
 
   @override
   Widget build(BuildContext context) {

@@ -110,5 +110,50 @@ void main() {
       await tester.pump();
       expect(find.text('Entre 0.5 et 30 kg'), findsOneWidget);
     });
+
+    testWidgets('rend le champ Description (optionnel)', (tester) async {
+      await tester.pumpWidget(wrap(const Step2Details()));
+      expect(find.text('Description (optionnel)'), findsOneWidget);
+      expect(find.byKey(const Key('description-input')), findsOneWidget);
+    });
+
+    testWidgets('saisir une description → state.description après submit',
+        (tester) async {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
+      await tester.enterText(find.byType(TextFormField).first, '5');
+      await tester.enterText(
+        find.byKey(const Key('description-input')),
+        'Colis fragile, vases en verre',
+      );
+      key.currentState!.submit();
+      await tester.pump();
+      expect(bloc.state.description, 'Colis fragile, vases en verre');
+    });
+
+    testWidgets('description vide → null (non envoyée)', (tester) async {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
+      await tester.enterText(find.byType(TextFormField).first, '5');
+      key.currentState!.submit();
+      await tester.pump();
+      expect(bloc.state.description, isNull);
+    });
+
+    testWidgets('prefill : state.description affichée dans le champ',
+        (tester) async {
+      when(() => mockBloc.state).thenReturn(
+          const PackageRequestFormState(description: 'Déjà écrit'));
+      await tester.pumpWidget(wrap(const Step2Details(), bloc: mockBloc));
+      expect(find.text('Déjà écrit'), findsOneWidget);
+    });
   });
 }
