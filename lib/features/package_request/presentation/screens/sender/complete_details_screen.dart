@@ -56,6 +56,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
   final _recipientCityCtrl = TextEditingController();
+  final _declaredValueCtrl = TextEditingController();
 
   /// Payment method chosen by the sender (null until the request is loaded and
   /// the default is resolved from the accepted methods).
@@ -66,6 +67,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
     _recipientCityCtrl.dispose();
+    _declaredValueCtrl.dispose();
     _selectedMethod.dispose();
     super.dispose();
   }
@@ -90,12 +92,16 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   void _submit() {
     if (!_form.currentState!.validate()) return;
     final city = _recipientCityCtrl.text.trim();
+    final declared = double.parse(
+      _declaredValueCtrl.text.trim().replaceAll(',', '.'),
+    );
     context.read<CompleteDetailsBloc>().add(
       CompleteDetailsSubmitted(
         requestId: widget.requestId,
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
         recipientCity: city.isEmpty ? null : city,
+        declaredValueEur: declared,
       ),
     );
   }
@@ -197,6 +203,29 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 labelText: 'Ville / commune',
                                 hintText: 'Ex. Dakar (optionnel)',
                               ),
+                            ),
+                            const SizedBox(height: DonySpacing.md),
+                            TextFormField(
+                              key: const Key('declared-value-input'),
+                              controller: _declaredValueCtrl,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: const InputDecoration(
+                                labelText: 'Valeur déclarée du colis',
+                                hintText: 'Ex. 120 (max 500 €)',
+                                suffixText: '€',
+                              ),
+                              validator: (v) {
+                                final d = double.tryParse(
+                                  (v ?? '').trim().replaceAll(',', '.'),
+                                );
+                                if (d == null) return 'Valeur requise';
+                                if (d <= 0) return 'Doit être positive';
+                                if (d > 500) return 'Maximum 500 €';
+                                return null;
+                              },
                             ),
                             if (state.request != null &&
                                 state

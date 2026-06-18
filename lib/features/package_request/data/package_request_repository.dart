@@ -246,6 +246,7 @@ class PackageRequestRepository {
     required String recipientName,
     required String recipientPhone,
     String? recipientCity,
+    required double declaredValueEur,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests/$id/complete-details',
@@ -254,6 +255,7 @@ class PackageRequestRepository {
         'recipientPhone': recipientPhone,
         if (recipientCity != null && recipientCity.isNotEmpty)
           'recipientCity': recipientCity,
+        'declaredValueEur': declaredValueEur,
       },
     );
     return PackageRequest.fromJson(response.data!);
