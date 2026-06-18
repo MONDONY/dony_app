@@ -434,6 +434,24 @@ void main() {
         isFalse,
       );
     });
+
+    test('AWAITING_PAYMENT stripe → true', () {
+      expect(
+        SenderStickyBar.hasAction(
+          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+        ),
+        isTrue,
+      );
+    });
+
+    test('AWAITING_PAYMENT cash → false', () {
+      expect(
+        SenderStickyBar.hasAction(
+          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.cash),
+        ),
+        isFalse,
+      );
+    });
   });
 
   // ── PENDING_CONFIRMATION → SizedBox.shrink (no action) ───────────────────────
@@ -567,6 +585,99 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Supprimer cette demande'), findsOneWidget);
+    },
+  );
+
+  // Test 20: AWAITING_PAYMENT stripe → "Payer mon envoi" (reprise paiement)
+  testWidgets(
+    '20. AWAITING_PAYMENT stripe → "Payer mon envoi"',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Payer mon envoi'), findsOneWidget);
+      expect(find.text('Annuler la demande'), findsOneWidget);
+    },
+  );
+
+  // Test 21: AWAITING_PAYMENT stripe + paiement PENDING obsolète → bouton présent
+  // (ne gate pas sur existingPayment ; pas de badge car badge = PENDING/ACCEPTED)
+  testWidgets(
+    '21. AWAITING_PAYMENT stripe existingPayment(PENDING) → "Payer mon envoi", pas de badge',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+          paymentLoaded: true,
+          existingPayment: _payment(status: PaymentStatus.pending, amount: 182.0),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Payer mon envoi'), findsOneWidget);
+      expect(find.byType(EscrowBadge), findsNothing);
+    },
+  );
+
+  // Test 22: AWAITING_PAYMENT cash → pas de "Payer mon envoi" (barre vide)
+  testWidgets(
+    '22. AWAITING_PAYMENT cash → pas de "Payer mon envoi"',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.cash),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Payer mon envoi'), findsNothing);
+    },
+  );
+
+  // Test 23: AWAITING_PAYMENT stripe → tap "Annuler la demande" → dialog →
+  // "Oui, annuler" → BidDeleteRequested dispatché une fois
+  testWidgets(
+    '23. AWAITING_PAYMENT → "Annuler la demande" → dialog → "Oui, annuler" → BidDeleteRequested',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Annuler la demande de transport ?'), findsOneWidget);
+
+      await tester.tap(find.text('Oui, annuler'));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(any(that: isA<BidDeleteRequested>()))).called(1);
     },
   );
 

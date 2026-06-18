@@ -10,6 +10,7 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -65,11 +66,7 @@ class PaymentScreen extends StatelessWidget {
       BuildContext context, PaymentSheetReady state) async {
     try {
       await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          merchantDisplayName: 'dony',
-          paymentIntentClientSecret: state.clientSecret,
-          style: ThemeMode.light,
-        ),
+        paymentSheetParameters: donyPaymentSheetParams(state.clientSecret),
       );
       await Stripe.instance.presentPaymentSheet();
 

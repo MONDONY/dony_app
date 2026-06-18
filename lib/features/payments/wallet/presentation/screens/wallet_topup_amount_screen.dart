@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -93,17 +94,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   ) async {
     try {
       await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          merchantDisplayName: 'dony',
-          paymentIntentClientSecret: clientSecret,
-          style: ThemeMode.light,
-          // OBLIGATOIRE : le PaymentIntent inclut des moyens de paiement
-          // "redirect-based" (Klarna, Bancontact, EPS…) et le 3D Secure des
-          // cartes EU exigent une URL de retour vers l'app. Sans returnURL la
-          // PaymentSheet refuse de s'ouvrir. Le scheme `dony://` est déjà
-          // déclaré dans Info.plist / AndroidManifest.
-          returnURL: 'dony://stripe/payment-return',
-        ),
+        paymentSheetParameters: donyPaymentSheetParams(clientSecret),
       );
       await Stripe.instance.presentPaymentSheet();
 

@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -439,10 +440,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     try {
       await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: state.clientSecret,
-          merchantDisplayName: 'Dony',
-        ),
+        paymentSheetParameters: donyPaymentSheetParams(state.clientSecret),
       );
 
       await Stripe.instance.presentPaymentSheet();
