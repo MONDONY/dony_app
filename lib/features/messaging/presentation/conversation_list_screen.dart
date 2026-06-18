@@ -131,7 +131,12 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         onRefresh: () async =>
             context.read<ConversationListBloc>().add(const ConversationsLoadRequested()),
         child: ListView.builder(
-          padding: EdgeInsets.zero,
+          // Padding bas = hauteur de la nav flottante (~100) + safe area,
+          // pour que les derniers éléments scrollent au-dessus de l'île de
+          // nav (même pattern que announcement_list_screen).
+          padding: EdgeInsets.only(
+            bottom: 100 + MediaQuery.paddingOf(context).bottom,
+          ),
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];

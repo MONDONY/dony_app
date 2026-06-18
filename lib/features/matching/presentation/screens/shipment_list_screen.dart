@@ -459,7 +459,7 @@ class _ShipmentListView extends StatelessWidget {
         hPadding,
         DonySpacing.base,
         hPadding,
-        100,
+        100 + MediaQuery.paddingOf(context).bottom,
       ),
       itemCount: bids.length,
       separatorBuilder: (context, index) {
