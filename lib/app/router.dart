@@ -16,6 +16,7 @@ import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart'
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
@@ -33,6 +34,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
+import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
@@ -623,6 +625,29 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final id = state.pathParameters['id']!;
         return PendingBidsScreen(announcementId: id);
+      },
+    ),
+
+    // ── Détail trajet propriétaire (hors shell — plein écran) ────────────
+    GoRoute(
+      path: '/announcements/:id/trip',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        final extra =
+            state.extra is AnnouncementModel ? state.extra as AnnouncementModel : null;
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) =>
+                  getIt<AnnouncementBloc>()..add(AnnouncementDetailRequested(id)),
+            ),
+            BlocProvider(
+              create: (_) => getIt<BidBloc>()..add(BidListRequested(id)),
+            ),
+            BlocProvider(create: (_) => getIt<CancellationBloc>()),
+          ],
+          child: TripOwnerDetailScreen(announcementId: id, initial: extra),
+        );
       },
     ),
 

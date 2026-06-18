@@ -1,0 +1,122 @@
+import 'dart:async';
+
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+/// Écran plein écran « Trajet » côté propriétaire (voyageur).
+///
+/// Affiche tout le détail du trajet (hero + sections) via [AnnouncementDetailBody]
+/// avec un bouton retour et un bouton de signalement de bug dans l'AppBar.
+///
+/// La grille d'actions (Task 4) et la section colis embarqués (Task 5) seront
+/// insérées sous le corps de détail dans une itération ultérieure.
+class TripOwnerDetailScreen extends StatefulWidget {
+  const TripOwnerDetailScreen({
+    super.key,
+    required this.announcementId,
+    this.initial,
+  });
+
+  /// Identifiant du trajet — sert au rechargement via [AnnouncementBloc].
+  final String announcementId;
+
+  /// Annonce passée en `extra` au moment de la navigation. Permet un premier
+  /// rendu instantané pendant que le détail complet se recharge.
+  final AnnouncementModel? initial;
+
+  @override
+  State<TripOwnerDetailScreen> createState() => _TripOwnerDetailScreenState();
+}
+
+class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
+  /// Clé du [RepaintBoundary] enveloppant l'écran — capture d'écran du bouton bug.
+  final GlobalKey _boundaryKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.tripOwnerDetailOpened,
+        properties: {'status': widget.initial?.status ?? 'unknown'},
+      ));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: DonyAppBar(
+        title: 'Trajet',
+        actions: [DonyFeedbackButton(repaintBoundaryKey: _boundaryKey)],
+      ),
+      body: RepaintBoundary(
+        key: _boundaryKey,
+        child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+          listener: (context, state) {
+            if (state is AnnouncementDeleted) {
+              DonySnackbar.show(
+                context,
+                message: 'Trajet supprimé',
+                type: DonySnackbarType.success,
+              );
+              if (context.mounted) {
+                context.pop(true);
+              }
+            } else if (state is AnnouncementNotFound) {
+              DonySnackbar.show(
+                context,
+                message: 'Cette annonce n\'existe plus',
+                type: DonySnackbarType.warning,
+              );
+              if (context.mounted) {
+                context.pop(true);
+              }
+            } else if (state is AnnouncementError) {
+              ErrorPresenter.show(context, state.error);
+            }
+            // TODO(dony): Task 4 — gérer AnnouncementDeleteBlockedByAcceptedBid
+            // (dialog → CancellationBottomSheet) dans la grille d'actions.
+          },
+          builder: (context, state) {
+            final a =
+                state is AnnouncementDetailLoaded ? state.announcement : widget.initial;
+            if (a == null) {
+              return Center(child: CircularProgressIndicator(color: cs.primary));
+            }
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.md,
+                DonySpacing.lg,
+                DonySpacing.lg + safeBottom,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AnnouncementDetailBody(a: a),
+                  // OwnerActionGrid (Task 4) et TripParcelsSection (Task 5)
+                  // seront insérés ici ultérieurement.
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
