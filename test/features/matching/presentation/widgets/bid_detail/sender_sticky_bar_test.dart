@@ -605,6 +605,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Payer mon envoi'), findsOneWidget);
+      expect(find.text('Annuler la demande'), findsOneWidget);
     },
   );
 
@@ -648,6 +649,35 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Payer mon envoi'), findsNothing);
+    },
+  );
+
+  // Test 23: AWAITING_PAYMENT stripe → tap "Annuler la demande" → dialog →
+  // "Oui, annuler" → BidDeleteRequested dispatché une fois
+  testWidgets(
+    '23. AWAITING_PAYMENT → "Annuler la demande" → dialog → "Oui, annuler" → BidDeleteRequested',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Annuler la demande de transport ?'), findsOneWidget);
+
+      await tester.tap(find.text('Oui, annuler'));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(any(that: isA<BidDeleteRequested>()))).called(1);
     },
   );
 
