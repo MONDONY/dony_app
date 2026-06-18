@@ -43,9 +43,9 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
       try {
         final response = await getIt<ApiClient>().dio.get<Map<String, dynamic>>(
-              '/actuator/health',
-              options: Options(extra: {'skipAuth': true}),
-            );
+          '/actuator/health',
+          options: Options(extra: {'skipAuth': true}),
+        );
         final status = response.data?['status'] as String? ?? '';
         if (!mounted) return;
         if (status == 'UP') {
@@ -134,33 +134,43 @@ class _SplashScreenState extends State<SplashScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const DonyMascotteAnimated(
-                    type: DonyMascotteType.joyeux,
-                    size: DonyMascotteSize.xl,
+            // Illustration xl + logo 104px : centrés, mais scrollent si le
+            // viewport est trop court (très petit device / gros text scale).
+            LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const DonyMascotteAnimated(
+                        type: DonyMascotteType.joyeux,
+                        size: DonyMascotteSize.xl,
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
+                      const DonyLogo(
+                        variant: DonyLogoVariant.onLight,
+                        fontSize: 104,
+                      ),
+                      const SizedBox(height: DonySpacing.xxl),
+                      Text(
+                        'Livrez vos colis en confiance',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.45),
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      Text(
+                        'v1.0.0',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: DonySpacing.xl),
-                  const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
-                  const SizedBox(height: DonySpacing.xxl),
-                  Text(
-                    'Livrez vos colis en confiance',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: cs.onSurface.withValues(alpha: 0.45),
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.sm),
-                  Text(
-                    'v1.0.0',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             if (!_hasError)
@@ -180,33 +190,35 @@ class _SplashScreenState extends State<SplashScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        DonyIcon('wifi-off',
-                            color: cs.onSurfaceVariant, size: 16),
+                        DonyIcon(
+                          'wifi-off',
+                          color: cs.onSurfaceVariant,
+                          size: 16,
+                        ),
                         const SizedBox(width: DonySpacing.sm),
                         Text(
                           'Impossible de se connecter',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ],
                     ),
                     const SizedBox(height: DonySpacing.lg),
                     OutlinedButton.icon(
                       onPressed: _retry,
-                      icon: DonyIcon('refresh-cw',
-                          color: cs.primary, size: 16),
+                      icon: DonyIcon('refresh-cw', color: cs.primary, size: 16),
                       label: const Text('Réessayer'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                            color: cs.primary.withValues(alpha: 0.4)),
+                          color: cs.primary.withValues(alpha: 0.4),
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.md),
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
                         ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.xl,
-                            vertical: DonySpacing.md),
+                          horizontal: DonySpacing.xl,
+                          vertical: DonySpacing.md,
+                        ),
                       ),
                     ),
                   ],
@@ -227,19 +239,24 @@ class _LoadingDots extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (i) {
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 5),
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(
-            color: cs.primary.withValues(alpha: 0.3),
-            shape: BoxShape.circle,
-          ),
-        )
+              margin: const EdgeInsets.symmetric(horizontal: 5),
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
+            )
             .animate(
               onPlay: (c) => c.repeat(reverse: true),
               delay: Duration(milliseconds: i * 180),
             )
-            .scaleXY(begin: 0.3, end: 1.0, duration: 500.ms, curve: Curves.easeInOut)
+            .scaleXY(
+              begin: 0.3,
+              end: 1.0,
+              duration: 500.ms,
+              curve: Curves.easeInOut,
+            )
             .fadeIn(begin: 0.2, duration: 500.ms);
       }),
     );

@@ -63,33 +63,59 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const DonyIcon('circle-alert', size: 48, color: Color(0xFFE53935)),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Compte rejeté',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Votre compte Stripe a été rejeté. Vous devez '
-                    'reconfigurer un nouveau compte pour continuer.',
-                  ),
-                  if (reason != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Raison : $reason',
-                      style: const TextStyle(fontStyle: FontStyle.italic),
+                  // Texte scrollable (la raison serveur peut être longue) ;
+                  // boutons épinglés en bas pour éviter l'overflow.
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const DonyIcon(
+                                'circle-alert',
+                                size: 48,
+                                color: Color(0xFFE53935),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Compte rejeté',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Votre compte Stripe a été rejeté. Vous devez '
+                                'reconfigurer un nouveau compte pour continuer.',
+                              ),
+                              if (reason != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Raison : $reason',
+                                  style: const TextStyle(
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
-                  const Spacer(),
+                  ),
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
                         _tapCount.value++;
-                        context
-                            .read<ConnectOnboardingBloc>()
-                            .add(const ConnectOnboardingLinkRequested());
+                        context.read<ConnectOnboardingBloc>().add(
+                          const ConnectOnboardingLinkRequested(),
+                        );
                       },
                       child: const Text('Reconfigurer mon compte'),
                     ),

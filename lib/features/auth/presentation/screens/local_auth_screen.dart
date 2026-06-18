@@ -202,24 +202,46 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                               ),
                             ),
                           ),
-                        const Spacer(),
-                        if (!isCompact) ...[
-                          const DonyMascotteAnimated(
-                            type: DonyMascotteType.securise,
-                            size: DonyMascotteSize.sm,
+                        // Zone milieu scrollable : garde le sizing adaptatif
+                        // isCompact mais scrolle au gros text scale / quand les
+                        // bannières (tentatives, verrou) s'ajoutent, pour ne
+                        // jamais pousser le keypad hors écran.
+                        Expanded(
+                          child: LayoutBuilder(
+                            builder: (context, inner) => SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: inner.maxHeight,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (!isCompact) ...[
+                                      const DonyMascotteAnimated(
+                                        type: DonyMascotteType.securise,
+                                        size: DonyMascotteSize.sm,
+                                      ),
+                                      const SizedBox(height: DonySpacing.md),
+                                    ],
+                                    _buildLockIcon(state, cs, size: lockSize),
+                                    SizedBox(height: vGapSm),
+                                    _buildTitle(cs, logoSize: logoSize),
+                                    SizedBox(height: vGapLg),
+                                    _buildPinDots(state, cs),
+                                    if (state is LocalAuthPinRequired &&
+                                        state.attemptsLeft < 3)
+                                      _buildAttemptsWarning(
+                                        state.attemptsLeft,
+                                        cs,
+                                      ),
+                                    if (state is LocalAuthLocked)
+                                      _buildLockMessage(cs),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: DonySpacing.md),
-                        ],
-                        _buildLockIcon(state, cs, size: lockSize),
-                        SizedBox(height: vGapSm),
-                        _buildTitle(cs, logoSize: logoSize),
-                        SizedBox(height: vGapLg),
-                        _buildPinDots(state, cs),
-                        if (state is LocalAuthPinRequired &&
-                            state.attemptsLeft < 3)
-                          _buildAttemptsWarning(state.attemptsLeft, cs),
-                        if (state is LocalAuthLocked) _buildLockMessage(cs),
-                        const Spacer(flex: 3),
+                        ),
                         if (state is LocalAuthPinRequired)
                           DonyKeypad(
                             onDigit: _onDigit,

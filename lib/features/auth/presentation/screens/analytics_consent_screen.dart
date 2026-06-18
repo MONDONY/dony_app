@@ -38,11 +38,27 @@ class AnalyticsConsentScreen extends StatelessWidget {
                     label: 'Préférences',
                   ),
                 ),
-                const Spacer(flex: 2),
-                _Header(cs: cs, tt: tt),
-                const Spacer(flex: 2),
-                _ConsentPoints(cs: cs, tt: tt),
-                const Spacer(flex: 3),
+                // Zone haute scrollable : header + points peuvent dépasser au
+                // gros text scale ; les boutons restent épinglés en bas.
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _Header(cs: cs, tt: tt),
+                            const SizedBox(height: DonySpacing.xxl),
+                            _ConsentPoints(cs: cs, tt: tt),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 _Buttons(bottom: bottom),
               ],
             ),
