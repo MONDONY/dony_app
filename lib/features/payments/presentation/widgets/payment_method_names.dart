@@ -32,17 +32,17 @@ class PaymentMethodNames extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Padding(
       key: Key('payment-row-${name.toLowerCase().replaceAll(' ', '-')}'),
-      padding: const EdgeInsets.only(top: DonySpacing.xs),
+      padding: const EdgeInsets.only(top: DonySpacing.sm),
       child: Row(
         children: [
           for (final logo in logos) ...[
-            SvgPicture.asset('assets/logos/payment/$logo.svg', height: 16),
+            SvgPicture.asset('assets/logos/payment/$logo.svg', height: 24),
             const SizedBox(width: DonySpacing.xs),
           ],
           Text(
             name,
             style: tt.labelMedium?.copyWith(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
               color: cs.onSurface,
             ),
