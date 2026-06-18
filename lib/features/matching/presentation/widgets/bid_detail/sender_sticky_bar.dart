@@ -59,6 +59,10 @@ class SenderStickyBar extends StatelessWidget {
 
     final status = bid.status;
 
+    if (status == 'AWAITING_PAYMENT') {
+      return bid.paymentMethod == BidPaymentMethod.stripe;
+    }
+
     if (status == 'PENDING') {
       return bid.paymentMethod == BidPaymentMethod.stripe;
     }
@@ -130,6 +134,42 @@ class SenderStickyBar extends StatelessWidget {
     }
 
     final status = bid.status;
+
+    // 1.5 AWAITING_PAYMENT (stripe) : l'expéditeur a quitté la PaymentSheet
+    //     avant d'autoriser l'escrow → reprendre le paiement. Le backend
+    //     (createEscrow) recycle le PaymentIntent en attente et renvoie le
+    //     clientSecret existant. On ne gate PAS sur existingPayment : un bid
+    //     de checkout abandonné porte un PaymentEntity PENDING obsolète.
+    if (status == 'AWAITING_PAYMENT' &&
+        bid.paymentMethod == BidPaymentMethod.stripe) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Payer mon envoi',
+            iconAsset: 'lock',
+            isLoading: isLoading,
+            onPressed: isLoading
+                ? null
+                : () => context.push('/payments/pay', extra: bid),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            label: 'Annuler la demande',
+            variant: DonyButtonVariant.ghost,
+            onPressed: isLoading
+                ? null
+                : () => _showDeleteDialog(
+                      context,
+                      title: 'Annuler la demande de transport ?',
+                      body: "Aucun paiement n'a été effectué. La demande sera retirée.",
+                      confirmLabel: 'Oui, annuler',
+                      dismissLabel: 'Retour',
+                    ),
+          ),
+        ],
+      );
+    }
 
     // 2. Stripe payment loading placeholder: show a skeleton while the payment
     //    status is being fetched so there is no layout shift when it resolves.
@@ -239,7 +279,13 @@ class SenderStickyBar extends StatelessWidget {
 
   // ── Delete dialog ────────────────────────────────────────────────────────────
 
-  void _showDeleteDialog(BuildContext context) {
+  void _showDeleteDialog(
+    BuildContext context, {
+    String title = 'Supprimer cette demande ?',
+    String body = 'Elle sera retirée définitivement de votre historique.',
+    String confirmLabel = 'Supprimer',
+    String dismissLabel = 'Annuler',
+  }) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     // Capture the bloc before opening the dialog so the reference stays valid
@@ -251,16 +297,16 @@ class SenderStickyBar extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.sheet),
         ),
-        title: Text('Supprimer cette demande ?', style: tt.headlineMedium),
+        title: Text(title, style: tt.headlineMedium),
         content: Text(
-          'Elle sera retirée définitivement de votre historique.',
+          body,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'Annuler',
+              dismissLabel,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
@@ -271,7 +317,7 @@ class SenderStickyBar extends StatelessWidget {
               foregroundColor: DonyColors.white,
               elevation: 0,
             ),
-            child: Text('Supprimer', style: tt.labelLarge),
+            child: Text(confirmLabel, style: tt.labelLarge),
           ),
         ],
       ),
