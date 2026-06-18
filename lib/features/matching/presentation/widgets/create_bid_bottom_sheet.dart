@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dony/features/payments/presentation/widgets/payment_brand_marks.dart';
+import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
@@ -1723,7 +1723,7 @@ class _PaymentMethodSelector extends StatelessWidget {
           key: const Key('payment-method-stripe'),
           iconAsset: 'lock',
           label: 'Paiement sécurisé',
-          marks: const PaymentBrandMarks(),
+          marks: const PaymentMethodNames(),
           sublabel: 'Via Stripe',
           selected: selectedMethod == BidPaymentMethod.stripe,
           onTap: () => onChanged(BidPaymentMethod.stripe),
