@@ -113,7 +113,9 @@ class _PaymentSummaryView extends StatelessWidget {
   // réellement facturé par le backend (PaymentService : amount = net × 1,12).
   double get _amount => bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
   double get _commission => _amount * commissionRate;
-  double get _total => _amount + _commission;
+  // Total payé par l'expéditeur = BRUT fourni par le backend (qui ne renvoie
+  // jamais le net au sender) ; repli sur la dérivation net × (1 + taux).
+  double get _total => bid.totalSenderAmountEur ?? (_amount + _commission);
 
   Future<void> _pay(BuildContext context) async {
     final authenticated = await requirePaymentAuth(
@@ -244,10 +246,10 @@ class _SummaryCard extends StatelessWidget {
                   const DonyInfoRow.divider(),
                   DonyInfoRow(
                     label: 'Prix/kg',
-                    // Tarif affiché à l'expéditeur = net voyageur + commission
-                    // Dony. L'expéditeur ne voit jamais le net du voyageur.
-                    value: bid.pricePerKg != null
-                        ? '${formatKgPrice(netToSenderPrice(bid.pricePerKg!))} €/kg'
+                    // Tarif BRUT (net + commission). Le backend ne renvoie
+                    // jamais le tarif net à l'expéditeur.
+                    value: bid.senderPricePerKg != null
+                        ? '${formatKgPrice(bid.senderPricePerKg!)} €/kg'
                         : '—',
                   ),
                 ] else if (bid.pricingMode == BidPricingMode.grid) ...[

@@ -1,3 +1,4 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -74,6 +75,16 @@ class BidModel {
   final DateTime? departureAt;
   final String? arrivalTime;
   final double? pricePerKg;
+
+  /// Tarif/kg BRUT affiché à l'expéditeur (net + commission). L'API ne renvoie
+  /// pas le tarif net à l'expéditeur ; ce champ est la source côté sender.
+  final double? pricePerKgSenderEur;
+
+  /// Tarif/kg à afficher à l'EXPÉDITEUR (brut). Préfère [pricePerKgSenderEur]
+  /// (le backend ne renvoie pas le net au sender), sinon dérive de [pricePerKg].
+  double? get senderPricePerKg =>
+      pricePerKgSenderEur ??
+      (pricePerKg != null ? netToSenderPrice(pricePerKg!) : null);
   final String? trackingNumber;
   final String? trackingToken;
   final String? confirmationCode;
@@ -164,6 +175,7 @@ class BidModel {
     this.departureAt,
     this.arrivalTime,
     this.pricePerKg,
+    this.pricePerKgSenderEur,
     this.trackingNumber,
     this.trackingToken,
     this.confirmationCode,

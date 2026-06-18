@@ -36,16 +36,14 @@ class PaiementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    // netLabel : ce que reçoit le voyageur (libéré / espèces).
-    // senderLabel : ce que paie l'expéditeur = net + commission (séquestré /
-    // remboursé). En cash, sender == net (la commission est prélevée au voyageur).
-    final netLabel = _fmt(bid.totalAmountEur);
+    // senderLabel : ce que paie l'expéditeur (brut séquestré/remboursé, ou net
+    // en cash). On n'affiche jamais le net du voyageur à l'expéditeur.
     final senderLabel = _fmt(bid.totalSenderAmountEur ?? bid.totalAmountEur);
 
     Widget body;
 
     if (bid.paymentMethod == BidPaymentMethod.stripe) {
-      body = _stripeBody(context, cs, tt, netLabel, senderLabel);
+      body = _stripeBody(context, cs, tt, senderLabel);
     } else {
       // Cash / Wave / Orange Money — règlement en personne (net voyageur)
       body = Row(
@@ -54,7 +52,7 @@ class PaiementCard extends StatelessWidget {
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              'À régler en espèces à la remise : $netLabel',
+              'À régler en espèces à la remise : $senderLabel',
               style: tt.bodySmall?.copyWith(color: cs.onSurface),
             ),
           ),
@@ -71,7 +69,6 @@ class PaiementCard extends StatelessWidget {
     BuildContext context,
     ColorScheme cs,
     TextTheme tt,
-    String netLabel,
     String senderLabel,
   ) {
     final status = bid.status;
