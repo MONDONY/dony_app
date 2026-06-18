@@ -1677,11 +1677,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         item: pr,
                                         index: itemIndex,
                                         isOwnRequest: isOwn,
-                                        onTap: () =>
-                                            PackageRequestPreviewBottomSheet.show(
-                                              ctx,
-                                              item: pr,
-                                            ),
+                                        onTap: () async {
+                                          await PackageRequestPreviewBottomSheet.show(
+                                            ctx,
+                                            item: pr,
+                                          );
+                                          if (ctx.mounted) {
+                                            ctx
+                                                .read<
+                                                  PackageRequestSearchBloc
+                                                >()
+                                                .add(const SearchRefresh());
+                                          }
+                                        },
                                         onMakeOffer: isOwn
                                             ? null
                                             : () =>
@@ -1770,11 +1778,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   item: pr,
                                   index: i,
                                   isOwnRequest: isOwn,
-                                  onTap: () =>
-                                      PackageRequestPreviewBottomSheet.show(
-                                        ctx,
-                                        item: pr,
-                                      ),
+                                  onTap: () async {
+                                    await PackageRequestPreviewBottomSheet.show(
+                                      ctx,
+                                      item: pr,
+                                    );
+                                    if (ctx.mounted) {
+                                      ctx.read<PackageRequestSearchBloc>().add(
+                                        const SearchRefresh(),
+                                      );
+                                    }
+                                  },
                                   onMakeOffer: isOwn
                                       ? null
                                       : () =>

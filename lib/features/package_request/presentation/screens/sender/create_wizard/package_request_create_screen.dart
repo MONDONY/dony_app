@@ -17,9 +17,36 @@ import 'package:go_router/go_router.dart';
 
 /// Wizard 3 étapes — bottom sheet crème/terracotta (Proposition B).
 abstract final class PackageRequestCreateWizard {
+  /// Vrai si l'édition de [initial] doit afficher un avertissement : la
+  /// demande est en cours de négociation, donc la modifier annulera les
+  /// offres actives (threads OPEN → AUTO_REJECTED côté backend).
+  static bool requiresEditWarning(PackageRequest? initial) =>
+      initial != null && initial.status == PackageRequestStatus.negotiating;
+
   /// [initial] non-null → ouvre le wizard en mode édition (pré-rempli).
-  static Future<void> show(BuildContext context, {PackageRequest? initial}) {
-    return showModalBottomSheet<void>(
+  static Future<void> show(
+    BuildContext context, {
+    PackageRequest? initial,
+  }) async {
+    // Avertir avant d'annuler des négociations en cours.
+    if (requiresEditWarning(initial)) {
+      final confirmed = await DonyDialog.show(
+        context,
+        title: 'Modifier votre demande ?',
+        message:
+            'Des voyageurs négocient actuellement cette demande. La '
+            'modifier annulera toutes les offres en cours — ils devront vous '
+            'reproposer un trajet.',
+        confirmLabel: 'Modifier quand même',
+        cancelLabel: 'Annuler',
+        variant: DonyDialogVariant.destructive,
+        icon: Icons.warning_amber_rounded,
+      );
+      if (confirmed != true || !context.mounted) {
+        return;
+      }
+    }
+    await showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -31,9 +58,7 @@ abstract final class PackageRequestCreateWizard {
             BlocProvider(
               create: (_) => getIt<PackageRequestFormBloc>(param1: initial),
             ),
-            BlocProvider(
-              create: (_) => getIt<PackageRequestPhotosCubit>(),
-            ),
+            BlocProvider(create: (_) => getIt<PackageRequestPhotosCubit>()),
           ],
           child: const _WizardSheet(),
         );
@@ -107,9 +132,11 @@ class _WizardSheetState extends State<_WizardSheet> {
           Navigator.of(context, rootNavigator: true).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.isEditing
-                  ? 'Demande modifiée'
-                  : 'Demande publiée — les voyageurs sont notifiés'),
+              content: Text(
+                state.isEditing
+                    ? 'Demande modifiée'
+                    : 'Demande publiée — les voyageurs sont notifiés',
+              ),
               backgroundColor: DonyColors.success500,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -154,7 +181,8 @@ class _WizardSheetState extends State<_WizardSheet> {
                     ),
                     _StickyCta(
                       currentStep: state.currentStep,
-                      isSubmitting: state.submissionStatus ==
+                      isSubmitting:
+                          state.submissionStatus ==
                           FormSubmissionStatus.submitting,
                       onPressed: () => _onCtaPressed(context, state),
                     ),
@@ -191,10 +219,10 @@ class _Header extends StatelessWidget {
   final bool isEditing;
 
   String get _title => switch (currentStep) {
-        0 => isEditing ? 'Modifier la demande' : 'Nouvelle demande',
-        1 => 'Ton colis',
-        _ => 'Dernière étape',
-      };
+    0 => isEditing ? 'Modifier la demande' : 'Nouvelle demande',
+    1 => 'Ton colis',
+    _ => 'Dernière étape',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -203,9 +231,7 @@ class _Header extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: DonyColors.sand100,
-        border: Border(
-          bottom: BorderSide(color: DonyColors.neutral200),
-        ),
+        border: Border(bottom: BorderSide(color: DonyColors.neutral200)),
       ),
       child: Column(
         children: [
@@ -229,30 +255,38 @@ class _Header extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Builder(builder: (ctx) {
-                  final cs = Theme.of(ctx).colorScheme;
-                  return IconButton(
-                    tooltip: 'Retour',
-                    onPressed: () {
-                      if (currentStep > 0) {
-                        context
-                            .read<PackageRequestFormBloc>()
-                            .add(const FormStepBack());
-                      } else {
-                        Navigator.of(context, rootNavigator: true).maybePop();
-                      }
-                    },
-                    icon: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                Builder(
+                  builder: (ctx) {
+                    final cs = Theme.of(ctx).colorScheme;
+                    return IconButton(
+                      tooltip: 'Retour',
+                      onPressed: () {
+                        if (currentStep > 0) {
+                          context.read<PackageRequestFormBloc>().add(
+                            const FormStepBack(),
+                          );
+                        } else {
+                          Navigator.of(context, rootNavigator: true).maybePop();
+                        }
+                      },
+                      icon: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(
+                            DonyRadius.iconBtn,
+                          ),
+                        ),
+                        child: DonyIcon(
+                          'chevron-left',
+                          size: 20,
+                          color: cs.primary,
+                        ),
                       ),
-                      child: DonyIcon('chevron-left', size: 20, color: cs.primary),
-                    ),
-                  );
-                }),
+                    );
+                  },
+                ),
                 Expanded(
                   child: Text(
                     _title,
@@ -264,28 +298,30 @@ class _Header extends StatelessWidget {
                   ),
                 ),
                 // Badge étape
-                Builder(builder: (ctx) {
-                  final cs = Theme.of(ctx).colorScheme;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.sm + 2,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                      border: Border.all(color: cs.primary),
-                    ),
-                    child: Text(
-                      '${currentStep + 1} / 3',
-                      style: tt.labelSmall?.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: cs.primary,
+                Builder(
+                  builder: (ctx) {
+                    final cs = Theme.of(ctx).colorScheme;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm + 2,
+                        vertical: 4,
                       ),
-                    ),
-                  );
-                }),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                        border: Border.all(color: cs.primary),
+                      ),
+                      child: Text(
+                        '${currentStep + 1} / 3',
+                        style: tt.labelSmall?.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -356,9 +392,9 @@ class _StickyCta extends StatelessWidget {
                     variant: DonyButtonVariant.secondary,
                     onPressed: isSubmitting
                         ? null
-                        : () => context
-                            .read<PackageRequestFormBloc>()
-                            .add(const FormStepBack()),
+                        : () => context.read<PackageRequestFormBloc>().add(
+                            const FormStepBack(),
+                          ),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
@@ -367,8 +403,8 @@ class _StickyCta extends StatelessWidget {
                     label: isSubmitting
                         ? 'Publication…'
                         : isFinalStep
-                            ? 'Publier ma demande'
-                            : 'Continuer',
+                        ? 'Publier ma demande'
+                        : 'Continuer',
                     iconRightAsset: isFinalStep ? 'send' : 'arrow-right',
                     onPressed: isSubmitting ? null : onPressed,
                     isLoading: isSubmitting,
@@ -388,4 +424,3 @@ class _StickyCta extends StatelessWidget {
     );
   }
 }
-
