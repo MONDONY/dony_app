@@ -144,6 +144,12 @@ PayPal : pas de param dédié — le redirect revient via `Stripe.urlScheme` glo
 - **Design du bottom sheet** de choix de paiement (relooking tuile « Carte & wallets », iconographie wallets). Cycle séparé avec mockups visuels.
 - **Analytics instrument** : tracker `payment_method.type` (carte/paypal/applepay/googlepay) sur `payment_succeeded` via le webhook. Optionnel, à décider en phase 2.
 
+## 10bis. Corrections issues de la review (implémentation)
+
+- **`returnURL` obligatoire** : le helper `donyPaymentSheetParams` pose `returnURL: 'dony://stripe/payment-return'`. PayPal étant un moyen à redirection, sans `returnURL` la PaymentSheet refuse de s'ouvrir. Le retour du scheme `dony://` est intercepté en interne par le SDK Stripe — aucun intent-filter `/payment-return` à ajouter (l'ajouter casserait l'interception SDK).
+- **6 sites migrés, pas 2** : l'audit a recensé 7 appels `initPaymentSheet`. Les **6** ouvrant un *PaymentIntent* utilisent le helper : `payment_screen`, `payment_recap_bottom_sheet`, `create_bid_screen`, `create_bid_bottom_sheet`, `accept_offer_bottom_sheet`, `wallet_topup_amount_screen`. Le **7ᵉ** (`commission_method_screen`) ouvre un *SetupIntent* (carte sur fichier pour la commission cash) → **non migré** (le helper est PaymentIntent-only).
+- **`testEnv` testable** : la clé publiable est injectable (`donyPaymentSheetParams(cs, stripePublishableKey: ...)`) ; tests couvrant `pk_test → true` et `pk_live → false`.
+
 ## 11. Critères d'acceptation
 
 - [ ] Un expéditeur peut payer par carte, Apple Pay, Google Pay et PayPal via la PaymentSheet (rail STRIPE).
