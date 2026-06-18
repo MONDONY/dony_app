@@ -11,7 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Gère les photos colis (max 4) pendant la création/édition d'une demande d'envoi.
 /// Calqué sur BidPhotosCubit : upload immédiat → clé S3, exposée via [readyKeys].
 class PackageRequestPhotosCubit extends Cubit<List<PackageRequestPhotoUpload>> {
-  PackageRequestPhotosCubit(this._repository, this._analytics) : super(const []);
+  PackageRequestPhotosCubit(this._repository, this._analytics)
+    : super(const []);
 
   final PackageRequestRepository _repository;
   final AnalyticsService _analytics;
@@ -23,14 +24,37 @@ class PackageRequestPhotosCubit extends Cubit<List<PackageRequestPhotoUpload>> {
 
   /// Clés S3 des photos uploadées avec succès, à envoyer à la création/édition.
   List<String> get readyKeys => state
-      .where((p) =>
-          p.status == PackageRequestPhotoUploadStatus.ready && p.remoteKey != null)
+      .where(
+        (p) =>
+            p.status == PackageRequestPhotoUploadStatus.ready &&
+            p.remoteKey != null,
+      )
       .map((p) => p.remoteKey!)
       .toList();
 
   /// true dès qu'au moins une photo a été ajoutée dans cette session (pour décider
   /// d'envoyer photoKeys en édition : sinon null = conserver les photos existantes).
   bool get touched => state.isNotEmpty;
+
+  /// Pré-charge les photos déjà attachées à la demande (mode édition) comme
+  /// entrées « ready » : elles s'affichent et restent incluses dans
+  /// [readyKeys] pour ne pas être perdues à la sauvegarde. No-op si l'état
+  /// n'est pas vide (évite de re-seeder au retour d'étape).
+  void seed(List<({String key, String url})> existing) {
+    if (state.isNotEmpty || existing.isEmpty) {
+      return;
+    }
+    emit([
+      for (final e in existing.take(maxPhotos))
+        PackageRequestPhotoUpload(
+          localId: 's${_counter++}',
+          localPath: '',
+          status: PackageRequestPhotoUploadStatus.ready,
+          remoteKey: e.key,
+          remoteUrl: e.url,
+        ),
+    ]);
+  }
 
   Future<void> add(String localPath) async {
     if (!canAddMore) {
@@ -47,7 +71,9 @@ class PackageRequestPhotosCubit extends Cubit<List<PackageRequestPhotoUpload>> {
         for (final p in state)
           if (p.localId == id)
             p.copyWith(
-                status: PackageRequestPhotoUploadStatus.ready, remoteKey: key)
+              status: PackageRequestPhotoUploadStatus.ready,
+              remoteKey: key,
+            )
           else
             p,
       ]);
@@ -58,8 +84,9 @@ class PackageRequestPhotosCubit extends Cubit<List<PackageRequestPhotoUpload>> {
         for (final p in state)
           if (p.localId == id)
             p.copyWith(
-                status: PackageRequestPhotoUploadStatus.failed,
-                error: e.toString())
+              status: PackageRequestPhotoUploadStatus.failed,
+              error: e.toString(),
+            )
           else
             p,
       ]);

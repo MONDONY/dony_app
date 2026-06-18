@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
@@ -70,7 +71,10 @@ class PackageRequestPhotoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return BlocBuilder<PackageRequestPhotosCubit, List<PackageRequestPhotoUpload>>(
+    return BlocBuilder<
+      PackageRequestPhotosCubit,
+      List<PackageRequestPhotoUpload>
+    >(
       builder: (context, photos) {
         final canAdd = photos.length < PackageRequestPhotosCubit.maxPhotos;
         return Column(
@@ -100,7 +104,10 @@ class PackageRequestPhotoSection extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Visibles par les voyageurs. Ajoutées à l\'offre quand un trajet est lié.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: DonySpacing.sm),
             Wrap(
@@ -166,12 +173,29 @@ class _PhotoThumb extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(DonyRadius.md),
-            child: Image.file(
-              File(upload.localPath),
-              width: 64,
-              height: 64,
-              fit: BoxFit.cover,
-            ),
+            child: upload.remoteUrl != null && upload.localPath.isEmpty
+                ? CachedNetworkImage(
+                    imageUrl: upload.remoteUrl!,
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.cover,
+                    placeholder: (_, _) =>
+                        ColoredBox(color: cs.surfaceContainerHighest),
+                    errorWidget: (_, _, _) => ColoredBox(
+                      color: cs.surfaceContainerHighest,
+                      child: Icon(
+                        Icons.broken_image_rounded,
+                        color: cs.onSurfaceVariant,
+                        size: 18,
+                      ),
+                    ),
+                  )
+                : Image.file(
+                    File(upload.localPath),
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.cover,
+                  ),
           ),
           if (upload.status == PackageRequestPhotoUploadStatus.uploading)
             Positioned.fill(
@@ -201,8 +225,11 @@ class _PhotoThumb extends StatelessWidget {
                     color: cs.errorContainer.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
-                  child:
-                      Icon(Icons.error_outline_rounded, color: cs.error, size: 18),
+                  child: Icon(
+                    Icons.error_outline_rounded,
+                    color: cs.error,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -223,7 +250,11 @@ class _PhotoThumb extends StatelessWidget {
                       color: cs.onSurface,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close_rounded, size: 13, color: Colors.white),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 13,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

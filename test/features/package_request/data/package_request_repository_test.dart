@@ -402,16 +402,26 @@ void main() {
   });
 
   group('photos parsing', () {
-    test('PackageRequest.fromJson maps photos to photoUrls', () {
+    test('PackageRequest.fromJson maps photos to photoUrls + photoKeys', () {
       final json = <String, dynamic>{
         ..._prJson,
         'photos': [
-          {'id': 'p1', 'url': 'https://signed/1'},
-          {'id': 'p2', 'url': 'https://signed/2'},
+          {
+            'id': 'p1',
+            'objectKey': 'package_requests/s/1.jpg',
+            'url': 'https://signed/1',
+          },
+          {
+            'id': 'p2',
+            'objectKey': 'package_requests/s/2.jpg',
+            'url': 'https://signed/2',
+          },
         ],
       };
       final pr = PackageRequest.fromJson(json);
       expect(pr.photoUrls, ['https://signed/1', 'https://signed/2']);
+      expect(pr.photoKeys,
+          ['package_requests/s/1.jpg', 'package_requests/s/2.jpg']);
     });
 
     test('PackageRequestSearchItem.fromJson maps photos; empty when absent', () {

@@ -7,6 +7,10 @@ class PackageRequestPhotoUpload {
   final PackageRequestPhotoUploadStatus status;
   final String? remoteKey;
 
+  /// URL présignée pour une photo déjà attachée (mode édition). Null pour
+  /// une photo locale en cours d'upload (affichée depuis [localPath]).
+  final String? remoteUrl;
+
   /// Message d'erreur si [status] == failed (pour diagnostic / affichage).
   final String? error;
 
@@ -15,19 +19,21 @@ class PackageRequestPhotoUpload {
     required this.localPath,
     this.status = PackageRequestPhotoUploadStatus.uploading,
     this.remoteKey,
+    this.remoteUrl,
     this.error,
   });
 
   PackageRequestPhotoUpload copyWith({
     PackageRequestPhotoUploadStatus? status,
     String? remoteKey,
+    String? remoteUrl,
     String? error,
-  }) =>
-      PackageRequestPhotoUpload(
-        localId: localId,
-        localPath: localPath,
-        status: status ?? this.status,
-        remoteKey: remoteKey ?? this.remoteKey,
-        error: error ?? this.error,
-      );
+  }) => PackageRequestPhotoUpload(
+    localId: localId,
+    localPath: localPath,
+    status: status ?? this.status,
+    remoteKey: remoteKey ?? this.remoteKey,
+    remoteUrl: remoteUrl ?? this.remoteUrl,
+    error: error ?? this.error,
+  );
 }
