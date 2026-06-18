@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/data/models/payment_method.dart'
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -104,10 +105,7 @@ class PaymentRecapBottomSheet {
                               .initiatePayment(thread.id);
                           await Stripe.instance.initPaymentSheet(
                             paymentSheetParameters:
-                                SetupPaymentSheetParameters(
-                              paymentIntentClientSecret: init.clientSecret,
-                              merchantDisplayName: 'Dony',
-                            ),
+                                donyPaymentSheetParams(init.clientSecret),
                           );
                           await Stripe.instance.presentPaymentSheet();
                           bloc.add(NegotiationCheckoutRequested(

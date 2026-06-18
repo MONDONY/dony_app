@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 
 void main() {
