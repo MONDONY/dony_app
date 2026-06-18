@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dony/features/payments/presentation/widgets/payment_brand_marks.dart';
 
+// Note : le reset de debugDefaultTargetPlatformOverride doit se faire EN FIN DE
+// CORPS de test (pas via addTearDown) — le test binding Flutter exécute
+// debugAssertAllFoundationVarsUnset avant les tearDowns, donc un reset en
+// tearDown lèverait « foundation debug variable was changed by the test ».
 void main() {
   testWidgets('iOS → carte + Apple Pay + PayPal, pas Google Pay', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;

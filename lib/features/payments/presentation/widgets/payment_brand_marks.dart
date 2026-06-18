@@ -11,13 +11,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 class PaymentBrandMarks extends StatelessWidget {
   const PaymentBrandMarks({super.key});
 
-  static const _semantics = <String, String>{
-    'card': 'Carte bancaire',
-    'apple-pay': 'Apple Pay',
-    'google-pay': 'Google Pay',
-    'paypal': 'PayPal',
-  };
-
   @override
   Widget build(BuildContext context) {
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
@@ -35,9 +28,20 @@ class PaymentBrandMarks extends StatelessWidget {
             'assets/logos/payment/$n.svg',
             key: Key('payment-mark-$n'),
             height: 16,
-            semanticsLabel: _semantics[n],
+            semanticsLabel: _label(n),
           ),
       ],
     );
   }
+
+  /// Label d'accessibilité par mark. Lève si un nom inconnu est ajouté à
+  /// [names] sans label — un trou d'accessibilité silencieux devient un crash
+  /// de dev (cf. checklist HIG « Semantics sur icônes sans label »).
+  String _label(String name) => switch (name) {
+        'card' => 'Carte bancaire',
+        'apple-pay' => 'Apple Pay',
+        'google-pay' => 'Google Pay',
+        'paypal' => 'PayPal',
+        _ => throw ArgumentError('unknown payment mark: $name'),
+      };
 }
