@@ -89,7 +89,10 @@ class OwnerActionGrid extends StatelessWidget {
         accent: cs.primary,
         badgeCount: a.confirmedParcelCount,
         onTap: hasColis
-            ? () => context.push('/announcements/${a.id}/bids')
+            ? () => context.push(
+                '/announcements/${a.id}/bids',
+                extra: const <String, dynamic>{'title': 'Colis'},
+              )
             : null,
         disabledMessage: 'Aucun colis embarqué',
       ),

@@ -615,6 +615,7 @@ final appRouter = GoRouter(
         return BidListScreen(
           announcementId: id,
           initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
+          title: extra?['title'] as String? ?? 'Demandes',
         );
       },
     ),

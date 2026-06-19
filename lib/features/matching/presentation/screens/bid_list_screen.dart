@@ -37,6 +37,10 @@ class BidListScreen extends StatelessWidget {
   /// onglets (un seul écran désormais).
   final int initialTabIndex;
 
+  /// Titre de l'app bar. « Demandes » par défaut ; « Colis » quand l'écran est
+  /// ouvert depuis le bouton « Colis » du détail trajet.
+  final String title;
+
   const BidListScreen({
     super.key,
     required this.announcementId,
@@ -44,6 +48,7 @@ class BidListScreen extends StatelessWidget {
     this.arrivalCityCode,
     this.departureDate,
     this.initialTabIndex = 0,
+    this.title = 'Demandes',
   });
 
   @override
@@ -61,6 +66,7 @@ class BidListScreen extends StatelessWidget {
         departureCityCode: departureCityCode,
         arrivalCityCode: arrivalCityCode,
         departureDate: departureDate,
+        title: title,
       ),
     );
   }
@@ -74,6 +80,7 @@ class BidListScreenTesting extends StatelessWidget {
   final String? departureCityCode;
   final String? arrivalCityCode;
   final DateTime? departureDate;
+  final String title;
 
   const BidListScreenTesting({
     super.key,
@@ -81,6 +88,7 @@ class BidListScreenTesting extends StatelessWidget {
     this.departureCityCode,
     this.arrivalCityCode,
     this.departureDate,
+    this.title = 'Demandes',
   });
 
   @override
@@ -91,6 +99,7 @@ class BidListScreenTesting extends StatelessWidget {
       departureCityCode: departureCityCode,
       arrivalCityCode: arrivalCityCode,
       departureDate: departureDate,
+      title: title,
     ),
   );
 }
@@ -104,12 +113,14 @@ class _BidListView extends StatelessWidget {
   final String? departureCityCode;
   final String? arrivalCityCode;
   final DateTime? departureDate;
+  final String title;
 
   const _BidListView({
     required this.announcementId,
     this.departureCityCode,
     this.arrivalCityCode,
     this.departureDate,
+    this.title = 'Demandes',
   });
 
   String _buildSubtitle() {
@@ -190,7 +201,7 @@ class _BidListView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Demandes', style: tt.headlineLarge),
+                Text(title, style: tt.headlineLarge),
                 if (subtitle.isNotEmpty)
                   Text(
                     subtitle,
