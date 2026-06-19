@@ -162,7 +162,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   }
 
   /// Suppression bloquée par un colis déjà accepté — propose l'annulation du
-  /// voyage (wording miroir du `announcement_detail_bottom_sheet`).
+  /// voyage.
   Future<void> _onDeleteBlocked(
     BuildContext context,
     String announcementId,

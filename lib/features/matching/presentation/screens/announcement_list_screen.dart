@@ -10,7 +10,6 @@ import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/announcement_detail_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:flutter/material.dart';
@@ -305,9 +304,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                                 announcement: item,
                                 index: i,
                                 onTap: () async {
-                                  await AnnouncementDetailBottomSheet.show(
-                                      context,
-                                      announcementId: item.id);
+                                  await context.push<bool>(
+                                    '/announcements/${item.id}/trip',
+                                    extra: item,
+                                  );
                                   if (context.mounted) {
                                     context
                                         .read<AnnouncementBloc>()

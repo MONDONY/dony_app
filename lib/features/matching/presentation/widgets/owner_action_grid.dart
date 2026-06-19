@@ -11,8 +11,8 @@ import 'package:go_router/go_router.dart';
 
 /// Grille 2×2 d'actions propriétaire pour l'écran détail d'un trajet.
 ///
-/// Le gating + la logique de suppression MIROIR du bottom sheet
-/// `announcement_detail_bottom_sheet.dart` (wording identique) :
+/// Grille = source de vérité du gating propriétaire (Demandes / Colis /
+/// Modifier / Supprimer) :
 /// - **Demandes** (si ACTIVE) → liste des offres.
 /// - **Colis** → scroll vers la section colis embarqués.
 /// - **Modifier** → édition (uniquement si 0 demande, sinon désactivé).

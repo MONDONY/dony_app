@@ -10,9 +10,8 @@ import 'package:intl/intl.dart';
 /// Corps de détail d'un trajet (hero, capacité/prix, colis, lieux de remise,
 /// fenêtre de remise, paiements, contenus acceptés/refusés, note expéditeurs).
 ///
-/// Partagé entre [AnnouncementDetailBottomSheet] et l'écran plein écran du
-/// propriétaire. Ne contient AUCUNE action — uniquement la présentation des
-/// données du trajet.
+/// Utilisé par l'écran plein écran du propriétaire (TripOwnerDetailScreen).
+/// Ne contient AUCUNE action — uniquement la présentation des données du trajet.
 class AnnouncementDetailBody extends StatelessWidget {
   final AnnouncementModel a;
   const AnnouncementDetailBody({super.key, required this.a});
