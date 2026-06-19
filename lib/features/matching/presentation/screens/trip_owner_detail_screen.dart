@@ -20,11 +20,10 @@ import 'package:go_router/go_router.dart';
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
 ///
-/// Affiche tout le détail du trajet (hero + sections) via [AnnouncementDetailBody]
-/// avec un bouton retour et un bouton de signalement de bug dans l'AppBar.
-///
-/// La grille d'actions (Task 4) et la section colis embarqués (Task 5) seront
-/// insérées sous le corps de détail dans une itération ultérieure.
+/// Bouton retour + bouton de signalement de bug dans l'AppBar, puis, dans l'ordre :
+/// le détail complet du trajet via [AnnouncementDetailBody], la grille d'actions
+/// [OwnerActionGrid] (Demandes / Colis / Modifier / Supprimer) et la section des
+/// colis déjà embarqués [TripParcelsSection].
 class TripOwnerDetailScreen extends StatefulWidget {
   const TripOwnerDetailScreen({
     super.key,
@@ -55,10 +54,12 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.tripOwnerDetailOpened,
-        properties: {'status': widget.initial?.status ?? 'unknown'},
-      ));
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.tripOwnerDetailOpened,
+          properties: {'status': widget.initial?.status ?? 'unknown'},
+        ),
+      );
     });
   }
 
@@ -96,16 +97,19 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                 context.pop(true);
               }
             } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
-              _onDeleteBlocked(context, state.announcementId);
+              unawaited(_onDeleteBlocked(context, state.announcementId));
             } else if (state is AnnouncementError) {
               ErrorPresenter.show(context, state.error);
             }
           },
           builder: (context, state) {
-            final a =
-                state is AnnouncementDetailLoaded ? state.announcement : widget.initial;
+            final a = state is AnnouncementDetailLoaded
+                ? state.announcement
+                : widget.initial;
             if (a == null) {
-              return Center(child: CircularProgressIndicator(color: cs.primary));
+              return Center(
+                child: CircularProgressIndicator(color: cs.primary),
+              );
             }
             final isOwner = _isOwner(context, a);
             return SingleChildScrollView(
@@ -151,8 +155,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     } catch (_) {
       return false;
     }
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : null;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
     return currentUserId != null && a.travelerId == currentUserId;
   }
 
@@ -173,7 +178,10 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
       iconAsset: 'calendar-x',
     );
     if (confirmed == true && context.mounted) {
-      await CancellationBottomSheet.show(context, announcementId: announcementId);
+      await CancellationBottomSheet.show(
+        context,
+        announcementId: announcementId,
+      );
     }
   }
 }

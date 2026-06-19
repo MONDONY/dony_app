@@ -50,112 +50,114 @@ class OwnerActionGrid extends StatelessWidget {
         (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
     final isActive = a.status == 'ACTIVE';
 
-    // ── Tuile « Demandes » (uniquement si ACTIVE) ───────────────────────────
-    final Widget demandesTile = isActive
-        ? _ActionTile(
-            iconAsset: 'package',
-            label: 'Demandes',
-            accent: cs.primary,
-            badgeCount: a.bidsCount ?? 0,
-            onTap: () => context.push('/announcements/${a.id}/bids'),
-          )
-        : const _EmptyTile();
-
-    // ── Tuile « Colis » ─────────────────────────────────────────────────────
-    final Widget colisTile = _ActionTile(
-      // `inbox` = convention « colis » de la feature matching (pas de `box.svg`).
-      iconAsset: 'inbox',
-      label: 'Colis',
-      accent: cs.primary,
-      badgeCount: a.confirmedParcelCount,
-      onTap: () {
-        final ctx = colisSectionKey.currentContext;
-        if (ctx != null) {
-          Scrollable.ensureVisible(
-            ctx,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      },
-    );
-
-    // ── Tuile « Modifier » (désactivée si une demande existe) ────────────────
-    final Widget modifierTile = canEdit
-        ? _ActionTile(
-            iconAsset: 'square-pen',
-            label: 'Modifier',
-            accent: cs.onSurface,
-            onTap: () async {
-              final bloc = context.read<AnnouncementBloc>();
-              await CreateAnnouncementBottomSheet.show(context, announcement: a);
-              bloc.add(AnnouncementDetailRequested(a.id));
-            },
-          )
-        : Tooltip(
-            message: 'Modifiable tant qu\'aucune demande',
-            child: Opacity(
-              opacity: 0.4,
-              child: _ActionTile(
-                iconAsset: 'square-pen',
-                label: 'Modifier',
-                accent: cs.onSurface,
-              ),
+    // Tuiles présentes selon le statut. Construites dans une liste pour éviter
+    // les demi-tuiles vides (ex. trajet COMPLETED/FULL n'a ni Demandes ni
+    // Supprimer → la grille se réduit proprement aux tuiles réelles).
+    final tiles = <Widget>[
+      // ── Demandes (uniquement si ACTIVE) ──
+      if (isActive)
+        _ActionTile(
+          iconAsset: 'package',
+          label: 'Demandes',
+          accent: cs.primary,
+          badgeCount: a.bidsCount ?? 0,
+          onTap: () => context.push('/announcements/${a.id}/bids'),
+        ),
+      // ── Colis (toujours) ──
+      _ActionTile(
+        // `inbox` = convention « colis » de la feature matching (pas de `box.svg`).
+        iconAsset: 'inbox',
+        label: 'Colis',
+        accent: cs.primary,
+        badgeCount: a.confirmedParcelCount,
+        onTap: () {
+          final ctx = colisSectionKey.currentContext;
+          if (ctx != null) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        },
+      ),
+      // ── Modifier (désactivée si une demande existe) ──
+      if (canEdit)
+        _ActionTile(
+          iconAsset: 'square-pen',
+          label: 'Modifier',
+          accent: cs.onSurface,
+          onTap: () async {
+            final bloc = context.read<AnnouncementBloc>();
+            await CreateAnnouncementBottomSheet.show(context, announcement: a);
+            bloc.add(AnnouncementDetailRequested(a.id));
+          },
+        )
+      else
+        Tooltip(
+          message: 'Modifiable tant qu\'aucune demande',
+          child: Opacity(
+            opacity: 0.4,
+            child: _ActionTile(
+              iconAsset: 'square-pen',
+              label: 'Modifier',
+              accent: cs.onSurface,
             ),
-          );
-
-    // ── Tuile « Supprimer » ou « Annuler » ──────────────────────────────────
-    final Widget destructiveTile = canDelete
-        ? _ActionTile(
-            iconAsset: 'trash-2',
-            label: 'Supprimer',
-            accent: cs.error,
-            onTap: () async {
-              final confirmed = await DonyDialog.show(
-                context,
-                title: 'Supprimer ce trajet ?',
-                message: isCancelled
-                    ? 'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'
-                    : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
-                confirmLabel: 'Supprimer',
-                variant: DonyDialogVariant.destructive,
-                iconAsset: 'trash-2',
+          ),
+        ),
+      // ── Supprimer (si supprimable) ou Annuler (si ACTIVE non supprimable) ──
+      if (canDelete)
+        _ActionTile(
+          iconAsset: 'trash-2',
+          label: 'Supprimer',
+          accent: cs.error,
+          onTap: () async {
+            final confirmed = await DonyDialog.show(
+              context,
+              title: 'Supprimer ce trajet ?',
+              message: isCancelled
+                  ? 'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'
+                  : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
+              confirmLabel: 'Supprimer',
+              variant: DonyDialogVariant.destructive,
+              iconAsset: 'trash-2',
+            );
+            if (confirmed == true && context.mounted) {
+              context.read<AnnouncementBloc>().add(
+                AnnouncementDeleteRequested(a.id),
               );
-              if (confirmed == true && context.mounted) {
-                context
-                    .read<AnnouncementBloc>()
-                    .add(AnnouncementDeleteRequested(a.id));
-              }
-            },
-          )
-        : isActive
-            ? _ActionTile(
-                iconAsset: 'circle-x',
-                label: 'Annuler',
-                accent: cs.error,
-                onTap: () =>
-                    CancellationBottomSheet.show(context, announcementId: a.id),
-              )
-            : const _EmptyTile();
+            }
+          },
+        )
+      else if (isActive)
+        _ActionTile(
+          iconAsset: 'circle-x',
+          label: 'Annuler',
+          accent: cs.error,
+          onTap: () =>
+              CancellationBottomSheet.show(context, announcementId: a.id),
+        ),
+    ];
 
+    // Disposition 2 colonnes ; seul un éventuel dernier rang impair laisse un
+    // espace (jamais de demi-tuile vide en milieu de grille).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(child: demandesTile),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(child: colisTile),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        Row(
-          children: [
-            Expanded(child: modifierTile),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(child: destructiveTile),
-          ],
-        ),
+        for (int i = 0; i < tiles.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: DonySpacing.sm),
+          Row(
+            children: [
+              Expanded(child: tiles[i]),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: i + 1 < tiles.length
+                    ? tiles[i + 1]
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -201,9 +203,9 @@ class _ActionTile extends StatelessWidget {
                 child: Text(
                   label,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -262,18 +264,10 @@ class _CountPill extends StatelessWidget {
       child: Text(
         '$count',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: accent,
-            ),
+          fontWeight: FontWeight.w700,
+          color: accent,
+        ),
       ),
     );
   }
-}
-
-/// Placeholder invisible pour garder l'alignement 2×2 quand une tuile est absente.
-class _EmptyTile extends StatelessWidget {
-  const _EmptyTile();
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
 }

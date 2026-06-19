@@ -597,7 +597,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         : null;
     final isOwn = currentUserId != null && a.travelerId == currentUserId;
     if (isOwn) {
-      () async {
+      unawaited(() async {
         final changed = await context.push<bool>(
           '/announcements/${a.id}/trip',
           extra: a,
@@ -605,7 +605,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         if ((changed ?? false) && mounted) {
           _dispatchSearch();
         }
-      }();
+      }());
       return;
     }
     final bidState = context.read<BidBloc>().state;
