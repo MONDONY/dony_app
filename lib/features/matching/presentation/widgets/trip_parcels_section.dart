@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +33,16 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
   /// `setState` — elle ne déclenche aucun rendu, juste l'idempotence du log.
   bool _logged = false;
 
+  /// Filtre statut courant (`null` = « Tous »). Mutation via `ValueNotifier`
+  /// (pas de `setState`) — seul le contenu de la liste se reconstruit.
+  final ValueNotifier<String?> _statusFilter = ValueNotifier<String?>(null);
+
+  @override
+  void dispose() {
+    _statusFilter.dispose();
+    super.dispose();
+  }
+
   void _logOnce(int count) {
     if (_logged) {
       return;
@@ -40,6 +51,17 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
     unawaited(getIt<AnalyticsService>().logEvent(
       AnalyticsEvents.tripParcelsViewed,
       properties: {'count': count},
+    ));
+  }
+
+  void _onFilter(String? status) {
+    if (_statusFilter.value == status) {
+      return;
+    }
+    _statusFilter.value = status;
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.tripParcelsFiltered,
+      properties: {'status': status ?? 'all'},
     ));
   }
 
@@ -70,15 +92,15 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
               );
             }
             if (state is BidListLoaded) {
-              final filtered =
+              final embarked =
                   state.bids.where(isAcceptedTabBid).toList(growable: false);
 
               // Premier rendu de la liste chargée → tir analytics unique.
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                _logOnce(filtered.length);
+                _logOnce(embarked.length);
               });
 
-              if (filtered.isEmpty) {
+              if (embarked.isEmpty) {
                 return const DonyEmptyState(
                   iconAsset: 'inbox',
                   title: 'Aucun colis embarqué',
@@ -87,14 +109,58 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                 );
               }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < filtered.length; i++) ...[
-                    if (i > 0) const SizedBox(height: DonySpacing.sm),
-                    _ColisRow(bid: filtered[i]),
-                  ],
-                ],
+              // Compteur par statut + statuts présents (ordre métier fixe).
+              final counts = <String, int>{};
+              for (final b in embarked) {
+                counts[b.status] = (counts[b.status] ?? 0) + 1;
+              }
+              final present = <String>[
+                for (final st in _kStatusOrder)
+                  if (counts.containsKey(st)) st,
+                for (final st in counts.keys)
+                  if (!_kStatusOrder.contains(st)) st,
+              ];
+
+              return ValueListenableBuilder<String?>(
+                valueListenable: _statusFilter,
+                builder: (context, filter, _) {
+                  // Filtre actif disparu (liste rechargée) → repli sur « Tous ».
+                  final active = (filter != null && counts.containsKey(filter))
+                      ? filter
+                      : null;
+                  final visible = active == null
+                      ? embarked
+                      : embarked
+                          .where((b) => b.status == active)
+                          .toList(growable: false);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Filtre rapide : seulement si ≥ 2 statuts distincts.
+                      if (present.length >= 2) ...[
+                        StatusChipsRow<String?>(
+                          selected: active,
+                          onSelected: _onFilter,
+                          chips: [
+                            StatusChipData<String?>(
+                              label: 'Tous',
+                              value: null,
+                              count: embarked.length,
+                            ),
+                            for (final st in present)
+                              _statusFilterChip(st, counts[st]!, cs),
+                          ],
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                      ],
+                      for (var i = 0; i < visible.length; i++) ...[
+                        if (i > 0) const SizedBox(height: DonySpacing.sm),
+                        _ColisRow(bid: visible[i]),
+                      ],
+                    ],
+                  );
+                },
               );
             }
             return const SizedBox.shrink();
@@ -200,16 +266,19 @@ class _ColisRow extends StatelessWidget {
   }
 }
 
-/// Petit chip de statut traduit en français pour un colis embarqué.
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
+/// Ordre d'affichage métier des statuts dans le filtre rapide.
+const _kStatusOrder = <String>[
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'COMPLETED',
+  'NO_SHOW',
+  'PARCEL_REFUSED',
+  'CANCELLED',
+];
 
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final (label, color) = switch (status) {
+/// Libellé FR + couleur d'un statut de colis embarqué.
+(String, Color) _statusMeta(String status, ColorScheme cs) => switch (status) {
       'ACCEPTED' => ('Accepté', cs.primary),
       'HANDED_OVER' => ('Remis', cs.warning),
       'IN_TRANSIT' => ('En transit', cs.info),
@@ -219,6 +288,32 @@ class _StatusChip extends StatelessWidget {
       'CANCELLED' => ('Annulé', cs.error),
       _ => (status, cs.onSurfaceVariant),
     };
+
+/// Chip de filtre d'un statut : libellé FR + compteur + pastille colorée.
+StatusChipData<String?> _statusFilterChip(
+  String status,
+  int count,
+  ColorScheme cs,
+) {
+  final (label, color) = _statusMeta(status, cs);
+  return StatusChipData<String?>(
+    label: label,
+    value: status,
+    count: count,
+    dotColor: color,
+  );
+}
+
+/// Petit chip de statut traduit en français pour un colis embarqué.
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final (label, color) = _statusMeta(status, cs);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,

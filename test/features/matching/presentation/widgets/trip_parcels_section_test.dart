@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -160,5 +161,56 @@ void main() {
     await tester.pump();
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('≥ 2 statuts → filtre rapide affiché avec compteur « Tous »',
+      (tester) async {
+    stub(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
+      _makeBid(status: 'IN_TRANSIT', id: 'b2', contentCategory: 'Électronique'),
+      _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
+    ]));
+
+    await _pump(tester, bidBloc);
+    await tester.pump();
+
+    expect(find.byType(StatusChipsRow<String?>), findsOneWidget);
+    expect(find.text('Tous · 3'), findsOneWidget);
+    // Les 3 colis sont visibles tant qu'aucun filtre n'est actif.
+    expect(find.text('Documents'), findsOneWidget);
+    expect(find.text('Électronique'), findsOneWidget);
+    expect(find.text('Bijoux'), findsOneWidget);
+  });
+
+  testWidgets('tap chip statut → filtre la liste sur ce statut',
+      (tester) async {
+    stub(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
+      _makeBid(status: 'IN_TRANSIT', id: 'b2', contentCategory: 'Électronique'),
+      _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
+    ]));
+
+    await _pump(tester, bidBloc);
+    await tester.pump();
+
+    // La chip de filtre « En transit · 1 » est distincte du chip de ligne.
+    await tester.tap(find.text('En transit · 1'));
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text('Électronique'), findsOneWidget);
+    expect(find.text('Documents'), findsNothing);
+    expect(find.text('Bijoux'), findsNothing);
+  });
+
+  testWidgets('un seul statut → pas de filtre rapide', (tester) async {
+    stub(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1'),
+      _makeBid(status: 'ACCEPTED', id: 'b2', senderName: 'Autre Expéditeur'),
+    ]));
+
+    await _pump(tester, bidBloc);
+    await tester.pump();
+
+    expect(find.byType(StatusChipsRow<String?>), findsNothing);
   });
 }
