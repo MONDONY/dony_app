@@ -18,6 +18,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     on<NoShowReportRequested>(_onNoShowReport);
     on<TravelerNoShowReportRequested>(_onTravelerNoShowReport);
     on<NoShowContestRequested>(_onNoShowContest);
+    on<NoShowConfirmRequested>(_onNoShowConfirm);
     on<CancelAfterHandoverRequested>(_onCancelAfterHandover);
     on<ReturnConfirmRequested>(_onReturnConfirm);
     on<ReturnCodeRequested>(_onReturnCodeRequested);
@@ -92,6 +93,19 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.contestNoShow(event.bidId);
       emit(NoShowContested());
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onNoShowConfirm(
+    NoShowConfirmRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      await _repository.confirmNoShow(event.bidId);
+      emit(NoShowConfirmed());
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }

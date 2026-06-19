@@ -61,6 +61,14 @@ void main() {
     verify(() => mockDs.contestNoShow('bid-2')).called(1);
   });
 
+  test('confirmNoShow delegates to datasource', () async {
+    when(() => mockDs.confirmNoShow('bid-3')).thenAnswer((_) async {});
+
+    await repo.confirmNoShow('bid-3');
+
+    verify(() => mockDs.confirmNoShow('bid-3')).called(1);
+  });
+
   test('cancelAfterHandover delegates to datasource', () async {
     when(() => mockDs.cancelAfterHandover('bid-3')).thenAnswer((_) async {});
 

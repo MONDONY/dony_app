@@ -585,14 +585,13 @@ class _ContestationHeroState extends State<_ContestationHero> {
   }
 
   Future<void> _showConfirmSheet(BuildContext context) async {
-    await DonyBottomSheet.show<void>(
+    final confirmed = await DonyBottomSheet.show<bool>(
       context,
       title: 'Confirmer votre absence',
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
-          label: 'Compris',
-          variant: DonyButtonVariant.ghost,
-          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
+          label: 'Confirmer mon absence',
+          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
       ),
       child: Padding(
@@ -604,5 +603,10 @@ class _ContestationHeroState extends State<_ContestationHero> {
         ),
       ),
     );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+    context.read<CancellationBloc>().add(NoShowConfirmRequested(widget.bid.id));
   }
 }
