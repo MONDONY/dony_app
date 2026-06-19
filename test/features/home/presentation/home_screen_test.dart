@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:hive/hive.dart';
@@ -112,19 +113,20 @@ UserModel _makeUser({List<String> roles = const ['ROLE_SENDER']}) => UserModel(
   status: 'ACTIVE',
 );
 
-AnnouncementModel _makeAnn({String id = 'a1'}) => AnnouncementModel(
-  id: id,
-  travelerId: 'traveler-1',
-  departureCity: 'Paris · CDG, ORY',
-  arrivalCity: 'Dakar · DKR',
-  departureDate: DateTime(2026, 6, 15),
-  availableKg: 10,
-  totalKg: 20,
-  pricePerKg: 7,
-  status: 'ACTIVE',
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
-);
+AnnouncementModel _makeAnn({String id = 'a1', String travelerId = 'traveler-1'}) =>
+    AnnouncementModel(
+      id: id,
+      travelerId: travelerId,
+      departureCity: 'Paris · CDG, ORY',
+      arrivalCity: 'Dakar · DKR',
+      departureDate: DateTime(2026, 6, 15),
+      availableKg: 10,
+      totalKg: 20,
+      pricePerKg: 7,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 5, 1),
+      updatedAt: DateTime(2026, 5, 1),
+    );
 
 Widget _buildHome({
   AnnouncementState? announcementState,
@@ -174,6 +176,71 @@ Widget _buildHome({
       locale: const Locale('fr'),
       home: const HomeScreen(),
     ),
+  );
+}
+
+/// Monte le feed dans un vrai [GoRouter] avec une route stub
+/// `/announcements/:id/trip` qui enregistre l'`id` visité. Permet de vérifier
+/// qu'un tap sur une carte « Votre trajet » (annonce dont le `travelerId`
+/// correspond à l'utilisateur courant) ouvre bien l'écran détail trajet.
+Widget _buildHomeRouter({
+  required AnnouncementState announcementState,
+  required List<String> visitedTripIds,
+  UserModel? user,
+  BidState? bidState,
+}) {
+  final announcementBloc = MockAnnouncementBloc();
+  final authBloc = MockAuthBloc();
+  final roleCubit = MockActiveRoleCubit();
+  final notifBloc = MockNotificationBloc();
+  final bidBloc = MockBidBloc();
+
+  when(() => announcementBloc.state).thenReturn(announcementState);
+  when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => authBloc.state).thenReturn(AuthAuthenticated(user ?? _makeUser()));
+  when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+  when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => notifBloc.state).thenReturn(const NotificationInitial());
+  when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+  final providers = MultiBlocProvider(
+    providers: [
+      BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+      BlocProvider<NotificationBloc>.value(value: notifBloc),
+      BlocProvider<BidBloc>.value(value: bidBloc),
+    ],
+    child: const HomeScreen(),
+  );
+
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(path: '/', builder: (_, _) => providers),
+      GoRoute(
+        path: '/announcements/:id/trip',
+        builder: (_, state) {
+          visitedTripIds.add(state.pathParameters['id']!);
+          return const Scaffold(body: Text('STUB_TRIP_DETAIL'));
+        },
+      ),
+    ],
+  );
+
+  return MaterialApp.router(
+    routerConfig: router,
+    theme: AppTheme.light,
+    localizationsDelegates: const [
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('fr'), Locale('en')],
+    locale: const Locale('fr'),
   );
 }
 
@@ -256,6 +323,43 @@ void main() {
 
       expect(find.byType(TravelerCard), findsAtLeastNWidgets(1));
     });
+
+    testWidgets(
+      'tap sur sa propre carte trajet ouvre /announcements/:id/trip',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 1600);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        final visited = <String>[];
+        await tester.pumpWidget(
+          _buildHomeRouter(
+            // travelerId == id de _makeUser ('uid-1') → carte « Votre trajet ».
+            announcementState: AnnouncementSearchLoaded([
+              _makeAnn(id: 'a-own', travelerId: 'uid-1'),
+            ]),
+            visitedTripIds: visited,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        // Déplier le sheet en plein écran pour exposer la carte.
+        await tester.tap(find.textContaining('Tirer pour voir'));
+        await tester.pumpAndSettle();
+
+        // La carte propriétaire affiche le pill « Votre trajet ».
+        expect(find.byKey(const Key('own-trip-pill')), findsOneWidget);
+
+        await tester.ensureVisible(find.byType(TravelerCard).first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(TravelerCard).first);
+        await tester.pumpAndSettle();
+
+        // Navigation vers l'écran détail trajet pour cette annonce.
+        expect(visited, contains('a-own'));
+        expect(find.text('STUB_TRIP_DETAIL'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows empty message when search loaded with no results', (
       tester,

@@ -125,15 +125,48 @@ void main() {
       expect(blueIcons, isNotEmpty);
     });
 
-    testWidgets('shows Votre trajet label when isOwnAnnouncement', (tester) async {
+    testWidgets(
+        'own card shows pill, chevron and is tappable when isOwnAnnouncement',
+        (tester) async {
+      var tapped = false;
       await tester.pumpWidget(_wrap(TravelerCard(
         announcement: _makeAnn(),
         index: 0,
         isOwnAnnouncement: true,
-        onTap: null,
+        onTap: () => tapped = true,
       )));
       await tester.pumpAndSettle();
+
+      // Pill « Votre trajet » présent (key + texte).
+      expect(find.byKey(const Key('own-trip-pill')), findsOneWidget);
       expect(find.text('Votre trajet'), findsOneWidget);
+
+      // Chevron de cliquabilité sur le corridor.
+      final chevrons = tester.widgetList<DonyIcon>(find.byWidgetPredicate(
+        (w) => w is DonyIcon && w.name == 'chevron-right',
+      ));
+      expect(chevrons, isNotEmpty);
+
+      // La carte propriétaire est désormais cliquable.
+      await tester.tap(find.byType(TravelerCard));
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('does NOT show own-trip pill when isOwnAnnouncement is false',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('own-trip-pill')), findsNothing);
+      expect(find.text('Votre trajet'), findsNothing);
+      final chevrons = tester.widgetList<DonyIcon>(find.byWidgetPredicate(
+        (w) => w is DonyIcon && w.name == 'chevron-right',
+      ));
+      expect(chevrons, isEmpty);
     });
 
     testWidgets('calls onTap when tapped', (tester) async {

@@ -50,6 +50,7 @@ Future<void> _pump(
   String? departureCityCode,
   String? arrivalCityCode,
   DateTime? departureDate,
+  String title = 'Demandes',
 }) async {
   await initializeDateFormatting('fr_FR');
   tester.view.physicalSize = const Size(800, 2200);
@@ -68,6 +69,7 @@ Future<void> _pump(
             departureCityCode: departureCityCode,
             arrivalCityCode: arrivalCityCode,
             departureDate: departureDate,
+            title: title,
           ),
         ),
       ),
@@ -179,6 +181,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Demandes'), findsOneWidget);
+  });
+
+  testWidgets('le titre devient « Colis » quand title = Colis', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, title: 'Colis');
+    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Colis'), findsOneWidget);
+    expect(find.text('Demandes'), findsNothing);
   });
 
   // ── Bouton « À traiter » ────────────────────────────────────────────────────

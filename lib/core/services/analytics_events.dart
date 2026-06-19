@@ -94,6 +94,11 @@ abstract final class AnalyticsEvents {
   // Trajets (Mes trajets)
   static const tripFilterApplied = 'trip_filter_applied';
 
+  // Détail trajet (propriétaire)
+  static const tripOwnerDetailOpened = 'trip_owner_detail_opened';
+  static const tripParcelsViewed     = 'trip_parcels_viewed';
+  static const tripParcelsFiltered   = 'trip_parcels_filtered';
+
   // Onglet « Envoyer » — noms d'écran (logScreen par onglet)
   static const envoyerEnvoisScreen = 'envoyer_envois';
   static const envoyerDemandesScreen = 'envoyer_demandes';

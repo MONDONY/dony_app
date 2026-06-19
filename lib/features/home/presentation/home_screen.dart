@@ -591,6 +591,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   void _onTravelerCardTap(BuildContext context, AnnouncementModel a) {
+    final authState = context.read<AuthBloc>().state;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
+    final isOwn = currentUserId != null && a.travelerId == currentUserId;
+    if (isOwn) {
+      unawaited(() async {
+        final changed = await context.push<bool>(
+          '/announcements/${a.id}/trip',
+          extra: a,
+        );
+        if ((changed ?? false) && mounted) {
+          _dispatchSearch();
+        }
+      }());
+      return;
+    }
     final bidState = context.read<BidBloc>().state;
     final existingBid = bidState.activeBidsByAnnouncement()[a.id];
     if (existingBid != null) {
@@ -1646,7 +1663,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         isOwnAnnouncement: isOwn,
                                         existingBidStatus: existingBid?.status,
                                         onTap: isOwn
-                                            ? null
+                                            ? () async {
+                                                final changed = await context
+                                                    .push<bool>(
+                                                      '/announcements/${a.id}/trip',
+                                                      extra: a,
+                                                    );
+                                                if ((changed ?? false) &&
+                                                    mounted) {
+                                                  _dispatchSearch();
+                                                }
+                                              }
                                             : existingBid != null
                                             ? () async {
                                                 await context.push(
@@ -1879,7 +1906,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   distanceBadge: badge,
                                   existingBidStatus: existingBid?.status,
                                   onTap: isOwn
-                                      ? null
+                                      ? () async {
+                                          final changed = await context
+                                              .push<bool>(
+                                                '/announcements/${a.id}/trip',
+                                                extra: a,
+                                              );
+                                          if ((changed ?? false) &&
+                                              context.mounted) {
+                                            _dispatchSearch();
+                                          }
+                                        }
                                       : existingBid != null
                                       ? () async {
                                           await context.push(

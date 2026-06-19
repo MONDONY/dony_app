@@ -83,6 +83,14 @@ class TravelerCard extends StatelessWidget {
     final hasExistingBid = existingBidStatus != null;
     final bidStyle = _bidStyle(cs);
 
+    // Bordure : un bid existant prime ; sinon, une annonce dont l'expéditeur
+    // courant est le voyageur (« Votre trajet ») est surlignée en primaire pour
+    // signaler qu'elle est cliquable (ouvre l'écran détail propriétaire).
+    final Color borderColor = hasExistingBid
+        ? bidStyle.border
+        : (isOwnAnnouncement ? cs.primary : cs.outline);
+    final double borderWidth = (hasExistingBid || isOwnAnnouncement) ? 1.5 : 1;
+
     // Préfère le drapeau résolu par le backend (n'importe quel pays), retombe
     // sur la map hardcodée locale, puis null (point bleu via _FlagEndpoint).
     final depFlag =
@@ -101,8 +109,8 @@ class TravelerCard extends StatelessWidget {
           color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
           border: Border.all(
-            color: hasExistingBid ? bidStyle.border : cs.outline,
-            width: hasExistingBid ? 1.5 : 1,
+            color: borderColor,
+            width: borderWidth,
           ),
           boxShadow: const [
             BoxShadow(
@@ -136,6 +144,7 @@ class TravelerCard extends StatelessWidget {
               arrivalCity: announcement.arrivalCity,
               depFlag: depFlag,
               arrFlag: arrFlag,
+              showChevron: isOwnAnnouncement,
             ),
             const SizedBox(height: DonySpacing.xs),
             Row(
@@ -224,15 +233,15 @@ class TravelerCard extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
+                if (isOwnAnnouncement) ...[
+                  const Spacer(),
+                  const _OwnTripPill(),
+                ],
               ],
             ),
             if (categories.isNotEmpty) ...[
               const SizedBox(height: DonySpacing.sm),
               _CategoryChips(categories: categories, maxVisible: _maxVisibleChips),
-            ],
-            if (isOwnAnnouncement) ...[
-              const SizedBox(height: DonySpacing.sm),
-              Text('Votre trajet', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
             ],
           ],
         ),
@@ -293,12 +302,17 @@ class _RouteHeader extends StatelessWidget {
     required this.arrivalCity,
     required this.depFlag,
     required this.arrFlag,
+    this.showChevron = false,
   });
 
   final String departureCity;
   final String arrivalCity;
   final String? depFlag;
   final String? arrFlag;
+
+  /// Affiche un chevron `>` après le drapeau d'arrivée pour signaler que la
+  /// carte est cliquable (cas « Votre trajet »).
+  final bool showChevron;
 
   @override
   Widget build(BuildContext context) {
@@ -332,6 +346,10 @@ class _RouteHeader extends StatelessWidget {
         ),
         const SizedBox(width: DonySpacing.xs),
         _FlagEndpoint(flag: arrFlag),
+        if (showChevron) ...[
+          const SizedBox(width: DonySpacing.xs),
+          DonyIcon('chevron-right', size: 18, color: cs.primary),
+        ],
       ],
     );
   }
@@ -440,6 +458,50 @@ class _ExistingBidChip extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
               overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pill « Votre trajet » : badge primaire plein affiché à droite de la ligne
+/// capacité (kg) sur les annonces dont l'expéditeur courant est le voyageur.
+class _OwnTripPill extends StatelessWidget {
+  const _OwnTripPill();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('own-trip-pill'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: cs.onPrimary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: DonySpacing.xxs),
+          Text(
+            'Votre trajet',
+            style: tt.labelSmall?.copyWith(
+              color: cs.onPrimary,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
