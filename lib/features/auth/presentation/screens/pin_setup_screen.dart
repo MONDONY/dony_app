@@ -137,9 +137,11 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                   alignment: Alignment.centerRight,
                   child: DonyStepPill(current: 3, total: 3, label: 'Code PIN'),
                 ),
-                // Zone haute scrollable : centrée quand il y a de la place,
-                // scrolle quand l'écran est trop court (petit device / gros
-                // text scale) pour ne jamais pousser le keypad hors écran.
+                // Zone haute scrollable : mascotte + titre uniquement
+                // (sacrifiables si l'écran est court). Le step indicator et
+                // surtout les points du PIN restent ÉPINGLÉS au-dessus du
+                // keypad — ils sont le retour visuel de la saisie et ne doivent
+                // jamais passer sous le pli (sinon le champ semble absent).
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) => SingleChildScrollView(
@@ -151,16 +153,17 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _buildHeader(cs, tt),
-                            const SizedBox(height: DonySpacing.xxl),
+                            const SizedBox(height: DonySpacing.xl),
                             _buildStepIndicator(cs),
-                            const SizedBox(height: DonySpacing.xxl),
-                            _buildPinDots(cs),
                           ],
                         ),
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: DonySpacing.xl),
+                _buildPinDots(cs),
+                const SizedBox(height: DonySpacing.xl),
                 DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
                 SizedBox(height: DonySpacing.xxl + bottom),
               ],

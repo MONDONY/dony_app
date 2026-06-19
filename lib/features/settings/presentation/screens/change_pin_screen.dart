@@ -151,31 +151,33 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
                             ),
                             const SizedBox(height: DonySpacing.lg),
                             _buildStepIndicator(cs),
-                            const SizedBox(height: DonySpacing.xxl),
-                            _buildPinDots(cs),
-                            AnimatedSize(
-                              duration: const Duration(milliseconds: 200),
-                              child: _hasError
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: DonySpacing.md,
-                                      ),
-                                      child: Text(
-                                        _errorMessage,
-                                        style: tt.bodySmall?.copyWith(
-                                          color: cs.error,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ).animate().fadeIn(duration: 200.ms),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
                 ),
+                // Points du PIN + message d'erreur épinglés au-dessus du keypad
+                // (retour visuel de la saisie, toujours visible — jamais sous le
+                // pli sur petit écran).
+                const SizedBox(height: DonySpacing.xl),
+                _buildPinDots(cs),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  child: _hasError
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: DonySpacing.md),
+                          child: Text(
+                            _errorMessage,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.error,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ).animate().fadeIn(duration: 200.ms),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(height: DonySpacing.xl),
                 DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
                 SizedBox(height: DonySpacing.xxl + bottom),
               ],
