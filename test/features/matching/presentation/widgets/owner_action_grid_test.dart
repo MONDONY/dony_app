@@ -3,7 +3,11 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,12 +21,15 @@ class _MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
 
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
 // ── Fixture ───────────────────────────────────────────────────────────────────
 
 AnnouncementModel _makeAnnouncement({
   String status = 'ACTIVE',
   int? bidsCount,
   int confirmedParcelCount = 0,
+  int pendingBidCount = 0,
 }) =>
     AnnouncementModel(
       id: 'ann-001',
@@ -36,8 +43,21 @@ AnnouncementModel _makeAnnouncement({
       status: status,
       bidsCount: bidsCount ?? 0,
       confirmedParcelCount: confirmedParcelCount,
+      pendingBidCount: pendingBidCount,
       createdAt: DateTime(2026, 6),
       updatedAt: DateTime(2026, 6),
+    );
+
+BidModel _makeBid({required String status, String id = 'bid-1'}) => BidModel(
+      id: id,
+      announcementId: 'ann-001',
+      senderId: 'sender-1',
+      senderName: 'Moussa Traoré',
+      weightKg: 3,
+      contentCategory: 'Vêtements',
+      status: status,
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
     );
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
@@ -45,6 +65,7 @@ AnnouncementModel _makeAnnouncement({
 Future<GoRouter> _pump(
   WidgetTester tester, {
   required _MockAnnouncementBloc annBloc,
+  required _MockBidBloc bidBloc,
   required AnnouncementModel a,
   required bool isOwner,
 }) async {
@@ -59,8 +80,11 @@ Future<GoRouter> _pump(
     routes: [
       GoRoute(
         path: '/',
-        builder: (ctx, _) => BlocProvider<AnnouncementBloc>.value(
-          value: annBloc,
+        builder: (ctx, _) => MultiBlocProvider(
+          providers: [
+            BlocProvider<AnnouncementBloc>.value(value: annBloc),
+            BlocProvider<BidBloc>.value(value: bidBloc),
+          ],
           child: SingleChildScrollView(
             child: OwnerActionGrid(
               a: a,
@@ -73,6 +97,10 @@ Future<GoRouter> _pump(
       GoRoute(
         path: '/announcements/:id/bids',
         builder: (ctx, _) => const Scaffold(body: Text('BIDS_SCREEN')),
+      ),
+      GoRoute(
+        path: '/announcements/:id/bids/pending',
+        builder: (ctx, _) => const Scaffold(body: Text('PENDING_SCREEN')),
       ),
     ],
   );
@@ -88,20 +116,26 @@ Future<GoRouter> _pump(
 
 void main() {
   late _MockAnnouncementBloc annBloc;
+  late _MockBidBloc bidBloc;
 
   setUp(() {
     annBloc = _MockAnnouncementBloc();
     when(() => annBloc.state)
         .thenReturn(AnnouncementDetailLoaded(_makeAnnouncement()));
+    bidBloc = _MockBidBloc();
+    when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
   });
 
-  tearDown(() => annBloc.close());
+  tearDown(() {
+    annBloc.close();
+    bidBloc.close();
+  });
 
   testWidgets('(a) ACTIVE bidsCount=0 → Demandes, Colis, Modifier actif, Supprimer',
       (tester) async {
     final a = _makeAnnouncement(bidsCount: 0);
 
-    await _pump(tester, annBloc: annBloc, a: a, isOwner: true);
+    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
 
     expect(find.text('Demandes'), findsOneWidget);
     expect(find.text('Colis'), findsOneWidget);
@@ -118,7 +152,7 @@ void main() {
       (tester) async {
     final a = _makeAnnouncement(bidsCount: 2);
 
-    await _pump(tester, annBloc: annBloc, a: a, isOwner: true);
+    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
 
     // Modifier désactivé : tooltip présent + tuile sous Opacity 0.4.
     expect(
@@ -142,7 +176,7 @@ void main() {
       (tester) async {
     final a = _makeAnnouncement();
 
-    await _pump(tester, annBloc: annBloc, a: a, isOwner: false);
+    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: false);
 
     expect(find.text('Demandes'), findsNothing);
     expect(find.text('Colis'), findsNothing);
@@ -155,22 +189,52 @@ void main() {
       (tester) async {
     final a = _makeAnnouncement(status: 'CANCELLED', bidsCount: 3);
 
-    await _pump(tester, annBloc: annBloc, a: a, isOwner: true);
+    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
 
     expect(find.text('Supprimer'), findsOneWidget);
     expect(find.text('Demandes'), findsNothing); // non ACTIVE
     expect(find.text('Annuler'), findsNothing);
   });
 
-  testWidgets('tap Demandes → navigue vers /announcements/:id/bids',
+  testWidgets(
+      'tap Demandes sans demande en attente → liste /announcements/:id/bids',
       (tester) async {
     final a = _makeAnnouncement(bidsCount: 0);
 
-    await _pump(tester, annBloc: annBloc, a: a, isOwner: true);
+    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
 
     await tester.tap(find.text('Demandes'));
     await tester.pumpAndSettle();
 
     expect(find.text('BIDS_SCREEN'), findsOneWidget);
+  });
+
+  testWidgets(
+      'tap Demandes avec une demande en attente (BidBloc) → écran « À traiter »',
+      (tester) async {
+    final a = _makeAnnouncement(bidsCount: 1);
+    when(() => bidBloc.state)
+        .thenReturn(BidListLoaded([_makeBid(status: 'PENDING')]));
+
+    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
+
+    await tester.tap(find.text('Demandes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PENDING_SCREEN'), findsOneWidget);
+  });
+
+  testWidgets(
+      'tap Demandes : repli sur pendingBidCount quand les bids ne sont pas chargés',
+      (tester) async {
+    final a = _makeAnnouncement(bidsCount: 2, pendingBidCount: 2);
+    when(() => bidBloc.state).thenReturn(BidLoading());
+
+    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
+
+    await tester.tap(find.text('Demandes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PENDING_SCREEN'), findsOneWidget);
   });
 }

@@ -3,6 +3,9 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +16,8 @@ import 'package:go_router/go_router.dart';
 ///
 /// Grille = source de vérité du gating propriétaire (Demandes / Colis /
 /// Modifier / Supprimer) :
-/// - **Demandes** (si ACTIVE) → liste des offres.
+/// - **Demandes** (si ACTIVE) → écran « À traiter » s'il reste des demandes
+///   en attente, sinon la liste complète des offres.
 /// - **Colis** → scroll vers la section colis embarqués.
 /// - **Modifier** → édition (uniquement si 0 demande, sinon désactivé).
 /// - **Supprimer** (si supprimable) ou **Annuler** (si ACTIVE non supprimable).
@@ -61,7 +65,19 @@ class OwnerActionGrid extends StatelessWidget {
           label: 'Demandes',
           accent: cs.primary,
           badgeCount: a.bidsCount ?? 0,
-          onTap: () => context.push('/announcements/${a.id}/bids'),
+          onTap: () {
+            // Demandes en attente connues : via le BidBloc (déjà chargé pour la
+            // section colis) si disponible, sinon le compteur du modèle.
+            final bidState = context.read<BidBloc>().state;
+            final hasPending = bidState is BidListLoaded
+                ? bidState.bids.any(isPendingBid)
+                : a.pendingBidCount > 0;
+            context.push(
+              hasPending
+                  ? '/announcements/${a.id}/bids/pending'
+                  : '/announcements/${a.id}/bids',
+            );
+          },
         ),
       // ── Colis (toujours) ──
       _ActionTile(

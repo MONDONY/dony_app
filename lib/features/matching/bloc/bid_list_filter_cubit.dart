@@ -42,6 +42,12 @@ bool isActiveBid(BidModel bid) => kActiveBidStatuses.contains(bid.status);
 bool isClosedBid(BidModel bid) =>
     kClosedBidStatuses.contains(bid.status) && !_isAutoCancelled(bid);
 
+/// `true` si le bid est une demande en attente de traitement par le voyageur :
+/// `PENDING` (cash / Mobile Money) ou `PAYMENT_ESCROWED` (carte en séquestre).
+/// Cohérent avec l'écran « À traiter » (PendingBidsScreen).
+bool isPendingBid(BidModel bid) =>
+    bid.status == 'PENDING' || bid.status == 'PAYMENT_ESCROWED';
+
 /// `true` si le bid correspond à la requête (nom de l'expéditeur ou n° de suivi).
 bool bidMatchesQuery(BidModel bid, String query) {
   final q = normalizeSearch(query.trim());
