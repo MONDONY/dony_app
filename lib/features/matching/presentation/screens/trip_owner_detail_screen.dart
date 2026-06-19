@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
+import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -124,8 +125,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                     isOwner: isOwner,
                     colisSectionKey: _colisKey,
                   ),
-                  // TripParcelsSection (Task 5) sera insérée ici, sous la grille
-                  // d'actions, en utilisant _colisKey.
+                  const SizedBox(height: DonySpacing.lg),
+                  KeyedSubtree(
+                    key: _colisKey,
+                    child: const TripParcelsSection(),
+                  ),
                 ],
               ),
             );
