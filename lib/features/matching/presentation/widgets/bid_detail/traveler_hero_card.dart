@@ -26,7 +26,22 @@ class TravelerHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ── Priorité 1 : fenêtre dépassée ─────────────────────────────────────
+    // ── Priorité 1 : absence déjà signalée (en attente / contestée) ───────
+    // Le bid reste 'ACCEPTED' tant que l'expéditeur n'a pas confirmé/contesté
+    // et que le délai n'est pas expiré. Sans ce check, on ré-afficherait
+    // « Signaler l'absence » alors que le signalement est déjà fait.
+    final noShowStatus = bid.cancellationNoShowStatus;
+    if (noShowStatus == 'PENDING_CONFIRMATION' || noShowStatus == 'CONTESTED') {
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: _NoShowReportedHero(
+          contested: noShowStatus == 'CONTESTED',
+          key: ValueKey('TRAVELER_NOSHOW_$noShowStatus${bid.id}'),
+        ),
+      );
+    }
+
+    // ── Priorité 2 : fenêtre dépassée ─────────────────────────────────────
     final windowEnd = bid.handoverWindowEnd;
     if (bid.status == 'ACCEPTED' &&
         windowEnd != null &&
@@ -376,5 +391,26 @@ class _WindowExpiredHero extends StatelessWidget {
       return;
     }
     context.read<CancellationBloc>().add(NoShowReportRequested(bid.id));
+  }
+}
+
+// ── Hero : absence déjà signalée (en attente / contestée) ─────────────────────
+
+class _NoShowReportedHero extends StatelessWidget {
+  const _NoShowReportedHero({super.key, required this.contested});
+
+  final bool contested;
+
+  @override
+  Widget build(BuildContext context) {
+    return _HeroShell(
+      variant: TravelerHeroVariant.wait,
+      title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
+      subtitle: contested
+          ? "L'expéditeur conteste votre signalement. Notre équipe examine la "
+              'demande et vous tiendra informé.'
+          : "Signalement envoyé. L'expéditeur a 48 h pour confirmer ou "
+              'contester. Sans réponse, le bid sera annulé automatiquement.',
+    );
   }
 }
