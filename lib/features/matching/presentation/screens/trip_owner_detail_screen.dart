@@ -5,10 +5,14 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
+import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -41,6 +45,10 @@ class TripOwnerDetailScreen extends StatefulWidget {
 class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// Clé du [RepaintBoundary] enveloppant l'écran — capture d'écran du bouton bug.
   final GlobalKey _boundaryKey = GlobalKey();
+
+  /// Clé de la section colis embarqués — cible du scroll depuis la grille
+  /// d'actions (tuile « Colis »). Partagée avec la section colis (Task 5).
+  final GlobalKey _colisKey = GlobalKey();
 
   @override
   void initState() {
@@ -86,11 +94,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               if (context.mounted) {
                 context.pop(true);
               }
+            } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
+              _onDeleteBlocked(context, state.announcementId);
             } else if (state is AnnouncementError) {
               ErrorPresenter.show(context, state.error);
             }
-            // TODO(dony): Task 4 — gérer AnnouncementDeleteBlockedByAcceptedBid
-            // (dialog → CancellationBottomSheet) dans la grille d'actions.
           },
           builder: (context, state) {
             final a =
@@ -98,6 +106,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
             if (a == null) {
               return Center(child: CircularProgressIndicator(color: cs.primary));
             }
+            final isOwner = _isOwner(context, a);
             return SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -109,8 +118,14 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AnnouncementDetailBody(a: a),
-                  // OwnerActionGrid (Task 4) et TripParcelsSection (Task 5)
-                  // seront insérés ici ultérieurement.
+                  const SizedBox(height: DonySpacing.lg),
+                  OwnerActionGrid(
+                    a: a,
+                    isOwner: isOwner,
+                    colisSectionKey: _colisKey,
+                  ),
+                  // TripParcelsSection (Task 5) sera insérée ici, sous la grille
+                  // d'actions, en utilisant _colisKey.
                 ],
               ),
             );
@@ -118,5 +133,43 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
         ),
       ),
     );
+  }
+
+  /// Détermine si l'utilisateur courant est le voyageur propriétaire du trajet.
+  ///
+  /// Lit l'`AuthBloc` global (fourni par l'app, instance unique). En l'absence
+  /// d'utilisateur authentifié — ou si le provider n'est pas dans l'arbre —
+  /// considère que ce n'est pas le propriétaire (sécurité non-propriétaire).
+  bool _isOwner(BuildContext context, AnnouncementModel a) {
+    AuthState authState;
+    try {
+      authState = context.read<AuthBloc>().state;
+    } catch (_) {
+      return false;
+    }
+    final currentUserId =
+        authState is AuthAuthenticated ? authState.user.id : null;
+    return currentUserId != null && a.travelerId == currentUserId;
+  }
+
+  /// Suppression bloquée par un colis déjà accepté — propose l'annulation du
+  /// voyage (wording miroir du `announcement_detail_bottom_sheet`).
+  Future<void> _onDeleteBlocked(
+    BuildContext context,
+    String announcementId,
+  ) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Suppression impossible',
+      message:
+          "Un colis est déjà accepté sur ce trajet. Pour le retirer, vous devez d'abord annuler le voyage : l'expéditeur sera remboursé automatiquement.",
+      confirmLabel: 'Annuler le voyage',
+      cancelLabel: 'Fermer',
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'calendar-x',
+    );
+    if (confirmed == true && context.mounted) {
+      await CancellationBottomSheet.show(context, announcementId: announcementId);
+    }
   }
 }
