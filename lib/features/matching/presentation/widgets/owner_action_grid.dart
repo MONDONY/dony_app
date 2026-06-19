@@ -16,9 +16,10 @@ import 'package:go_router/go_router.dart';
 ///
 /// Grille = source de vérité du gating propriétaire (Demandes / Colis /
 /// Modifier / Supprimer) :
-/// - **Demandes** (si ACTIVE) → écran « À traiter » s'il reste des demandes
-///   en attente, sinon la liste complète des offres.
-/// - **Colis** → scroll vers la section colis embarqués.
+/// - **Demandes** → écran « À traiter » (PendingBidsScreen). Désactivé s'il n'y
+///   a aucune demande en attente.
+/// - **Colis** → écran des colis (BidListScreen). Désactivé s'il n'y a aucun
+///   colis embarqué.
 /// - **Modifier** → édition (uniquement si 0 demande, sinon désactivé).
 /// - **Supprimer** (si supprimable) ou **Annuler** (si ACTIVE non supprimable).
 class OwnerActionGrid extends StatelessWidget {
@@ -26,7 +27,6 @@ class OwnerActionGrid extends StatelessWidget {
     super.key,
     required this.a,
     required this.isOwner,
-    required this.colisSectionKey,
   });
 
   /// Trajet affiché.
@@ -34,9 +34,6 @@ class OwnerActionGrid extends StatelessWidget {
 
   /// `true` si l'utilisateur courant est le voyageur propriétaire.
   final bool isOwner;
-
-  /// Clé de la section colis — cible du scroll de la tuile « Colis ».
-  final GlobalKey colisSectionKey;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +44,22 @@ class OwnerActionGrid extends StatelessWidget {
 
     final cs = Theme.of(context).colorScheme;
 
-    // Calculs identiques au bottom sheet (source de vérité du gating).
+    // Compteurs « demandes à traiter » et « colis embarqués » : source de
+    // vérité = BidBloc (chargé pour la section colis) ; repli sur le modèle
+    // tant que la liste n'a pas répondu. `watch` → réactive les tuiles dès que
+    // les bids arrivent.
+    final bidState = context.watch<BidBloc>().state;
+    final loadedBids = bidState is BidListLoaded ? bidState.bids : null;
+    final pendingCount = loadedBids != null
+        ? loadedBids.where(isPendingBid).length
+        : a.pendingBidCount;
+    final colisCount = loadedBids != null
+        ? loadedBids.where(isAcceptedTabBid).length
+        : a.confirmedParcelCount;
+    final hasPending = pendingCount > 0;
+    final hasColis = colisCount > 0;
+
+    // Gating édition / suppression (inchangé).
     final canEdit = a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0;
     final isCancelled = a.status == 'CANCELLED';
     final canDelete =
@@ -58,72 +70,49 @@ class OwnerActionGrid extends StatelessWidget {
     // les demi-tuiles vides (ex. trajet COMPLETED/FULL n'a ni Demandes ni
     // Supprimer → la grille se réduit proprement aux tuiles réelles).
     final tiles = <Widget>[
-      // ── Demandes (uniquement si ACTIVE) ──
-      if (isActive)
-        _ActionTile(
-          iconAsset: 'package',
-          label: 'Demandes',
-          accent: cs.primary,
-          badgeCount: a.bidsCount ?? 0,
-          onTap: () {
-            // Demandes en attente connues : via le BidBloc (déjà chargé pour la
-            // section colis) si disponible, sinon le compteur du modèle.
-            final bidState = context.read<BidBloc>().state;
-            final hasPending = bidState is BidListLoaded
-                ? bidState.bids.any(isPendingBid)
-                : a.pendingBidCount > 0;
-            context.push(
-              hasPending
-                  ? '/announcements/${a.id}/bids/pending'
-                  : '/announcements/${a.id}/bids',
-            );
-          },
-        ),
-      // ── Colis (toujours) ──
-      _ActionTile(
+      // ── Demandes → écran « À traiter » ; désactivé si rien en attente ──
+      _tile(
+        iconAsset: 'package',
+        label: 'Demandes',
+        accent: cs.primary,
+        badgeCount: pendingCount,
+        onTap: hasPending
+            ? () => context.push('/announcements/${a.id}/bids/pending')
+            : null,
+        disabledMessage: 'Aucune demande à traiter',
+      ),
+      // ── Colis → écran des colis ; désactivé si aucun colis embarqué ──
+      _tile(
         // `inbox` = convention « colis » de la feature matching (pas de `box.svg`).
         iconAsset: 'inbox',
         label: 'Colis',
         accent: cs.primary,
         badgeCount: a.confirmedParcelCount,
-        onTap: () {
-          final ctx = colisSectionKey.currentContext;
-          if (ctx != null) {
-            Scrollable.ensureVisible(
-              ctx,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          }
-        },
+        onTap: hasColis
+            ? () => context.push('/announcements/${a.id}/bids')
+            : null,
+        disabledMessage: 'Aucun colis embarqué',
       ),
-      // ── Modifier (désactivée si une demande existe) ──
-      if (canEdit)
-        _ActionTile(
-          iconAsset: 'square-pen',
-          label: 'Modifier',
-          accent: cs.onSurface,
-          onTap: () async {
-            final bloc = context.read<AnnouncementBloc>();
-            await CreateAnnouncementBottomSheet.show(context, announcement: a);
-            bloc.add(AnnouncementDetailRequested(a.id));
-          },
-        )
-      else
-        Tooltip(
-          message: 'Modifiable tant qu\'aucune demande',
-          child: Opacity(
-            opacity: 0.4,
-            child: _ActionTile(
-              iconAsset: 'square-pen',
-              label: 'Modifier',
-              accent: cs.onSurface,
-            ),
-          ),
-        ),
+      // ── Modifier (désactivée tant qu'une demande existe) ──
+      _tile(
+        iconAsset: 'square-pen',
+        label: 'Modifier',
+        accent: cs.onSurface,
+        onTap: canEdit
+            ? () async {
+                final bloc = context.read<AnnouncementBloc>();
+                await CreateAnnouncementBottomSheet.show(
+                  context,
+                  announcement: a,
+                );
+                bloc.add(AnnouncementDetailRequested(a.id));
+              }
+            : null,
+        disabledMessage: 'Modifiable tant qu\'aucune demande',
+      ),
       // ── Supprimer (si supprimable) ou Annuler (si ACTIVE non supprimable) ──
       if (canDelete)
-        _ActionTile(
+        _tile(
           iconAsset: 'trash-2',
           label: 'Supprimer',
           accent: cs.error,
@@ -146,7 +135,7 @@ class OwnerActionGrid extends StatelessWidget {
           },
         )
       else if (isActive)
-        _ActionTile(
+        _tile(
           iconAsset: 'circle-x',
           label: 'Annuler',
           accent: cs.error,
@@ -177,6 +166,39 @@ class OwnerActionGrid extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Construit une tuile d'action. Quand [onTap] est `null` et [disabledMessage]
+/// fourni, la tuile est grisée (opacity 0.4) + tooltip et n'est plus tappable.
+Widget _tile({
+  required String iconAsset,
+  required String label,
+  required Color accent,
+  VoidCallback? onTap,
+  int badgeCount = 0,
+  String? disabledMessage,
+}) {
+  if (onTap == null && disabledMessage != null) {
+    return Tooltip(
+      message: disabledMessage,
+      child: Opacity(
+        opacity: 0.4,
+        child: _ActionTile(
+          iconAsset: iconAsset,
+          label: label,
+          accent: accent,
+          badgeCount: badgeCount,
+        ),
+      ),
+    );
+  }
+  return _ActionTile(
+    iconAsset: iconAsset,
+    label: label,
+    accent: accent,
+    badgeCount: badgeCount,
+    onTap: onTap,
+  );
 }
 
 /// Tuile d'action : carte tappable avec icône, label et badge compteur optionnel.

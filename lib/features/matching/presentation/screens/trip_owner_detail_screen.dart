@@ -46,10 +46,6 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// Clé du [RepaintBoundary] enveloppant l'écran — capture d'écran du bouton bug.
   final GlobalKey _boundaryKey = GlobalKey();
 
-  /// Clé de la section colis embarqués — cible du scroll depuis la grille
-  /// d'actions (tuile « Colis »). Partagée avec la section colis (Task 5).
-  final GlobalKey _colisKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
@@ -127,13 +123,9 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   OwnerActionGrid(
                     a: a,
                     isOwner: isOwner,
-                    colisSectionKey: _colisKey,
                   ),
                   const SizedBox(height: DonySpacing.lg),
-                  KeyedSubtree(
-                    key: _colisKey,
-                    child: const TripParcelsSection(),
-                  ),
+                  const TripParcelsSection(),
                 ],
               ),
             );

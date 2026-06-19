@@ -23,7 +23,7 @@ class _MockAnnouncementBloc
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
-// ── Fixture ───────────────────────────────────────────────────────────────────
+// ── Fixtures ──────────────────────────────────────────────────────────────────
 
 AnnouncementModel _makeAnnouncement({
   String status = 'ACTIVE',
@@ -62,7 +62,7 @@ BidModel _makeBid({required String status, String id = 'bid-1'}) => BidModel(
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
 
-Future<GoRouter> _pump(
+Future<void> _pump(
   WidgetTester tester, {
   required _MockAnnouncementBloc annBloc,
   required _MockBidBloc bidBloc,
@@ -72,8 +72,6 @@ Future<GoRouter> _pump(
   tester.view.physicalSize = const Size(900, 1600);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
-
-  final colisKey = GlobalKey();
 
   final router = GoRouter(
     initialLocation: '/',
@@ -86,11 +84,7 @@ Future<GoRouter> _pump(
             BlocProvider<BidBloc>.value(value: bidBloc),
           ],
           child: SingleChildScrollView(
-            child: OwnerActionGrid(
-              a: a,
-              isOwner: isOwner,
-              colisSectionKey: colisKey,
-            ),
+            child: OwnerActionGrid(a: a, isOwner: isOwner),
           ),
         ),
       ),
@@ -109,7 +103,6 @@ Future<GoRouter> _pump(
     MaterialApp.router(routerConfig: router, theme: AppTheme.light),
   );
   await tester.pump(const Duration(milliseconds: 300));
-  return router;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -123,6 +116,7 @@ void main() {
     when(() => annBloc.state)
         .thenReturn(AnnouncementDetailLoaded(_makeAnnouncement()));
     bidBloc = _MockBidBloc();
+    // Par défaut : liste chargée vide → aucune demande, aucun colis.
     when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
   });
 
@@ -131,110 +125,126 @@ void main() {
     bidBloc.close();
   });
 
-  testWidgets('(a) ACTIVE bidsCount=0 → Demandes, Colis, Modifier actif, Supprimer',
-      (tester) async {
-    final a = _makeAnnouncement(bidsCount: 0);
+  // ── Gating Modifier / Supprimer / Annuler ──────────────────────────────────
 
-    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
-
-    expect(find.text('Demandes'), findsOneWidget);
-    expect(find.text('Colis'), findsOneWidget);
-    expect(find.text('Modifier'), findsOneWidget);
-    expect(find.text('Supprimer'), findsOneWidget);
-    // Annuler ne doit pas apparaître (la suppression est possible).
-    expect(find.text('Annuler'), findsNothing);
-    // Modifier actif → pas de Tooltip de désactivation.
-    expect(find.byType(Tooltip), findsNothing);
-  });
-
-  testWidgets(
-      '(b) ACTIVE bidsCount=2 → Modifier désactivé (tooltip+opacity), Annuler, badge 2',
-      (tester) async {
-    final a = _makeAnnouncement(bidsCount: 2);
-
-    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
-
-    // Modifier désactivé : tooltip présent + tuile sous Opacity 0.4.
-    expect(
-      find.byTooltip('Modifiable tant qu\'aucune demande'),
-      findsOneWidget,
-    );
-    final opacity = tester.widget<Opacity>(
-      find.ancestor(of: find.text('Modifier'), matching: find.byType(Opacity)),
-    );
-    expect(opacity.opacity, 0.4);
-
-    // Suppression impossible → tuile Annuler à la place de Supprimer.
-    expect(find.text('Annuler'), findsOneWidget);
-    expect(find.text('Supprimer'), findsNothing);
-
-    // Badge Demandes affiche bien « 2 ».
-    expect(find.text('2'), findsOneWidget);
-  });
-
-  testWidgets('(c) isOwner:false → SizedBox.shrink (aucune tuile)',
-      (tester) async {
-    final a = _makeAnnouncement();
-
-    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: false);
+  testWidgets('isOwner:false → SizedBox.shrink (aucune tuile)', (tester) async {
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(),
+        isOwner: false);
 
     expect(find.text('Demandes'), findsNothing);
     expect(find.text('Colis'), findsNothing);
     expect(find.text('Modifier'), findsNothing);
-    expect(find.text('Supprimer'), findsNothing);
     expect(find.byType(OwnerActionGrid), findsOneWidget);
   });
 
-  testWidgets('CANCELLED → Supprimer présent, pas de Demandes ni Annuler',
+  testWidgets('ACTIVE bidsCount=0 → Modifier actif + Supprimer (pas Annuler)',
       (tester) async {
-    final a = _makeAnnouncement(status: 'CANCELLED', bidsCount: 3);
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(bidsCount: 0),
+        isOwner: true);
 
-    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
-
+    expect(find.text('Modifier'), findsOneWidget);
     expect(find.text('Supprimer'), findsOneWidget);
-    expect(find.text('Demandes'), findsNothing); // non ACTIVE
     expect(find.text('Annuler'), findsNothing);
+    // Modifier actif → pas de tooltip de désactivation.
+    expect(find.byTooltip("Modifiable tant qu'aucune demande"), findsNothing);
   });
 
   testWidgets(
-      'tap Demandes sans demande en attente → liste /announcements/:id/bids',
+      'ACTIVE bidsCount=2 → Modifier désactivé + Annuler (pas Supprimer)',
       (tester) async {
-    final a = _makeAnnouncement(bidsCount: 0);
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(bidsCount: 2),
+        isOwner: true);
 
-    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
+    expect(find.byTooltip("Modifiable tant qu'aucune demande"), findsOneWidget);
+    expect(find.text('Annuler'), findsOneWidget);
+    expect(find.text('Supprimer'), findsNothing);
+  });
+
+  testWidgets('CANCELLED → Supprimer présent, pas d\'Annuler', (tester) async {
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(status: 'CANCELLED', bidsCount: 3),
+        isOwner: true);
+
+    expect(find.text('Supprimer'), findsOneWidget);
+    expect(find.text('Annuler'), findsNothing);
+  });
+
+  // ── Bouton Demandes → écran « À traiter » ──────────────────────────────────
+
+  testWidgets('Demandes actif (demande en attente) → écran À traiter',
+      (tester) async {
+    when(() => bidBloc.state)
+        .thenReturn(BidListLoaded([_makeBid(status: 'PENDING')]));
+
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(),
+        isOwner: true);
 
     await tester.tap(find.text('Demandes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PENDING_SCREEN'), findsOneWidget);
+  });
+
+  testWidgets('Demandes désactivé sans demande en attente (tap sans effet)',
+      (tester) async {
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(),
+        isOwner: true);
+
+    expect(find.byTooltip('Aucune demande à traiter'), findsOneWidget);
+
+    await tester.tap(find.text('Demandes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PENDING_SCREEN'), findsNothing);
+  });
+
+  // ── Bouton Colis → écran des colis ─────────────────────────────────────────
+
+  testWidgets('Colis actif (colis embarqué) → écran des colis', (tester) async {
+    when(() => bidBloc.state)
+        .thenReturn(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(),
+        isOwner: true);
+
+    await tester.tap(find.text('Colis'));
     await tester.pumpAndSettle();
 
     expect(find.text('BIDS_SCREEN'), findsOneWidget);
   });
 
-  testWidgets(
-      'tap Demandes avec une demande en attente (BidBloc) → écran « À traiter »',
-      (tester) async {
-    final a = _makeAnnouncement(bidsCount: 1);
-    when(() => bidBloc.state)
-        .thenReturn(BidListLoaded([_makeBid(status: 'PENDING')]));
+  testWidgets('Colis désactivé sans colis (tap sans effet)', (tester) async {
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        a: _makeAnnouncement(),
+        isOwner: true);
 
-    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
+    expect(find.byTooltip('Aucun colis embarqué'), findsOneWidget);
 
-    await tester.tap(find.text('Demandes'));
+    await tester.tap(find.text('Colis'));
     await tester.pumpAndSettle();
 
-    expect(find.text('PENDING_SCREEN'), findsOneWidget);
-  });
-
-  testWidgets(
-      'tap Demandes : repli sur pendingBidCount quand les bids ne sont pas chargés',
-      (tester) async {
-    final a = _makeAnnouncement(bidsCount: 2, pendingBidCount: 2);
-    when(() => bidBloc.state).thenReturn(BidLoading());
-
-    await _pump(tester, annBloc: annBloc, bidBloc: bidBloc, a: a, isOwner: true);
-
-    await tester.tap(find.text('Demandes'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('PENDING_SCREEN'), findsOneWidget);
+    expect(find.text('BIDS_SCREEN'), findsNothing);
   });
 }
