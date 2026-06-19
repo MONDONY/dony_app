@@ -226,22 +226,21 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                                     _buildLockIcon(state, cs, size: lockSize),
                                     SizedBox(height: vGapSm),
                                     _buildTitle(cs, logoSize: logoSize),
-                                    SizedBox(height: vGapLg),
-                                    _buildPinDots(state, cs),
-                                    if (state is LocalAuthPinRequired &&
-                                        state.attemptsLeft < 3)
-                                      _buildAttemptsWarning(
-                                        state.attemptsLeft,
-                                        cs,
-                                      ),
-                                    if (state is LocalAuthLocked)
-                                      _buildLockMessage(cs),
                                   ],
                                 ),
                               ),
                             ),
                           ),
                         ),
+                        // Points du PIN + bannières épinglés au-dessus du
+                        // keypad (retour visuel de la saisie, toujours visible).
+                        SizedBox(height: vGapLg),
+                        _buildPinDots(state, cs),
+                        if (state is LocalAuthPinRequired &&
+                            state.attemptsLeft < 3)
+                          _buildAttemptsWarning(state.attemptsLeft, cs),
+                        if (state is LocalAuthLocked) _buildLockMessage(cs),
+                        const SizedBox(height: DonySpacing.lg),
                         if (state is LocalAuthPinRequired)
                           DonyKeypad(
                             onDigit: _onDigit,
