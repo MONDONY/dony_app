@@ -111,6 +111,7 @@ import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
@@ -638,6 +639,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Package request marketplace
   getIt.registerLazySingleton<PackageRequestRepository>(
     () => PackageRequestRepository(getIt<ApiClient>()),
+  );
+  // Corridor alerts (alertes corridor voyageur)
+  getIt.registerLazySingleton<CorridorAlertRepository>(
+    () => CorridorAlertRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<NegotiationRepository>(
     () => NegotiationRepository(getIt<ApiClient>()),

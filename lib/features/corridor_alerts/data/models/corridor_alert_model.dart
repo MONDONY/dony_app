@@ -1,0 +1,127 @@
+import 'package:equatable/equatable.dart';
+
+/// Alerte corridor du voyageur (saved search). Mappe `CorridorAlertResponse`
+/// du backend (`GET /me/corridor-alerts`).
+class CorridorAlertModel extends Equatable {
+  const CorridorAlertModel({
+    required this.id,
+    required this.departureCity,
+    required this.arrivalCity,
+    this.departureCountryCode,
+    this.arrivalCountryCode,
+    this.dateFrom,
+    this.dateTo,
+    this.minWeightKg,
+    this.contentCategories = const [],
+    required this.active,
+    this.matchCount = 0,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String departureCity;
+  final String arrivalCity;
+  final String? departureCountryCode;
+  final String? arrivalCountryCode;
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+  final double? minWeightKg;
+  final List<String> contentCategories;
+  final bool active;
+  final int matchCount;
+  final DateTime createdAt;
+
+  factory CorridorAlertModel.fromJson(Map<String, dynamic> json) =>
+      CorridorAlertModel(
+        id: json['id'] as String,
+        departureCity: json['departureCity'] as String,
+        arrivalCity: json['arrivalCity'] as String,
+        departureCountryCode: json['departureCountryCode'] as String?,
+        arrivalCountryCode: json['arrivalCountryCode'] as String?,
+        dateFrom: json['dateFrom'] != null
+            ? DateTime.parse(json['dateFrom'] as String)
+            : null,
+        dateTo: json['dateTo'] != null
+            ? DateTime.parse(json['dateTo'] as String)
+            : null,
+        minWeightKg: (json['minWeightKg'] as num?)?.toDouble(),
+        contentCategories:
+            (json['contentCategories'] as List<dynamic>?)
+                    ?.map((e) => e as String)
+                    .toList() ??
+                const [],
+        active: json['active'] as bool? ?? true,
+        matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+      );
+
+  CorridorAlertModel copyWith({bool? active, int? matchCount}) =>
+      CorridorAlertModel(
+        id: id,
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureCountryCode: departureCountryCode,
+        arrivalCountryCode: arrivalCountryCode,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        minWeightKg: minWeightKg,
+        contentCategories: contentCategories,
+        active: active ?? this.active,
+        matchCount: matchCount ?? this.matchCount,
+        createdAt: createdAt,
+      );
+
+  @override
+  List<Object?> get props => [
+    id,
+    departureCity,
+    arrivalCity,
+    departureCountryCode,
+    arrivalCountryCode,
+    dateFrom,
+    dateTo,
+    minWeightKg,
+    contentCategories,
+    active,
+    matchCount,
+    createdAt,
+  ];
+}
+
+/// Payload de création/édition d'alerte (POST / PUT). Découple le bloc/sheet
+/// du format wire ; les optionnels nuls sont omis du body.
+class CorridorAlertDraft {
+  const CorridorAlertDraft({
+    required this.departureCity,
+    required this.arrivalCity,
+    this.departureCountryCode,
+    this.arrivalCountryCode,
+    this.dateFrom,
+    this.dateTo,
+    this.minWeightKg,
+    this.contentCategories = const [],
+  });
+
+  final String departureCity;
+  final String arrivalCity;
+  final String? departureCountryCode;
+  final String? arrivalCountryCode;
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+  final double? minWeightKg;
+  final List<String> contentCategories;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'departureCity': departureCity,
+    'arrivalCity': arrivalCity,
+    if (departureCountryCode != null)
+      'departureCountryCode': departureCountryCode,
+    if (arrivalCountryCode != null) 'arrivalCountryCode': arrivalCountryCode,
+    if (dateFrom != null) 'dateFrom': _date(dateFrom!),
+    if (dateTo != null) 'dateTo': _date(dateTo!),
+    if (minWeightKg != null) 'minWeightKg': minWeightKg,
+    if (contentCategories.isNotEmpty) 'contentCategories': contentCategories,
+  };
+
+  static String _date(DateTime d) => d.toIso8601String().substring(0, 10);
+}
