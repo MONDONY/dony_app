@@ -7,10 +7,17 @@ import 'package:go_router/go_router.dart';
 ///
 /// Affiche les 4 entrées voyageur en layout FLAT (pas de DonyCard/DonyListSection) :
 /// séparateurs thin directement sur le fond du scaffold.
+/// Si [isSender] vaut `true`, affiche 5 entrées — ajoute « Mes demandes de colis »
+/// entre « Colis sur mes trajets » et « Mes alertes corridor ».
 class MesTrajetsColisScreen extends StatelessWidget {
-  const MesTrajetsColisScreen({super.key, this.upcomingCount = 0});
+  const MesTrajetsColisScreen({
+    super.key,
+    this.upcomingCount = 0,
+    this.isSender = false,
+  });
 
   final int upcomingCount;
+  final bool isSender;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +44,12 @@ class MesTrajetsColisScreen extends StatelessWidget {
         label: 'Colis sur mes trajets',
         onTap: () => context.push('/package-requests/match'),
       ),
+      if (isSender)
+        _TileData(
+          iconAsset: 'package',
+          label: 'Mes demandes de colis',
+          onTap: () => context.push('/package-requests/me'),
+        ),
       _TileData(
         iconAsset: 'bell',
         label: 'Mes alertes corridor',

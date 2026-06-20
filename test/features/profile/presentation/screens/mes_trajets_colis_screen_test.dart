@@ -6,14 +6,14 @@ import 'package:go_router/go_router.dart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-Widget _buildHarness({int upcomingCount = 0}) {
+Widget _buildHarness({int upcomingCount = 0, bool isSender = false}) {
   final router = GoRouter(
     initialLocation: '/trajets-colis',
     routes: [
       GoRoute(
         path: '/trajets-colis',
         builder: (_, __) =>
-            MesTrajetsColisScreen(upcomingCount: upcomingCount),
+            MesTrajetsColisScreen(upcomingCount: upcomingCount, isSender: isSender),
       ),
       GoRoute(
         path: '/announcements',
@@ -24,6 +24,11 @@ Widget _buildHarness({int upcomingCount = 0}) {
         path: '/package-requests/match',
         builder: (_, __) =>
             const Scaffold(body: Text('COLIS_MATCH')),
+      ),
+      GoRoute(
+        path: '/package-requests/me',
+        builder: (_, __) =>
+            const Scaffold(body: Text('MES_DEMANDES')),
       ),
       GoRoute(
         path: '/corridor-alerts',
@@ -122,6 +127,39 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('TRIP_TEMPLATES'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'isSender:true inserts « Mes demandes de colis » between colis & alertes',
+      (tester) async {
+        await tester.pumpWidget(_buildHarness(isSender: true));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('Mes demandes de colis'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'isSender:false hides « Mes demandes de colis »',
+      (tester) async {
+        await tester.pumpWidget(_buildHarness(isSender: false));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('Mes demandes de colis'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'isSender:true — tapping "Mes demandes de colis" navigates to /package-requests/me',
+      (tester) async {
+        await tester.pumpWidget(_buildHarness(isSender: true));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+
+        await tester.tap(find.text('Mes demandes de colis'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('MES_DEMANDES'), findsOneWidget);
       },
     );
   });
