@@ -127,6 +127,10 @@ abstract final class AnalyticsEvents {
   // Trip matching (Colis sur mes trajets)
   static const tripMatchingViewed = 'trip_matching_viewed';
 
+  // Corridor alerts
+  static const corridorAlertToggled = 'corridor_alert_toggled';
+  static const corridorAlertDeleted = 'corridor_alert_deleted';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }

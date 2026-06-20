@@ -360,6 +360,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
 | `public_reviews_opened` | UserReviewsCubit — ouverture de la bottom sheet « tous les avis » (propriété `rating_count`) |
 | `trip_matching_viewed` | TripMatchingBloc._onLoad — chargement de la liste scorée « Colis sur mes trajets » (propriété `count`) |
+| `corridor_alert_toggled` | CorridorAlertListBloc._onToggle — actif/pause d'une alerte corridor (propriété `active`) |
+| `corridor_alert_deleted` | CorridorAlertListBloc._onDelete — suppression d'une alerte corridor |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---
