@@ -129,7 +129,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: DonySpacing.md),
                       itemBuilder: (lCtx, i) {
-                        final m = state.matches[i];
+                        final m = state.matches.packages[i];
                         return MatchingRequestCard(
                           key: ValueKey(m.id),
                           match: m,

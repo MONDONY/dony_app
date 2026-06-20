@@ -1,5 +1,8 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_matches.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 
 class CorridorAlertRepository {
@@ -7,9 +10,15 @@ class CorridorAlertRepository {
 
   final ApiClient _apiClient;
 
-  Future<List<CorridorAlertModel>> getMyAlerts() async {
-    final response =
-        await _apiClient.dio.get<List<dynamic>>('/me/corridor-alerts');
+  Future<List<CorridorAlertModel>> getMyAlerts({
+    AlertDirection? direction,
+  }) async {
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/me/corridor-alerts',
+      queryParameters: {
+        if (direction != null) 'direction': direction.wire,
+      },
+    );
     return (response.data ?? <dynamic>[])
         .map((e) => CorridorAlertModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -43,12 +52,29 @@ class CorridorAlertRepository {
     await _apiClient.dio.delete<void>('/me/corridor-alerts/$id');
   }
 
-  /// Colis OPEN matchant l'alerte (tap sur la carte).
-  Future<List<MatchingRequestModel>> getMatches(String id) async {
+  /// Matchs pour une alerte. Selon [direction], retourne soit une liste de
+  /// [MatchingRequestModel] (colis, direction TRAVELER_WANTS_PACKAGES) soit
+  /// une liste de [TripMatchModel] (trajets, direction SENDER_WANTS_TRIPS).
+  Future<CorridorAlertMatches> getMatches(
+    String id,
+    AlertDirection direction,
+  ) async {
     final response = await _apiClient.dio
         .get<List<dynamic>>('/me/corridor-alerts/$id/matches');
-    return (response.data ?? <dynamic>[])
-        .map((e) => MatchingRequestModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final raw = response.data ?? <dynamic>[];
+    if (direction == AlertDirection.senderWantsTrips) {
+      return CorridorAlertMatches(
+        direction: direction,
+        trips: raw
+            .map((e) => TripMatchModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+    }
+    return CorridorAlertMatches(
+      direction: direction,
+      packages: raw
+          .map((e) => MatchingRequestModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
   }
 }

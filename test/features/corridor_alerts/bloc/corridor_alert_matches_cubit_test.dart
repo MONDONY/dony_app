@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_matches.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,14 +41,20 @@ void main() {
         repo,
         analytics,
         alertId: 'alert-1',
+        direction: AlertDirection.travelerWantsPackages,
       );
 
   blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
     'load success with matches → loaded state',
     build: build,
     setUp: () {
-      when(() => repo.getMatches('alert-1'))
-          .thenAnswer((_) async => [_fakeMatch('m1'), _fakeMatch('m2')]);
+      when(() => repo.getMatches(
+            'alert-1',
+            AlertDirection.travelerWantsPackages,
+          )).thenAnswer((_) async => CorridorAlertMatches(
+            direction: AlertDirection.travelerWantsPackages,
+            packages: [_fakeMatch('m1'), _fakeMatch('m2')],
+          ));
     },
     act: (c) => c.load(),
     expect: () => [
@@ -54,7 +62,8 @@ void main() {
           status: CorridorAlertMatchesStatus.loading),
       isA<CorridorAlertMatchesState>()
           .having((s) => s.status, 'status', CorridorAlertMatchesStatus.loaded)
-          .having((s) => s.matches.length, 'matches length', 2),
+          .having(
+              (s) => s.matches.packages.length, 'packages length', 2),
     ],
   );
 
@@ -62,8 +71,12 @@ void main() {
     'load empty → empty state',
     build: build,
     setUp: () {
-      when(() => repo.getMatches('alert-1'))
-          .thenAnswer((_) async => []);
+      when(() => repo.getMatches(
+            'alert-1',
+            AlertDirection.travelerWantsPackages,
+          )).thenAnswer((_) async => const CorridorAlertMatches(
+            direction: AlertDirection.travelerWantsPackages,
+          ));
     },
     act: (c) => c.load(),
     expect: () => [
@@ -78,8 +91,10 @@ void main() {
     'load error → error state with message',
     build: build,
     setUp: () {
-      when(() => repo.getMatches('alert-1'))
-          .thenThrow(Exception('network error'));
+      when(() => repo.getMatches(
+            'alert-1',
+            AlertDirection.travelerWantsPackages,
+          )).thenThrow(Exception('network error'));
     },
     act: (c) => c.load(),
     expect: () => [

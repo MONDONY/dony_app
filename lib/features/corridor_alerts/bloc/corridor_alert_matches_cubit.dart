@@ -4,7 +4,8 @@ import 'package:bloc/bloc.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
-import 'package:dony/features/package_request/data/models/matching_request.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_matches.dart';
 import 'package:equatable/equatable.dart';
 
 enum CorridorAlertMatchesStatus { initial, loading, loaded, empty, error }
@@ -12,17 +13,19 @@ enum CorridorAlertMatchesStatus { initial, loading, loaded, empty, error }
 class CorridorAlertMatchesState extends Equatable {
   const CorridorAlertMatchesState({
     this.status = CorridorAlertMatchesStatus.initial,
-    this.matches = const [],
+    this.matches = const CorridorAlertMatches(
+      direction: AlertDirection.travelerWantsPackages,
+    ),
     this.errorMessage,
   });
 
   final CorridorAlertMatchesStatus status;
-  final List<MatchingRequestModel> matches;
+  final CorridorAlertMatches matches;
   final String? errorMessage;
 
   CorridorAlertMatchesState copyWith({
     CorridorAlertMatchesStatus? status,
-    List<MatchingRequestModel>? matches,
+    CorridorAlertMatches? matches,
     String? errorMessage,
   }) =>
       CorridorAlertMatchesState(
@@ -40,20 +43,22 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
     this._repository,
     this._analytics, {
     required this.alertId,
+    this.direction = AlertDirection.travelerWantsPackages,
   }) : super(const CorridorAlertMatchesState());
 
   final CorridorAlertRepository _repository;
   final AnalyticsService _analytics;
   final String alertId;
+  final AlertDirection direction;
 
   Future<void> load() async {
     emit(state.copyWith(status: CorridorAlertMatchesStatus.loading));
     try {
-      final matches = await _repository.getMatches(alertId);
+      final matches = await _repository.getMatches(alertId, direction);
       if (matches.isEmpty) {
         emit(state.copyWith(
           status: CorridorAlertMatchesStatus.empty,
-          matches: const [],
+          matches: CorridorAlertMatches(direction: direction),
         ));
       } else {
         emit(state.copyWith(
