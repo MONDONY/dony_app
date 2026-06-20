@@ -95,6 +95,50 @@ void main() {
   );
 
   blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'setDateWindow stores dateFrom and dateTo',
+    build: () => CorridorAlertFormCubit(repo, analytics),
+    act: (c) => c.setDateWindow(DateTime(2026, 7, 5), DateTime(2026, 7, 20)),
+    verify: (c) {
+      expect(c.state.dateFrom, DateTime(2026, 7, 5));
+      expect(c.state.dateTo, DateTime(2026, 7, 20));
+    },
+  );
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'clearDateWindow resets dateFrom and dateTo to null',
+    build: () {
+      final c = CorridorAlertFormCubit(repo, analytics);
+      c.setDateWindow(DateTime(2026, 7, 5), DateTime(2026, 7, 20));
+      return c;
+    },
+    act: (c) => c.clearDateWindow(),
+    verify: (c) {
+      expect(c.state.dateFrom, isNull);
+      expect(c.state.dateTo, isNull);
+    },
+  );
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'editing seeds dateFrom and dateTo from existing alert',
+    build: () {
+      final alert = CorridorAlertModel(
+        id: 'b1',
+        departureCity: 'Lyon',
+        arrivalCity: 'Dakar',
+        active: true,
+        createdAt: DateTime(2026, 6, 20),
+        dateFrom: DateTime(2026, 8, 10),
+        dateTo: DateTime(2026, 8, 25),
+      );
+      return CorridorAlertFormCubit(repo, analytics, editing: alert);
+    },
+    verify: (c) {
+      expect(c.state.dateFrom, DateTime(2026, 8, 10));
+      expect(c.state.dateTo, DateTime(2026, 8, 25));
+    },
+  );
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
     'submit error → status error',
     build: () {
       when(() => repo.create(any())).thenThrow(Exception('422'));

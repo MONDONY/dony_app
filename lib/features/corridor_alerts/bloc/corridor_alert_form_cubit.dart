@@ -115,8 +115,19 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
         arrivalCountryCode: countryCode,
       ));
 
-  void setDateWindow(DateTime? from, DateTime? to) =>
+  void setDateWindow(DateTime from, DateTime to) =>
       emit(state.copyWith(dateFrom: from, dateTo: to));
+
+  void clearDateWindow() => emit(CorridorAlertFormState(
+        departureCity: state.departureCity,
+        arrivalCity: state.arrivalCity,
+        departureCountryCode: state.departureCountryCode,
+        arrivalCountryCode: state.arrivalCountryCode,
+        minWeightKg: state.minWeightKg,
+        contentCategories: state.contentCategories,
+        status: state.status,
+        errorMessage: state.errorMessage,
+      ));
 
   void setMinWeight(double? kg) => emit(state.copyWith(minWeightKg: kg));
 
@@ -131,7 +142,9 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
   }
 
   Future<void> submit() async {
-    if (!state.isValid) return;
+    if (!state.isValid) {
+      return;
+    }
     emit(state.copyWith(status: CorridorAlertFormStatus.submitting));
     final draft = CorridorAlertDraft(
       departureCity: state.departureCity!.trim(),

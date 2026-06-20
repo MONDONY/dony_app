@@ -17,35 +17,26 @@ class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
 
 void main() {
-  late MockFormCubit cubit;
-  late MockCitySearchBloc cityBloc;
-
-  setUp(() {
-    cubit = MockFormCubit();
-    cityBloc = MockCitySearchBloc();
-    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
-    when(() => cubit.isEditing).thenReturn(false);
-
-    if (GetIt.I.isRegistered<CorridorAlertFormCubit>()) {
-      GetIt.I.unregister<CorridorAlertFormCubit>();
-    }
-    if (GetIt.I.isRegistered<CitySearchBloc>()) {
-      GetIt.I.unregister<CitySearchBloc>();
-    }
-
-    // Sheet resolves cubit via getIt with a factoryParam.
-    GetIt.I.registerFactoryParam<CorridorAlertFormCubit, dynamic, void>(
-        (editing, _) => cubit);
-    // Form body needs a CitySearchBloc per autocomplete field.
-    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
-  });
 
   tearDown(() => GetIt.I.reset());
 
+  // ---------------------------------------------------------------------------
+  // Existing tests
+  // ---------------------------------------------------------------------------
+
   testWidgets('submit button is disabled while corridor is invalid',
       (t) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(false);
     when(() => cubit.state)
         .thenReturn(const CorridorAlertFormState()); // invalid
+
+    GetIt.I.registerFactoryParam<CorridorAlertFormCubit, dynamic, void>(
+        (editing, _) => cubit);
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
     await t.pumpWidget(MaterialApp(
       theme: AppTheme.light,
       home: Builder(
@@ -73,11 +64,20 @@ void main() {
 
   testWidgets('submit button enabled when valid → calls submit()',
       (t) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(false);
     when(() => cubit.state).thenReturn(const CorridorAlertFormState(
       departureCity: 'Paris',
       arrivalCity: 'Bamako',
     ));
     when(() => cubit.submit()).thenAnswer((_) async {});
+
+    GetIt.I.registerFactoryParam<CorridorAlertFormCubit, dynamic, void>(
+        (editing, _) => cubit);
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
     await t.pumpWidget(MaterialApp(
       theme: AppTheme.light,
       home: Builder(
@@ -97,5 +97,125 @@ void main() {
     await t.tap(find.byKey(const Key('corridor-alert-submit')));
     await t.pump();
     verify(() => cubit.submit()).called(1);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Fix 1 — date-window field
+  // ---------------------------------------------------------------------------
+
+  testWidgets('date-window field renders in form with placeholder',
+      (t) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(false);
+    when(() => cubit.state).thenReturn(const CorridorAlertFormState());
+
+    GetIt.I.registerFactoryParam<CorridorAlertFormCubit, dynamic, void>(
+        (editing, _) => cubit);
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+    await t.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Builder(
+        builder: (ctx) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () => CorridorAlertFormSheet.show(ctx),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+
+    // The date-window container is present.
+    expect(find.byKey(const Key('corridor-alert-date-window')), findsOneWidget);
+    // Placeholder text shown when no dates set.
+    expect(find.text('Toute date'), findsOneWidget);
+    // No clear button when no dates are set.
+    expect(
+        find.byKey(const Key('corridor-alert-date-window-clear')), findsNothing);
+  });
+
+  testWidgets('edit mode prefills date window from cubit state', (t) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(true);
+    when(() => cubit.state).thenReturn(CorridorAlertFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateFrom: DateTime(2026, 7, 20),
+      dateTo: DateTime(2026, 7, 28),
+    ));
+
+    GetIt.I.registerFactoryParam<CorridorAlertFormCubit, dynamic, void>(
+        (editing, _) => cubit);
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+    await t.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Builder(
+        builder: (ctx) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () => CorridorAlertFormSheet.show(ctx),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+
+    // Formatted date range should appear (e.g. "20 juil → 30 juil").
+    expect(find.textContaining('juil'), findsWidgets);
+    // Clear button should be visible.
+    expect(find.byKey(const Key('corridor-alert-date-window-clear')),
+        findsOneWidget);
+    // Placeholder must NOT be present.
+    expect(find.text('Toute date'), findsNothing);
+  });
+
+  testWidgets('tapping clear button calls cubit.clearDateWindow()', (t) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(true);
+    when(() => cubit.state).thenReturn(CorridorAlertFormState(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      dateFrom: DateTime(2026, 7, 20),
+      dateTo: DateTime(2026, 7, 28),
+    ));
+    when(() => cubit.clearDateWindow()).thenReturn(null);
+
+    GetIt.I.registerFactoryParam<CorridorAlertFormCubit, dynamic, void>(
+        (editing, _) => cubit);
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+    await t.pumpWidget(MaterialApp(
+      theme: AppTheme.light,
+      home: Builder(
+        builder: (ctx) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () => CorridorAlertFormSheet.show(ctx),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.byKey(const Key('corridor-alert-date-window-clear')));
+    await t.pump();
+    verify(() => cubit.clearDateWindow()).called(1);
   });
 }
