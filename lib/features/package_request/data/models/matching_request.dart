@@ -6,10 +6,10 @@ import 'package:equatable/equatable.dart';
 class MatchingRequestModel extends Equatable {
   const MatchingRequestModel({
     required this.id,
-    required this.tripId,
-    required this.tripCorridor,
-    required this.tripDepartureDate,
-    required this.tripAvailableKg,
+    this.tripId,
+    this.tripCorridor,
+    this.tripDepartureDate,
+    this.tripAvailableKg,
     required this.senderId,
     required this.senderName,
     required this.senderInitials,
@@ -25,10 +25,10 @@ class MatchingRequestModel extends Equatable {
   });
 
   final String id;
-  final String tripId;
-  final String tripCorridor;
-  final DateTime tripDepartureDate;
-  final double tripAvailableKg;
+  final String? tripId;
+  final String? tripCorridor;
+  final DateTime? tripDepartureDate;
+  final double? tripAvailableKg;
   final String senderId;
   final String senderName;
   final String senderInitials;
@@ -45,11 +45,12 @@ class MatchingRequestModel extends Equatable {
   factory MatchingRequestModel.fromJson(Map<String, dynamic> json) =>
       MatchingRequestModel(
         id: json['id'] as String,
-        tripId: json['tripId'] as String,
-        tripCorridor: json['tripCorridor'] as String,
-        tripDepartureDate:
-            DateTime.parse(json['tripDepartureDate'] as String),
-        tripAvailableKg: (json['tripAvailableKg'] as num).toDouble(),
+        tripId: json['tripId'] as String?,
+        tripCorridor: json['tripCorridor'] as String?,
+        tripDepartureDate: json['tripDepartureDate'] == null
+            ? null
+            : DateTime.parse(json['tripDepartureDate'] as String),
+        tripAvailableKg: (json['tripAvailableKg'] as num?)?.toDouble(),
         senderId: json['senderId'] as String,
         senderName: json['senderName'] as String,
         senderInitials: json['senderInitials'] as String,

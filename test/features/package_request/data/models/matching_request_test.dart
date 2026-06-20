@@ -63,4 +63,32 @@ void main() {
     expect(m.packagePhotoUrl, isNull);
     expect(m.messageExcerpt, isNull);
   });
+
+  test('corridor-alert match: parses with null trip context', () {
+    // Backend returns null trip fields for autonomous corridor-alert matches
+    // (no trip is associated — GET /me/corridor-alerts/{id}/matches).
+    final json = <String, dynamic>{
+      'id': 'r3',
+      'tripId': null,
+      'tripCorridor': null,
+      'tripDepartureDate': null,
+      'tripAvailableKg': null,
+      'senderId': 's3',
+      'senderName': 'Fatou Ba',
+      'senderInitials': 'FB',
+      'senderRating': 4.5,
+      'senderTotalSent': 3,
+      'weightKg': 2.0,
+      'matchScore': 75,
+      'requestedAt': '2026-06-20T10:00:00',
+    };
+    final m = MatchingRequestModel.fromJson(json);
+    expect(m.id, 'r3');
+    expect(m.tripId, isNull);
+    expect(m.tripCorridor, isNull);
+    expect(m.tripDepartureDate, isNull);
+    expect(m.tripAvailableKg, isNull);
+    expect(m.senderName, 'Fatou Ba');
+    expect(m.matchScore, 75);
+  });
 }
