@@ -114,6 +114,7 @@ import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
@@ -660,6 +661,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
       editing: editing,
+    ),
+  );
+  // param1 = alertId (String) — colis matchant l'alerte.
+  getIt.registerFactoryParam<CorridorAlertMatchesCubit, String, void>(
+    (alertId, _) => CorridorAlertMatchesCubit(
+      getIt<CorridorAlertRepository>(),
+      getIt<AnalyticsService>(),
+      alertId: alertId,
     ),
   );
   getIt.registerLazySingleton<NegotiationRepository>(

@@ -6,6 +6,7 @@ import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_aler
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class CorridorAlertListScreen extends StatelessWidget {
   const CorridorAlertListScreen({super.key});
@@ -126,7 +127,10 @@ class _CorridorAlertListView extends StatelessWidget {
                       .read<CorridorAlertListBloc>()
                       .add(CorridorAlertActiveToggled(alert.id, next)),
                   onTap: () async {
-                    await CorridorAlertFormSheet.show(lCtx, alert: alert);
+                    await lCtx.push(
+                      '/corridor-alerts/${alert.id}/matches',
+                      extra: alert,
+                    );
                     if (lCtx.mounted) {
                       lCtx
                           .read<CorridorAlertListBloc>()
