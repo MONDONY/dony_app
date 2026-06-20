@@ -112,8 +112,10 @@ import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
@@ -650,6 +652,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CorridorAlertListBloc(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
+    ),
+  );
+  // param1 = alerte à éditer (null → création).
+  getIt.registerFactoryParam<CorridorAlertFormCubit, CorridorAlertModel?, void>(
+    (editing, _) => CorridorAlertFormCubit(
+      getIt<CorridorAlertRepository>(),
+      getIt<AnalyticsService>(),
+      editing: editing,
     ),
   );
   getIt.registerLazySingleton<NegotiationRepository>(
