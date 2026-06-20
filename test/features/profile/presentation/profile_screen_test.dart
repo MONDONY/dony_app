@@ -215,6 +215,10 @@ Widget _buildTestHarness({
       path: '/profile/price-grid',
       builder: (_, __) => const Scaffold(body: Text('PriceGrid')),
     ),
+    GoRoute(
+      path: '/trajets-colis',
+      builder: (_, __) => const Scaffold(body: Text('TrajetsCoils')),
+    ),
   ];
 
   return MaterialApp.router(
@@ -590,7 +594,7 @@ void main() {
     );
 
     testWidgets(
-      'affiche "Colis sur mes trajets" et pas "Demandes d\'envoi à transporter"',
+      'affiche "Mes trajets et colis" (hub) et pas les 4 anciennes tuiles ni "Demandes d\'envoi à transporter"',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -604,11 +608,13 @@ void main() {
         await tester.pump(const Duration(milliseconds: 600));
 
         await tester.scrollUntilVisible(
-          find.text('Colis sur mes trajets'),
+          find.text('Mes trajets et colis'),
           300,
           scrollable: _activityScrollable,
         );
-        expect(find.text('Colis sur mes trajets'), findsOneWidget);
+        expect(find.text('Mes trajets et colis'), findsOneWidget);
+        // Les 4 anciennes tuiles ne sont plus directement dans le profil.
+        expect(find.text('Colis sur mes trajets'), findsNothing);
         expect(find.text("Demandes d'envoi à transporter"), findsNothing);
         await tester.pumpAndSettle(const Duration(seconds: 5));
       },
@@ -663,7 +669,7 @@ void main() {
     });
 
     testWidgets(
-        '"Colis sur mes trajets" tile visible sans badge matchs (count retiré)',
+        'hub "Mes trajets et colis" visible sans badge matchs (count retiré)',
         (tester) async {
       final now = DateTime(2026, 6, 1);
       whenListen<AnnouncementState>(
@@ -700,9 +706,8 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 600));
 
-      // Le badge "N matchs" a été retiré car il affichait le nombre de trajets
-      // à venir (upcomingAnnouncements) au lieu du vrai nombre de colis matchants.
-      // La tuile "Colis sur mes trajets" n'a plus de trailing count.
+      // Le badge "N matchs" n'a jamais été affiché sur le hub.
+      // La tuile "Mes trajets et colis" n'a pas de trailing count matchs.
       expect(find.textContaining('matchs'), findsNothing);
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
@@ -767,7 +772,7 @@ void main() {
     });
 
     testWidgets(
-      'voyageur : base commune visible + section MES TRAJETS ajoutée (modèle additif)',
+      'voyageur : base commune visible + tuile hub "Mes trajets et colis" ajoutée (modèle additif)',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -781,21 +786,21 @@ void main() {
         await tester.pump(const Duration(milliseconds: 600));
 
         // Modèle additif : les sections de base sont visibles pour TOUS les utilisateurs,
-        // y compris les voyageurs. La section MES TRAJETS est ajoutée en plus.
+        // y compris les voyageurs. La tuile hub est ajoutée en plus pour les voyageurs.
         expect(
           find.text('Mes envois en cours'),
           findsOneWidget,
           reason: 'Mes envois en cours est une section base visible par tous',
         );
         await tester.scrollUntilVisible(
-          find.text('Mes trajets'),
+          find.text('Mes trajets et colis'),
           300,
           scrollable: _activityScrollable,
         );
         expect(
-          find.text('Mes trajets'),
+          find.text('Mes trajets et colis'),
           findsOneWidget,
-          reason: 'voyageur voit en plus la section MES TRAJETS',
+          reason: 'voyageur voit en plus la tuile hub "Mes trajets et colis"',
         );
       },
     );
@@ -830,38 +835,9 @@ void main() {
       },
     );
 
-    // Navigation depuis onglet Activité
-    testWidgets('tapping "Mes trajets" navigates to /announcements', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-
-      await tester.scrollUntilVisible(
-        find.text('Mes trajets'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      // Settle animations triggered by the widget appearing in the viewport.
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-      await tester.ensureVisible(find.text('Mes trajets'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Mes trajets'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Announcements'), findsOneWidget);
-    });
-
+    // Navigation depuis onglet Activité — le hub "Mes trajets et colis" remplace les 4 tuiles.
     testWidgets(
-      'tapping "Colis sur mes trajets" navigates to /package-requests/match',
+      'tapping "Mes trajets et colis" navigates to /trajets-colis',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -875,18 +851,17 @@ void main() {
         await tester.pumpAndSettle(const Duration(seconds: 2));
 
         await tester.scrollUntilVisible(
-          find.text('Colis sur mes trajets'),
+          find.text('Mes trajets et colis'),
           300,
           scrollable: _activityScrollable,
         );
-        // Settle animations triggered by the widget appearing in the viewport.
         await tester.pumpAndSettle(const Duration(seconds: 2));
-        await tester.ensureVisible(find.text('Colis sur mes trajets'));
+        await tester.ensureVisible(find.text('Mes trajets et colis'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Colis sur mes trajets'));
+        await tester.tap(find.text('Mes trajets et colis'));
         await tester.pumpAndSettle();
 
-        expect(find.text('ColisMatch'), findsOneWidget);
+        expect(find.text('TrajetsCoils'), findsOneWidget);
       },
     );
 
@@ -1281,7 +1256,7 @@ void main() {
     // ── Phase 4 : modèle additif ─────────────────────────────────────────────────
 
     testWidgets(
-      'pur expéditeur : section Mes trajets absente (isTraveler=false)',
+      'pur expéditeur : hub "Mes trajets et colis" absent (isTraveler=false)',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -1295,9 +1270,9 @@ void main() {
         await tester.pump(const Duration(milliseconds: 600));
 
         expect(
-          find.text('Mes trajets'),
+          find.text('Mes trajets et colis'),
           findsNothing,
-          reason: 'sender ne doit pas voir Mes trajets',
+          reason: 'sender ne doit pas voir le hub "Mes trajets et colis"',
         );
       },
     );
@@ -1653,16 +1628,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     // Le pill Expéditeur/Voyageur n'existe plus dans le header.
-    // La section MES TRAJETS est visible car _dualRoleUser.isTraveler == true.
+    // La tuile hub est visible car _dualRoleUser.isTraveler == true.
     await tester.scrollUntilVisible(
-      find.text('Mes trajets'),
+      find.text('Mes trajets et colis'),
       300,
       scrollable: _activityScrollable,
     );
     expect(
-      find.text('Mes trajets'),
+      find.text('Mes trajets et colis'),
       findsOneWidget,
-      reason: 'dual-role user (isTraveler=true) doit voir MES TRAJETS',
+      reason: 'dual-role user (isTraveler=true) doit voir la tuile hub',
     );
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });

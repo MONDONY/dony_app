@@ -605,14 +605,14 @@ class _ActivityTab extends StatelessWidget {
 
         // Ajout voyageur
         if (isTraveler) ...[
-          _SectionLabel(label: 'MES TRAJETS', cs: cs),
           DonyListSection(
                 tiles: [
                   DonyListTile(
                     iconAsset: 'plane',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
-                    label: 'Mes trajets',
+                    label: 'Mes trajets et colis',
+                    showDivider: false,
                     trailing: upcomingAnnouncements > 0
                         ? Text(
                             '$upcomingAnnouncements à venir',
@@ -622,29 +622,10 @@ class _ActivityTab extends StatelessWidget {
                             ),
                           )
                         : null,
-                    onTap: () => context.push('/announcements'),
-                  ),
-                  DonyListTile(
-                    iconAsset: 'inbox',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'Colis sur mes trajets',
-                    onTap: () => context.push('/package-requests/match'),
-                  ),
-                  DonyListTile(
-                    iconAsset: 'bell',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'Mes alertes corridor',
-                    onTap: () => context.push('/corridor-alerts'),
-                  ),
-                  DonyListTile(
-                    iconAsset: 'bookmark',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'Mes modèles de trajet',
-                    showDivider: false,
-                    onTap: () => context.push('/trip-templates'),
+                    onTap: () => context.push(
+                      '/trajets-colis',
+                      extra: upcomingAnnouncements,
+                    ),
                   ),
                 ],
               )

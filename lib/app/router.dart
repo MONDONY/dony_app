@@ -106,6 +106,7 @@ import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/features/profile/presentation/screens/mes_trajets_colis_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -695,6 +696,15 @@ final appRouter = GoRouter(
           create: (_) => getIt<TrackingBloc>(),
           child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
         );
+      },
+    ),
+
+    // ── Mes trajets et colis — hub voyageur (hors shell) ─────────────
+    GoRoute(
+      path: '/trajets-colis',
+      builder: (context, state) {
+        final upcomingCount = (state.extra as int?) ?? 0;
+        return MesTrajetsColisScreen(upcomingCount: upcomingCount);
       },
     ),
 
