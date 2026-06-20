@@ -6,6 +6,7 @@ import 'package:equatable/equatable.dart';
 import '../../../core/services/analytics_events.dart';
 import '../../../core/services/analytics_service.dart';
 import '../data/corridor_alert_repository.dart';
+import '../data/models/alert_direction.dart';
 import '../data/models/corridor_alert_model.dart';
 
 enum CorridorAlertFormStatus { editing, submitting, success, error }
@@ -22,6 +23,7 @@ class CorridorAlertFormState extends Equatable {
     this.contentCategories = const [],
     this.status = CorridorAlertFormStatus.editing,
     this.errorMessage,
+    this.direction = AlertDirection.travelerWantsPackages,
   });
 
   final String? departureCity;
@@ -34,6 +36,7 @@ class CorridorAlertFormState extends Equatable {
   final List<String> contentCategories;
   final CorridorAlertFormStatus status;
   final String? errorMessage;
+  final AlertDirection direction;
 
   bool get isValid =>
       (departureCity?.trim().isNotEmpty ?? false) &&
@@ -52,6 +55,7 @@ class CorridorAlertFormState extends Equatable {
     List<String>? contentCategories,
     CorridorAlertFormStatus? status,
     Object? errorMessage = _unset,
+    AlertDirection? direction,
   }) =>
       CorridorAlertFormState(
         departureCity: departureCity ?? this.departureCity,
@@ -72,6 +76,7 @@ class CorridorAlertFormState extends Equatable {
         errorMessage: identical(errorMessage, _unset)
             ? this.errorMessage
             : errorMessage as String?,
+        direction: direction ?? this.direction,
       );
 
   @override
@@ -86,16 +91,18 @@ class CorridorAlertFormState extends Equatable {
         contentCategories,
         status,
         errorMessage,
+        direction,
       ];
 }
 
 class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
   CorridorAlertFormCubit(this._repository, this._analytics,
-      {CorridorAlertModel? editing})
+      {CorridorAlertModel? editing,
+      AlertDirection initialDirection = AlertDirection.travelerWantsPackages})
       : _editingId = editing?.id,
         super(
           editing == null
-              ? const CorridorAlertFormState()
+              ? CorridorAlertFormState(direction: initialDirection)
               : CorridorAlertFormState(
                   departureCity: editing.departureCity,
                   arrivalCity: editing.arrivalCity,
@@ -105,6 +112,7 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
                   dateTo: editing.dateTo,
                   minWeightKg: editing.minWeightKg,
                   contentCategories: editing.contentCategories,
+                  direction: editing.direction,
                 ),
         );
 
@@ -132,6 +140,8 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
 
   void setMinWeight(double? kg) => emit(state.copyWith(minWeightKg: kg));
 
+  void setDirection(AlertDirection d) => emit(state.copyWith(direction: d));
+
   void toggleCategory(String category) {
     final next = List<String>.from(state.contentCategories);
     if (next.contains(category)) {
@@ -156,6 +166,7 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
       dateTo: state.dateTo,
       minWeightKg: state.minWeightKg,
       contentCategories: state.contentCategories,
+      direction: state.direction,
     );
     try {
       if (_editingId != null) {

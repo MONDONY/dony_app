@@ -49,7 +49,12 @@ class _CorridorAlertMatchesView extends StatelessWidget {
           IconButton(
             tooltip: 'Modifier l\'alerte',
             icon: DonyIcon('pen', size: 22, color: cs.primary),
-            onPressed: () => CorridorAlertFormSheet.show(context, alert: alert),
+            // TODO(task-3): pass real isTraveler/isSender from AuthBloc
+            onPressed: () => CorridorAlertFormSheet.show(
+              context,
+              alert: alert,
+              isTraveler: true,
+            ),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -16,6 +17,18 @@ CorridorAlertModel _created() => CorridorAlertModel(
       arrivalCity: 'Bamako',
       active: true,
       createdAt: DateTime(2026, 6, 20),
+    );
+
+CorridorAlertModel _alert({
+  AlertDirection direction = AlertDirection.travelerWantsPackages,
+}) =>
+    CorridorAlertModel(
+      id: 'a1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      active: true,
+      createdAt: DateTime(2026, 6, 20),
+      direction: direction,
     );
 
 void main() {
@@ -135,6 +148,52 @@ void main() {
     verify: (c) {
       expect(c.state.dateFrom, DateTime(2026, 8, 10));
       expect(c.state.dateTo, DateTime(2026, 8, 25));
+    },
+  );
+
+  // ---------------------------------------------------------------------------
+  // Task 2 — direction field
+  // ---------------------------------------------------------------------------
+
+  test('initialDirection seeds state.direction on create', () {
+    final cubit = CorridorAlertFormCubit(repo, analytics,
+        initialDirection: AlertDirection.senderWantsTrips);
+    expect(cubit.state.direction, AlertDirection.senderWantsTrips);
+  });
+
+  test('editing alert seeds state.direction from alert', () {
+    final cubit = CorridorAlertFormCubit(repo, analytics,
+        editing: _alert(direction: AlertDirection.senderWantsTrips));
+    expect(cubit.state.direction, AlertDirection.senderWantsTrips);
+    expect(cubit.isEditing, isTrue);
+  });
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'setDirection updates state',
+    build: () => CorridorAlertFormCubit(repo, analytics),
+    act: (c) => c.setDirection(AlertDirection.senderWantsTrips),
+    expect: () => [
+      isA<CorridorAlertFormState>()
+          .having((s) => s.direction, 'direction',
+              AlertDirection.senderWantsTrips),
+    ],
+  );
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'submit sends direction in draft',
+    build: () => CorridorAlertFormCubit(repo, analytics,
+        initialDirection: AlertDirection.senderWantsTrips),
+    setUp: () => when(() => repo.create(any()))
+        .thenAnswer((_) async => _alert(direction: AlertDirection.senderWantsTrips)),
+    act: (c) {
+      c.setDeparture('Paris', 'FR');
+      c.setArrival('Dakar', 'SN');
+      return c.submit();
+    },
+    verify: (_) {
+      final draft = verify(() => repo.create(captureAny())).captured.single
+          as CorridorAlertDraft;
+      expect(draft.direction, AlertDirection.senderWantsTrips);
     },
   );
 

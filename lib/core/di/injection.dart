@@ -116,6 +116,7 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dar
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -655,12 +656,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
-  // param1 = alerte à éditer (null → création).
-  getIt.registerFactoryParam<CorridorAlertFormCubit, CorridorAlertModel?, void>(
-    (editing, _) => CorridorAlertFormCubit(
+  // param1 = record {editing, direction} — direction forcée par rôle ou from editing.
+  getIt.registerFactoryParam<CorridorAlertFormCubit,
+      ({CorridorAlertModel? editing, AlertDirection direction}), void>(
+    (params, _) => CorridorAlertFormCubit(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
-      editing: editing,
+      editing: params.editing,
+      initialDirection: params.direction,
     ),
   );
   // param1 = alertId (String) — colis matchant l'alerte.

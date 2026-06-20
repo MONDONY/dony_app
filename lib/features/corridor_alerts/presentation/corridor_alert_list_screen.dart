@@ -46,7 +46,8 @@ class _CorridorAlertListView extends StatelessWidget {
           icon: const Icon(Icons.add_rounded),
           label: const Text('Créer'),
           onPressed: () async {
-            await CorridorAlertFormSheet.show(fabCtx);
+            // TODO(task-3): pass real isTraveler/isSender from AuthBloc
+            await CorridorAlertFormSheet.show(fabCtx, isTraveler: true);
             if (fabCtx.mounted) {
               fabCtx
                   .read<CorridorAlertListBloc>()
@@ -84,7 +85,8 @@ class _CorridorAlertListView extends StatelessWidget {
                   'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.',
               actionLabel: 'Créer une alerte',
               onAction: () async {
-                await CorridorAlertFormSheet.show(ctx);
+                // TODO(task-3): pass real isTraveler/isSender from AuthBloc
+                await CorridorAlertFormSheet.show(ctx, isTraveler: true);
                 if (ctx.mounted) {
                   ctx
                       .read<CorridorAlertListBloc>()
