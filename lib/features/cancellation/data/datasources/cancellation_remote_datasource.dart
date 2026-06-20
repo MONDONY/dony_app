@@ -36,6 +36,12 @@ class CancellationRemoteDatasource {
     await _apiClient.dio.post('/cancellations/bids/$bidId/contest-noshow');
   }
 
+  /// L'expéditeur confirme lui-même son absence signalée par le voyageur :
+  /// le bid est annulé, pas de débit (endpoint dédié SENDER).
+  Future<void> confirmNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/confirm-noshow-self');
+  }
+
   /// Annulation après remise (HANDED_OVER) — expéditeur OU voyageur (D5/D6).
   /// Le backend renvoie le bid mis à jour ; on ignore le corps, l'écran rafraîchit
   /// via BidBloc.BidDetailRequested.

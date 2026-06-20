@@ -84,6 +84,20 @@ void main() {
     });
   });
 
+  group('confirmNoShow', () {
+    test('calls POST /cancellations/bids/{bidId}/confirm-noshow-self', () async {
+      when(() => mockDio.post(
+            '/cancellations/bids/bid-3/confirm-noshow-self',
+          )).thenAnswer(
+          (_) async => _ok(null, '/cancellations/bids/bid-3/confirm-noshow-self'));
+
+      await datasource.confirmNoShow('bid-3');
+
+      verify(() => mockDio.post('/cancellations/bids/bid-3/confirm-noshow-self'))
+          .called(1);
+    });
+  });
+
   group('cancelAfterHandover', () {
     test('calls POST /bids/{bidId}/cancel-after-handover', () async {
       when(() => mockDio.post('/bids/bid-9/cancel-after-handover'))

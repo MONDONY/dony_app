@@ -21,6 +21,7 @@ BidModel _bid({
   double? total = 48,
   DateTime? windowEnd,
   String? recipientName = 'Awa S.',
+  String? cancellationNoShowStatus,
 }) =>
     BidModel(
       id: 'b1',
@@ -32,6 +33,7 @@ BidModel _bid({
       voyageurConfirmed: voyageurConfirmed,
       handoverWindowEnd: windowEnd,
       recipientName: recipientName,
+      cancellationNoShowStatus: cancellationNoShowStatus,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
@@ -100,6 +102,36 @@ void main() {
       find.textContaining("Signaler l'absence de l'expéditeur"),
       findsOneWidget,
     );
+  });
+
+  testWidgets(
+      'absence déjà signalée (PENDING_CONFIRMATION) → « Absence signalée », plus de bouton signaler',
+      (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+      ),
+    );
+    expect(find.textContaining('Absence signalée'), findsOneWidget);
+    expect(find.textContaining("Signaler l'absence de l'expéditeur"), findsNothing);
+    expect(find.textContaining('Fenêtre de remise dépassée'), findsNothing);
+  });
+
+  testWidgets('absence contestée (CONTESTED) → « Absence contestée »',
+      (tester) async {
+    await _pump(
+      tester,
+      _bid(
+        status: 'ACCEPTED',
+        windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
+        cancellationNoShowStatus: 'CONTESTED',
+      ),
+    );
+    expect(find.textContaining('Absence contestée'), findsOneWidget);
+    expect(find.textContaining("Signaler l'absence de l'expéditeur"), findsNothing);
   });
 
   testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {

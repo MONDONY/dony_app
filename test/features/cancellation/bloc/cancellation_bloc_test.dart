@@ -289,6 +289,38 @@ void main() {
     );
   });
 
+  // ── NoShowConfirmRequested ─────────────────────────────────────────────────
+
+  group('NoShowConfirmRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, NoShowConfirmed] on success',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.confirmNoShow('bid-3'))
+            .thenAnswer((_) async {});
+      },
+      act: (b) => b.add(NoShowConfirmRequested('bid-3')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<NoShowConfirmed>(),
+      ],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, Error] on exception',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.confirmNoShow(any()))
+            .thenThrow(DioException(requestOptions: RequestOptions()));
+      },
+      act: (b) => b.add(NoShowConfirmRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+  });
+
   // ── Model tests ─────────────────────────────────────────────────────────────
 
   group('CancellationModel.fromJson', () {

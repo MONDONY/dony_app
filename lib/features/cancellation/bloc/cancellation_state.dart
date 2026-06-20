@@ -21,6 +21,9 @@ class NoShowReported extends CancellationState {}
 
 class NoShowContested extends CancellationState {}
 
+/// L'expéditeur a confirmé son absence → le bid est annulé (l'écran rafraîchit).
+class NoShowConfirmed extends CancellationState {}
+
 /// Annulation après remise réussie (l'écran rafraîchit le bid via BidBloc).
 class CancelledAfterHandover extends CancellationState {}
 

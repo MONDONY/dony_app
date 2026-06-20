@@ -27,6 +27,13 @@ class NoShowContestRequested extends CancellationEvent {
   NoShowContestRequested(this.bidId);
 }
 
+/// L'expéditeur confirme son absence signalée par le voyageur (le bid sera
+/// annulé, pas de débit).
+class NoShowConfirmRequested extends CancellationEvent {
+  final String bidId;
+  NoShowConfirmRequested(this.bidId);
+}
+
 /// Annulation après remise du colis (HANDED_OVER). `actor` = 'sender' | 'traveler'
 /// (analytics uniquement, le backend déduit le rôle réel).
 class CancelAfterHandoverRequested extends CancellationEvent {

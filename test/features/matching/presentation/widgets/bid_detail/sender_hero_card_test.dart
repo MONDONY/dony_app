@@ -504,10 +504,10 @@ void main() {
     },
   );
 
-  // ── Test 20: tap "Je confirme" → sheet informatif → "Compris" ferme ──────────
+  // ── Test 20: tap "Je confirme" → confirmer → NoShowConfirmRequested ──────────
 
   testWidgets(
-    '20 · tap "Je confirme" → sheet s\'ouvre → "Compris" ferme le sheet',
+    '20 · tap "Je confirme" → "Confirmer mon absence" → NoShowConfirmRequested dispatched',
     (tester) async {
       final bid = _bid(
         status: 'ACCEPTED',
@@ -520,14 +520,16 @@ void main() {
       await tester.tap(find.textContaining('Je confirme'));
       await tester.pumpAndSettle();
 
-      // "Compris" button should be in the sheet
-      expect(find.textContaining('Compris'), findsOneWidget);
-
-      await tester.tap(find.textContaining('Compris'));
+      final confirmBtn = find.descendant(
+        of: find.byKey(const Key('donyBottomSheetFooter')),
+        matching: find.textContaining('Confirmer mon absence'),
+      );
+      await tester.tap(confirmBtn.last);
       await tester.pumpAndSettle();
 
-      // Sheet should be closed
-      expect(find.textContaining('Confirmer votre absence'), findsNothing);
+      verify(
+        () => cancellationBloc.add(any(that: isA<NoShowConfirmRequested>())),
+      ).called(1);
 
       // Kill timer
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));

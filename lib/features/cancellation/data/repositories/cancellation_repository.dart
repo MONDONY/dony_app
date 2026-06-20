@@ -24,6 +24,9 @@ class CancellationRepository {
   Future<void> contestNoShow(String bidId) =>
       _datasource.contestNoShow(bidId);
 
+  Future<void> confirmNoShow(String bidId) =>
+      _datasource.confirmNoShow(bidId);
+
   Future<void> cancelAfterHandover(String bidId) =>
       _datasource.cancelAfterHandover(bidId);
 

@@ -278,6 +278,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
               type: DonySnackbarType.success,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is NoShowConfirmed) {
+            DonySnackbar.show(
+              context,
+              message:
+                  'Absence confirmée. Le bid a été annulé, vous ne serez pas débité.',
+              type: DonySnackbarType.info,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancelledAfterHandover) {
             DonySnackbar.show(
               context,
