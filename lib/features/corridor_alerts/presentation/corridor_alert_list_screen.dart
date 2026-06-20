@@ -117,6 +117,7 @@ class _CorridorAlertListView extends StatelessWidget {
                     color: cs.error,
                     borderRadius: BorderRadius.circular(DonyRadius.card),
                   ),
+                  // size: 24 is the DonyIcon default — matches the brief.
                   child: DonyIcon('trash-2', color: cs.onError),
                 ),
                 child: CorridorAlertTile(

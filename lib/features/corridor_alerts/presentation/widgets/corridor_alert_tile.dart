@@ -3,7 +3,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter/material.dart';
 
-/// Carte d'une alerte corridor : corridor, badge matchCount, toggle actif/pause.
+/// Carte d'une alerte corridor : corridor, badge matchCount, toggle actif/pause,
+/// et résumé des filtres (date · poids · catégories).
 class CorridorAlertTile extends StatelessWidget {
   const CorridorAlertTile({
     super.key,
@@ -15,6 +16,49 @@ class CorridorAlertTile extends StatelessWidget {
   final CorridorAlertModel alert;
   final VoidCallback onTap;
   final ValueChanged<bool> onToggle;
+
+  /// Builds a compact filter summary, e.g. "20–30 juin · ≥ 3 kg · Documents, Vêtements".
+  /// Returns a neutral fallback when no filter is set.
+  static String buildFilterSummary(CorridorAlertModel alert) {
+    final parts = <String>[];
+
+    // ── Date ──────────────────────────────────────────────────────────────
+    if (alert.dateFrom != null && alert.dateTo != null) {
+      parts.add('${_compactDate(alert.dateFrom!)}–${_compactDate(alert.dateTo!)}');
+    } else if (alert.dateFrom != null) {
+      parts.add('À partir du ${_compactDate(alert.dateFrom!)}');
+    } else if (alert.dateTo != null) {
+      parts.add("Jusqu'au ${_compactDate(alert.dateTo!)}");
+    }
+
+    // ── Weight ────────────────────────────────────────────────────────────
+    if (alert.minWeightKg != null) {
+      final kg = alert.minWeightKg!;
+      final display = kg == kg.truncateToDouble()
+          ? '${kg.toInt()} kg'
+          : '$kg kg';
+      parts.add('≥ $display');
+    }
+
+    // ── Categories ────────────────────────────────────────────────────────
+    if (alert.contentCategories.isNotEmpty) {
+      parts.add(alert.contentCategories.join(', '));
+    }
+
+    if (parts.isEmpty) {
+      return 'Toute date · tout poids';
+    }
+    return parts.join(' · ');
+  }
+
+  static const _monthNames = [
+    'jan', 'fév', 'mar', 'avr', 'mai', 'juin',
+    'juil', 'août', 'sep', 'oct', 'nov', 'déc',
+  ];
+
+  static String _compactDate(DateTime d) {
+    return '${d.day} ${_monthNames[d.month - 1]}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +106,14 @@ class CorridorAlertTile extends StatelessWidget {
                         ),
                       ],
                     ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    buildFilterSummary(alert),
+                    style: tt.bodySmall
+                        ?.copyWith(color: cs.onSurfaceVariant),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     alert.active ? 'Active' : 'En pause',

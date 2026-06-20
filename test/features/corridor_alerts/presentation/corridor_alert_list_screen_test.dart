@@ -23,6 +23,19 @@ CorridorAlertModel _alert(String id, {bool active = true, int matches = 3}) =>
       createdAt: DateTime(2026, 6, 20),
     );
 
+CorridorAlertModel _alertWithFilters(String id) => CorridorAlertModel(
+      id: id,
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      active: true,
+      matchCount: 0,
+      createdAt: DateTime(2026, 6, 20),
+      dateFrom: DateTime(2026, 6, 20),
+      dateTo: DateTime(2026, 6, 30),
+      minWeightKg: 3.0,
+      contentCategories: const ['Documents', 'Vêtements'],
+    );
+
 void main() {
   late MockListBloc bloc;
 
@@ -90,5 +103,45 @@ void main() {
     await t.pumpWidget(pump());
     await t.pump(const Duration(milliseconds: 600));
     expect(find.byType(FloatingActionButton), findsOneWidget);
+  });
+
+  testWidgets('swipe left on tile → dispatches CorridorAlertDeleted with alert id',
+      (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [_alert('a1'), _alert('a2')],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    await t.drag(find.byType(Dismissible).first, const Offset(-500, 0));
+    await t.pumpAndSettle();
+    final captured = verify(() => bloc.add(captureAny())).captured;
+    expect(
+      captured.any((e) => e is CorridorAlertDeleted && e.id == 'a1'),
+      isTrue,
+    );
+  });
+
+  testWidgets('tile WITH filters shows compact filter summary', (t) async {
+    final alert = _alertWithFilters('b1');
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [alert],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    // Summary must contain date range, weight and categories.
+    expect(find.textContaining('≥ 3 kg'), findsOneWidget);
+    expect(find.textContaining('Documents'), findsOneWidget);
+  });
+
+  testWidgets('tile WITHOUT filters shows neutral fallback', (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [_alert('c1')],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.textContaining('Toute date · tout poids'), findsOneWidget);
   });
 }
