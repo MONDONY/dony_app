@@ -113,6 +113,7 @@ class CorridorAlertListBloc
           minWeightKg: target.minWeightKg,
           contentCategories: target.contentCategories,
         ),
+        active: e.active,
       );
       // Reconcile with server truth only when matchCount changed.
       final currentTarget = state.alerts.firstWhere((a) => a.id == e.id);

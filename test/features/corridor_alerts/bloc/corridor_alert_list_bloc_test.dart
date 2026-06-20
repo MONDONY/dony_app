@@ -73,7 +73,7 @@ void main() {
   blocTest<CorridorAlertListBloc, CorridorAlertListState>(
     'toggle optimistic: flips active immediately then confirms',
     build: () {
-      when(() => repo.update(any(), any()))
+      when(() => repo.update(any(), any(), active: any(named: 'active')))
           .thenAnswer((_) async => _alert('a1', active: false));
       return CorridorAlertListBloc(repo, analytics);
     },
@@ -86,12 +86,16 @@ void main() {
       isA<CorridorAlertListState>()
           .having((s) => s.alerts.first.active, 'active', isFalse),
     ],
+    verify: (_) {
+      verify(() => repo.update('a1', any(), active: false)).called(1);
+    },
   );
 
   blocTest<CorridorAlertListBloc, CorridorAlertListState>(
     'toggle rollback: restores previous active + status error on failure',
     build: () {
-      when(() => repo.update(any(), any())).thenThrow(Exception('net'));
+      when(() => repo.update(any(), any(), active: any(named: 'active')))
+          .thenThrow(Exception('net'));
       return CorridorAlertListBloc(repo, analytics);
     },
     seed: () => CorridorAlertListState(
