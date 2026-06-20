@@ -67,6 +67,7 @@ import 'package:dony/features/package_request/presentation/screens/shared/my_neg
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/colis_match_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -567,6 +568,12 @@ final appRouter = GoRouter(
       path: '/stripe/onboarding/refresh',
       redirect: (context, state) => '/connect/onboarding/intro',
     ),
+    // ── Alertes corridor (hors shell) ────────────────────────────────────
+    GoRoute(
+      path: '/corridor-alerts',
+      builder: (_, __) => const CorridorAlertListScreen(),
+    ),
+
     GoRoute(
       path: '/disputes',
       builder: (context, state) => const _PlaceholderScreen(title: 'Litiges'),

@@ -1,0 +1,94 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockListBloc
+    extends MockBloc<CorridorAlertListEvent, CorridorAlertListState>
+    implements CorridorAlertListBloc {}
+
+CorridorAlertModel _alert(String id, {bool active = true, int matches = 3}) =>
+    CorridorAlertModel(
+      id: id,
+      departureCity: 'Paris',
+      arrivalCity: 'Bamako',
+      active: active,
+      matchCount: matches,
+      createdAt: DateTime(2026, 6, 20),
+    );
+
+void main() {
+  late MockListBloc bloc;
+
+  setUpAll(() {
+    registerFallbackValue(const CorridorAlertDeleted('x'));
+    registerFallbackValue(const CorridorAlertActiveToggled('x', false));
+  });
+
+  setUp(() {
+    bloc = MockListBloc();
+    if (GetIt.I.isRegistered<CorridorAlertListBloc>()) {
+      GetIt.I.unregister<CorridorAlertListBloc>();
+    }
+    GetIt.I.registerFactory<CorridorAlertListBloc>(() => bloc);
+  });
+
+  tearDown(() => GetIt.I.reset());
+
+  Widget pump() => MaterialApp(
+        theme: AppTheme.light,
+        home: const CorridorAlertListScreen(),
+      );
+
+  testWidgets('loaded → renders a tile per alert with matchCount badge',
+      (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [_alert('a1'), _alert('a2')],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.byType(CorridorAlertTile), findsNWidgets(2));
+    expect(find.textContaining('Paris → Bamako'), findsNWidgets(2));
+  });
+
+  testWidgets('empty → CTA créer une alerte', (t) async {
+    when(() => bloc.state).thenReturn(const CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.byType(DonyEmptyState), findsOneWidget);
+  });
+
+  testWidgets('tap toggle → dispatches CorridorAlertActiveToggled',
+      (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [_alert('a1', active: true)],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    await t.tap(find.byType(Switch));
+    await t.pump();
+    final captured = verify(() => bloc.add(captureAny())).captured;
+    expect(captured.any((e) => e is CorridorAlertActiveToggled), isTrue);
+  });
+
+  testWidgets('FAB present for creating an alert', (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [_alert('a1')],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+  });
+}
