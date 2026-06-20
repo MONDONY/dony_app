@@ -7,6 +7,7 @@ import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_aler
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockListBloc
@@ -39,7 +40,8 @@ CorridorAlertModel _alertWithFilters(String id) => CorridorAlertModel(
 void main() {
   late MockListBloc bloc;
 
-  setUpAll(() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
     registerFallbackValue(const CorridorAlertDeleted('x'));
     registerFallbackValue(const CorridorAlertActiveToggled('x', false));
   });

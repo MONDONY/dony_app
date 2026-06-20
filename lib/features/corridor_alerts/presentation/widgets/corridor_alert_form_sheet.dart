@@ -8,6 +8,8 @@ import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.d
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
 /// Catégories de contenu sélectionnables pour filtrer l'alerte (optionnel).
 const _kAlertContentTypes = <String>[
   'Documents',
@@ -17,14 +19,6 @@ const _kAlertContentTypes = <String>[
   'Cosmétiques',
   'Médicaments',
 ];
-
-const _kMonthsFr = [
-  '', 'jan', 'fév', 'mar', 'avr', 'mai', 'juin',
-  'juil', 'aoû', 'sep', 'oct', 'nov', 'déc',
-];
-
-/// Format "20 juin" — no intl locale dependency required.
-String _formatDate(DateTime d) => '${d.day} ${_kMonthsFr[d.month]}';
 
 abstract final class CorridorAlertFormSheet {
   static Future<void> show(BuildContext context, {CorridorAlertModel? alert}) {
@@ -83,8 +77,8 @@ class _CorridorAlertFormBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<CorridorAlertFormCubit>();
-    final state = context.watch<CorridorAlertFormCubit>().state;
+    final cubit = context.watch<CorridorAlertFormCubit>();
+    final state = cubit.state;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -166,7 +160,8 @@ class _DateWindowField extends StatelessWidget {
 
   String get _label {
     if (dateFrom != null && dateTo != null) {
-      return '${_formatDate(dateFrom!)} → ${_formatDate(dateTo!)}';
+      final fmt = DateFormat('d MMM', 'fr');
+      return '${fmt.format(dateFrom!)} → ${fmt.format(dateTo!)}';
     }
     return 'Toute date';
   }

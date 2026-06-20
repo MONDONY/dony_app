@@ -39,17 +39,19 @@ class CorridorAlertFormState extends Equatable {
       (departureCity?.trim().isNotEmpty ?? false) &&
       (arrivalCity?.trim().isNotEmpty ?? false);
 
+  static const _unset = Object();
+
   CorridorAlertFormState copyWith({
     String? departureCity,
     String? arrivalCity,
     String? departureCountryCode,
     String? arrivalCountryCode,
-    DateTime? dateFrom,
-    DateTime? dateTo,
-    double? minWeightKg,
+    Object? dateFrom = _unset,
+    Object? dateTo = _unset,
+    Object? minWeightKg = _unset,
     List<String>? contentCategories,
     CorridorAlertFormStatus? status,
-    String? errorMessage,
+    Object? errorMessage = _unset,
   }) =>
       CorridorAlertFormState(
         departureCity: departureCity ?? this.departureCity,
@@ -57,12 +59,19 @@ class CorridorAlertFormState extends Equatable {
         departureCountryCode:
             departureCountryCode ?? this.departureCountryCode,
         arrivalCountryCode: arrivalCountryCode ?? this.arrivalCountryCode,
-        dateFrom: dateFrom ?? this.dateFrom,
-        dateTo: dateTo ?? this.dateTo,
-        minWeightKg: minWeightKg ?? this.minWeightKg,
+        dateFrom: identical(dateFrom, _unset)
+            ? this.dateFrom
+            : dateFrom as DateTime?,
+        dateTo:
+            identical(dateTo, _unset) ? this.dateTo : dateTo as DateTime?,
+        minWeightKg: identical(minWeightKg, _unset)
+            ? this.minWeightKg
+            : minWeightKg as double?,
         contentCategories: contentCategories ?? this.contentCategories,
         status: status ?? this.status,
-        errorMessage: errorMessage ?? this.errorMessage,
+        errorMessage: identical(errorMessage, _unset)
+            ? this.errorMessage
+            : errorMessage as String?,
       );
 
   @override
@@ -118,16 +127,8 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
   void setDateWindow(DateTime from, DateTime to) =>
       emit(state.copyWith(dateFrom: from, dateTo: to));
 
-  void clearDateWindow() => emit(CorridorAlertFormState(
-        departureCity: state.departureCity,
-        arrivalCity: state.arrivalCity,
-        departureCountryCode: state.departureCountryCode,
-        arrivalCountryCode: state.arrivalCountryCode,
-        minWeightKg: state.minWeightKg,
-        contentCategories: state.contentCategories,
-        status: state.status,
-        errorMessage: state.errorMessage,
-      ));
+  void clearDateWindow() =>
+      emit(state.copyWith(dateFrom: null, dateTo: null));
 
   void setMinWeight(double? kg) => emit(state.copyWith(minWeightKg: kg));
 

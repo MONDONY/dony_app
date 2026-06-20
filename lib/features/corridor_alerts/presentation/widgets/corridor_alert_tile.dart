@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// Carte d'une alerte corridor : corridor, badge matchCount, toggle actif/pause,
 /// et résumé des filtres (date · poids · catégories).
@@ -51,14 +52,8 @@ class CorridorAlertTile extends StatelessWidget {
     return parts.join(' · ');
   }
 
-  static const _monthNames = [
-    'jan', 'fév', 'mar', 'avr', 'mai', 'juin',
-    'juil', 'août', 'sep', 'oct', 'nov', 'déc',
-  ];
-
-  static String _compactDate(DateTime d) {
-    return '${d.day} ${_monthNames[d.month - 1]}';
-  }
+  static String _compactDate(DateTime d) =>
+      DateFormat('d MMM', 'fr').format(d);
 
   @override
   Widget build(BuildContext context) {
