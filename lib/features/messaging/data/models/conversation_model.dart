@@ -5,12 +5,31 @@ class ParticipantModel {
   final String name;
   final String? avatarUrl;
 
-  const ParticipantModel({required this.id, required this.name, this.avatarUrl});
+  /// Numéro de l'interlocuteur — révélé par le backend uniquement quand le deal
+  /// est actif (même gating que les bids). `null` sinon → pas de bouton appel.
+  final String? phone;
+
+  /// Rôle affiché en sous-titre du header ('Voyageur' | 'Expéditeur').
+  final String? role;
+
+  final bool kycVerified;
+
+  const ParticipantModel({
+    required this.id,
+    required this.name,
+    this.avatarUrl,
+    this.phone,
+    this.role,
+    this.kycVerified = false,
+  });
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) => ParticipantModel(
         id: json['id'] as String,
         name: json['name'] as String? ?? '',
         avatarUrl: json['avatarUrl'] as String?,
+        phone: json['phone'] as String?,
+        role: json['role'] as String?,
+        kycVerified: json['kycVerified'] as bool? ?? false,
       );
 }
 

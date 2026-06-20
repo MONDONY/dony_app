@@ -55,6 +55,8 @@ abstract final class AnalyticsEvents {
   // Messaging
   static const conversationOpened = 'conversation_opened';
   static const messageSent        = 'message_sent';
+  static const conversationCallInitiated = 'conversation_call_initiated';
+  static const messageBlocked            = 'message_blocked';
 
   // Wallet
   static const walletTopupStarted   = 'wallet_topup_started';

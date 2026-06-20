@@ -5,7 +5,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -13,16 +12,16 @@ import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
+import 'package:dony/features/messaging/data/chat_message_validator.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatScreen extends StatefulWidget {
   final ConversationModel conversation;
@@ -35,6 +34,10 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _validator = ChatMessageValidator();
+
+  /// Envois récents de l'utilisateur — débit (5/15 s) + anti-doublon (30 s).
+  final List<SentRecord> _recentSends = [];
   bool _isSending = false;
 
   String get _myUid {
@@ -95,7 +98,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               );
             },
-            style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
+            style: TextButton.styleFrom(
+                foregroundColor: Theme.of(ctx).colorScheme.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -103,11 +107,52 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _call(String phone) async {
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.conversationCallInitiated,
+    ));
+    final uri = Uri(scheme: 'tel', path: phone);
+    final ok = await canLaunchUrl(uri) && await launchUrl(uri);
+    if (!ok && mounted) {
+      DonySnackbar.show(
+        context,
+        message: 'Impossible d\'ouvrir le composeur',
+        type: DonySnackbarType.error,
+      );
+    }
+  }
+
   Future<void> _sendText() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty || _isSending) return;
+    if (_isSending) return;
+    final raw = _controller.text;
+    final now = DateTime.now();
+
+    // Règles de contenu (cf. ChatMessageValidator) — bloque + avertit.
+    final result = _validator.validate(raw, recent: _recentSends, now: now);
+    if (result is ChatValidationBlocked) {
+      if (result.message.isNotEmpty) {
+        DonySnackbar.show(
+          context,
+          message: result.message,
+          type: DonySnackbarType.warning,
+        );
+        unawaited(getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.messageBlocked,
+          properties: {'reason': result.reason},
+        ));
+      }
+      return;
+    }
+    final text = (result as ChatValidationOk).text;
+
     setState(() => _isSending = true);
     _controller.clear();
+    _recentSends.add(SentRecord(now, text));
+    // Borne la liste (fenêtre la plus longue = anti-doublon 30 s).
+    _recentSends.removeWhere(
+      (r) => now.difference(r.at) > const Duration(seconds: 30),
+    );
+
     context.read<ChatBloc>().add(
           ChatTextSendRequested(
             firestoreConversationId: widget.conversation.firestoreConversationId,
@@ -119,81 +164,14 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isSending = false);
   }
 
-  Future<void> _pickAndSendImage() async {
-    final bloc = context.read<ChatBloc>();
-    try {
-      final xfile = await getIt<DonyMediaService>().pick(
-        source: ImageSource.gallery,
-      );
-      if (xfile == null || !mounted) return;
-      final bytes = await xfile.readAsBytes();
-      bloc.add(
-        ChatImageSendRequested(
-          firestoreConversationId: widget.conversation.firestoreConversationId,
-          conversationId: widget.conversation.id,
-          senderFirebaseUid: _myUid,
-          bytes: bytes,
-          filename: xfile.name,
-        ),
-      );
-    } on UnsupportedMediaTypeException {
-      if (!mounted) return;
-      DonySnackbar.show(
-        context,
-        message: 'Seules les images sont acceptées (pas de vidéo).',
-        type: DonySnackbarType.error,
-      );
-    } on MediaFileTooLargeException catch (e) {
-      if (!mounted) return;
-      DonySnackbar.show(
-        context,
-        message: 'Image trop lourde (max ${e.maxMb} Mo).',
-        type: DonySnackbarType.error,
-      );
-    }
-  }
-
-  Future<void> _sendLocation() async {
-    final bloc = context.read<ChatBloc>();
-    final messenger = ScaffoldMessenger.of(context);
-    LocationPermission permission;
-    try {
-      permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Permission de localisation refusée')),
-        );
-        return;
-      }
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-      );
-      bloc.add(
-        ChatLocationSendRequested(
-          firestoreConversationId: widget.conversation.firestoreConversationId,
-          conversationId: widget.conversation.id,
-          senderFirebaseUid: _myUid,
-          latitude: position.latitude,
-          longitude: position.longitude,
-        ),
-      );
-    } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Impossible de récupérer votre position')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final conversation = widget.conversation;
     final participant = conversation.otherParticipant;
+    final phone = participant.phone;
+    final canCall = phone != null && phone.isNotEmpty;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -203,6 +181,7 @@ class _ChatScreenState extends State<ChatScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           tooltip: 'Retour',
           onPressed: () => context.pop(),
@@ -222,22 +201,54 @@ class _ChatScreenState extends State<ChatScreen> {
               name: participant.name.isNotEmpty ? participant.name : '?',
               imageUrl: participant.avatarUrl,
               size: DonyAvatarSize.sm,
+              verified: participant.kycVerified,
             ),
             const SizedBox(width: DonySpacing.sm),
             Expanded(
-              child: Text(
-                participant.name.isNotEmpty ? participant.name : 'Conversation',
-                style: tt.titleLarge?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    participant.name.isNotEmpty
+                        ? participant.name
+                        : 'Conversation',
+                    style: tt.titleLarge?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (participant.role != null && participant.role!.isNotEmpty)
+                    Text(
+                      participant.role!,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
               ),
             ),
           ],
         ),
         actions: [
+          if (canCall)
+            IconButton(
+              tooltip: 'Appeler',
+              onPressed: () => _call(phone),
+              icon: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                ),
+                child: DonyIcon('phone', size: 18, color: cs.primary),
+              ),
+            ),
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'delete') _confirmAndDelete();
@@ -247,8 +258,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 value: 'delete',
                 child: Row(
                   children: [
-                    DonyIcon('trash-2',
-                        size: 20, color: cs.error),
+                    DonyIcon('trash-2', size: 20, color: cs.error),
                     const SizedBox(width: DonySpacing.sm),
                     Text(
                       'Supprimer la conversation',
@@ -287,122 +297,125 @@ class _ChatScreenState extends State<ChatScreen> {
         builder: (context, state) {
           final isReadOnly = state is ChatReadOnly;
           return Column(
-        children: [
-          // Sticky trip banner — disabled (not clickable) in read-only mode
-          if (conversation.tripLabel != null)
-            _TripBanner(
-              conversation: conversation,
-              cs: cs,
-              tt: tt,
-              disabled: isReadOnly,
-            ),
+            children: [
+              if (conversation.tripLabel != null)
+                _TripBanner(
+                  conversation: conversation,
+                  cs: cs,
+                  tt: tt,
+                  disabled: isReadOnly,
+                ),
+              if (isReadOnly) _ReadOnlyBanner(cs: cs, tt: tt),
+              if (conversation.bidStatus != null)
+                _BidStatusBanner(status: conversation.bidStatus!, cs: cs, tt: tt),
 
-          // Read-only info banner
-          if (isReadOnly)
-            _ReadOnlyBanner(cs: cs, tt: tt),
-
-          // Sticky bid status banner (informational, no actions)
-          if (conversation.bidStatus != null)
-            _BidStatusBanner(status: conversation.bidStatus!, cs: cs, tt: tt),
-
-          // Message list
-          Expanded(
-            child: Builder(builder: (context) {
-              if (state is ChatLoading || state is ChatInitial) {
-                return Center(child: CircularProgressIndicator(color: cs.primary));
-              }
-
-              if (state is ChatError) {
-                return DonyEmptyState(
-                  type: DonyEmptyStateType.error,
-                  mascotte: DonyMascotteType.assis,
-                  iconAsset: 'wifi-off',
-                  title: 'Connexion interrompue',
-                  description: ErrorPresenter.resolve(state.error).message,
-                  actionLabel: 'Réessayer',
-                  onAction: () => context.read<ChatBloc>().add(
-                        ChatSubscribeRequested(
-                          widget.conversation.firestoreConversationId,
-                        ),
-                      ),
-                );
-              }
-
-              final messages = switch (state) {
-                ChatLoaded(:final messages) => messages,
-                ChatReadOnly(:final messages) => messages,
-                _ => null,
-              };
-
-              if (messages != null) {
-                if (messages.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        DonyIcon(
-                          'message-circle',
-                          size: 48,
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.35),
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                        Text(
-                          'Démarrez la conversation !',
-                          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  reverse: true,
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.sm,
-                    DonySpacing.lg,
-                    DonySpacing.md,
-                  ),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final isMe = message.senderId == _myUid;
-                    final showSep = _showDateSeparator(messages, index);
-                    return Column(
-                      children: [
-                        if (showSep)
-                          _DateSeparator(date: message.sentAt, cs: cs, tt: tt),
-                        _MessageBubble(message: message, isMe: isMe)
-                            .animate()
-                            .fadeIn(duration: 180.ms, curve: Curves.easeOutCubic),
-                      ],
+              Expanded(
+                child: Builder(builder: (context) {
+                  if (state is ChatLoading || state is ChatInitial) {
+                    return Center(
+                        child: CircularProgressIndicator(color: cs.primary));
+                  }
+                  if (state is ChatError) {
+                    return DonyEmptyState(
+                      type: DonyEmptyStateType.error,
+                      mascotte: DonyMascotteType.assis,
+                      iconAsset: 'wifi-off',
+                      title: 'Connexion interrompue',
+                      description: ErrorPresenter.resolve(state.error).message,
+                      actionLabel: 'Réessayer',
+                      onAction: () => context.read<ChatBloc>().add(
+                            ChatSubscribeRequested(
+                              widget.conversation.firestoreConversationId,
+                            ),
+                          ),
                     );
-                  },
-                );
-              }
+                  }
 
-              return const SizedBox.shrink();
-            }),
-          ),
+                  final messages = switch (state) {
+                    ChatLoaded(:final messages) => messages,
+                    ChatReadOnly(:final messages) => messages,
+                    _ => null,
+                  };
 
-          // Input bar — disabled in read-only mode
-          _InputBar(
-            controller: _controller,
-            isSending: _isSending,
-            disabled: isReadOnly,
-            onSendText: _sendText,
-            onPickImage: _pickAndSendImage,
-            onSendLocation: _sendLocation,
-          ),
-        ],
-        );
+                  if (messages != null) {
+                    if (messages.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            DonyIcon(
+                              'message-circle',
+                              size: 48,
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.35),
+                            ),
+                            const SizedBox(height: DonySpacing.md),
+                            Text(
+                              'Démarrez la conversation !',
+                              style: tt.bodyMedium
+                                  ?.copyWith(color: cs.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.sm,
+                        DonySpacing.lg,
+                        DonySpacing.md,
+                      ),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        final isMe = message.senderId == _myUid;
+                        final showSep = _showDateSeparator(messages, index);
+                        // Dernier d'un groupe (visuellement en bas du groupe) :
+                        // le message plus récent (index-1) a un autre expéditeur,
+                        // ou c'est le plus récent, ou un séparateur les coupe.
+                        final isLastOfGroup = index == 0 ||
+                            messages[index - 1].senderId != message.senderId ||
+                            _showDateSeparator(messages, index - 1);
+                        return Column(
+                          children: [
+                            if (showSep)
+                              _DateSeparator(
+                                  date: message.sentAt, cs: cs, tt: tt),
+                            _MessageBubble(
+                              message: message,
+                              isMe: isMe,
+                              isLastOfGroup: isLastOfGroup,
+                            )
+                                .animate()
+                                .fadeIn(duration: 180.ms, curve: Curves.easeOutCubic)
+                                .slideY(begin: 0.06, end: 0, duration: 180.ms, curve: Curves.easeOutCubic),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
+              ),
+
+              _InputBar(
+                controller: _controller,
+                isSending: _isSending,
+                disabled: isReadOnly,
+                onSendText: _sendText,
+              ),
+            ],
+          );
         },
       ),
     );
   }
 
   bool _showDateSeparator(List<MessageModel> messages, int index) {
+    if (index < 0 || index >= messages.length) return false;
     if (index == messages.length - 1) return true;
     final current = messages[index].sentAt;
     final next = messages[index + 1].sentAt;
@@ -463,7 +476,8 @@ class _TripBanner extends StatelessWidget {
     return Material(
       color: disabled ? cs.surfaceContainerLowest : cs.surface,
       child: InkWell(
-        onTap: disabled ? null : () => context.push('/bids/${conversation.bidId}'),
+        onTap:
+            disabled ? null : () => context.push('/bids/${conversation.bidId}'),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -507,11 +521,7 @@ class _TripBanner extends StatelessWidget {
                       ],
                     ),
                   ),
-                  DonyIcon(
-                    'chevron-right',
-                    size: 18,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
                 ],
               ),
             ),
@@ -538,30 +548,15 @@ class _BidStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (IconData?, String, Color, String?)? config = switch (status) {
-      'BID_ACCEPTED' => (
-          null,
-          'Offre acceptée',
-          cs.success,
-          'circle-check',
-        ),
-      'DELIVERY_CONFIRMED' => (
-          null,
-          'Livraison confirmée',
-          cs.success,
-          'package',
-        ),
-      'TRIP_CANCELLED' => (
-          null,
-          'Trajet annulé',
-          cs.error,
-          'circle-x',
-        ),
+    final (String, Color, String?)? config = switch (status) {
+      'BID_ACCEPTED' => ('Offre acceptée', cs.success, 'circle-check'),
+      'DELIVERY_CONFIRMED' => ('Livraison confirmée', cs.success, 'package'),
+      'TRIP_CANCELLED' => ('Trajet annulé', cs.error, 'circle-x'),
       _ => null,
     };
     if (config == null) return const SizedBox.shrink();
 
-    final (icon, label, color, iconAsset) = config;
+    final (label, color, iconAsset) = config;
     return Container(
       color: color.withValues(alpha: 0.08),
       padding: const EdgeInsets.symmetric(
@@ -573,9 +568,7 @@ class _BidStatusBanner extends StatelessWidget {
           if (iconAsset == 'package')
             const DonyEmoji.parcel(size: 14)
           else if (iconAsset != null)
-            DonyIcon(iconAsset, size: 14, color: color)
-          else
-            Icon(icon, size: 14, color: color),
+            DonyIcon(iconAsset, size: 14, color: color),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
@@ -601,7 +594,8 @@ class _DateSeparator extends StatelessWidget {
 
   String _label() {
     final now = DateTime.now();
-    final isToday = now.year == date.year && now.month == date.month && now.day == date.day;
+    final isToday =
+        now.year == date.year && now.month == date.month && now.day == date.day;
     final isYesterday = now.difference(date).inDays == 1;
     if (isToday) return 'Aujourd\'hui';
     if (isYesterday) return 'Hier';
@@ -612,18 +606,24 @@ class _DateSeparator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-      child: Row(
-        children: [
-          Expanded(child: Divider(color: cs.outlineVariant, endIndent: DonySpacing.md)),
-          Text(
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.md,
+            vertical: 5,
+          ),
+          decoration: BoxDecoration(
+            color: cs.onSurface.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+          ),
+          child: Text(
             _label(),
             style: tt.labelSmall?.copyWith(
               color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          Expanded(child: Divider(color: cs.outlineVariant, indent: DonySpacing.md)),
-        ],
+        ),
       ),
     );
   }
@@ -634,7 +634,12 @@ class _DateSeparator extends StatelessWidget {
 class _MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
-  const _MessageBubble({required this.message, required this.isMe});
+  final bool isLastOfGroup;
+  const _MessageBubble({
+    required this.message,
+    required this.isMe,
+    this.isLastOfGroup = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -664,8 +669,17 @@ class _MessageBubble extends StatelessWidget {
       );
     }
 
+    // Coin « queue » uniquement sur le dernier d'un groupe.
+    final tail = Radius.circular(isLastOfGroup ? DonyRadius.xs : DonyRadius.card);
+    final radius = BorderRadius.only(
+      topLeft: const Radius.circular(DonyRadius.card),
+      topRight: const Radius.circular(DonyRadius.card),
+      bottomLeft: isMe ? const Radius.circular(DonyRadius.card) : tail,
+      bottomRight: isMe ? tail : const Radius.circular(DonyRadius.card),
+    );
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.xs),
+      padding: EdgeInsets.only(bottom: isLastOfGroup ? DonySpacing.sm : 2),
       child: Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -682,22 +696,18 @@ class _MessageBubble extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       color: isMe ? cs.primary : cs.surface,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(DonyRadius.card),
-                        topRight: const Radius.circular(DonyRadius.card),
-                        bottomLeft:
-                            Radius.circular(isMe ? DonyRadius.card : DonyRadius.xs),
-                        bottomRight:
-                            Radius.circular(isMe ? DonyRadius.xs : DonyRadius.card),
-                      ),
-                      border: isMe ? null : Border.all(color: cs.outlineVariant),
-                      boxShadow: [
-                        BoxShadow(
-                          color: DonyColors.shadow,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      borderRadius: radius,
+                      // Bulle reçue : ombre douce, SANS bordure (principe
+                      // « ombres > bordures »). Bulle envoyée : aplat coloré.
+                      boxShadow: isMe
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: DonyColors.shadow,
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                     ),
                     child: message.isDeleted
                         ? _DeletedContent(isMe: isMe, cs: cs, tt: tt)
@@ -718,32 +728,33 @@ class _MessageBubble extends StatelessWidget {
                                     tt: tt,
                                   ),
                   ),
-                  const SizedBox(height: 3),
-                  // Timestamp + read receipt
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        DateFormat('HH:mm').format(message.sentAt.toLocal()),
-                        style: tt.bodySmall?.copyWith(
-                          fontSize: 10,
-                          color: cs.onSurfaceVariant,
+                  // Horodatage + accusé : seulement sur le dernier du groupe.
+                  if (isLastOfGroup) ...[
+                    const SizedBox(height: 3),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          DateFormat('HH:mm').format(message.sentAt.toLocal()),
+                          style: tt.bodySmall?.copyWith(
+                            fontSize: 10,
+                            color: cs.onSurfaceVariant,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
-                      ),
-                      if (isMe) ...[
-                        const SizedBox(width: 3),
-                        DonyIcon(
-                          message.readAt != null
-                              ? 'check-check'
-                              : 'check',
-                          size: 12,
-                          color: message.readAt != null
-                              ? cs.primary
-                              : cs.onSurfaceVariant,
-                        ),
+                        if (isMe) ...[
+                          const SizedBox(width: 3),
+                          DonyIcon(
+                            message.readAt != null ? 'check-check' : 'check',
+                            size: 12,
+                            color: message.readAt != null
+                                ? cs.primary
+                                : cs.onSurfaceVariant,
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -848,11 +859,7 @@ class _LocationContent extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon(
-            'map-pin',
-            size: 20,
-            color: isMe ? cs.onPrimary : cs.error,
-          ),
+          DonyIcon('map-pin', size: 20, color: isMe ? cs.onPrimary : cs.error),
           const SizedBox(width: DonySpacing.xs),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,9 +908,8 @@ class _DeletedContent extends StatelessWidget {
           DonyIcon(
             'ban',
             size: 14,
-            color: isMe
-                ? cs.onPrimary.withValues(alpha: 0.6)
-                : cs.onSurfaceVariant,
+            color:
+                isMe ? cs.onPrimary.withValues(alpha: 0.6) : cs.onSurfaceVariant,
           ),
           const SizedBox(width: DonySpacing.xs),
           Text(
@@ -921,23 +927,19 @@ class _DeletedContent extends StatelessWidget {
   }
 }
 
-// ── Input bar ──────────────────────────────────────────────────────────────────
+// ── Input bar (F1 — texte uniquement) ──────────────────────────────────────────
 
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool isSending;
   final bool disabled;
   final VoidCallback onSendText;
-  final VoidCallback onPickImage;
-  final VoidCallback onSendLocation;
 
   const _InputBar({
     required this.controller,
     required this.isSending,
     this.disabled = false,
     required this.onSendText,
-    required this.onPickImage,
-    required this.onSendLocation,
   });
 
   @override
@@ -982,79 +984,74 @@ class _InputBar extends StatelessWidget {
           border: Border(top: BorderSide(color: cs.outlineVariant)),
         ),
         padding: EdgeInsets.fromLTRB(
-          DonySpacing.xs,
+          DonySpacing.lg,
           DonySpacing.sm,
-          DonySpacing.sm,
+          DonySpacing.lg,
           DonySpacing.sm + MediaQuery.of(context).padding.bottom,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            IconButton(
-              onPressed: onPickImage,
-              icon: DonyIcon('image', color: cs.onSurfaceVariant),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            ),
-            IconButton(
-              onPressed: onSendLocation,
-              icon: DonyIcon('map-pin', color: cs.onSurfaceVariant),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            ),
-            const SizedBox(width: DonySpacing.xs),
-            Expanded(
-              child: Container(
-                constraints: const BoxConstraints(maxHeight: 120),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(DonyRadius.xl),
-                  border: Border.all(color: cs.outlineVariant),
-                ),
+        // F1 : une seule pill — champ + bouton envoi à l'intérieur.
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 132),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: BorderRadius.circular(DonyRadius.xl),
+            border: Border.all(color: cs.outlineVariant),
+          ),
+          padding: const EdgeInsets.only(left: DonySpacing.base, right: 5),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
                 child: TextField(
                   controller: controller,
                   maxLines: null,
+                  minLines: 1,
+                  maxLength: ChatMessageRules.maxLength,
                   keyboardType: TextInputType.multiline,
                   textInputAction: TextInputAction.newline,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   decoration: InputDecoration(
                     hintText: 'Votre message…',
-                    hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                    hintStyle:
+                        tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.md,
-                      vertical: DonySpacing.sm,
-                    ),
+                    counterText: '',
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 11),
                     isDense: true,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: DonySpacing.xs),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: controller,
-              builder: (context, value, _) {
-                final hasText = value.text.trim().isNotEmpty;
-                return AnimatedScale(
-                  scale: hasText ? 1.0 : 0.85,
-                  duration: 150.ms,
-                  child: Material(
-                    color: hasText ? cs.primary : cs.outlineVariant,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: hasText && !isSending ? onSendText : null,
-                      child: const SizedBox(
-                        width: 44,
-                        height: 44,
-                        child: DonyIcon('send', color: Colors.white, size: 20),
+              const SizedBox(width: DonySpacing.xs),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: controller,
+                  builder: (context, value, _) {
+                    final hasText = value.text.trim().isNotEmpty;
+                    return AnimatedScale(
+                      scale: hasText ? 1.0 : 0.85,
+                      duration: 150.ms,
+                      curve: Curves.easeOutCubic,
+                      child: Material(
+                        color: hasText ? cs.primary : cs.outlineVariant,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: hasText && !isSending ? onSendText : null,
+                          child: const SizedBox(
+                            width: 38,
+                            height: 38,
+                            child: DonyIcon('send', color: Colors.white, size: 18),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

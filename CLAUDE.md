@@ -323,6 +323,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `negotiation_offer_accepted` | NegotiationBloc._onAccept() |
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |
+| `conversation_call_initiated` | ChatScreen._call() — tap 📞 dans le header chat (numéro révélé) |
+| `message_blocked` | ChatScreen._sendText() — message refusé par ChatMessageValidator (propriété `reason`) |
 | `wallet_topup_started` | WalletTopupAmountScreen.initState |
 | `wallet_topup_completed` | WalletBloc (après topup réussi) |
 | `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
