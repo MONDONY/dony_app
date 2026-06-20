@@ -641,6 +641,13 @@ class _ActivityTab extends StatelessWidget {
                     onTap: () => context.push('/package-requests/match'),
                   ),
                   DonyListTile(
+                    iconAsset: 'bell',
+                    iconColor: cs.primary,
+                    iconBgColor: cs.primaryContainer,
+                    label: 'Mes alertes corridor',
+                    onTap: () => context.push('/corridor-alerts'),
+                  ),
+                  DonyListTile(
                     iconAsset: 'bookmark',
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
