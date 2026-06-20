@@ -629,15 +629,6 @@ class _ActivityTab extends StatelessWidget {
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Colis sur mes trajets',
-                    trailing: upcomingAnnouncements > 0
-                        ? Text(
-                            '$upcomingAnnouncements matchs',
-                            style: tt.labelMedium?.copyWith(
-                              color: cs.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          )
-                        : null,
                     onTap: () => context.push('/package-requests/match'),
                   ),
                   DonyListTile(

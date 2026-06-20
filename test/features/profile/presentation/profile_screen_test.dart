@@ -662,9 +662,9 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
-    testWidgets('badge "2 matchs" visible quand 2 annonces ACTIVE', (
-      tester,
-    ) async {
+    testWidgets(
+        '"Colis sur mes trajets" tile visible sans badge matchs (count retiré)',
+        (tester) async {
       final now = DateTime(2026, 6, 1);
       whenListen<AnnouncementState>(
         announcementBloc,
@@ -700,12 +700,10 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.scrollUntilVisible(
-        find.text('2 matchs'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      expect(find.text('2 matchs'), findsOneWidget);
+      // Le badge "N matchs" a été retiré car il affichait le nombre de trajets
+      // à venir (upcomingAnnouncements) au lieu du vrai nombre de colis matchants.
+      // La tuile "Colis sur mes trajets" n'a plus de trailing count.
+      expect(find.textContaining('matchs'), findsNothing);
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
