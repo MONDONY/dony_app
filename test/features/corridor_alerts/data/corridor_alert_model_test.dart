@@ -51,6 +51,39 @@ void main() {
       expect(m.matchCount, 0);
     });
 
+    test('active round-trips true correctly', () {
+      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+        'id': 'rt-true',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Abidjan',
+        'active': true,
+        'createdAt': '2026-06-20T09:00:00',
+      });
+      expect(m.active, isTrue);
+    });
+
+    test('active round-trips false correctly', () {
+      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+        'id': 'rt-false',
+        'departureCity': 'Marseille',
+        'arrivalCity': 'Douala',
+        'active': false,
+        'createdAt': '2026-06-20T09:00:00',
+      });
+      expect(m.active, isFalse);
+    });
+
+    test('throws when active is missing (strict parse)', () {
+      final json = <String, dynamic>{
+        'id': 'a-missing',
+        'departureCity': 'Lyon',
+        'arrivalCity': 'Dakar',
+        'createdAt': '2026-06-20T09:00:00',
+        // 'active' intentionally absent
+      };
+      expect(() => CorridorAlertModel.fromJson(json), throwsA(isA<TypeError>()));
+    });
+
     test('copyWith overrides active + matchCount', () {
       final m = CorridorAlertModel.fromJson(<String, dynamic>{
         'id': 'a3',

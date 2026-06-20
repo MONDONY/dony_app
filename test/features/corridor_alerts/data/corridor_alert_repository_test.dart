@@ -87,6 +87,56 @@ void main() {
     ).called(1);
   });
 
+  test('update with active:false → PUT body contains "active": false', () async {
+    Map<String, dynamic>? capturedBody;
+    when(
+      () => dio.put<Map<String, dynamic>>(
+        '/me/corridor-alerts/a1',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((inv) async {
+      capturedBody = inv.namedArguments[#data] as Map<String, dynamic>;
+      return _resp<Map<String, dynamic>>(alertJson);
+    });
+    const draft = CorridorAlertDraft(
+      departureCity: 'Paris',
+      arrivalCity: 'Bamako',
+    );
+    await repo.update('a1', draft, active: false);
+    expect(capturedBody, containsPair('active', false));
+    verify(
+      () => dio.put<Map<String, dynamic>>(
+        '/me/corridor-alerts/a1',
+        data: any(named: 'data'),
+      ),
+    ).called(1);
+  });
+
+  test('update without active → PUT body omits "active"', () async {
+    Map<String, dynamic>? capturedBody;
+    when(
+      () => dio.put<Map<String, dynamic>>(
+        '/me/corridor-alerts/a1',
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((inv) async {
+      capturedBody = inv.namedArguments[#data] as Map<String, dynamic>;
+      return _resp<Map<String, dynamic>>(alertJson);
+    });
+    const draft = CorridorAlertDraft(
+      departureCity: 'Paris',
+      arrivalCity: 'Bamako',
+    );
+    await repo.update('a1', draft);
+    expect(capturedBody!.containsKey('active'), isFalse);
+    verify(
+      () => dio.put<Map<String, dynamic>>(
+        '/me/corridor-alerts/a1',
+        data: any(named: 'data'),
+      ),
+    ).called(1);
+  });
+
   test('delete → DELETE /me/corridor-alerts/{id}', () async {
     when(() => dio.delete<void>('/me/corridor-alerts/a1'))
         .thenAnswer((_) async => _resp<void>(null));

@@ -22,10 +22,18 @@ class CorridorAlertRepository {
     return CorridorAlertModel.fromJson(response.data!);
   }
 
-  Future<CorridorAlertModel> update(String id, CorridorAlertDraft draft) async {
+  Future<CorridorAlertModel> update(
+    String id,
+    CorridorAlertDraft draft, {
+    bool? active,
+  }) async {
+    final body = draft.toJson();
+    if (active != null) {
+      body['active'] = active;
+    }
     final response = await _apiClient.dio.put<Map<String, dynamic>>(
       '/me/corridor-alerts/$id',
-      data: draft.toJson(),
+      data: body,
     );
     return CorridorAlertModel.fromJson(response.data!);
   }

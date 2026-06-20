@@ -50,7 +50,7 @@ class CorridorAlertModel extends Equatable {
                     ?.map((e) => e as String)
                     .toList() ??
                 const [],
-        active: json['active'] as bool? ?? true,
+        active: json['active'] as bool,
         matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
