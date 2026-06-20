@@ -140,9 +140,14 @@ class _EmptyView extends StatelessWidget {
     // AnnouncementBloc tells us if ≥1 ACTIVE/FULL trip exists.
     return BlocBuilder<AnnouncementBloc, AnnouncementState>(
       builder: (ctx, annState) {
-        final hasActiveTrip = annState is AnnouncementListLoaded &&
-            annState.announcements
-                .any((a) => a.status == 'ACTIVE' || a.status == 'FULL');
+        // Guard: show a neutral spinner while announcements are still loading
+        // so we never flash the "Publier un trajet" CTA for users who do have
+        // active trips.
+        if (annState is! AnnouncementListLoaded) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final hasActiveTrip = annState.announcements
+            .any((a) => a.status == 'ACTIVE' || a.status == 'FULL');
         return Center(
           child: Padding(
             padding: const EdgeInsets.all(DonySpacing.huge - 8),

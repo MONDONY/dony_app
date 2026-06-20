@@ -84,6 +84,10 @@ void main() {
                 path: '/announcements/create',
                 builder: (_, __) =>
                     const Scaffold(body: Text('CREATE-TRIP'))),
+            GoRoute(
+                path: '/package-requests/:id/public',
+                builder: (_, __) =>
+                    const Scaffold(body: Text('PUBLIC-DETAIL-SCREEN'))),
           ],
         ),
       );
@@ -165,5 +169,52 @@ void main() {
     await t.pumpAndSettle(const Duration(seconds: 2));
     expect(find.byType(DonyMascotteAnimated), findsOneWidget);
     expect(find.textContaining('Créer une alerte'), findsOneWidget);
+  });
+
+  testWidgets('card tap navigates to public detail screen', (t) async {
+    whenListen(
+      matching,
+      Stream.value(TripMatchingState(
+        status: TripMatchingStatus.loaded,
+        matches: [_match('xyz')],
+      )),
+      initialState: const TripMatchingState(),
+    );
+    when(() => announcements.state)
+        .thenReturn(AnnouncementListLoaded(const []));
+    when(() => announcements.stream)
+        .thenAnswer((_) => const Stream<AnnouncementState>.empty());
+    await t.pumpWidget(pump());
+    await t.pumpAndSettle(const Duration(seconds: 2));
+    expect(find.byType(MatchingRequestCard), findsOneWidget);
+    await t.tap(find.byType(MatchingRequestCard));
+    await t.pumpAndSettle();
+    expect(find.text('PUBLIC-DETAIL-SCREEN'), findsOneWidget);
+  });
+
+  testWidgets('error state shows error view and retry re-dispatches load event',
+      (t) async {
+    whenListen(
+      matching,
+      Stream.value(const TripMatchingState(
+        status: TripMatchingStatus.error,
+        errorMessage: 'network error',
+      )),
+      initialState: const TripMatchingState(),
+    );
+    when(() => announcements.state)
+        .thenReturn(AnnouncementInitial());
+    when(() => announcements.stream)
+        .thenAnswer((_) => const Stream<AnnouncementState>.empty());
+    await t.pumpWidget(pump());
+    await t.pumpAndSettle(const Duration(seconds: 2));
+    // Error view should be rendered.
+    expect(find.textContaining('erreur'), findsOneWidget);
+    expect(find.textContaining('Réessayer'), findsOneWidget);
+    // Tap the retry button.
+    await t.tap(find.textContaining('Réessayer'));
+    await t.pump();
+    // Verify that TripMatchingRequested was re-dispatched to the bloc.
+    verify(() => matching.add(const TripMatchingRequested())).called(greaterThan(0));
   });
 }
