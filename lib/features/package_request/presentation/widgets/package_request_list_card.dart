@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -433,4 +434,248 @@ class _OwnRequestChip extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Carte matching scoré (layout B — « Colis sur mes trajets ») ──────────────
+
+/// Carte unifiée d'un colis matchant un trajet : badge de score, poids,
+/// corridor du trajet + date, expéditeur (initiales/note), budget/kg, photo.
+class MatchingRequestCard extends StatelessWidget {
+  const MatchingRequestCard({
+    super.key,
+    required this.match,
+    required this.index,
+    this.onTap,
+  });
+
+  final MatchingRequestModel match;
+  final int index;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final accent = cs.warning;
+    final depDate = match.tripDepartureDate;
+    final dateStr = depDate != null
+        ? DateFormat('d MMM', 'fr').format(depDate).toLowerCase()
+        : '';
+
+    return Material(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: cs.outlineVariant),
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      width: 6,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [accent, accent.withValues(alpha: 0.55)],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(DonySpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                _ScoreBadge(score: match.matchScore),
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    match.tripCorridor != null && dateStr.isNotEmpty
+                                        ? '${match.tripCorridor} · $dateStr'
+                                        : match.tripCorridor ?? dateStr,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: DonySpacing.sm),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _MatchThumbnail(match: match, cs: cs),
+                                const SizedBox(width: DonySpacing.md),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${match.weightKg.toStringAsFixed(0)} kg'
+                                        '${match.contentType != null ? ' · ${match.contentType}' : ''}',
+                                        style: tt.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.3,
+                                          color: cs.onSurface,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: DonySpacing.xs),
+                                      Text(
+                                        match.budgetPerKg != null
+                                            ? 'Budget ${match.budgetPerKg!.toStringAsFixed(0)} €/kg'
+                                            : 'Budget libre',
+                                        style: tt.bodySmall?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: DonySpacing.sm),
+                            Divider(height: 1, color: cs.outlineVariant),
+                            const SizedBox(height: DonySpacing.xs),
+                            Row(
+                              children: [
+                                DonyAvatar(
+                                  name: match.senderName,
+                                  size: DonyAvatarSize.sm,
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        match.senderName,
+                                        style: tt.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Row(
+                                        children: [
+                                          DonyIcon('star',
+                                              size: 12, color: cs.warning),
+                                          const SizedBox(width: 2),
+                                          Text(
+                                            match.senderRating
+                                                .toStringAsFixed(1),
+                                            style: tt.bodySmall?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: cs.onSurface,
+                                            ),
+                                          ),
+                                          Text(
+                                            ' · ${match.senderTotalSent} envois',
+                                            style: tt.bodySmall?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                DonyIcon('chevron-right',
+                                    size: 16,
+                                    color: cs.onSurfaceVariant
+                                        .withValues(alpha: 0.5)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(delay: Duration(milliseconds: 60 * index), duration: 280.ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+class _ScoreBadge extends StatelessWidget {
+  const _ScoreBadge({required this.score});
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyIcon('sparkles', size: 12, color: cs.primary),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            '$score',
+            style: tt.labelSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: cs.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MatchThumbnail extends StatelessWidget {
+  const _MatchThumbnail({required this.match, required this.cs});
+  final MatchingRequestModel match;
+  final ColorScheme cs;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = match.packagePhotoUrl;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      child: SizedBox(
+        width: 76,
+        height: 76,
+        child: url != null && url.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => _matchPlaceholder(cs),
+                errorWidget: (_, __, ___) => _matchPlaceholder(cs),
+              )
+            : _matchPlaceholder(cs),
+      ),
+    );
+  }
+
+  Widget _matchPlaceholder(ColorScheme cs) => Container(
+        color: cs.primaryContainer.withValues(alpha: 0.45),
+        child: const Center(child: Text('📦', style: TextStyle(fontSize: 30))),
+      );
 }

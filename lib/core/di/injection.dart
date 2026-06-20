@@ -105,12 +105,18 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/bloc/trip_matching_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
+import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
@@ -639,6 +645,32 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<PackageRequestRepository>(
     () => PackageRequestRepository(getIt<ApiClient>()),
   );
+  // Corridor alerts (alertes corridor voyageur)
+  getIt.registerLazySingleton<CorridorAlertRepository>(
+    () => CorridorAlertRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<CorridorAlertListBloc>(
+    () => CorridorAlertListBloc(
+      getIt<CorridorAlertRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  // param1 = alerte à éditer (null → création).
+  getIt.registerFactoryParam<CorridorAlertFormCubit, CorridorAlertModel?, void>(
+    (editing, _) => CorridorAlertFormCubit(
+      getIt<CorridorAlertRepository>(),
+      getIt<AnalyticsService>(),
+      editing: editing,
+    ),
+  );
+  // param1 = alertId (String) — colis matchant l'alerte.
+  getIt.registerFactoryParam<CorridorAlertMatchesCubit, String, void>(
+    (alertId, _) => CorridorAlertMatchesCubit(
+      getIt<CorridorAlertRepository>(),
+      getIt<AnalyticsService>(),
+      alertId: alertId,
+    ),
+  );
   getIt.registerLazySingleton<NegotiationRepository>(
     () => NegotiationRepository(getIt<ApiClient>()),
   );
@@ -655,6 +687,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<PackageRequestSearchBloc>(
     () => PackageRequestSearchBloc(
+      getIt<PackageRequestRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<TripMatchingBloc>(
+    () => TripMatchingBloc(
       getIt<PackageRequestRepository>(),
       getIt<AnalyticsService>(),
     ),

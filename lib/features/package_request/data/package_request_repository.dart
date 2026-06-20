@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -259,6 +260,16 @@ class PackageRequestRepository {
       },
     );
     return PackageRequest.fromJson(response.data!);
+  }
+
+  /// Demandes colis scorées pour les trajets actifs du voyageur connecté.
+  /// Déjà triées par matchScore décroissant côté serveur.
+  Future<List<MatchingRequestModel>> findMatchingRequests() async {
+    final response = await _apiClient.dio
+        .get<List<dynamic>>('/travelers/me/matching-requests');
+    return (response.data ?? <dynamic>[])
+        .map((e) => MatchingRequestModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<PackageRequestSearchPage> search({

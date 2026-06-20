@@ -124,6 +124,16 @@ abstract final class AnalyticsEvents {
   static const trackingLinkShared     = 'tracking_link_shared';
   static const screenFeedbackSubmitted = 'screen_feedback_submitted';
 
+  // Trip matching (Colis sur mes trajets)
+  static const tripMatchingViewed = 'trip_matching_viewed';
+
+  // Corridor alerts
+  static const corridorAlertToggled = 'corridor_alert_toggled';
+  static const corridorAlertDeleted = 'corridor_alert_deleted';
+  static const corridorAlertCreated = 'corridor_alert_created';
+  static const corridorAlertUpdated = 'corridor_alert_updated';
+  static const corridorAlertMatchesViewed = 'corridor_alert_matches_viewed';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }
