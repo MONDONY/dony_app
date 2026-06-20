@@ -62,6 +62,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/my_pac
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
@@ -1117,7 +1118,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/package-requests/me',
-      builder: (_, __) => const MyPackageRequestsScreen(),
+      builder: (_, __) => BlocProvider.value(
+        value: getIt<PackageRequestBloc>(),
+        child: const MyPackageRequestsScreen(),
+      ),
     ),
     GoRoute(
       path: '/package-requests/match',
