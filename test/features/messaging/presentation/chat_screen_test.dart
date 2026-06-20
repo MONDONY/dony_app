@@ -60,6 +60,14 @@ void main() {
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
+    registerFallbackValue(
+      ChatTextSendRequested(
+        firestoreConversationId: 'x',
+        conversationId: 'x',
+        senderFirebaseUid: 'x',
+        body: 'x',
+      ),
+    );
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
       getIt.registerSingleton<AnalyticsService>(analytics);
@@ -118,19 +126,52 @@ void main() {
       expect(find.text('Connexion interrompue'), findsOneWidget);
     });
 
-    testWidgets('input bar renders with image and send buttons', (tester) async {
+    testWidgets('footer texte : envoi présent, plus de bouton image/position',
+        (tester) async {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
 
-      // Icônes migrées vers DonyIcon SVG Lucide ('image' / 'send').
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'image'),
-        findsOneWidget,
-      );
       expect(
         find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'),
         findsOneWidget,
       );
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'image'),
+        findsNothing,
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'map-pin'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('texte valide → ChatTextSendRequested dispatché', (tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await _pump(tester, bloc);
+
+      await tester.enterText(find.byType(TextField), 'Bonjour Kadi');
+      await tester.pump();
+      await tester.tap(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'));
+      await tester.pump();
+
+      verify(() => bloc.add(any(that: isA<ChatTextSendRequested>()))).called(1);
+    });
+
+    testWidgets('numéro de téléphone → bloqué (aucun envoi + avertissement)',
+        (tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      await _pump(tester, bloc);
+
+      await tester.enterText(
+          find.byType(TextField), 'appelle moi au 06 12 34 56 78');
+      await tester.pump();
+      await tester.tap(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      verifyNever(() => bloc.add(any(that: isA<ChatTextSendRequested>())));
+      expect(find.textContaining('garde les échanges'), findsOneWidget);
     });
   });
 }
