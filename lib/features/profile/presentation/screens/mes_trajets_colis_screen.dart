@@ -37,7 +37,7 @@ class MesTrajetsColisScreen extends StatelessWidget {
                 ),
               )
             : null,
-        onTap: () => context.push('/announcements'),
+        onTap: () => context.go('/announcements'),
       ),
       _TileData(
         iconAsset: 'inbox',

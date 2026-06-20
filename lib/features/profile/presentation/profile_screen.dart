@@ -539,7 +539,7 @@ class _ActivityTab extends StatelessWidget {
                           ),
                         )
                       : null,
-                  onTap: () => context.push('/announcements'),
+                  onTap: () => context.go('/announcements'),
                 ),
                 DonyListTile(
                   iconAsset: 'handshake',
