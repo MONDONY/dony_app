@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -19,6 +20,7 @@ class CorridorAlertTile extends StatelessWidget {
   final ValueChanged<bool> onToggle;
 
   /// Builds a compact filter summary, e.g. "20–30 juin · ≥ 3 kg · Documents, Vêtements".
+  /// For senderWantsTrips, only the date window is meaningful.
   /// Returns a neutral fallback when no filter is set.
   static String buildFilterSummary(CorridorAlertModel alert) {
     final parts = <String>[];
@@ -30,6 +32,11 @@ class CorridorAlertTile extends StatelessWidget {
       parts.add('À partir du ${_compactDate(alert.dateFrom!)}');
     } else if (alert.dateTo != null) {
       parts.add("Jusqu'au ${_compactDate(alert.dateTo!)}");
+    }
+
+    // For trajets direction, only date is meaningful — skip weight & categories.
+    if (alert.direction == AlertDirection.senderWantsTrips) {
+      return parts.isEmpty ? 'Toute date' : parts.join(' · ');
     }
 
     // ── Weight ────────────────────────────────────────────────────────────
@@ -85,6 +92,10 @@ class CorridorAlertTile extends StatelessWidget {
                 children: [
                   Row(
                     children: [
+                      _DirectionPill(
+                        direction: alert.direction,
+                      ),
+                      const SizedBox(width: DonySpacing.xs),
                       Flexible(
                         child: Text(
                           '${alert.departureCity} → ${alert.arrivalCity}',
@@ -125,6 +136,55 @@ class CorridorAlertTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Small pill showing direction: « Colis » (traveler wants packages) or « Trajets » (sender wants trips).
+class _DirectionPill extends StatelessWidget {
+  const _DirectionPill({required this.direction});
+
+  final AlertDirection direction;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final isTrip = direction == AlertDirection.senderWantsTrips;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.xs + 2,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: isTrip
+            ? cs.secondaryContainer
+            : cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isTrip ? Icons.flight_rounded : Icons.inventory_2_rounded,
+            size: 11,
+            color: isTrip
+                ? cs.onSecondaryContainer
+                : cs.onPrimaryContainer,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            isTrip ? 'Trajets' : 'Colis',
+            style: tt.labelSmall?.copyWith(
+              color: isTrip
+                  ? cs.onSecondaryContainer
+                  : cs.onPrimaryContainer,
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }

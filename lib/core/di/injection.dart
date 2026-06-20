@@ -666,12 +666,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       initialDirection: params.direction,
     ),
   );
-  // param1 = alertId (String) — colis matchant l'alerte.
-  getIt.registerFactoryParam<CorridorAlertMatchesCubit, String, void>(
-    (alertId, _) => CorridorAlertMatchesCubit(
+  // param1 = alertId (String), param2 = direction (AlertDirection) — matchs typés par direction.
+  getIt.registerFactoryParam<CorridorAlertMatchesCubit, String, AlertDirection>(
+    (alertId, direction) => CorridorAlertMatchesCubit(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
       alertId: alertId,
+      direction: direction,
     ),
   );
   getIt.registerLazySingleton<NegotiationRepository>(

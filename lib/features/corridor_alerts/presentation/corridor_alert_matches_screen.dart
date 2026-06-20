@@ -1,7 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
@@ -18,8 +21,10 @@ class CorridorAlertMatchesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<CorridorAlertMatchesCubit>(param1: alert.id)..load(),
+      create: (_) => getIt<CorridorAlertMatchesCubit>(
+        param1: alert.id,
+        param2: alert.direction,
+      )..load(),
       child: _CorridorAlertMatchesView(alert: alert),
     );
   }
@@ -34,6 +39,21 @@ class _CorridorAlertMatchesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isTrip = alert.direction == AlertDirection.senderWantsTrips;
+
+    // Resolve role flags for the edit sheet.
+    // watch ensures build() re-runs on auth state change so the edit callback captures fresh flags.
+    final authState = context.watch<AuthBloc>().state;
+    final isTraveler = switch (authState) {
+      final AuthAuthenticated s => s.user.isTraveler,
+      final AuthProfileUpdated s => s.user.isTraveler,
+      _ => false,
+    };
+    final isSender = switch (authState) {
+      final AuthAuthenticated s => s.user.isSender,
+      final AuthProfileUpdated s => s.user.isSender,
+      _ => false,
+    };
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -49,11 +69,11 @@ class _CorridorAlertMatchesView extends StatelessWidget {
           IconButton(
             tooltip: 'Modifier l\'alerte',
             icon: DonyIcon('pen', size: 22, color: cs.primary),
-            // TODO(task-3): pass real isTraveler/isSender from AuthBloc
             onPressed: () => CorridorAlertFormSheet.show(
               context,
               alert: alert,
-              isTraveler: true,
+              isTraveler: isTraveler,
+              isSender: isSender,
             ),
           ),
         ],
@@ -89,14 +109,18 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.base),
                       Text(
-                        'Aucun colis pour l\'instant',
+                        isTrip
+                            ? 'Aucun trajet pour l\'instant'
+                            : 'Aucun colis pour l\'instant',
                         textAlign: TextAlign.center,
                         style:
                             tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       Text(
-                        'Aucun colis ne correspond à cette alerte pour l\'instant.',
+                        isTrip
+                            ? 'Aucun trajet ne correspond à cette alerte pour l\'instant.'
+                            : 'Aucun colis ne correspond à cette alerte pour l\'instant.',
                         textAlign: TextAlign.center,
                         style: tt.bodyMedium
                             ?.copyWith(color: cs.onSurfaceVariant),
@@ -106,6 +130,83 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                 ),
               );
             case CorridorAlertMatchesStatus.loaded:
+              if (isTrip) {
+                // Task 4 will render TripMatchCard here.
+                // For now, show a placeholder list using the trips count.
+                final trips = state.matches.trips;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.base,
+                        DonySpacing.lg,
+                        DonySpacing.sm,
+                      ),
+                      child: Text(
+                        '${trips.length} trajet${trips.length != 1 ? 's' : ''}',
+                        style: tt.labelMedium
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          0,
+                          DonySpacing.lg,
+                          DonySpacing.huge,
+                        ),
+                        itemCount: trips.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: DonySpacing.md),
+                        itemBuilder: (_, i) {
+                          final trip = trips[i];
+                          // TODO(task-4): replace with TripMatchCard(trip: trip)
+                          return Container(
+                            key: ValueKey(trip.announcementId),
+                            padding: const EdgeInsets.all(DonySpacing.base),
+                            decoration: BoxDecoration(
+                              color: cs.surface,
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.card),
+                              border: Border.all(color: cs.outline),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.flight_rounded,
+                                    size: 20, color: cs.primary),
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    '${trip.departureCity} → ${trip.arrivalCity}',
+                                    style: tt.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                              .animate()
+                              .fadeIn(
+                                delay: Duration(milliseconds: 60 * i),
+                                duration: 280.ms,
+                                curve: Curves.easeOutCubic,
+                              )
+                              .slideY(
+                                begin: 0.04,
+                                delay: Duration(milliseconds: 60 * i),
+                                duration: 280.ms,
+                                curve: Curves.easeOutCubic,
+                              );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+              // Colis direction: render package matches.
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

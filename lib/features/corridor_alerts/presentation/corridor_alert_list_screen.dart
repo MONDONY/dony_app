@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
@@ -28,6 +30,21 @@ class _CorridorAlertListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    // Resolve role flags from AuthBloc state (guard for unauthenticated → both false).
+    // watch ensures build() re-runs on auth state change so callbacks capture fresh flags.
+    final authState = context.watch<AuthBloc>().state;
+    final isTraveler = switch (authState) {
+      final AuthAuthenticated s => s.user.isTraveler,
+      final AuthProfileUpdated s => s.user.isTraveler,
+      _ => false,
+    };
+    final isSender = switch (authState) {
+      final AuthAuthenticated s => s.user.isSender,
+      final AuthProfileUpdated s => s.user.isSender,
+      _ => false,
+    };
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -46,8 +63,11 @@ class _CorridorAlertListView extends StatelessWidget {
           icon: const Icon(Icons.add_rounded),
           label: const Text('Créer'),
           onPressed: () async {
-            // TODO(task-3): pass real isTraveler/isSender from AuthBloc
-            await CorridorAlertFormSheet.show(fabCtx, isTraveler: true);
+            await CorridorAlertFormSheet.show(
+              fabCtx,
+              isTraveler: isTraveler,
+              isSender: isSender,
+            );
             if (fabCtx.mounted) {
               fabCtx
                   .read<CorridorAlertListBloc>()
@@ -85,8 +105,11 @@ class _CorridorAlertListView extends StatelessWidget {
                   'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.',
               actionLabel: 'Créer une alerte',
               onAction: () async {
-                // TODO(task-3): pass real isTraveler/isSender from AuthBloc
-                await CorridorAlertFormSheet.show(ctx, isTraveler: true);
+                await CorridorAlertFormSheet.show(
+                  ctx,
+                  isTraveler: isTraveler,
+                  isSender: isSender,
+                );
                 if (ctx.mounted) {
                   ctx
                       .read<CorridorAlertListBloc>()

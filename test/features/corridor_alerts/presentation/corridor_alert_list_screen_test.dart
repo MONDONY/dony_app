@@ -1,10 +1,15 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -14,13 +19,22 @@ class MockListBloc
     extends MockBloc<CorridorAlertListEvent, CorridorAlertListState>
     implements CorridorAlertListBloc {}
 
-CorridorAlertModel _alert(String id, {bool active = true, int matches = 3}) =>
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
+CorridorAlertModel _alert(
+  String id, {
+  bool active = true,
+  int matches = 3,
+  AlertDirection direction = AlertDirection.travelerWantsPackages,
+}) =>
     CorridorAlertModel(
       id: id,
       departureCity: 'Paris',
       arrivalCity: 'Bamako',
       active: active,
       matchCount: matches,
+      direction: direction,
       createdAt: DateTime(2026, 6, 20),
     );
 
@@ -39,6 +53,7 @@ CorridorAlertModel _alertWithFilters(String id) => CorridorAlertModel(
 
 void main() {
   late MockListBloc bloc;
+  late MockAuthBloc authBloc;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -48,6 +63,9 @@ void main() {
 
   setUp(() {
     bloc = MockListBloc();
+    authBloc = MockAuthBloc();
+    // Default: unauthenticated (isTraveler = isSender = false).
+    when(() => authBloc.state).thenReturn(const AuthInitial());
     if (GetIt.I.isRegistered<CorridorAlertListBloc>()) {
       GetIt.I.unregister<CorridorAlertListBloc>();
     }
@@ -56,9 +74,12 @@ void main() {
 
   tearDown(() => GetIt.I.reset());
 
-  Widget pump() => MaterialApp(
-        theme: AppTheme.light,
-        home: const CorridorAlertListScreen(),
+  Widget pump() => BlocProvider<AuthBloc>.value(
+        value: authBloc,
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const CorridorAlertListScreen(),
+        ),
       );
 
   testWidgets('loaded → renders a tile per alert with matchCount badge',
@@ -145,5 +166,19 @@ void main() {
     await t.pumpWidget(pump());
     await t.pump(const Duration(milliseconds: 600));
     expect(find.textContaining('Toute date · tout poids'), findsOneWidget);
+  });
+
+  testWidgets('mixed directions → both pills rendered', (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [
+        _alert('a1', direction: AlertDirection.travelerWantsPackages),
+        _alert('a2', direction: AlertDirection.senderWantsTrips),
+      ],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.text('Colis'), findsOneWidget);
+    expect(find.text('Trajets'), findsOneWidget);
   });
 }
