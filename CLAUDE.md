@@ -359,6 +359,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
 | `public_reviews_opened` | UserReviewsCubit — ouverture de la bottom sheet « tous les avis » (propriété `rating_count`) |
+| `trip_matching_viewed` | TripMatchingBloc._onLoad — chargement de la liste scorée « Colis sur mes trajets » (propriété `count`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---
