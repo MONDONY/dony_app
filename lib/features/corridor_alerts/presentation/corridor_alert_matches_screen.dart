@@ -7,6 +7,7 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/trip_match_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -131,9 +132,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
               );
             case CorridorAlertMatchesStatus.loaded:
               if (isTrip) {
-                // Task 4 will render TripMatchCard here.
-                // For now, show a placeholder list using the trips count.
-                final trips = state.matches.trips;
+                final trips = state.result!.trips;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -161,45 +160,15 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                         itemCount: trips.length,
                         separatorBuilder: (_, _) =>
                             const SizedBox(height: DonySpacing.md),
-                        itemBuilder: (_, i) {
+                        itemBuilder: (lCtx, i) {
                           final trip = trips[i];
-                          // TODO(task-4): replace with TripMatchCard(trip: trip)
-                          return Container(
+                          return TripMatchCard(
                             key: ValueKey(trip.announcementId),
-                            padding: const EdgeInsets.all(DonySpacing.base),
-                            decoration: BoxDecoration(
-                              color: cs.surface,
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.card),
-                              border: Border.all(color: cs.outline),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.flight_rounded,
-                                    size: 20, color: cs.primary),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: Text(
-                                    '${trip.departureCity} → ${trip.arrivalCity}',
-                                    style: tt.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                              .animate()
-                              .fadeIn(
-                                delay: Duration(milliseconds: 60 * i),
-                                duration: 280.ms,
-                                curve: Curves.easeOutCubic,
-                              )
-                              .slideY(
-                                begin: 0.04,
-                                delay: Duration(milliseconds: 60 * i),
-                                duration: 280.ms,
-                                curve: Curves.easeOutCubic,
-                              );
+                            match: trip,
+                            index: i,
+                            onTap: () => lCtx
+                                .push('/traveler/${trip.announcementId}'),
+                          );
                         },
                       ),
                     ),
@@ -207,6 +176,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                 );
               }
               // Colis direction: render package matches.
+              final packages = state.result!.packages;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -218,7 +188,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                       DonySpacing.sm,
                     ),
                     child: Text(
-                      '${state.matches.length} colis',
+                      '${packages.length} colis',
                       style: tt.labelMedium
                           ?.copyWith(color: cs.onSurfaceVariant),
                     ),
@@ -231,11 +201,11 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                         DonySpacing.lg,
                         DonySpacing.huge,
                       ),
-                      itemCount: state.matches.length,
+                      itemCount: packages.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: DonySpacing.md),
                       itemBuilder: (lCtx, i) {
-                        final m = state.matches.packages[i];
+                        final m = packages[i];
                         return MatchingRequestCard(
                           key: ValueKey(m.id),
                           match: m,

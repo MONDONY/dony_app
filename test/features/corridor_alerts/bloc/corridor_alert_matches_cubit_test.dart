@@ -3,6 +3,7 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_matches.dart';
+import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +27,19 @@ MatchingRequestModel _fakeMatch(String id) => MatchingRequestModel(
       requestedAt: DateTime(2026, 6, 20),
     );
 
+TripMatchModel _fakeTrip(String id) => TripMatchModel(
+      announcementId: id,
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 7, 10),
+      travelerId: 't-1',
+      travelerName: 'Awa S.',
+      travelerInitials: 'AS',
+      travelerRating: 4.7,
+      availableKg: 12.0,
+      pricePerKg: 9.5,
+    );
+
 void main() {
   late MockCorridorAlertRepository repo;
   late MockAnalyticsService analytics;
@@ -37,59 +51,77 @@ void main() {
         .thenAnswer((_) async {});
   });
 
-  CorridorAlertMatchesCubit build() => CorridorAlertMatchesCubit(
+  CorridorAlertMatchesCubit build({
+    AlertDirection direction = AlertDirection.travelerWantsPackages,
+  }) =>
+      CorridorAlertMatchesCubit(
         repo,
         analytics,
         alertId: 'alert-1',
-        direction: AlertDirection.travelerWantsPackages,
+        direction: direction,
       );
 
   blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
-    'load success with matches → loaded state',
-    build: build,
-    setUp: () {
-      when(() => repo.getMatches(
-            'alert-1',
-            AlertDirection.travelerWantsPackages,
-          )).thenAnswer((_) async => CorridorAlertMatches(
-            direction: AlertDirection.travelerWantsPackages,
-            packages: [_fakeMatch('m1'), _fakeMatch('m2')],
-          ));
-    },
+    'package direction loaded → result.packages populated',
+    build: () => build(),
+    setUp: () => when(() => repo.getMatches(
+              'alert-1',
+              AlertDirection.travelerWantsPackages,
+            )).thenAnswer((_) async => CorridorAlertMatches(
+          direction: AlertDirection.travelerWantsPackages,
+          packages: [_fakeMatch('m1')],
+        )),
     act: (c) => c.load(),
     expect: () => [
-      const CorridorAlertMatchesState(
-          status: CorridorAlertMatchesStatus.loading),
+      isA<CorridorAlertMatchesState>()
+          .having((s) => s.status, 'status', CorridorAlertMatchesStatus.loading),
       isA<CorridorAlertMatchesState>()
           .having((s) => s.status, 'status', CorridorAlertMatchesStatus.loaded)
-          .having(
-              (s) => s.matches.packages.length, 'packages length', 2),
+          .having((s) => s.result?.packages.length, 'packages', 1),
     ],
   );
 
   blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
-    'load empty → empty state',
-    build: build,
-    setUp: () {
-      when(() => repo.getMatches(
-            'alert-1',
-            AlertDirection.travelerWantsPackages,
-          )).thenAnswer((_) async => const CorridorAlertMatches(
-            direction: AlertDirection.travelerWantsPackages,
-          ));
-    },
+    'trip direction loaded → result.trips populated',
+    build: () => build(direction: AlertDirection.senderWantsTrips),
+    setUp: () => when(() => repo.getMatches(
+              'alert-1',
+              AlertDirection.senderWantsTrips,
+            )).thenAnswer((_) async => CorridorAlertMatches(
+          direction: AlertDirection.senderWantsTrips,
+          trips: [_fakeTrip('ann-1')],
+        )),
     act: (c) => c.load(),
     expect: () => [
-      const CorridorAlertMatchesState(
-          status: CorridorAlertMatchesStatus.loading),
-      const CorridorAlertMatchesState(
-          status: CorridorAlertMatchesStatus.empty),
+      isA<CorridorAlertMatchesState>()
+          .having((s) => s.status, 'status', CorridorAlertMatchesStatus.loading),
+      isA<CorridorAlertMatchesState>()
+          .having((s) => s.status, 'status', CorridorAlertMatchesStatus.loaded)
+          .having((s) => s.result?.trips.length, 'trips', 1),
+    ],
+  );
+
+  blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
+    'empty result → empty state',
+    build: () => build(),
+    setUp: () => when(() => repo.getMatches(
+              'alert-1',
+              AlertDirection.travelerWantsPackages,
+            )).thenAnswer((_) async => const CorridorAlertMatches(
+          direction: AlertDirection.travelerWantsPackages,
+        )),
+    act: (c) => c.load(),
+    expect: () => [
+      isA<CorridorAlertMatchesState>()
+          .having((s) => s.status, 'status', CorridorAlertMatchesStatus.loading),
+      isA<CorridorAlertMatchesState>()
+          .having((s) => s.status, 'status', CorridorAlertMatchesStatus.empty),
     ],
   );
 
   blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
     'load error → error state with message',
-    build: build,
+    build: () => build(),
     setUp: () {
       when(() => repo.getMatches(
             'alert-1',
@@ -98,8 +130,8 @@ void main() {
     },
     act: (c) => c.load(),
     expect: () => [
-      const CorridorAlertMatchesState(
-          status: CorridorAlertMatchesStatus.loading),
+      isA<CorridorAlertMatchesState>()
+          .having((s) => s.status, 'status', CorridorAlertMatchesStatus.loading),
       isA<CorridorAlertMatchesState>()
           .having((s) => s.status, 'status', CorridorAlertMatchesStatus.error)
           .having((s) => s.errorMessage, 'errorMessage', isNotNull),

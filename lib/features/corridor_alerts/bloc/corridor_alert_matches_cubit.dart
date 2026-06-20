@@ -13,29 +13,27 @@ enum CorridorAlertMatchesStatus { initial, loading, loaded, empty, error }
 class CorridorAlertMatchesState extends Equatable {
   const CorridorAlertMatchesState({
     this.status = CorridorAlertMatchesStatus.initial,
-    this.matches = const CorridorAlertMatches(
-      direction: AlertDirection.travelerWantsPackages,
-    ),
+    this.result,
     this.errorMessage,
   });
 
   final CorridorAlertMatchesStatus status;
-  final CorridorAlertMatches matches;
+  final CorridorAlertMatches? result;
   final String? errorMessage;
 
   CorridorAlertMatchesState copyWith({
     CorridorAlertMatchesStatus? status,
-    CorridorAlertMatches? matches,
+    CorridorAlertMatches? result,
     String? errorMessage,
   }) =>
       CorridorAlertMatchesState(
         status: status ?? this.status,
-        matches: matches ?? this.matches,
+        result: result ?? this.result,
         errorMessage: errorMessage ?? this.errorMessage,
       );
 
   @override
-  List<Object?> get props => [status, matches, errorMessage];
+  List<Object?> get props => [status, result, errorMessage];
 }
 
 class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
@@ -58,12 +56,12 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
       if (matches.isEmpty) {
         emit(state.copyWith(
           status: CorridorAlertMatchesStatus.empty,
-          matches: CorridorAlertMatches(direction: direction),
+          result: CorridorAlertMatches(direction: direction),
         ));
       } else {
         emit(state.copyWith(
           status: CorridorAlertMatchesStatus.loaded,
-          matches: matches,
+          result: matches,
         ));
         unawaited(_analytics.logEvent(
           AnalyticsEvents.corridorAlertMatchesViewed,
