@@ -523,7 +523,7 @@ void main() {
     );
 
     testWidgets(
-      'onglet Compte affiche IDENTITÉ & CONFIANCE, REVENUS & PAIEMENTS, COMPTE PRO, FIDÉLITÉ',
+      'onglet Compte affiche IDENTITÉ & CONTACT, RÉPUTATION, PAIEMENTS, AVANTAGES',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -539,14 +539,12 @@ void main() {
         await _goToCompteTab(tester);
 
         // Order matches the widget-tree order in _AccountTab (top → bottom):
-        // CONTACT & SÉCURITÉ → IDENTITÉ & CONFIANCE → FIDÉLITÉ →
-        // REVENUS & PAIEMENTS → COMPTE PRO → PAIEMENTS
+        // IDENTITÉ & CONTACT → RÉPUTATION → PAIEMENTS → AVANTAGES
         for (final label in [
-          'CONTACT & SÉCURITÉ',
-          'IDENTITÉ & CONFIANCE',
-          'FIDÉLITÉ',
-          'REVENUS & PAIEMENTS',
-          'COMPTE PRO',
+          'IDENTITÉ & CONTACT',
+          'RÉPUTATION',
+          'PAIEMENTS',
+          'AVANTAGES',
         ]) {
           await tester.scrollUntilVisible(
             find.text(label),
@@ -1318,7 +1316,7 @@ void main() {
       },
     );
 
-    testWidgets('pur expéditeur : section FIDÉLITÉ présente en onglet Compte', (
+    testWidgets('pur expéditeur : section AVANTAGES présente en onglet Compte', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1334,14 +1332,14 @@ void main() {
 
       await _goToCompteTab(tester);
       await tester.scrollUntilVisible(
-        find.text('FIDÉLITÉ'),
+        find.text('AVANTAGES'),
         300,
         scrollable: _accountScrollable,
       );
       expect(
-        find.text('FIDÉLITÉ'),
+        find.text('AVANTAGES'),
         findsOneWidget,
-        reason: 'section FIDÉLITÉ doit être visible pour tous les utilisateurs',
+        reason: 'section AVANTAGES doit être visible pour tous les utilisateurs',
       );
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
@@ -1718,6 +1716,56 @@ void main() {
     await _goToCompteTab(tester);
     expect(find.byType(BecomeTravelerCtaCard), findsNothing);
     await tester.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  group('onglet Compte réorganisé', () {
+    Future<void> openCompte(WidgetTester tester, UserModel user) async {
+      whenListen<AuthState>(authBloc, const Stream.empty(),
+          initialState: AuthAuthenticated(user));
+      whenListen<AccountDeletionState>(deletionBloc, const Stream.empty(),
+          initialState: const AccountDeletionInitial());
+      await tester.pumpWidget(_buildTestHarness(
+          authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+          announcementBloc: announcementBloc, referralBloc: referralBloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      await _goToCompteTab(tester);
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    testWidgets('sections regroupées présentes (voyageur)', (tester) async {
+      await openCompte(tester, _travelerUser);
+      await tester.pump(const Duration(milliseconds: 100));
+      for (final label in ['IDENTITÉ & CONTACT', 'RÉPUTATION', 'PAIEMENTS', 'AVANTAGES']) {
+        await tester.scrollUntilVisible(find.text(label), 300, scrollable: _accountScrollable);
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.text('REVENUS & PAIEMENTS'), findsNothing);
+      expect(find.text('FIDÉLITÉ'), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('PAIEMENTS unifié : voyageur voit portefeuille + revenus',
+        (tester) async {
+      await openCompte(tester, _travelerUser);
+      await tester.scrollUntilVisible(find.text('Ma grille de prix'), 300,
+          scrollable: _accountScrollable);
+      expect(find.text('Mon portefeuille'), findsOneWidget);
+      expect(find.text('Recevoir mes paiements'), findsOneWidget);
+      expect(find.text('Ma grille de prix'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('PAIEMENTS : expéditeur ne voit que le portefeuille',
+        (tester) async {
+      await openCompte(tester, _activeUser);
+      await tester.scrollUntilVisible(find.text('Mon portefeuille'), 300,
+          scrollable: _accountScrollable);
+      expect(find.text('Mon portefeuille'), findsOneWidget);
+      expect(find.text('Recevoir mes paiements'), findsNothing);
+      expect(find.text('Ma grille de prix'), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
   });
 
   group('onglet Activité réorganisé', () {
