@@ -140,6 +140,10 @@ MockFavoriteIdsCubit _makeFavCubit({int count = 0}) {
   when(() => cubit.state).thenReturn(FavoriteIdsState(trips, {}));
   when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
   when(() => cubit.count).thenReturn(count);
+  when(() => cubit.isTripFav(any())).thenReturn(false);
+  when(() => cubit.isRequestFav(any())).thenReturn(false);
+  when(() => cubit.toggleTrip(any())).thenAnswer((_) async {});
+  when(() => cubit.toggleRequest(any())).thenAnswer((_) async {});
   return cubit;
 }
 
