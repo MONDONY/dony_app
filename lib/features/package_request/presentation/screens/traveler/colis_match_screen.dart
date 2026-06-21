@@ -48,6 +48,8 @@ class _ColisMatchView extends StatelessWidget {
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
+        leading: const DonyAppBarBackButton(),
         title: BlocBuilder<TripMatchingBloc, TripMatchingState>(
           builder: (_, state) {
             final count = state.matches.length;

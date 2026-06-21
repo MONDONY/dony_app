@@ -45,7 +45,6 @@ class _CorridorAlertListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
     // La direction de l'écran verrouille la direction à la création : exactement
     // un rôle est passé au form → segment masqué, direction forcée.
@@ -58,14 +57,8 @@ class _CorridorAlertListView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text(
-          _isPackages ? 'Mes alertes colis' : 'Mes alertes trajets',
-          style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
+      appBar: DonyAppBar(
+        title: _isPackages ? 'Mes alertes colis' : 'Mes alertes trajets',
       ),
       floatingActionButton: Builder(
         builder: (fabCtx) => FloatingActionButton.extended(
