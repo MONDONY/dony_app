@@ -80,14 +80,9 @@ class MesTrajetsColisScreen extends StatelessWidget {
     // ── Bloc EXPÉDITEUR — icônes secondary (terracotta) ──────────────────────
     final senderSection = DonyListSection(
       title: 'Expéditeur · Colis',
+      // « Mes demandes de colis » n'est PAS listé ici : déjà accessible via le
+      // hub Envoyer (onglet « Demandes ») depuis l'onglet Activité du profil.
       tiles: [
-        DonyListTile(
-          iconAsset: 'package',
-          iconColor: cs.secondary,
-          iconBgColor: cs.secondaryContainer,
-          label: 'Mes demandes de colis',
-          onTap: () => context.push('/package-requests/me'),
-        ),
         DonyListTile(
           iconAsset: 'contact',
           iconColor: cs.secondary,

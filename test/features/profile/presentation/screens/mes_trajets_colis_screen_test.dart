@@ -152,14 +152,15 @@ void main() {
     });
 
     testWidgets(
-      'isSender:true shows EXPÉDITEUR block with demandes & destinataires',
+      'isSender:true shows EXPÉDITEUR block with destinataires (no demandes)',
       (tester) async {
         await tester.pumpWidget(_buildHarness(isSender: true));
         await tester.pump(const Duration(milliseconds: 600));
 
         expect(find.text('EXPÉDITEUR · COLIS'), findsOneWidget);
-        expect(find.text('Mes demandes de colis'), findsOneWidget);
         expect(find.text('Mes destinataires'), findsOneWidget);
+        // « Mes demandes de colis » retiré : déjà accessible via le hub Envoyer.
+        expect(find.text('Mes demandes de colis'), findsNothing);
       },
     );
 
@@ -172,19 +173,6 @@ void main() {
         expect(find.text('EXPÉDITEUR · COLIS'), findsNothing);
         expect(find.text('Mes demandes de colis'), findsNothing);
         expect(find.text('Mes destinataires'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'isSender:true — tapping "Mes demandes de colis" navigates to /package-requests/me',
-      (tester) async {
-        await tester.pumpWidget(_buildHarness(isSender: true));
-        await tester.pumpAndSettle(const Duration(seconds: 1));
-
-        await tester.tap(find.text('Mes demandes de colis'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('MES_DEMANDES'), findsOneWidget);
       },
     );
 
