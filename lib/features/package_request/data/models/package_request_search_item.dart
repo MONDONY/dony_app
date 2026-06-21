@@ -28,6 +28,7 @@ class PackageRequestSearchItem extends Equatable {
     this.negotiable = true,
     this.acceptedPaymentMethods = const {},
     required this.sender,
+    this.isFavorite = false,
   });
 
   final String id;
@@ -58,6 +59,10 @@ class PackageRequestSearchItem extends Equatable {
   final bool negotiable;
   final Set<PaymentMethod> acceptedPaymentMethods;
   final SenderPublicProfile sender;
+
+  /// Indique si cette demande est dans les favoris de l'utilisateur courant.
+  /// Fourni par le backend sur les endpoints de feed ; `false` par défaut.
+  final bool isFavorite;
 
   factory PackageRequestSearchItem.fromJson(Map<String, dynamic> json) =>
       PackageRequestSearchItem(
@@ -91,6 +96,7 @@ class PackageRequestSearchItem extends Equatable {
         sender: SenderPublicProfile.fromJson(
           json['sender'] as Map<String, dynamic>,
         ),
+        isFavorite: json['isFavorite'] as bool? ?? false,
       );
 
   @override
@@ -115,6 +121,7 @@ class PackageRequestSearchItem extends Equatable {
     negotiable,
     acceptedPaymentMethods,
     sender,
+    isFavorite,
   ];
 }
 
