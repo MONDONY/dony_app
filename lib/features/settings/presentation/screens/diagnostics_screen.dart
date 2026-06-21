@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,9 +39,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
           ),
           children: [
             // APPLICATION
-            _SectionLabel('APPLICATION', cs: cs),
-            DonyListSection(
-              tiles: [
+            const SettingsSectionHeader('APPLICATION'),
+            SettingsFlatGroup(
+              children: [
                 DonyListTile(
                   iconAsset: 'info',
                   iconColor: cs.primary,
@@ -60,9 +62,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
             const SizedBox(height: DonySpacing.xl),
 
             // CONNECTIVITE
-            _SectionLabel('CONNECTIVITÉ', cs: cs),
-            DonyListSection(
-              tiles: [
+            const SettingsSectionHeader('CONNECTIVITÉ'),
+            SettingsFlatGroup(
+              children: [
                 DonyListTile(
                   iconAsset: 'wifi',
                   iconColor: _pingIconColor(state, cs),
@@ -96,9 +98,9 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
             const SizedBox(height: DonySpacing.xl),
 
             // SUPPORT
-            _SectionLabel('SUPPORT', cs: cs),
-            DonyListSection(
-              tiles: [
+            const SettingsSectionHeader('SUPPORT'),
+            SettingsFlatGroup(
+              children: [
                 DonyListTile(
                   iconAsset: 'bug',
                   iconColor: cs.primary,
@@ -215,31 +217,4 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
       ),
     );
   }
-}
-
-// Section label (reprend la convention des autres ecrans settings)
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label, {required this.cs});
-  final String label;
-  final ColorScheme cs;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.xs,
-          0,
-          DonySpacing.xs,
-          DonySpacing.sm,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: cs.onSurfaceVariant,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
 }
