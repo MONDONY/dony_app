@@ -31,6 +31,7 @@ import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
@@ -883,6 +884,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           children: [
                             Row(
                               children: [
+                                const _FavoritesButton(),
+                                const SizedBox(width: DonySpacing.sm),
                                 Expanded(
                                   child: _CorridorBar(
                                     key: const Key('corridor-bar'),
@@ -3196,6 +3199,85 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── _FavoritesButton ──────────────────────────────────────────────────────────
+
+/// Bouton cœur en haut à gauche de l'overlay accueil (à gauche de la barre de
+/// recherche). Même style que [_NotificationBell] : cercle 48×48, fond
+/// [ColorScheme.surface], shadow `Colors.black @10% blur 12 offset(0,3)`.
+/// Badge rouge [DonyColors.favorite] affiché si le nombre de favoris > 0.
+/// Navigue vers `/favoris` au tap via GoRouter.
+class _FavoritesButton extends StatelessWidget {
+  const _FavoritesButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+      buildWhen: (prev, next) => prev.count != next.count,
+      builder: (context, state) {
+        final cs = Theme.of(context).colorScheme;
+        final count = state.count;
+        return GestureDetector(
+          key: const Key('favorites-button'),
+          onTap: () => context.push('/favoris'),
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.10),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  count > 0 ? Icons.favorite : Icons.favorite_border,
+                  size: 22,
+                  color: count > 0 ? DonyColors.favorite : cs.onSurfaceVariant,
+                ),
+              ),
+              if (count > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    key: const Key('favorites-badge'),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: DonyColors.favorite,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: DonyColors.white,
+                        height: 1.6,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
