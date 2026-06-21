@@ -12,33 +12,38 @@ Widget _buildHarness({int upcomingCount = 0, bool isSender = false}) {
     routes: [
       GoRoute(
         path: '/trajets-colis',
-        builder: (_, __) =>
-            MesTrajetsColisScreen(upcomingCount: upcomingCount, isSender: isSender),
+        builder: (_, __) => MesTrajetsColisScreen(
+          upcomingCount: upcomingCount,
+          isSender: isSender,
+        ),
       ),
       GoRoute(
         path: '/announcements',
-        builder: (_, __) =>
-            const Scaffold(body: Text('ANNOUNCEMENTS')),
+        builder: (_, __) => const Scaffold(body: Text('ANNOUNCEMENTS')),
       ),
       GoRoute(
         path: '/package-requests/match',
-        builder: (_, __) =>
-            const Scaffold(body: Text('COLIS_MATCH')),
+        builder: (_, __) => const Scaffold(body: Text('COLIS_MATCH')),
       ),
       GoRoute(
         path: '/package-requests/me',
-        builder: (_, __) =>
-            const Scaffold(body: Text('MES_DEMANDES')),
+        builder: (_, __) => const Scaffold(body: Text('MES_DEMANDES')),
       ),
       GoRoute(
         path: '/corridor-alerts',
-        builder: (_, __) =>
-            const Scaffold(body: Text('CORRIDOR_ALERTS')),
+        builder: (_, __) => const Scaffold(body: Text('CORRIDOR_ALERTS')),
       ),
       GoRoute(
         path: '/trip-templates',
-        builder: (_, __) =>
-            const Scaffold(body: Text('TRIP_TEMPLATES')),
+        builder: (_, __) => const Scaffold(body: Text('TRIP_TEMPLATES')),
+      ),
+      GoRoute(
+        path: '/profile/addresses',
+        builder: (_, __) => const Scaffold(body: Text('ADDRESSES')),
+      ),
+      GoRoute(
+        path: '/profile/recipients',
+        builder: (_, __) => const Scaffold(body: Text('RECIPIENTS')),
       ),
     ],
   );
@@ -52,15 +57,19 @@ Widget _buildHarness({int upcomingCount = 0, bool isSender = false}) {
 
 void main() {
   group('MesTrajetsColisScreen', () {
-    testWidgets('renders AppBar title and all 4 row labels', (tester) async {
+    testWidgets('renders AppBar title and VOYAGEUR block labels', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildHarness());
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text('Mes trajets et colis'), findsOneWidget);
+      expect(find.text('VOYAGEUR · TRAJETS'), findsOneWidget);
       expect(find.text('Mes trajets'), findsOneWidget);
       expect(find.text('Colis sur mes trajets'), findsOneWidget);
       expect(find.text('Mes alertes corridor'), findsOneWidget);
       expect(find.text('Mes modèles de trajet'), findsOneWidget);
+      expect(find.text('Mes adresses'), findsOneWidget);
     });
 
     testWidgets('shows "X à venir" badge when upcomingCount > 0', (
@@ -130,23 +139,39 @@ void main() {
       },
     );
 
+    testWidgets('tapping "Mes adresses" navigates to /profile/addresses', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildHarness());
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      await tester.tap(find.text('Mes adresses'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ADDRESSES'), findsOneWidget);
+    });
+
     testWidgets(
-      'isSender:true inserts « Mes demandes de colis » between colis & alertes',
+      'isSender:true shows EXPÉDITEUR block with demandes & destinataires',
       (tester) async {
         await tester.pumpWidget(_buildHarness(isSender: true));
         await tester.pump(const Duration(milliseconds: 600));
 
+        expect(find.text('EXPÉDITEUR · COLIS'), findsOneWidget);
         expect(find.text('Mes demandes de colis'), findsOneWidget);
+        expect(find.text('Mes destinataires'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'isSender:false hides « Mes demandes de colis »',
+      'isSender:false hides the entire EXPÉDITEUR block',
       (tester) async {
         await tester.pumpWidget(_buildHarness(isSender: false));
         await tester.pump(const Duration(milliseconds: 600));
 
+        expect(find.text('EXPÉDITEUR · COLIS'), findsNothing);
         expect(find.text('Mes demandes de colis'), findsNothing);
+        expect(find.text('Mes destinataires'), findsNothing);
       },
     );
 
@@ -160,6 +185,19 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('MES_DEMANDES'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'isSender:true — tapping "Mes destinataires" navigates to /profile/recipients',
+      (tester) async {
+        await tester.pumpWidget(_buildHarness(isSender: true));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+
+        await tester.tap(find.text('Mes destinataires'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('RECIPIENTS'), findsOneWidget);
       },
     );
   });

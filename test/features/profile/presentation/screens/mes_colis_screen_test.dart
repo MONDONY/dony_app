@@ -20,6 +20,14 @@ Widget _buildHarness() {
         path: '/corridor-alerts',
         builder: (_, __) => const Scaffold(body: Text('CORRIDOR_ALERTS')),
       ),
+      GoRoute(
+        path: '/profile/recipients',
+        builder: (_, __) => const Scaffold(body: Text('RECIPIENTS')),
+      ),
+      GoRoute(
+        path: '/profile/addresses',
+        builder: (_, __) => const Scaffold(body: Text('ADDRESSES')),
+      ),
     ],
   );
   return MaterialApp.router(
@@ -30,11 +38,13 @@ Widget _buildHarness() {
 
 void main() {
   group('MesColisScreen', () {
-    testWidgets('renders the two sender hub rows', (tester) async {
+    testWidgets('renders the four sender hub rows', (tester) async {
       await tester.pumpWidget(_buildHarness());
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text('Mes demandes de colis'), findsOneWidget);
+      expect(find.text('Mes destinataires'), findsOneWidget);
+      expect(find.text('Mes adresses'), findsOneWidget);
       expect(find.text('Mes alertes corridor'), findsOneWidget);
     });
 
@@ -55,6 +65,32 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('MES_DEMANDES'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapping "Mes destinataires" navigates to /profile/recipients',
+      (tester) async {
+        await tester.pumpWidget(_buildHarness());
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+
+        await tester.tap(find.text('Mes destinataires'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('RECIPIENTS'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapping "Mes adresses" navigates to /profile/addresses',
+      (tester) async {
+        await tester.pumpWidget(_buildHarness());
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+
+        await tester.tap(find.text('Mes adresses'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('ADDRESSES'), findsOneWidget);
       },
     );
 

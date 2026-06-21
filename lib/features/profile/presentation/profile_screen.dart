@@ -560,26 +560,12 @@ class _ActivityTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  iconAsset: 'contact',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Mes destinataires',
-                  onTap: () => context.push('/profile/recipients'),
-                ),
-                DonyListTile(
                   iconAsset: 'bell',
                   iconColor: cs.tertiary,
                   iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
                   label: 'Mes abonnements',
-                  onTap: () => context.push('/profile/subscriptions'),
-                ),
-                DonyListTile(
-                  iconAsset: 'map-pin',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Mes adresses',
                   showDivider: false,
-                  onTap: () => context.push('/profile/addresses'),
+                  onTap: () => context.push('/profile/subscriptions'),
                 ),
               ],
             )

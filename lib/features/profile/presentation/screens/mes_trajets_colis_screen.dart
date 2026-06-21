@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
-/// Écran hub "Mes trajets et colis" (voyageur uniquement).
+/// Écran hub "Mes trajets et colis".
 ///
-/// Affiche les 4 entrées voyageur en layout FLAT (pas de DonyCard/DonyListSection) :
-/// séparateurs thin directement sur le fond du scaffold.
-/// Si [isSender] vaut `true`, affiche 5 entrées — ajoute « Mes demandes de colis »
-/// entre « Colis sur mes trajets » et « Mes alertes corridor ».
+/// Deux blocs distincts selon le rôle :
+/// - **VOYAGEUR · TRAJETS** (toujours) : tout ce qui concerne les trajets du
+///   voyageur — trajets, colis reçus sur ses trajets, alertes corridor,
+///   modèles de trajet, adresses.
+/// - **EXPÉDITEUR · COLIS** (si [isSender]) : les demandes d'envoi de
+///   l'expéditeur et son carnet de destinataires.
 class MesTrajetsColisScreen extends StatelessWidget {
   const MesTrajetsColisScreen({
     super.key,
@@ -24,44 +26,77 @@ class MesTrajetsColisScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final tiles = <_TileData>[
-      _TileData(
-        iconAsset: 'plane',
-        label: 'Mes trajets',
-        trailing: upcomingCount > 0
-            ? Text(
-                '$upcomingCount à venir',
-                style: tt.labelMedium?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            : null,
-        onTap: () => context.go('/announcements'),
-      ),
-      _TileData(
-        iconAsset: 'inbox',
-        label: 'Colis sur mes trajets',
-        onTap: () => context.push('/package-requests/match'),
-      ),
-      if (isSender)
-        _TileData(
+    // ── Bloc VOYAGEUR — icônes primary (bleu) ────────────────────────────────
+    final travelerSection = DonyListSection(
+      title: 'Voyageur · Trajets',
+      tiles: [
+        DonyListTile(
+          iconAsset: 'plane',
+          iconColor: cs.primary,
+          iconBgColor: cs.primaryContainer,
+          label: 'Mes trajets',
+          trailing: upcomingCount > 0
+              ? Text(
+                  '$upcomingCount à venir',
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                )
+              : null,
+          onTap: () => context.go('/announcements'),
+        ),
+        DonyListTile(
+          iconAsset: 'inbox',
+          iconColor: cs.primary,
+          iconBgColor: cs.primaryContainer,
+          label: 'Colis sur mes trajets',
+          onTap: () => context.push('/package-requests/match'),
+        ),
+        DonyListTile(
+          iconAsset: 'bell',
+          iconColor: cs.primary,
+          iconBgColor: cs.primaryContainer,
+          label: 'Mes alertes corridor',
+          onTap: () => context.push('/corridor-alerts'),
+        ),
+        DonyListTile(
+          iconAsset: 'bookmark',
+          iconColor: cs.primary,
+          iconBgColor: cs.primaryContainer,
+          label: 'Mes modèles de trajet',
+          onTap: () => context.push('/trip-templates'),
+        ),
+        DonyListTile(
+          iconAsset: 'map-pin',
+          iconColor: cs.primary,
+          iconBgColor: cs.primaryContainer,
+          label: 'Mes adresses',
+          onTap: () => context.push('/profile/addresses'),
+        ),
+      ],
+    );
+
+    // ── Bloc EXPÉDITEUR — icônes secondary (terracotta) ──────────────────────
+    final senderSection = DonyListSection(
+      title: 'Expéditeur · Colis',
+      tiles: [
+        DonyListTile(
           iconAsset: 'package',
+          iconColor: cs.secondary,
+          iconBgColor: cs.secondaryContainer,
           label: 'Mes demandes de colis',
           onTap: () => context.push('/package-requests/me'),
         ),
-      _TileData(
-        iconAsset: 'bell',
-        label: 'Mes alertes corridor',
-        onTap: () => context.push('/corridor-alerts'),
-      ),
-      _TileData(
-        iconAsset: 'bookmark',
-        label: 'Mes modèles de trajet',
-        showDivider: false,
-        onTap: () => context.push('/trip-templates'),
-      ),
-    ];
+        DonyListTile(
+          iconAsset: 'contact',
+          iconColor: cs.secondary,
+          iconBgColor: cs.secondaryContainer,
+          label: 'Mes destinataires',
+          onTap: () => context.push('/profile/recipients'),
+        ),
+      ],
+    );
 
     return DonyPageScaffold(
       title: 'Mes trajets et colis',
@@ -73,41 +108,20 @@ class MesTrajetsColisScreen extends StatelessWidget {
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(tiles.length, (i) {
-          final t = tiles[i];
-          return DonyListTile(
-            iconAsset: t.iconAsset,
-            iconColor: cs.primary,
-            iconBgColor: cs.primaryContainer,
-            label: t.label,
-            trailing: t.trailing,
-            showDivider: t.showDivider,
-            onTap: t.onTap,
-          )
+        children: [
+          travelerSection
               .animate()
-              .fadeIn(
-                delay: (60 * i).ms,
-                duration: 300.ms,
-              )
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic);
-        }),
+              .fadeIn(delay: 60.ms, duration: 300.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          if (isSender) ...[
+            const SizedBox(height: DonySpacing.xl),
+            senderSection
+                .animate()
+                .fadeIn(delay: 140.ms, duration: 300.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ],
+        ],
       ),
     );
   }
-}
-
-class _TileData {
-  const _TileData({
-    required this.iconAsset,
-    required this.label,
-    required this.onTap,
-    this.trailing,
-    this.showDivider = true,
-  });
-
-  final String iconAsset;
-  final String label;
-  final Widget? trailing;
-  final bool showDivider;
-  final VoidCallback onTap;
 }

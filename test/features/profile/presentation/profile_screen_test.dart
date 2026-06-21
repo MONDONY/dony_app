@@ -1122,12 +1122,12 @@ void main() {
         reason: 'section MON ACTIVITÉ sender absente',
       );
       await tester.scrollUntilVisible(
-        find.text('Mes destinataires'),
+        find.text('Mes abonnements'),
         300,
         scrollable: _activityScrollable,
       );
       expect(
-        find.text('Mes destinataires'),
+        find.text('Mes abonnements'),
         findsOneWidget,
         reason: 'section MON CARNET sender absente',
       );
@@ -1278,7 +1278,7 @@ void main() {
     );
 
     testWidgets(
-      'Mes adresses visible pour un expéditeur (dans Mon carnet)',
+      'Mes adresses retiré du profil (déplacé vers le hub colis/trajets)',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -1291,13 +1291,11 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 600));
 
-        await tester.scrollUntilVisible(
-          find.text('Mes adresses'),
-          300,
-          scrollable: _activityScrollable,
-        );
-        expect(find.text('Mes adresses'), findsOneWidget);
-        await tester.pumpAndSettle(const Duration(seconds: 5));
+        // « Mes adresses » et « Mes destinataires » ont quitté MON CARNET :
+        // ils vivent désormais dans les hubs « Mes trajets et colis » / « Mes
+        // colis », plus sur l'onglet Activité du profil.
+        expect(find.text('Mes adresses'), findsNothing);
+        expect(find.text('Mes destinataires'), findsNothing);
       },
     );
 

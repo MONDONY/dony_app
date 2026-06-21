@@ -21,6 +21,16 @@ class MesColisScreen extends StatelessWidget {
         onTap: () => context.push('/package-requests/me'),
       ),
       _TileData(
+        iconAsset: 'contact',
+        label: 'Mes destinataires',
+        onTap: () => context.push('/profile/recipients'),
+      ),
+      _TileData(
+        iconAsset: 'map-pin',
+        label: 'Mes adresses',
+        onTap: () => context.push('/profile/addresses'),
+      ),
+      _TileData(
         iconAsset: 'bell',
         label: 'Mes alertes corridor',
         showDivider: false,
