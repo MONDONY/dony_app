@@ -1827,4 +1827,56 @@ void main() {
       expect(find.text('Mes abonnements'), findsOneWidget);
     });
   });
+
+  group('onglet Réglages dédupliqué', () {
+    Future<void> openReglages(WidgetTester tester) async {
+      whenListen<AuthState>(authBloc, const Stream.empty(),
+          initialState: AuthAuthenticated(_activeUser));
+      whenListen<AccountDeletionState>(deletionBloc, const Stream.empty(),
+          initialState: const AccountDeletionInitial());
+      await tester.pumpWidget(_buildTestHarness(
+          authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+          announcementBloc: announcementBloc, referralBloc: referralBloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      await _goToReglagesTab(tester);
+    }
+
+    testWidgets('doublons /settings retirés', (tester) async {
+      await openReglages(tester);
+      expect(find.text('Notifications'), findsNothing);
+      expect(find.text('Langue'), findsNothing);
+      expect(find.text('Sécurité & confidentialité'), findsNothing);
+      expect(find.text('SÉCURITÉ'), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('garde Paramètres, Support et Déconnexion', (tester) async {
+      await openReglages(tester);
+      await tester.scrollUntilVisible(
+        find.text('Paramètres'),
+        300,
+        scrollable: _settingsScrollable,
+      );
+      expect(find.text('Paramètres'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Contacter le support'),
+        300,
+        scrollable: _settingsScrollable,
+      );
+      expect(find.text('Contacter le support'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('FAQ & aide'),
+        300,
+        scrollable: _settingsScrollable,
+      );
+      expect(find.text('FAQ & aide'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Se déconnecter'),
+        300,
+        scrollable: _settingsScrollable,
+      );
+      expect(find.text('Se déconnecter'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+  });
 }

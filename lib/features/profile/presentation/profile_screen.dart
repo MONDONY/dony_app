@@ -850,50 +850,14 @@ class _SettingsTab extends StatelessWidget {
                 DonyListTile(
                   iconAsset: 'sliders-horizontal',
                   label: 'Paramètres',
-                  onTap: () => context.push('/settings'),
-                ),
-                DonyListTile(
-                  iconAsset: 'bell',
-                  iconColor: cs.warning,
-                  iconBgColor: cs.warningLight,
-                  label: 'Notifications',
-                  onTap: () {},
-                ),
-                DonyListTile(
-                  iconAsset: 'languages',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Langue',
-                  trailing: Text(
-                    'Français',
-                    style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
+                  subtitle: 'Thème, langue, notifications, sécurité',
                   showDivider: false,
-                  onTap: () {},
+                  onTap: () => context.push('/settings'),
                 ),
               ],
             )
             .animate()
             .fadeIn(delay: 80.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
-
-        // ── SÉCURITÉ ────────────────────────────────────────────────────
-        _SectionLabel(label: 'SÉCURITÉ', cs: cs),
-        DonyListSection(
-              tiles: [
-                DonyListTile(
-                  iconAsset: 'shield-check',
-                  iconColor: cs.onSurfaceVariant,
-                  iconBgColor: cs.outline.withValues(alpha: 0.3),
-                  label: 'Sécurité & confidentialité',
-                  showDivider: false,
-                  onTap: () {},
-                ),
-              ],
-            )
-            .animate()
-            .fadeIn(delay: 120.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.lg),
 
@@ -906,6 +870,7 @@ class _SettingsTab extends StatelessWidget {
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Contacter le support',
+                  subtitle: 'On répond sous 24 h',
                   onTap: () => context.push('/profile/help/contact'),
                 ),
                 DonyListTile(
@@ -919,7 +884,7 @@ class _SettingsTab extends StatelessWidget {
               ],
             )
             .animate()
-            .fadeIn(delay: 160.ms)
+            .fadeIn(delay: 120.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.xxl),
 
@@ -929,7 +894,7 @@ class _SettingsTab extends StatelessWidget {
           onPressed: () =>
               context.read<AuthBloc>().add(const AuthLogoutRequested()),
           variant: DonyButtonVariant.ghost,
-        ).animate().fadeIn(delay: 200.ms),
+        ).animate().fadeIn(delay: 160.ms),
         const SizedBox(height: DonySpacing.xxl),
 
         // ── FOOTER ──────────────────────────────────────────────────────
@@ -937,7 +902,7 @@ class _SettingsTab extends StatelessWidget {
           'dony v1.0.0 · Made with ❤️ in Paris',
           style: tt.bodySmall?.copyWith(color: cs.outline),
           textAlign: TextAlign.center,
-        ).animate().fadeIn(delay: 240.ms),
+        ).animate().fadeIn(delay: 200.ms),
       ],
     );
   }
