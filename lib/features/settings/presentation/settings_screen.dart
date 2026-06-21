@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -33,9 +35,9 @@ class SettingsScreen extends StatelessWidget {
             ),
             children: [
               // ── APPARENCE ──────────────────────────────────────────────
-              const _SectionLabel('APPARENCE'),
-              _FlatGroup(
-                tiles: [
+              const SettingsSectionHeader('APPARENCE'),
+              SettingsFlatGroup(
+                children: [
                   DonyListTile(
                     iconAsset: _themeIcon(prefs.themeMode),
                     iconColor: cs.primary,
@@ -50,9 +52,9 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── LANGUE & COMMUNICATION ─────────────────────────────────
-              const _SectionLabel('LANGUE & COMMUNICATION'),
-              _FlatGroup(
-                tiles: [
+              const SettingsSectionHeader('LANGUE & COMMUNICATION'),
+              SettingsFlatGroup(
+                children: [
                   DonyListTile(
                     iconAsset: 'languages',
                     iconColor: cs.primary,
@@ -69,9 +71,9 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── DESTINATIONS FAVORITES ─────────────────────────────────
-              const _SectionLabel('DESTINATIONS FAVORITES'),
-              _FlatGroup(
-                tiles: [
+              const SettingsSectionHeader('DESTINATIONS FAVORITES'),
+              SettingsFlatGroup(
+                children: [
                   DonyListTile(
                     iconAsset: 'map-pin',
                     iconColor: cs.primary,
@@ -88,9 +90,9 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── SÉCURITÉ & DONNÉES ─────────────────────────────────────
-              const _SectionLabel('SÉCURITÉ & DONNÉES'),
-              _FlatGroup(
-                tiles: [
+              const SettingsSectionHeader('SÉCURITÉ & DONNÉES'),
+              SettingsFlatGroup(
+                children: [
                   DonyListTile(
                     iconAsset: 'lock',
                     iconColor: cs.primary,
@@ -120,9 +122,9 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── PERSONNALISATION ───────────────────────────────────────
-              const _SectionLabel('PERSONNALISATION'),
-              _FlatGroup(
-                tiles: [
+              const SettingsSectionHeader('PERSONNALISATION'),
+              SettingsFlatGroup(
+                children: [
                   DonyListTile(
                     iconAsset: 'bell',
                     iconColor: cs.primary,
@@ -152,9 +154,9 @@ class SettingsScreen extends StatelessWidget {
               ),
 
               // ── INFORMATIONS ───────────────────────────────────────────
-              const _SectionLabel('INFORMATIONS'),
-              _FlatGroup(
-                tiles: [
+              const SettingsSectionHeader('INFORMATIONS'),
+              SettingsFlatGroup(
+                children: [
                   DonyListTile(
                     iconAsset: 'file-text',
                     iconColor: cs.onSurfaceVariant,
@@ -329,46 +331,3 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class _FlatGroup extends StatelessWidget {
-  const _FlatGroup({required this.tiles});
-  final List<Widget> tiles;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(children: tiles),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.sm,
-        DonySpacing.lg,
-        DonySpacing.sm,
-        DonySpacing.sm,
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          letterSpacing: 0.3,
-        ),
-      ),
-    );
-  }
-}
