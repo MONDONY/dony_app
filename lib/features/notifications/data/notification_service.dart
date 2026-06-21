@@ -260,6 +260,8 @@ class NotificationService {
       'request_accepted' when _isUuid(threadId)              => '/negotiations/$threadId',
       // Voyageur abonné → détail de l'annonce publiée
       'TRAVELER_NEW_ANNOUNCEMENT' when _isUuid(announcementId) => '/traveler/$announcementId',
+      // Expéditeur → détail du trajet qui matche son alerte
+      'CORRIDOR_ALERT' when _isUuid(announcementId) => '/traveler/$announcementId',
       // Nouveau message → liste des conversations
       'NEW_MESSAGE'                              => '/messages',
       // Trajet annulé → pas de navigation (le trajet n'existe plus)
