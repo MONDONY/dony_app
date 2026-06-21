@@ -19,6 +19,10 @@ class CorridorAlertModel extends Equatable {
     this.matchCount = 0,
     required this.createdAt,
     this.direction = AlertDirection.travelerWantsPackages,
+    this.centerLat,
+    this.centerLng,
+    this.radiusKm,
+    this.centerLabel,
   });
 
   final String id;
@@ -34,6 +38,16 @@ class CorridorAlertModel extends Equatable {
   final int matchCount;
   final DateTime createdAt;
   final AlertDirection direction;
+
+  // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
+  final double? centerLat;
+  final double? centerLng;
+  final int? radiusKm;
+  final String? centerLabel;
+
+  /// True si l'alerte porte une zone de remise (centre + rayon).
+  bool get hasPickupZone =>
+      centerLat != null && centerLng != null && radiusKm != null;
 
   factory CorridorAlertModel.fromJson(Map<String, dynamic> json) =>
       CorridorAlertModel(
@@ -58,6 +72,10 @@ class CorridorAlertModel extends Equatable {
         matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
         createdAt: DateTime.parse(json['createdAt'] as String),
         direction: AlertDirection.fromWire(json['direction'] as String?),
+        centerLat: (json['centerLat'] as num?)?.toDouble(),
+        centerLng: (json['centerLng'] as num?)?.toDouble(),
+        radiusKm: (json['radiusKm'] as num?)?.toInt(),
+        centerLabel: json['centerLabel'] as String?,
       );
 
   CorridorAlertModel copyWith({
@@ -79,6 +97,10 @@ class CorridorAlertModel extends Equatable {
         matchCount: matchCount ?? this.matchCount,
         createdAt: createdAt,
         direction: direction ?? this.direction,
+        centerLat: centerLat,
+        centerLng: centerLng,
+        radiusKm: radiusKm,
+        centerLabel: centerLabel,
       );
 
   @override
@@ -96,6 +118,10 @@ class CorridorAlertModel extends Equatable {
     matchCount,
     createdAt,
     direction,
+    centerLat,
+    centerLng,
+    radiusKm,
+    centerLabel,
   ];
 }
 
@@ -113,6 +139,10 @@ class CorridorAlertDraft {
     this.minWeightKg,
     this.contentCategories = const [],
     this.direction = AlertDirection.travelerWantsPackages,
+    this.centerLat,
+    this.centerLng,
+    this.radiusKm,
+    this.centerLabel,
   });
 
   final String departureCity;
@@ -125,6 +155,12 @@ class CorridorAlertDraft {
   final List<String> contentCategories;
   final AlertDirection direction;
 
+  // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
+  final double? centerLat;
+  final double? centerLng;
+  final int? radiusKm;
+  final String? centerLabel;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'departureCity': departureCity,
     'arrivalCity': arrivalCity,
@@ -136,6 +172,10 @@ class CorridorAlertDraft {
     if (dateTo != null) 'dateTo': _date(dateTo!),
     if (minWeightKg != null) 'minWeightKg': minWeightKg,
     if (contentCategories.isNotEmpty) 'contentCategories': contentCategories,
+    if (centerLat != null) 'centerLat': centerLat,
+    if (centerLng != null) 'centerLng': centerLng,
+    if (radiusKm != null) 'radiusKm': radiusKm,
+    if (centerLabel != null) 'centerLabel': centerLabel,
   };
 
   static String _date(DateTime d) => d.toIso8601String().substring(0, 10);

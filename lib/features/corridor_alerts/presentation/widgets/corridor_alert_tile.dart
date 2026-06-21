@@ -134,6 +134,10 @@ class CorridorAlertTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (alert.hasPickupZone) ...[
+                    const SizedBox(height: 4),
+                    _ZoneChip(radiusKm: alert.radiusKm!, label: alert.centerLabel),
+                  ],
                 ],
               ),
             ),
@@ -143,6 +147,53 @@ class CorridorAlertTile extends StatelessWidget {
               value: active,
               onChanged: onToggle,
               activeThumbColor: cs.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Petit chip « 📍 ≤ R km · Lieu » affiché quand l'alerte porte une zone de remise.
+class _ZoneChip extends StatelessWidget {
+  const _ZoneChip({required this.radiusKm, this.label});
+
+  final int radiusKm;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final text = label != null ? '≤ $radiusKm km · $label' : '≤ $radiusKm km';
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.xs + 2,
+          vertical: 2,
+        ),
+        decoration: BoxDecoration(
+          color: cs.primaryContainer,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DonyIcon('map-pin', size: 11, color: cs.onPrimaryContainer),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                text,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

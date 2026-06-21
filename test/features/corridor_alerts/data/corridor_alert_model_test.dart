@@ -172,4 +172,86 @@ void main() {
       expect(draft.toJson()['direction'], 'SENDER_WANTS_TRIPS');
     });
   });
+
+  group('CorridorAlertModel / Draft — zone de remise', () {
+    test('fromJson parses zone fields + hasPickupZone', () {
+      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+        'id': 'z1',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Abidjan',
+        'active': true,
+        'createdAt': '2026-06-20T09:00:00',
+        'direction': 'SENDER_WANTS_TRIPS',
+        'centerLat': 48.8566,
+        'centerLng': 2.3522,
+        'radiusKm': 20,
+        'centerLabel': 'Châtelet, Paris',
+      });
+      expect(m.centerLat, 48.8566);
+      expect(m.centerLng, 2.3522);
+      expect(m.radiusKm, 20);
+      expect(m.centerLabel, 'Châtelet, Paris');
+      expect(m.hasPickupZone, isTrue);
+    });
+
+    test('hasPickupZone false when zone absent', () {
+      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+        'id': 'z2',
+        'departureCity': 'Lyon',
+        'arrivalCity': 'Dakar',
+        'active': true,
+        'createdAt': '2026-06-20T09:00:00',
+      });
+      expect(m.hasPickupZone, isFalse);
+      expect(m.radiusKm, isNull);
+    });
+
+    test('copyWith preserves zone fields', () {
+      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+        'id': 'z3',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Abidjan',
+        'active': true,
+        'createdAt': '2026-06-20T09:00:00',
+        'direction': 'SENDER_WANTS_TRIPS',
+        'centerLat': 48.85,
+        'centerLng': 2.35,
+        'radiusKm': 30,
+        'centerLabel': 'Paris',
+      });
+      final toggled = m.copyWith(active: false);
+      expect(toggled.hasPickupZone, isTrue);
+      expect(toggled.radiusKm, 30);
+      expect(toggled.centerLabel, 'Paris');
+    });
+
+    test('draft.toJson includes zone when set', () {
+      const draft = CorridorAlertDraft(
+        departureCity: 'Paris',
+        arrivalCity: 'Abidjan',
+        direction: AlertDirection.senderWantsTrips,
+        centerLat: 48.8566,
+        centerLng: 2.3522,
+        radiusKm: 20,
+        centerLabel: 'Châtelet',
+      );
+      final json = draft.toJson();
+      expect(json['centerLat'], 48.8566);
+      expect(json['centerLng'], 2.3522);
+      expect(json['radiusKm'], 20);
+      expect(json['centerLabel'], 'Châtelet');
+    });
+
+    test('draft.toJson omits zone when absent', () {
+      const draft = CorridorAlertDraft(
+        departureCity: 'Lyon',
+        arrivalCity: 'Dakar',
+        direction: AlertDirection.senderWantsTrips,
+      );
+      final json = draft.toJson();
+      expect(json.containsKey('centerLat'), isFalse);
+      expect(json.containsKey('radiusKm'), isFalse);
+      expect(json.containsKey('centerLabel'), isFalse);
+    });
+  });
 }

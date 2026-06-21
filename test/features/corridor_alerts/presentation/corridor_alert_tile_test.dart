@@ -71,4 +71,26 @@ void main() {
     expect(find.textContaining('Toute date'), findsOneWidget);
     expect(find.textContaining('tout poids'), findsNothing);
   });
+
+  testWidgets('zone alert shows the pickup-zone chip', (tester) async {
+    final zoneAlert = CorridorAlertModel(
+      id: 'z1',
+      departureCity: 'Paris',
+      arrivalCity: 'Abidjan',
+      direction: AlertDirection.senderWantsTrips,
+      active: true,
+      createdAt: DateTime(2026, 6, 20),
+      centerLat: 48.8566,
+      centerLng: 2.3522,
+      radiusKm: 20,
+      centerLabel: 'Châtelet',
+    );
+    await tester.pumpWidget(_pump(zoneAlert));
+    expect(find.textContaining('≤ 20 km · Châtelet'), findsOneWidget);
+  });
+
+  testWidgets('non-zone alert shows no pickup-zone chip', (tester) async {
+    await tester.pumpWidget(_pump(_alert(AlertDirection.travelerWantsPackages)));
+    expect(find.textContaining('≤'), findsNothing);
+  });
 }

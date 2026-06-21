@@ -24,6 +24,10 @@ class CorridorAlertFormState extends Equatable {
     this.status = CorridorAlertFormStatus.editing,
     this.errorMessage,
     this.direction = AlertDirection.travelerWantsPackages,
+    this.centerLat,
+    this.centerLng,
+    this.radiusKm,
+    this.centerLabel,
   });
 
   final String? departureCity;
@@ -37,6 +41,15 @@ class CorridorAlertFormState extends Equatable {
   final CorridorAlertFormStatus status;
   final String? errorMessage;
   final AlertDirection direction;
+
+  // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
+  final double? centerLat;
+  final double? centerLng;
+  final int? radiusKm;
+  final String? centerLabel;
+
+  bool get hasZone =>
+      centerLat != null && centerLng != null && radiusKm != null;
 
   bool get isValid =>
       (departureCity?.trim().isNotEmpty ?? false) &&
@@ -56,6 +69,10 @@ class CorridorAlertFormState extends Equatable {
     CorridorAlertFormStatus? status,
     Object? errorMessage = _unset,
     AlertDirection? direction,
+    Object? centerLat = _unset,
+    Object? centerLng = _unset,
+    Object? radiusKm = _unset,
+    Object? centerLabel = _unset,
   }) =>
       CorridorAlertFormState(
         departureCity: departureCity ?? this.departureCity,
@@ -77,6 +94,17 @@ class CorridorAlertFormState extends Equatable {
             ? this.errorMessage
             : errorMessage as String?,
         direction: direction ?? this.direction,
+        centerLat: identical(centerLat, _unset)
+            ? this.centerLat
+            : centerLat as double?,
+        centerLng: identical(centerLng, _unset)
+            ? this.centerLng
+            : centerLng as double?,
+        radiusKm:
+            identical(radiusKm, _unset) ? this.radiusKm : radiusKm as int?,
+        centerLabel: identical(centerLabel, _unset)
+            ? this.centerLabel
+            : centerLabel as String?,
       );
 
   @override
@@ -92,6 +120,10 @@ class CorridorAlertFormState extends Equatable {
         status,
         errorMessage,
         direction,
+        centerLat,
+        centerLng,
+        radiusKm,
+        centerLabel,
       ];
 }
 
@@ -113,6 +145,10 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
                   minWeightKg: editing.minWeightKg,
                   contentCategories: editing.contentCategories,
                   direction: editing.direction,
+                  centerLat: editing.centerLat,
+                  centerLng: editing.centerLng,
+                  radiusKm: editing.radiusKm,
+                  centerLabel: editing.centerLabel,
                 ),
         );
 
@@ -142,6 +178,28 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
 
   void setDirection(AlertDirection d) => emit(state.copyWith(direction: d));
 
+  /// Définit la zone de remise (centre + rayon + label). Réservé aux alertes
+  /// trajet ; l'UI ne l'expose que pour `senderWantsTrips`.
+  void setZone({
+    required double lat,
+    required double lng,
+    required int radiusKm,
+    String? label,
+  }) =>
+      emit(state.copyWith(
+        centerLat: lat,
+        centerLng: lng,
+        radiusKm: radiusKm,
+        centerLabel: label,
+      ));
+
+  void clearZone() => emit(state.copyWith(
+        centerLat: null,
+        centerLng: null,
+        radiusKm: null,
+        centerLabel: null,
+      ));
+
   void toggleCategory(String category) {
     final next = List<String>.from(state.contentCategories);
     if (next.contains(category)) {
@@ -167,6 +225,10 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
       minWeightKg: state.minWeightKg,
       contentCategories: state.contentCategories,
       direction: state.direction,
+      centerLat: state.centerLat,
+      centerLng: state.centerLng,
+      radiusKm: state.radiusKm,
+      centerLabel: state.centerLabel,
     );
     try {
       if (_editingId != null) {

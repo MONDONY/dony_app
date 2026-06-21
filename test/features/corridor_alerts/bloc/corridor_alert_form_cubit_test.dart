@@ -222,4 +222,80 @@ void main() {
           .having((s) => s.errorMessage, 'err', isNotNull),
     ],
   );
+
+  // ---------------------------------------------------------------------------
+  // Zone de remise
+  // ---------------------------------------------------------------------------
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'setZone stores center, radius, label + hasZone',
+    build: () => CorridorAlertFormCubit(repo, analytics,
+        initialDirection: AlertDirection.senderWantsTrips),
+    act: (c) =>
+        c.setZone(lat: 48.8566, lng: 2.3522, radiusKm: 20, label: 'Châtelet'),
+    verify: (c) {
+      expect(c.state.centerLat, 48.8566);
+      expect(c.state.centerLng, 2.3522);
+      expect(c.state.radiusKm, 20);
+      expect(c.state.centerLabel, 'Châtelet');
+      expect(c.state.hasZone, isTrue);
+    },
+  );
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'clearZone resets the zone',
+    build: () {
+      final c = CorridorAlertFormCubit(repo, analytics,
+          initialDirection: AlertDirection.senderWantsTrips);
+      c.setZone(lat: 48.85, lng: 2.35, radiusKm: 30, label: 'Paris');
+      return c;
+    },
+    act: (c) => c.clearZone(),
+    verify: (c) {
+      expect(c.state.hasZone, isFalse);
+      expect(c.state.centerLat, isNull);
+      expect(c.state.radiusKm, isNull);
+      expect(c.state.centerLabel, isNull);
+    },
+  );
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'submit sends zone in draft',
+    build: () => CorridorAlertFormCubit(repo, analytics,
+        initialDirection: AlertDirection.senderWantsTrips),
+    setUp: () => when(() => repo.create(any())).thenAnswer(
+        (_) async => _alert(direction: AlertDirection.senderWantsTrips)),
+    act: (c) {
+      c.setDeparture('Paris', 'FR');
+      c.setArrival('Abidjan', 'CI');
+      c.setZone(lat: 48.8566, lng: 2.3522, radiusKm: 20, label: 'Châtelet');
+      return c.submit();
+    },
+    verify: (_) {
+      final draft = verify(() => repo.create(captureAny())).captured.single
+          as CorridorAlertDraft;
+      expect(draft.centerLat, 48.8566);
+      expect(draft.radiusKm, 20);
+      expect(draft.centerLabel, 'Châtelet');
+    },
+  );
+
+  test('editing alert with zone seeds zone state', () {
+    final alert = CorridorAlertModel(
+      id: 'z1',
+      departureCity: 'Paris',
+      arrivalCity: 'Abidjan',
+      active: true,
+      createdAt: DateTime(2026, 6, 20),
+      direction: AlertDirection.senderWantsTrips,
+      centerLat: 48.85,
+      centerLng: 2.35,
+      radiusKm: 25,
+      centerLabel: 'Paris',
+    );
+    final c = CorridorAlertFormCubit(repo, analytics, editing: alert);
+    expect(c.state.hasZone, isTrue);
+    expect(c.state.radiusKm, 25);
+    expect(c.state.centerLabel, 'Paris');
+  });
 }
