@@ -7,6 +7,8 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,20 +58,17 @@ class PrivacySettingsScreen extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── 2. Section "QUI PEUT ME CONTACTER" ───────────────────
-                _SectionLabel('QUI PEUT ME CONTACTER'),
-                const SizedBox(height: DonySpacing.sm),
+                const SettingsSectionHeader('QUI PEUT ME CONTACTER'),
                 _KycToggleCard(state: state),
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── 3. Section "BLOCAGE" ──────────────────────────────────
-                _SectionLabel('BLOCAGE'),
-                const SizedBox(height: DonySpacing.sm),
+                const SettingsSectionHeader('BLOCAGE'),
                 _BlockedUsersCard(),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── 4. Section "AMÉLIORATION DE L'APP" ────────────────────
-                _SectionLabel("AMÉLIORATION DE L'APP"),
-                const SizedBox(height: DonySpacing.sm),
+                const SettingsSectionHeader("AMÉLIORATION DE L'APP"),
                 const _AnalyticsConsentCard(),
                 const SizedBox(height: DonySpacing.xxl),
 
@@ -165,68 +164,65 @@ class _KycToggleCard extends StatelessWidget {
         ? (state as PrivacySettingsLoaded).contactKycOnly
         : false;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            // Icône dans container vert clair
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5EE),
-                borderRadius: BorderRadius.circular(10),
+    return SettingsFlatGroup(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md,
+          ),
+          child: Row(
+            children: [
+              // Icône dans container vert clair
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5EE),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: Text('✅', style: TextStyle(fontSize: 16)),
+                ),
               ),
-              child: const Center(
-                child: Text('✅', style: TextStyle(fontSize: 16)),
-              ),
-            ),
-            const SizedBox(width: DonySpacing.base),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Profils vérifiés uniquement',
-                    style: tt.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
+              const SizedBox(width: DonySpacing.base),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Profils vérifiés uniquement',
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "Seuls les utilisateurs ayant validé leur identité (KYC) peuvent t'envoyer une offre",
-                    style: tt.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: cs.onSurfaceVariant,
-                      height: 1.3,
+                    const SizedBox(height: 2),
+                    Text(
+                      "Seuls les utilisateurs ayant validé leur identité (KYC) peuvent t'envoyer une offre",
+                      style: tt.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: cs.onSurfaceVariant,
+                        height: 1.3,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            Switch(
-              value: contactKycOnly,
-              activeColor: const Color(0xFF1A6B3C),
-              onChanged: isLoading
-                  ? null
-                  : (v) => context
-                      .read<PrivacySettingsBloc>()
-                      .add(ContactKycOnlyToggled(v)),
-            ),
-          ],
+              const SizedBox(width: DonySpacing.sm),
+              Switch(
+                value: contactKycOnly,
+                activeColor: const Color(0xFF1A6B3C),
+                onChanged: isLoading
+                    ? null
+                    : (v) => context
+                        .read<PrivacySettingsBloc>()
+                        .add(ContactKycOnlyToggled(v)),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -248,70 +244,67 @@ class _AnalyticsConsentCard extends StatelessWidget {
       builder: (context, box, _) {
         final enabled = box.get(HiveService.kAnalyticsConsent) == true;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.md,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF1FF),
-                    borderRadius: BorderRadius.circular(10),
+        return SettingsFlatGroup(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.md,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAF1FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text('📊', style: TextStyle(fontSize: 16)),
+                    ),
                   ),
-                  child: const Center(
-                    child: Text('📊', style: TextStyle(fontSize: 16)),
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.base),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Statistiques d'utilisation",
-                        style: tt.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                  const SizedBox(width: DonySpacing.base),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Statistiques d'utilisation",
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "Mesure anonyme de l'usage pour améliorer l'app. "
-                        "Jamais tes paiements ni ton identité.",
-                        style: tt.bodySmall?.copyWith(
-                          fontSize: 11,
-                          color: cs.onSurfaceVariant,
-                          height: 1.3,
+                        const SizedBox(height: 2),
+                        Text(
+                          "Mesure anonyme de l'usage pour améliorer l'app. "
+                          "Jamais tes paiements ni ton identité.",
+                          style: tt.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: cs.onSurfaceVariant,
+                            height: 1.3,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                Switch(
-                  value: enabled,
-                  onChanged: (v) {
-                    getIt<AnalyticsService>()
-                        .setConsent(granted: v, source: 'settings');
-                    unawaited(getIt<AnalyticsService>().logEvent(
-                      AnalyticsEvents.analyticsConsentChanged,
-                      properties: {'granted': v},
-                    ));
-                  },
-                ),
-              ],
+                  const SizedBox(width: DonySpacing.sm),
+                  Switch(
+                    value: enabled,
+                    onChanged: (v) {
+                      getIt<AnalyticsService>()
+                          .setConsent(granted: v, source: 'settings');
+                      unawaited(getIt<AnalyticsService>().logEvent(
+                        AnalyticsEvents.analyticsConsentChanged,
+                        properties: {'granted': v},
+                      ));
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );
@@ -331,106 +324,80 @@ class _BlockedUsersCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => context.go('/settings/privacy/blocked-users'),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.md,
-          ),
-          child: Row(
-            children: [
-              // Icône dans container rouge clair
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF0F0),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Center(
-                  child: Text('🚫', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(width: DonySpacing.base),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Utilisateurs bloqués',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Gérer les personnes que tu as bloquées',
-                      style: tt.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              if (blockedCount > 0) ...[
+      child: SettingsFlatGroup(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md,
+            ),
+            child: Row(
+              children: [
+                // Icône dans container rouge clair
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm,
-                    vertical: DonySpacing.xs,
-                  ),
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF4F6F8),
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    color: const Color(0xFFFFF0F0),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text(
-                    '$blockedCount',
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: const Center(
+                    child: Text('🚫', style: TextStyle(fontSize: 16)),
                   ),
                 ),
-                const SizedBox(width: DonySpacing.xs),
+                const SizedBox(width: DonySpacing.base),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Utilisateurs bloqués',
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Gérer les personnes que tu as bloquées',
+                        style: tt.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                if (blockedCount > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm,
+                      vertical: DonySpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F6F8),
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    ),
+                    child: Text(
+                      '$blockedCount',
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                ],
+                const DonyIcon(
+                  'chevron-right',
+                  color: Color(0xFF1A6B3C),
+                  size: 20,
+                ),
               ],
-              const DonyIcon(
-                'chevron-right',
-                color: Color(0xFF1A6B3C),
-                size: 20,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Section label ─────────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return Text(
-      label,
-      style: tt.labelMedium?.copyWith(
-        color: cs.onSurfaceVariant,
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        ],
       ),
     );
   }
