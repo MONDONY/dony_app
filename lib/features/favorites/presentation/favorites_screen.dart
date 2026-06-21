@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
@@ -7,6 +12,7 @@ import 'package:dony/features/package_request/presentation/widgets/package_reque
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -23,6 +29,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       if (!mounted) {
         return;
       }
+      unawaited(
+        getIt<AnalyticsService>().logEvent(AnalyticsEvents.favoritesOpened),
+      );
       final role = context.read<ActiveRoleCubit>().state;
       context.read<FavoriteTripsCubit>().load();
       if (role == ActiveRole.traveler) {
@@ -119,9 +128,13 @@ class _TripsTab extends StatelessWidget {
               ),
               itemCount: trips.length,
               itemBuilder: (context, index) {
+                final trip = trips[index];
                 return TripCard(
-                  announcement: trips[index],
-                  onTap: () {},
+                  announcement: trip,
+                  onTap: () => context.push(
+                    '/announcements/${trip.id}/trip',
+                    extra: trip,
+                  ),
                   index: index,
                   showFavorite: true,
                 );
@@ -176,10 +189,14 @@ class _RequestsTab extends StatelessWidget {
               ),
               itemCount: requests.length,
               itemBuilder: (context, index) {
+                final request = requests[index];
                 return PackageRequestListCard(
-                  item: requests[index],
+                  item: request,
                   index: index,
                   showFavorite: true,
+                  onTap: () => context.push(
+                    '/package-requests/${request.id}/public',
+                  ),
                 );
               },
             ),

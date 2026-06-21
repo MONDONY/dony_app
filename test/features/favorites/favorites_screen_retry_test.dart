@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
@@ -8,6 +10,7 @@ import 'package:dony/features/favorites/presentation/widgets/favorite_heart_butt
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,6 +32,11 @@ class _MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
 
 class _MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
+
+class _FakeAnalyticsService extends Fake implements AnalyticsService {
+  @override
+  Future<void> logEvent(String name, {Map<String, Object?>? properties}) async {}
+}
 
 // ---------------------------------------------------------------------------
 // Helper
@@ -80,6 +88,20 @@ Widget _buildScreen({
 // ---------------------------------------------------------------------------
 
 void main() {
+  setUpAll(() {
+    // FavoritesScreen calls getIt<AnalyticsService>() in initState — register
+    // a no-op fake so tests don't crash with GetIt not-registered errors.
+    if (!getIt.isRegistered<AnalyticsService>()) {
+      getIt.registerSingleton<AnalyticsService>(_FakeAnalyticsService());
+    }
+  });
+
+  tearDownAll(() {
+    if (getIt.isRegistered<AnalyticsService>()) {
+      getIt.unregister<AnalyticsService>();
+    }
+  });
+
   // ---------------------------------------------------------------------------
   // Retry button — trips tab
   // ---------------------------------------------------------------------------
@@ -121,21 +143,17 @@ void main() {
       ));
       await tester.pump();
 
-      // Navigate to the Demandes tab (index 1)
+      // Navigate to the Demandes tab (index 1) and wait for animation
       await tester.tap(find.text('Demandes'));
-      // Pump enough for tab animation to complete
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
 
-      // The Réessayer button is in the _RequestsTab error state
-      final retryButtons = find.text('Réessayer');
-      if (retryButtons.evaluate().isNotEmpty) {
-        await tester.tap(retryButtons.first);
-        await tester.pump();
-        verify(() => requestsCubit.load()).called(greaterThanOrEqualTo(1));
-      } else {
-        // Tab might not have rendered — just verify the cubit was set up correctly
-        expect(requestsCubit.state, isA<FavoriteRequestsError>());
-      }
+      // The Réessayer button must be visible in the _RequestsTab error state
+      expect(find.text('Réessayer'), findsOneWidget);
+
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      verify(() => requestsCubit.load()).called(greaterThanOrEqualTo(1));
     });
   });
 
@@ -269,7 +287,7 @@ void main() {
           id: 'req-1',
           departureCity: 'Lyon',
           arrivalCity: 'Abidjan',
-          desiredDate: DateTime(2025, 7, 1),
+          desiredDate: DateTime(2025, 7),
           dateToleranceDays: 3,
           weightKg: 4.0,
           parcelSize: ParcelSize.medium,
@@ -283,7 +301,7 @@ void main() {
         );
 
     testWidgets(
-        'FavoriteRequestsLoaded : cubit state correct dans le screen',
+        'FavoriteRequestsLoaded : affiche ListView dans l\'onglet Demandes',
         (tester) async {
       final requestsCubit = _MockFavoriteRequestsCubit();
       when(() => requestsCubit.state)
@@ -299,18 +317,18 @@ void main() {
           requestsCubitOverride: requestsCubit,
         ),
       );
-      await tester.pump();
 
-      // Verify the cubit exposes the right state (covers the Loaded branch)
-      expect(requestsCubit.state, isA<FavoriteRequestsLoaded>());
-      expect(
-        (requestsCubit.state as FavoriteRequestsLoaded).requests,
-        hasLength(1),
-      );
+      // Navigate to the Demandes tab so it actually renders
+      await tester.tap(find.text('Demandes'));
+      await tester.pumpAndSettle();
+
+      // The tab must render the loaded list
+      expect(find.byType(RefreshIndicator), findsAtLeastNWidgets(1));
+      expect(find.byType(PackageRequestListCard), findsOneWidget);
     });
 
     testWidgets(
-        'FavoriteRequestsEmpty : cubit state correct dans le screen',
+        'FavoriteRequestsEmpty : affiche message vide dans l\'onglet Demandes',
         (tester) async {
       final requestsCubit = _MockFavoriteRequestsCubit();
       when(() => requestsCubit.state).thenReturn(FavoriteRequestsEmpty());
@@ -325,9 +343,15 @@ void main() {
           requestsCubitOverride: requestsCubit,
         ),
       );
-      await tester.pump();
 
-      expect(requestsCubit.state, isA<FavoriteRequestsEmpty>());
+      // Navigate to the Demandes tab so it actually renders
+      await tester.tap(find.text('Demandes'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("Aucune demande favorite pour l'instant"),
+        findsOneWidget,
+      );
     });
   });
 }

@@ -42,6 +42,10 @@ class PackageRequestListCard extends StatelessWidget {
 
   /// When true, renders a heart button in the micro-label row (pushed right).
   /// Requires a [FavoriteIdsCubit] in the tree; silently omitted if absent.
+  ///
+  /// Caller is responsible for NOT passing true on items owned by the current
+  /// user. The in-card heart has no owner guard; the backend returns 422 on an
+  /// own-request add, but the optimistic UI would flash before the error arrives.
   final bool showFavorite;
 
   String get _sizeLabel => switch (item.parcelSize) {

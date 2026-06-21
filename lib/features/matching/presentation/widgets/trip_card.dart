@@ -39,6 +39,10 @@ class TripCard extends StatelessWidget {
   /// When true, renders a heart button in the header row.
   /// Requires a [FavoriteIdsCubit] to be in the widget tree; if absent the
   /// heart is silently omitted (defensive read — never crashes).
+  ///
+  /// Caller is responsible for NOT passing true on items owned by the current
+  /// user. The in-card heart has no owner guard; the backend returns 422 on an
+  /// own-trip add, but the optimistic UI would flash before the error arrives.
   final bool showFavorite;
 
   bool get _isPast =>

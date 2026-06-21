@@ -135,6 +135,9 @@ abstract final class AnalyticsEvents {
   static const corridorAlertUpdated = 'corridor_alert_updated';
   static const corridorAlertMatchesViewed = 'corridor_alert_matches_viewed';
 
+  // Favorites
+  static const favoritesOpened = 'favorites_opened';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }

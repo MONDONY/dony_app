@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
@@ -67,11 +69,28 @@ Widget _buildScreen({
 class _MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
 
+class _FakeAnalyticsService extends Fake implements AnalyticsService {
+  @override
+  Future<void> logEvent(String name, {Map<String, Object?>? properties}) async {}
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 void main() {
+  setUpAll(() {
+    if (!getIt.isRegistered<AnalyticsService>()) {
+      getIt.registerSingleton<AnalyticsService>(_FakeAnalyticsService());
+    }
+  });
+
+  tearDownAll(() {
+    if (getIt.isRegistered<AnalyticsService>()) {
+      getIt.unregister<AnalyticsService>();
+    }
+  });
+
   // ---------------------------------------------------------------------------
   // Traveler role → 2 tabs
   // ---------------------------------------------------------------------------
