@@ -23,6 +23,8 @@ String? routeForNotification(NotificationModel n) {
     'DELIVERY_CONFIRMED' when bidId != null   => '/bids/$bidId',
     'PAYMENT_RELEASED' when bidId != null     => '/bids/$bidId',
     'DISPUTE_OPENED' when bidId != null       => '/bids/$bidId',
+    // Expéditeur → détail du trajet qui matche son alerte corridor
+    'CORRIDOR_ALERT' when announcementId != null => '/traveler/$announcementId',
     _ => null,
   };
 }
