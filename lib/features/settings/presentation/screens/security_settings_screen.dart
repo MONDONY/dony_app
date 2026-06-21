@@ -3,6 +3,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/pin_confirm_bottom_sheet.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -84,8 +86,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   DonySpacing.huge,
                 ),
                 children: [
-                  const _SectionLabel('PAIEMENTS'),
-                  DonyListSection(tiles: [
+                  const SettingsSectionHeader('PAIEMENTS'),
+                  SettingsFlatGroup(children: [
                     DonyListTile(
                       iconAsset: 'fingerprint',
                       iconColor: biometricAvailable
@@ -122,8 +124,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: DonySpacing.lg),
-                  const _SectionLabel('APPLICATION'),
-                  DonyListSection(tiles: [
+                  const SettingsSectionHeader('APPLICATION'),
+                  SettingsFlatGroup(children: [
                     DonyListTile(
                       iconAsset: 'lock',
                       iconColor: biometricAvailable
@@ -161,8 +163,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: DonySpacing.lg),
-                  const _SectionLabel('AUTHENTIFICATION'),
-                  DonyListSection(tiles: [
+                  const SettingsSectionHeader('AUTHENTIFICATION'),
+                  SettingsFlatGroup(children: [
                     DonyListTile(
                       iconAsset: 'key-round',
                       iconColor: cs.primary,
@@ -178,8 +180,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: DonySpacing.lg),
-                  const _SectionLabel('SESSION'),
-                  DonyListSection(tiles: [
+                  const SettingsSectionHeader('SESSION'),
+                  SettingsFlatGroup(children: [
                     DonyListTile(
                       iconAsset: 'smartphone',
                       iconColor: cs.primary,
@@ -197,31 +199,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             },
           );
         },
-      ),
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.xs,
-        0,
-        DonySpacing.xs,
-        DonySpacing.sm,
-      ),
-      child: Text(
-        label,
-        style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
       ),
     );
   }
