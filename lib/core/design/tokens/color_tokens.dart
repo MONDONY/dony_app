@@ -87,6 +87,8 @@ abstract final class DonyColors {
   static const info500 = Color(0xFF1B7BC2); // Bleu info ★
   static const info700 = Color(0xFF115687);
 
+  static const favorite = Color(0xFFE11D48); // Cœur favori (rempli). Contour = cs.onSurfaceVariant.
+
   // Accent violet / teal (badges spéciaux)
   static const amberLight  = Color(0xFFFEF3C7);
   static const amberDark   = Color(0xFFB45309);
