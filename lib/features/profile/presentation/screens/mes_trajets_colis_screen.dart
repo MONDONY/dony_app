@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -58,7 +59,10 @@ class MesTrajetsColisScreen extends StatelessWidget {
           iconColor: cs.primary,
           iconBgColor: cs.primaryContainer,
           label: 'Mes alertes corridor',
-          onTap: () => context.push('/corridor-alerts'),
+          onTap: () => context.push(
+            '/corridor-alerts',
+            extra: AlertDirection.travelerWantsPackages,
+          ),
         ),
         DonyListTile(
           iconAsset: 'bookmark',
@@ -83,6 +87,17 @@ class MesTrajetsColisScreen extends StatelessWidget {
       // « Mes demandes de colis » n'est PAS listé ici : déjà accessible via le
       // hub Envoyer (onglet « Demandes ») depuis l'onglet Activité du profil.
       tiles: [
+        DonyListTile(
+          iconAsset: 'bell',
+          iconColor: cs.secondary,
+          iconBgColor: cs.secondaryContainer,
+          label: 'Mes alertes corridor',
+          // Direction trajets : l'expéditeur est alerté quand un trajet matche.
+          onTap: () => context.push(
+            '/corridor-alerts',
+            extra: AlertDirection.senderWantsTrips,
+          ),
+        ),
         DonyListTile(
           iconAsset: 'contact',
           iconColor: cs.secondary,

@@ -1,49 +1,60 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Écran liste des alertes corridor, mono-direction.
+///
+/// [direction] filtre les alertes affichées et verrouille la direction à la
+/// création :
+/// - `travelerWantsPackages` → alertes « Colis » (atteint depuis le bloc
+///   Voyageur).
+/// - `senderWantsTrips` → alertes « Trajets » (atteint depuis le bloc/​hub
+///   Expéditeur).
 class CorridorAlertListScreen extends StatelessWidget {
-  const CorridorAlertListScreen({super.key});
+  const CorridorAlertListScreen({
+    super.key,
+    this.direction = AlertDirection.travelerWantsPackages,
+  });
+
+  final AlertDirection direction;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
           getIt<CorridorAlertListBloc>()..add(CorridorAlertListRequested()),
-      child: const _CorridorAlertListView(),
+      child: _CorridorAlertListView(direction: direction),
     );
   }
 }
 
 class _CorridorAlertListView extends StatelessWidget {
-  const _CorridorAlertListView();
+  const _CorridorAlertListView({required this.direction});
+
+  final AlertDirection direction;
+
+  bool get _isPackages => direction == AlertDirection.travelerWantsPackages;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    // Resolve role flags from AuthBloc state (guard for unauthenticated → both false).
-    // watch ensures build() re-runs on auth state change so callbacks capture fresh flags.
-    final authState = context.watch<AuthBloc>().state;
-    final isTraveler = switch (authState) {
-      final AuthAuthenticated s => s.user.isTraveler,
-      final AuthProfileUpdated s => s.user.isTraveler,
-      _ => false,
-    };
-    final isSender = switch (authState) {
-      final AuthAuthenticated s => s.user.isSender,
-      final AuthProfileUpdated s => s.user.isSender,
-      _ => false,
-    };
+    // La direction de l'écran verrouille la direction à la création : exactement
+    // un rôle est passé au form → segment masqué, direction forcée.
+    final formIsTraveler = _isPackages;
+    final formIsSender = !_isPackages;
+
+    final emptyDescription = _isPackages
+        ? 'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.'
+        : 'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.';
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -65,8 +76,8 @@ class _CorridorAlertListView extends StatelessWidget {
           onPressed: () async {
             await CorridorAlertFormSheet.show(
               fabCtx,
-              isTraveler: isTraveler,
-              isSender: isSender,
+              isTraveler: formIsTraveler,
+              isSender: formIsSender,
             );
             if (fabCtx.mounted) {
               fabCtx
@@ -78,13 +89,17 @@ class _CorridorAlertListView extends StatelessWidget {
       ),
       body: BlocBuilder<CorridorAlertListBloc, CorridorAlertListState>(
         builder: (ctx, state) {
+          // Filtre mono-direction : seules les alertes de cet écran sont visibles.
+          final visible =
+              state.alerts.where((a) => a.direction == direction).toList();
+
           if (state.status == CorridorAlertListStatus.loading &&
-              state.alerts.isEmpty) {
+              visible.isEmpty) {
             return Center(
                 child: CircularProgressIndicator(color: cs.primary));
           }
           if (state.status == CorridorAlertListStatus.error &&
-              state.alerts.isEmpty) {
+              visible.isEmpty) {
             return DonyEmptyState(
               mascotte: DonyMascotteType.assis,
               type: DonyEmptyStateType.error,
@@ -97,18 +112,17 @@ class _CorridorAlertListView extends StatelessWidget {
                   .add(CorridorAlertListRequested()),
             );
           }
-          if (state.alerts.isEmpty) {
+          if (visible.isEmpty) {
             return DonyEmptyState(
               mascotte: DonyMascotteType.assis,
               title: 'Aucune alerte corridor',
-              description:
-                  'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.',
+              description: emptyDescription,
               actionLabel: 'Créer une alerte',
               onAction: () async {
                 await CorridorAlertFormSheet.show(
                   ctx,
-                  isTraveler: isTraveler,
-                  isSender: isSender,
+                  isTraveler: formIsTraveler,
+                  isSender: formIsSender,
                 );
                 if (ctx.mounted) {
                   ctx
@@ -119,17 +133,19 @@ class _CorridorAlertListView extends StatelessWidget {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.base,
-              DonySpacing.lg,
-              DonySpacing.huge,
+            padding: const EdgeInsets.only(
+              top: DonySpacing.sm,
+              bottom: DonySpacing.huge,
             ),
-            itemCount: state.alerts.length,
-            separatorBuilder: (context, index) =>
-                const SizedBox(height: DonySpacing.md),
+            itemCount: visible.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              thickness: 1,
+              indent: DonySpacing.lg + 44 + DonySpacing.md,
+              color: cs.outline.withValues(alpha: 0.5),
+            ),
             itemBuilder: (lCtx, i) {
-              final alert = state.alerts[i];
+              final alert = visible[i];
               return Dismissible(
                 key: ValueKey(alert.id),
                 direction: DismissDirection.endToStart,
@@ -139,10 +155,7 @@ class _CorridorAlertListView extends StatelessWidget {
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: DonySpacing.xl),
-                  decoration: BoxDecoration(
-                    color: cs.error,
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                  ),
+                  color: cs.error,
                   // size: 24 is the DonyIcon default — matches the brief.
                   child: DonyIcon('trash-2', color: cs.onError),
                 ),

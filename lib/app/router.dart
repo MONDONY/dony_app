@@ -68,6 +68,7 @@ import 'package:dony/features/package_request/presentation/screens/shared/my_neg
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_matches_screen.dart';
@@ -576,7 +577,11 @@ final appRouter = GoRouter(
     // ── Alertes corridor (hors shell) ────────────────────────────────────
     GoRoute(
       path: '/corridor-alerts',
-      builder: (_, __) => const CorridorAlertListScreen(),
+      builder: (_, state) => CorridorAlertListScreen(
+        direction: state.extra is AlertDirection
+            ? state.extra as AlertDirection
+            : AlertDirection.travelerWantsPackages,
+      ),
     ),
     GoRoute(
       path: '/corridor-alerts/:id/matches',

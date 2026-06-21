@@ -4,6 +4,7 @@ import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.d
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 CorridorAlertModel _alert(AlertDirection d) => CorridorAlertModel(
       id: 'a1',
@@ -22,16 +23,34 @@ Widget _pump(CorridorAlertModel a) => MaterialApp(
     );
 
 void main() {
-  testWidgets('package direction shows « Colis » pill', (tester) async {
+  setUpAll(() => initializeDateFormatting('fr'));
+
+  testWidgets('renders corridor, summary and toggle (flat, no border)',
+      (tester) async {
     await tester.pumpWidget(_pump(_alert(AlertDirection.travelerWantsPackages)));
-    expect(find.text('Colis'), findsOneWidget);
+
+    expect(find.text('Paris → Dakar'), findsOneWidget);
+    expect(find.byType(Switch), findsOneWidget);
+    // Flat WhatsApp style: the tile itself draws no bordered Container.
+    expect(find.byType(Card), findsNothing);
+    // Direction pill removed — each screen is mono-direction.
+    expect(find.text('Colis'), findsNothing);
     expect(find.text('Trajets'), findsNothing);
   });
 
-  testWidgets('trip direction shows « Trajets » pill', (tester) async {
-    await tester.pumpWidget(_pump(_alert(AlertDirection.senderWantsTrips)));
-    expect(find.text('Trajets'), findsOneWidget);
-    expect(find.text('Colis'), findsNothing);
+  testWidgets('paused alert renders with toggle off', (tester) async {
+    final paused = CorridorAlertModel(
+      id: 'p1',
+      departureCity: 'Lyon',
+      arrivalCity: 'Bamako',
+      direction: AlertDirection.travelerWantsPackages,
+      active: false,
+      createdAt: DateTime(2026, 6, 20),
+    );
+    await tester.pumpWidget(_pump(paused));
+
+    final sw = tester.widget<Switch>(find.byType(Switch));
+    expect(sw.value, isFalse);
   });
 
   testWidgets(

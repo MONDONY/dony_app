@@ -5,8 +5,12 @@ import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.d
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Carte d'une alerte corridor : corridor, badge matchCount, toggle actif/pause,
-/// et résumé des filtres (date · poids · catégories).
+/// Ligne plate (style liste WhatsApp) d'une alerte corridor : avatar cloche,
+/// corridor, résumé des filtres et toggle actif/pause. Pas de bordure ni de
+/// carte — séparateurs fins gérés par la liste parente.
+///
+/// La direction (colis ↔ trajets) n'est plus affichée ici : chaque écran
+/// d'alertes est mono-direction (filtré en amont).
 class CorridorAlertTile extends StatelessWidget {
   const CorridorAlertTile({
     super.key,
@@ -66,41 +70,51 @@ class CorridorAlertTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final active = alert.active;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(
-        padding: const EdgeInsets.all(DonySpacing.base),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(
-            color: alert.active
-                ? cs.primary.withValues(alpha: 0.35)
-                : cs.outline,
-          ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.lg,
+          vertical: DonySpacing.md,
         ),
         child: Row(
           children: [
-            DonyIcon('bell',
-                size: 20,
-                color: alert.active ? cs.primary : cs.onSurfaceVariant),
+            // ── Avatar cloche ────────────────────────────────────────────
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: active
+                    ? cs.primaryContainer
+                    : cs.onSurface.withValues(alpha: 0.06),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: DonyIcon(
+                  'bell',
+                  size: 20,
+                  color: active ? cs.primary : cs.onSurfaceVariant,
+                ),
+              ),
+            ),
             const SizedBox(width: DonySpacing.md),
+            // ── Corridor + résumé filtres ────────────────────────────────
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      _DirectionPill(
-                        direction: alert.direction,
-                      ),
-                      const SizedBox(width: DonySpacing.xs),
-                      Flexible(
+                      Expanded(
                         child: Text(
                           '${alert.departureCity} → ${alert.arrivalCity}',
-                          style: tt.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: active ? cs.onSurface : cs.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -116,75 +130,22 @@ class CorridorAlertTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     buildFilterSummary(alert),
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                    maxLines: 2,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    alert.active ? 'Active' : 'En pause',
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: DonySpacing.sm),
+            // ── Toggle actif/pause ───────────────────────────────────────
             Switch(
-              value: alert.active,
+              value: active,
               onChanged: onToggle,
               activeThumbColor: cs.primary,
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Small pill showing direction: « Colis » (traveler wants packages) or « Trajets » (sender wants trips).
-class _DirectionPill extends StatelessWidget {
-  const _DirectionPill({required this.direction});
-
-  final AlertDirection direction;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final isTrip = direction == AlertDirection.senderWantsTrips;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.xs + 2,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: isTrip
-            ? cs.secondaryContainer
-            : cs.primaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.sm),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isTrip ? Icons.flight_rounded : Icons.inventory_2_rounded,
-            size: 11,
-            color: isTrip
-                ? cs.onSecondaryContainer
-                : cs.onPrimaryContainer,
-          ),
-          const SizedBox(width: 3),
-          Text(
-            isTrip ? 'Trajets' : 'Colis',
-            style: tt.labelSmall?.copyWith(
-              color: isTrip
-                  ? cs.onSecondaryContainer
-                  : cs.onPrimaryContainer,
-              fontWeight: FontWeight.w600,
-              fontSize: 10,
-            ),
-          ),
-        ],
       ),
     );
   }

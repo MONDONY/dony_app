@@ -152,13 +152,15 @@ void main() {
     });
 
     testWidgets(
-      'isSender:true shows EXPÉDITEUR block with destinataires (no demandes)',
+      'isSender:true shows EXPÉDITEUR block with alertes + destinataires (no demandes)',
       (tester) async {
         await tester.pumpWidget(_buildHarness(isSender: true));
         await tester.pump(const Duration(milliseconds: 600));
 
         expect(find.text('EXPÉDITEUR · COLIS'), findsOneWidget);
         expect(find.text('Mes destinataires'), findsOneWidget);
+        // « Mes alertes corridor » présent dans les 2 blocs (voyageur + expéditeur).
+        expect(find.text('Mes alertes corridor'), findsNWidgets(2));
         // « Mes demandes de colis » retiré : déjà accessible via le hub Envoyer.
         expect(find.text('Mes demandes de colis'), findsNothing);
       },
