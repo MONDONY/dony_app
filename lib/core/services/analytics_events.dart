@@ -126,6 +126,7 @@ abstract final class AnalyticsEvents {
 
   // Trip matching (Colis sur mes trajets)
   static const tripMatchingViewed = 'trip_matching_viewed';
+  static const packageMatchAlertToggled = 'package_match_alert_toggled';
 
   // Corridor alerts
   static const corridorAlertToggled = 'corridor_alert_toggled';

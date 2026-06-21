@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
@@ -14,13 +15,19 @@ class MockListBloc
     extends MockBloc<CorridorAlertListEvent, CorridorAlertListState>
     implements CorridorAlertListBloc {}
 
-CorridorAlertModel _alert(String id, {bool active = true, int matches = 3}) =>
+CorridorAlertModel _alert(
+  String id, {
+  bool active = true,
+  int matches = 3,
+  AlertDirection direction = AlertDirection.travelerWantsPackages,
+}) =>
     CorridorAlertModel(
       id: id,
       departureCity: 'Paris',
       arrivalCity: 'Bamako',
       active: active,
       matchCount: matches,
+      direction: direction,
       createdAt: DateTime(2026, 6, 20),
     );
 
@@ -56,9 +63,12 @@ void main() {
 
   tearDown(() => GetIt.I.reset());
 
-  Widget pump() => MaterialApp(
+  Widget pump({
+    AlertDirection direction = AlertDirection.travelerWantsPackages,
+  }) =>
+      MaterialApp(
         theme: AppTheme.light,
-        home: const CorridorAlertListScreen(),
+        home: CorridorAlertListScreen(direction: direction),
       );
 
   testWidgets('loaded → renders a tile per alert with matchCount badge',
@@ -145,5 +155,40 @@ void main() {
     await t.pumpWidget(pump());
     await t.pump(const Duration(milliseconds: 600));
     expect(find.textContaining('Toute date · tout poids'), findsOneWidget);
+  });
+
+  testWidgets(
+      'travelerWantsPackages screen hides senderWantsTrips alerts (filter)',
+      (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [
+        _alert('a1', direction: AlertDirection.travelerWantsPackages),
+        _alert('a2', direction: AlertDirection.senderWantsTrips),
+      ],
+    ));
+    await t.pumpWidget(pump());
+    await t.pump(const Duration(milliseconds: 600));
+    // Only the travelerWantsPackages alert is visible on this screen.
+    expect(find.byType(CorridorAlertTile), findsOneWidget);
+    // Titre direction-aware.
+    expect(find.text('Mes alertes colis'), findsOneWidget);
+  });
+
+  testWidgets(
+      'senderWantsTrips screen shows only senderWantsTrips alerts (filter)',
+      (t) async {
+    when(() => bloc.state).thenReturn(CorridorAlertListState(
+      status: CorridorAlertListStatus.loaded,
+      alerts: [
+        _alert('a1', direction: AlertDirection.travelerWantsPackages),
+        _alert('a2', direction: AlertDirection.senderWantsTrips),
+      ],
+    ));
+    await t.pumpWidget(pump(direction: AlertDirection.senderWantsTrips));
+    await t.pump(const Duration(milliseconds: 600));
+    expect(find.byType(CorridorAlertTile), findsOneWidget);
+    // Titre direction-aware.
+    expect(find.text('Mes alertes trajets'), findsOneWidget);
   });
 }

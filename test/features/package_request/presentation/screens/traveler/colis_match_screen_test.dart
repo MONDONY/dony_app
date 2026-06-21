@@ -111,13 +111,14 @@ void main() {
     expect(find.byType(MatchingRequestCard), findsNWidgets(2));
   });
 
-  testWidgets('header shows compteur + bell, tap bell navigates to alerts',
+  testWidgets('header bell reflects alert state and toggles it on tap',
       (t) async {
     whenListen(
       matching,
       Stream.value(TripMatchingState(
         status: TripMatchingStatus.loaded,
         matches: [_match('a')],
+        alertEnabled: true,
       )),
       initialState: const TripMatchingState(),
     );
@@ -126,13 +127,17 @@ void main() {
     when(() => announcements.stream)
         .thenAnswer((_) => const Stream<AnnouncementState>.empty());
     await t.pumpWidget(pump());
-    await t.pump(const Duration(milliseconds: 600));
+    await t.pumpAndSettle(const Duration(seconds: 2));
     expect(find.textContaining('compatible'), findsOneWidget);
     final bell = find.byKey(const Key('colis-match-bell'));
     expect(bell, findsOneWidget);
+    // alertEnabled == true → cloche active
+    expect(find.byIcon(Icons.notifications_active_rounded), findsOneWidget);
     await t.tap(bell);
     await t.pumpAndSettle();
-    expect(find.text('ALERTS-SCREEN'), findsOneWidget);
+    // Tap → bascule vers OFF (pas de navigation)
+    verify(() => matching.add(const TripMatchingAlertToggled(false))).called(1);
+    expect(find.text('ALERTS-SCREEN'), findsNothing);
   });
 
   testWidgets('empty matches → fennec + "Créer une alerte sur ce corridor"',

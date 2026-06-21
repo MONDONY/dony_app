@@ -48,40 +48,16 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
 
     return AppBar(
       title: Text(title, style: tt.headlineMedium),
       centerTitle: false,
       scrolledUnderElevation: 0,
       leading: showBackButton
-          ? IconButton(
-              tooltip: leadingIcon != null ? 'Fermer' : 'Retour',
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                if (onBack != null) {
-                  onBack!();
-                } else if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/home');
-                }
-              },
-              icon: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                ),
-                child: leadingIconAsset != null
-                    ? DonyIcon(leadingIconAsset!, size: 20, color: cs.primary)
-                    : Icon(
-                        leadingIcon ?? Icons.chevron_left_rounded,
-                        size: 20,
-                        color: cs.primary,
-                      ),
-              ),
+          ? DonyAppBarBackButton(
+              onBack: onBack,
+              leadingIcon: leadingIcon,
+              leadingIconAsset: leadingIconAsset,
             )
           : null,
       automaticallyImplyLeading: showBackButton,
@@ -91,6 +67,55 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
             preferredSize: Size.fromHeight(1),
             child: Divider(height: 1),
           ),
+    );
+  }
+}
+
+/// Bouton retour stylé dony (carré [ColorScheme.primaryContainer] + chevron).
+/// À placer en `leading` d'une AppBar custom pour rester cohérent avec
+/// [DonyAppBar] (qui l'utilise en interne).
+class DonyAppBarBackButton extends StatelessWidget {
+  const DonyAppBarBackButton({
+    super.key,
+    this.onBack,
+    this.leadingIcon,
+    this.leadingIconAsset,
+  });
+
+  final VoidCallback? onBack;
+  final IconData? leadingIcon;
+  final String? leadingIconAsset;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return IconButton(
+      tooltip: leadingIcon != null ? 'Fermer' : 'Retour',
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        if (onBack != null) {
+          onBack!();
+        } else if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/home');
+        }
+      },
+      icon: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: cs.primaryContainer,
+          borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+        ),
+        child: leadingIconAsset != null
+            ? DonyIcon(leadingIconAsset!, size: 20, color: cs.primary)
+            : Icon(
+                leadingIcon ?? Icons.chevron_left_rounded,
+                size: 20,
+                color: cs.primary,
+              ),
+      ),
     );
   }
 }

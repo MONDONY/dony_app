@@ -1,11 +1,16 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Carte d'une alerte corridor : corridor, badge matchCount, toggle actif/pause,
-/// et résumé des filtres (date · poids · catégories).
+/// Ligne plate (style liste WhatsApp) d'une alerte corridor : avatar cloche,
+/// corridor, résumé des filtres et toggle actif/pause. Pas de bordure ni de
+/// carte — séparateurs fins gérés par la liste parente.
+///
+/// La direction (colis ↔ trajets) n'est plus affichée ici : chaque écran
+/// d'alertes est mono-direction (filtré en amont).
 class CorridorAlertTile extends StatelessWidget {
   const CorridorAlertTile({
     super.key,
@@ -19,6 +24,7 @@ class CorridorAlertTile extends StatelessWidget {
   final ValueChanged<bool> onToggle;
 
   /// Builds a compact filter summary, e.g. "20–30 juin · ≥ 3 kg · Documents, Vêtements".
+  /// For senderWantsTrips, only the date window is meaningful.
   /// Returns a neutral fallback when no filter is set.
   static String buildFilterSummary(CorridorAlertModel alert) {
     final parts = <String>[];
@@ -30,6 +36,11 @@ class CorridorAlertTile extends StatelessWidget {
       parts.add('À partir du ${_compactDate(alert.dateFrom!)}');
     } else if (alert.dateTo != null) {
       parts.add("Jusqu'au ${_compactDate(alert.dateTo!)}");
+    }
+
+    // For trajets direction, only date is meaningful — skip weight & categories.
+    if (alert.direction == AlertDirection.senderWantsTrips) {
+      return parts.isEmpty ? 'Toute date' : parts.join(' · ');
     }
 
     // ── Weight ────────────────────────────────────────────────────────────
@@ -59,37 +70,51 @@ class CorridorAlertTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final active = alert.active;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(
-        padding: const EdgeInsets.all(DonySpacing.base),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(
-            color: alert.active
-                ? cs.primary.withValues(alpha: 0.35)
-                : cs.outline,
-          ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.lg,
+          vertical: DonySpacing.md,
         ),
         child: Row(
           children: [
-            DonyIcon('bell',
-                size: 20,
-                color: alert.active ? cs.primary : cs.onSurfaceVariant),
+            // ── Avatar cloche ────────────────────────────────────────────
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: active
+                    ? cs.primaryContainer
+                    : cs.onSurface.withValues(alpha: 0.06),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: DonyIcon(
+                  'bell',
+                  size: 20,
+                  color: active ? cs.primary : cs.onSurfaceVariant,
+                ),
+              ),
+            ),
             const SizedBox(width: DonySpacing.md),
+            // ── Corridor + résumé filtres ────────────────────────────────
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Flexible(
+                      Expanded(
                         child: Text(
                           '${alert.departureCity} → ${alert.arrivalCity}',
-                          style: tt.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: active ? cs.onSurface : cs.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -105,23 +130,70 @@ class CorridorAlertTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     buildFilterSummary(alert),
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                    maxLines: 2,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    alert.active ? 'Active' : 'En pause',
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                  ),
+                  if (alert.hasPickupZone) ...[
+                    const SizedBox(height: 4),
+                    _ZoneChip(radiusKm: alert.radiusKm!, label: alert.centerLabel),
+                  ],
                 ],
               ),
             ),
+            const SizedBox(width: DonySpacing.sm),
+            // ── Toggle actif/pause ───────────────────────────────────────
             Switch(
-              value: alert.active,
+              value: active,
               onChanged: onToggle,
               activeThumbColor: cs.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Petit chip « 📍 ≤ R km · Lieu » affiché quand l'alerte porte une zone de remise.
+class _ZoneChip extends StatelessWidget {
+  const _ZoneChip({required this.radiusKm, this.label});
+
+  final int radiusKm;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final text = label != null ? '≤ $radiusKm km · $label' : '≤ $radiusKm km';
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.xs + 2,
+          vertical: 2,
+        ),
+        decoration: BoxDecoration(
+          color: cs.primaryContainer,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DonyIcon('map-pin', size: 11, color: cs.onPrimaryContainer),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                text,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

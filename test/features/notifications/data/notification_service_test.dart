@@ -310,5 +310,52 @@ void main() {
         isNull,
       );
     });
+
+    test('CORRIDOR_ALERT routes to the matching trip detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'CORRIDOR_ALERT',
+          'announcementId': uuid,
+        }),
+        '/traveler/$uuid',
+      );
+    });
+
+    test('CORRIDOR_ALERT without valid announcementId returns null', () {
+      expect(
+        service.testRouteForMessage({'type': 'CORRIDOR_ALERT'}),
+        isNull,
+      );
+      expect(
+        service.testRouteForMessage({
+          'type': 'CORRIDOR_ALERT',
+          'announcementId': 'not-a-uuid',
+        }),
+        isNull,
+      );
+    });
+
+    test('PACKAGE_MATCH routes to the matching package request detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'PACKAGE_MATCH',
+          'requestId': uuid,
+        }),
+        '/package-requests/$uuid/public',
+      );
+    });
+
+    test('PACKAGE_MATCH without valid requestId returns null', () {
+      expect(service.testRouteForMessage({'type': 'PACKAGE_MATCH'}), isNull);
+      expect(
+        service.testRouteForMessage({
+          'type': 'PACKAGE_MATCH',
+          'requestId': 'not-a-uuid',
+        }),
+        isNull,
+      );
+    });
   });
 }

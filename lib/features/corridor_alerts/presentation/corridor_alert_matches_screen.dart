@@ -1,9 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/trip_match_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -18,8 +22,10 @@ class CorridorAlertMatchesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          getIt<CorridorAlertMatchesCubit>(param1: alert.id)..load(),
+      create: (_) => getIt<CorridorAlertMatchesCubit>(
+        param1: alert.id,
+        param2: alert.direction,
+      )..load(),
       child: _CorridorAlertMatchesView(alert: alert),
     );
   }
@@ -34,6 +40,21 @@ class _CorridorAlertMatchesView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isTrip = alert.direction == AlertDirection.senderWantsTrips;
+
+    // Resolve role flags for the edit sheet.
+    // watch ensures build() re-runs on auth state change so the edit callback captures fresh flags.
+    final authState = context.watch<AuthBloc>().state;
+    final isTraveler = switch (authState) {
+      final AuthAuthenticated s => s.user.isTraveler,
+      final AuthProfileUpdated s => s.user.isTraveler,
+      _ => false,
+    };
+    final isSender = switch (authState) {
+      final AuthAuthenticated s => s.user.isSender,
+      final AuthProfileUpdated s => s.user.isSender,
+      _ => false,
+    };
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -49,7 +70,12 @@ class _CorridorAlertMatchesView extends StatelessWidget {
           IconButton(
             tooltip: 'Modifier l\'alerte',
             icon: DonyIcon('pen', size: 22, color: cs.primary),
-            onPressed: () => CorridorAlertFormSheet.show(context, alert: alert),
+            onPressed: () => CorridorAlertFormSheet.show(
+              context,
+              alert: alert,
+              isTraveler: isTraveler,
+              isSender: isSender,
+            ),
           ),
         ],
       ),
@@ -84,14 +110,18 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.base),
                       Text(
-                        'Aucun colis pour l\'instant',
+                        isTrip
+                            ? 'Aucun trajet pour l\'instant'
+                            : 'Aucun colis pour l\'instant',
                         textAlign: TextAlign.center,
                         style:
                             tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       Text(
-                        'Aucun colis ne correspond à cette alerte pour l\'instant.',
+                        isTrip
+                            ? 'Aucun trajet ne correspond à cette alerte pour l\'instant.'
+                            : 'Aucun colis ne correspond à cette alerte pour l\'instant.',
                         textAlign: TextAlign.center,
                         style: tt.bodyMedium
                             ?.copyWith(color: cs.onSurfaceVariant),
@@ -101,6 +131,52 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                 ),
               );
             case CorridorAlertMatchesStatus.loaded:
+              if (isTrip) {
+                final trips = state.result!.trips;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.base,
+                        DonySpacing.lg,
+                        DonySpacing.sm,
+                      ),
+                      child: Text(
+                        '${trips.length} trajet${trips.length != 1 ? 's' : ''}',
+                        style: tt.labelMedium
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          0,
+                          DonySpacing.lg,
+                          DonySpacing.huge,
+                        ),
+                        itemCount: trips.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: DonySpacing.md),
+                        itemBuilder: (lCtx, i) {
+                          final trip = trips[i];
+                          return TripMatchCard(
+                            key: ValueKey(trip.announcementId),
+                            match: trip,
+                            index: i,
+                            onTap: () => lCtx
+                                .push('/traveler/${trip.announcementId}'),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+              // Colis direction: render package matches.
+              final packages = state.result!.packages;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -112,7 +188,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                       DonySpacing.sm,
                     ),
                     child: Text(
-                      '${state.matches.length} colis',
+                      '${packages.length} colis',
                       style: tt.labelMedium
                           ?.copyWith(color: cs.onSurfaceVariant),
                     ),
@@ -125,11 +201,11 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                         DonySpacing.lg,
                         DonySpacing.huge,
                       ),
-                      itemCount: state.matches.length,
+                      itemCount: packages.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: DonySpacing.md),
                       itemBuilder: (lCtx, i) {
-                        final m = state.matches[i];
+                        final m = packages[i];
                         return MatchingRequestCard(
                           key: ValueKey(m.id),
                           match: m,

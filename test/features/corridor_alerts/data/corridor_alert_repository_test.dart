@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -36,13 +37,40 @@ void main() {
     'createdAt': '2026-06-20T09:00:00',
   };
 
+  final packageMatchJson = <String, dynamic>{
+    'id': 'm1',
+    'senderId': 's1',
+    'senderName': 'Jean D.',
+    'senderInitials': 'JD',
+    'senderRating': 4.5,
+    'senderTotalSent': 10,
+    'weightKg': 5.0,
+    'matchScore': 80,
+    'requestedAt': '2026-06-20T09:00:00',
+  };
+
+  final tripMatchJson = <String, dynamic>{
+    'announcementId': 'ann-1',
+    'departureCity': 'Paris',
+    'arrivalCity': 'Dakar',
+    'departureDate': '2026-07-10',
+    'travelerId': 't-1',
+    'travelerName': 'Awa S.',
+    'travelerInitials': 'AS',
+    'travelerRating': 4.7,
+    'availableKg': 12.0,
+  };
+
   test('getMyAlerts → GET /me/corridor-alerts', () async {
-    when(() => dio.get<List<dynamic>>('/me/corridor-alerts'))
+    when(() => dio.get<List<dynamic>>('/me/corridor-alerts',
+            queryParameters: any(named: 'queryParameters')))
         .thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
     final result = await repo.getMyAlerts();
     expect(result, isA<List<CorridorAlertModel>>());
     expect(result.single.id, 'a1');
-    verify(() => dio.get<List<dynamic>>('/me/corridor-alerts')).called(1);
+    verify(() => dio.get<List<dynamic>>('/me/corridor-alerts',
+            queryParameters: any(named: 'queryParameters')))
+        .called(1);
   });
 
   test('create → POST /me/corridor-alerts with draft body', () async {
@@ -144,12 +172,56 @@ void main() {
     verify(() => dio.delete<void>('/me/corridor-alerts/a1')).called(1);
   });
 
-  test('getMatches → GET /me/corridor-alerts/{id}/matches', () async {
+  test('getMatches → GET /me/corridor-alerts/{id}/matches (empty)', () async {
     when(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
         .thenAnswer((_) async => _resp<List<dynamic>>([]));
-    final matches = await repo.getMatches('a1');
-    expect(matches, isEmpty);
+    final result =
+        await repo.getMatches('a1', AlertDirection.travelerWantsPackages);
+    expect(result.isEmpty, isTrue);
     verify(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
         .called(1);
+  });
+
+  test('getMyAlerts with direction → adds query param', () async {
+    when(() => dio.get<List<dynamic>>('/me/corridor-alerts',
+            queryParameters: any(named: 'queryParameters')))
+        .thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
+    await repo.getMyAlerts(direction: AlertDirection.senderWantsTrips);
+    final captured = verify(() => dio.get<List<dynamic>>('/me/corridor-alerts',
+            queryParameters: captureAny(named: 'queryParameters')))
+        .captured.single as Map<String, dynamic>;
+    expect(captured['direction'], 'SENDER_WANTS_TRIPS');
+  });
+
+  test('getMyAlerts without direction → no query param', () async {
+    when(() => dio.get<List<dynamic>>('/me/corridor-alerts',
+            queryParameters: any(named: 'queryParameters')))
+        .thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
+    await repo.getMyAlerts();
+    final captured = verify(() => dio.get<List<dynamic>>('/me/corridor-alerts',
+            queryParameters: captureAny(named: 'queryParameters')))
+        .captured.single as Map<String, dynamic>;
+    expect(captured.containsKey('direction'), isFalse);
+  });
+
+  test('getMatches package direction → parses MatchingRequestModel list',
+      () async {
+    when(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
+        .thenAnswer((_) async => _resp<List<dynamic>>([packageMatchJson]));
+    final result =
+        await repo.getMatches('a1', AlertDirection.travelerWantsPackages);
+    expect(result.direction, AlertDirection.travelerWantsPackages);
+    expect(result.packages, hasLength(1));
+    expect(result.trips, isEmpty);
+    expect(result.isEmpty, isFalse);
+  });
+
+  test('getMatches trip direction → parses TripMatchModel list', () async {
+    when(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
+        .thenAnswer((_) async => _resp<List<dynamic>>([tripMatchJson]));
+    final result = await repo.getMatches('a1', AlertDirection.senderWantsTrips);
+    expect(result.direction, AlertDirection.senderWantsTrips);
+    expect(result.trips, hasLength(1));
+    expect(result.packages, isEmpty);
   });
 }

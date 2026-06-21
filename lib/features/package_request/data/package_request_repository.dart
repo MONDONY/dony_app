@@ -272,6 +272,22 @@ class PackageRequestRepository {
         .toList();
   }
 
+  /// État du toggle « notifier quand un colis matche un de mes trajets »
+  /// (cloche de l'écran « Colis sur mes trajets »). Défaut serveur = activé.
+  Future<bool> getPackageMatchAlert() async {
+    final response = await _apiClient.dio
+        .get<Map<String, dynamic>>('/notifications/package-match-alert');
+    return (response.data?['enabled'] as bool?) ?? true;
+  }
+
+  /// Active ou coupe la notif temps réel de match colis pour le voyageur.
+  Future<void> setPackageMatchAlert(bool enabled) async {
+    await _apiClient.dio.put<void>(
+      '/notifications/package-match-alert',
+      data: {'enabled': enabled},
+    );
+  }
+
   Future<PackageRequestSearchPage> search({
     String? departure,
     String? arrival,

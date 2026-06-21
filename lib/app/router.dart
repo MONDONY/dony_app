@@ -62,11 +62,13 @@ import 'package:dony/features/package_request/presentation/screens/sender/my_pac
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_matches_screen.dart';
@@ -106,6 +108,7 @@ import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/features/profile/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/profile/presentation/screens/mes_trajets_colis_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
@@ -574,7 +577,11 @@ final appRouter = GoRouter(
     // ── Alertes corridor (hors shell) ────────────────────────────────────
     GoRoute(
       path: '/corridor-alerts',
-      builder: (_, __) => const CorridorAlertListScreen(),
+      builder: (_, state) => CorridorAlertListScreen(
+        direction: state.extra is AlertDirection
+            ? state.extra as AlertDirection
+            : AlertDirection.travelerWantsPackages,
+      ),
     ),
     GoRoute(
       path: '/corridor-alerts/:id/matches',
@@ -703,9 +710,26 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/trajets-colis',
       builder: (context, state) {
-        final upcomingCount = (state.extra as int?) ?? 0;
-        return MesTrajetsColisScreen(upcomingCount: upcomingCount);
+        final extra = state.extra;
+        final upcomingCount =
+            extra is ({int upcomingCount, bool isSender})
+                ? extra.upcomingCount
+                : (extra as int? ?? 0);
+        final isSender =
+            extra is ({int upcomingCount, bool isSender})
+                ? extra.isSender
+                : false;
+        return MesTrajetsColisScreen(
+          upcomingCount: upcomingCount,
+          isSender: isSender,
+        );
       },
+    ),
+
+    // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
+    GoRoute(
+      path: '/mes-colis',
+      builder: (_, __) => const MesColisScreen(),
     ),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────
@@ -1099,7 +1123,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/package-requests/me',
-      builder: (_, __) => const MyPackageRequestsScreen(),
+      builder: (_, __) => BlocProvider.value(
+        value: getIt<PackageRequestBloc>(),
+        child: const MyPackageRequestsScreen(),
+      ),
     ),
     GoRoute(
       path: '/package-requests/match',

@@ -85,12 +85,6 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   onPressed: _toggleSave,
                   tooltip: _isSaved ? 'Retirer' : 'Sauvegarder',
                 ),
-                IconButton(
-                  icon: DonyIcon('message-circle',
-                      color: cs.onSurfaceVariant, size: 22),
-                  onPressed: () {},
-                  tooltip: 'Contacter',
-                ),
               ],
       ),
       body: Stack(

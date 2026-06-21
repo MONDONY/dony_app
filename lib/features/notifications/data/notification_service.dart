@@ -240,6 +240,7 @@ class NotificationService {
     final bidId = data['bidId'] as String?;
     final announcementId = data['announcementId'] as String?;
     final threadId = data['threadId'] as String?;
+    final requestId = data['requestId'] as String?;
 
     return switch (type) {
       // Voyageur → liste des offres sur son annonce
@@ -260,6 +261,10 @@ class NotificationService {
       'request_accepted' when _isUuid(threadId)              => '/negotiations/$threadId',
       // Voyageur abonné → détail de l'annonce publiée
       'TRAVELER_NEW_ANNOUNCEMENT' when _isUuid(announcementId) => '/traveler/$announcementId',
+      // Expéditeur → détail du trajet qui matche son alerte
+      'CORRIDOR_ALERT' when _isUuid(announcementId) => '/traveler/$announcementId',
+      // Voyageur → détail du colis qui matche un de ses trajets
+      'PACKAGE_MATCH' when _isUuid(requestId) => '/package-requests/$requestId/public',
       // Nouveau message → liste des conversations
       'NEW_MESSAGE'                              => '/messages',
       // Trajet annulé → pas de navigation (le trajet n'existe plus)

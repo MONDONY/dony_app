@@ -360,6 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 _ActivityTab(
                                   user: user,
                                   isTraveler: isTraveler,
+                                  isSender: isSender,
                                   upcomingAnnouncements: upcomingAnnouncements,
                                   activeBids: activeBids,
                                   bidState: bidState,
@@ -448,6 +449,7 @@ class _ActivityTab extends StatelessWidget {
   const _ActivityTab({
     required this.user,
     required this.isTraveler,
+    required this.isSender,
     required this.upcomingAnnouncements,
     required this.activeBids,
     required this.bidState,
@@ -456,6 +458,7 @@ class _ActivityTab extends StatelessWidget {
 
   final UserModel? user;
   final bool isTraveler;
+  final bool isSender;
   final int upcomingAnnouncements;
   final int activeBids;
   final BidState bidState;
@@ -536,7 +539,7 @@ class _ActivityTab extends StatelessWidget {
                           ),
                         )
                       : null,
-                  onTap: () => context.push('/announcements'),
+                  onTap: () => context.go('/announcements'),
                 ),
                 DonyListTile(
                   iconAsset: 'handshake',
@@ -557,26 +560,12 @@ class _ActivityTab extends StatelessWidget {
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  iconAsset: 'contact',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Mes destinataires',
-                  onTap: () => context.push('/profile/recipients'),
-                ),
-                DonyListTile(
                   iconAsset: 'bell',
                   iconColor: cs.tertiary,
                   iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
                   label: 'Mes abonnements',
-                  onTap: () => context.push('/profile/subscriptions'),
-                ),
-                DonyListTile(
-                  iconAsset: 'map-pin',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Mes adresses',
                   showDivider: false,
-                  onTap: () => context.push('/profile/addresses'),
+                  onTap: () => context.push('/profile/subscriptions'),
                 ),
               ],
             )
@@ -603,7 +592,7 @@ class _ActivityTab extends StatelessWidget {
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.xl),
 
-        // Ajout voyageur
+        // Hub activité — role-aware
         if (isTraveler) ...[
           DonyListSection(
                 tiles: [
@@ -624,8 +613,28 @@ class _ActivityTab extends StatelessWidget {
                         : null,
                     onTap: () => context.push(
                       '/trajets-colis',
-                      extra: upcomingAnnouncements,
+                      extra: (
+                        upcomingCount: upcomingAnnouncements,
+                        isSender: isSender,
+                      ),
                     ),
+                  ),
+                ],
+              )
+              .animate()
+              .fadeIn(delay: 140.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          const SizedBox(height: DonySpacing.xl),
+        ] else if (isSender) ...[
+          DonyListSection(
+                tiles: [
+                  DonyListTile(
+                    iconAsset: 'package',
+                    iconColor: cs.secondary,
+                    iconBgColor: cs.secondaryContainer,
+                    label: 'Mes colis',
+                    showDivider: false,
+                    onTap: () => context.push('/mes-colis'),
                   ),
                 ],
               )
