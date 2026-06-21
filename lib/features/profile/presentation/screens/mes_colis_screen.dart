@@ -17,19 +17,9 @@ class MesColisScreen extends StatelessWidget {
 
     final tiles = <_TileData>[
       _TileData(
-        iconAsset: 'package',
-        label: 'Mes demandes de colis',
-        onTap: () => context.push('/package-requests/me'),
-      ),
-      _TileData(
         iconAsset: 'contact',
         label: 'Mes destinataires',
         onTap: () => context.push('/profile/recipients'),
-      ),
-      _TileData(
-        iconAsset: 'map-pin',
-        label: 'Mes adresses',
-        onTap: () => context.push('/profile/addresses'),
       ),
       _TileData(
         iconAsset: 'bell',

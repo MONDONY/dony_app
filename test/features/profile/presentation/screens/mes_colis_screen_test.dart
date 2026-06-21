@@ -13,20 +13,12 @@ Widget _buildHarness() {
         builder: (_, __) => const MesColisScreen(),
       ),
       GoRoute(
-        path: '/package-requests/me',
-        builder: (_, __) => const Scaffold(body: Text('MES_DEMANDES')),
-      ),
-      GoRoute(
         path: '/corridor-alerts',
         builder: (_, __) => const Scaffold(body: Text('CORRIDOR_ALERTS')),
       ),
       GoRoute(
         path: '/profile/recipients',
         builder: (_, __) => const Scaffold(body: Text('RECIPIENTS')),
-      ),
-      GoRoute(
-        path: '/profile/addresses',
-        builder: (_, __) => const Scaffold(body: Text('ADDRESSES')),
       ),
     ],
   );
@@ -38,14 +30,22 @@ Widget _buildHarness() {
 
 void main() {
   group('MesColisScreen', () {
-    testWidgets('renders the four sender hub rows', (tester) async {
+    testWidgets('renders the two sender hub rows', (tester) async {
       await tester.pumpWidget(_buildHarness());
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.text('Mes demandes de colis'), findsOneWidget);
       expect(find.text('Mes destinataires'), findsOneWidget);
-      expect(find.text('Mes adresses'), findsOneWidget);
       expect(find.text('Mes alertes trajets'), findsOneWidget);
+    });
+
+    testWidgets('does not show traveler-only or duplicate rows', (tester) async {
+      await tester.pumpWidget(_buildHarness());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // « Mes demandes de colis » vit déjà dans l'onglet Activité (doublon)
+      expect(find.text('Mes demandes de colis'), findsNothing);
+      // « Mes adresses » est réservé au voyageur
+      expect(find.text('Mes adresses'), findsNothing);
     });
 
     testWidgets('renders AppBar title "Mes colis"', (tester) async {
@@ -54,19 +54,6 @@ void main() {
 
       expect(find.text('Mes colis'), findsOneWidget);
     });
-
-    testWidgets(
-      'tapping "Mes demandes de colis" navigates to /package-requests/me',
-      (tester) async {
-        await tester.pumpWidget(_buildHarness());
-        await tester.pumpAndSettle(const Duration(seconds: 1));
-
-        await tester.tap(find.text('Mes demandes de colis'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('MES_DEMANDES'), findsOneWidget);
-      },
-    );
 
     testWidgets(
       'tapping "Mes destinataires" navigates to /profile/recipients',
@@ -78,19 +65,6 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('RECIPIENTS'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'tapping "Mes adresses" navigates to /profile/addresses',
-      (tester) async {
-        await tester.pumpWidget(_buildHarness());
-        await tester.pumpAndSettle(const Duration(seconds: 1));
-
-        await tester.tap(find.text('Mes adresses'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('ADDRESSES'), findsOneWidget);
       },
     );
 
