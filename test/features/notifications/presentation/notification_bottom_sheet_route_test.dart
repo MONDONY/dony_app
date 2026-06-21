@@ -31,6 +31,19 @@ void main() {
       expect(routeForNotification(_notif('CORRIDOR_ALERT')), isNull);
     });
 
+    test('PACKAGE_MATCH routes to the matching package request detail', () {
+      expect(
+        routeForNotification(
+          _notif('PACKAGE_MATCH', data: {'requestId': annId}),
+        ),
+        '/package-requests/$annId/public',
+      );
+    });
+
+    test('PACKAGE_MATCH without requestId returns null', () {
+      expect(routeForNotification(_notif('PACKAGE_MATCH')), isNull);
+    });
+
     test('BID_CREATED routes to announcement bids page', () {
       expect(
         routeForNotification(

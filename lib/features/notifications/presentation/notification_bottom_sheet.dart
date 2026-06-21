@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 String? routeForNotification(NotificationModel n) {
   final bidId = n.data['bidId'] as String?;
   final announcementId = n.data['announcementId'] as String?;
+  final requestId = n.data['requestId'] as String?;
 
   return switch (n.type) {
     'BID_CREATED' when announcementId != null => '/announcements/$announcementId/bids',
@@ -25,6 +26,8 @@ String? routeForNotification(NotificationModel n) {
     'DISPUTE_OPENED' when bidId != null       => '/bids/$bidId',
     // Expéditeur → détail du trajet qui matche son alerte corridor
     'CORRIDOR_ALERT' when announcementId != null => '/traveler/$announcementId',
+    // Voyageur → détail du colis qui matche un de ses trajets
+    'PACKAGE_MATCH' when requestId != null => '/package-requests/$requestId/public',
     _ => null,
   };
 }

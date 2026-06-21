@@ -68,11 +68,33 @@ class _ColisMatchView extends StatelessWidget {
           },
         ),
         actions: [
-          IconButton(
-            key: const Key('colis-match-bell'),
-            tooltip: 'Mes alertes colis',
-            onPressed: () => context.push('/corridor-alerts'),
-            icon: DonyIcon('bell', size: 22, color: cs.primary),
+          // Cloche = toggle « me notifier quand un colis matche un de mes trajets ».
+          BlocBuilder<TripMatchingBloc, TripMatchingState>(
+            buildWhen: (a, b) => a.alertEnabled != b.alertEnabled,
+            builder: (ctx, state) {
+              final enabled = state.alertEnabled;
+              final on = enabled ?? false;
+              return IconButton(
+                key: const Key('colis-match-bell'),
+                tooltip: enabled == null
+                    ? 'Notifications de match'
+                    : on
+                        ? 'Notifications activées — appuyer pour couper'
+                        : 'Notifications coupées — appuyer pour activer',
+                onPressed: enabled == null
+                    ? null
+                    : () => ctx
+                        .read<TripMatchingBloc>()
+                        .add(TripMatchingAlertToggled(!on)),
+                icon: Icon(
+                  on
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_off_rounded,
+                  size: 22,
+                  color: on ? cs.primary : cs.onSurfaceVariant,
+                ),
+              );
+            },
           ),
         ],
         bottom: PreferredSize(

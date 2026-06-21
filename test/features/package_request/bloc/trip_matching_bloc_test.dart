@@ -36,6 +36,8 @@ void main() {
     analytics = MockAnalytics();
     when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
         .thenAnswer((_) async {});
+    when(() => repo.getPackageMatchAlert()).thenAnswer((_) async => true);
+    when(() => repo.setPackageMatchAlert(any())).thenAnswer((_) async {});
   });
 
   blocTest<TripMatchingBloc, TripMatchingState>(
@@ -102,6 +104,72 @@ void main() {
       isA<TripMatchingState>()
           .having((s) => s.status, 'status', TripMatchingStatus.loaded)
           .having((s) => s.matches.length, 'len', 1),
+    ],
+  );
+
+  blocTest<TripMatchingBloc, TripMatchingState>(
+    'load also fetches the bell (alertEnabled) state',
+    build: () {
+      when(() => repo.findMatchingRequests()).thenAnswer((_) async => []);
+      when(() => repo.getPackageMatchAlert()).thenAnswer((_) async => false);
+      return TripMatchingBloc(repo, analytics);
+    },
+    act: (b) => b.add(const TripMatchingRequested()),
+    expect: () => [
+      isA<TripMatchingState>()
+          .having((s) => s.status, 'status', TripMatchingStatus.loading),
+      isA<TripMatchingState>()
+          .having((s) => s.status, 'status', TripMatchingStatus.loaded)
+          .having((s) => s.alertEnabled, 'alertEnabled', false),
+    ],
+  );
+
+  blocTest<TripMatchingBloc, TripMatchingState>(
+    'load tolerates a bell fetch failure (alertEnabled stays null)',
+    build: () {
+      when(() => repo.findMatchingRequests()).thenAnswer((_) async => []);
+      when(() => repo.getPackageMatchAlert()).thenThrow(Exception('net'));
+      return TripMatchingBloc(repo, analytics);
+    },
+    act: (b) => b.add(const TripMatchingRequested()),
+    expect: () => [
+      isA<TripMatchingState>()
+          .having((s) => s.status, 'status', TripMatchingStatus.loading),
+      isA<TripMatchingState>()
+          .having((s) => s.status, 'status', TripMatchingStatus.loaded)
+          .having((s) => s.alertEnabled, 'alertEnabled', isNull),
+    ],
+  );
+
+  blocTest<TripMatchingBloc, TripMatchingState>(
+    'TripMatchingAlertToggled persists the new value optimistically',
+    build: () => TripMatchingBloc(repo, analytics),
+    seed: () => const TripMatchingState(
+        status: TripMatchingStatus.loaded, alertEnabled: true),
+    act: (b) => b.add(const TripMatchingAlertToggled(false)),
+    expect: () => [
+      isA<TripMatchingState>()
+          .having((s) => s.alertEnabled, 'alertEnabled', false),
+    ],
+    verify: (_) {
+      verify(() => repo.setPackageMatchAlert(false)).called(1);
+    },
+  );
+
+  blocTest<TripMatchingBloc, TripMatchingState>(
+    'TripMatchingAlertToggled reverts when the API call fails',
+    build: () {
+      when(() => repo.setPackageMatchAlert(any())).thenThrow(Exception('net'));
+      return TripMatchingBloc(repo, analytics);
+    },
+    seed: () => const TripMatchingState(
+        status: TripMatchingStatus.loaded, alertEnabled: true),
+    act: (b) => b.add(const TripMatchingAlertToggled(false)),
+    expect: () => [
+      isA<TripMatchingState>()
+          .having((s) => s.alertEnabled, 'optimistic', false),
+      isA<TripMatchingState>()
+          .having((s) => s.alertEnabled, 'reverted', true),
     ],
   );
 }

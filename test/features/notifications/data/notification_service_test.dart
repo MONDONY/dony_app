@@ -335,5 +335,27 @@ void main() {
         isNull,
       );
     });
+
+    test('PACKAGE_MATCH routes to the matching package request detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'PACKAGE_MATCH',
+          'requestId': uuid,
+        }),
+        '/package-requests/$uuid/public',
+      );
+    });
+
+    test('PACKAGE_MATCH without valid requestId returns null', () {
+      expect(service.testRouteForMessage({'type': 'PACKAGE_MATCH'}), isNull);
+      expect(
+        service.testRouteForMessage({
+          'type': 'PACKAGE_MATCH',
+          'requestId': 'not-a-uuid',
+        }),
+        isNull,
+      );
+    });
   });
 }
