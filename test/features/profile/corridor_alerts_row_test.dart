@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-// Vérifie que la tuile "Mes alertes corridor" est présente sur MesTrajetsColisScreen
+// Vérifie que la tuile "Mes alertes colis" est présente sur MesTrajetsColisScreen
 // (elle a été déplacée hors du profile_screen vers ce hub voyageur).
 void main() {
   Widget _buildHarness() {
@@ -40,17 +40,17 @@ void main() {
     );
   }
 
-  testWidgets('hub screen contains "Mes alertes corridor" row', (t) async {
+  testWidgets('hub screen contains "Mes alertes colis" row', (t) async {
     await t.pumpWidget(_buildHarness());
     await t.pump(const Duration(milliseconds: 600));
-    expect(find.text('Mes alertes corridor'), findsOneWidget);
+    expect(find.text('Mes alertes colis'), findsOneWidget);
   });
 
-  testWidgets('Mes alertes corridor row navigates to /corridor-alerts',
+  testWidgets('Mes alertes colis row navigates to /corridor-alerts',
       (t) async {
     await t.pumpWidget(_buildHarness());
     await t.pumpAndSettle(const Duration(seconds: 1));
-    await t.tap(find.text('Mes alertes corridor'));
+    await t.tap(find.text('Mes alertes colis'));
     await t.pumpAndSettle();
     expect(find.text('ALERTS'), findsOneWidget);
   });
@@ -94,7 +94,7 @@ void main() {
       // Old 4-tile labels must NOT appear on the profile section
       expect(find.text('Mes trajets'), findsNothing);
       expect(find.text('Colis sur mes trajets'), findsNothing);
-      expect(find.text('Mes alertes corridor'), findsNothing);
+      expect(find.text('Mes alertes colis'), findsNothing);
       expect(find.text('Mes modèles de trajet'), findsNothing);
 
       // Tapping the single entry navigates to hub

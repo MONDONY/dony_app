@@ -67,7 +67,7 @@ void main() {
       expect(find.text('VOYAGEUR · TRAJETS'), findsOneWidget);
       expect(find.text('Mes trajets'), findsOneWidget);
       expect(find.text('Colis sur mes trajets'), findsOneWidget);
-      expect(find.text('Mes alertes corridor'), findsOneWidget);
+      expect(find.text('Mes alertes colis'), findsOneWidget);
       expect(find.text('Mes modèles de trajet'), findsOneWidget);
       expect(find.text('Mes adresses'), findsOneWidget);
     });
@@ -114,12 +114,12 @@ void main() {
     );
 
     testWidgets(
-      'tapping "Mes alertes corridor" navigates to /corridor-alerts',
+      'tapping "Mes alertes colis" navigates to /corridor-alerts',
       (tester) async {
         await tester.pumpWidget(_buildHarness());
         await tester.pumpAndSettle(const Duration(seconds: 1));
 
-        await tester.tap(find.text('Mes alertes corridor'));
+        await tester.tap(find.text('Mes alertes colis'));
         await tester.pumpAndSettle();
 
         expect(find.text('CORRIDOR_ALERTS'), findsOneWidget);
@@ -159,8 +159,9 @@ void main() {
 
         expect(find.text('EXPÉDITEUR · COLIS'), findsOneWidget);
         expect(find.text('Mes destinataires'), findsOneWidget);
-        // « Mes alertes corridor » présent dans les 2 blocs (voyageur + expéditeur).
-        expect(find.text('Mes alertes corridor'), findsNWidgets(2));
+        // Alertes renommées par direction : colis (voyageur) + trajets (expéditeur).
+        expect(find.text('Mes alertes colis'), findsOneWidget);
+        expect(find.text('Mes alertes trajets'), findsOneWidget);
         // « Mes demandes de colis » retiré : déjà accessible via le hub Envoyer.
         expect(find.text('Mes demandes de colis'), findsNothing);
       },

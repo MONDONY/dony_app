@@ -63,7 +63,7 @@ class _CorridorAlertListView extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          'Mes alertes corridor',
+          _isPackages ? 'Mes alertes colis' : 'Mes alertes trajets',
           style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),

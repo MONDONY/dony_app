@@ -33,7 +33,7 @@ class MesColisScreen extends StatelessWidget {
       ),
       _TileData(
         iconAsset: 'bell',
-        label: 'Mes alertes corridor',
+        label: 'Mes alertes trajets',
         showDivider: false,
         onTap: () => context.push(
           '/corridor-alerts',

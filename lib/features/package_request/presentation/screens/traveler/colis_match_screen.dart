@@ -68,7 +68,7 @@ class _ColisMatchView extends StatelessWidget {
         actions: [
           IconButton(
             key: const Key('colis-match-bell'),
-            tooltip: 'Mes alertes corridor',
+            tooltip: 'Mes alertes colis',
             onPressed: () => context.push('/corridor-alerts'),
             icon: DonyIcon('bell', size: 22, color: cs.primary),
           ),

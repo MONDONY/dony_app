@@ -45,7 +45,7 @@ void main() {
       expect(find.text('Mes demandes de colis'), findsOneWidget);
       expect(find.text('Mes destinataires'), findsOneWidget);
       expect(find.text('Mes adresses'), findsOneWidget);
-      expect(find.text('Mes alertes corridor'), findsOneWidget);
+      expect(find.text('Mes alertes trajets'), findsOneWidget);
     });
 
     testWidgets('renders AppBar title "Mes colis"', (tester) async {
@@ -95,12 +95,12 @@ void main() {
     );
 
     testWidgets(
-      'tapping "Mes alertes corridor" navigates to /corridor-alerts',
+      'tapping "Mes alertes trajets" navigates to /corridor-alerts',
       (tester) async {
         await tester.pumpWidget(_buildHarness());
         await tester.pumpAndSettle(const Duration(seconds: 1));
 
-        await tester.tap(find.text('Mes alertes corridor'));
+        await tester.tap(find.text('Mes alertes trajets'));
         await tester.pumpAndSettle();
 
         expect(find.text('CORRIDOR_ALERTS'), findsOneWidget);

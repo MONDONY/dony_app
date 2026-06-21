@@ -58,7 +58,7 @@ class MesTrajetsColisScreen extends StatelessWidget {
           iconAsset: 'bell',
           iconColor: cs.primary,
           iconBgColor: cs.primaryContainer,
-          label: 'Mes alertes corridor',
+          label: 'Mes alertes colis',
           onTap: () => context.push(
             '/corridor-alerts',
             extra: AlertDirection.travelerWantsPackages,
@@ -91,7 +91,7 @@ class MesTrajetsColisScreen extends StatelessWidget {
           iconAsset: 'bell',
           iconColor: cs.secondary,
           iconBgColor: cs.secondaryContainer,
-          label: 'Mes alertes corridor',
+          label: 'Mes alertes trajets',
           // Direction trajets : l'expéditeur est alerté quand un trajet matche.
           onTap: () => context.push(
             '/corridor-alerts',

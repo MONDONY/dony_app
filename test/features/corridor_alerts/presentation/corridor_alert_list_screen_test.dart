@@ -171,6 +171,8 @@ void main() {
     await t.pump(const Duration(milliseconds: 600));
     // Only the travelerWantsPackages alert is visible on this screen.
     expect(find.byType(CorridorAlertTile), findsOneWidget);
+    // Titre direction-aware.
+    expect(find.text('Mes alertes colis'), findsOneWidget);
   });
 
   testWidgets(
@@ -186,5 +188,7 @@ void main() {
     await t.pumpWidget(pump(direction: AlertDirection.senderWantsTrips));
     await t.pump(const Duration(milliseconds: 600));
     expect(find.byType(CorridorAlertTile), findsOneWidget);
+    // Titre direction-aware.
+    expect(find.text('Mes alertes trajets'), findsOneWidget);
   });
 }
