@@ -2,12 +2,12 @@ import 'package:dony/features/profile/presentation/widgets/activity_hub_card.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
-  testWidgets('affiche titre, sous-titre et compteur, et déclenche onTap',
-      (tester) async {
+  testWidgets('affiche titre, sous-titre et compteur, et déclenche onTap', (
+    tester,
+  ) async {
     var tapped = false;
     await tester.pumpWidget(
       _wrap(
