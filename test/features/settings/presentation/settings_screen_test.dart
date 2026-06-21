@@ -68,15 +68,13 @@ void main() {
       expect(find.text('Paramètres'), findsOneWidget);
     });
 
-    testWidgets('shows APPARENCE section with theme selector', (tester) async {
+    testWidgets('APPARENCE : ligne Thème sans segmented', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
       expect(find.text('APPARENCE'), findsOneWidget);
-      expect(find.byType(SegmentedButton<String>), findsOneWidget);
-      expect(find.text('Clair'), findsOneWidget);
-      expect(find.text('Sombre'), findsOneWidget);
-      expect(find.text('Auto'), findsOneWidget);
+      expect(find.text('Thème'), findsOneWidget);
+      expect(find.byType(SegmentedButton<String>), findsNothing);
     });
 
     testWidgets('shows LANGUE & COMMUNICATION section', (tester) async {
@@ -87,16 +85,22 @@ void main() {
       expect(find.text('Langue'), findsOneWidget);
     });
 
-    testWidgets('shows DESTINATIONS FAVORITES section with 4 chips',
+    testWidgets('DESTINATIONS FAVORITES : ligne disclosure (pas de chips inline)',
         (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
       expect(find.text('DESTINATIONS FAVORITES'), findsOneWidget);
-      expect(find.textContaining('Dakar'), findsOneWidget);
-      expect(find.textContaining('Abidjan'), findsOneWidget);
-      expect(find.textContaining('Bamako'), findsOneWidget);
-      expect(find.textContaining('Douala'), findsOneWidget);
+      expect(find.text('Destinations'), findsOneWidget);
+      // villes absentes de la liste principale (uniquement dans le picker)
+      expect(find.textContaining('Abidjan'), findsNothing);
+    });
+
+    testWidgets('ligne Destinations résume la sélection', (tester) async {
+      await tester.pumpWidget(
+          _wrap(prefs: const UserPreferencesModel(favDestinations: ['SN'])));
+      await tester.pumpAndSettle();
+      expect(find.text('Dakar'), findsOneWidget);
     });
 
     testWidgets('shows SÉCURITÉ & DONNÉES section', (tester) async {
@@ -134,46 +138,16 @@ void main() {
       expect(find.text('Diagnostics'), findsOneWidget);
     });
 
-    testWidgets('theme selector reflects themeMode dark state', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          prefs: const UserPreferencesModel(themeMode: 'dark'),
-        ),
-      );
+    testWidgets('ligne Thème affiche Sombre quand themeMode dark', (tester) async {
+      await tester.pumpWidget(_wrap(prefs: const UserPreferencesModel(themeMode: 'dark')));
       await tester.pumpAndSettle();
-
-      final btn = tester.widget<SegmentedButton<String>>(
-        find.byType(SegmentedButton<String>),
-      );
-      expect(btn.selected, equals({'dark'}));
+      expect(find.text('Sombre'), findsOneWidget);
     });
 
-    testWidgets('theme selector reflects themeMode system state', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          prefs: const UserPreferencesModel(themeMode: 'system'),
-        ),
-      );
+    testWidgets('ligne Thème affiche Auto quand themeMode system', (tester) async {
+      await tester.pumpWidget(_wrap(prefs: const UserPreferencesModel(themeMode: 'system')));
       await tester.pumpAndSettle();
-
-      final btn = tester.widget<SegmentedButton<String>>(
-        find.byType(SegmentedButton<String>),
-      );
-      expect(btn.selected, equals({'system'}));
-      expect(btn.selected, isNot(contains('dark')));
-    });
-
-    testWidgets('selected destination chip shows primary styling',
-        (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          prefs: const UserPreferencesModel(favDestinations: ['SN']),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Dakar chip is present and selected (rendered with primaryContainer color)
-      expect(find.textContaining('Dakar'), findsOneWidget);
+      expect(find.text('Auto'), findsOneWidget);
     });
 
     testWidgets('language shows Français when languageCode is fr',
@@ -200,25 +174,42 @@ void main() {
       expect(find.text('English'), findsOneWidget);
     });
 
-    testWidgets('tap Sombre segment dispatches ThemeChanged(dark)',
+    testWidgets('tap ligne Thème → picker → Sombre dispatch ThemeChanged(dark)',
         (tester) async {
       final mockBloc = MockAppPreferencesBloc();
-      // Initial mode is 'system' so tapping 'Sombre' is a real selection change
       final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(themeMode: 'system'),
-      );
+          preferences: const UserPreferencesModel(themeMode: 'system'));
       when(() => mockBloc.state).thenReturn(state);
-      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
-          initialState: state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(), initialState: state);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      // Tap the 'Sombre' segment (value: 'dark')
-      await tester.tap(find.text('Sombre'));
+      await tester.tap(find.text('Thème'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sombre').last);
       await tester.pump();
 
       verify(() => mockBloc.add(ThemeChanged('dark'))).called(1);
+    });
+
+    testWidgets('tap ligne Thème → picker → Clair dispatch ThemeChanged(light)',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+          preferences: const UserPreferencesModel(themeMode: 'dark'));
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(), initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Thème'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Clair').last);
+      await tester.pump();
+
+      verify(() => mockBloc.add(ThemeChanged('light'))).called(1);
     });
 
     testWidgets('tap langue tile ouvre le language picker modal',
@@ -233,44 +224,22 @@ void main() {
       expect(find.text('English'), findsOneWidget);
     });
 
-    testWidgets('tap destination chip dispatches DestinationToggled',
+    testWidgets('tap ligne Destinations → picker → Dakar dispatch DestinationToggled',
         (tester) async {
       final mockBloc = MockAppPreferencesBloc();
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      final state = AppPreferencesState(preferences: const UserPreferencesModel());
       when(() => mockBloc.state).thenReturn(state);
-      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
-          initialState: state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(), initialState: state);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
+      await tester.tap(find.text('Destinations'));
+      await tester.pumpAndSettle();
       await tester.tap(find.textContaining('Dakar'));
       await tester.pump();
 
       verify(() => mockBloc.add(any(that: isA<DestinationToggled>()))).called(1);
-    });
-
-    testWidgets('tap Clair segment dispatches ThemeChanged(light)',
-        (tester) async {
-      final mockBloc = MockAppPreferencesBloc();
-      // Initial mode is 'dark' so tapping 'Clair' is a real selection change
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(themeMode: 'dark'),
-      );
-      when(() => mockBloc.state).thenReturn(state);
-      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
-          initialState: state);
-
-      await tester.pumpWidget(_wrapWithBloc(mockBloc));
-      await tester.pumpAndSettle();
-
-      // Tap the 'Clair' segment (value: 'light')
-      await tester.tap(find.text('Clair'));
-      await tester.pump();
-
-      verify(() => mockBloc.add(ThemeChanged('light'))).called(1);
     });
 
     testWidgets('tap Sécurité tile navigates to /settings/security',
@@ -278,8 +247,11 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      // Scroll down a bit to ensure Sécurité tile is visible
-      await tester.drag(find.byType(ListView), const Offset(0, -200));
+      await tester.scrollUntilVisible(
+        find.text('Sécurité'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Sécurité'));
@@ -294,7 +266,11 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -200));
+      await tester.scrollUntilVisible(
+        find.text('Confidentialité'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Confidentialité'));
@@ -308,7 +284,11 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -200));
+      await tester.scrollUntilVisible(
+        find.text('Mes données'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Mes données'));
@@ -322,7 +302,11 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.scrollUntilVisible(
+        find.text('Notifications'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Notifications'));
@@ -336,7 +320,11 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -700));
+      await tester.scrollUntilVisible(
+        find.text('Préférences'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Préférences'));
@@ -350,7 +338,11 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.scrollUntilVisible(
+        find.text('Accessibilité'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Accessibilité'));

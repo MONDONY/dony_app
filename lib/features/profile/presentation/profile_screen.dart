@@ -16,6 +16,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/features/profile/presentation/widgets/activity_hub_card.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
@@ -504,7 +505,7 @@ class _ActivityTab extends StatelessWidget {
           const SizedBox(height: DonySpacing.lg),
         ],
 
-        // ── Stats card ──────────────────────────────────────────────────
+        // ── Stats hero (inchangé) ───────────────────────────────────────
         _SectionLabel(
           label: isTraveler ? 'ACTIVITÉ · VOYAGEUR' : 'ACTIVITÉ · EXPÉDITEUR',
           cs: cs,
@@ -521,8 +522,38 @@ class _ActivityTab extends StatelessWidget {
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.xl),
 
-        // Base commune (expéditeur) — toujours visible
-        _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
+        // ── EN COURS ────────────────────────────────────────────────────
+        _SectionLabel(label: 'EN COURS', cs: cs),
+        if (isTraveler)
+          ProfileActivityHubCard(
+                iconAsset: 'plane',
+                title: 'Mes trajets et colis',
+                subtitle: 'Gère tes trajets et colis embarqués',
+                countLabel: upcomingAnnouncements > 0
+                    ? '$upcomingAnnouncements à venir'
+                    : null,
+                onTap: () => context.push(
+                  '/trajets-colis',
+                  extra: (
+                    upcomingCount: upcomingAnnouncements,
+                    isSender: isSender,
+                  ),
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 120.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic)
+        else if (isSender)
+          ProfileActivityHubCard(
+                iconAsset: 'package',
+                title: 'Mes colis',
+                subtitle: 'Suis tes colis et demandes en cours',
+                onTap: () => context.push('/mes-colis'),
+              )
+              .animate()
+              .fadeIn(delay: 120.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        if (isTraveler || isSender) const SizedBox(height: DonySpacing.sm),
         DonyListSection(
               tiles: [
                 DonyListTile(
@@ -552,29 +583,12 @@ class _ActivityTab extends StatelessWidget {
               ],
             )
             .animate()
-            .fadeIn(delay: 140.ms)
+            .fadeIn(delay: 160.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
+        const SizedBox(height: DonySpacing.xl),
 
-        _SectionLabel(label: 'MON CARNET', cs: cs),
-        DonyListSection(
-              tiles: [
-                DonyListTile(
-                  iconAsset: 'bell',
-                  iconColor: cs.tertiary,
-                  iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
-                  label: 'Mes abonnements',
-                  showDivider: false,
-                  onTap: () => context.push('/profile/subscriptions'),
-                ),
-              ],
-            )
-            .animate()
-            .fadeIn(delay: 180.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
-
-        _SectionLabel(label: 'LITIGES', cs: cs),
+        // ── SUIVI (litiges + abonnements) ───────────────────────────────
+        _SectionLabel(label: 'SUIVI', cs: cs),
         DonyListSection(
               tiles: [
                 DonyListTile(
@@ -582,67 +596,23 @@ class _ActivityTab extends StatelessWidget {
                   iconColor: cs.error,
                   iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
                   label: 'Mes litiges',
-                  showDivider: false,
+                  subtitle: 'Suivi de vos litiges',
                   onTap: () => context.push('/disputes'),
+                ),
+                DonyListTile(
+                  iconAsset: 'bell',
+                  iconColor: cs.tertiary,
+                  iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
+                  label: 'Mes abonnements',
+                  subtitle: 'Alertes corridors et voyageurs',
+                  showDivider: false,
+                  onTap: () => context.push('/profile/subscriptions'),
                 ),
               ],
             )
             .animate()
-            .fadeIn(delay: 240.ms)
+            .fadeIn(delay: 200.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.xl),
-
-        // Hub activité — role-aware
-        if (isTraveler) ...[
-          DonyListSection(
-                tiles: [
-                  DonyListTile(
-                    iconAsset: 'plane',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'Mes trajets et colis',
-                    showDivider: false,
-                    trailing: upcomingAnnouncements > 0
-                        ? Text(
-                            '$upcomingAnnouncements à venir',
-                            style: tt.labelMedium?.copyWith(
-                              color: cs.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          )
-                        : null,
-                    onTap: () => context.push(
-                      '/trajets-colis',
-                      extra: (
-                        upcomingCount: upcomingAnnouncements,
-                        isSender: isSender,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 140.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          const SizedBox(height: DonySpacing.xl),
-        ] else if (isSender) ...[
-          DonyListSection(
-                tiles: [
-                  DonyListTile(
-                    iconAsset: 'package',
-                    iconColor: cs.secondary,
-                    iconBgColor: cs.secondaryContainer,
-                    label: 'Mes colis',
-                    showDivider: false,
-                    onTap: () => context.push('/mes-colis'),
-                  ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 140.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          const SizedBox(height: DonySpacing.xl),
-        ],
       ],
     );
   }
@@ -689,8 +659,13 @@ class _AccountTab extends StatelessWidget {
           const SizedBox(height: DonySpacing.xl),
         ],
 
-        // ── CONTACT & SÉCURITÉ ──────────────────────────────────────────
-        _SectionLabel(label: 'CONTACT & SÉCURITÉ', cs: cs),
+        // ── IDENTITÉ & CONTACT ──────────────────────────────────────────
+        _SectionLabel(label: 'IDENTITÉ & CONTACT', cs: cs),
+        DonyListSection(tiles: [_kycTile(context, user)])
+            .animate()
+            .fadeIn(delay: 80.ms)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        const SizedBox(height: DonySpacing.sm),
         _ContactSecuritySection(
               phoneNumber: user?.phoneNumber,
               email: user?.email,
@@ -698,20 +673,20 @@ class _AccountTab extends StatelessWidget {
               onEmailTap: () => AddEmailSheet.show(context),
             )
             .animate()
-            .fadeIn(delay: 80.ms)
+            .fadeIn(delay: 120.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.xl),
 
-        // ── IDENTITÉ & CONFIANCE ────────────────────────────────────────
-        _SectionLabel(label: 'IDENTITÉ & CONFIANCE', cs: cs),
+        // ── RÉPUTATION ──────────────────────────────────────────────────
+        _SectionLabel(label: 'RÉPUTATION', cs: cs),
         DonyListSection(
               tiles: [
-                _kycTile(context, user),
                 DonyListTile(
                   iconAsset: 'user',
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Mon profil public',
+                  subtitle: 'Ce que voient les autres',
                   onTap: () => context.push(
                     '/profile/public',
                     extra: ProfilePublicArgs(
@@ -731,64 +706,24 @@ class _AccountTab extends StatelessWidget {
               ],
             )
             .animate()
-            .fadeIn(delay: 120.ms)
+            .fadeIn(delay: 160.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
+        const SizedBox(height: DonySpacing.xl),
 
-        // ── FIDÉLITÉ (commun, dédupliqué) ───────────────────────────────
-        _SectionLabel(label: 'FIDÉLITÉ', cs: cs),
+        // ── PAIEMENTS (1 bloc unifié) ───────────────────────────────────
+        _SectionLabel(label: 'PAIEMENTS', cs: cs),
         DonyListSection(
               tiles: [
                 DonyListTile(
-                  iconAsset: 'user-plus',
-                  iconColor: cs.success,
-                  iconBgColor: cs.successLight,
-                  label: 'Parrainages',
-                  trailing: Text(
-                    '0 invité',
-                    style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  showDivider: true,
-                  onTap: () => context.push('/profile/referral'),
+                  iconAsset: 'wallet',
+                  iconColor: cs.primary,
+                  iconBgColor: cs.primaryContainer,
+                  label: 'Mon portefeuille',
+                  subtitle: 'Solde & recharges',
+                  showDivider: isTraveler,
+                  onTap: () => context.push('/payments/wallet'),
                 ),
-                BlocBuilder<ReferralBloc, ReferralState>(
-                  builder: (context, referralState) {
-                    final alreadyReferred =
-                        referralState is ReferralLoaded &&
-                        referralState.info.hasBeenReferred;
-                    if (alreadyReferred) return const SizedBox.shrink();
-                    return DonyListTile(
-                      iconAsset: 'gift',
-                      iconColor: cs.primary,
-                      iconBgColor: cs.primaryContainer,
-                      label: 'J\'ai un code parrain',
-                      showDivider: false,
-                      onTap: () async {
-                        final redeemed = await RedeemCodeBottomSheet.show(
-                          context,
-                        );
-                        if ((redeemed ?? false) && context.mounted) {
-                          context.read<ReferralBloc>().add(
-                            const ReferralLoadRequested(),
-                          );
-                        }
-                      },
-                    );
-                  },
-                ),
-              ],
-            )
-            .animate()
-            .fadeIn(delay: 200.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
-
-        // ── Ajout voyageur ──────────────────────────────────────────────
-        if (isTraveler) ...[
-          // ── REVENUS & PAIEMENTS ─────────────────────────────────────
-          _SectionLabel(label: 'REVENUS & PAIEMENTS', cs: cs),
-          DonyListSection(
-                tiles: [
+                if (isTraveler) ...[
                   DonyListTile(
                     iconAsset: 'piggy-bank',
                     iconColor: cs.success,
@@ -813,63 +748,72 @@ class _AccountTab extends StatelessWidget {
                     onTap: () => context.push('/profile/price-grid'),
                   ),
                 ],
-              )
-              .animate()
-              .fadeIn(delay: 240.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          const SizedBox(height: DonySpacing.lg),
+              ],
+            )
+            .animate()
+            .fadeIn(delay: 200.ms)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        const SizedBox(height: DonySpacing.xl),
 
-          // ── COMPTE PRO ─────────────────────────────────────────────
-          _SectionLabel(label: 'COMPTE PRO', cs: cs),
-          DonyListSection(
-                tiles: [
+        // ── AVANTAGES (PRO + parrainage) ────────────────────────────────
+        _SectionLabel(label: 'AVANTAGES', cs: cs),
+        DonyListSection(
+              tiles: [
+                if (isTraveler)
                   DonyListTile(
                     iconAsset: 'award',
                     iconColor: isProAccount ? cs.success : cs.warning,
-                    iconBgColor: isProAccount
-                        ? cs.successLight
-                        : cs.warningLight,
+                    iconBgColor:
+                        isProAccount ? cs.successLight : cs.warningLight,
                     label: isProAccount
                         ? 'Mon profil PRO'
                         : 'Passer en compte PRO',
                     trailing: isProAccount
-                        ? DonyIcon(
-                            'badge-check',
-                            color: cs.success,
-                            size: 18,
-                          )
+                        ? DonyIcon('badge-check', color: cs.success, size: 18)
                         : null,
-                    showDivider: false,
                     onTap: user != null
                         ? () => context.push('/profile/upgrade-to-pro')
                         : null,
                   ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 280.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          const SizedBox(height: DonySpacing.lg),
-        ],
-
-        // ── PAIEMENTS (commun aux deux rôles) ───────────────────────────
-        const SizedBox(height: DonySpacing.lg),
-        _SectionLabel(label: 'PAIEMENTS', cs: cs),
-        DonyListSection(
-              tiles: [
                 DonyListTile(
-                  iconAsset: 'wallet',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Mon portefeuille',
-                  subtitle: 'Solde & recharges',
-                  showDivider: false,
-                  onTap: () => context.push('/payments/wallet'),
+                  iconAsset: 'user-plus',
+                  iconColor: cs.success,
+                  iconBgColor: cs.successLight,
+                  label: 'Parrainages',
+                  trailing: Text(
+                    '0 invité',
+                    style:
+                        tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  onTap: () => context.push('/profile/referral'),
+                ),
+                BlocBuilder<ReferralBloc, ReferralState>(
+                  builder: (context, referralState) {
+                    final alreadyReferred = referralState is ReferralLoaded &&
+                        referralState.info.hasBeenReferred;
+                    if (alreadyReferred) return const SizedBox.shrink();
+                    return DonyListTile(
+                      iconAsset: 'gift',
+                      iconColor: cs.primary,
+                      iconBgColor: cs.primaryContainer,
+                      label: 'J\'ai un code parrain',
+                      showDivider: false,
+                      onTap: () async {
+                        final redeemed =
+                            await RedeemCodeBottomSheet.show(context);
+                        if ((redeemed ?? false) && context.mounted) {
+                          context
+                              .read<ReferralBloc>()
+                              .add(const ReferralLoadRequested());
+                        }
+                      },
+                    );
+                  },
                 ),
               ],
             )
             .animate()
-            .fadeIn(delay: 260.ms)
+            .fadeIn(delay: 240.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
       ],
     );
@@ -906,50 +850,14 @@ class _SettingsTab extends StatelessWidget {
                 DonyListTile(
                   iconAsset: 'sliders-horizontal',
                   label: 'Paramètres',
-                  onTap: () => context.push('/settings'),
-                ),
-                DonyListTile(
-                  iconAsset: 'bell',
-                  iconColor: cs.warning,
-                  iconBgColor: cs.warningLight,
-                  label: 'Notifications',
-                  onTap: () {},
-                ),
-                DonyListTile(
-                  iconAsset: 'languages',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Langue',
-                  trailing: Text(
-                    'Français',
-                    style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
+                  subtitle: 'Thème, langue, notifications, sécurité',
                   showDivider: false,
-                  onTap: () {},
+                  onTap: () => context.push('/settings'),
                 ),
               ],
             )
             .animate()
             .fadeIn(delay: 80.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
-
-        // ── SÉCURITÉ ────────────────────────────────────────────────────
-        _SectionLabel(label: 'SÉCURITÉ', cs: cs),
-        DonyListSection(
-              tiles: [
-                DonyListTile(
-                  iconAsset: 'shield-check',
-                  iconColor: cs.onSurfaceVariant,
-                  iconBgColor: cs.outline.withValues(alpha: 0.3),
-                  label: 'Sécurité & confidentialité',
-                  showDivider: false,
-                  onTap: () {},
-                ),
-              ],
-            )
-            .animate()
-            .fadeIn(delay: 120.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.lg),
 
@@ -962,6 +870,7 @@ class _SettingsTab extends StatelessWidget {
                   iconColor: cs.primary,
                   iconBgColor: cs.primaryContainer,
                   label: 'Contacter le support',
+                  subtitle: 'On répond sous 24 h',
                   onTap: () => context.push('/profile/help/contact'),
                 ),
                 DonyListTile(
@@ -975,7 +884,7 @@ class _SettingsTab extends StatelessWidget {
               ],
             )
             .animate()
-            .fadeIn(delay: 160.ms)
+            .fadeIn(delay: 120.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.xxl),
 
@@ -985,7 +894,7 @@ class _SettingsTab extends StatelessWidget {
           onPressed: () =>
               context.read<AuthBloc>().add(const AuthLogoutRequested()),
           variant: DonyButtonVariant.ghost,
-        ).animate().fadeIn(delay: 200.ms),
+        ).animate().fadeIn(delay: 160.ms),
         const SizedBox(height: DonySpacing.xxl),
 
         // ── FOOTER ──────────────────────────────────────────────────────
@@ -993,7 +902,7 @@ class _SettingsTab extends StatelessWidget {
           'dony v1.0.0 · Made with ❤️ in Paris',
           style: tt.bodySmall?.copyWith(color: cs.outline),
           textAlign: TextAlign.center,
-        ).animate().fadeIn(delay: 240.ms),
+        ).animate().fadeIn(delay: 200.ms),
       ],
     );
   }
