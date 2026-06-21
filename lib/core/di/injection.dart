@@ -1,4 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
+import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
+import 'package:dony/features/favorites/data/datasources/favorite_remote_datasource.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -737,5 +742,24 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<StripeAccountBloc>(
     () => StripeAccountBloc(getIt<IStripeAccountRepository>()),
     dispose: (b) => b.close(),
+  );
+
+  // Favorites
+  getIt.registerLazySingleton<FavoriteRemoteDatasource>(
+    () => FavoriteRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<FavoriteRepository>(
+    () => FavoriteRepository(getIt<FavoriteRemoteDatasource>()),
+  );
+  // Global singleton — shared source-of-truth for heart buttons across the app
+  getIt.registerLazySingleton<FavoriteIdsCubit>(
+    () => FavoriteIdsCubit(getIt<FavoriteRepository>()),
+    dispose: (c) => c.close(),
+  );
+  getIt.registerFactory<FavoriteTripsCubit>(
+    () => FavoriteTripsCubit(getIt<FavoriteRepository>()),
+  );
+  getIt.registerFactory<FavoriteRequestsCubit>(
+    () => FavoriteRequestsCubit(getIt<FavoriteRepository>()),
   );
 }
