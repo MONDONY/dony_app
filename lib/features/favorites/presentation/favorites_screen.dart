@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:flutter/material.dart';
@@ -131,9 +132,9 @@ class _TripsTab extends StatelessWidget {
                 final trip = trips[index];
                 return TripCard(
                   announcement: trip,
-                  onTap: () => context.push(
-                    '/announcements/${trip.id}/trip',
-                    extra: trip,
+                  onTap: () => showTravelerAnnouncementSheet(
+                    context,
+                    announcement: trip,
                   ),
                   index: index,
                   showFavorite: true,
