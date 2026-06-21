@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
@@ -40,6 +42,27 @@ void main() {
         {'id': 'trip-1'},
         {'id': 'trip-2'},
       ]);
+      when(() => repo.add('trip', any())).thenAnswer((_) async {});
+      when(() => box.delete('saved_trips')).thenAnswer((_) async {});
+
+      await migration.run();
+
+      verify(() => repo.add('trip', 'trip-1')).called(1);
+      verify(() => repo.add('trip', 'trip-2')).called(1);
+      verify(() => box.delete('saved_trips')).called(1);
+    });
+
+    // Regression test for C1: SavedTripsService stored a JSON-encoded String,
+    // not a bare List. The original migration did `saved as List` which threw a
+    // CastError on any real user's data, silently no-oping the migration.
+    test(
+        'decodes JSON String stored by legacy SavedTripsService and migrates correctly',
+        () async {
+      // This is the exact format SavedTripsService._encode() produced:
+      // jsonEncode(trips.map((a) => a.toJson()).toList())
+      final stored =
+          jsonEncode([{'id': 'trip-1'}, {'id': 'trip-2'}]);
+      when(() => box.get('saved_trips')).thenReturn(stored);
       when(() => repo.add('trip', any())).thenAnswer((_) async {});
       when(() => box.delete('saved_trips')).thenAnswer((_) async {});
 

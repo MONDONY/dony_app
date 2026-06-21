@@ -54,10 +54,21 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                     return FavoriteHeartButton(
                       isFavorite: isFav,
                       onToggle: () async {
+                        final cubit = context.read<FavoriteIdsCubit>();
                         try {
-                          await context
-                              .read<FavoriteIdsCubit>()
-                              .toggleTrip(_a.id);
+                          await cubit.toggleTrip(_a.id);
+                          if (context.mounted) {
+                            final nowFav = cubit.isTripFav(_a.id);
+                            DonySnackbar.show(
+                              context,
+                              message: nowFav
+                                  ? 'Trajet ajouté aux favoris'
+                                  : 'Trajet retiré des favoris',
+                              type: nowFav
+                                  ? DonySnackbarType.success
+                                  : DonySnackbarType.info,
+                            );
+                          }
                         } catch (_) {
                           if (context.mounted) {
                             DonySnackbar.show(
