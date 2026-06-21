@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -38,43 +40,44 @@ class DataSettingsScreen extends StatelessWidget {
             DonySpacing.huge,
           ),
           children: [
-            _SectionLabel('VOS DONNÉES', cs: cs),
+            const SettingsSectionHeader('VOS DONNÉES'),
             // Export tile — wrapped in BlocBuilder to react to loading state
-            DonyCard(
-              padding: EdgeInsets.zero,
-              child: BlocBuilder<DataExportBloc, DataExportState>(
-                builder: (context, state) {
-                  final isLoading = state is DataExportLoading;
-                  return DonyListTile(
-                    iconAsset: 'download',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'Télécharger mes données',
-                    subtitle: 'Export RGPD au format JSON',
-                    showDivider: false,
-                    trailing: isLoading
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: cs.primary,
-                            ),
-                          )
-                        : null,
-                    onTap: isLoading
-                        ? null
-                        : () => context
-                            .read<DataExportBloc>()
-                            .add(const DataExportRequested()),
-                  );
-                },
-              ),
+            SettingsFlatGroup(
+              children: [
+                BlocBuilder<DataExportBloc, DataExportState>(
+                  builder: (context, state) {
+                    final isLoading = state is DataExportLoading;
+                    return DonyListTile(
+                      iconAsset: 'download',
+                      iconColor: cs.primary,
+                      iconBgColor: cs.primaryContainer,
+                      label: 'Télécharger mes données',
+                      subtitle: 'Export RGPD au format JSON',
+                      showDivider: false,
+                      trailing: isLoading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.primary,
+                              ),
+                            )
+                          : null,
+                      onTap: isLoading
+                          ? null
+                          : () => context
+                              .read<DataExportBloc>()
+                              .add(const DataExportRequested()),
+                    );
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: DonySpacing.xl),
-            _SectionLabel('DANGER ZONE', cs: cs),
-            DonyListSection(
-              tiles: [
+            const SettingsSectionHeader('DANGER ZONE'),
+            SettingsFlatGroup(
+              children: [
                 DonyListTile(
                   iconAsset: 'trash',
                   iconColor: cs.error,
@@ -92,30 +95,4 @@ class DataSettingsScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label, {required this.cs});
-
-  final String label;
-  final ColorScheme cs;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.xs,
-          0,
-          DonySpacing.xs,
-          DonySpacing.sm,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: cs.onSurfaceVariant,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
 }
