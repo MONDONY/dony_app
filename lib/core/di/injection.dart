@@ -95,7 +95,7 @@ import 'package:dony/features/matching/data/datasources/mobile_money_remote_data
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
-import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/data/datasources/price_grid_datasource.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
@@ -204,9 +204,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<PendingSearchNotifier>(
     () => PendingSearchNotifier(),
   );
-  getIt.registerLazySingleton<SavedTripsService>(
-    () => SavedTripsService(getIt<HiveService>()),
-  );
+
   getIt.registerLazySingleton<AddressAutocompleteService>(
     () => AddressAutocompleteService(dio: getIt<ApiClient>().dio),
   );
@@ -750,6 +748,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<FavoriteRepository>(
     () => FavoriteRepository(getIt<FavoriteRemoteDatasource>()),
+  );
+  getIt.registerLazySingleton<FavoritesMigration>(
+    () => FavoritesMigration(getIt<HiveService>(), getIt<FavoriteRepository>()),
   );
   // Global singleton — shared source-of-truth for heart buttons across the app
   getIt.registerLazySingleton<FavoriteIdsCubit>(

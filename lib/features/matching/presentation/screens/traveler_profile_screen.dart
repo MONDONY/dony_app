@@ -1,19 +1,17 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -34,33 +32,7 @@ class TravelerProfileScreen extends StatefulWidget {
 }
 
 class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
-  late bool _isSaved;
-  final _savedTripsService = getIt<SavedTripsService>();
-
   AnnouncementModel get _a => widget.announcement;
-
-  @override
-  void initState() {
-    super.initState();
-    _isSaved = _savedTripsService.isSaved(_a.id);
-  }
-
-  Future<void> _toggleSave() async {
-    unawaited(HapticFeedback.lightImpact());
-    if (_isSaved) {
-      await _savedTripsService.removeTrip(_a.id);
-    } else {
-      await _savedTripsService.saveTrip(_a);
-    }
-    setState(() => _isSaved = !_isSaved);
-    if (mounted) {
-      DonySnackbar.show(
-        context,
-        message: _isSaved ? 'Trajet sauvegardé' : 'Trajet retiré des sauvegardes',
-        type: _isSaved ? DonySnackbarType.success : DonySnackbarType.info,
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,14 +48,28 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
         actions: widget.consultOnly
             ? null
             : [
-                IconButton(
-                  icon: DonyIcon(
-                    'bookmark',
-                    color: _isSaved ? cs.primary : cs.onSurfaceVariant,
-                    size: 24,
-                  ),
-                  onPressed: _toggleSave,
-                  tooltip: _isSaved ? 'Retirer' : 'Sauvegarder',
+                BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+                  builder: (context, state) {
+                    final isFav = state.tripIds.contains(_a.id);
+                    return FavoriteHeartButton(
+                      isFavorite: isFav,
+                      onToggle: () async {
+                        try {
+                          await context
+                              .read<FavoriteIdsCubit>()
+                              .toggleTrip(_a.id);
+                        } catch (_) {
+                          if (context.mounted) {
+                            DonySnackbar.show(
+                              context,
+                              message: 'Impossible de modifier les favoris',
+                              type: DonySnackbarType.error,
+                            );
+                          }
+                        }
+                      },
+                    );
+                  },
                 ),
               ],
       ),
