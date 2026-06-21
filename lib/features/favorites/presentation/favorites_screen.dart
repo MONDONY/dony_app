@@ -4,7 +4,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -23,6 +24,16 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
+  bool _isTravelerCapable(AuthState state) {
+    if (state is AuthAuthenticated) {
+      return state.user.isTraveler;
+    }
+    if (state is AuthProfileUpdated) {
+      return state.user.isTraveler;
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -33,9 +44,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       unawaited(
         getIt<AnalyticsService>().logEvent(AnalyticsEvents.favoritesOpened),
       );
-      final role = context.read<ActiveRoleCubit>().state;
+      final isTraveler = _isTravelerCapable(context.read<AuthBloc>().state);
       context.read<FavoriteTripsCubit>().load();
-      if (role == ActiveRole.traveler) {
+      if (isTraveler) {
         context.read<FavoriteRequestsCubit>().load();
       }
     });
@@ -43,9 +54,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ActiveRoleCubit, ActiveRole>(
-      builder: (context, role) {
-        final isTraveler = role == ActiveRole.traveler;
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final isTraveler = _isTravelerCapable(authState);
 
         if (isTraveler) {
           return DefaultTabController(

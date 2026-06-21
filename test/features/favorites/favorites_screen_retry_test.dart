@@ -1,7 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
@@ -30,8 +33,7 @@ class _MockFavoriteRequestsCubit extends MockCubit<FavoriteRequestsState>
 class _MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
     implements FavoriteIdsCubit {}
 
-class _MockActiveRoleCubit extends MockCubit<ActiveRole>
-    implements ActiveRoleCubit {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class _FakeAnalyticsService extends Fake implements AnalyticsService {
   @override
@@ -39,11 +41,22 @@ class _FakeAnalyticsService extends Fake implements AnalyticsService {
 }
 
 // ---------------------------------------------------------------------------
+// Fixture helpers
+// ---------------------------------------------------------------------------
+
+UserModel _makeUser({required bool isTraveler}) => UserModel(
+      id: 'user-1',
+      roles: isTraveler ? ['TRAVELER', 'SENDER'] : ['SENDER'],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
+
+// ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
 
 Widget _buildScreen({
-  required ActiveRole role,
+  required bool isTraveler,
   required FavoriteTripsState tripsState,
   required FavoriteRequestsState requestsState,
   _MockFavoriteTripsCubit? tripsCubitOverride,
@@ -67,13 +80,14 @@ Widget _buildScreen({
   when(() => requestsCubit.load()).thenAnswer((_) async {});
   when(() => requestsCubit.refresh()).thenAnswer((_) async {});
 
-  final roleCubit = _MockActiveRoleCubit();
-  when(() => roleCubit.state).thenReturn(role);
+  final authBloc = _MockAuthBloc();
+  when(() => authBloc.state)
+      .thenReturn(AuthAuthenticated(_makeUser(isTraveler: isTraveler)));
 
   return MaterialApp(
     home: MultiBlocProvider(
       providers: [
-        BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+        BlocProvider<AuthBloc>.value(value: authBloc),
         BlocProvider<FavoriteTripsCubit>.value(value: tripsCubit),
         BlocProvider<FavoriteRequestsCubit>.value(value: requestsCubit),
         BlocProvider<FavoriteIdsCubit>.value(value: idsCubit),
@@ -112,7 +126,7 @@ void main() {
       when(() => tripsCubit.load()).thenAnswer((_) async {});
 
       await tester.pumpWidget(_buildScreen(
-        role: ActiveRole.sender,
+        isTraveler: false,
         tripsState: FavoriteTripsError('err'),
         requestsState: FavoriteRequestsLoading(),
         tripsCubitOverride: tripsCubit,
@@ -136,7 +150,7 @@ void main() {
       when(() => requestsCubit.refresh()).thenAnswer((_) async {});
 
       await tester.pumpWidget(_buildScreen(
-        role: ActiveRole.traveler,
+        isTraveler: true,
         tripsState: FavoriteTripsLoading(),
         requestsState: FavoriteRequestsError('err'),
         requestsCubitOverride: requestsCubit,
@@ -163,7 +177,7 @@ void main() {
   group('FavoritesScreen — error state text', () {
     testWidgets('affiche "Une erreur est survenue"', (tester) async {
       await tester.pumpWidget(_buildScreen(
-        role: ActiveRole.sender,
+        isTraveler: false,
         tripsState: FavoriteTripsError('something'),
         requestsState: FavoriteRequestsLoading(),
       ));
@@ -248,7 +262,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsLoaded([makeTrip()]),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -263,7 +277,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsEmpty(),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -311,7 +325,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.traveler,
+          isTraveler: true,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsLoaded([makeRequest()]),
           requestsCubitOverride: requestsCubit,
@@ -337,7 +351,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.traveler,
+          isTraveler: true,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsEmpty(),
           requestsCubitOverride: requestsCubit,

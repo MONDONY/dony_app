@@ -1,7 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
@@ -24,12 +27,25 @@ class _MockFavoriteRequestsCubit extends MockCubit<FavoriteRequestsState>
 class _MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
     implements FavoriteIdsCubit {}
 
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+// ---------------------------------------------------------------------------
+// Fixture helpers
+// ---------------------------------------------------------------------------
+
+UserModel _makeUser({required bool isTraveler}) => UserModel(
+      id: 'user-1',
+      roles: isTraveler ? ['TRAVELER', 'SENDER'] : ['SENDER'],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
+
 // ---------------------------------------------------------------------------
 // Helper to build the widget
 // ---------------------------------------------------------------------------
 
 Widget _buildScreen({
-  required ActiveRole role,
+  required bool isTraveler,
   required FavoriteTripsState tripsState,
   required FavoriteRequestsState requestsState,
 }) {
@@ -48,15 +64,14 @@ Widget _buildScreen({
   when(() => requestsCubit.load()).thenAnswer((_) async {});
   when(() => requestsCubit.refresh()).thenAnswer((_) async {});
 
-  // ActiveRoleCubit backed by a real hive-less implementation would require
-  // hive init. Instead use MockCubit.
-  final roleCubit = _MockActiveRoleCubit();
-  when(() => roleCubit.state).thenReturn(role);
+  final authBloc = _MockAuthBloc();
+  when(() => authBloc.state)
+      .thenReturn(AuthAuthenticated(_makeUser(isTraveler: isTraveler)));
 
   return MaterialApp(
     home: MultiBlocProvider(
       providers: [
-        BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+        BlocProvider<AuthBloc>.value(value: authBloc),
         BlocProvider<FavoriteTripsCubit>.value(value: tripsCubit),
         BlocProvider<FavoriteRequestsCubit>.value(value: requestsCubit),
         BlocProvider<FavoriteIdsCubit>.value(value: favoriteIdsCubit),
@@ -65,9 +80,6 @@ Widget _buildScreen({
     ),
   );
 }
-
-class _MockActiveRoleCubit extends MockCubit<ActiveRole>
-    implements ActiveRoleCubit {}
 
 class _FakeAnalyticsService extends Fake implements AnalyticsService {
   @override
@@ -92,13 +104,13 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Traveler role → 2 tabs
+  // Traveler capability → 2 tabs
   // ---------------------------------------------------------------------------
-  group('FavoritesScreen — rôle voyageur', () {
+  group('FavoritesScreen — capacité voyageur', () {
     testWidgets('affiche 2 onglets "Trajets" et "Demandes"', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.traveler,
+          isTraveler: true,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -113,7 +125,7 @@ void main() {
     testWidgets('affiche DefaultTabController avec length 2', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.traveler,
+          isTraveler: true,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -125,16 +137,36 @@ void main() {
       expect(controller, isNotNull);
       expect(controller!.length, 2);
     });
+
+    // Key regression test: traveler capability gates the tab, not active role.
+    // A user with TRAVELER role must see both tabs regardless of ActiveRoleCubit.
+    testWidgets(
+        'voyageur avec capacité isTraveler=true voit les 2 onglets '
+        'indépendamment du rôle actif (ActiveRoleCubit ignoré)', (tester) async {
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: true,
+          tripsState: FavoriteTripsLoading(),
+          requestsState: FavoriteRequestsLoading(),
+        ),
+      );
+      await tester.pump();
+
+      // Should have both tabs purely from isTraveler capability
+      expect(find.byType(TabBar), findsOneWidget);
+      expect(find.text('Trajets'), findsOneWidget);
+      expect(find.text('Demandes'), findsOneWidget);
+    });
   });
 
   // ---------------------------------------------------------------------------
-  // Sender role → no tab bar, single list
+  // Sender-only capability → no tab bar, single list
   // ---------------------------------------------------------------------------
-  group('FavoritesScreen — rôle expéditeur', () {
+  group('FavoritesScreen — capacité expéditeur uniquement', () {
     testWidgets('n\'affiche pas de TabBar', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -147,7 +179,7 @@ void main() {
     testWidgets('n\'affiche pas l\'onglet "Demandes"', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -165,7 +197,7 @@ void main() {
     testWidgets('affiche l\'état vide quand FavoriteTripsEmpty', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsEmpty(),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -179,7 +211,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.traveler,
+          isTraveler: true,
           tripsState: FavoriteTripsEmpty(),
           requestsState: FavoriteRequestsEmpty(),
         ),
@@ -198,7 +230,7 @@ void main() {
     testWidgets('affiche le bouton Réessayer en cas d\'erreur', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsError('network error'),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -216,7 +248,7 @@ void main() {
     testWidgets('affiche un spinner CircularProgressIndicator', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsLoading(),
         ),
@@ -234,7 +266,7 @@ void main() {
     testWidgets('affiche "Mes favoris" dans l\'AppBar', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
-          role: ActiveRole.sender,
+          isTraveler: false,
           tripsState: FavoriteTripsLoading(),
           requestsState: FavoriteRequestsLoading(),
         ),
