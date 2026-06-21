@@ -2,10 +2,13 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 class TravelerCard extends StatelessWidget {
@@ -17,6 +20,7 @@ class TravelerCard extends StatelessWidget {
     required this.onTap,
     this.distanceBadge,
     this.existingBidStatus,
+    this.showFavorite = false,
   });
 
   final AnnouncementModel announcement;
@@ -29,6 +33,15 @@ class TravelerCard extends StatelessWidget {
   /// statut + une bordure colorée pour rappeler à l'expéditeur qu'il a déjà
   /// une demande en cours sur ce trajet.
   final String? existingBidStatus;
+
+  /// When true, renders a heart button in the top-right of the card header.
+  /// Requires a [FavoriteIdsCubit] to be in the widget tree; if absent the
+  /// heart is silently omitted (defensive read — never crashes).
+  ///
+  /// Caller is responsible for NOT passing true on items owned by the current
+  /// user. The in-card heart has no owner guard; the backend returns 422 on an
+  /// own-trip add, but the optimistic UI would flash before the error arrives.
+  final bool showFavorite;
 
   static const int _maxVisibleChips = 3;
 
@@ -139,12 +152,23 @@ class TravelerCard extends StatelessWidget {
             ],
 
             // ── Zone 1 : trajet (hero) ──
-            _RouteHeader(
-              departureCity: announcement.departureCity,
-              arrivalCity: announcement.arrivalCity,
-              depFlag: depFlag,
-              arrFlag: arrFlag,
-              showChevron: isOwnAnnouncement,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _RouteHeader(
+                    departureCity: announcement.departureCity,
+                    arrivalCity: announcement.arrivalCity,
+                    depFlag: depFlag,
+                    arrFlag: arrFlag,
+                    showChevron: isOwnAnnouncement,
+                  ),
+                ),
+                if (showFavorite) ...[
+                  const SizedBox(width: DonySpacing.xs),
+                  _buildFavoriteHeart(context, announcement.id),
+                ],
+              ],
             ),
             const SizedBox(height: DonySpacing.xs),
             Row(
@@ -251,6 +275,43 @@ class TravelerCard extends StatelessWidget {
         .fadeIn(delay: Duration(milliseconds: 60 * index))
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Shared helper — defensive favorite heart
+// ─────────────────────────────────────────────────────────────
+
+/// Renders a [FavoriteHeartButton] driven by [FavoriteIdsCubit].
+/// Silently returns [SizedBox.shrink] if no cubit is in the tree —
+/// so the card never crashes when rendered outside a cubit provider.
+Widget _buildFavoriteHeart(BuildContext context, String tripId) {
+  FavoriteIdsCubit? cubit;
+  try {
+    cubit = context.read<FavoriteIdsCubit>();
+  } catch (_) {
+    // No FavoriteIdsCubit in the tree — render nothing.
+    return const SizedBox.shrink();
+  }
+  final c = cubit;
+  return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+    bloc: c,
+    builder: (ctx, _) => FavoriteHeartButton(
+      isFavorite: c.isTripFav(tripId),
+      onToggle: () async {
+        try {
+          await c.toggleTrip(tripId);
+        } catch (_) {
+          if (ctx.mounted) {
+            DonySnackbar.show(
+              ctx,
+              message: 'Action impossible, réessaie',
+              type: DonySnackbarType.error,
+            );
+          }
+        }
+      },
+    ),
+  );
 }
 
 /// Carte tactile : applique un léger scale 0.97 pendant l'appui (feedback

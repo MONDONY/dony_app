@@ -1664,6 +1664,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         announcement: a,
                                         index: itemIndex,
                                         isOwnAnnouncement: isOwn,
+                                        showFavorite: !isOwn,
                                         existingBidStatus: existingBid?.status,
                                         onTap: isOwn
                                             ? () async {
@@ -1707,6 +1708,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         item: pr,
                                         index: itemIndex,
                                         isOwnRequest: isOwn,
+                                        showFavorite: _isTraveler && !isOwn,
                                         onTap: () async {
                                           await PackageRequestPreviewBottomSheet.show(
                                             ctx,
@@ -1808,6 +1810,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   item: pr,
                                   index: i,
                                   isOwnRequest: isOwn,
+                                  showFavorite: _isTraveler && !isOwn,
                                   onTap: () async {
                                     await PackageRequestPreviewBottomSheet.show(
                                       ctx,
@@ -1906,6 +1909,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   announcement: a,
                                   index: i,
                                   isOwnAnnouncement: isOwn,
+                                  showFavorite: !isOwn,
                                   distanceBadge: badge,
                                   existingBidStatus: existingBid?.status,
                                   onTap: isOwn
