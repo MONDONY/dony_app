@@ -279,7 +279,6 @@ void main() {
 
       expect(find.byType(FavoriteHeartButton), findsOneWidget);
       // Find the Icon inside the FavoriteHeartButton specifically
-      final heartBtn = tester.element(find.byType(FavoriteHeartButton));
       final icons = find.descendant(
         of: find.byType(FavoriteHeartButton),
         matching: find.byType(Icon),
