@@ -1,16 +1,19 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_status_chip.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 /// Carte « demande d'envoi » — identité COLIS-FIRST (variante Ⓒ Ticket) :
@@ -25,6 +28,7 @@ class PackageRequestListCard extends StatelessWidget {
     this.isOwnRequest = false,
     this.status = PackageRequestStatus.open,
     this.index = 0,
+    this.showFavorite = false,
   });
 
   final PackageRequestSearchItem item;
@@ -36,11 +40,46 @@ class PackageRequestListCard extends StatelessWidget {
   final PackageRequestStatus status;
   final int index;
 
+  /// When true, renders a heart button in the micro-label row (pushed right).
+  /// Requires a [FavoriteIdsCubit] in the tree; silently omitted if absent.
+  final bool showFavorite;
+
   String get _sizeLabel => switch (item.parcelSize) {
     ParcelSize.small => 'S',
     ParcelSize.medium => 'M',
     ParcelSize.large => 'L',
   };
+
+  /// Builds a favorite heart for a package request — defensive (never crashes
+  /// if no [FavoriteIdsCubit] is present in the tree).
+  Widget _buildRequestFavoriteHeart(BuildContext context) {
+    FavoriteIdsCubit? cubit;
+    try {
+      cubit = context.read<FavoriteIdsCubit>();
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+    final c = cubit;
+    return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+      bloc: c,
+      builder: (ctx, _) => FavoriteHeartButton(
+        isFavorite: c.isRequestFav(item.id),
+        onToggle: () async {
+          try {
+            await c.toggleRequest(item.id);
+          } catch (_) {
+            if (ctx.mounted) {
+              DonySnackbar.show(
+                ctx,
+                message: 'Action impossible, réessaie',
+                type: DonySnackbarType.error,
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +124,7 @@ class PackageRequestListCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ── Micro-label + chip statut/own ──────────────────
+                            // ── Micro-label + chip statut/own + optional heart ──
                             Row(
                               children: [
                                 DonyIcon('package', size: 13, color: accent),
@@ -106,6 +145,10 @@ class PackageRequestListCard extends StatelessWidget {
                                   _OwnRequestChip(cs: cs, tt: tt)
                                 else
                                   packageStatusChip(context, status),
+                                if (showFavorite) ...[
+                                  const SizedBox(width: DonySpacing.xs),
+                                  _buildRequestFavoriteHeart(context),
+                                ],
                               ],
                             ),
                             const SizedBox(height: DonySpacing.sm),
@@ -666,8 +709,8 @@ class _MatchThumbnail extends StatelessWidget {
             ? CachedNetworkImage(
                 imageUrl: url,
                 fit: BoxFit.cover,
-                placeholder: (_, __) => _matchPlaceholder(cs),
-                errorWidget: (_, __, ___) => _matchPlaceholder(cs),
+                placeholder: (_, _) => _matchPlaceholder(cs),
+                errorWidget: (_, _, _) => _matchPlaceholder(cs),
               )
             : _matchPlaceholder(cs),
       ),
