@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -99,6 +104,17 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
     _fitCamera();
   }
 
+  /// Recentre avec un label connu (ex. ville choisie) — pas de reverse-geocoding.
+  void _setCenterWithLabel(LatLng c, String label) {
+    _geocodeDebounce?.cancel();
+    setState(() {
+      _center = c;
+      _label = label;
+    });
+    _emit();
+    _fitCamera();
+  }
+
   void _setRadius(int km) {
     setState(() => _radiusKm = km);
     _emit();
@@ -161,64 +177,64 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Définir le centre sans ambiguïté : par ville OU par position GPS.
+        BlocProvider(
+          create: (_) => getIt<CitySearchBloc>(),
+          child: CityAutocompleteField(
+            label: 'Centrer la zone sur une ville',
+            fieldKey: const Key('zone-city-field'),
+            prefixIcon: const Icon(Icons.place_outlined),
+            onSelected: (CityModel c) =>
+                _setCenterWithLabel(LatLng(c.lat, c.lng), c.name),
+          ),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('zone-locate-me'),
+            onPressed: _useMyLocation,
+            icon: const Icon(Icons.my_location_rounded, size: 18),
+            label: const Text('Utiliser ma position'),
+          ),
+        ),
+        const SizedBox(height: DonySpacing.sm),
         ClipRRect(
           borderRadius: BorderRadius.circular(DonyRadius.card),
           child: SizedBox(
             height: 190,
-            child: Stack(
-              children: [
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: _center,
-                    zoom: _zoomForRadius(_radiusKm),
-                  ),
-                  style: resolveMapStyle(Theme.of(context).brightness),
-                  onMapCreated: (c) {
-                    _map = c;
-                    _fitCamera();
-                  },
-                  onTap: _setCenter,
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('zone-center'),
-                      position: _center,
-                      draggable: true,
-                      onDragEnd: _setCenter,
-                    ),
-                  },
-                  circles: {
-                    Circle(
-                      circleId: const CircleId('zone-radius'),
-                      center: _center,
-                      radius: _radiusKm * 1000.0,
-                      strokeColor: cs.primary,
-                      strokeWidth: 2,
-                      fillColor: cs.primary.withValues(alpha: 0.13),
-                    ),
-                  },
-                  zoomControlsEnabled: false,
-                  myLocationButtonEnabled: false,
-                  mapToolbarEnabled: false,
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _center,
+                zoom: _zoomForRadius(_radiusKm),
+              ),
+              style: resolveMapStyle(Theme.of(context).brightness),
+              onMapCreated: (c) {
+                _map = c;
+                _fitCamera();
+              },
+              onTap: _setCenter,
+              markers: {
+                Marker(
+                  markerId: const MarkerId('zone-center'),
+                  position: _center,
+                  draggable: true,
+                  onDragEnd: _setCenter,
                 ),
-                Positioned(
-                  right: DonySpacing.sm,
-                  bottom: DonySpacing.sm,
-                  child: Material(
-                    color: cs.surface,
-                    shape: const CircleBorder(),
-                    elevation: 2,
-                    child: InkWell(
-                      key: const Key('zone-locate-me'),
-                      customBorder: const CircleBorder(),
-                      onTap: _useMyLocation,
-                      child: const Padding(
-                        padding: EdgeInsets.all(DonySpacing.sm),
-                        child: Icon(Icons.my_location_rounded, size: 18),
-                      ),
-                    ),
-                  ),
+              },
+              circles: {
+                Circle(
+                  circleId: const CircleId('zone-radius'),
+                  center: _center,
+                  radius: _radiusKm * 1000.0,
+                  strokeColor: cs.primary,
+                  strokeWidth: 2,
+                  fillColor: cs.primary.withValues(alpha: 0.13),
                 ),
-              ],
+              },
+              zoomControlsEnabled: false,
+              myLocationButtonEnabled: false,
+              mapToolbarEnabled: false,
             ),
           ),
         ),
