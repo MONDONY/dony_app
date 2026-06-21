@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
+import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,34 +30,39 @@ class NotificationSettingsScreen extends StatelessWidget {
             ),
             children: [
               // ── Section 1 : Protections critiques ──────────────────────
-              _buildSectionHeader(context,
-                  title: 'PROTECTIONS CRITIQUES',
-                  titleColor: Theme.of(context).colorScheme.error),
-              _buildLockedTile(context,
-                iconAsset: 'badge-check',
-                label: 'Livraison confirmée',
-                subtitle: 'SMS automatique si push non reçu',
+              SettingsSectionHeader(
+                'PROTECTIONS CRITIQUES',
+                color: Theme.of(context).colorScheme.error,
               ),
-              _buildLockedTile(context,
-                iconAsset: 'banknote',
-                label: 'Paiement reçu',
-                subtitle: 'SMS automatique si push non reçu',
-              ),
-              _buildLockedTile(context,
-                iconAsset: 'gavel',
-                label: 'Litige ouvert',
-                subtitle: 'SMS automatique si push non reçu',
+              SettingsFlatGroup(
+                children: [
+                  _buildLockedTile(context,
+                    iconAsset: 'badge-check',
+                    label: 'Livraison confirmée',
+                    subtitle: 'SMS automatique si push non reçu',
+                  ),
+                  _buildLockedTile(context,
+                    iconAsset: 'banknote',
+                    label: 'Paiement reçu',
+                    subtitle: 'SMS automatique si push non reçu',
+                  ),
+                  _buildLockedTile(context,
+                    iconAsset: 'gavel',
+                    label: 'Litige ouvert',
+                    subtitle: 'SMS automatique si push non reçu',
+                  ),
+                ],
               ),
               const SizedBox(height: DonySpacing.sm),
               _buildCriticalBanner(context),
               const SizedBox(height: DonySpacing.xl),
               // ── Section 2 : Activité ────────────────────────────────────
-              _buildSectionHeader(context,
-                  title: 'ACTIVITÉ',
-                  titleColor: const Color(0xFFD97706)),
-              DonyListSection(
-                title: '',
-                tiles: [
+              SettingsSectionHeader(
+                'ACTIVITÉ',
+                color: Theme.of(context).colorScheme.warning,
+              ),
+              SettingsFlatGroup(
+                children: [
                   _buildTile(context,
                     label: 'Matchs & enchères',
                     subtitle: 'Demandes, acceptations, remise, annulation…',
@@ -88,12 +95,9 @@ class NotificationSettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.xl),
               // ── Section 3 : Actus & promotions ─────────────────────────
-              _buildSectionHeader(context,
-                  title: 'ACTUS & PROMOTIONS',
-                  titleColor: Theme.of(context).colorScheme.onSurfaceVariant),
-              DonyListSection(
-                title: '',
-                tiles: [
+              const SettingsSectionHeader('ACTUS & PROMOTIONS'),
+              SettingsFlatGroup(
+                children: [
                   _buildTile(context,
                     label: 'Actus dony (Push)',
                     key: 'push_promo',
@@ -118,25 +122,6 @@ class NotificationSettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(
-    BuildContext context, {
-    required String title,
-    Color? titleColor,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: titleColor ??
-                  Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
-      ),
-    );
-  }
-
   Widget _buildLockedTile(
     BuildContext context, {
     required String iconAsset,
@@ -144,31 +129,24 @@ class NotificationSettingsScreen extends StatelessWidget {
     required String subtitle,
   }) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.errorContainer.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-      ),
-      margin: const EdgeInsets.only(bottom: 4),
-      child: DonyListTile(
-        iconAsset: iconAsset,
-        iconColor: cs.error,
-        iconBgColor: cs.errorContainer,
-        label: label,
-        subtitle: subtitle,
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: cs.errorContainer,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            'Toujours actif',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: cs.onErrorContainer,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
+    return DonyListTile(
+      iconAsset: iconAsset,
+      iconColor: cs.error,
+      iconBgColor: cs.errorContainer,
+      label: label,
+      subtitle: subtitle,
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: cs.errorContainer,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          'Toujours actif',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: cs.onErrorContainer,
+                fontWeight: FontWeight.w600,
+              ),
         ),
       ),
     );
