@@ -3,6 +3,9 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -21,6 +24,8 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 
 UserModel _makeUser({String id = 'uid-1'}) => UserModel(
       id: id,
@@ -70,6 +75,7 @@ Widget _wrap(
   Widget child, {
   BidState? bidState,
   AuthState? authState,
+  FavoriteIdsCubit? favCubit,
 }) {
   final bidBloc = _MockBidBloc();
   final authBloc = _MockAuthBloc();
@@ -97,11 +103,15 @@ Widget _wrap(
     ],
   );
 
+  final providers = <BlocProvider>[
+    BlocProvider<BidBloc>.value(value: bidBloc),
+    BlocProvider<AuthBloc>.value(value: authBloc),
+    if (favCubit != null)
+      BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
+  ];
+
   return MultiBlocProvider(
-    providers: [
-      BlocProvider<BidBloc>.value(value: bidBloc),
-      BlocProvider<AuthBloc>.value(value: authBloc),
-    ],
+    providers: providers,
     child: MaterialApp.router(routerConfig: router),
   );
 }
@@ -263,5 +273,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(BottomSheet), findsOneWidget);
+  });
+
+  // ── showFavorite gating ────────────────────────────────────────────────────
+
+  testWidgets(
+      '10 — non-owned card shows FavoriteHeartButton when FavoriteIdsCubit is provided',
+      (tester) async {
+    final repo = _MockFavoriteRepository();
+    final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+    // _ann('a1') has travelerId='traveler-1'; auth user is 'uid-1' → not owner
+    await tester.pumpWidget(_wrap(
+      NearMeCarousel(
+        announcements: [_ann('a1')],
+        userPosition: null,
+        onSeeAll: () {},
+      ),
+      favCubit: cubit,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FavoriteHeartButton), findsOneWidget);
+  });
+
+  testWidgets(
+      '11 — owned card does NOT show FavoriteHeartButton even when FavoriteIdsCubit is provided',
+      (tester) async {
+    final repo = _MockFavoriteRepository();
+    final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+    // _ann with travelerId='uid-1' matches the authenticated user → isOwn=true
+    await tester.pumpWidget(_wrap(
+      NearMeCarousel(
+        announcements: [_ann('a1', travelerId: 'uid-1')],
+        userPosition: null,
+        onSeeAll: () {},
+      ),
+      favCubit: cubit,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FavoriteHeartButton), findsNothing);
   });
 }
