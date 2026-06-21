@@ -219,6 +219,10 @@ Widget _buildTestHarness({
       path: '/trajets-colis',
       builder: (_, __) => const Scaffold(body: Text('TrajetsCoils')),
     ),
+    GoRoute(
+      path: '/mes-colis',
+      builder: (_, __) => const Scaffold(body: Text('MesColis')),
+    ),
   ];
 
   return MaterialApp.router(
@@ -489,7 +493,7 @@ void main() {
     });
 
     testWidgets(
-      'onglet Activité affiche les sections MON ACTIVITÉ et LITIGES',
+      'onglet Activité affiche les sections EN COURS et SUIVI',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -502,7 +506,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 600));
 
-        for (final label in ['MON ACTIVITÉ', 'LITIGES']) {
+        for (final label in ['EN COURS', 'SUIVI']) {
           await tester.scrollUntilVisible(
             find.text(label),
             300,
@@ -787,6 +791,11 @@ void main() {
 
         // Modèle additif : les sections de base sont visibles pour TOUS les utilisateurs,
         // y compris les voyageurs. La tuile hub est ajoutée en plus pour les voyageurs.
+        await tester.scrollUntilVisible(
+          find.text('Mes envois en cours'),
+          300,
+          scrollable: _activityScrollable,
+        );
         expect(
           find.text('Mes envois en cours'),
           findsOneWidget,
@@ -1095,12 +1104,17 @@ void main() {
 
       // Ces labels voyageur ne doivent pas apparaître quand sender.
       expect(find.text('Colis sur mes trajets'), findsNothing);
-      // « Mes négociations » est commun aux deux rôles (section MON ACTIVITÉ)
+      // « Mes négociations » est commun aux deux rôles (section EN COURS)
       // → présent même côté expéditeur.
+      await tester.scrollUntilVisible(
+        find.text('Mes négociations'),
+        300,
+        scrollable: _activityScrollable,
+      );
       expect(find.text('Mes négociations'), findsOneWidget);
     });
 
-    testWidgets('tab Activité sender affiche MON ACTIVITÉ, MON CARNET, LITIGES', (
+    testWidgets('tab Activité sender affiche EN COURS et SUIVI', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -1116,10 +1130,15 @@ void main() {
 
       // Vérifie les entrées des sections sender (plus fiable que les headers
       // dans un NestedScrollView où scrollUntilVisible peut ne pas fonctionner).
+      await tester.scrollUntilVisible(
+        find.text('Mes envois en cours'),
+        300,
+        scrollable: _activityScrollable,
+      );
       expect(
         find.text('Mes envois en cours'),
         findsOneWidget,
-        reason: 'section MON ACTIVITÉ sender absente',
+        reason: 'section EN COURS sender absente',
       );
       await tester.scrollUntilVisible(
         find.text('Mes abonnements'),
@@ -1129,7 +1148,7 @@ void main() {
       expect(
         find.text('Mes abonnements'),
         findsOneWidget,
-        reason: 'section MON CARNET sender absente',
+        reason: 'section SUIVI sender absente (abonnements)',
       );
       await tester.scrollUntilVisible(
         find.text('Mes litiges'),
@@ -1139,7 +1158,7 @@ void main() {
       expect(
         find.text('Mes litiges'),
         findsOneWidget,
-        reason: 'section LITIGES sender absente',
+        reason: 'section SUIVI sender absente (litiges)',
       );
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
@@ -1699,5 +1718,65 @@ void main() {
     await _goToCompteTab(tester);
     expect(find.byType(BecomeTravelerCtaCard), findsNothing);
     await tester.pumpAndSettle(const Duration(seconds: 5));
+  });
+
+  group('onglet Activité réorganisé', () {
+    testWidgets('voyageur : hub "Mes trajets et colis" en section EN COURS',
+        (tester) async {
+      whenListen<AuthState>(authBloc, const Stream.empty(),
+          initialState: AuthAuthenticated(_travelerUser));
+      whenListen<AccountDeletionState>(deletionBloc, const Stream.empty(),
+          initialState: const AccountDeletionInitial());
+      await tester.pumpWidget(_buildTestHarness(
+          authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+          announcementBloc: announcementBloc, referralBloc: referralBloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('EN COURS'), findsOneWidget);
+      expect(find.text('Mes trajets et colis'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('SUIVI'),
+        300,
+        scrollable: _activityScrollable,
+      );
+      expect(find.text('SUIVI'), findsOneWidget);
+      expect(find.text('Mes colis'), findsNothing);
+      expect(find.text('MON CARNET'), findsNothing);
+    });
+
+    testWidgets('expéditeur : hub "Mes colis" en section EN COURS',
+        (tester) async {
+      whenListen<AuthState>(authBloc, const Stream.empty(),
+          initialState: AuthAuthenticated(_activeUser));
+      whenListen<AccountDeletionState>(deletionBloc, const Stream.empty(),
+          initialState: const AccountDeletionInitial());
+      await tester.pumpWidget(_buildTestHarness(
+          authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+          announcementBloc: announcementBloc, referralBloc: referralBloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('Mes colis'), findsOneWidget);
+      expect(find.text('Mes trajets et colis'), findsNothing);
+    });
+
+    testWidgets('section SUIVI contient litiges et abonnements', (tester) async {
+      whenListen<AuthState>(authBloc, const Stream.empty(),
+          initialState: AuthAuthenticated(_travelerUser));
+      whenListen<AccountDeletionState>(deletionBloc, const Stream.empty(),
+          initialState: const AccountDeletionInitial());
+      await tester.pumpWidget(_buildTestHarness(
+          authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+          announcementBloc: announcementBloc, referralBloc: referralBloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final scrollable = find.descendant(
+        of: find.byKey(const Key('profile_activity_tab')),
+        matching: find.byType(Scrollable),
+      );
+      await tester.scrollUntilVisible(find.text('Mes litiges'), 300,
+          scrollable: scrollable);
+      expect(find.text('Mes litiges'), findsOneWidget);
+      expect(find.text('Mes abonnements'), findsOneWidget);
+    });
   });
 }

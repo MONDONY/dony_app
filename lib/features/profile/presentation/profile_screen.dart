@@ -16,6 +16,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/features/profile/presentation/widgets/activity_hub_card.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
@@ -504,7 +505,7 @@ class _ActivityTab extends StatelessWidget {
           const SizedBox(height: DonySpacing.lg),
         ],
 
-        // ── Stats card ──────────────────────────────────────────────────
+        // ── Stats hero (inchangé) ───────────────────────────────────────
         _SectionLabel(
           label: isTraveler ? 'ACTIVITÉ · VOYAGEUR' : 'ACTIVITÉ · EXPÉDITEUR',
           cs: cs,
@@ -521,8 +522,38 @@ class _ActivityTab extends StatelessWidget {
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.xl),
 
-        // Base commune (expéditeur) — toujours visible
-        _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
+        // ── EN COURS ────────────────────────────────────────────────────
+        _SectionLabel(label: 'EN COURS', cs: cs),
+        if (isTraveler)
+          ProfileActivityHubCard(
+                iconAsset: 'plane',
+                title: 'Mes trajets et colis',
+                subtitle: 'Gère tes trajets et colis embarqués',
+                countLabel: upcomingAnnouncements > 0
+                    ? '$upcomingAnnouncements à venir'
+                    : null,
+                onTap: () => context.push(
+                  '/trajets-colis',
+                  extra: (
+                    upcomingCount: upcomingAnnouncements,
+                    isSender: isSender,
+                  ),
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 120.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic)
+        else if (isSender)
+          ProfileActivityHubCard(
+                iconAsset: 'package',
+                title: 'Mes colis',
+                subtitle: 'Suis tes colis et demandes en cours',
+                onTap: () => context.push('/mes-colis'),
+              )
+              .animate()
+              .fadeIn(delay: 120.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        if (isTraveler || isSender) const SizedBox(height: DonySpacing.sm),
         DonyListSection(
               tiles: [
                 DonyListTile(
@@ -552,29 +583,12 @@ class _ActivityTab extends StatelessWidget {
               ],
             )
             .animate()
-            .fadeIn(delay: 140.ms)
+            .fadeIn(delay: 160.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
+        const SizedBox(height: DonySpacing.xl),
 
-        _SectionLabel(label: 'MON CARNET', cs: cs),
-        DonyListSection(
-              tiles: [
-                DonyListTile(
-                  iconAsset: 'bell',
-                  iconColor: cs.tertiary,
-                  iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
-                  label: 'Mes abonnements',
-                  showDivider: false,
-                  onTap: () => context.push('/profile/subscriptions'),
-                ),
-              ],
-            )
-            .animate()
-            .fadeIn(delay: 180.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.lg),
-
-        _SectionLabel(label: 'LITIGES', cs: cs),
+        // ── SUIVI (litiges + abonnements) ───────────────────────────────
+        _SectionLabel(label: 'SUIVI', cs: cs),
         DonyListSection(
               tiles: [
                 DonyListTile(
@@ -582,67 +596,23 @@ class _ActivityTab extends StatelessWidget {
                   iconColor: cs.error,
                   iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
                   label: 'Mes litiges',
-                  showDivider: false,
+                  subtitle: 'Suivi de vos litiges',
                   onTap: () => context.push('/disputes'),
+                ),
+                DonyListTile(
+                  iconAsset: 'bell',
+                  iconColor: cs.tertiary,
+                  iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
+                  label: 'Mes abonnements',
+                  subtitle: 'Alertes corridors et voyageurs',
+                  showDivider: false,
+                  onTap: () => context.push('/profile/subscriptions'),
                 ),
               ],
             )
             .animate()
-            .fadeIn(delay: 240.ms)
+            .fadeIn(delay: 200.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.xl),
-
-        // Hub activité — role-aware
-        if (isTraveler) ...[
-          DonyListSection(
-                tiles: [
-                  DonyListTile(
-                    iconAsset: 'plane',
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'Mes trajets et colis',
-                    showDivider: false,
-                    trailing: upcomingAnnouncements > 0
-                        ? Text(
-                            '$upcomingAnnouncements à venir',
-                            style: tt.labelMedium?.copyWith(
-                              color: cs.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          )
-                        : null,
-                    onTap: () => context.push(
-                      '/trajets-colis',
-                      extra: (
-                        upcomingCount: upcomingAnnouncements,
-                        isSender: isSender,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 140.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          const SizedBox(height: DonySpacing.xl),
-        ] else if (isSender) ...[
-          DonyListSection(
-                tiles: [
-                  DonyListTile(
-                    iconAsset: 'package',
-                    iconColor: cs.secondary,
-                    iconBgColor: cs.secondaryContainer,
-                    label: 'Mes colis',
-                    showDivider: false,
-                    onTap: () => context.push('/mes-colis'),
-                  ),
-                ],
-              )
-              .animate()
-              .fadeIn(delay: 140.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          const SizedBox(height: DonySpacing.xl),
-        ],
       ],
     );
   }
