@@ -554,7 +554,7 @@ void main() {
           await tester.pump(const Duration(milliseconds: 100));
           expect(
             find.text(label),
-            findsAtLeastNWidgets(1),
+            findsOneWidget,
             reason: 'Section "$label" manquante dans Compte',
           );
         }
