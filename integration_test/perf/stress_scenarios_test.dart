@@ -40,7 +40,7 @@ import 'perf_harness.dart';
 /// renders in a standalone MaterialApp. [FavoriteIdsCubit] is absent from the
 /// tree; TripCard.showFavorite defaults to false so no cubit is needed.
 AnnouncementModel _fakeAnnouncement(int index) {
-  final now = DateTime(2026, 6, 22);
+  final now = DateTime.now();
   return AnnouncementModel(
     id: 'stress-$index',
     travelerId: 'traveler-$index',
@@ -98,14 +98,14 @@ Future<void> main() async {
         final scrollable = find.byType(Scrollable).first;
         for (var i = 0; i < 8; i++) {
           await tester.fling(scrollable, const Offset(0, -600), 3000);
-          await tester.pumpAndSettle();
+          await tester.pump(const Duration(milliseconds: 300));
           await tester.fling(scrollable, const Offset(0, 600), 3000);
-          await tester.pumpAndSettle();
+          await tester.pump(const Duration(milliseconds: 300));
         }
       },
       reportKey: scenario,
     );
-    // No network in this pure-widget scenario — dumpNetwork skipped.
+    await dumpNetwork(scenario);
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -170,7 +170,7 @@ Future<void> main() async {
       },
       reportKey: scenario,
     );
-    // No network in this pure-widget scenario — dumpNetwork skipped.
+    await dumpNetwork(scenario);
 
     positionNotifier.dispose();
   });
