@@ -114,8 +114,30 @@ void main(List<String> args) {
     }
   }
 
+  // Write waterfall findings to reports/waterfall-report.md.
+  final reportsDir = Directory('reports')..createSync(recursive: true);
+  final reportFile = File('${reportsDir.path}/waterfall-report.md');
+  final buffer = StringBuffer();
+  buffer.writeln('# Waterfall Report');
+  buffer.writeln();
+  buffer.writeln('Generated: ${DateTime.now().toIso8601String()}');
+  buffer.writeln();
+  if (allFindings.isEmpty) {
+    buffer.writeln('No waterfall chains detected across ${rawFiles.length} scenario(s).');
+  } else {
+    buffer.writeln('## Waterfalls');
+    buffer.writeln();
+    for (final finding in allFindings) {
+      buffer.writeln('- $finding');
+    }
+    buffer.writeln();
+    buffer.writeln('**${allFindings.length} waterfall finding(s) found.**');
+  }
+  reportFile.writeAsStringSync(buffer.toString());
+  print('\nReport written to ${reportFile.path}');
+
   if (allFindings.isNotEmpty) {
-    print('\n${allFindings.length} waterfall finding(s) found.');
+    print('${allFindings.length} waterfall finding(s) found.');
     exitCode = 1;
   }
 }

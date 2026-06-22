@@ -70,4 +70,8 @@ class NetworkMetricsCollector {
   }
 
   Map<String, dynamic> toJson() => {'endpoints': aggregate().map((e) => e.toJson()).toList()};
+
+  List<Map<String, dynamic>> rawSamplesJson() => _samples
+      .map((s) => {'path': normalizePath(s.path), 'startTsMs': s.startTsMs, 'durationMs': s.durationMs})
+      .toList();
 }

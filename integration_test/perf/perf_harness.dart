@@ -133,13 +133,18 @@ Future<void> fling(
 }
 
 /// Sérialise les métriques réseau du scénario [scenario] dans
-/// `build/perf/network-{scenario}.json` puis vide le collector.
+/// `build/perf/network-{scenario}.json` et les samples bruts dans
+/// `build/perf/raw-{scenario}.json`, puis vide le collector.
 ///
 /// Utilise MetricsInterceptor.globalCollector (NetworkMetricsCollector).
 Future<void> dumpNetwork(String scenario) async {
-  final json = MetricsInterceptor.globalCollector.toJson();
+  final collector = MetricsInterceptor.globalCollector;
+  final json = collector.toJson();
+  final rawSamples = collector.rawSamplesJson();
   final dir = Directory('build/perf')..createSync(recursive: true);
   File('${dir.path}/network-$scenario.json')
       .writeAsStringSync(jsonEncode(json));
-  MetricsInterceptor.globalCollector.clear();
+  File('${dir.path}/raw-$scenario.json')
+      .writeAsStringSync(jsonEncode(rawSamples));
+  collector.clear();
 }

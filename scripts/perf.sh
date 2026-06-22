@@ -33,8 +33,12 @@ echo "--- [3/4] Parse timeline + FPS report ---"
 dart run tool/parse_timeline.dart
 
 echo ""
-echo "--- [4/4] Network audit report ---"
+echo "--- [4/5] Network audit report ---"
 dart run tool/network_audit.dart
 
 echo ""
-echo "Rapports: reports/perf-report.md, reports/network-report.md"
+echo "--- [5/5] Waterfall detection ---"
+dart run tool/waterfall.dart
+
+echo ""
+echo "Rapports: reports/perf-report.md, reports/network-report.md, reports/waterfall-report.md"
