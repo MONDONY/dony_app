@@ -18,5 +18,11 @@ Future<void> main() async {
         reason: 'Encore sur l\'écran PIN — boot non terminé');
     expect(find.textContaining('méthode'), findsNothing,
         reason: 'Sur l\'écran de connexion — session perdue ?');
+    // Assertion POSITIVE : le home est réellement rendu (sinon un écran blanc
+    // ou un crash au boot passerait les deux findsNothing ci-dessus).
+    final atHome = find.byTooltip('Options').evaluate().isNotEmpty ||
+        find.text('Rechercher').evaluate().isNotEmpty;
+    expect(atHome, isTrue,
+        reason: 'Home non atteint (écran blanc / crash au boot ?)');
   });
 }

@@ -151,6 +151,13 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
       return;
     }
 
+    // E2E_SKIP_BIOMETRIC (dart-define, jamais en release) : ne déclenche pas le
+    // prompt biométrique natif si l'event est reçu pendant un test (sinon le
+    // dialogue système non annulable bloque le harness integration_test).
+    if (const bool.fromEnvironment('E2E_SKIP_BIOMETRIC')) {
+      return;
+    }
+
     final success = await _service.authenticateWithBiometric();
     if (success && !emit.isDone) {
       await _resetAttemptsAndPersist();

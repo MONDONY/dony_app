@@ -95,19 +95,23 @@ Future<void> bootToHome(WidgetTester tester) async {
   _appLaunched = true;
 
   final originalHandler = FlutterError.onError;
-  app.main();
+  try {
+    app.main();
 
-  // Attente active : écran PIN ou home (même tolérance que app_driver.dart : ~45 s).
-  await _pumpUntil(
-    tester,
-    () =>
-        find.text('Saisissez votre code PIN').evaluate().isNotEmpty ||
-        find.byTooltip('Options').evaluate().isNotEmpty ||
-        find.text('Rechercher').evaluate().isNotEmpty,
-    maxIterations: 90, // ~45 s
-  );
-
-  FlutterError.onError = originalHandler;
+    // Attente active : écran PIN ou home (même tolérance que app_driver.dart : ~45 s).
+    await _pumpUntil(
+      tester,
+      () =>
+          find.text('Saisissez votre code PIN').evaluate().isNotEmpty ||
+          find.byTooltip('Options').evaluate().isNotEmpty ||
+          find.text('Rechercher').evaluate().isNotEmpty,
+      maxIterations: 90, // ~45 s
+    );
+  } finally {
+    // Garantit le restore même si app.main()/_pumpUntil lève (sinon onError
+    // reste écrasé pour la suite du run).
+    FlutterError.onError = originalHandler;
+  }
   tester.takeException();
 
   await _handlePinIfPresent(tester);
