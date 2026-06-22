@@ -1,4 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -13,14 +16,23 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
-Widget _wrap(Widget child) {
+class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
+
+Widget _wrap(Widget child, {FavoriteIdsCubit? favCubit}) {
   final bidBloc = _MockBidBloc();
   when(() => bidBloc.state).thenReturn(BidInitial());
   when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
-  return BlocProvider<BidBloc>.value(
+  final inner = BlocProvider<BidBloc>.value(
     value: bidBloc,
     child: MaterialApp(home: Scaffold(body: child)),
   );
+  if (favCubit != null) {
+    return BlocProvider<FavoriteIdsCubit>.value(
+      value: favCubit,
+      child: inner,
+    );
+  }
+  return inner;
 }
 
 AnnouncementModel _ann(String id, String dep, String arr) => AnnouncementModel(
@@ -82,5 +94,45 @@ void main() {
     await tester.tap(find.text('Sékou Ba'));
     await tester.pumpAndSettle();
     expect(tappedId, isNull);
+  });
+
+  // ── showFavorite gating ────────────────────────────────────────────────────
+
+  testWidgets(
+      'non-owned card shows FavoriteHeartButton when FavoriteIdsCubit is provided',
+      (tester) async {
+    final repo = _MockFavoriteRepository();
+    final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+    final list = [_ann('a1', 'Paris', 'Dakar')]; // travelerId == 't1'
+    await tester.pumpWidget(_wrap(
+      SameAddressAnnouncementsSheet(
+        addressLabel: 'X',
+        announcements: list,
+        currentUserId: 'other-user', // not the owner → showFavorite: true
+        onTap: (_) {},
+      ),
+      favCubit: cubit,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byType(FavoriteHeartButton), findsOneWidget);
+  });
+
+  testWidgets(
+      'owned card does NOT show FavoriteHeartButton even when FavoriteIdsCubit is provided',
+      (tester) async {
+    final repo = _MockFavoriteRepository();
+    final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+    final list = [_ann('a1', 'Paris', 'Dakar')]; // travelerId == 't1'
+    await tester.pumpWidget(_wrap(
+      SameAddressAnnouncementsSheet(
+        addressLabel: 'X',
+        announcements: list,
+        currentUserId: 't1', // matches travelerId → isOwn=true → showFavorite:false
+        onTap: (_) {},
+      ),
+      favCubit: cubit,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byType(FavoriteHeartButton), findsNothing);
   });
 }

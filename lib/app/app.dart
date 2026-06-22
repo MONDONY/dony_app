@@ -8,6 +8,8 @@ import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/favorites_migration.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
@@ -163,11 +165,27 @@ class _DonyAppState extends State<DonyApp> {
                 BlocProvider<StripeAccountBloc>(
                   create: (_) => getIt<StripeAccountBloc>(),
                 ),
+                // Global FavoriteIdsCubit — provides heart buttons across all screens.
+                // load() is triggered after AuthAuthenticated so it only hits the API
+                // when the user is logged in. The cubit swallows errors silently.
+                BlocProvider<FavoriteIdsCubit>.value(
+                  value: getIt<FavoriteIdsCubit>(),
+                ),
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
                   if (state is AuthAuthenticated) {
                     context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+                    // One-shot migration: push legacy Hive-saved trips to server,
+                    // then reload favorites so migrated items appear immediately.
+                    // Capture cubit ref before the async gap to avoid
+                    // use_build_context_synchronously lint.
+                    final favCubit = context.read<FavoriteIdsCubit>();
+                    unawaited(
+                      getIt<FavoritesMigration>()
+                          .run()
+                          .then((_) => favCubit.load()),
+                    );
                     // Réconciliation de la préférence contactKycOnly depuis le backend
                     // vers le cache Hive local (utile en cas de changement sur un autre appareil).
                     unawaited(

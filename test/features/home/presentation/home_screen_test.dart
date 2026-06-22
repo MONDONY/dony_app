@@ -8,6 +8,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -51,6 +52,9 @@ class _FakeBidEvent extends Fake implements BidEvent {}
 
 class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
+
+class MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
+    implements FavoriteIdsCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
 
@@ -128,6 +132,21 @@ AnnouncementModel _makeAnn({String id = 'a1', String travelerId = 'traveler-1'})
       updatedAt: DateTime(2026, 5, 1),
     );
 
+MockFavoriteIdsCubit _makeFavCubit({int count = 0}) {
+  final cubit = MockFavoriteIdsCubit();
+  final trips = count > 0
+      ? Set<String>.from(List.generate(count, (i) => 'trip-$i'))
+      : <String>{};
+  when(() => cubit.state).thenReturn(FavoriteIdsState(trips, {}));
+  when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => cubit.count).thenReturn(count);
+  when(() => cubit.isTripFav(any())).thenReturn(false);
+  when(() => cubit.isRequestFav(any())).thenReturn(false);
+  when(() => cubit.toggleTrip(any())).thenAnswer((_) async {});
+  when(() => cubit.toggleRequest(any())).thenAnswer((_) async {});
+  return cubit;
+}
+
 Widget _buildHome({
   AnnouncementState? announcementState,
   ActiveRole role = ActiveRole.sender,
@@ -135,12 +154,14 @@ Widget _buildHome({
   BidState? bidState,
   NotificationState? notificationState,
   MockBidBloc? bidBloc,
+  MockFavoriteIdsCubit? favCubit,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
   final roleCubit = MockActiveRoleCubit();
   final notifBloc = MockNotificationBloc();
   final effectiveBidBloc = bidBloc ?? MockBidBloc();
+  final effectiveFavCubit = favCubit ?? _makeFavCubit();
 
   when(
     () => announcementBloc.state,
@@ -164,6 +185,7 @@ Widget _buildHome({
       BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: effectiveBidBloc),
+      BlocProvider<FavoriteIdsCubit>.value(value: effectiveFavCubit),
     ],
     child: MaterialApp(
       theme: AppTheme.light,
@@ -213,6 +235,7 @@ Widget _buildHomeRouter({
       BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: bidBloc),
+      BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
     ],
     child: const HomeScreen(),
   );
@@ -525,6 +548,121 @@ void main() {
         ).called(1);
       },
     );
+  });
+
+  group('HomeScreen — _FavoritesButton', () {
+    testWidgets('renders favorites button in the overlay', (tester) async {
+      await tester.pumpWidget(_buildHome());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('favorites-button')), findsOneWidget);
+    });
+
+    testWidgets('no badge when favorites count is 0', (tester) async {
+      await tester.pumpWidget(_buildHome(favCubit: _makeFavCubit(count: 0)));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('favorites-badge')), findsNothing);
+    });
+
+    testWidgets('shows badge with count when favorites count > 0',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(favCubit: _makeFavCubit(count: 3)));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('favorites-badge')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('favorites-badge')),
+          matching: find.text('3'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows 99+ badge when count exceeds 99', (tester) async {
+      await tester.pumpWidget(_buildHome(favCubit: _makeFavCubit(count: 120)));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('favorites-badge')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('favorites-badge')),
+          matching: find.text('99+'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tap navigates to /favoris via GoRouter', (tester) async {
+      final visited = <String>[];
+      final favCubit = _makeFavCubit(count: 2);
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      final roleCubit = MockActiveRoleCubit();
+      final notifBloc = MockNotificationBloc();
+      final bidBloc = MockBidBloc();
+
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(() => announcementBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
+      when(() => authBloc.state)
+          .thenReturn(AuthAuthenticated(_makeUser()));
+      when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+      when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+      when(() => notifBloc.state).thenReturn(const NotificationInitial());
+      when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => bidBloc.state).thenReturn(BidInitial());
+      when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+      final providers = MultiBlocProvider(
+        providers: [
+          BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+          BlocProvider<NotificationBloc>.value(value: notifBloc),
+          BlocProvider<BidBloc>.value(value: bidBloc),
+          BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
+        ],
+        child: const HomeScreen(),
+      );
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => providers),
+          GoRoute(
+            path: '/favoris',
+            builder: (_, _) {
+              visited.add('/favoris');
+              return const Scaffold(body: Text('STUB_FAVORIS'));
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('fr'), Locale('en')],
+          locale: const Locale('fr'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('favorites-button')));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/favoris'));
+      expect(find.text('STUB_FAVORIS'), findsOneWidget);
+    });
   });
 
   group('HomeScreen — Traveler view', () {

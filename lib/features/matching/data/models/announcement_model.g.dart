@@ -92,6 +92,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
   handoverWindowEnd: json['handoverWindowEnd'] == null
       ? null
       : DateTime.parse(json['handoverWindowEnd'] as String),
+  isFavorite: json['isFavorite'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -135,6 +136,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'surplusPublished': instance.surplusPublished,
       'handoverWindowStart': instance.handoverWindowStart?.toIso8601String(),
       'handoverWindowEnd': instance.handoverWindowEnd?.toIso8601String(),
+      'isFavorite': instance.isFavorite,
     };
 
 const _$BidPaymentMethodEnumMap = {

@@ -166,6 +166,11 @@ class AnnouncementModel {
   final DateTime? handoverWindowStart;
   final DateTime? handoverWindowEnd;
 
+  /// Indique si ce trajet est dans les favoris de l'utilisateur courant.
+  /// Fourni par le backend sur les endpoints de feed ; `false` par défaut.
+  @JsonKey(defaultValue: false)
+  final bool isFavorite;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -204,6 +209,7 @@ class AnnouncementModel {
     this.surplusPublished = false,
     this.handoverWindowStart,
     this.handoverWindowEnd,
+    this.isFavorite = false,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

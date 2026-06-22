@@ -365,6 +365,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `corridor_alert_deleted` | CorridorAlertListBloc._onDelete — suppression d'une alerte corridor |
 | `corridor_alert_created` | CorridorAlertFormCubit.submit() — création d'une alerte corridor |
 | `corridor_alert_updated` | CorridorAlertFormCubit.submit() — édition d'une alerte corridor |
+| `favorites_opened` | FavoritesScreen.initState — ouverture du hub favoris |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

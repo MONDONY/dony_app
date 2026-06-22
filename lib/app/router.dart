@@ -1,5 +1,8 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
+import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
+import 'package:dony/features/favorites/presentation/favorites_screen.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -1043,6 +1046,18 @@ final appRouter = GoRouter(
           ),
         ),
       ],
+    ),
+
+    // ── Mes favoris (hors shell) ─────────────────────────────────────────
+    GoRoute(
+      path: '/favoris',
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<FavoriteTripsCubit>()),
+          BlocProvider(create: (_) => getIt<FavoriteRequestsCubit>()),
+        ],
+        child: const FavoritesScreen(),
+      ),
     ),
 
     // ── Shell principal avec Bottom Navigation ───────────────────────────

@@ -1,5 +1,7 @@
 import 'package:dony/core/constants/cities.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -68,6 +70,8 @@ class RouteBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final items = _filtered;
+    final auth = context.read<AuthBloc>().state;
+    final currentUserId = auth is AuthAuthenticated ? auth.user.id : null;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.8,
@@ -144,12 +148,15 @@ class RouteBottomSheet extends StatelessWidget {
                               const SizedBox(height: DonySpacing.md),
                           itemBuilder: (_, i) {
                             final ann = items[i];
+                            final isOwn = currentUserId != null &&
+                                ann.travelerId == currentUserId;
                             final existingBid = activeBids[ann.id];
                             return TravelerCard(
                               key: Key('traveler-card-${ann.id}'),
                               announcement: ann,
                               index: i,
-                              isOwnAnnouncement: false,
+                              isOwnAnnouncement: isOwn,
+                              showFavorite: !isOwn,
                               existingBidStatus: existingBid?.status,
                               onTap: existingBid != null
                                   ? () {

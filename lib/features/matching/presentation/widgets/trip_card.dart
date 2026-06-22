@@ -1,10 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -26,11 +29,21 @@ class TripCard extends StatelessWidget {
     required this.announcement,
     required this.onTap,
     required this.index,
+    this.showFavorite = false,
   });
 
   final AnnouncementModel announcement;
   final VoidCallback onTap;
   final int index;
+
+  /// When true, renders a heart button in the header row.
+  /// Requires a [FavoriteIdsCubit] to be in the widget tree; if absent the
+  /// heart is silently omitted (defensive read — never crashes).
+  ///
+  /// Caller is responsible for NOT passing true on items owned by the current
+  /// user. The in-card heart has no owner guard; the backend returns 422 on an
+  /// own-trip add, but the optimistic UI would flash before the error arrives.
+  final bool showFavorite;
 
   bool get _isPast =>
       announcement.status == 'COMPLETED' ||
@@ -147,6 +160,7 @@ class TripCard extends StatelessWidget {
                 kg: _kg,
                 price: _price,
                 dateLabel: _dateLabel(),
+                showFavorite: showFavorite,
               )
             : _ActiveCardContent(
                 announcement: announcement,
@@ -160,6 +174,7 @@ class TripCard extends StatelessWidget {
                 dateLabel: _dateLabel(),
                 kg: _kg,
                 price: _price,
+                showFavorite: showFavorite,
               ),
       ),
     );
@@ -173,6 +188,43 @@ class TripCard extends StatelessWidget {
         .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
         .slideY(begin: 0.04, duration: 300.ms, curve: Curves.easeOutCubic);
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Shared helper — defensive favorite heart
+// ─────────────────────────────────────────────────────────────
+
+/// Renders a [FavoriteHeartButton] driven by [FavoriteIdsCubit].
+/// Silently returns [SizedBox.shrink] if no cubit is in the tree —
+/// so the card never crashes when rendered outside a cubit provider.
+Widget _buildFavoriteHeart(BuildContext context, String tripId) {
+  FavoriteIdsCubit? cubit;
+  try {
+    cubit = context.read<FavoriteIdsCubit>();
+  } catch (_) {
+    // No FavoriteIdsCubit in the tree — render nothing.
+    return const SizedBox.shrink();
+  }
+  final c = cubit;
+  return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+    bloc: c,
+    builder: (ctx, _) => FavoriteHeartButton(
+      isFavorite: c.isTripFav(tripId),
+      onToggle: () async {
+        try {
+          await c.toggleTrip(tripId);
+        } catch (_) {
+          if (ctx.mounted) {
+            DonySnackbar.show(
+              ctx,
+              message: 'Action impossible, réessaie',
+              type: DonySnackbarType.error,
+            );
+          }
+        }
+      },
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -192,6 +244,7 @@ class _ActiveCardContent extends StatelessWidget {
     required this.dateLabel,
     required this.kg,
     required this.price,
+    required this.showFavorite,
   });
 
   final AnnouncementModel announcement;
@@ -205,6 +258,7 @@ class _ActiveCardContent extends StatelessWidget {
   final String dateLabel;
   final String Function(double) kg;
   final String Function(double) price;
+  final bool showFavorite;
 
   /// Builds the optional « demandes » stats row (acceptées / en attente).
   /// Returns an empty list when both counts are 0 so the card stays clean and
@@ -255,7 +309,7 @@ class _ActiveCardContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Header row: route title + badge ──
+          // ── Header row: route title + badge + optional heart ──
           Row(
             children: [
               Expanded(
@@ -266,6 +320,10 @@ class _ActiveCardContent extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               _StatusBadge(badge: badge),
+              if (showFavorite) ...[
+                const SizedBox(width: DonySpacing.xs),
+                _buildFavoriteHeart(context, announcement.id),
+              ],
             ],
           ),
 
@@ -373,6 +431,7 @@ class _PastCardContent extends StatelessWidget {
     required this.kg,
     required this.price,
     required this.dateLabel,
+    required this.showFavorite,
   });
 
   final AnnouncementModel announcement;
@@ -381,6 +440,7 @@ class _PastCardContent extends StatelessWidget {
   final String Function(double) kg;
   final String Function(double) price;
   final String dateLabel;
+  final bool showFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -444,6 +504,10 @@ class _PastCardContent extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.sm),
           _StatusBadge(badge: badge),
+          if (showFavorite) ...[
+            const SizedBox(width: DonySpacing.xs),
+            _buildFavoriteHeart(context, announcement.id),
+          ],
         ],
       ),
     );

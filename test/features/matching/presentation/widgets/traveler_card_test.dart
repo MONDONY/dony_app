@@ -1,9 +1,17 @@
+import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 
 AnnouncementModel _makeAnn({
   String departureCity = 'Paris',
@@ -329,6 +337,161 @@ void main() {
       )));
       await tester.pumpAndSettle();
       expect(find.byKey(chipKey), findsNothing);
+    });
+  });
+
+  // ── showFavorite ────────────────────────────────────────────────────────────
+
+  group('TravelerCard – showFavorite', () {
+    testWidgets(
+        'showFavorite=false (défaut) : aucun FavoriteHeartButton affiché',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+    });
+
+    testWidgets(
+        'showFavorite=true sans cubit dans l\'arbre : dégradation silencieuse (pas de crash)',
+        (tester) async {
+      // No FavoriteIdsCubit provided — defensive read must not crash.
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+        showFavorite: true,
+      )));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+    });
+
+    testWidgets(
+        'showFavorite=true avec cubit : FavoriteHeartButton affiché non-favori',
+        (tester) async {
+      final repo = _MockFavoriteRepository();
+      final cubit = FavoriteIdsCubit(repo)
+        ..emitSeed(trips: {}, requests: {});
+
+      await tester.pumpWidget(
+        BlocProvider<FavoriteIdsCubit>.value(
+          value: cubit,
+          child: _wrap(TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+            showFavorite: true,
+          )),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FavoriteHeartButton), findsOneWidget);
+      final icons = find.descendant(
+        of: find.byType(FavoriteHeartButton),
+        matching: find.byType(Icon),
+      );
+      final icon = tester.widget<Icon>(icons.first);
+      expect(icon.icon, Icons.favorite_border);
+    });
+
+    testWidgets(
+        'showFavorite=true avec cubit seeded favori : cœur rempli',
+        (tester) async {
+      final repo = _MockFavoriteRepository();
+      // 'a1' is the id used in _makeAnn()
+      final cubit = FavoriteIdsCubit(repo)
+        ..emitSeed(trips: {'a1'}, requests: {});
+
+      await tester.pumpWidget(
+        BlocProvider<FavoriteIdsCubit>.value(
+          value: cubit,
+          child: _wrap(TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+            showFavorite: true,
+          )),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FavoriteHeartButton), findsOneWidget);
+      final icons = find.descendant(
+        of: find.byType(FavoriteHeartButton),
+        matching: find.byType(Icon),
+      );
+      final icon = tester.widget<Icon>(icons.first);
+      expect(icon.icon, Icons.favorite);
+      expect(icon.color, DonyColors.favorite);
+    });
+
+    testWidgets(
+        'showFavorite=true : tap cœur appelle toggleTrip sur l\'id de l\'annonce',
+        (tester) async {
+      final repo = _MockFavoriteRepository();
+      when(() => repo.add(any(), any())).thenAnswer((_) async {});
+
+      final cubit = FavoriteIdsCubit(repo)
+        ..emitSeed(trips: {}, requests: {});
+
+      await tester.pumpWidget(
+        BlocProvider<FavoriteIdsCubit>.value(
+          value: cubit,
+          child: _wrap(TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+            showFavorite: true,
+          )),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FavoriteHeartButton));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // 'a1' is the announcement id from _makeAnn()
+      expect(cubit.isTripFav('a1'), isTrue);
+      verify(() => repo.add('trip', 'a1')).called(1);
+    });
+
+    testWidgets(
+        'isOwnAnnouncement=true : même avec showFavorite=true (défense en amont), le cœur est rendu — owner guard est la responsabilité de l\'appelant',
+        (tester) async {
+      // The card itself has no owner guard; the caller must pass showFavorite:false
+      // for own announcements. This test documents/verifies the card renders the
+      // heart when showFavorite=true regardless of ownership.
+      final repo = _MockFavoriteRepository();
+      final cubit = FavoriteIdsCubit(repo)
+        ..emitSeed(trips: {}, requests: {});
+
+      await tester.pumpWidget(
+        BlocProvider<FavoriteIdsCubit>.value(
+          value: cubit,
+          child: _wrap(TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: true,
+            onTap: () {},
+            showFavorite: true,
+          )),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Card renders the heart — owner guard is caller's responsibility
+      expect(find.byType(FavoriteHeartButton), findsOneWidget);
     });
   });
 }
