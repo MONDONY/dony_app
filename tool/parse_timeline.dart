@@ -1,9 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:convert';
 import 'dart:io';
-
-const _avgGood = 8.0, _avgWarn = 12.0, _worstGood = 16.67, _worstWarn = 33.0;
-const _jankGood = 0.01, _jankWarn = 0.05;
+import 'package:dony/core/perf/perf_thresholds.dart';
 
 String verdictFor(Map<String, dynamic> s) {
   double d(String k) => (s[k] as num?)?.toDouble() ?? 0;
@@ -12,18 +10,18 @@ String verdictFor(Map<String, dynamic> s) {
   final jankRaster = (s['missed_frame_rasterizer_budget_count'] as num? ?? 0) / frames;
   bool fail(double v, double warn) => v > warn;
   bool warnL(double v, double good) => v > good;
-  if (fail(d('average_frame_build_time_millis'), _avgWarn) ||
-      fail(d('worst_frame_build_time_millis'), _worstWarn) ||
-      jankBuild > _jankWarn ||
-      jankRaster > _jankWarn ||
-      fail(d('average_frame_rasterizer_time_millis'), _avgWarn)) {
+  if (fail(d('average_frame_build_time_millis'), kAvgBuildWarn) ||
+      fail(d('worst_frame_build_time_millis'), kWorstBuildWarn) ||
+      jankBuild > kJankPctWarn ||
+      jankRaster > kJankRasterWarn ||
+      fail(d('average_frame_rasterizer_time_millis'), kAvgRasterWarn)) {
     return 'FAIL';
   }
-  if (warnL(d('average_frame_build_time_millis'), _avgGood) ||
-      warnL(d('worst_frame_build_time_millis'), _worstGood) ||
-      jankBuild > _jankGood ||
-      jankRaster > _jankGood ||
-      warnL(d('average_frame_rasterizer_time_millis'), _avgGood)) {
+  if (warnL(d('average_frame_build_time_millis'), kAvgBuildGood) ||
+      warnL(d('worst_frame_build_time_millis'), kWorstBuildGood) ||
+      jankBuild > kJankPctGood ||
+      jankRaster > kJankRasterGood ||
+      warnL(d('average_frame_rasterizer_time_millis'), kAvgRasterGood)) {
     return 'WARN';
   }
   return 'PASS';
