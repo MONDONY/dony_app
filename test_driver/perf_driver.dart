@@ -10,15 +10,17 @@
 //     --dart-define-from-file=env.dev.json \
 //     --profile
 //
-// Pour chaque scénario la shape de reportData est :
-//   { '<scenario>': { 'timeline': Map<String,dynamic>, 'summary': Map<String,dynamic> } }
-// Le test y écrit le résultat via binding.traceAction(reportKey: scenario) ;
-// le driver lit cette map et produit :
+// Shape de reportData produite par traceAction(reportKey: scenario) :
+//   binding.reportData[scenario] = <raw timeline Map> (traceEvents, etc.)
+//
+// Le driver calcule lui-même le résumé via Timeline + TimelineSummary
+// (disponibles uniquement côté host via package:flutter_driver) et produit :
 //   build/perf/<scenario>.timeline.json
 //   build/perf/<scenario>.summary.json
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter_driver/flutter_driver.dart';
 import 'package:integration_test/integration_test_driver.dart';
 
 Future<void> main() => integrationDriver(
@@ -30,19 +32,20 @@ Future<void> main() => integrationDriver(
         for (final entry in data.entries) {
           final scenario = entry.key;
           final value = entry.value;
-          if (value is Map) {
-            final m = Map<String, dynamic>.from(value);
-            final timeline = m['timeline'];
-            final summary = m['summary'];
-            if (timeline != null) {
-              File('${dir.path}/$scenario.timeline.json')
-                  .writeAsStringSync(jsonEncode(timeline));
-            }
-            if (summary != null) {
-              File('${dir.path}/$scenario.summary.json')
-                  .writeAsStringSync(jsonEncode(summary));
-            }
+          // traceAction stores the raw timeline map; skip non-map entries
+          // (e.g. network dump keys written by dumpNetwork()).
+          if (value is! Map<String, dynamic>) {
+            continue;
           }
+          // Write raw timeline.
+          File('${dir.path}/$scenario.timeline.json')
+              .writeAsStringSync(jsonEncode(value));
+          // Compute summary on the host side where Timeline/TimelineSummary
+          // are available. This produces average_frame_build_time_millis etc.
+          final timeline = Timeline.fromJson(value);
+          final summary = TimelineSummary.summarize(timeline);
+          File('${dir.path}/$scenario.summary.json')
+              .writeAsStringSync(jsonEncode(summary.summaryJson));
         }
       },
     );
