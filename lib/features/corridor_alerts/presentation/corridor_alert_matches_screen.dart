@@ -69,7 +69,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Modifier l\'alerte',
-            icon: DonyIcon('pen', size: 22, color: cs.primary),
+            icon: DonyIcon('square-pen', size: 22, color: cs.primary),
             onPressed: () => CorridorAlertFormSheet.show(
               context,
               alert: alert,

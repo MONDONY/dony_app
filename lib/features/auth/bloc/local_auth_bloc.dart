@@ -114,7 +114,12 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
             as bool;
     final biometricAvailable = await _service.isBiometricAvailable();
 
-    if (biometricAvailable && appLockEnabled) {
+    // E2E_SKIP_BIOMETRIC (dart-define, jamais en release) : saute le prompt
+    // biométrique natif pour que le keypad PIN s'affiche direct dans les tests
+    // integration_test (qui ne peuvent pas annuler un dialogue système natif).
+    if (biometricAvailable &&
+        appLockEnabled &&
+        !const bool.fromEnvironment('E2E_SKIP_BIOMETRIC')) {
       final success = await _service.authenticateWithBiometric();
       if (!isClosed && !emit.isDone) {
         if (success) {
@@ -143,6 +148,13 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
         _userPrefs.get(HiveService.kAppLockBiometric, defaultValue: true)
             as bool;
     if (!appLockEnabled) {
+      return;
+    }
+
+    // E2E_SKIP_BIOMETRIC (dart-define, jamais en release) : ne déclenche pas le
+    // prompt biométrique natif si l'event est reçu pendant un test (sinon le
+    // dialogue système non annulable bloque le harness integration_test).
+    if (const bool.fromEnvironment('E2E_SKIP_BIOMETRIC')) {
       return;
     }
 

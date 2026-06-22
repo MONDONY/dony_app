@@ -1,0 +1,164 @@
+// ignore_for_file: avoid_print
+import 'dart:io';
+
+class Finding {
+  final String file;
+  final int line;
+  final String rule;
+  final String severity;
+  final String message;
+
+  const Finding({
+    required this.file,
+    required this.line,
+    required this.rule,
+    required this.severity,
+    required this.message,
+  });
+
+  @override
+  String toString() => '$file:$line [$severity] $rule — $message';
+}
+
+/// Heuristic patterns for network anti-patterns.
+final _imageNetworkRe = RegExp(r'Image\.network\(');
+final _dioVerbRe = RegExp(r'\.dio\.(get|post|put|delete|patch)\(');
+final _loopOpenRe = RegExp(r'(for\s*\(|\.map\(|\.forEach\(|while\s*\()');
+final _initStateRe = RegExp(r'\binitState\b.*\{');
+
+/// Returns findings for the given [content] (file at [path]).
+List<Finding> auditSource(String path, String content) {
+  final findings = <Finding>[];
+  final lines = content.split('\n');
+
+  bool inInitState = false;
+  int braceDepthAtInitState = 0;
+  int currentBraceDepth = 0;
+
+  // Window size for loop detection (lines to look ahead for a network call).
+  const int windowSize = 8;
+
+  for (int i = 0; i < lines.length; i++) {
+    final lineNum = i + 1;
+    final line = lines[i];
+
+    // Track brace depth for initState detection.
+    currentBraceDepth += '{'.allMatches(line).length;
+    currentBraceDepth -= '}'.allMatches(line).length;
+
+    // Detect entry into initState body.
+    if (!inInitState && _initStateRe.hasMatch(line)) {
+      inInitState = true;
+      braceDepthAtInitState = currentBraceDepth;
+    }
+
+    // Detect exit from initState body (brace depth fell back to where we entered).
+    if (inInitState && currentBraceDepth < braceDepthAtInitState) {
+      inInitState = false;
+    }
+
+    // Rule: image_network — Image.network( found.
+    if (_imageNetworkRe.hasMatch(line)) {
+      findings.add(Finding(
+        file: path,
+        line: lineNum,
+        rule: 'image_network',
+        severity: 'warning',
+        message:
+            'Utiliser CachedNetworkImage à la place de Image.network() pour éviter les re-téléchargements inutiles.',
+      ));
+    }
+
+    // Rule: loop_request — network call inside a loop construct.
+    // Check if this line opens a loop.
+    if (_loopOpenRe.hasMatch(line)) {
+      // Look on the same line AND in the next windowSize lines for a dio verb.
+      final end = (i + windowSize).clamp(0, lines.length - 1);
+      for (int j = i; j <= end; j++) {
+        final candidate = lines[j];
+        if (_dioVerbRe.hasMatch(candidate)) {
+          final callLineNum = j + 1;
+          findings.add(Finding(
+            file: path,
+            line: callLineNum,
+            rule: 'loop_request',
+            severity: 'warning',
+            message:
+                'Appel réseau Dio détecté dans une boucle — risque de N+1 requêtes. '
+                'Préférer un batch endpoint ou collecter les IDs puis appeler une seule fois.',
+          ));
+          break; // one finding per loop open
+        }
+      }
+    }
+
+    // Rule: boot_blocking — await on dio call inside initState.
+    if (inInitState && line.contains('await') && _dioVerbRe.hasMatch(line)) {
+      findings.add(Finding(
+        file: path,
+        line: lineNum,
+        rule: 'boot_blocking',
+        severity: 'info',
+        message:
+            'Appel réseau bloquant dans initState — retarde le rendu initial. '
+            'Déclencher via un BLoC event ou FutureBuilder plutôt qu\'un await direct.',
+      ));
+    }
+  }
+
+  return findings;
+}
+
+void main(List<String> args) {
+  final libDir = Directory('lib');
+  if (!libDir.existsSync()) {
+    stderr.writeln('ERROR: lib/ directory not found. Run from the project root.');
+    exit(1);
+  }
+
+  final allFindings = <Finding>[];
+
+  for (final entity in libDir.listSync(recursive: true).whereType<File>()) {
+    if (!entity.path.endsWith('.dart')) {
+      continue;
+    }
+    final content = entity.readAsStringSync();
+    final findings = auditSource(entity.path, content);
+    allFindings.addAll(findings);
+  }
+
+  // Sort: warning first, then info.
+  allFindings.sort((a, b) {
+    const order = {'warning': 0, 'info': 1};
+    final cmp = (order[a.severity] ?? 2).compareTo(order[b.severity] ?? 2);
+    if (cmp != 0) {
+      return cmp;
+    }
+    return a.file.compareTo(b.file);
+  });
+
+  // Write markdown report.
+  Directory('reports').createSync(recursive: true);
+  final sb = StringBuffer();
+  sb.writeln('# Network Audit Report');
+  sb.writeln();
+  sb.writeln('| file:line | rule | severity | message |');
+  sb.writeln('|---|---|---|---|');
+  for (final f in allFindings) {
+    final escaped = f.message.replaceAll('|', '\\|');
+    sb.writeln('| ${f.file}:${f.line} | ${f.rule} | ${f.severity} | $escaped |');
+  }
+  if (allFindings.isEmpty) {
+    sb.writeln('| — | — | — | Aucun finding. |');
+  }
+  sb.writeln();
+  sb.writeln('_Generated by tool/network_audit.dart_');
+
+  File('reports/network-report.md').writeAsStringSync(sb.toString());
+
+  final warnings = allFindings.where((f) => f.severity == 'warning').length;
+  final infos = allFindings.where((f) => f.severity == 'info').length;
+  print(
+    'network-audit: ${allFindings.length} finding(s) — $warnings warning(s), $infos info(s) → reports/network-report.md',
+  );
+}

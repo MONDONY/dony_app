@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -58,6 +59,10 @@ class ApiClient {
           },
         ),
       );
+    }
+
+    if (kProfileMode || kDebugMode) {
+      _dio.interceptors.add(MetricsInterceptor(MetricsInterceptor.globalCollector));
     }
   }
 
