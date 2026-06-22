@@ -39,6 +39,14 @@ Future<void> main() => integrationDriver(
         for (final entry in data.entries) {
           final scenario = entry.key;
           final value = entry.value;
+          // List entries (e.g. raw-<scenario> per-request network samples
+          // written by dumpNetwork) are serialized as-is. waterfall.dart reads
+          // build/perf/raw-<scenario>.json as a JSON List.
+          if (value is List) {
+            File('${dir.path}/$scenario.json')
+                .writeAsStringSync(jsonEncode(value));
+            continue;
+          }
           if (value is! Map<String, dynamic>) {
             continue;
           }

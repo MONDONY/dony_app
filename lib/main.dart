@@ -63,8 +63,13 @@ Future<void> _bootstrap() async {
   // Fail-fast on misconfigured release builds (a release shipped without
   // --dart-define-from-file would silently call http://localhost and use
   // an empty Stripe key).
+  // E2E_ALLOW_HTTP (dart-define, jamais en release) : autorise un API_BASE_URL
+  // http en build profile pour les tests perf locaux (flutter drive --profile
+  // contre le backend dev). Faux par défaut → garde-fou release intact ; un
+  // flag compile-time explicite ne peut pas survenir dans un vrai build store.
+  const allowHttp = bool.fromEnvironment('E2E_ALLOW_HTTP');
   if (!kDebugMode) {
-    if (!_apiBaseUrl.startsWith('https://')) {
+    if (!allowHttp && !_apiBaseUrl.startsWith('https://')) {
       throw StateError(
         'API_BASE_URL must use https in release builds (got "$_apiBaseUrl")',
       );

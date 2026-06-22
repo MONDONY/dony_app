@@ -5,13 +5,11 @@
 
 // ignore_for_file: avoid_print, unawaited_futures
 
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/main.dart' as app;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
 
 // ── Flag singleton : app.main() ne doit être appelé qu'une seule fois ────────
 bool _appLaunched = false;
@@ -132,19 +130,22 @@ Future<void> fling(
   await tester.pumpAndSettle();
 }
 
-/// Sérialise les métriques réseau du scénario [scenario] dans
-/// `build/perf/network-{scenario}.json` et les samples bruts dans
-/// `build/perf/raw-{scenario}.json`, puis vide le collector.
+/// Pousse les métriques réseau du scénario [scenario] dans
+/// `binding.reportData` pour que le driver host-side les écrive dans
+/// `build/perf/`, puis vide le collector.
+///
+/// IMPORTANT : on ne peut PAS écrire de fichiers depuis l'app sur un device
+/// physique (FS sandbox read-only). Tout transite par reportData, comme la
+/// timeline. Le driver (test_driver/perf_driver.dart) sérialise :
+///   `reportData['network-<scenario>']` (Map) → `build/perf/network-<scenario>.json`
+///   `reportData['raw-<scenario>']` (List) → `build/perf/raw-<scenario>.json`
 ///
 /// Utilise MetricsInterceptor.globalCollector (NetworkMetricsCollector).
 Future<void> dumpNetwork(String scenario) async {
   final collector = MetricsInterceptor.globalCollector;
-  final json = collector.toJson();
-  final rawSamples = collector.rawSamplesJson();
-  final dir = Directory('build/perf')..createSync(recursive: true);
-  File('${dir.path}/network-$scenario.json')
-      .writeAsStringSync(jsonEncode(json));
-  File('${dir.path}/raw-$scenario.json')
-      .writeAsStringSync(jsonEncode(rawSamples));
+  final binding = IntegrationTestWidgetsFlutterBinding.instance;
+  final data = binding.reportData ??= <String, dynamic>{};
+  data['network-$scenario'] = collector.toJson();
+  data['raw-$scenario'] = collector.rawSamplesJson();
   collector.clear();
 }
