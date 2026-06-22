@@ -38,6 +38,7 @@
 import 'package:dony/app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:integration_test/integration_test.dart';
 import 'perf_harness.dart';
 
@@ -96,15 +97,19 @@ Future<void> main() async {
     appRouter.go('/home');
     await tester.pumpAndSettle(const Duration(seconds: 2));
     await binding.traceAction(() async {
-      // TODO(perf-run): confirm finder on device — la carte peut être un
-      // GoogleMap, MapWidget ou un GestureDetector wrappant la map.
-      // On cherche le premier widget de type GestureDetector dans l'arbre
-      // (la map est généralement le premier élément derrière la sheet).
-      final mapCandidate = find.byType(GestureDetector).first;
+      // Cible le widget GoogleMap réel. L'ancien `find.byType(GestureDetector)
+      // .first` tapait souvent un GestureDetector de la bottom sheet (empilée
+      // au-dessus de la carte) → données perf faussées. Si la carte n'est pas
+      // dans l'arbre, on saute le geste plutôt que de mesurer le mauvais widget.
+      final map = find.byType(GoogleMap);
+      if (map.evaluate().isEmpty) {
+        print('[A3] GoogleMap absente de l\'arbre — geste carte ignoré');
+        return;
+      }
       for (var i = 0; i < 3; i++) {
-        await tester.fling(mapCandidate, const Offset(100, 0), 500);
+        await tester.fling(map.first, const Offset(100, 0), 500);
         await tester.pump(const Duration(milliseconds: 300));
-        await tester.fling(mapCandidate, const Offset(-100, 0), 500);
+        await tester.fling(map.first, const Offset(-100, 0), 500);
         await tester.pump(const Duration(milliseconds: 300));
       }
     }, reportKey: scenario);

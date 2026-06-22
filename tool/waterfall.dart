@@ -22,6 +22,12 @@ import 'dart:io';
 ///
 /// Returns a list of human-readable finding strings, one per detected chain.
 /// Returns an empty list when no sequential chain of ≥3 requests is found.
+/// Tolérance d'overlap : deux requêtes dont la suivante démarre jusqu'à
+/// [_overlapToleranceMs] ms avant la fin de la précédente sont considérées
+/// séquentielles. Les timers réels ne sont pas précis à la milliseconde — sans
+/// tolérance, un chaînage fonctionnellement séquentiel échappe à la détection.
+const int _overlapToleranceMs = 15;
+
 List<String> detectWaterfalls(List<Map<String, dynamic>> samples) {
   if (samples.length < 3) {
     return [];
@@ -43,7 +49,7 @@ List<String> detectWaterfalls(List<Map<String, dynamic>> samples) {
       final prev = chain.last;
       final prevEnd = (prev['startTsMs'] as int) + (prev['durationMs'] as int);
       final nextStart = sorted[j]['startTsMs'] as int;
-      if (nextStart >= prevEnd) {
+      if (nextStart >= prevEnd - _overlapToleranceMs) {
         chain.add(sorted[j]);
         j++;
       } else {

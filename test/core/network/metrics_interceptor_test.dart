@@ -44,4 +44,22 @@ void main() {
     );
     expect(collector.aggregate().single.errorRate, 1.0);
   });
+
+  test('respBytes utilise Content-Length (pas toString) pour un corps JSON', () {
+    final collector = NetworkMetricsCollector();
+    final interceptor = MetricsInterceptor(collector);
+    final opts = RequestOptions(path: '/announcements/search', method: 'GET');
+    try { interceptor.onRequest(opts, RequestInterceptorHandler()); } catch (_) {}
+    final resp = Response(
+      requestOptions: opts,
+      statusCode: 200,
+      data: {'a': 1}, // Map JSON parsé : toString().length ≈ 8, non pertinent
+      headers: Headers.fromMap({
+        Headers.contentLengthHeader: ['1234'],
+      }),
+    );
+    try { interceptor.onResponse(resp, ResponseInterceptorHandler()); } catch (_) {}
+    // totalBytes = reqBytes(0, GET) + respBytes → doit valoir le Content-Length.
+    expect(collector.aggregate().single.totalBytes, 1234);
+  });
 }
