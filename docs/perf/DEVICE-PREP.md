@@ -63,6 +63,8 @@ This will:
 2. Run `integration_test/perf/stress_scenarios_test.dart` in `--profile` mode.
 3. Generate `reports/perf-report.md` (FPS / jank per scenario).
 4. Generate `reports/network-report.md` (static network anti-pattern audit).
+5. Generate `reports/waterfall-report.md` (sequential network chain detection).
+6. Generate `reports/PRODUCTION-READINESS.md` (consolidated report assembling all sub-reports).
 
 ---
 
@@ -79,12 +81,15 @@ re-confirm PASS/WARN results on a real device before marking a perf story comple
 
 ---
 
-## Waterfall Detection (follow-up)
+## Waterfall Detection
 
 The `tool/waterfall.dart` tool detects sequential network chains from raw per-request
-samples in `build/perf/raw-<scenario>.json`. The current `dumpNetwork` helper writes
-aggregated metrics only — extending it to also emit raw samples is a follow-up task.
-When `raw-*.json` files are present, run:
+samples in `build/perf/raw-<scenario>.json`. Raw sample emission is wired: the
+`dumpNetwork` helper emits both aggregated metrics and raw per-request samples, which
+`waterfall.dart` reads from `build/perf/raw-<scenario>.json`. This step is run
+automatically by `scripts/perf.sh` — no manual invocation needed.
+
+To run it standalone:
 
 ```bash
 dart run tool/waterfall.dart

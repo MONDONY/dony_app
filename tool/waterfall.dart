@@ -5,11 +5,9 @@
 // each request starts only after the previous one has fully completed.
 // i.e. samples[i+1].startTsMs >= samples[i].startTsMs + samples[i].durationMs
 //
-// Note: The current dumpNetwork helper writes an AGGREGATED shape
-// (NetworkMetricsCollector.toJson) that has no per-request timestamps.
-// This tool operates on raw samples that must be collected separately and
-// written to build/perf/raw-<scenario>.json. Wiring dumpNetwork to also
-// emit raw samples is a follow-up task.
+// Raw sample emission is wired: the dumpNetwork helper emits both aggregated
+// metrics (NetworkMetricsCollector.toJson) and raw per-request samples written
+// to build/perf/raw-<scenario>.json, which this tool reads.
 library;
 
 import 'dart:convert';

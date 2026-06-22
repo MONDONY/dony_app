@@ -13,10 +13,17 @@
 // Shape de reportData produite par traceAction(reportKey: scenario) :
 //   binding.reportData[scenario] = <raw timeline Map> (traceEvents, etc.)
 //
+// Les entrées non-timeline (e.g. les maps RSS écrites par A10 sous la clé
+// '<scenario>_rss') sont écrites telles quelles dans build/perf/<key>.json
+// plutôt que d'être passées à Timeline.fromJson (qui crasherait sur l'absence
+// de la clé 'traceEvents').
+//
 // Le driver calcule lui-même le résumé via Timeline + TimelineSummary
 // (disponibles uniquement côté host via package:flutter_driver) et produit :
 //   build/perf/<scenario>.timeline.json
 //   build/perf/<scenario>.summary.json
+// Pour les entrées non-timeline :
+//   build/perf/<key>.json
 
 import 'dart:convert';
 import 'dart:io';
@@ -32,9 +39,15 @@ Future<void> main() => integrationDriver(
         for (final entry in data.entries) {
           final scenario = entry.key;
           final value = entry.value;
-          // traceAction stores the raw timeline map; skip non-map entries
-          // (e.g. network dump keys written by dumpNetwork()).
           if (value is! Map<String, dynamic>) {
+            continue;
+          }
+          // Only summarize real timeline entries (they always have 'traceEvents').
+          // Non-timeline maps (e.g. the '_rss' memory-delta map written by A10)
+          // are written as plain JSON so the data is not lost.
+          if (!value.containsKey('traceEvents')) {
+            File('${dir.path}/$scenario.json')
+                .writeAsStringSync(jsonEncode(value));
             continue;
           }
           // Write raw timeline.
