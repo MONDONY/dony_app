@@ -124,49 +124,47 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Champ texte — dans un conteneur card (remplace CaFieldCard) ───
-        ClipRRect(
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          child: Container(
-            color: cs.surface,
-            child: TextField(
-              key: widget.fieldKey,
-              controller: _controller,
-              focusNode: _focusNode,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontSize: 15,
-                color: cs.onSurface,
-              ),
-              decoration: InputDecoration(
-                // Si requiredLabel, label widget (RichText) ; sinon labelText.
-                label: labelWidget,
-                labelText: labelWidget == null ? widget.label : null,
-                prefixIcon: widget.prefixIcon,
-                suffixIcon: _controller.text.isNotEmpty
-                    ? IconButton(
-                        icon: DonyIcon(
-                          'x',
-                          size: 18,
-                          color: cs.onSurfaceVariant,
-                        ),
-                        onPressed: () {
-                          _controller.clear();
-                          setState(() {});
-                          context
-                              .read<CitySearchBloc>()
-                              .add(const CitySearchCleared());
-                        },
-                      )
-                    : null,
-              ),
-              onChanged: (value) {
-                setState(() {});
-                context
-                    .read<CitySearchBloc>()
-                    .add(CitySearchQueryChanged(value));
-              },
-            ),
+        // ── Champ texte ───────────────────────────────────────────────────
+        // Pas de ClipRRect/Container ici : le thème (InputDecorationTheme)
+        // fournit déjà `filled` + OutlineInputBorder arrondi. Un ClipRRect
+        // coupait la moitié haute du label flottant (centré sur la bordure
+        // supérieure) → label illisible au focus. On laisse le décor au thème.
+        TextField(
+          key: widget.fieldKey,
+          controller: _controller,
+          focusNode: _focusNode,
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: 15,
+            color: cs.onSurface,
           ),
+          decoration: InputDecoration(
+            // Si requiredLabel, label widget (RichText) ; sinon labelText.
+            label: labelWidget,
+            labelText: labelWidget == null ? widget.label : null,
+            prefixIcon: widget.prefixIcon,
+            suffixIcon: _controller.text.isNotEmpty
+                ? IconButton(
+                    icon: DonyIcon(
+                      'x',
+                      size: 18,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    onPressed: () {
+                      _controller.clear();
+                      setState(() {});
+                      context
+                          .read<CitySearchBloc>()
+                          .add(const CitySearchCleared());
+                    },
+                  )
+                : null,
+          ),
+          onChanged: (value) {
+            setState(() {});
+            context
+                .read<CitySearchBloc>()
+                .add(CitySearchQueryChanged(value));
+          },
         ),
         // ── Suggestions — dans le flux scrollable (jamais en Overlay) ─────
         // Les suggestions poussent le contenu vers le bas : pas de masquage
