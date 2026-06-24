@@ -13,9 +13,23 @@ class MyReviewsLoading extends MyReviewsState {
 }
 
 class MyReviewsLoaded extends MyReviewsState {
-  const MyReviewsLoaded({required this.summary});
+  const MyReviewsLoaded({required this.summary, this.selectedStars});
 
   final RatingSummary summary;
+
+  /// Note (1–5) sélectionnée pour filtrer la liste. `null` = toutes les notes.
+  final int? selectedStars;
+
+  /// Avis affichés après application du filtre étoile courant.
+  List<RatingItem> get visibleRatings => selectedStars == null
+      ? summary.ratings
+      : summary.ratings.where((r) => r.stars == selectedStars).toList();
+
+  MyReviewsLoaded copyWith({RatingSummary? summary, int? selectedStars}) =>
+      MyReviewsLoaded(
+        summary: summary ?? this.summary,
+        selectedStars: selectedStars,
+      );
 }
 
 class MyReviewsError extends MyReviewsState {

@@ -518,7 +518,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => RatingBloc(getIt<RatingRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<MyReviewsBloc>(
-    () => MyReviewsBloc(getIt<RatingRepository>()),
+    () => MyReviewsBloc(getIt<RatingRepository>(), getIt<AnalyticsService>()),
     dispose: (b) => b.close(),
   );
   getIt.registerFactory<ProfilePublicBloc>(

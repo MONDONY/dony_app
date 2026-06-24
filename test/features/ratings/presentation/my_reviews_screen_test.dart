@@ -153,4 +153,35 @@ void main() {
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<MyReviewsRequested>()))).called(1);
   });
+
+  // 8. Tap sur une ligne de distribution → MyReviewsStarFilterToggled
+  testWidgets('tapping a distribution row dispatches star filter',
+      (tester) async {
+    when(() => bloc.state)
+        .thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+    clearInteractions(bloc);
+
+    // La ligne 5★ a 2 avis → cliquable.
+    await tester.tap(find.text('5★'));
+    verify(() => bloc.add(any(
+        that: isA<MyReviewsStarFilterToggled>()
+            .having((e) => e.stars, 'stars', 5)))).called(1);
+  });
+
+  // 9. Filtre actif → liste réduite + bouton « Tout afficher »
+  testWidgets('active filter shows only matching reviews and a reset',
+      (tester) async {
+    when(() => bloc.state).thenReturn(
+        MyReviewsLoaded(summary: _summaryWithReviews, selectedStars: 5));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Tout afficher'), findsOneWidget);
+    // _summaryWithReviews a 1 avis 5★ et 1 avis 4★ → filtre 5★ ⇒ 1 visible.
+    expect(find.text('AVIS 5★ · 1'), findsOneWidget);
+  });
 }

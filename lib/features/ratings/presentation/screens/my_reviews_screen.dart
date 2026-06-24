@@ -44,7 +44,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
             if (state.summary.ratingCount == 0) {
               return const _EmptyView();
             }
-            return _LoadedView(summary: state.summary);
+            return _LoadedView(state: state);
           }
           return const Center(
             child: CircularProgressIndicator(),
@@ -96,19 +96,20 @@ class _ErrorView extends StatelessWidget {
 // ─── Loaded state ─────────────────────────────────────────────────────────────
 
 class _LoadedView extends StatelessWidget {
-  const _LoadedView({required this.summary});
+  const _LoadedView({required this.state});
 
-  final RatingSummary summary;
+  final MyReviewsLoaded state;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final ratings = summary.ratings;
+    final selected = state.selectedStars;
+    final visible = state.visibleRatings;
 
     return CustomScrollView(
       slivers: [
-        // ── Hero éditorial — gros score + distribution ────────────────────
+        // ── Hero éditorial — gros score + distribution filtrante ──────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -117,14 +118,14 @@ class _LoadedView extends StatelessWidget {
               DonySpacing.lg,
               DonySpacing.base,
             ),
-            child: _HeaderSummary(summary: summary),
+            child: _HeaderSummary(summary: state.summary, selected: selected),
           )
               .animate()
               .fadeIn(duration: 300.ms)
               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
-        // Section label
+        // Section label + filtre actif
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -133,13 +134,46 @@ class _LoadedView extends StatelessWidget {
               DonySpacing.lg,
               0,
             ),
-            child: Text(
-              'AVIS REÇUS',
-              style: tt.labelMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-                letterSpacing: 1.4,
-                fontWeight: FontWeight.w700,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selected == null
+                        ? 'AVIS REÇUS'
+                        : 'AVIS $selected★ · ${visible.length}',
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (selected != null)
+                  GestureDetector(
+                    onTap: () => context
+                        .read<MyReviewsBloc>()
+                        .add(MyReviewsStarFilterToggled(selected)),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.xs, vertical: DonySpacing.xs),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          DonyIcon('x', size: 14, color: cs.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Tout afficher',
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
         ),
@@ -153,12 +187,12 @@ class _LoadedView extends StatelessWidget {
             DonySpacing.huge,
           ),
           sliver: SliverList.builder(
-            itemCount: ratings.length,
+            itemCount: visible.length,
             itemBuilder: (context, i) {
               return Column(
                 children: [
                   Divider(height: 1, color: cs.outline),
-                  _ReviewItem(item: ratings[i], index: i),
+                  _ReviewItem(item: visible[i], index: i),
                 ],
               );
             },
@@ -172,9 +206,10 @@ class _LoadedView extends StatelessWidget {
 // ─── Hero éditorial ───────────────────────────────────────────────────────────
 
 class _HeaderSummary extends StatelessWidget {
-  const _HeaderSummary({required this.summary});
+  const _HeaderSummary({required this.summary, this.selected});
 
   final RatingSummary summary;
+  final int? selected;
 
   @override
   Widget build(BuildContext context) {
@@ -216,17 +251,21 @@ class _HeaderSummary extends StatelessWidget {
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.lg),
-        // Distribution — barres bleu marque sur track soft.
+        // Distribution — tap une ligne pour filtrer la liste sur cette note.
         ...List.generate(5, (i) {
           final star = 5 - i;
           final count = summary.distribution[star] ?? 0;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-            child: _RatingBar(
-              stars: star,
-              count: count,
-              total: summary.ratingCount,
-            ),
+          return _RatingBar(
+            stars: star,
+            count: count,
+            total: summary.ratingCount,
+            selected: selected == star,
+            // Pas d'avis pour cette note → ligne non cliquable.
+            onTap: count == 0
+                ? null
+                : () => context
+                    .read<MyReviewsBloc>()
+                    .add(MyReviewsStarFilterToggled(star)),
           );
         }),
       ],
@@ -234,62 +273,92 @@ class _HeaderSummary extends StatelessWidget {
   }
 }
 
-// ─── Rating bar ──────────────────────────────────────────────────────────────
+// ─── Rating bar (cliquable = filtre) ──────────────────────────────────────────
 
 class _RatingBar extends StatelessWidget {
   const _RatingBar({
     required this.stars,
     required this.count,
     required this.total,
+    this.selected = false,
+    this.onTap,
   });
 
   final int stars;
   final int count;
   final int total;
+  final bool selected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final ratio = total > 0 ? count / total : 0.0;
+    final disabled = onTap == null;
 
-    return Row(
-      children: [
-        SizedBox(
-          width: 26,
-          child: Text(
-            '$stars★',
-            style: tt.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+    return Semantics(
+      button: !disabled,
+      selected: selected,
+      label: '$stars étoiles, $count avis',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.sm, vertical: DonySpacing.xs + 2),
+            decoration: BoxDecoration(
+              color: selected ? DonyColors.primarySoft : Colors.transparent,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 26,
+                  child: Text(
+                    '$stars★',
+                    style: tt.labelMedium?.copyWith(
+                      color: selected ? cs.primary : cs.onSurfaceVariant,
+                      fontWeight:
+                          selected ? FontWeight.w800 : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                    child: LinearProgressIndicator(
+                      value: ratio,
+                      backgroundColor: selected
+                          ? cs.surface
+                          : DonyColors.primarySoft,
+                      color: disabled ? cs.outline : cs.primary,
+                      minHeight: 7,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                SizedBox(
+                  width: 24,
+                  child: Text(
+                    '$count',
+                    textAlign: TextAlign.end,
+                    style: tt.bodySmall?.copyWith(
+                      color: selected ? cs.primary : cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-            child: LinearProgressIndicator(
-              value: ratio,
-              backgroundColor: DonyColors.primarySoft,
-              color: cs.primary,
-              minHeight: 7,
-            ),
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        SizedBox(
-          width: 24,
-          child: Text(
-            '$count',
-            textAlign: TextAlign.end,
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
