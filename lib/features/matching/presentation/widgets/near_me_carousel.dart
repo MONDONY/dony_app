@@ -164,9 +164,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
               final a = widget.announcements[i];
               final badge = buildDistanceBadge(a, widget.userPosition);
               final authState = context.read<AuthBloc>().state;
-              final currentUserId = authState is AuthAuthenticated
-                  ? authState.user.id
-                  : null;
+              final currentUserId = authState.currentUserId;
               final isOwn =
                   currentUserId != null && a.travelerId == currentUserId;
               return BlocBuilder<BidBloc, BidState>(

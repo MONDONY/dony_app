@@ -113,3 +113,19 @@ class AuthOAuthNewUser extends AuthState {
   @override
   List<Object?> get props => [email];
 }
+
+/// Accès uniforme à l'utilisateur courant quel que soit l'état "connecté".
+///
+/// IMPORTANT : tester `state is AuthAuthenticated` rate [AuthProfileUpdated],
+/// émis après une édition de profil / upload d'avatar. Tout code qui a besoin
+/// de l'ID utilisateur (ex: détection « c'est mon trajet ») DOIT passer par
+/// [currentUser]/[currentUserId] pour ne pas casser après une maj de profil.
+extension AuthStateUser on AuthState {
+  UserModel? get currentUser => switch (this) {
+        AuthAuthenticated(:final user) => user,
+        AuthProfileUpdated(:final user) => user,
+        _ => null,
+      };
+
+  String? get currentUserId => currentUser?.id;
+}

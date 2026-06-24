@@ -71,7 +71,7 @@ class RouteBottomSheet extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final items = _filtered;
     final auth = context.read<AuthBloc>().state;
-    final currentUserId = auth is AuthAuthenticated ? auth.user.id : null;
+    final currentUserId = auth.currentUserId;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.8,
