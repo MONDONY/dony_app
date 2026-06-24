@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockMyReviewsBloc extends MockBloc<MyReviewsEvent, MyReviewsState>
@@ -63,7 +64,11 @@ const _emptySummary = RatingSummary(
 void main() {
   late MockMyReviewsBloc bloc;
 
-  setUpAll(() => registerFallbackValue(FakeMyReviewsEvent()));
+  setUpAll(() {
+    registerFallbackValue(FakeMyReviewsEvent());
+    // _ReviewItem formate la date en français (DateFormat('d MMM yyyy', 'fr')).
+    initializeDateFormatting('fr');
+  });
 
   setUp(() {
     bloc = MockMyReviewsBloc();

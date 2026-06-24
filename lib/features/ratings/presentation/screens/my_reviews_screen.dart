@@ -104,10 +104,11 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final ratings = summary.ratings;
 
     return CustomScrollView(
       slivers: [
-        // Header card — score moyen
+        // ── Hero éditorial — gros score + distribution ────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -116,7 +117,7 @@ class _LoadedView extends StatelessWidget {
               DonySpacing.lg,
               DonySpacing.base,
             ),
-            child: _HeaderCard(summary: summary),
+            child: _HeaderSummary(summary: summary),
           )
               .animate()
               .fadeIn(duration: 300.ms)
@@ -128,21 +129,22 @@ class _LoadedView extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
-              DonySpacing.base,
               DonySpacing.lg,
-              DonySpacing.sm,
+              DonySpacing.lg,
+              0,
             ),
             child: Text(
               'AVIS REÇUS',
               style: tt.labelMedium?.copyWith(
                 color: cs.onSurfaceVariant,
-                letterSpacing: 1.2,
+                letterSpacing: 1.4,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
         ),
 
-        // Liste des avis
+        // ── Liste éditoriale (divisée, sans cartes) ───────────────────────
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             DonySpacing.lg,
@@ -151,11 +153,13 @@ class _LoadedView extends StatelessWidget {
             DonySpacing.huge,
           ),
           sliver: SliverList.builder(
-            itemCount: summary.ratings.length,
+            itemCount: ratings.length,
             itemBuilder: (context, i) {
-              return _ReviewItem(
-                item: summary.ratings[i],
-                index: i,
+              return Column(
+                children: [
+                  Divider(height: 1, color: cs.outline),
+                  _ReviewItem(item: ratings[i], index: i),
+                ],
               );
             },
           ),
@@ -165,10 +169,10 @@ class _LoadedView extends StatelessWidget {
   }
 }
 
-// ─── Header card ─────────────────────────────────────────────────────────────
+// ─── Hero éditorial ───────────────────────────────────────────────────────────
 
-class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.summary});
+class _HeaderSummary extends StatelessWidget {
+  const _HeaderSummary({required this.summary});
 
   final RatingSummary summary;
 
@@ -176,75 +180,56 @@ class _HeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final rounded = summary.averageRating.round();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: DonyShadows.card,
-      ),
-      padding: const EdgeInsets.all(DonySpacing.xl),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Score moyen
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                summary.averageRating.toStringAsFixed(1),
-                style: tt.displayLarge?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(5, (i) {
-                  final filled = i < summary.averageRating.round();
-                  return DonyIcon(
-                    'star',
-                    size: 14,
-                    color: filled
-                        ? DonyColors.warning500
-                        : cs.onSurfaceVariant,
-                  );
-                }),
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              Text(
-                '${summary.ratingCount} avis',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Score géant (display) — calme, couleur encre.
+        Text(
+          summary.averageRating.toStringAsFixed(1),
+          style: tt.displayLarge?.copyWith(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w800,
+            fontSize: 60,
+            height: 1,
+            letterSpacing: -2,
           ),
-
-          const SizedBox(width: DonySpacing.xl),
-
-          // Barres de distribution
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(5, (i) {
-                final star = 5 - i;
-                final count = summary.distribution[star] ?? 0;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: DonySpacing.xs),
-                  child: _RatingBar(
-                    stars: star,
-                    count: count,
-                    total: summary.ratingCount,
-                  ),
-                );
-              }),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(5, (i) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 2),
+              child: DonyIcon(
+                'star',
+                size: 18,
+                color: i < rounded ? DonyColors.warning500 : cs.outline,
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          'Sur ${summary.ratingCount} avis reçus',
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.lg),
+        // Distribution — barres bleu marque sur track soft.
+        ...List.generate(5, (i) {
+          final star = 5 - i;
+          final count = summary.distribution[star] ?? 0;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+            child: _RatingBar(
+              stars: star,
+              count: count,
+              total: summary.ratingCount,
             ),
-          ),
-        ],
-      ),
+          );
+        }),
+      ],
     );
   }
 }
@@ -270,11 +255,14 @@ class _RatingBar extends StatelessWidget {
 
     return Row(
       children: [
-        Text(
-          '$stars★',
-          style: tt.labelMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
+        SizedBox(
+          width: 26,
+          child: Text(
+            '$stars★',
+            style: tt.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(width: DonySpacing.sm),
@@ -283,9 +271,9 @@ class _RatingBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.full),
             child: LinearProgressIndicator(
               value: ratio,
-              backgroundColor: cs.outline,
-              color: DonyColors.warning500,
-              minHeight: 6,
+              backgroundColor: DonyColors.primarySoft,
+              color: cs.primary,
+              minHeight: 7,
             ),
           ),
         ),
@@ -295,7 +283,10 @@ class _RatingBar extends StatelessWidget {
           child: Text(
             '$count',
             textAlign: TextAlign.end,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -303,7 +294,7 @@ class _RatingBar extends StatelessWidget {
   }
 }
 
-// ─── Review item ─────────────────────────────────────────────────────────────
+// ─── Review item (éditorial) ──────────────────────────────────────────────────
 
 class _ReviewItem extends StatelessWidget {
   const _ReviewItem({required this.item, required this.index});
@@ -311,63 +302,113 @@ class _ReviewItem extends StatelessWidget {
   final RatingItem item;
   final int index;
 
+  /// Corridor « VILLE → VILLE » si les deux villes sont connues, sinon null.
+  String? get _corridor {
+    final dep = item.departureCity?.trim();
+    final arr = item.arrivalCity?.trim();
+    if (dep == null || dep.isEmpty || arr == null || arr.isEmpty) return null;
+    return '${dep.toUpperCase()} → ${arr.toUpperCase()}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final dateStr = DateFormat('dd/MM/yyyy').format(item.createdAt);
+    final dateStr =
+        DateFormat('d MMM yyyy', 'fr').format(item.createdAt).toUpperCase();
+    final name = (item.authorName?.trim().isNotEmpty ?? false)
+        ? item.authorName!.trim()
+        : 'Utilisateur dony';
+    final corridor = _corridor;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
-        ),
-        padding: const EdgeInsets.all(DonySpacing.base),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Étoiles
-                ...List.generate(5, (i) {
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // En-tête : avatar + nom/corridor + étoiles
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              DonyAvatar(
+                name: name,
+                imageUrl: item.authorAvatarUrl,
+                size: DonyAvatarSize.md,
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      name,
+                      style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (corridor != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        corridor,
+                        style: tt.labelMedium?.copyWith(
+                          color: cs.secondary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(5, (i) {
                   return DonyIcon(
                     'star',
-                    size: 16,
+                    size: 15,
                     color: i < item.stars
                         ? DonyColors.warning500
-                        : cs.onSurfaceVariant,
+                        : cs.outline,
                   );
                 }),
-                const Spacer(),
-                Text(
-                  dateStr,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
+              ),
+            ],
+          ),
+          // Commentaire
+          if (item.comment != null && item.comment!.isNotEmpty) ...[
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              '« ${item.comment!} »',
+              style: tt.bodyLarge?.copyWith(color: cs.onSurface, height: 1.5),
             ),
-            if (item.comment != null && item.comment!.isNotEmpty) ...[
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                item.comment!,
-                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              ),
-            ],
-            if (item.excluded) ...[
-              const SizedBox(height: DonySpacing.xs),
-              Text(
-                'Avis exclu du calcul',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ],
           ],
-        ),
+          // Date
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            dateStr,
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.6,
+            ),
+          ),
+          // Avis exclu
+          if (item.excluded) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              'Avis exclu du calcul',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ],
       ),
     )
         .animate()
-        .fadeIn(delay: (index * 80).ms, duration: 300.ms)
+        .fadeIn(delay: (index * 70).ms, duration: 300.ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }
