@@ -593,9 +593,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _onTravelerCardTap(BuildContext context, AnnouncementModel a) {
     final authState = context.read<AuthBloc>().state;
-    final currentUserId = authState is AuthAuthenticated
-        ? authState.user.id
-        : null;
+    final currentUserId = authState.currentUserId;
     final isOwn = currentUserId != null && a.travelerId == currentUserId;
     if (isOwn) {
       unawaited(() async {
@@ -788,9 +786,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           icon: icon,
           onTap: () {
             final authState = context.read<AuthBloc>().state;
-            final uid = authState is AuthAuthenticated
-                ? authState.user.id
-                : null;
+            final uid = authState.currentUserId;
             if (uid != null && item.sender.id == uid) return;
             PackageRequestPreviewBottomSheet.show(context, item: item);
           },
@@ -810,9 +806,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final showBothTypes =
         !showParcelControls && isTraveler && _mapFocus == HomeMapFocus.all;
     final authState = context.watch<AuthBloc>().state;
-    final currentUserId = authState is AuthAuthenticated
-        ? authState.user.id
-        : null;
+    final currentUserId = authState.currentUserId;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
@@ -1654,9 +1648,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       final authState = context
                                           .read<AuthBloc>()
                                           .state;
-                                      final uid = authState is AuthAuthenticated
-                                          ? authState.user.id
-                                          : null;
+                                      final uid = authState.currentUserId;
                                       final isOwn =
                                           uid != null && a.travelerId == uid;
                                       final existingBid = myActiveBids[a.id];
@@ -1885,10 +1877,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 final authState = context
                                     .read<AuthBloc>()
                                     .state;
-                                final currentUserId =
-                                    authState is AuthAuthenticated
-                                    ? authState.user.id
-                                    : null;
+                                final currentUserId = authState.currentUserId;
                                 final isOwn =
                                     currentUserId != null &&
                                     a.travelerId == currentUserId;

@@ -348,9 +348,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   void _onMarkerTapped(AnnouncementModel a) {
     widget.onAnnouncementSelected?.call(a.id);
     final authState = context.read<AuthBloc>().state;
-    final currentUserId = authState is AuthAuthenticated
-        ? authState.user.id
-        : null;
+    final currentUserId = authState.currentUserId;
     final isOwn = currentUserId != null && a.travelerId == currentUserId;
     if (isOwn) return;
     showTravelerAnnouncementSheet(context, announcement: a);
@@ -364,9 +362,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           ? firstItem.announcement.pickupAddress
           : firstItem.announcement.deliveryAddress;
       final authState = context.read<AuthBloc>().state;
-      final currentUserId = authState is AuthAuthenticated
-          ? authState.user.id
-          : null;
+      final currentUserId = authState.currentUserId;
       showModalBottomSheet<void>(
         context: context,
         useRootNavigator: true,

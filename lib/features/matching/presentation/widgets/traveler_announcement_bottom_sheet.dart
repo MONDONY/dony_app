@@ -28,8 +28,9 @@ void showTravelerAnnouncementSheet(
   // Captured before DonyBottomSheet.show() — context may be invalid inside
   // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
   final authState = context.read<AuthBloc>().state;
-  final isKycVerified =
-      authState is AuthAuthenticated && authState.user.isKycVerified;
+  // currentUser couvre AuthAuthenticated ET AuthProfileUpdated (émis après
+  // upload avatar / édition profil) — sinon le KYC repasserait à false.
+  final isKycVerified = authState.currentUser?.isKycVerified ?? false;
   // Capture la référence au BidBloc du parent (carousel / liste) pour pouvoir
   // déclencher un refresh après la fermeture de CreateBidBottomSheet, même
   // quand useRootNavigator: true sort du BlocProvider tree.
