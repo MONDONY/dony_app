@@ -3,6 +3,19 @@ import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+Widget _harness(void Function(BuildContext) onTap, {String label = 'Show'}) =>
+    MaterialApp(
+      theme: AppTheme.light,
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: ElevatedButton(
+            onPressed: () => onTap(context),
+            child: Text(label),
+          ),
+        ),
+      ),
+    );
+
 void main() {
   setUp(() {
     DonySnackbar.clearDedup();
@@ -11,17 +24,8 @@ void main() {
   group('DonySnackbar', () {
     testWidgets('show() displays a SnackBar with the given message',
         (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => DonySnackbar.show(context, message: 'Hello'),
-              child: const Text('Show'),
-            ),
-          ),
-        ),
-      ));
+      await tester.pumpWidget(
+          _harness((ctx) => DonySnackbar.show(ctx, message: 'Hello')));
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
       expect(find.byType(SnackBar), findsOneWidget);
@@ -29,21 +33,11 @@ void main() {
     });
 
     testWidgets('error variant shows SnackBar', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => DonySnackbar.show(
-                context,
-                message: 'Error!',
-                type: DonySnackbarType.error,
-              ),
-              child: const Text('Show'),
-            ),
-          ),
-        ),
-      ));
+      await tester.pumpWidget(_harness((ctx) => DonySnackbar.show(
+            ctx,
+            message: 'Error!',
+            type: DonySnackbarType.error,
+          )));
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
       expect(find.byType(SnackBar), findsOneWidget);
@@ -51,21 +45,11 @@ void main() {
     });
 
     testWidgets('success variant shows SnackBar', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => DonySnackbar.show(
-                context,
-                message: 'Done!',
-                type: DonySnackbarType.success,
-              ),
-              child: const Text('Show'),
-            ),
-          ),
-        ),
-      ));
+      await tester.pumpWidget(_harness((ctx) => DonySnackbar.show(
+            ctx,
+            message: 'Done!',
+            type: DonySnackbarType.success,
+          )));
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
       expect(find.byType(SnackBar), findsOneWidget);
@@ -73,43 +57,23 @@ void main() {
 
     testWidgets('shows SnackBarAction when actionLabel provided',
         (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => DonySnackbar.show(
-                context,
-                message: 'Undo action',
-                actionLabel: 'ANNULER',
-                onAction: () {},
-              ),
-              child: const Text('Show'),
-            ),
-          ),
-        ),
-      ));
+      await tester.pumpWidget(_harness((ctx) => DonySnackbar.show(
+            ctx,
+            message: 'Undo action',
+            actionLabel: 'ANNULER',
+            onAction: () {},
+          )));
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
       expect(find.byType(SnackBarAction), findsOneWidget);
     });
 
     testWidgets('affiche le titre quand fourni', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => DonySnackbar.show(
-                context,
-                message: 'Le message',
-                title: 'Mon titre',
-              ),
-              child: const Text('Show'),
-            ),
-          ),
-        ),
-      ));
+      await tester.pumpWidget(_harness((ctx) => DonySnackbar.show(
+            ctx,
+            message: 'Le message',
+            title: 'Mon titre',
+          )));
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
       expect(find.text('Mon titre'), findsOneWidget);
@@ -118,28 +82,10 @@ void main() {
 
     testWidgets('dedup: appel identique en < 400ms — un seul toast',
         (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () {
-                DonySnackbar.show(
-                  context,
-                  message: 'msg dupe',
-                  type: DonySnackbarType.error,
-                );
-                DonySnackbar.show(
-                  context,
-                  message: 'msg dupe',
-                  type: DonySnackbarType.error,
-                );
-              },
-              child: const Text('ShowDouble'),
-            ),
-          ),
-        ),
-      ));
+      await tester.pumpWidget(_harness((ctx) {
+        DonySnackbar.show(ctx, message: 'msg dupe', type: DonySnackbarType.error);
+        DonySnackbar.show(ctx, message: 'msg dupe', type: DonySnackbarType.error);
+      }, label: 'ShowDouble'));
       await tester.tap(find.text('ShowDouble'));
       await tester.pump();
       expect(find.text('msg dupe'), findsOneWidget);
@@ -147,23 +93,13 @@ void main() {
 
     testWidgets('onAction callback appelé quand action pressée', (tester) async {
       bool called = false;
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => DonySnackbar.show(
-                context,
-                message: 'msg',
-                actionLabel: 'Annuler',
-                onAction: () => called = true,
-              ),
-              child: const Text('Show'),
-            ),
-          ),
-        ),
-      ));
-      await tester.tap(find.text('Show'));
+      await tester.pumpWidget(_harness((ctx) => DonySnackbar.show(
+            ctx,
+            message: 'msg',
+            actionLabel: 'Annuler',
+            onAction: () => called = true,
+          )));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
       // Invoquer directement le callback (SnackBarAction est hors viewport dans le test runner)
       final action = tester.widget<SnackBarAction>(find.byType(SnackBarAction));
@@ -172,21 +108,11 @@ void main() {
     });
 
     testWidgets('warning variant shows SnackBar', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: ElevatedButton(
-              onPressed: () => DonySnackbar.show(
-                context,
-                message: 'Attention',
-                type: DonySnackbarType.warning,
-              ),
-              child: const Text('Show'),
-            ),
-          ),
-        ),
-      ));
+      await tester.pumpWidget(_harness((ctx) => DonySnackbar.show(
+            ctx,
+            message: 'Attention',
+            type: DonySnackbarType.warning,
+          )));
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
       expect(find.byType(SnackBar), findsOneWidget);

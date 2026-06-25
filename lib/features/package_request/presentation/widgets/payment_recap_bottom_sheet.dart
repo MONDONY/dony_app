@@ -117,14 +117,11 @@ class PaymentRecapBottomSheet {
                         } on StripeException catch (e) {
                           processing.value = false;
                           if (ctx.mounted) {
+                            final isCanceled = e.error.code == FailureCode.Canceled;
                             DonySnackbar.show(
                               ctx,
-                              message: e.error.code == FailureCode.Canceled
-                                  ? 'Paiement annulé'
-                                  : 'Erreur paiement : ${e.error.message ?? ""}',
-                              type: e.error.code == FailureCode.Canceled
-                                  ? DonySnackbarType.warning
-                                  : DonySnackbarType.error,
+                              message: isCanceled ? 'Paiement annulé' : 'Erreur paiement : ${e.error.message ?? ""}',
+                              type: isCanceled ? DonySnackbarType.warning : DonySnackbarType.error,
                             );
                           }
                         } catch (_) {
