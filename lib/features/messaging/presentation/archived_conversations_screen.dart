@@ -64,13 +64,9 @@ class _ArchivedTile extends StatelessWidget {
               ctx
                   .read<ConversationListBloc>()
                   .add(ConversationUnarchiveRequested(conversation.id));
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                SnackBar(
-                  content: const Text('Conversation désarchivée'),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+              DonySnackbar.show(
+                ctx,
+                message: 'Conversation désarchivée',
               );
             },
             backgroundColor: cs.primary,

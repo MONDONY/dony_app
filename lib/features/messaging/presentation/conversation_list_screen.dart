@@ -471,19 +471,13 @@ class _SlidableTile extends StatelessWidget {
             onPressed: (ctx) {
               ctx.read<ConversationListBloc>()
                   .add(ConversationArchiveRequested(conversation.id));
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                SnackBar(
-                  content: const Text('Conversation archivée'),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  action: SnackBarAction(
-                    label: 'Annuler',
-                    onPressed: () => ctx.read<ConversationListBloc>().add(
-                          ConversationUnarchiveRequested(conversation.id),
-                        ),
-                  ),
-                ),
+              DonySnackbar.show(
+                ctx,
+                message: 'Conversation archivée',
+                actionLabel: 'Annuler',
+                onAction: () => ctx.read<ConversationListBloc>().add(
+                      ConversationUnarchiveRequested(conversation.id),
+                    ),
               );
             },
             backgroundColor: cs.warning,

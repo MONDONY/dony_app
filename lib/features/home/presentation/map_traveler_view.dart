@@ -89,10 +89,9 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
       );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible de te localiser. Réessaie.'),
-          ),
+        DonySnackbar.show(
+          context,
+          message: 'Impossible de te localiser. Réessaie.',
         );
       }
       return;
