@@ -116,11 +116,10 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
           _resolveDefaultMethod(state.request!);
         }
         if (state.status == CompleteDetailsStatus.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Détails enregistrés'),
-              backgroundColor: kSuccess,
-            ),
+          DonySnackbar.show(
+            context,
+            message: 'Détails enregistrés',
+            type: DonySnackbarType.success,
           );
           // Return the chosen method so the caller opens the payment recap with it.
           final method =
@@ -129,11 +128,10 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
               PaymentMethod.stripe;
           context.pop(method);
         } else if (state.status == CompleteDetailsStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage ?? 'Erreur'),
-              backgroundColor: kError,
-            ),
+          DonySnackbar.show(
+            context,
+            message: state.errorMessage ?? 'Erreur',
+            type: DonySnackbarType.error,
           );
         }
       },

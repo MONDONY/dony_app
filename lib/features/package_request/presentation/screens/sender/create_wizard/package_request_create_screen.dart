@@ -139,19 +139,12 @@ class _WizardSheetState extends State<_WizardSheet> {
         if (state.submissionStatus == FormSubmissionStatus.success &&
             state.createdRequest != null) {
           Navigator.of(context, rootNavigator: true).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                state.isEditing
-                    ? 'Demande modifiée'
-                    : 'Demande publiée — les voyageurs sont notifiés',
-              ),
-              backgroundColor: DonyColors.success500,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-              ),
-            ),
+          DonySnackbar.show(
+            context,
+            message: state.isEditing
+                ? 'Demande modifiée'
+                : 'Demande publiée — les voyageurs sont notifiés',
+            type: DonySnackbarType.success,
           );
         } else if (state.submissionStatus == FormSubmissionStatus.error) {
           ErrorPresenter.show(
