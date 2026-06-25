@@ -82,6 +82,7 @@ abstract final class AnalyticsEvents {
   static const profilePhotoUpdated   = 'profile_photo_updated';
   static const profileAboutUpdated   = 'profile_about_updated';
   static const publicReviewsOpened   = 'public_reviews_opened';
+  static const reviewsFiltered       = 'reviews_filtered';
 
   // Referral
   static const referralShared = 'referral_shared';

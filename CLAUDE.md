@@ -359,6 +359,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
 | `public_reviews_opened` | UserReviewsCubit — ouverture de la bottom sheet « tous les avis » (propriété `rating_count`) |
+| `reviews_filtered` | MyReviewsBloc._onStarFilterToggled — tap sur une ligne de distribution dans « Mes avis reçus » (propriété `stars`: note 1–5 ou `all` si filtre retiré) |
 | `trip_matching_viewed` | TripMatchingBloc._onLoad — chargement de la liste scorée « Colis sur mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | TripMatchingBloc._onToggleAlert — cloche « notifier quand un colis matche mes trajets » dans « Colis sur mes trajets » (propriété `enabled`) |
 | `corridor_alert_toggled` | CorridorAlertListBloc._onToggle — actif/pause d'une alerte corridor (propriété `active`) |
