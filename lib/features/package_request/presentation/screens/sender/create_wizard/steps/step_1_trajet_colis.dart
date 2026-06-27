@@ -44,20 +44,26 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
       return;
     }
     if (_date == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Choisis une date souhaitée')),
+      DonySnackbar.show(
+        context,
+        message: 'Choisis une date souhaitée',
+        type: DonySnackbarType.warning,
       );
       return;
     }
     if (_departureCity == null || _arrivalCity == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Renseigne les deux villes')),
+      DonySnackbar.show(
+        context,
+        message: 'Renseigne les deux villes',
+        type: DonySnackbarType.warning,
       );
       return;
     }
     if (_departureCity == _arrivalCity) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Les villes doivent être différentes')),
+      DonySnackbar.show(
+        context,
+        message: 'Les villes doivent être différentes',
+        type: DonySnackbarType.warning,
       );
       return;
     }

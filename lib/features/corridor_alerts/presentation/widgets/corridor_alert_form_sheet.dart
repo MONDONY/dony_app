@@ -53,11 +53,10 @@ abstract final class CorridorAlertFormSheet {
             if (state.status == CorridorAlertFormStatus.success) {
               ctx.pop();
             } else if (state.status == CorridorAlertFormStatus.error) {
-              ScaffoldMessenger.maybeOf(ctx)?.showSnackBar(
-                SnackBar(
-                  content: Text(state.errorMessage ??
-                      'Impossible d\'enregistrer l\'alerte'),
-                ),
+              DonySnackbar.show(
+                ctx,
+                message: state.errorMessage ?? 'Impossible d\'enregistrer l\'alerte',
+                type: DonySnackbarType.error,
               );
             }
           },

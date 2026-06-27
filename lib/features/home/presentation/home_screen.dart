@@ -494,10 +494,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     } catch (_) {
       if (mounted) {
         setState(() => _isLocatingNearMe = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible de te localiser. Réessaie.'),
-          ),
+        DonySnackbar.show(
+          context,
+          message: 'Impossible de te localiser. Réessaie.',
         );
       }
       return;

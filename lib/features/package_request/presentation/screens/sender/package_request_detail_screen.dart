@@ -71,11 +71,10 @@ class _PackageRequestDetailScreenState
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: DonyColors.danger500,
-          ),
+        DonySnackbar.show(
+          context,
+          message: 'Une erreur est survenue. Veuillez réessayer.',
+          type: DonySnackbarType.error,
         );
       }
     } finally {
@@ -1092,11 +1091,10 @@ class _SheetBodyState extends State<_SheetBody> {
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: DonyColors.danger500,
-          ),
+        DonySnackbar.show(
+          context,
+          message: 'Une erreur est survenue. Veuillez réessayer.',
+          type: DonySnackbarType.error,
         );
         _syncBtn(_request!, false);
       }

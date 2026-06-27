@@ -1,3 +1,4 @@
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -100,12 +101,9 @@ class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
         return;
       }
       Navigator.of(context, rootNavigator: true).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${widget.displayName} a été bloqué(e)'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+      DonySnackbar.show(
+        context,
+        message: '${widget.displayName} a été bloqué(e)',
       );
     } on ConflictException {
       setState(() {

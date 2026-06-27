@@ -813,16 +813,17 @@ class _FirmPriceCta extends StatelessWidget {
         builder: (ctx) => BlocConsumer<NegotiationBloc, NegotiationState>(
           listener: (ctx, state) {
             if (state is NegotiationLoaded) {
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(
-                  content: Text('Offre confirmée'),
-                  backgroundColor: kSuccess,
-                ),
+              DonySnackbar.show(
+                ctx,
+                message: 'Offre confirmée',
+                type: DonySnackbarType.success,
               );
             } else if (state is NegotiationError) {
-              ScaffoldMessenger.of(
+              DonySnackbar.show(
                 ctx,
-              ).showSnackBar(SnackBar(content: Text(state.error.message)));
+                message: state.error.message,
+                type: DonySnackbarType.error,
+              );
             }
           },
           builder: (ctx, state) {

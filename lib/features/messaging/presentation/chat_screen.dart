@@ -285,8 +285,9 @@ class _ChatScreenState extends State<ChatScreen> {
             );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Conversation supprimée')),
+              DonySnackbar.show(
+                context,
+                message: 'Conversation supprimée',
               );
               if (context.canPop()) context.pop();
             });

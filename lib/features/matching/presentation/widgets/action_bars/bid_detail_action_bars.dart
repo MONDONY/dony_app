@@ -733,22 +733,10 @@ class _SenderOptionsSheet extends StatelessWidget {
                     ? null
                     : () {
                         ctx.pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Signalement envoyé. Merci !',
-                              style: tt.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            backgroundColor: cs.success,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                DonyRadius.sm,
-                              ),
-                            ),
-                          ),
+                        DonySnackbar.show(
+                          context,
+                          message: 'Signalement envoyé. Merci !',
+                          type: DonySnackbarType.success,
                         );
                       },
               ),

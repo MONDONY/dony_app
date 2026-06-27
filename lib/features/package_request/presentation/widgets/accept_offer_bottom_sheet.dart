@@ -79,12 +79,10 @@ class AcceptOfferBottomSheet {
                       if (!ctx.mounted) return;
                       if (!authenticated) {
                         processing.value = false;
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Authentification requise pour effectuer le paiement'),
-                            backgroundColor: kError,
-                          ),
+                        DonySnackbar.show(
+                          ctx,
+                          message: 'Authentification requise pour effectuer le paiement',
+                          type: DonySnackbarType.warning,
                         );
                         return;
                       }
@@ -112,13 +110,12 @@ class AcceptOfferBottomSheet {
                           } on StripeException catch (e) {
                             processing.value = false;
                             if (ctx.mounted) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                                content: Text(e.error.code ==
-                                        FailureCode.Canceled
-                                    ? 'Paiement annulé'
-                                    : 'Erreur paiement : ${e.error.message ?? ""}'),
-                                backgroundColor: kError,
-                              ));
+                              final isCanceled = e.error.code == FailureCode.Canceled;
+                            DonySnackbar.show(
+                                ctx,
+                                message: isCanceled ? 'Paiement annulé' : 'Erreur paiement : ${e.error.message ?? ""}',
+                                type: isCanceled ? DonySnackbarType.warning : DonySnackbarType.error,
+                              );
                             }
                             return;
                           }
@@ -131,10 +128,10 @@ class AcceptOfferBottomSheet {
                       } catch (e) {
                         processing.value = false;
                         if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(
-                                content: Text(e.toString()),
-                                backgroundColor: kError),
+                          DonySnackbar.show(
+                            ctx,
+                            message: 'Une erreur est survenue. Veuillez réessayer.',
+                            type: DonySnackbarType.error,
                           );
                         }
                       }

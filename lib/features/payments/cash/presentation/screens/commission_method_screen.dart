@@ -134,10 +134,10 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
     );
     if (!context.mounted) return;
     if (!authenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Authentification requise pour effectuer le paiement'),
-        ),
+      DonySnackbar.show(
+        context,
+        message: 'Authentification requise pour effectuer le paiement',
+        type: DonySnackbarType.warning,
       );
       context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
       return;
@@ -164,13 +164,10 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
         return;
       }
       if (e.error.code != FailureCode.Canceled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.error.localizedMessage ??
-                  'Erreur lors de l\'ajout de la carte.',
-            ),
-          ),
+        DonySnackbar.show(
+          context,
+          message: e.error.localizedMessage ?? 'Erreur lors de l\'ajout de la carte.',
+          type: DonySnackbarType.error,
         );
       }
       context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());

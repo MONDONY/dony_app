@@ -47,11 +47,10 @@ class _ThreadView extends StatelessWidget {
           ErrorPresenter.show(ctx, state.error);
         }
         if (state is NegotiationRejected) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            const SnackBar(
-              content: Text('Négociation rejetée'),
-              behavior: SnackBarBehavior.floating,
-            ),
+          DonySnackbar.show(
+            ctx,
+            message: 'Négociation rejetée',
+            type: DonySnackbarType.warning,
           );
           ctx.pop();
         }

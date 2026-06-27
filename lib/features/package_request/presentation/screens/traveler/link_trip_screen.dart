@@ -310,11 +310,10 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
               errorCode == 'payment-method/no-commission-card'
                   ? 'Ajoute d\'abord une carte de commission pour payer en cash.'
                   : state.error.message;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              behavior: SnackBarBehavior.floating,
-            ),
+          DonySnackbar.show(
+            context,
+            message: message,
+            type: DonySnackbarType.error,
           );
         }
       },

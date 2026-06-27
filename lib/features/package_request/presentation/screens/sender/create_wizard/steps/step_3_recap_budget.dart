@@ -53,10 +53,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     // la vérifie pas, donc on la rejoue ici.
     final state = context.read<PackageRequestFormBloc>().state;
     if (!state.negotiable && state.totalBudgetEur == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Indique un budget pour continuer (prix ferme requis).'),
-        ),
+      DonySnackbar.show(
+        context,
+        message: 'Indique un budget pour continuer (prix ferme requis).',
+        type: DonySnackbarType.warning,
       );
       return;
     }

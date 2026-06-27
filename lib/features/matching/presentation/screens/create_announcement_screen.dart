@@ -402,10 +402,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   }
 
   void _showError(String message) {
-    final cs = Theme.of(context).colorScheme;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: cs.error),
-    );
+    DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
   }
 
   Future<void> _selectDate() async {
@@ -558,10 +555,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
       listener: (context, state) {
         if (state is AnnouncementCreated || state is AnnouncementUpdated) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(_isEdit ? 'Trajet modifié !' : 'Trajet publié !'),
-            backgroundColor: cs.success,
-          ));
+          DonySnackbar.show(
+            context,
+            message: _isEdit ? 'Trajet modifié !' : 'Trajet publié !',
+            type: DonySnackbarType.success,
+          );
           context.go('/announcements');
         } else if (state is AnnouncementProLimitReached) {
           DonyDialog.show(

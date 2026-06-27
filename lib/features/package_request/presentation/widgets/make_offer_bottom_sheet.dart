@@ -156,8 +156,10 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     if (_dateNotifier.value == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sélectionnez votre date de voyage')),
+      DonySnackbar.show(
+        context,
+        message: 'Sélectionnez votre date de voyage',
+        type: DonySnackbarType.warning,
       );
       return;
     }
@@ -182,11 +184,10 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     return BlocListener<NegotiationBloc, NegotiationState>(
       listener: (ctx, state) {
         if (state is NegotiationLoaded) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            const SnackBar(
-              content: Text('Offre envoyée'),
-              backgroundColor: kSuccess,
-            ),
+          DonySnackbar.show(
+            ctx,
+            message: 'Offre envoyée',
+            type: DonySnackbarType.success,
           );
           Navigator.of(ctx, rootNavigator: true).pop();
           widget.rootRouter.push('/negotiations/${state.thread.id}');

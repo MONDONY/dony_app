@@ -1,3 +1,4 @@
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -46,11 +47,10 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
             }
           } else if (state is ConnectOnboardingError) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error.message),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              DonySnackbar.show(
+                context,
+                message: state.error.message,
+                type: DonySnackbarType.error,
               );
             }
           }

@@ -360,19 +360,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       } catch (_) {
                         setDialogState(() => loading = false);
                         if (ctx.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Numéro introuvable. Vérifiez et réessayez.',
-                                style: tt.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w500),
-                              ),
-                              backgroundColor: cs.error,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(DonyRadius.sm)),
-                            ),
+                          DonySnackbar.show(
+                            context,
+                            message: 'Numéro introuvable. Vérifiez et réessayez.',
+                            type: DonySnackbarType.error,
                           );
                         }
                       }
