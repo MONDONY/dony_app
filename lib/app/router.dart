@@ -39,6 +39,7 @@ import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart
 import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -443,6 +444,30 @@ final appRouter = GoRouter(
             ),
           ],
           child: CreateAnnouncementScreen(announcement: announcement),
+        );
+      },
+    ),
+
+    // ── Créer / modifier un trajet (plein écran, slide-up) ───────────────────
+    GoRoute(
+      path: '/trips/create',
+      pageBuilder: (context, state) {
+        final args = state.extra is CreateTripArgs
+            ? state.extra as CreateTripArgs
+            : null;
+        return CustomTransitionPage<bool>(
+          child: CreateTripScreen(args: args),
+          transitionDuration: const Duration(milliseconds: 300),
+          reverseTransitionDuration: const Duration(milliseconds: 250),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(begin: const Offset(0, 1), end: Offset.zero)
+                    .chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
+              child: child,
+            );
+          },
         );
       },
     ),
