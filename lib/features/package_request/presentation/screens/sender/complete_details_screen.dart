@@ -76,17 +76,26 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   /// else Stripe if accepted, else the first accepted method.
   void _resolveDefaultMethod(PackageRequest request) {
     if (_selectedMethod.value != null) return;
-    final accepted = request.acceptedPaymentMethods;
+    final available = _availableMethods(request);
     final fromThread = widget.thread?.paymentMethod;
-    if (fromThread != null && accepted.contains(fromThread)) {
+    if (fromThread != null && available.contains(fromThread)) {
       _selectedMethod.value = fromThread;
-    } else if (accepted.contains(PaymentMethod.stripe)) {
+    } else if (available.contains(PaymentMethod.stripe)) {
       _selectedMethod.value = PaymentMethod.stripe;
-    } else if (accepted.isNotEmpty) {
-      _selectedMethod.value = accepted.first;
+    } else if (available.isNotEmpty) {
+      _selectedMethod.value = available.first;
     } else {
       _selectedMethod.value = fromThread ?? PaymentMethod.stripe;
     }
+  }
+
+  /// Filtre CASH si le voyageur ne peut pas couvrir la commission Dony.
+  Set<PaymentMethod> _availableMethods(PackageRequest request) {
+    final cashOk = widget.thread?.cashCommissionAvailable ?? true;
+    if (cashOk) return request.acceptedPaymentMethods;
+    return request.acceptedPaymentMethods
+        .where((m) => m != PaymentMethod.cash)
+        .toSet();
   }
 
   void _submit() {
@@ -236,8 +245,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 valueListenable: _selectedMethod,
                                 builder: (context, selected, _) =>
                                     _PaymentMethodChoice(
-                                      methods:
-                                          state.request!.acceptedPaymentMethods,
+                                      methods: _availableMethods(state.request!),
                                       selected: selected,
                                       onChanged: (m) =>
                                           _selectedMethod.value = m,

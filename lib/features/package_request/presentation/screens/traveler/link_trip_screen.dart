@@ -121,25 +121,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         return linkable && corridorMatch && dateMatch;
       }).toList();
 
-      // Filter out CASH if traveler can't cover the commission (no wallet + no card).
+      // Filter out CASH if the backend reports the traveler can't cover the commission.
       final accepted = Set<PaymentMethod>.from(request.acceptedPaymentMethods);
-      Set<PaymentMethod> filtered = accepted;
-      if (accepted.contains(PaymentMethod.cash)) {
-        final net = widget.thread.currentPriceEur;
-        final gross = widget.thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
-        final commission = gross - net;
-        double balance = 0;
-        bool hasCard = false;
-        try {
-          balance = (await getIt<WalletRepository>().getBalance()).balance;
-        } catch (_) {}
-        try {
-          hasCard = (await getIt<CommissionMethodRepository>().load()) != null;
-        } catch (_) {}
-        if (balance < commission && !hasCard) {
-          filtered = accepted.where((m) => m != PaymentMethod.cash).toSet();
-        }
-      }
+      final cashOk = widget.thread.cashCommissionAvailable;
+      final Set<PaymentMethod> filtered = cashOk
+          ? accepted
+          : accepted.where((m) => m != PaymentMethod.cash).toSet();
 
       if (mounted) {
         _requestNotifier.value = request;
