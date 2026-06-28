@@ -104,11 +104,13 @@ class OwnerActionGrid extends StatelessWidget {
         onTap: canEdit
             ? () async {
                 final bloc = context.read<AnnouncementBloc>();
-                await context.push<bool>(
+                final changed = await context.push<bool>(
                   '/trips/create',
                   extra: CreateTripArgs(announcement: a),
                 );
-                if (context.mounted) bloc.add(AnnouncementDetailRequested(a.id));
+                if ((changed ?? false) && context.mounted) {
+                  bloc.add(AnnouncementDetailRequested(a.id));
+                }
               }
             : null,
         disabledMessage: 'Modifiable tant qu\'aucune demande',

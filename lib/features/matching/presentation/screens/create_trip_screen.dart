@@ -132,6 +132,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         create: (_) =>
             getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
       ),
+      BlocProvider<StripeAccountBloc>(
+        create: (_) => getIt<StripeAccountBloc>(),
+      ),
       if (args?.negotiationBloc != null)
         BlocProvider<NegotiationBloc>.value(value: args!.negotiationBloc!),
     ];
