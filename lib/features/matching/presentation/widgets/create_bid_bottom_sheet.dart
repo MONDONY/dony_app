@@ -410,7 +410,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       recipientPhone: _recipientPhoneCtrl.text.trim(),
       gridItems: _selectedGridItems(),
       promoCode: promoCode,
-      photoKeys: context.read<BidPhotosCubit>().readyKeys,
+      photoKeys: _photosCubit.readyKeys,
     );
 
     if (!_hasAlternativePaymentMethods) {
