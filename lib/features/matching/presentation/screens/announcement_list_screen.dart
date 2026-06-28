@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
@@ -79,6 +80,8 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
     if (isActive && !_tickerWasActive) {
       context.read<AnnouncementBloc>().add(AnnouncementListRequested());
       context.read<TripsSummaryCubit>().load();
+      // Pré-charge les négos pour alimenter le badge du bouton "Envoyer".
+      context.read<NegotiationListBloc>().add(const NegotiationListFetchRequested());
     }
     _tickerWasActive = isActive;
   }
@@ -134,6 +137,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
         onSendParcel: widget.onSendParcel,
         onCreateTrip: _createTrip,
         showBackButton: widget.showBackButton,
+        sendParcelBadge: widget.onSendParcel != null
+            ? context.select<NegotiationListBloc, int>(
+                (b) => b.state.activeCount)
+            : 0,
         hPad: hPad,
         tt: tt,
         cs: cs,
@@ -375,6 +382,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
     required this.hPad,
     required this.tt,
     required this.cs,
+    this.sendParcelBadge = 0,
   });
 
   final VoidCallback? onSendParcel;
@@ -383,6 +391,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
   final double hPad;
   final TextTheme tt;
   final ColorScheme cs;
+  final int sendParcelBadge;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight + 1);
@@ -440,6 +449,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                             label: 'Envoyer',
                             iconAsset: 'package',
                             style: HeaderPillStyle.warm,
+                            badge: sendParcelBadge,
                             onTap: onSendParcel!,
                           ),
                           const SizedBox(width: DonySpacing.xs),

@@ -144,6 +144,9 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
             final filtered = hasData
                 ? applyShipmentFilters(rawBids, filter, DateTime.now())
                 : <BidModel>[];
+            final awaitingPaymentCount = rawBids
+                .where((b) => b.status == 'AWAITING_PAYMENT')
+                .length;
 
             Widget body;
             if (!hasData &&
@@ -213,6 +216,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
                       onQueryChanged: _onQueryChanged,
                       resultCount: filtered.length,
                       hasData: hasData,
+                      awaitingPaymentCount: awaitingPaymentCount,
                     ),
                   Expanded(child: body),
                 ],
@@ -228,13 +232,17 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
 // ── Filter bar ────────────────────────────────────────────────────────────────
 
 /// Quick-preset chips for the shipment list.
-List<StatusChipData<Set<String>>> _buildChips(ColorScheme cs) => [
+List<StatusChipData<Set<String>>> _buildChips(
+  ColorScheme cs, {
+  int awaitingPaymentCount = 0,
+}) => [
   const StatusChipData(label: 'Tous', value: <String>{}),
   StatusChipData(label: 'En cours', value: kEnvoisEnCours, dotColor: cs.info),
   StatusChipData(
     label: 'En attente',
     value: kEnvoisAVenir,
     dotColor: cs.warning,
+    hasNew: awaitingPaymentCount > 0,
   ),
   StatusChipData(
     label: 'Livrés',
@@ -249,11 +257,13 @@ class _ShipmentFilterBar extends StatelessWidget {
     required this.onQueryChanged,
     required this.resultCount,
     required this.hasData,
+    required this.awaitingPaymentCount,
   });
   final TextEditingController controller;
   final ValueChanged<String> onQueryChanged;
   final int resultCount;
   final bool hasData;
+  final int awaitingPaymentCount;
 
   @override
   Widget build(BuildContext context) {
@@ -284,7 +294,7 @@ class _ShipmentFilterBar extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           // Status chips + period filter icon
           StatusChipsRow<Set<String>>(
-            chips: _buildChips(cs),
+            chips: _buildChips(cs, awaitingPaymentCount: awaitingPaymentCount),
             selected: filter.statuses,
             equals: setEquals,
             onSelected: (s) => cubit.applyQuickPreset(s),

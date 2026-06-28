@@ -32,6 +32,7 @@ class HeaderPill extends StatelessWidget {
     this.icon,
     this.iconAsset,
     this.style = HeaderPillStyle.primary,
+    this.badge = 0,
   });
 
   final String label;
@@ -39,6 +40,9 @@ class HeaderPill extends StatelessWidget {
   final String? iconAsset;
   final HeaderPillStyle style;
   final VoidCallback onTap;
+
+  /// Affiche un point rouge si > 0 (nouvel event dans la section).
+  final int badge;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +63,7 @@ class HeaderPill extends StatelessWidget {
         ),
     };
 
-    return Material(
+    final pill = Material(
       color: bg,
       shape: StadiumBorder(
         side: borderColor != null
@@ -96,6 +100,28 @@ class HeaderPill extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (badge <= 0) return pill;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        pill,
+        Positioned(
+          top: -3,
+          right: -3,
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: DonyColors.danger500,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 1.5),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -229,6 +255,7 @@ class StatusChipData<T> {
     required this.value,
     this.count,
     this.dotColor,
+    this.hasNew = false,
   });
 
   final String label;
@@ -239,6 +266,9 @@ class StatusChipData<T> {
 
   /// Pastille colorée optionnelle à gauche du label (ex: vert = actif).
   final Color? dotColor;
+
+  /// Point rouge d'alerte affiché à droite du label (nouvel event non vu).
+  final bool hasNew;
 }
 
 /// Rangée horizontale scrollable de chips de filtre statut.
@@ -355,6 +385,17 @@ class _ChipItem<T> extends StatelessWidget {
                   color: textColor,
                 ),
               ),
+              if (data.hasNew) ...[
+                const SizedBox(width: 5),
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    color: DonyColors.danger500,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

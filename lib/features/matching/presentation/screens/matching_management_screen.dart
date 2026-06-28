@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/presentation/annonces_layout.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,6 +56,7 @@ class MatchingManagementScreen extends StatelessWidget {
             BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
             BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
             BlocProvider(create: (_) => getIt<TripFilterCubit>()),
+            BlocProvider.value(value: getIt<NegotiationListBloc>()),
           ],
           child: AnnouncementListScreen(
             onSendParcel: () {
