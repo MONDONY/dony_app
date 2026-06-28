@@ -67,6 +67,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/packag
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
@@ -1134,7 +1135,9 @@ final appRouter = GoRouter(
     // ── Marketplace de demandes d'envoi (package requests) ─────────────────
     GoRoute(
       path: '/package-requests/new',
-      builder: (_, __) => const PackageRequestCreateScreen(),
+      builder: (_, state) => PackageRequestCreateScreen(
+        initial: state.extra as PackageRequest?,
+      ),
     ),
     GoRoute(
       path: '/package-requests/me',
