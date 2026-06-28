@@ -1236,6 +1236,17 @@ final appRouter = GoRouter(
         );
       },
     ),
+    GoRoute(
+      path: '/negotiations/:id/create-dedicated-trip',
+      builder: (context, state) {
+        final thread = state.extra as NegotiationThread;
+        return BlocProvider.value(
+          value: getIt<NegotiationBloc>()
+            ..add(NegotiationFetchRequested(thread.id)),
+          child: LinkTripScreen(thread: thread, autoCreateDedicated: true),
+        );
+      },
+    ),
   ],
 );
 

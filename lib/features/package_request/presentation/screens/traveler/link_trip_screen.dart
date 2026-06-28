@@ -26,8 +26,17 @@ import 'package:intl/intl.dart';
 /// They must pick one of their existing trips matching the corridor + date,
 /// or create a new one which will be auto-linked.
 class LinkTripScreen extends StatefulWidget {
-  const LinkTripScreen({required this.thread, super.key});
+  const LinkTripScreen({
+    required this.thread,
+    this.autoCreateDedicated = false,
+    super.key,
+  });
   final NegotiationThread thread;
+
+  /// Si `true`, after loading, navigates directly to the trip creation form
+  /// without the user having to tap "Créer un nouveau trajet".
+  /// Used when navigating from the "Créer un trajet dédié" button.
+  final bool autoCreateDedicated;
 
   @override
   State<LinkTripScreen> createState() => _LinkTripScreenState();
@@ -45,7 +54,11 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _load().then((_) {
+      if (widget.autoCreateDedicated && mounted) {
+        _createNewTrip();
+      }
+    });
   }
 
   @override
