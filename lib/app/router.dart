@@ -83,6 +83,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
@@ -307,6 +308,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/kyc/status',
       builder: (context, state) => const KycStatusScreen(),
+    ),
+
+    // ── Création d'une offre (hors shell) ───────────────────────────────
+    GoRoute(
+      path: '/bids/new',
+      builder: (_, state) => CreateBidScreen(
+        announcement: state.extra as AnnouncementModel,
+      ),
     ),
 
     // ── Bid detail (hors shell) ──────────────────────────────────────────
