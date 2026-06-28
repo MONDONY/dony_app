@@ -44,7 +44,17 @@ class _ThreadView extends StatelessWidget {
     return BlocConsumer<NegotiationBloc, NegotiationState>(
       listener: (ctx, state) {
         if (state is NegotiationError) {
-          ErrorPresenter.show(ctx, state.error);
+          if (state.error.code == 'negotiation/commission-charge-failed') {
+            DonySnackbar.show(
+              ctx,
+              message:
+                  'Le paiement cash est impossible : solde et carte du voyageur indisponibles.',
+              type: DonySnackbarType.warning,
+            );
+            ctx.pop();
+          } else {
+            ErrorPresenter.show(ctx, state.error);
+          }
         }
         if (state is NegotiationRejected) {
           DonySnackbar.show(
