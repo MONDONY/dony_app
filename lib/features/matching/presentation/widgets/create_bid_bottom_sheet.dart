@@ -95,97 +95,34 @@ class CreateBidBottomSheet {
   static Future<void> show(
     BuildContext context, {
     required AnnouncementModel announcement,
-  }) {
-    final btnConfigNotifier = ValueNotifier<_BtnConfig?>(const _BtnConfig(
-      label: 'Envoyer',
-      iconAsset: 'send',
-    ));
-    final isCashAvailable =
-        announcement.acceptedPaymentMethods.contains(BidPaymentMethod.cash);
-    final isWaveAvailable =
-        announcement.acceptedPaymentMethods.contains(BidPaymentMethod.wave);
-    final isOrangeMoneyAvailable = announcement.acceptedPaymentMethods
-        .contains(BidPaymentMethod.orangeMoney);
-
-    final bidBloc = getIt<BidBloc>();
-    final paymentBloc = getIt<PaymentBloc>();
-    final photosCubit = getIt<BidPhotosCubit>();
-
-    return DonyBottomSheet.show(
-      context,
-      title: 'Envoyer un colis',
-      wrapper: (child) => MultiBlocProvider(
-        providers: [
-          BlocProvider<BidBloc>.value(value: bidBloc),
-          BlocProvider<PaymentBloc>.value(value: paymentBloc),
-          BlocProvider<BidPhotosCubit>.value(value: photosCubit),
-          BlocProvider<WalletBloc>(
-            create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
-          ),
-        ],
-        child: child,
-      ),
-      stickyBottom: ValueListenableBuilder<_BtnConfig?>(
-        valueListenable: btnConfigNotifier,
-        builder: (ctx, config, _) => BlocBuilder<BidBloc, BidState>(
-          bloc: bidBloc,
-          builder: (ctx, state) {
-            final isLoading = state is BidLoading;
-            return DonyButton(
-              label: config?.label ?? 'Envoyer',
-              iconAsset: config?.iconAsset ?? 'send',
-              isLoading: isLoading,
-              onPressed: isLoading ? null : config?.onPressed,
-            );
-          },
-        ),
-      ),
-      child: _CreateBidContent(
-        announcement: announcement,
-        btnConfigNotifier: btnConfigNotifier,
-        isCashAvailable: isCashAvailable,
-        isWaveAvailable: isWaveAvailable,
-        isOrangeMoneyAvailable: isOrangeMoneyAvailable,
-        bidBloc: bidBloc,
-        paymentBloc: paymentBloc,
-      ),
-    ).whenComplete(() {
-      btnConfigNotifier.dispose();
-      bidBloc.close();
-      paymentBloc.close();
-      photosCubit.close();
-      // walletBloc.close() — géré automatiquement par BlocProvider
-    });
-  }
+  }) =>
+      context.push<void>('/bids/new', extra: announcement);
 }
 
-// ── Content widget ─────────────────────────────────────────────────────────────
+// ── Screen ─────────────────────────────────────────────────────────────────────
 
-class _CreateBidContent extends StatefulWidget {
-  const _CreateBidContent({
-    required this.announcement,
-    required this.btnConfigNotifier,
-    required this.isCashAvailable,
-    required this.isWaveAvailable,
-    required this.isOrangeMoneyAvailable,
-    required this.bidBloc,
-    required this.paymentBloc,
-  });
+class CreateBidScreen extends StatefulWidget {
+  const CreateBidScreen({super.key, required this.announcement});
 
   final AnnouncementModel announcement;
-  final ValueNotifier<_BtnConfig?> btnConfigNotifier;
-  final bool isCashAvailable;
-  final bool isWaveAvailable;
-  final bool isOrangeMoneyAvailable;
-  final BidBloc bidBloc;
-  final PaymentBloc paymentBloc;
 
   @override
-  State<_CreateBidContent> createState() => _CreateBidContentState();
+  State<CreateBidScreen> createState() => _CreateBidScreenState();
 }
 
-class _CreateBidContentState extends State<_CreateBidContent> {
-  // ── Form step fields ───────────────────────────────────────────────────────
+class _CreateBidScreenState extends State<CreateBidScreen> {
+  // ── BLoCs (créés ici, fermés dans dispose) ──────────────────────────────────
+  late final ValueNotifier<_BtnConfig?> _btnConfigNotifier;
+  late final BidBloc _bidBloc;
+  late final PaymentBloc _paymentBloc;
+  late final BidPhotosCubit _photosCubit;
+
+  // ── Payment method availability ─────────────────────────────────────────────
+  late final bool _isCashAvailable;
+  late final bool _isWaveAvailable;
+  late final bool _isOrangeMoneyAvailable;
+
+  // ── Form step fields ────────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
   final _valueCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
@@ -196,16 +133,15 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   final _disclaimerNotifier = ValueNotifier<bool>(false);
   final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
 
-  // ── Multi-step state ───────────────────────────────────────────────────────
+  // ── Multi-step state ────────────────────────────────────────────────────────
   final _stepNotifier = ValueNotifier<_FormStep>(_FormStep.form);
   _CollectedFormData? _formData;
 
-  // ── Code promo ─────────────────────────────────────────────────────────────
+  // ── Code promo ──────────────────────────────────────────────────────────────
   final _promoCtrl = TextEditingController();
-  // null = pas de devis ; BidQuoteResponse = promo valide ; String = erreur
   final _quoteNotifier = ValueNotifier<Object?>(null);
 
-  // ── Picker step fields ─────────────────────────────────────────────────────
+  // ── Picker step fields ──────────────────────────────────────────────────────
   final _methodNotifier =
       ValueNotifier<BidPaymentMethod>(BidPaymentMethod.stripe);
   final _mmPhoneCtrl = TextEditingController();
@@ -214,9 +150,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
 
-  // ── Content section helpers ────────────────────────────────────────────────
-
-  /// Catégories acceptées = annonce si fournies, sinon liste statique de secours.
   List<String> get _acceptedCategories {
     final accepted = widget.announcement.acceptedContentTypes;
     if (accepted != null && accepted.isNotEmpty) return accepted;
@@ -225,6 +158,157 @@ class _CreateBidContentState extends State<_CreateBidContent> {
 
   List<String> get _refusedCategories =>
       widget.announcement.refusedTypes ?? const [];
+
+  bool get _hasAlternativePaymentMethods =>
+      _isCashAvailable || _isWaveAvailable || _isOrangeMoneyAvailable;
+
+  @override
+  void initState() {
+    super.initState();
+    _btnConfigNotifier = ValueNotifier<_BtnConfig?>(
+      const _BtnConfig(label: 'Envoyer', iconAsset: 'send'),
+    );
+    _bidBloc = getIt<BidBloc>();
+    _paymentBloc = getIt<PaymentBloc>();
+    _photosCubit = getIt<BidPhotosCubit>();
+
+    _isCashAvailable = widget.announcement.acceptedPaymentMethods
+        .contains(BidPaymentMethod.cash);
+    _isWaveAvailable = widget.announcement.acceptedPaymentMethods
+        .contains(BidPaymentMethod.wave);
+    _isOrangeMoneyAvailable = widget.announcement.acceptedPaymentMethods
+        .contains(BidPaymentMethod.orangeMoney);
+
+    final hasKgPricing = widget.announcement.pricePerKg > 0;
+    final cap = _maxKg;
+    _weightNotifier = ValueNotifier<double>(
+      hasKgPricing
+          ? (widget.announcement.isKgFree ? 5.0 : (cap >= 5 ? 5 : cap))
+          : 0.0,
+    );
+
+    _weightNotifier.addListener(_syncFormButtonState);
+    _categoriesNotifier.addListener(_syncFormButtonState);
+    _disclaimerNotifier.addListener(_syncFormButtonState);
+    _gridQuantitiesNotifier.addListener(_syncFormButtonState);
+
+    _weightNotifier.addListener(_invalidateQuote);
+    _gridQuantitiesNotifier.addListener(_invalidateQuote);
+
+    _stepNotifier.addListener(_onStepChanged);
+    _methodNotifier.addListener(_syncPickerButtonState);
+    _mmPhoneCtrl.addListener(_syncPickerButtonState);
+    _mmCountryNotifier.addListener(_syncPickerButtonState);
+
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _syncFormButtonState());
+  }
+
+  @override
+  void dispose() {
+    _btnConfigNotifier.dispose();
+    _bidBloc.close();
+    _paymentBloc.close();
+    _photosCubit.close();
+    _descCtrl.dispose();
+    _valueCtrl.dispose();
+    _recipientNameCtrl.dispose();
+    _recipientPhoneCtrl.dispose();
+    _customItemCtrl.dispose();
+    _mmPhoneCtrl.dispose();
+    _promoCtrl.dispose();
+    _weightNotifier.removeListener(_syncFormButtonState);
+    _categoriesNotifier.removeListener(_syncFormButtonState);
+    _disclaimerNotifier.removeListener(_syncFormButtonState);
+    _gridQuantitiesNotifier.removeListener(_syncFormButtonState);
+    _weightNotifier.removeListener(_invalidateQuote);
+    _gridQuantitiesNotifier.removeListener(_invalidateQuote);
+    _stepNotifier.removeListener(_onStepChanged);
+    _methodNotifier.removeListener(_syncPickerButtonState);
+    _mmPhoneCtrl.removeListener(_syncPickerButtonState);
+    _mmCountryNotifier.removeListener(_syncPickerButtonState);
+    _quoteNotifier.dispose();
+    _weightNotifier.dispose();
+    _categoriesNotifier.dispose();
+    _disclaimerNotifier.dispose();
+    _gridQuantitiesNotifier.dispose();
+    _stepNotifier.dispose();
+    _methodNotifier.dispose();
+    _mmCountryNotifier.dispose();
+    super.dispose();
+  }
+
+  // ── Button state sync ───────────────────────────────────────────────────────
+
+  void _onStepChanged() {
+    if (_stepNotifier.value == _FormStep.paymentPicker) {
+      _syncPickerButtonState();
+    } else {
+      _syncFormButtonState();
+    }
+  }
+
+  void _syncFormButtonState() {
+    if (_stepNotifier.value != _FormStep.form) return;
+    final hasKgPricing = widget.announcement.pricePerKg > 0;
+    final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
+    final weightOk = hasKgPricing && _weightNotifier.value > 0;
+    final gridOk =
+        hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
+    final canSubmit = (weightOk || gridOk) &&
+        _categoriesNotifier.value.isNotEmpty &&
+        _disclaimerNotifier.value;
+
+    _btnConfigNotifier.value = _BtnConfig(
+      label: 'Envoyer',
+      iconAsset: 'send',
+      onPressed: canSubmit ? _goToPicker : null,
+    );
+  }
+
+  void _syncPickerButtonState() {
+    if (_stepNotifier.value != _FormStep.paymentPicker) return;
+    final method = _methodNotifier.value;
+    final isMM = method == BidPaymentMethod.wave ||
+        method == BidPaymentMethod.orangeMoney;
+    final mmOk = !isMM ||
+        (_mmPhoneCtrl.text.trim().isNotEmpty &&
+            _mmCountryNotifier.value != null);
+
+    final String label;
+    final String iconAsset;
+    if (method == BidPaymentMethod.cash) {
+      label = 'Confirmer (paiement en espèces)';
+      iconAsset = 'banknote';
+    } else if (method == BidPaymentMethod.wave) {
+      label = 'Payer via Wave';
+      iconAsset = 'waves';
+    } else if (method == BidPaymentMethod.orangeMoney) {
+      label = 'Payer via Orange Money';
+      iconAsset = 'smartphone';
+    } else {
+      final total = _computeStripeTotal();
+      label =
+          'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(total)} & payer';
+      iconAsset = 'lock';
+    }
+
+    _btnConfigNotifier.value = _BtnConfig(
+      label: label,
+      iconAsset: iconAsset,
+      onPressed: mmOk ? _confirmPayment : null,
+    );
+  }
+
+  double _computeStripeTotal() {
+    final quote = _quoteNotifier.value;
+    if (quote is BidQuoteResponse) return quote.totalEur;
+    final data = _formData;
+    if (data == null) return 0.0;
+    return netToSenderPrice(data.weightKg * _pricePerKg) + _gridDisplayTotal();
+  }
+
+  // ── Content helpers ─────────────────────────────────────────────────────────
 
   void _toggleCategory(Set<String> categories, String cat) {
     final updated = Set<String>.from(categories);
@@ -236,7 +320,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _categoriesNotifier.value = updated;
   }
 
-  /// Ajoute l'élément saisi dans l'input inline (pas de modal).
   void _addCustomItem() {
     final v = _customItemCtrl.text.trim();
     if (v.isEmpty) return;
@@ -244,17 +327,709 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         .map((e) => e.toLowerCase())
         .contains(v.toLowerCase())) {
       _customItemCtrl.clear();
-      return; // refusé → ignoré
+      return;
     }
     final updated = Set<String>.from(_categoriesNotifier.value)..add(v);
     _categoriesNotifier.value = updated;
     _customItemCtrl.clear();
   }
 
-  Widget _buildContentSection(Set<String> categories) {
+  List<Map<String, dynamic>>? _selectedGridItems() {
+    final q = _gridQuantitiesNotifier.value;
+    final items = <Map<String, dynamic>>[];
+    for (final item in widget.announcement.priceGridItems) {
+      final qty = q[item.id] ?? 0;
+      if (qty > 0) {
+        items.add({'announcementGridItemId': item.id, 'quantity': qty});
+      }
+    }
+    return items.isEmpty ? null : items;
+  }
+
+  double _gridDisplayTotal() {
+    final q = _gridQuantitiesNotifier.value;
+    return widget.announcement.priceGridItems.fold<double>(
+      0,
+      (sum, item) => sum + item.unitPriceDisplay * (q[item.id] ?? 0),
+    );
+  }
+
+  void _applyPromoCode() {
+    final code = _promoCtrl.text.trim();
+    if (code.isEmpty) {
+      _quoteNotifier.value = null;
+      return;
+    }
+    final weight = _weightNotifier.value;
+    _bidBloc.add(BidQuoteRequested(
+      announcementId: widget.announcement.id,
+      weightKg: weight > 0 ? weight : null,
+      promoCode: code,
+      gridItems: _selectedGridItems(),
+    ));
+  }
+
+  void _invalidateQuote() {
+    if (_quoteNotifier.value != null) _quoteNotifier.value = null;
+  }
+
+  // ── Step navigation ─────────────────────────────────────────────────────────
+
+  void _goToPicker() {
+    if (_descCtrl.text.trim().isEmpty) {
+      _showError('Description obligatoire');
+      return;
+    }
+    final val = double.tryParse(_valueCtrl.text);
+    if (val == null || val <= 0) {
+      _showError('Valeur déclarée invalide');
+      return;
+    }
+    if (val > 500) {
+      _showError('Valeur maximum : 500 €');
+      return;
+    }
+    if (_recipientNameCtrl.text.trim().isEmpty) {
+      _showError('Nom du destinataire obligatoire');
+      return;
+    }
+    if (_recipientPhoneCtrl.text.trim().isEmpty) {
+      _showError('Téléphone du destinataire obligatoire');
+      return;
+    }
+
+    final promoCode = _promoCtrl.text.trim().isNotEmpty
+        ? _promoCtrl.text.trim()
+        : null;
+    _formData = _CollectedFormData(
+      weightKg: _weightNotifier.value,
+      declaredValueEur: val,
+      description: _descCtrl.text.trim(),
+      contentCategory: _categoriesNotifier.value.join(', '),
+      recipientName: _recipientNameCtrl.text.trim(),
+      recipientPhone: _recipientPhoneCtrl.text.trim(),
+      gridItems: _selectedGridItems(),
+      promoCode: promoCode,
+      photoKeys: _photosCubit.readyKeys,
+    );
+
+    if (!_hasAlternativePaymentMethods) {
+      _confirmPayment();
+      return;
+    }
+
+    _stepNotifier.value = _FormStep.paymentPicker;
+  }
+
+  void _confirmPayment() {
+    final data = _formData;
+    if (data == null) return;
+    final method = _methodNotifier.value;
+
+    if (method == BidPaymentMethod.wave ||
+        method == BidPaymentMethod.orangeMoney) {
+      final phone = _mmPhoneCtrl.text.trim();
+      if (phone.isEmpty) {
+        _showError('Numéro Mobile Money obligatoire');
+        return;
+      }
+      if (_mmCountryNotifier.value == null) {
+        _showError('Pays obligatoire');
+        return;
+      }
+      _bidBloc.add(BidCreateRequested(
+        announcementId: widget.announcement.id,
+        weightKg: data.weightKg,
+        declaredValueEur: data.declaredValueEur,
+        description: data.description,
+        contentCategory: data.contentCategory,
+        recipientName: data.recipientName,
+        recipientPhone: data.recipientPhone,
+        paymentMethod: method,
+        phoneNumber: phone,
+        countryCode: _mmCountryNotifier.value,
+        promoCode: data.promoCode,
+        gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
+      ));
+    } else if (method == BidPaymentMethod.cash) {
+      _bidBloc.add(BidCreateRequested(
+        announcementId: widget.announcement.id,
+        weightKg: data.weightKg,
+        declaredValueEur: data.declaredValueEur,
+        description: data.description,
+        contentCategory: data.contentCategory,
+        recipientName: data.recipientName,
+        recipientPhone: data.recipientPhone,
+        paymentMethod: BidPaymentMethod.cash,
+        promoCode: data.promoCode,
+        gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
+      ));
+    } else {
+      _bidBloc.add(BidCheckoutRequested(
+        announcementId: widget.announcement.id,
+        weightKg: data.weightKg,
+        declaredValueEur: data.declaredValueEur,
+        description: data.description,
+        contentCategory: data.contentCategory,
+        recipientName: data.recipientName,
+        recipientPhone: data.recipientPhone,
+        gridItems: data.gridItems,
+        photoKeys: data.photoKeys,
+      ));
+    }
+  }
+
+  void _showError(String message) {
+    DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
+  }
+
+  // ── BLoC listeners ──────────────────────────────────────────────────────────
+
+  void _onBidState(BuildContext context, BidState state) {
+    if (state is BidCreated) {
+      context.pop();
+      if (context.mounted) {
+        unawaited(context.push('/bids/${state.bid.id}?from=payment'));
+      }
+    } else if (state is BidCheckoutReady) {
+      context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
+            clientSecret: state.response.clientSecret,
+            publishableKey: state.response.publishableKey,
+            bidId: state.response.bidId,
+          ));
+    } else if (state is BidQuoteLoaded) {
+      _quoteNotifier.value = state.quote;
+    } else if (state is BidPromoError) {
+      _quoteNotifier.value = state.error.message;
+      ErrorPresenter.show(context, state.error);
+    } else if (state is BidError) {
+      ErrorPresenter.show(context, state.error);
+    }
+  }
+
+  Future<void> _onPaymentState(
+    BuildContext context,
+    PaymentState state,
+  ) async {
+    if (state is CheckoutPaymentSheetReady) {
+      await _presentPaymentSheet(context, state);
+    }
+  }
+
+  // ── Build ───────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<BidBloc>.value(value: _bidBloc),
+        BlocProvider<PaymentBloc>.value(value: _paymentBloc),
+        BlocProvider<BidPhotosCubit>.value(value: _photosCubit),
+        BlocProvider<WalletBloc>(
+          create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+        ),
+      ],
+      child: ValueListenableBuilder<_FormStep>(
+        valueListenable: _stepNotifier,
+        builder: (context, step, _) => PopScope(
+          canPop: step == _FormStep.form,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _stepNotifier.value = _FormStep.form;
+          },
+          child: Scaffold(
+            backgroundColor: cs.surface,
+            appBar: AppBar(
+              backgroundColor: cs.surface,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                tooltip: 'Retour',
+                onPressed: () {
+                  if (step == _FormStep.paymentPicker) {
+                    _stepNotifier.value = _FormStep.form;
+                  } else {
+                    context.pop();
+                  }
+                },
+                icon: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius:
+                        BorderRadius.circular(DonyRadius.iconBtn),
+                  ),
+                  child: DonyIcon(
+                    'chevron-left',
+                    size: 20,
+                    color: cs.primary,
+                  ),
+                ),
+              ),
+              title: Text(
+                step == _FormStep.paymentPicker
+                    ? 'Paiement'
+                    : 'Envoyer un colis',
+                style: tt.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              centerTitle: false,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1),
+                child: Divider(height: 1, color: cs.outlineVariant),
+              ),
+            ),
+            body: MultiBlocListener(
+              listeners: [
+                BlocListener<BidBloc, BidState>(listener: _onBidState),
+                BlocListener<PaymentBloc, PaymentState>(
+                  listener: _onPaymentState,
+                ),
+              ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  DonySpacing.xxl,
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  ),
+                  child: step == _FormStep.paymentPicker
+                      ? _buildPickerStep(context)
+                      : _buildFormStep(context),
+                ),
+              ),
+            ),
+            bottomNavigationBar: _StickyBottom(
+              btnConfigNotifier: _btnConfigNotifier,
+              bidBloc: _bidBloc,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Form step ───────────────────────────────────────────────────────────────
+
+  Widget _buildFormStep(BuildContext context) {
+    return ListenableBuilder(
+      key: const ValueKey('form'),
+      listenable: Listenable.merge([
+        _weightNotifier,
+        _categoriesNotifier,
+        _disclaimerNotifier,
+        _gridQuantitiesNotifier,
+      ]),
+      builder: (context, _) {
+        final weightKg = _weightNotifier.value;
+        final disclaimerAccepted = _disclaimerNotifier.value;
+        final gridQuantities = _gridQuantitiesNotifier.value;
+        final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
+        final hasKgPricing = widget.announcement.pricePerKg > 0;
+
+        final gridTotal = hasGridPricing
+            ? widget.announcement.priceGridItems.fold<double>(
+                0,
+                (sum, item) =>
+                    sum + item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
+              )
+            : 0.0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Articles grille ───────────────────────────────────────────
+            if (hasGridPricing) ...[
+              const _SectionLabel(label: 'ARTICLES'),
+              const SizedBox(height: DonySpacing.sm),
+              ValueListenableBuilder<Map<String, int>>(
+                valueListenable: _gridQuantitiesNotifier,
+                builder: (context, quantities, _) {
+                  final totalSelected =
+                      quantities.values.fold<int>(0, (s, q) => s + q);
+                  final subtotal = widget.announcement.priceGridItems
+                      .fold<double>(
+                        0.0,
+                        (s, item) =>
+                            s +
+                            item.unitPriceDisplay *
+                                (quantities[item.id] ?? 0),
+                      );
+                  final hasSelection = quantities.isNotEmpty;
+                  final cs = Theme.of(context).colorScheme;
+                  final tt = Theme.of(context).textTheme;
+
+                  return GestureDetector(
+                    onTap: () async {
+                      final result = await GridItemSelectionSheet.show(
+                        context,
+                        items: widget.announcement.priceGridItems,
+                        initialQuantities: quantities,
+                        corridor:
+                            '${widget.announcement.departureCity} → ${widget.announcement.arrivalCity}',
+                      );
+                      if (result != null) {
+                        _gridQuantitiesNotifier.value = result;
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(DonySpacing.base),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: hasSelection
+                            ? Border.all(
+                                color: cs.success,
+                                width: 1.5,
+                              )
+                            : Border.all(
+                                color: cs.warning,
+                                width: 1.5,
+                              ),
+                      ),
+                      child: hasSelection
+                          ? Row(
+                              children: [
+                                DonyIcon(
+                                  'circle-check',
+                                  color: cs.success,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '$totalSelected article${totalSelected > 1 ? 's' : ''} sélectionné${totalSelected > 1 ? 's' : ''}',
+                                        style: tt.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Sous-total : ${subtotal.toStringAsFixed(2)} €',
+                                        style: tt.bodySmall?.copyWith(
+                                          color: cs.success,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  'Modifier',
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.primary,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                const DonyEmoji.parcel(size: 18),
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Choisir mes articles',
+                                        key: const Key('choose-articles-btn'),
+                                        style: tt.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Requis — au moins 1 article',
+                                        style: tt.bodySmall?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                DonyIcon(
+                                  'chevron-right',
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
+
+            // ── Poids ─────────────────────────────────────────────────────
+            if (hasKgPricing) ...[
+              _WeightSection(
+                weightKg: weightKg,
+                maxKg: _maxKg,
+                isMixed: hasGridPricing,
+                isKgFree: widget.announcement.isKgFree,
+                onChanged: (v) => _weightNotifier.value = v,
+              ).animate().fadeIn(duration: 250.ms),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
+
+            // ── Contenu ───────────────────────────────────────────────────
+            ValueListenableBuilder<Set<String>>(
+              valueListenable: _categoriesNotifier,
+              builder: (_, categories, __) =>
+                  _buildContentSection(context, categories),
+            ),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Photos ────────────────────────────────────────────────────
+            const _SectionLabel(label: 'PHOTOS DU COLIS (OPTIONNEL)'),
+            const SizedBox(height: DonySpacing.md),
+            const PhotoSection(),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Description ───────────────────────────────────────────────
+            const _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
+            const SizedBox(height: DonySpacing.sm),
+            DonyTextField(
+              controller: _descCtrl,
+              hint: 'Médicaments pour diabète + 2 tee-shirts enfants',
+              maxLines: 4,
+              minLines: 2,
+            ).animate().fadeIn(delay: 100.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Valeur déclarée ───────────────────────────────────────────
+            const _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
+            const SizedBox(height: DonySpacing.sm),
+            TextFormField(
+              controller: _valueCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              scrollPadding: const EdgeInsets.only(bottom: 120),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                    RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+              decoration: InputDecoration(
+                hintText: '120',
+                helperText:
+                    'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
+                helperStyle:
+                    Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.md,
+                ),
+              ),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ).animate().fadeIn(delay: 140.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Destinataire ──────────────────────────────────────────────
+            const _SectionLabel(label: 'DESTINATAIRE'),
+            const SizedBox(height: DonySpacing.md),
+            DonyTextField(
+              controller: _recipientNameCtrl,
+              label: 'Prénom et nom du destinataire',
+              hint: 'ex: Amadou Diallo',
+            ).animate().fadeIn(delay: 160.ms),
+            const SizedBox(height: DonySpacing.md),
+            DonyTextField(
+              controller: _recipientPhoneCtrl,
+              label: 'Téléphone du destinataire',
+              hint: 'ex: +221 77 000 00 00',
+              keyboardType: TextInputType.phone,
+            ).animate().fadeIn(delay: 180.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Disclaimer ────────────────────────────────────────────────
+            _DisclaimerCard(
+              accepted: disclaimerAccepted,
+              onChanged: (v) => _disclaimerNotifier.value = v,
+            ).animate().fadeIn(delay: 200.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Code promo ────────────────────────────────────────────────
+            const _SectionLabel(label: 'CODE PROMO (OPTIONNEL)'),
+            const SizedBox(height: DonySpacing.sm),
+            BlocBuilder<BidBloc, BidState>(
+              bloc: _bidBloc,
+              builder: (context, bidState) {
+                final isQuoteLoading = bidState is BidQuoteLoading;
+                return ValueListenableBuilder<Object?>(
+                  valueListenable: _quoteNotifier,
+                  builder: (_, quoteVal, __) {
+                    final quote =
+                        quoteVal is BidQuoteResponse ? quoteVal : null;
+                    final promoError =
+                        quoteVal is String ? quoteVal : null;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _promoCtrl,
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                                decoration: InputDecoration(
+                                  hintText: 'Ex: WELCOME10',
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.base,
+                                    vertical: DonySpacing.md,
+                                  ),
+                                  suffixIcon: isQuoteLoading
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12),
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child:
+                                                CircularProgressIndicator(
+                                                    strokeWidth: 2),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                onFieldSubmitted: (_) => _applyPromoCode(),
+                              ),
+                            ),
+                            const SizedBox(width: DonySpacing.sm),
+                            SizedBox(
+                              height: 52,
+                              width: 110,
+                              child: FilledButton(
+                                onPressed: isQuoteLoading
+                                    ? null
+                                    : _applyPromoCode,
+                                child: const Text('Appliquer'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (quote != null && quote.promoApplied) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Row(
+                            children: [
+                              const DonyIcon('circle-check',
+                                  size: 16, color: Color(0xFF16A34A)),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  quote.promoLabel ?? 'Code appliqué',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: const Color(0xFF16A34A),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (promoError != null) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Row(
+                            children: [
+                              const DonyIcon('circle-alert',
+                                  size: 16, color: Color(0xFFE53935)),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  promoError,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: const Color(0xFFE53935),
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                );
+              },
+            ).animate().fadeIn(delay: 220.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Prix live ─────────────────────────────────────────────────
+            ValueListenableBuilder<Object?>(
+              valueListenable: _quoteNotifier,
+              builder: (_, quoteVal, __) {
+                final quote =
+                    quoteVal is BidQuoteResponse ? quoteVal : null;
+                final kgDisplayLocal = hasKgPricing
+                    ? netToSenderPrice(weightKg * _pricePerKg)
+                    : 0.0;
+                final localTotal = kgDisplayLocal + gridTotal;
+
+                double kgLine = kgDisplayLocal;
+                double gridLine = gridTotal;
+                double total = localTotal;
+                double? original;
+                bool promoApplied = false;
+                if (quote != null) {
+                  final mult = 1 + quote.rate;
+                  kgLine = quote.kgNetEur * mult;
+                  gridLine = quote.gridNetEur * mult;
+                  total = quote.totalEur;
+                  promoApplied = quote.promoApplied;
+                  original = promoApplied ? localTotal : null;
+                }
+                if (total <= 0) return const SizedBox.shrink();
+                return _PriceBreakdown(
+                  weightKg: weightKg,
+                  pricePerKg: _pricePerKg,
+                  kgDisplay: kgLine,
+                  gridDisplay: gridLine,
+                  totalPrice: total,
+                  originalTotal: original,
+                  promoApplied: promoApplied,
+                );
+              },
+            ),
+            const SizedBox(height: DonySpacing.md),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildContentSection(
+    BuildContext context,
+    Set<String> categories,
+  ) {
     final accepted = _acceptedCategories;
     final refused = _refusedCategories;
-    // Éléments custom = sélectionnés qui ne sont pas dans la liste acceptée.
     final custom = categories.where((c) => !accepted.contains(c)).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,770 +1067,16 @@ class _CreateBidContentState extends State<_CreateBidContent> {
           Wrap(
             spacing: DonySpacing.sm,
             runSpacing: DonySpacing.sm,
-            children: [for (final cat in refused) _RefusedChip(label: cat)],
+            children: [
+              for (final cat in refused) _RefusedChip(label: cat),
+            ],
           ),
         ],
       ],
     );
   }
 
-  /// Articles sélectionnés au format attendu par l'API (`null` si aucun).
-  List<Map<String, dynamic>>? _selectedGridItems() {
-    final q = _gridQuantitiesNotifier.value;
-    final items = <Map<String, dynamic>>[];
-    for (final item in widget.announcement.priceGridItems) {
-      final qty = q[item.id] ?? 0;
-      if (qty > 0) {
-        items.add({'announcementGridItemId': item.id, 'quantity': qty});
-      }
-    }
-    return items.isEmpty ? null : items;
-  }
-
-  /// Total grille « prix affiché expéditeur » (commission Dony incluse), au taux global.
-  double _gridDisplayTotal() {
-    final q = _gridQuantitiesNotifier.value;
-    return widget.announcement.priceGridItems.fold<double>(
-      0,
-      (sum, item) => sum + item.unitPriceDisplay * (q[item.id] ?? 0),
-    );
-  }
-
-  void _applyPromoCode() {
-    final code = _promoCtrl.text.trim();
-    if (code.isEmpty) { _quoteNotifier.value = null; return; }
-    final weight = _weightNotifier.value;
-    widget.bidBloc.add(BidQuoteRequested(
-      announcementId: widget.announcement.id,
-      weightKg: weight > 0 ? weight : null,
-      promoCode: code,
-      gridItems: _selectedGridItems(),
-    ));
-  }
-
-  /// Un devis (promo) calculé sur d'anciens poids/articles devient caduc.
-  void _invalidateQuote() {
-    if (_quoteNotifier.value != null) _quoteNotifier.value = null;
-  }
-
-  bool get _hasAlternativePaymentMethods =>
-      widget.isCashAvailable ||
-      widget.isWaveAvailable ||
-      widget.isOrangeMoneyAvailable;
-
-  @override
-  void initState() {
-    super.initState();
-    final hasKgPricing = widget.announcement.pricePerKg > 0;
-    final cap = _maxKg;
-    _weightNotifier = ValueNotifier<double>(
-      hasKgPricing
-          ? (widget.announcement.isKgFree ? 5.0 : (cap >= 5 ? 5 : cap))
-          : 0.0,
-    );
-
-    // Form step listeners
-    _weightNotifier.addListener(_syncFormButtonState);
-    _categoriesNotifier.addListener(_syncFormButtonState);
-    _disclaimerNotifier.addListener(_syncFormButtonState);
-    _gridQuantitiesNotifier.addListener(_syncFormButtonState);
-
-    // Tout changement de poids/articles invalide un devis promo désormais périmé.
-    _weightNotifier.addListener(_invalidateQuote);
-    _gridQuantitiesNotifier.addListener(_invalidateQuote);
-
-    // Picker step listeners
-    _stepNotifier.addListener(_onStepChanged);
-    _methodNotifier.addListener(_syncPickerButtonState);
-    _mmPhoneCtrl.addListener(_syncPickerButtonState);
-    _mmCountryNotifier.addListener(_syncPickerButtonState);
-
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _syncFormButtonState());
-  }
-
-  // ── Button state sync ──────────────────────────────────────────────────────
-
-  void _onStepChanged() {
-    if (_stepNotifier.value == _FormStep.paymentPicker) {
-      _syncPickerButtonState();
-    } else {
-      _syncFormButtonState();
-    }
-  }
-
-  void _syncFormButtonState() {
-    if (_stepNotifier.value != _FormStep.form) return;
-    final hasKgPricing = widget.announcement.pricePerKg > 0;
-    final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
-    final weightOk = hasKgPricing && _weightNotifier.value > 0;
-    final gridOk =
-        hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
-    final canSubmit = (weightOk || gridOk) &&
-        _categoriesNotifier.value.isNotEmpty &&
-        _disclaimerNotifier.value;
-
-    widget.btnConfigNotifier.value = _BtnConfig(
-      label: 'Envoyer',
-      iconAsset: 'send',
-      onPressed: canSubmit ? _goToPicker : null,
-    );
-  }
-
-  void _syncPickerButtonState() {
-    if (_stepNotifier.value != _FormStep.paymentPicker) return;
-    final method = _methodNotifier.value;
-    final isMM = method == BidPaymentMethod.wave ||
-        method == BidPaymentMethod.orangeMoney;
-    final mmOk = !isMM ||
-        (_mmPhoneCtrl.text.trim().isNotEmpty &&
-            _mmCountryNotifier.value != null);
-
-    final String label;
-    final String iconAsset;
-    if (method == BidPaymentMethod.cash) {
-      label = 'Confirmer (paiement en espèces)';
-      iconAsset = 'banknote';
-    } else if (method == BidPaymentMethod.wave) {
-      label = 'Payer via Wave';
-      iconAsset = 'waves';
-    } else if (method == BidPaymentMethod.orangeMoney) {
-      label = 'Payer via Orange Money';
-      iconAsset = 'smartphone';
-    } else {
-      final total = _computeStripeTotal();
-      label =
-          'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(total)} & payer';
-      iconAsset = 'lock';
-    }
-
-    widget.btnConfigNotifier.value = _BtnConfig(
-      label: label,
-      iconAsset: iconAsset,
-      onPressed: mmOk ? _confirmPayment : null,
-    );
-  }
-
-  double _computeStripeTotal() {
-    final quote = _quoteNotifier.value;
-    // Le devis serveur couvre tous les modes (poids + articles + promo).
-    if (quote is BidQuoteResponse) return quote.totalEur;
-    final data = _formData;
-    if (data == null) return 0.0;
-    // Repli local : part poids (commission incl.) + part articles (déjà commission incl.).
-    return netToSenderPrice(data.weightKg * _pricePerKg) + _gridDisplayTotal();
-  }
-
-  // ── Navigation between steps ───────────────────────────────────────────────
-
-  void _goToPicker() {
-    if (_descCtrl.text.trim().isEmpty) {
-      _showError('Description obligatoire');
-      return;
-    }
-    final val = double.tryParse(_valueCtrl.text);
-    if (val == null || val <= 0) {
-      _showError('Valeur déclarée invalide');
-      return;
-    }
-    if (val > 500) {
-      _showError('Valeur maximum : 500 €');
-      return;
-    }
-    if (_recipientNameCtrl.text.trim().isEmpty) {
-      _showError('Nom du destinataire obligatoire');
-      return;
-    }
-    if (_recipientPhoneCtrl.text.trim().isEmpty) {
-      _showError('Téléphone du destinataire obligatoire');
-      return;
-    }
-
-    final promoCode = _promoCtrl.text.trim().isNotEmpty
-        ? _promoCtrl.text.trim()
-        : null;
-    _formData = _CollectedFormData(
-      weightKg: _weightNotifier.value,
-      declaredValueEur: val,
-      description: _descCtrl.text.trim(),
-      contentCategory: _categoriesNotifier.value.join(', '),
-      recipientName: _recipientNameCtrl.text.trim(),
-      recipientPhone: _recipientPhoneCtrl.text.trim(),
-      gridItems: _selectedGridItems(),
-      promoCode: promoCode,
-      photoKeys: context.read<BidPhotosCubit>().readyKeys,
-    );
-
-    // If only Stripe is available, skip the picker and go straight to checkout.
-    if (!_hasAlternativePaymentMethods) {
-      _confirmPayment();
-      return;
-    }
-
-    _stepNotifier.value = _FormStep.paymentPicker;
-  }
-
-  // ── Dispatch BidBloc event ─────────────────────────────────────────────────
-
-  void _confirmPayment() {
-    final data = _formData;
-    if (data == null) return;
-    final method = _methodNotifier.value;
-
-    if (method == BidPaymentMethod.wave ||
-        method == BidPaymentMethod.orangeMoney) {
-      final phone = _mmPhoneCtrl.text.trim();
-      if (phone.isEmpty) {
-        _showError('Numéro Mobile Money obligatoire');
-        return;
-      }
-      if (_mmCountryNotifier.value == null) {
-        _showError('Pays obligatoire');
-        return;
-      }
-      widget.bidBloc.add(BidCreateRequested(
-        announcementId: widget.announcement.id,
-        weightKg: data.weightKg,
-        declaredValueEur: data.declaredValueEur,
-        description: data.description,
-        contentCategory: data.contentCategory,
-        recipientName: data.recipientName,
-        recipientPhone: data.recipientPhone,
-        paymentMethod: method,
-        phoneNumber: phone,
-        countryCode: _mmCountryNotifier.value,
-        promoCode: data.promoCode,
-        gridItems: data.gridItems,
-        photoKeys: data.photoKeys,
-      ));
-    } else if (method == BidPaymentMethod.cash) {
-      widget.bidBloc.add(BidCreateRequested(
-        announcementId: widget.announcement.id,
-        weightKg: data.weightKg,
-        declaredValueEur: data.declaredValueEur,
-        description: data.description,
-        contentCategory: data.contentCategory,
-        recipientName: data.recipientName,
-        recipientPhone: data.recipientPhone,
-        paymentMethod: BidPaymentMethod.cash,
-        promoCode: data.promoCode,
-        gridItems: data.gridItems,
-        photoKeys: data.photoKeys,
-      ));
-    } else {
-      widget.bidBloc.add(BidCheckoutRequested(
-        announcementId: widget.announcement.id,
-        weightKg: data.weightKg,
-        declaredValueEur: data.declaredValueEur,
-        description: data.description,
-        contentCategory: data.contentCategory,
-        recipientName: data.recipientName,
-        recipientPhone: data.recipientPhone,
-        gridItems: data.gridItems,
-        photoKeys: data.photoKeys,
-      ));
-    }
-  }
-
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
-
-  @override
-  void dispose() {
-    _descCtrl.dispose();
-    _valueCtrl.dispose();
-    _recipientNameCtrl.dispose();
-    _recipientPhoneCtrl.dispose();
-    _customItemCtrl.dispose();
-    _mmPhoneCtrl.dispose();
-    _weightNotifier.removeListener(_syncFormButtonState);
-    _categoriesNotifier.removeListener(_syncFormButtonState);
-    _disclaimerNotifier.removeListener(_syncFormButtonState);
-    _gridQuantitiesNotifier.removeListener(_syncFormButtonState);
-    _weightNotifier.removeListener(_invalidateQuote);
-    _gridQuantitiesNotifier.removeListener(_invalidateQuote);
-    _stepNotifier.removeListener(_onStepChanged);
-    _methodNotifier.removeListener(_syncPickerButtonState);
-    _mmPhoneCtrl.removeListener(_syncPickerButtonState);
-    _mmCountryNotifier.removeListener(_syncPickerButtonState);
-    _promoCtrl.dispose();
-    _quoteNotifier.dispose();
-    _weightNotifier.dispose();
-    _categoriesNotifier.dispose();
-    _disclaimerNotifier.dispose();
-    _gridQuantitiesNotifier.dispose();
-    _stepNotifier.dispose();
-    _methodNotifier.dispose();
-    _mmCountryNotifier.dispose();
-    super.dispose();
-  }
-
-  void _showError(String message) {
-    DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
-  }
-
-  // ── BLoC event handlers ────────────────────────────────────────────────────
-
-  void _onBidState(BuildContext context, BidState state) {
-    if (state is BidCreated) {
-      Navigator.of(context, rootNavigator: true).pop();
-      if (context.mounted) {
-        unawaited(context.push('/bids/${state.bid.id}?from=payment'));
-      }
-    } else if (state is BidCheckoutReady) {
-      context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
-            clientSecret: state.response.clientSecret,
-            publishableKey: state.response.publishableKey,
-            bidId: state.response.bidId,
-          ));
-    } else if (state is BidQuoteLoaded) {
-      _quoteNotifier.value = state.quote;
-    } else if (state is BidPromoError) {
-      _quoteNotifier.value = state.error.message;
-      ErrorPresenter.show(context, state.error);
-    } else if (state is BidError) {
-      ErrorPresenter.show(context, state.error);
-    }
-  }
-
-  Future<void> _onPaymentState(BuildContext context, PaymentState state) async {
-    if (state is CheckoutPaymentSheetReady) {
-      await _presentPaymentSheet(context, state);
-    }
-  }
-
-  // ── Build ──────────────────────────────────────────────────────────────────
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<BidBloc, BidState>(listener: _onBidState),
-        BlocListener<PaymentBloc, PaymentState>(listener: _onPaymentState),
-      ],
-      child: ValueListenableBuilder<_FormStep>(
-        valueListenable: _stepNotifier,
-        builder: (context, step, _) {
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
-            child: step == _FormStep.paymentPicker
-                ? _buildPickerStep(context)
-                : _buildFormStep(context),
-          );
-        },
-      ),
-    );
-  }
-
-  // ── Form step ──────────────────────────────────────────────────────────────
-
-  Widget _buildFormStep(BuildContext context) {
-    return ListenableBuilder(
-      key: const ValueKey('form'),
-      listenable: Listenable.merge([
-        _weightNotifier,
-        _categoriesNotifier,
-        _disclaimerNotifier,
-        _gridQuantitiesNotifier,
-      ]),
-      builder: (context, _) {
-        final weightKg = _weightNotifier.value;
-        final disclaimerAccepted = _disclaimerNotifier.value;
-        final gridQuantities = _gridQuantitiesNotifier.value;
-        final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
-        final hasKgPricing = widget.announcement.pricePerKg > 0;
-
-        final gridTotal = hasGridPricing
-            ? widget.announcement.priceGridItems.fold<double>(
-                0,
-                (sum, item) =>
-                    sum + item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
-              )
-            : 0.0;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Articles grille ─────────────────────────────────────────────
-            if (hasGridPricing) ...[
-              const _SectionLabel(label: 'ARTICLES'),
-              const SizedBox(height: DonySpacing.sm),
-              ValueListenableBuilder<Map<String, int>>(
-                valueListenable: _gridQuantitiesNotifier,
-                builder: (context, quantities, _) {
-                  final totalSelected =
-                      quantities.values.fold<int>(0, (s, q) => s + q);
-                  final subtotal = widget.announcement.priceGridItems
-                      .fold<double>(
-                        0.0,
-                        (s, item) =>
-                            s +
-                            item.unitPriceDisplay *
-                                (quantities[item.id] ?? 0),
-                      );
-                  final hasSelection = quantities.isNotEmpty;
-
-                  return GestureDetector(
-                    onTap: () async {
-                      final result = await GridItemSelectionSheet.show(
-                        context,
-                        items: widget.announcement.priceGridItems,
-                        initialQuantities: quantities,
-                        corridor:
-                            '${widget.announcement.departureCity} → ${widget.announcement.arrivalCity}',
-                      );
-                      if (result != null) {
-                        _gridQuantitiesNotifier.value = result;
-                      }
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(DonySpacing.base),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(DonyRadius.card),
-                        border: hasSelection
-                            ? Border.all(
-                                color:
-                                    Theme.of(context).colorScheme.success,
-                                width: 1.5,
-                              )
-                            : Border.all(
-                                color:
-                                    Theme.of(context).colorScheme.warning,
-                                width: 1.5,
-                              ),
-                      ),
-                      child: hasSelection
-                          ? Row(
-                              children: [
-                                DonyIcon(
-                                  'circle-check',
-                                  color:
-                                      Theme.of(context).colorScheme.success,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '$totalSelected article${totalSelected > 1 ? 's' : ''} sélectionné${totalSelected > 1 ? 's' : ''}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                      Text(
-                                        'Sous-total : ${subtotal.toStringAsFixed(2)} €',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .success,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  'Modifier',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                ),
-                              ],
-                            )
-                          : Row(
-                              children: [
-                                const DonyEmoji.parcel(size: 18),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Choisir mes articles',
-                                        key: const Key('choose-articles-btn'),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                      Text(
-                                        'Requis — au moins 1 article',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                DonyIcon(
-                                  'chevron-right',
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
-                              ],
-                            ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-            ],
-
-            // ── Poids ───────────────────────────────────────────────────────
-            if (hasKgPricing) ...[
-              _WeightSection(
-                weightKg: weightKg,
-                maxKg: _maxKg,
-                isMixed: hasGridPricing,
-                isKgFree: widget.announcement.isKgFree,
-                onChanged: (v) => _weightNotifier.value = v,
-              ).animate().fadeIn(duration: 250.ms),
-              const SizedBox(height: DonySpacing.xxl),
-            ],
-
-            // ── Contenu ─────────────────────────────────────────────────────
-            ValueListenableBuilder<Set<String>>(
-              valueListenable: _categoriesNotifier,
-              builder: (_, categories, __) => _buildContentSection(categories),
-            ),
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── Photos du colis ──────────────────────────────────────────────
-            const _SectionLabel(label: 'PHOTOS DU COLIS (OPTIONNEL)'),
-            const SizedBox(height: DonySpacing.md),
-            const PhotoSection(),
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── Description ─────────────────────────────────────────────────
-            const _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
-            const SizedBox(height: DonySpacing.sm),
-            DonyTextField(
-              controller: _descCtrl,
-              hint: 'Médicaments pour diabète + 2 tee-shirts enfants',
-              maxLines: 4,
-              minLines: 2,
-            ).animate().fadeIn(delay: 100.ms),
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── Valeur déclarée ─────────────────────────────────────────────
-            const _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
-            const SizedBox(height: DonySpacing.sm),
-            TextFormField(
-              controller: _valueCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              scrollPadding: const EdgeInsets.only(bottom: 120),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                    RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-              decoration: InputDecoration(
-                hintText: '120',
-                helperText:
-                    'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
-                helperStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color:
-                        Theme.of(context).colorScheme.onSurfaceVariant),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
-                  vertical: DonySpacing.md,
-                ),
-              ),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ).animate().fadeIn(delay: 140.ms),
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── Destinataire ────────────────────────────────────────────────
-            const _SectionLabel(label: 'DESTINATAIRE'),
-            const SizedBox(height: DonySpacing.md),
-            DonyTextField(
-              controller: _recipientNameCtrl,
-              label: 'Prénom et nom du destinataire',
-              hint: 'ex: Amadou Diallo',
-            ).animate().fadeIn(delay: 160.ms),
-            const SizedBox(height: DonySpacing.md),
-            DonyTextField(
-              controller: _recipientPhoneCtrl,
-              label: 'Téléphone du destinataire',
-              hint: 'ex: +221 77 000 00 00',
-              keyboardType: TextInputType.phone,
-            ).animate().fadeIn(delay: 180.ms),
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── Disclaimer ──────────────────────────────────────────────────
-            _DisclaimerCard(
-              accepted: disclaimerAccepted,
-              onChanged: (v) => _disclaimerNotifier.value = v,
-            ).animate().fadeIn(delay: 200.ms),
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── Code promo ──────────────────────────────────────────────────
-            const _SectionLabel(label: 'CODE PROMO (OPTIONNEL)'),
-            const SizedBox(height: DonySpacing.sm),
-            BlocBuilder<BidBloc, BidState>(
-              bloc: widget.bidBloc,
-              builder: (context, bidState) {
-                final isQuoteLoading = bidState is BidQuoteLoading;
-                return ValueListenableBuilder<Object?>(
-                  valueListenable: _quoteNotifier,
-                  builder: (_, quoteVal, __) {
-                    final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
-                    final promoError = quoteVal is String ? quoteVal : null;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _promoCtrl,
-                                textCapitalization: TextCapitalization.characters,
-                                decoration: InputDecoration(
-                                  hintText: 'Ex: WELCOME10',
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: DonySpacing.base,
-                                    vertical: DonySpacing.md,
-                                  ),
-                                  suffixIcon: isQuoteLoading
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(12),
-                                          child: SizedBox(
-                                            width: 20, height: 20,
-                                            child: CircularProgressIndicator(strokeWidth: 2),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                onFieldSubmitted: (_) => _applyPromoCode(),
-                              ),
-                            ),
-                            const SizedBox(width: DonySpacing.sm),
-                            SizedBox(
-                              height: 52,
-                              width: 110,
-                              child: FilledButton(
-                                onPressed: isQuoteLoading ? null : _applyPromoCode,
-                                child: const Text('Appliquer'),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (quote != null && quote.promoApplied) ...[
-                          const SizedBox(height: DonySpacing.xs),
-                          Row(
-                            children: [
-                              const DonyIcon('circle-check',
-                                  size: 16, color: Color(0xFF16A34A)),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  quote.promoLabel ?? 'Code appliqué',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF16A34A),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (promoError != null) ...[
-                          const SizedBox(height: DonySpacing.xs),
-                          Row(
-                            children: [
-                              const DonyIcon('circle-alert',
-                                  size: 16, color: Color(0xFFE53935)),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  promoError,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFFE53935),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    );
-                  },
-                );
-              },
-            ).animate().fadeIn(delay: 220.ms),
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── Prix (live, tous modes, promo inclus) ────────────────────────
-            ValueListenableBuilder<Object?>(
-              valueListenable: _quoteNotifier,
-              builder: (_, quoteVal, __) {
-                final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
-                final kgDisplayLocal =
-                    hasKgPricing ? netToSenderPrice(weightKg * _pricePerKg) : 0.0;
-                final localTotal = kgDisplayLocal + gridTotal;
-
-                double kgLine = kgDisplayLocal;
-                double gridLine = gridTotal;
-                double total = localTotal;
-                double? original;
-                bool promoApplied = false;
-                if (quote != null) {
-                  // Devis serveur : lignes recalculées au taux effectif → somme = total.
-                  final mult = 1 + quote.rate;
-                  kgLine = quote.kgNetEur * mult;
-                  gridLine = quote.gridNetEur * mult;
-                  total = quote.totalEur;
-                  promoApplied = quote.promoApplied;
-                  original = promoApplied ? localTotal : null;
-                }
-                if (total <= 0) return const SizedBox.shrink();
-                return _PriceBreakdown(
-                  weightKg: weightKg,
-                  pricePerKg: _pricePerKg,
-                  kgDisplay: kgLine,
-                  gridDisplay: gridLine,
-                  totalPrice: total,
-                  originalTotal: original,
-                  promoApplied: promoApplied,
-                );
-              },
-            ),
-            const SizedBox(height: DonySpacing.md),
-          ],
-        );
-      },
-    );
-  }
-
-  // ── Picker step ────────────────────────────────────────────────────────────
+  // ── Picker step ─────────────────────────────────────────────────────────────
 
   Widget _buildPickerStep(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -1065,24 +1086,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       key: const ValueKey('picker'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Back to form
-        GestureDetector(
-          onTap: () => _stepNotifier.value = _FormStep.form,
-          child: Row(
-            children: [
-              DonyIcon('chevron-left',
-                  size: 16, color: cs.primary),
-              const SizedBox(width: DonySpacing.xs),
-              Text(
-                'Retour',
-                style:
-                    tt.labelMedium?.copyWith(color: cs.primary),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: DonySpacing.xl),
-
         Text(
           'Comment veux-tu payer ?',
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -1094,7 +1097,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         ),
         const SizedBox(height: DonySpacing.xl),
 
-        // Method selector
         ValueListenableBuilder<BidPaymentMethod>(
           valueListenable: _methodNotifier,
           builder: (context, method, _) {
@@ -1104,12 +1106,10 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                 _PaymentMethodSelector(
                   selectedMethod: method,
                   onChanged: (m) => _methodNotifier.value = m,
-                  isCashAvailable: widget.isCashAvailable,
-                  isWaveAvailable: widget.isWaveAvailable,
-                  isOrangeMoneyAvailable: widget.isOrangeMoneyAvailable,
+                  isCashAvailable: _isCashAvailable,
+                  isWaveAvailable: _isWaveAvailable,
+                  isOrangeMoneyAvailable: _isOrangeMoneyAvailable,
                 ),
-
-                // Mobile Money extra fields
                 if (method == BidPaymentMethod.wave ||
                     method == BidPaymentMethod.orangeMoney) ...[
                   const SizedBox(height: DonySpacing.xxl),
@@ -1149,9 +1149,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
           },
         ),
 
-        // Compte Dony — solde disponible + accès recharge (porté de feat/wallet).
-        // Affiché sous le sélecteur de mode : informatif, non sélectionnable
-        // (wallet n'est pas un BidPaymentMethod).
         BlocBuilder<WalletBloc, WalletState>(
           builder: (ctx, walletState) {
             if (walletState is! WalletLoaded) {
@@ -1172,7 +1169,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     ).animate().fadeIn(duration: 220.ms);
   }
 
-  // ── Stripe payment sheet ───────────────────────────────────────────────────
+  // ── Stripe payment sheet ────────────────────────────────────────────────────
 
   Future<void> _presentPaymentSheet(
     BuildContext context,
@@ -1193,12 +1190,11 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: donyPaymentSheetParams(state.clientSecret),
       );
-
       await Stripe.instance.presentPaymentSheet();
 
       if (!context.mounted) return;
       context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
-      Navigator.of(context, rootNavigator: true).pop();
+      context.pop();
       if (context.mounted) {
         unawaited(context.push('/bids/${state.bidId}?from=payment'));
       }
@@ -1214,7 +1210,61 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   }
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
+// ── Sticky bottom (bottomNavigationBar) ────────────────────────────────────────
+
+class _StickyBottom extends StatelessWidget {
+  const _StickyBottom({
+    required this.btnConfigNotifier,
+    required this.bidBloc,
+  });
+
+  final ValueNotifier<_BtnConfig?> btnConfigNotifier;
+  final BidBloc bidBloc;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
+    return ValueListenableBuilder<_BtnConfig?>(
+      valueListenable: btnConfigNotifier,
+      builder: (ctx, config, _) => BlocBuilder<BidBloc, BidState>(
+        bloc: bidBloc,
+        builder: (ctx, state) {
+          final isLoading = state is BidLoading;
+          return Container(
+            decoration: BoxDecoration(
+              color: cs.surface,
+              border:
+                  Border(top: BorderSide(color: cs.outlineVariant)),
+              boxShadow: [
+                BoxShadow(
+                  color: cs.shadow.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.md,
+              DonySpacing.lg,
+              bottomInset + DonySpacing.md,
+            ),
+            child: DonyButton(
+              label: config?.label ?? 'Envoyer',
+              iconAsset: config?.iconAsset ?? 'send',
+              isLoading: isLoading,
+              onPressed: isLoading ? null : config?.onPressed,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ── Section label ──────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.label});
@@ -1234,7 +1284,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── Weight section with slider ────────────────────────────────────────────────
+// ── Weight section with slider ─────────────────────────────────────────────────
 
 class _WeightSection extends StatefulWidget {
   const _WeightSection({
@@ -1249,8 +1299,6 @@ class _WeightSection extends StatefulWidget {
   final double maxKg;
   final ValueChanged<double> onChanged;
   final bool isMixed;
-
-  /// Trajet « kilo libre » : capacité non bornée → saisie/stepper sans maximum.
   final bool isKgFree;
 
   @override
@@ -1267,7 +1315,8 @@ class _WeightSectionState extends State<_WeightSection> {
   void initState() {
     super.initState();
     if (widget.isKgFree) {
-      _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(0));
+      _kgCtrl =
+          TextEditingController(text: widget.weightKg.toStringAsFixed(0));
       _kgFocus = FocusNode()..addListener(_onFocusChanged);
     }
   }
@@ -1275,10 +1324,6 @@ class _WeightSectionState extends State<_WeightSection> {
   @override
   void didUpdateWidget(covariant _WeightSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Garde le champ synchronisé quand la valeur change via les steppers,
-    // sans interférer pendant une saisie en cours. Tant que le champ a le
-    // focus, on laisse l'utilisateur saisir librement (y compris vider le
-    // champ pour retaper un nombre) : aucune réécriture pendant l'édition.
     final ctrl = _kgCtrl;
     if (ctrl != null && !(_kgFocus?.hasFocus ?? false)) {
       final current = double.tryParse(ctrl.text.trim());
@@ -1305,21 +1350,13 @@ class _WeightSectionState extends State<_WeightSection> {
     widget.onChanged(clamped);
   }
 
-  /// À la perte de focus, un champ vide/invalide retombe au minimum et le
-  /// texte est resynchronisé avec la valeur réelle (sans plafond haut).
   void _onFocusChanged() {
-    if (_kgFocus?.hasFocus ?? false) {
-      return;
-    }
+    if (_kgFocus?.hasFocus ?? false) return;
     final ctrl = _kgCtrl;
-    if (ctrl == null) {
-      return;
-    }
+    if (ctrl == null) return;
     final parsed = double.tryParse(ctrl.text.trim());
     final value = parsed == null ? _min : (parsed < _min ? _min : parsed);
-    if (value != widget.weightKg) {
-      widget.onChanged(value);
-    }
+    if (value != widget.weightKg) widget.onChanged(value);
     final text = value.toStringAsFixed(0);
     if (ctrl.text != text) {
       ctrl.value = TextEditingValue(
@@ -1331,27 +1368,19 @@ class _WeightSectionState extends State<_WeightSection> {
 
   void _onFieldChanged(String raw) {
     final trimmed = raw.trim();
-    // Champ vidé / saisie transitoire → on ne coerce pas et on ne pousse rien
-    // au parent : l'utilisateur peut vider le champ pour retaper « 42 ». La
-    // coercition au minimum est différée à la perte de focus (_onFocusChanged).
-    if (trimmed.isEmpty) {
-      return;
-    }
+    if (trimmed.isEmpty) return;
     final parsed = double.tryParse(trimmed);
-    if (parsed == null) {
-      return;
-    }
-    // Pas de plafond haut ; on borne uniquement le minimum.
+    if (parsed == null) return;
     final value = parsed < _min ? _min : parsed;
     widget.onChanged(value);
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.isKgFree ? _buildKgFree(context) : _buildSlider(context);
+    return widget.isKgFree
+        ? _buildKgFree(context)
+        : _buildSlider(context);
   }
-
-  // ── Kilo libre : saisie + steppers, sans maximum ────────────────────────────
 
   Widget _buildKgFree(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -1363,7 +1392,9 @@ class _WeightSectionState extends State<_WeightSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+          widget.isMixed
+              ? 'Poids du colis (optionnel)'
+              : 'Poids du colis',
           style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.xxs),
@@ -1377,9 +1408,8 @@ class _WeightSectionState extends State<_WeightSection> {
             _StepperButton(
               key: const Key('weight-decrement'),
               iconAsset: 'minus',
-              onPressed: canDecrement
-                  ? () => _setWeight(weightKg - 1)
-                  : null,
+              onPressed:
+                  canDecrement ? () => _setWeight(weightKg - 1) : null,
             ),
             const SizedBox(width: DonySpacing.base),
             Expanded(
@@ -1398,7 +1428,8 @@ class _WeightSectionState extends State<_WeightSection> {
                         FilteringTextInputFormatter.digitsOnly,
                       ],
                       textAlign: TextAlign.center,
-                      style: tt.displayLarge?.copyWith(color: cs.onSurface),
+                      style: tt.displayLarge
+                          ?.copyWith(color: cs.onSurface),
                       cursorColor: cs.primary,
                       decoration: const InputDecoration(
                         isDense: true,
@@ -1411,7 +1442,8 @@ class _WeightSectionState extends State<_WeightSection> {
                   ),
                   const SizedBox(width: DonySpacing.xs),
                   Padding(
-                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                    padding:
+                        const EdgeInsets.only(bottom: DonySpacing.sm),
                     child: Text(
                       'kg',
                       style: tt.headlineMedium
@@ -1433,8 +1465,6 @@ class _WeightSectionState extends State<_WeightSection> {
     );
   }
 
-  // ── Trajet borné : slider sur la capacité restante (inchangé) ────────────────
-
   Widget _buildSlider(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
@@ -1449,7 +1479,9 @@ class _WeightSectionState extends State<_WeightSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+            isMixed
+                ? 'Poids du colis (optionnel)'
+                : 'Poids du colis',
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -1468,7 +1500,9 @@ class _WeightSectionState extends State<_WeightSection> {
         Row(
           children: [
             Text(
-              isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+              isMixed
+                  ? 'Poids du colis (optionnel)'
+                  : 'Poids du colis',
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -1486,8 +1520,8 @@ class _WeightSectionState extends State<_WeightSection> {
               padding: const EdgeInsets.only(bottom: DonySpacing.sm),
               child: Text(
                 'kg',
-                style:
-                    tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant),
+                style: tt.headlineMedium
+                    ?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
             const Spacer(),
@@ -1533,7 +1567,7 @@ class _WeightSectionState extends State<_WeightSection> {
   }
 }
 
-// ── Stepper button (kilo libre) ──────────────────────────────────────────────
+// ── Stepper button ─────────────────────────────────────────────────────────────
 
 class _StepperButton extends StatelessWidget {
   const _StepperButton({
@@ -1627,7 +1661,7 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-// ── Disclaimer card ───────────────────────────────────────────────────────────
+// ── Disclaimer card ────────────────────────────────────────────────────────────
 
 class _DisclaimerCard extends StatelessWidget {
   const _DisclaimerCard({
@@ -1658,8 +1692,7 @@ class _DisclaimerCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DonyIcon('triangle-alert',
-                  size: 20, color: cs.secondary),
+              DonyIcon('triangle-alert', size: 20, color: cs.secondary),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Column(
@@ -1712,7 +1745,7 @@ class _DisclaimerCard extends StatelessWidget {
   }
 }
 
-// ── Payment method selector ───────────────────────────────────────────────────
+// ── Payment method selector ────────────────────────────────────────────────────
 
 class _PaymentMethodSelector extends StatelessWidget {
   const _PaymentMethodSelector({
@@ -1770,8 +1803,6 @@ class _PaymentMethodSelector extends StatelessWidget {
         ),
     ];
 
-    // Tuiles empilées verticalement (pleine largeur) — laisse la place
-    // d'afficher logo + nom de chaque moyen dans la tuile Stripe.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1831,8 +1862,7 @@ class _MethodTile extends StatelessWidget {
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color:
-                    selected ? cs.onPrimaryContainer : cs.onSurface,
+                color: selected ? cs.onPrimaryContainer : cs.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1855,9 +1885,7 @@ class _MethodTile extends StatelessWidget {
   }
 }
 
-// ── Grid total recap ─────────────────────────────────────────────────────────
-
-// ── Wallet tile (Compte Dony) ────────────────────────────────────────────────
+// ── Wallet tile ────────────────────────────────────────────────────────────────
 
 class _WalletTile extends StatelessWidget {
   const _WalletTile({required this.balance});
@@ -1872,9 +1900,7 @@ class _WalletTile extends StatelessWidget {
     final hasBalance = balance > 0;
 
     return GestureDetector(
-      onTap: hasBalance
-          ? null
-          : () => context.push('/payments/wallet'),
+      onTap: hasBalance ? null : () => context.push('/payments/wallet'),
       child: AnimatedContainer(
         duration: 150.ms,
         width: double.infinity,
@@ -1912,9 +1938,7 @@ class _WalletTile extends StatelessWidget {
                         ? 'Solde disponible : ${fmt.format(balance)}'
                         : 'Solde insuffisant · Recharger',
                     style: tt.bodySmall?.copyWith(
-                      color: hasBalance
-                          ? cs.primary
-                          : cs.onSurfaceVariant,
+                      color: hasBalance ? cs.primary : cs.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -1933,7 +1957,7 @@ class _WalletTile extends StatelessWidget {
   }
 }
 
-// ── Price breakdown ───────────────────────────────────────────────────────────
+// ── Price breakdown ────────────────────────────────────────────────────────────
 
 class _PriceBreakdown extends StatelessWidget {
   const _PriceBreakdown({
@@ -1948,19 +1972,10 @@ class _PriceBreakdown extends StatelessWidget {
 
   final double weightKg;
   final double pricePerKg;
-
-  /// Part « poids » au prix expéditeur (commission Dony incluse). 0 si pas de poids.
   final double kgDisplay;
-
-  /// Part « articles » au prix expéditeur (commission Dony incluse). 0 si pas d'article.
   final double gridDisplay;
-
-  /// Total à payer par l'expéditeur.
   final double totalPrice;
-
-  /// Total avant promo (barré) — null si pas de promo.
   final double? originalTotal;
-
   final bool promoApplied;
 
   @override
@@ -2009,7 +2024,8 @@ class _PriceBreakdown extends StatelessWidget {
                   if (promoApplied) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8F5EE),
                         borderRadius: BorderRadius.circular(8),
@@ -2066,7 +2082,7 @@ class _PriceBreakdown extends StatelessWidget {
       );
 }
 
-// ── Inline add row (input + bouton +) ─────────────────────────────────────────
+// ── Inline add row ─────────────────────────────────────────────────────────────
 
 class _InlineAddRow extends StatelessWidget {
   const _InlineAddRow({
@@ -2131,7 +2147,7 @@ class _InlineAddRow extends StatelessWidget {
   }
 }
 
-// ── Refused chip ──────────────────────────────────────────────────────────────
+// ── Refused chip ───────────────────────────────────────────────────────────────
 
 class _RefusedChip extends StatelessWidget {
   const _RefusedChip({required this.label});
