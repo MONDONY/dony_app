@@ -398,19 +398,21 @@ void main() {
       (tester) async {
         setupViewport(tester);
 
-        // Edit mode: _canContinueNotifier starts true (announcement != null)
-        // Note: edit mode also needs handoverWindowStart & handoverWindowEnd
-        // to activate "Continuer". With announcement having those fields null,
-        // _canContinueNotifier is false after _updateCanContinue fires.
-        // We just verify the initial state reflects the announced values.
-        final args = CreateTripArgs(announcement: _makeAnnouncement());
+        // Edit mode with a full announcement (all required fields present):
+        // _canContinueNotifier is true after _updateCanContinue fires because
+        // departureCity, arrivalCity, departureDate, handoverWindowStart and
+        // handoverWindowEnd are all set, and handoverEnd (18:00) < departure (22:00).
+        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
         await _pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
 
-        // "Continuer" is present regardless of disabled/enabled state
         expect(find.text('Continuer'), findsOneWidget);
+        final btns = tester.widgetList<DonyButton>(find.byType(DonyButton));
+        final continueBtn = btns.firstWhere((b) => b.label == 'Continuer');
+        expect(continueBtn.onPressed, isNotNull,
+            reason: 'Continuer doit être actif en mode édition (champs pré-remplis)');
       },
     );
 
@@ -582,8 +584,8 @@ void main() {
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
 
-        // Screen renders — form content is built and custom price branch executed.
-        expect(find.byType(CreateTripScreen), findsOneWidget);
+        // Screen renders in edit mode — verify the title confirms edit mode.
+        expect(find.text('Modifier le trajet'), findsOneWidget);
       },
     );
 
@@ -622,7 +624,8 @@ void main() {
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
 
-        expect(find.byType(CreateTripScreen), findsOneWidget);
+        // Edit mode with description pre-filled — verify the title confirms edit mode.
+        expect(find.text('Modifier le trajet'), findsOneWidget);
       },
     );
 
@@ -771,6 +774,9 @@ void main() {
         // Screen still present (no navigation triggered)
         expect(find.byType(CreateTripScreen), findsOneWidget);
 
+        // _applyTemplate shows DonySnackbar with 'appliqué' in the message.
+        expect(find.textContaining('appliqué'), findsOneWidget);
+
         // Drain the SnackBar auto-dismiss timer (~4 s default) so the widget
         // tree can be disposed cleanly at end of test.
         await tester.pump(const Duration(seconds: 5));
@@ -860,53 +866,7 @@ void main() {
   });
 
   // ── Group: pricingMode MIXED → BlocListener ────────────────────────────────
-
-  group('CreateTripScreen — pricingMode MIXED listener', () {
-    testWidgets(
-      'pricingMode MIXED → listener désactive _kgPriceEnabled',
-      (tester) async {
-        setupViewport(tester);
-
-        // pricingMode: 'MIXED' → postFrameCallback fires PricingModeSetRequested(mixed)
-        // → AnnouncementFormBloc emits new state → BlocListener fires
-        final ann = AnnouncementModel(
-          id: 'ann-mixed',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 1),
-          departureTime: '22:00',
-          availableKg: 10.0,
-          totalKg: 23.0,
-          pricePerKg: 8.0,
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-          handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-          handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
-          transportMode: TransportMode.plane,
-          pricingMode: 'MIXED',
-          acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          acceptedContentTypes: const ['Vêtements'],
-          refusedTypes: const [],
-        );
-
-        final args = CreateTripArgs(announcement: ann);
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
-
-        // Extra pump to let the real AnnouncementFormBloc process the event
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 200));
-
-        // Screen still visible — the listener fired but no navigation
-        expect(find.byType(CreateTripScreen), findsOneWidget);
-      },
-    );
-  });
+  // PricingMode listener tested via unit test of _TripFormContentState.
 
   // ── Group: BLoC listeners ─────────────────────────────────────────────────────
 
@@ -1062,8 +1022,9 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
 
-        // The screen should still be visible (no pop)
-        expect(find.byType(CreateTripScreen), findsOneWidget);
+        // BlocListener fires ErrorPresenter.show → DonySnackbar → SnackBar visible
+        await tester.pump(); // laisser le BlocListener réagir
+        expect(find.byType(SnackBar), findsOneWidget);
       },
     );
   });
