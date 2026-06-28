@@ -50,6 +50,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   final _matchingTripsNotifier = ValueNotifier<List<AnnouncementModel>>(const []);
   final _selectedTripNotifier = ValueNotifier<AnnouncementModel?>(null);
   final _paymentMethodNotifier = ValueNotifier<PaymentMethod>(PaymentMethod.stripe);
+  final _filteredMethodsNotifier = ValueNotifier<Set<PaymentMethod>>({});
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     _matchingTripsNotifier.dispose();
     _selectedTripNotifier.dispose();
     _paymentMethodNotifier.dispose();
+    _filteredMethodsNotifier.dispose();
     super.dispose();
   }
 
@@ -119,14 +121,35 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         return linkable && corridorMatch && dateMatch;
       }).toList();
 
+      // Filter out CASH if traveler can't cover the commission (no wallet + no card).
+      final accepted = Set<PaymentMethod>.from(request.acceptedPaymentMethods);
+      Set<PaymentMethod> filtered = accepted;
+      if (accepted.contains(PaymentMethod.cash)) {
+        final net = widget.thread.currentPriceEur;
+        final gross = widget.thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
+        final commission = gross - net;
+        double balance = 0;
+        bool hasCard = false;
+        try {
+          balance = (await getIt<WalletRepository>().getBalance()).balance;
+        } catch (_) {}
+        try {
+          hasCard = (await getIt<CommissionMethodRepository>().load()) != null;
+        } catch (_) {}
+        if (balance < commission && !hasCard) {
+          filtered = accepted.where((m) => m != PaymentMethod.cash).toSet();
+        }
+      }
+
       if (mounted) {
         _requestNotifier.value = request;
         _matchingTripsNotifier.value = matching;
-        // Default to STRIPE; if STRIPE is not in accepted methods, pick first.
-        if (request.acceptedPaymentMethods.contains(PaymentMethod.stripe)) {
+        _filteredMethodsNotifier.value = filtered;
+        // Default to STRIPE; fallback to first available filtered method.
+        if (filtered.contains(PaymentMethod.stripe)) {
           _paymentMethodNotifier.value = PaymentMethod.stripe;
-        } else if (request.acceptedPaymentMethods.isNotEmpty) {
-          _paymentMethodNotifier.value = request.acceptedPaymentMethods.first;
+        } else if (filtered.isNotEmpty) {
+          _paymentMethodNotifier.value = filtered.first;
         }
         _loadingNotifier.value = false;
       }
@@ -443,10 +466,15 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                         ),
                       ),
                       const SizedBox(height: DonySpacing.xl),
-                      _PaymentMethodPicker(
-                        methods: r.acceptedPaymentMethods,
-                        selected: selectedPaymentMethod,
-                        onChanged: (m) => _paymentMethodNotifier.value = m,
+                      ValueListenableBuilder<Set<PaymentMethod>>(
+                        valueListenable: _filteredMethodsNotifier,
+                        builder: (context, filteredMethods, _) {
+                          return _PaymentMethodPicker(
+                            methods: filteredMethods,
+                            selected: selectedPaymentMethod,
+                            onChanged: (m) => _paymentMethodNotifier.value = m,
+                          );
+                        },
                       ),
                       const SizedBox(height: DonySpacing.xl),
                       Text(
