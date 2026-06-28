@@ -7,7 +7,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -104,11 +104,13 @@ class OwnerActionGrid extends StatelessWidget {
         onTap: canEdit
             ? () async {
                 final bloc = context.read<AnnouncementBloc>();
-                await CreateAnnouncementBottomSheet.show(
-                  context,
-                  announcement: a,
+                final changed = await context.push<bool>(
+                  '/trips/create',
+                  extra: CreateTripArgs(announcement: a),
                 );
-                bloc.add(AnnouncementDetailRequested(a.id));
+                if ((changed ?? false) && context.mounted) {
+                  bloc.add(AnnouncementDetailRequested(a.id));
+                }
               }
             : null,
         disabledMessage: 'Modifiable tant qu\'aucune demande',

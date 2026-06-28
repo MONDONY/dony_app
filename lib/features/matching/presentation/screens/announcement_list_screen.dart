@@ -10,7 +10,7 @@ import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -113,11 +113,13 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
   }
 
   Future<void> _createTrip() async {
-    await CreateAnnouncementBottomSheet.show(context);
-    if (!mounted) {
-      return;
+    final changed = await context.push<bool>(
+      '/trips/create',
+      extra: const CreateTripArgs(),
+    );
+    if ((changed ?? false) && mounted) {
+      context.read<AnnouncementBloc>().add(AnnouncementListRequested());
     }
-    context.read<AnnouncementBloc>().add(AnnouncementListRequested());
   }
 
   @override

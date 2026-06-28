@@ -1,22 +1,20 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
-import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
-// PricingMode is exported from announcement_form_event.dart
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
@@ -25,7 +23,12 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
-import 'package:dony/features/package_request/data/models/negotiation_thread.dart' show NegotiationThreadStatus;
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart'
+    show NegotiationThreadStatus;
+import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -35,74 +38,159 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-// ─── Public entry point ───────────────────────────────────────────────────────
+class CreateTripArgs {
+  final AnnouncementModel? announcement;
+  final LockedTripContext? lockContext;
+  final NegotiationBloc? negotiationBloc;
+  final bool lockCorridorAndDate;
 
-class CreateAnnouncementBottomSheet {
-  static Future<void> show(
-    BuildContext context, {
-    AnnouncementModel? announcement,
-    LockedTripContext? lockContext,
-    NegotiationBloc? negotiationBloc,
-    bool lockCorridorAndDate = false,
-  }) {
-    assert(lockContext == null || negotiationBloc != null,
-        'lockContext requires a negotiationBloc to dispatch the dedicated-trip event');
-    final canSubmitNotifier =
-        ValueNotifier<bool>(announcement?.transportMode != null || lockContext != null);
-    final currentStepNotifier = ValueNotifier<int>(0);
-    final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-    // true dès que ville départ + ville arrivée + date sont renseignés (étape 0).
-    // Initialisé à true en mode édition ET en trajet dédié car le corridor +
-    // la date sont pré-remplis depuis la demande.
-    final canContinueNotifier =
-        ValueNotifier<bool>(announcement != null || lockContext != null);
-    // true dès que lieu de remise + lieu de récupération sont renseignés (étape 1).
-    final canContinueStep1Notifier = ValueNotifier<bool>(
-      announcement?.pickupAddress != null && announcement?.deliveryAddress != null,
+  const CreateTripArgs({
+    this.announcement,
+    this.lockContext,
+    this.negotiationBloc,
+    this.lockCorridorAndDate = false,
+  });
+}
+
+class CreateTripScreen extends StatefulWidget {
+  final CreateTripArgs? args;
+
+  const CreateTripScreen({super.key, this.args});
+
+  @override
+  State<CreateTripScreen> createState() => _CreateTripScreenState();
+}
+
+class _CreateTripScreenState extends State<CreateTripScreen> {
+  late final ValueNotifier<bool> _canSubmitNotifier;
+  late final ValueNotifier<int> _currentStepNotifier;
+  late final ValueNotifier<bool> _canContinueNotifier;
+  late final ValueNotifier<bool> _canContinueStep1Notifier;
+  late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
+  VoidCallback? _submit;
+  bool Function()? _validateStep0;
+
+  @override
+  void initState() {
+    super.initState();
+    final args = widget.args;
+    _canSubmitNotifier = ValueNotifier<bool>(
+      args?.announcement?.transportMode != null || args?.lockContext != null,
     );
-    VoidCallback? submit;
-    // Callback de validation de l'étape 0 (Trajet) — injecté depuis le widget Content.
-    // Retourne true si les champs obligatoires sont renseignés.
-    bool Function()? validateStep0;
-    final isLocked = lockContext != null;
-    return DonyBottomSheet.show(
-      context,
-      title: isLocked
-          ? 'Créer le trajet pour cette demande'
-          : (announcement != null ? 'Modifier le trajet' : 'Publier un trajet'),
-      wrapper: (child) {
-        final providers = <BlocProvider>[
-          BlocProvider<AnnouncementBloc>(create: (_) => getIt<AnnouncementBloc>()),
-          BlocProvider<CommissionMethodBloc>(create: (_) => getIt<CommissionMethodBloc>()),
-          BlocProvider<AnnouncementFormBloc>(
-            create: (_) => AnnouncementFormBloc(
-              priceGridRepository: getIt<PriceGridRepository>(),
-            ),
-          ),
-          BlocProvider<TripTemplateBloc>(
-            create: (_) => getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
-          ),
-          if (negotiationBloc != null)
-            BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
-        ];
-        // ScaffoldMessenger + Scaffold transparent : ancre les snackbars
-        // à l'intérieur du sheet, pas sur l'écran derrière.
-        return ScaffoldMessenger(
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            resizeToAvoidBottomInset: false,
-            body: MultiBlocProvider(providers: providers, child: child),
-          ),
-        );
-      },
-      stickyBottom: ListenableBuilder(
-              listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier, canContinueNotifier, canContinueStep1Notifier]),
-              builder: (ctx, _) {
-                final step = currentStepNotifier.value;
-                final canSubmit = canSubmitNotifier.value;
-                final canContinue = canContinueNotifier.value;
-                final canContinueStep1 = canContinueStep1Notifier.value;
+    _currentStepNotifier = ValueNotifier<int>(0);
+    _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+    _canContinueNotifier = ValueNotifier<bool>(
+      args?.announcement != null || args?.lockContext != null,
+    );
+    _canContinueStep1Notifier = ValueNotifier<bool>(
+      args?.announcement?.pickupAddress != null &&
+          args?.announcement?.deliveryAddress != null,
+    );
 
+    final isCreation = args?.announcement == null && args?.lockContext == null;
+    if (isCreation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(
+            getIt<AnalyticsService>()
+                .logEvent(AnalyticsEvents.tripCreateStarted),
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _canSubmitNotifier.dispose();
+    _currentStepNotifier.dispose();
+    _departureTimeNotifier.dispose();
+    _canContinueNotifier.dispose();
+    _canContinueStep1Notifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final args = widget.args;
+    final isLocked = args?.lockContext != null;
+    final isEdit = args?.announcement != null;
+
+    final providers = <BlocProvider>[
+      BlocProvider<AnnouncementBloc>(
+        create: (_) => getIt<AnnouncementBloc>(),
+      ),
+      BlocProvider<CommissionMethodBloc>(
+        create: (_) => getIt<CommissionMethodBloc>(),
+      ),
+      BlocProvider<AnnouncementFormBloc>(
+        create: (_) => AnnouncementFormBloc(
+          priceGridRepository: getIt<PriceGridRepository>(),
+        ),
+      ),
+      BlocProvider<TripTemplateBloc>(
+        create: (_) =>
+            getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
+      ),
+      BlocProvider<StripeAccountBloc>(
+        create: (_) => getIt<StripeAccountBloc>(),
+      ),
+      if (args?.negotiationBloc != null)
+        BlocProvider<NegotiationBloc>.value(value: args!.negotiationBloc!),
+    ];
+
+    return MultiBlocProvider(
+      providers: providers,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text(
+            isLocked
+                ? 'Créer le trajet pour cette demande'
+                : (isEdit ? 'Modifier le trajet' : 'Publier un trajet'),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => context.pop(),
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          child: _TripFormContent(
+            announcement: args?.announcement,
+            lockContext: args?.lockContext,
+            lockCorridorAndDate: args?.lockCorridorAndDate ?? false,
+            canSubmitNotifier: _canSubmitNotifier,
+            canContinueNotifier: _canContinueNotifier,
+            canContinueStep1Notifier: _canContinueStep1Notifier,
+            currentStepNotifier: _currentStepNotifier,
+            departureTimeNotifier: _departureTimeNotifier,
+            onSubmitReady: (fn) => _submit = fn,
+            onValidateStep0Ready: (fn) => _validateStep0 = fn,
+          ),
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.sm,
+            ),
+            child: ListenableBuilder(
+              listenable: Listenable.merge([
+                _canSubmitNotifier,
+                _currentStepNotifier,
+                _canContinueNotifier,
+                _canContinueStep1Notifier,
+              ]),
+              builder: (ctx, _) {
+                final step = _currentStepNotifier.value;
+                final canSubmit = _canSubmitNotifier.value;
+                final canContinue = _canContinueNotifier.value;
+                final canContinueStep1 = _canContinueStep1Notifier.value;
+
+                // ── Étapes 0 et 1 : Continuer (+ Retour si step > 0) ──
                 if (step < 2) {
                   return Row(
                     children: [
@@ -112,7 +200,8 @@ class CreateAnnouncementBottomSheet {
                             label: 'Retour',
                             variant: DonyButtonVariant.secondary,
                             icon: DonyIcons.back,
-                            onPressed: () => currentStepNotifier.value = step - 1,
+                            onPressed: () =>
+                                _currentStepNotifier.value = step - 1,
                           ),
                         ),
                         const SizedBox(width: DonySpacing.sm),
@@ -121,14 +210,15 @@ class CreateAnnouncementBottomSheet {
                         child: DonyButton(
                           label: 'Continuer',
                           iconRight: DonyIcons.arrowRight,
-                          onPressed: ((step == 0 && !canContinue) || (step == 1 && !canContinueStep1))
+                          onPressed: ((step == 0 && !canContinue) ||
+                                  (step == 1 && !canContinueStep1))
                               ? null
                               : () {
                                   if (step == 0) {
-                                    final isValid = validateStep0?.call() ?? true;
-                                    if (!isValid) return;
+                                    final ok = _validateStep0?.call() ?? true;
+                                    if (!ok) return;
                                   }
-                                  currentStepNotifier.value = step + 1;
+                                  _currentStepNotifier.value = step + 1;
                                 },
                         ),
                       ),
@@ -136,8 +226,7 @@ class CreateAnnouncementBottomSheet {
                   );
                 }
 
-                // Étape 3 (finale) — Trajet dédié : « Confirmer le trajet »
-                // (dispatch NegotiationCreateDedicatedTripRequested).
+                // ── Étape 2 — Trajet dédié : Confirmer ──
                 if (isLocked) {
                   return BlocBuilder<NegotiationBloc, NegotiationState>(
                     builder: (ctx, state) {
@@ -151,7 +240,7 @@ class CreateAnnouncementBottomSheet {
                               variant: DonyButtonVariant.secondary,
                               icon: DonyIcons.back,
                               onPressed: () =>
-                                  currentStepNotifier.value = step - 1,
+                                  _currentStepNotifier.value = step - 1,
                             ),
                           ),
                           const SizedBox(width: DonySpacing.sm),
@@ -161,7 +250,7 @@ class CreateAnnouncementBottomSheet {
                               label: 'Confirmer le trajet',
                               isLoading: isLoading,
                               onPressed: (canSubmit && !isLoading)
-                                  ? () => submit?.call()
+                                  ? () => _submit?.call()
                                   : null,
                             ),
                           ),
@@ -171,8 +260,8 @@ class CreateAnnouncementBottomSheet {
                   );
                 }
 
-                // Étape 3 — Enregistrer (mode edit) ou Aperçu (mode création)
-                if (announcement != null) {
+                // ── Étape 2 — Mode édition : Enregistrer ──
+                if (isEdit) {
                   return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                     builder: (ctx, state) {
                       final isLoading = state is AnnouncementLoading;
@@ -183,7 +272,8 @@ class CreateAnnouncementBottomSheet {
                               label: 'Retour',
                               variant: DonyButtonVariant.secondary,
                               icon: DonyIcons.back,
-                              onPressed: () => currentStepNotifier.value = step - 1,
+                              onPressed: () =>
+                                  _currentStepNotifier.value = step - 1,
                             ),
                           ),
                           const SizedBox(width: DonySpacing.sm),
@@ -192,7 +282,9 @@ class CreateAnnouncementBottomSheet {
                               key: const Key('create-announcement-submit'),
                               label: 'Enregistrer',
                               isLoading: isLoading,
-                              onPressed: (canSubmit && !isLoading) ? () => submit?.call() : null,
+                              onPressed: (canSubmit && !isLoading)
+                                  ? () => _submit?.call()
+                                  : null,
                             ),
                           ),
                         ],
@@ -201,13 +293,15 @@ class CreateAnnouncementBottomSheet {
                   );
                 }
 
+                // ── Étape 2 — Mode création : Aperçu ──
                 return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                   builder: (ctx, annState) {
                     final isLoading = annState is AnnouncementLoading;
                     return BlocBuilder<StripeAccountBloc, StripeAccountState>(
                       builder: (ctx3, stripeState) {
-                        final isStripeConfigured = stripeState is StripeAccountReady &&
-                            stripeState.accountStatus.isComplete;
+                        final isStripeConfigured =
+                            stripeState is StripeAccountReady &&
+                                stripeState.accountStatus.isComplete;
 
                         if (!isStripeConfigured) {
                           return Row(
@@ -217,7 +311,8 @@ class CreateAnnouncementBottomSheet {
                                   label: 'Retour',
                                   variant: DonyButtonVariant.secondary,
                                   icon: DonyIcons.back,
-                                  onPressed: () => currentStepNotifier.value = step - 1,
+                                  onPressed: () =>
+                                      _currentStepNotifier.value = step - 1,
                                 ),
                               ),
                               const SizedBox(width: DonySpacing.sm),
@@ -225,14 +320,16 @@ class CreateAnnouncementBottomSheet {
                                 child: DonyButton(
                                   key: const Key('configure-stripe-btn'),
                                   label: 'Configurer Stripe',
-                                  onPressed: () => ctx3.push('/connect/onboarding/intro'),
+                                  onPressed: () =>
+                                      ctx3.push('/connect/onboarding/intro'),
                                 ),
                               ),
                             ],
                           );
                         }
 
-                        return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+                        return BlocBuilder<AnnouncementFormBloc,
+                            AnnouncementFormState>(
                           builder: (ctx2, formState) {
                             return Row(
                               children: [
@@ -241,13 +338,15 @@ class CreateAnnouncementBottomSheet {
                                     label: 'Retour',
                                     variant: DonyButtonVariant.secondary,
                                     icon: DonyIcons.back,
-                                    onPressed: () => currentStepNotifier.value = step - 1,
+                                    onPressed: () =>
+                                        _currentStepNotifier.value = step - 1,
                                   ),
                                 ),
                                 const SizedBox(width: DonySpacing.sm),
                                 Expanded(
                                   child: DonyButton(
-                                    key: const Key('create-announcement-preview'),
+                                    key:
+                                        const Key('create-announcement-preview'),
                                     label: 'Aperçu',
                                     iconRight: DonyIcons.arrowRight,
                                     isLoading: isLoading,
@@ -259,11 +358,16 @@ class CreateAnnouncementBottomSheet {
                                                   .read<AnnouncementFormBloc>()
                                                   .state,
                                               onConfirm: () {
-                                                Navigator.of(ctx2, rootNavigator: true).pop();
-                                                submit?.call();
+                                                // Intentional: closes the preview sheet,
+                                                // not the CreateTripScreen.
+                                                Navigator.of(ctx2,
+                                                        rootNavigator: true)
+                                                    .pop();
+                                                _submit?.call();
                                               },
                                               isSubmitting: isLoading,
-                                              departureTime: departureTimeNotifier.value,
+                                              departureTime:
+                                                  _departureTimeNotifier.value,
                                             );
                                           }
                                         : null,
@@ -279,33 +383,19 @@ class CreateAnnouncementBottomSheet {
                 );
               },
             ),
-      child: _CreateAnnouncementContent(
-        announcement: announcement,
-        lockContext: lockContext,
-        lockCorridorAndDate: lockCorridorAndDate,
-        canSubmitNotifier: canSubmitNotifier,
-        canContinueNotifier: canContinueNotifier,
-        canContinueStep1Notifier: canContinueStep1Notifier,
-        currentStepNotifier: currentStepNotifier,
-        departureTimeNotifier: departureTimeNotifier,
-        onSubmitReady: (fn) => submit = fn,
-        onValidateStep0Ready: (fn) => validateStep0 = fn,
+          ),
+        ),
       ),
-    ).whenComplete(() {
-      canSubmitNotifier.dispose();
-      canContinueNotifier.dispose();
-      canContinueStep1Notifier.dispose();
-      currentStepNotifier.dispose();
-      departureTimeNotifier.dispose();
-    });
+    );
   }
 }
 
 // ─── Content widget ───────────────────────────────────────────────────────────
 
-class _CreateAnnouncementContent extends StatefulWidget {
+class _TripFormContent extends StatefulWidget {
   final AnnouncementModel? announcement;
   final LockedTripContext? lockContext;
+
   /// Édition d'un trajet à lier à une négo : corridor + date verrouillés, et on
   /// reste sur l'écran de liaison au succès (pas de redirection /announcements).
   final bool lockCorridorAndDate;
@@ -315,11 +405,13 @@ class _CreateAnnouncementContent extends StatefulWidget {
   final ValueNotifier<int>? currentStepNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
   final void Function(VoidCallback)? onSubmitReady;
-  /// Injecte le callback de validation de l'étape 0 dans le parent (show()).
+
+  /// Injecte le callback de validation de l'étape 0 dans le parent.
   /// Le callback retourne true si tous les champs obligatoires de l'étape 0
   /// (ville départ, ville arrivée, date) sont renseignés.
   final void Function(bool Function())? onValidateStep0Ready;
-  const _CreateAnnouncementContent({
+
+  const _TripFormContent({
     this.announcement,
     this.lockContext,
     this.lockCorridorAndDate = false,
@@ -333,12 +425,10 @@ class _CreateAnnouncementContent extends StatefulWidget {
   });
 
   @override
-  State<_CreateAnnouncementContent> createState() =>
-      _CreateAnnouncementContentState();
+  State<_TripFormContent> createState() => _TripFormContentState();
 }
 
-class _CreateAnnouncementContentState
-    extends State<_CreateAnnouncementContent> {
+class _TripFormContentState extends State<_TripFormContent> {
   final _formKey = GlobalKey<FormState>();
   final _departureCityNotifier = ValueNotifier<String?>(null);
   final _arrivalCityNotifier = ValueNotifier<String?>(null);
@@ -376,7 +466,8 @@ class _CreateAnnouncementContentState
   bool get _isCustomPrice => _priceOptionNotifier.value == kPriceOptions.length;
   double get _pricePerKg => _isCustomPrice
       ? _customPriceNotifier.value
-      : kPriceOptions[_priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
+      : kPriceOptions[
+          _priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
 
   // Vrai si le prix est correctement renseigné :
   // — mode verrouillé → prix fixé par la demande, toujours valide
@@ -484,9 +575,7 @@ class _CreateAnnouncementContentState
         };
         formBloc.add(CapacityUnitChanged(unit));
 
-        final mode = a.pricingMode == 'MIXED'
-            ? PricingMode.mixed
-            : PricingMode.kg;
+        final mode = a.pricingMode == 'MIXED' ? PricingMode.mixed : PricingMode.kg;
         formBloc.add(AnnouncementPricingModeSetRequested(mode));
 
         // Seed le prix dans le form bloc depuis les notifiers pré-remplis : le
@@ -496,11 +585,10 @@ class _CreateAnnouncementContentState
         _syncPriceToFormBloc();
 
         // Seed la ville + le code pays dans le form bloc depuis les notifiers
-        // pré-remplis (lignes 411-414) : le listener _syncCityToFormBloc n'a pas
-        // pu se déclencher (valeurs posées avant son attache, l.515-516). Sans ce
-        // sync explicite, éditer une annonce SANS re-sélectionner la ville
-        // submitterait departureCountryCode/arrivalCountryCode = null (asymétrie
-        // vs le nom de ville qui, lui, est préservé). Edit-mode uniquement.
+        // pré-remplis : le listener _syncCityToFormBloc n'a pas pu se déclencher
+        // (valeurs posées avant son attache). Sans ce sync explicite, éditer une
+        // annonce SANS re-sélectionner la ville submitterait
+        // departureCountryCode/arrivalCountryCode = null. Edit-mode uniquement.
         _syncCityToFormBloc();
       });
     }
@@ -547,11 +635,11 @@ class _CreateAnnouncementContentState
   void _updateCanContinue() {
     widget.canContinueNotifier?.value =
         _departureCityNotifier.value != null &&
-        _arrivalCityNotifier.value != null &&
-        _departureDateNotifier.value != null &&
-        _handoverStartNotifier.value != null &&
-        _handoverEndNotifier.value != null &&
-        _handoverWindowError() == null;
+            _arrivalCityNotifier.value != null &&
+            _departureDateNotifier.value != null &&
+            _handoverStartNotifier.value != null &&
+            _handoverEndNotifier.value != null &&
+            _handoverWindowError() == null;
   }
 
   void _updateCanContinueStep1() {
@@ -647,9 +735,7 @@ class _CreateAnnouncementContentState
     if (!mounted) return;
     if (!_kgPriceEnabledNotifier.value) return; // évite d'écraser le clear
     if (_priceOptionNotifier.value == -1) return; // pas encore de sélection
-    context
-        .read<AnnouncementFormBloc>()
-        .add(PriceChanged(_pricePerKg));
+    context.read<AnnouncementFormBloc>().add(PriceChanged(_pricePerKg));
   }
 
   void _syncKgToFormBloc() {
@@ -830,26 +916,28 @@ class _CreateAnnouncementContentState
 
     if (_isLocked) {
       final lc = widget.lockContext!;
-      context.read<NegotiationBloc>().add(NegotiationCreateDedicatedTripRequested(
-            threadId: lc.threadId,
-            departureDate: departureDate,
-            departureTime: departureTime,
-            arrivalTime: arrivalTime,
-            pickupAddress: {
-              'label': _pickupAddress!.label,
-              'lat': _pickupAddress!.lat,
-              'lng': _pickupAddress!.lng,
-            },
-            deliveryAddress: {
-              'label': _deliveryAddress!.label,
-              'lat': _deliveryAddress!.lat,
-              'lng': _deliveryAddress!.lng,
-            },
-            description: description,
-            acceptedContentTypes: allAccepted,
-            refusedTypes: refused,
-            paymentMethod: lc.paymentMethod,
-          ));
+      context.read<NegotiationBloc>().add(
+            NegotiationCreateDedicatedTripRequested(
+              threadId: lc.threadId,
+              departureDate: departureDate,
+              departureTime: departureTime,
+              arrivalTime: arrivalTime,
+              pickupAddress: {
+                'label': _pickupAddress!.label,
+                'lat': _pickupAddress!.lat,
+                'lng': _pickupAddress!.lng,
+              },
+              deliveryAddress: {
+                'label': _deliveryAddress!.label,
+                'lat': _deliveryAddress!.lat,
+                'lng': _deliveryAddress!.lng,
+              },
+              description: description,
+              acceptedContentTypes: allAccepted,
+              refusedTypes: refused,
+              paymentMethod: lc.paymentMethod,
+            ),
+          );
       return;
     }
 
@@ -857,7 +945,8 @@ class _CreateAnnouncementContentState
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
-    final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG';
+    final pricingModeWire =
+        formBlocState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG';
     final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
 
     final handoverStart = _handoverStartNotifier.value;
@@ -943,7 +1032,9 @@ class _CreateAnnouncementContentState
       lastDate = lc.latestDate;
     }
     final initial = _departureDateNotifier.value ??
-        (_isLocked ? widget.lockContext!.desiredDate : today.add(const Duration(days: 1)));
+        (_isLocked
+            ? widget.lockContext!.desiredDate
+            : today.add(const Duration(days: 1)));
     final picked = await showDatePicker(
       context: context,
       initialDate: initial.isBefore(firstDate) ? firstDate : initial,
@@ -951,8 +1042,7 @@ class _CreateAnnouncementContentState
       lastDate: lastDate,
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme:
-              ColorScheme.light(primary: cs.primary),
+          colorScheme: ColorScheme.light(primary: cs.primary),
         ),
         child: child!,
       ),
@@ -970,8 +1060,7 @@ class _CreateAnnouncementContentState
           _departureTimeNotifier.value ?? const TimeOfDay(hour: 8, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme:
-              ColorScheme.light(primary: cs.primary),
+          colorScheme: ColorScheme.light(primary: cs.primary),
         ),
         child: child!,
       ),
@@ -989,8 +1078,7 @@ class _CreateAnnouncementContentState
           _arrivalTimeNotifier.value ?? const TimeOfDay(hour: 12, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme:
-              ColorScheme.light(primary: cs.primary),
+          colorScheme: ColorScheme.light(primary: cs.primary),
         ),
         child: child!,
       ),
@@ -1011,7 +1099,8 @@ class _CreateAnnouncementContentState
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+        data: Theme.of(ctx).copyWith(
+            colorScheme: ColorScheme.light(primary: cs.primary)),
         child: child!,
       ),
     );
@@ -1021,7 +1110,8 @@ class _CreateAnnouncementContentState
       initialTime:
           initial != null ? TimeOfDay.fromDateTime(initial) : defaultTime,
       builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+        data: Theme.of(ctx).copyWith(
+            colorScheme: ColorScheme.light(primary: cs.primary)),
         child: child!,
       ),
     );
@@ -1038,8 +1128,7 @@ class _CreateAnnouncementContentState
   }
 
   Future<void> _selectHandoverEnd() async {
-    final picked = await _pickDateTime(_handoverEndNotifier.value,
-        defaultTime: const TimeOfDay(hour: 18, minute: 0));
+    final picked = await _pickDateTime(_handoverEndNotifier.value);
     if (picked != null) _handoverEndNotifier.value = picked;
   }
 
@@ -1049,9 +1138,10 @@ class _CreateAnnouncementContentState
     if (_isLocked) {
       return BlocListener<NegotiationBloc, NegotiationState>(
         listener: (context, state) {
-          if (state is NegotiationLoaded
-              && state.thread.status == NegotiationThreadStatus.awaitingPayment) {
-            Navigator.of(context, rootNavigator: true).pop();
+          if (state is NegotiationLoaded &&
+              state.thread.status ==
+                  NegotiationThreadStatus.awaitingPayment) {
+            context.pop();
             DonySnackbar.show(context,
                 message: 'Trajet lié — l\'expéditeur peut désormais payer.',
                 type: DonySnackbarType.success);
@@ -1075,14 +1165,9 @@ class _CreateAnnouncementContentState
       child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) async {
           if (state is AnnouncementCreated || state is AnnouncementUpdated) {
-            Navigator.of(context, rootNavigator: true).pop();
-            // En modification depuis « Lier un trajet », on reste sur l'écran de
-            // liaison (le caller rafraîchit) — pas de redirection /announcements.
-            if (!widget.lockCorridorAndDate && context.mounted) {
-              context.go('/announcements');
-            }
+            context.pop(true); // caller rafraîchit via le bool retourné par context.push<bool>
           } else if (state is AnnouncementProLimitReached) {
-            Navigator.of(context, rootNavigator: true).pop();
+            context.pop();
             if (context.mounted) {
               final confirmed = await DonyDialog.show(
                 context,
@@ -1090,17 +1175,17 @@ class _CreateAnnouncementContentState
                 message: state.message,
                 confirmLabel: 'Passer en PRO',
                 cancelLabel: 'Plus tard',
-                variant: DonyDialogVariant.info,
               );
               if (confirmed == true && context.mounted) {
-                context.push('/profile/upgrade-to-pro');
+                unawaited(context.push('/profile/upgrade-to-pro'));
               }
             }
           } else if (state is AnnouncementError) {
-            ErrorPresenter.show(context, state.error);
+            unawaited(ErrorPresenter.show(context, state.error));
           }
         },
-        builder: (context, state) => BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+        builder: (context, state) =>
+            BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
           listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
           listener: (context, formState) {
             final kg = formState.availableKg ?? 0.0;
@@ -1173,14 +1258,16 @@ class _CreateAnnouncementContentState
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: state.templates.length,
-                separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.sm),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: DonySpacing.sm),
                 itemBuilder: (context, i) {
                   final t = state.templates[i];
                   return ActionChip(
                     avatar: t.emoji != null
                         ? Text(t.emoji!)
                         : DonyIcon('bookmark', size: 16, color: cs.primary),
-                    label: Text('${t.label} · ${t.pricePerKg.toStringAsFixed(0)}€/kg'),
+                    label: Text(
+                        '${t.label} · ${t.pricePerKg.toStringAsFixed(0)}€/kg'),
                     onPressed: () => _applyTemplate(t),
                   );
                 },
@@ -1233,11 +1320,12 @@ class _CreateAnnouncementContentState
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
                 ),
-                leading: DonyIcon('clock', size: 20,
-                    color: Theme.of(context).colorScheme.primary),
+                leading: DonyIcon('clock',
+                    size: 20, color: Theme.of(context).colorScheme.primary),
                 title: const Text('Début de remise'),
                 trailing: Text(dt != null
-                    ? DateFormat('dd/MM HH:mm', 'fr').format(dt) : 'Choisir'),
+                    ? DateFormat('dd/MM HH:mm', 'fr').format(dt)
+                    : 'Choisir'),
                 onTap: _selectHandoverStart,
               ),
             ),
@@ -1249,11 +1337,12 @@ class _CreateAnnouncementContentState
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
                 ),
-                leading: DonyIcon('clock', size: 20,
-                    color: Theme.of(context).colorScheme.primary),
+                leading: DonyIcon('clock',
+                    size: 20, color: Theme.of(context).colorScheme.primary),
                 title: const Text('Fin de remise'),
                 trailing: Text(dt != null
-                    ? DateFormat('dd/MM HH:mm', 'fr').format(dt) : 'Choisir'),
+                    ? DateFormat('dd/MM HH:mm', 'fr').format(dt)
+                    : 'Choisir'),
                 onTap: _selectHandoverEnd,
               ),
             ),
@@ -1285,8 +1374,10 @@ class _CreateAnnouncementContentState
                         child: Text(
                           err,
                           key: const Key('sheet-handover-error'),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.error),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                         ),
                       ),
                     ],
@@ -1330,7 +1421,7 @@ class _CreateAnnouncementContentState
         customPriceNotifier: _customPriceNotifier,
         availableKgNotifier: _availableKgNotifier,
         cashEnabledNotifier: _cashEnabledNotifier,
-        kgPriceEnabledNotifier: _kgPriceEnabledNotifier, // ← NOUVEAU
+        kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
         selectedContentNotifier: _selectedContentNotifier,
         customAcceptedNotifier: _customAcceptedNotifier,
         refusedTypesNotifier: _refusedTypesNotifier,

@@ -16,6 +16,7 @@ abstract final class AnalyticsEvents {
   static const announcementCreated = 'announcement_created';
   static const announcementViewed  = 'announcement_viewed';
   static const surplusOpened       = 'surplus_opened';
+  static const tripCreateStarted   = 'trip_create_started';
 
   // Bids
   static const bidSubmitted    = 'bid_submitted';

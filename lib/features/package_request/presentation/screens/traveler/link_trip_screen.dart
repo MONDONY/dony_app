@@ -3,7 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -258,10 +258,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       agreedPriceEur: widget.thread.currentPriceEur,
       paymentMethod: _paymentMethodNotifier.value,
     );
-    await CreateAnnouncementBottomSheet.show(
-      context,
-      lockContext: lockContext,
-      negotiationBloc: context.read<NegotiationBloc>(),
+    await context.push<bool>(
+      '/trips/create',
+      extra: CreateTripArgs(
+        lockContext: lockContext,
+        negotiationBloc: context.read<NegotiationBloc>(),
+      ),
     );
     // The sheet's BlocListener pops itself on success and the screen-level
     // listener below will pop us back. If the user cancelled, we still
@@ -278,10 +280,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     // Même wizard 3 étapes que la création, en mode édition : champs préremplis,
     // corridor + date verrouillés (le trajet doit rester compatible avec la
     // demande), tout le reste éditable.
-    await CreateAnnouncementBottomSheet.show(
-      context,
-      announcement: ann,
-      lockCorridorAndDate: true,
+    await context.push<bool>(
+      '/trips/create',
+      extra: CreateTripArgs(
+        announcement: ann,
+        lockCorridorAndDate: true,
+      ),
     );
     if (mounted) {
       await _load();
