@@ -320,18 +320,21 @@ class _LoadedViewState extends State<_LoadedView> {
             ),
           ),
         ),
-        if (thread.linkedTrip != null &&
-            thread.status == NegotiationThreadStatus.awaitingPayment)
+        if (thread.linkedTrip != null)
           LinkedTripCard(
             trip: thread.linkedTrip!,
             onTap: () => TripDetailBottomSheet.show(
               context,
               trip: thread.linkedTrip!,
               isSender: viewerUserId != thread.travelerId,
-              onRefuse: (reason) => context
-                  .read<NegotiationBloc>()
-                  .add(NegotiationRefuseTripRequested(
-                      threadId: thread.id, reason: reason)),
+              // Refus uniquement possible avant paiement
+              onRefuse: thread.status ==
+                      NegotiationThreadStatus.awaitingPayment
+                  ? (reason) => context
+                      .read<NegotiationBloc>()
+                      .add(NegotiationRefuseTripRequested(
+                          threadId: thread.id, reason: reason))
+                  : null,
             ),
           ),
         ThreadStateCtaBar(
