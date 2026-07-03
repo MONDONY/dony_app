@@ -227,6 +227,20 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.account_balance_wallet_outlined,
     ),
+    'payment-method/traveler-insufficient-funds-cash': ErrorPresentation(
+      title: 'Solde insuffisant',
+      message:
+          "Ton portefeuille n'a pas assez de fonds pour payer la commission Dony en espèces. Recharge-le ou ajoute une carte.",
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_wallet_outlined,
+    ),
+    'payment-method/no-commission-card': ErrorPresentation(
+      title: 'Carte requise',
+      message:
+          "Ajoute d'abord une carte de commission pour payer en espèces sans solde suffisant.",
+      severity: ErrorSeverity.warning,
+      icon: Icons.credit_card_outlined,
+    ),
 
     // ─── Externes (Stripe, Google) ───────────────────────────────────
     'stripe-error': ErrorPresentation(

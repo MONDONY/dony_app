@@ -154,7 +154,21 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 )
-              : Stack(
+              : (state.request != null &&
+                      _availableMethods(state.request!).isEmpty)
+                  ? DonyEmptyState(
+                      icon: Icons.hourglass_empty_rounded,
+                      type: DonyEmptyStateType.error,
+                      title: 'En attente du voyageur',
+                      description: 'Cette demande n\'accepte que le paiement '
+                          'en espèces, mais le voyageur n\'a pas encore les '
+                          'fonds pour régler sa commission. Réessaie un peu '
+                          'plus tard, ou demande-lui de recharger son '
+                          'portefeuille.',
+                      actionLabel: 'Retour',
+                      onAction: () => context.pop(),
+                    )
+                  : Stack(
                   children: [
                     SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(
