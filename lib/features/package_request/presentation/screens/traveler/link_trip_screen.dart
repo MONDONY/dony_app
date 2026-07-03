@@ -130,12 +130,17 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         return linkable && corridorMatch && dateMatch;
       }).toList();
 
-      // Filter out CASH if the backend reports the traveler can't cover the commission.
+      // If the sender accepted CASH for this request and the traveler can't cover
+      // the Dony commission, block the whole trip-linking flow — even when another
+      // method (e.g. STRIPE) is also accepted. The sender explicitly opted into
+      // cash as a possible outcome; the traveler must be able to honor it before
+      // engaging, not just fall back silently to a method the sender didn't
+      // necessarily prefer.
       final accepted = Set<PaymentMethod>.from(request.acceptedPaymentMethods);
+      final cashRequested = accepted.contains(PaymentMethod.cash);
       final cashOk = freshThread.cashCommissionAvailable;
-      final Set<PaymentMethod> filtered = cashOk
-          ? accepted
-          : accepted.where((m) => m != PaymentMethod.cash).toSet();
+      final Set<PaymentMethod> filtered =
+          (cashRequested && !cashOk) ? const <PaymentMethod>{} : accepted;
 
       if (mounted) {
         _requestNotifier.value = request;
@@ -654,10 +659,11 @@ class _PaymentMethodPicker extends StatelessWidget {
   }
 }
 
-/// Blocking state shown instead of the trip picker when CASH is the only
-/// method this request accepts and the traveler can't cover the Dony
-/// commission (empty wallet, no card on file). Linking a trip in this state
-/// would only fail later at checkout — better to stop here with a clear CTA.
+/// Blocking state shown instead of the trip picker when this request accepts
+/// CASH and the traveler can't cover the Dony commission (empty wallet, no
+/// card on file) — even if another method (e.g. STRIPE) is also accepted.
+/// Linking a trip in this state would only fail later at checkout — better to
+/// stop here with a clear CTA.
 class _CashUnavailableView extends StatelessWidget {
   const _CashUnavailableView({
     required this.commissionEur,
@@ -673,10 +679,10 @@ class _CashUnavailableView extends StatelessWidget {
       icon: Icons.account_balance_wallet_outlined,
       type: DonyEmptyStateType.error,
       title: 'Portefeuille insuffisant',
-      description: 'Cette demande n\'accepte que le paiement en espèces. '
-          'Il te manque des fonds pour régler la commission Dony '
-          '(${commissionEur.toStringAsFixed(2)} €). Recharge ton portefeuille '
-          'pour pouvoir lier un trajet.',
+      description: 'L\'expéditeur accepte le paiement en espèces sur cette '
+          'demande, mais il te manque des fonds pour régler la commission '
+          'Dony (${commissionEur.toStringAsFixed(2)} €). Recharge ton '
+          'portefeuille pour pouvoir lier un trajet.',
       actionLabel: 'Recharger mon portefeuille',
       onAction: () async {
         final recharged =

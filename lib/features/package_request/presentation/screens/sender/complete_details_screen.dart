@@ -89,13 +89,18 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
     }
   }
 
-  /// Filtre CASH si le voyageur ne peut pas couvrir la commission Dony.
+  /// Si CASH est accepté sur cette demande et que le voyageur ne peut pas
+  /// couvrir la commission Dony, bloque tout le formulaire — même si une autre
+  /// méthode (ex. STRIPE) est aussi acceptée. Le voyageur doit pouvoir honorer
+  /// le cash avant que l'expéditeur ne s'engage sur cette demande, plutôt que
+  /// de basculer silencieusement vers une méthode que l'expéditeur n'a pas
+  /// forcément privilégiée.
   Set<PaymentMethod> _availableMethods(PackageRequest request) {
+    final accepted = request.acceptedPaymentMethods;
+    final cashRequested = accepted.contains(PaymentMethod.cash);
     final cashOk = widget.thread?.cashCommissionAvailable ?? true;
-    if (cashOk) return request.acceptedPaymentMethods;
-    return request.acceptedPaymentMethods
-        .where((m) => m != PaymentMethod.cash)
-        .toSet();
+    if (cashRequested && !cashOk) return const <PaymentMethod>{};
+    return accepted;
   }
 
   void _submit() {
@@ -160,8 +165,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                       icon: Icons.hourglass_empty_rounded,
                       type: DonyEmptyStateType.error,
                       title: 'En attente du voyageur',
-                      description: 'Cette demande n\'accepte que le paiement '
-                          'en espèces, mais le voyageur n\'a pas encore les '
+                      description: 'Le paiement en espèces est accepté sur '
+                          'cette demande, mais le voyageur n\'a pas encore les '
                           'fonds pour régler sa commission. Réessaie un peu '
                           'plus tard, ou demande-lui de recharger son '
                           'portefeuille.',

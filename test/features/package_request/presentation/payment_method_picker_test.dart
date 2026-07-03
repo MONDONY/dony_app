@@ -57,6 +57,7 @@ PackageRequest _packageRequest({
 
 NegotiationThread _fakeThread({
   NegotiationThreadStatus status = NegotiationThreadStatus.awaitingTrip,
+  bool cashCommissionAvailable = true,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -69,6 +70,7 @@ NegotiationThread _fakeThread({
   lastActivityAt: DateTime(2026, 5, 10),
   createdAt: DateTime(2026, 5, 10),
   messages: const [],
+  cashCommissionAvailable: cashCommissionAvailable,
 );
 
 typedef _MyTripsResult = ({
@@ -380,6 +382,58 @@ void main() {
       // Wallet-first sheet (recharge OR card), not a dead-end snackbar.
       expect(find.text('Solde insuffisant'), findsOneWidget);
       expect(find.text('Recharger mon wallet'), findsOneWidget);
+    },
+  );
+
+  // ── Test 4: CASH accepted but traveler can't cover it → full block ───────
+
+  testWidgets(
+    'bloque tout le flow si CASH accepté par la demande mais commission non couverte, même avec STRIPE dispo',
+    (tester) async {
+      when(
+        () => negotiationRepo.getById(any()),
+      ).thenAnswer((_) async => _fakeThread(cashCommissionAvailable: false));
+      when(
+        () => packageRequestRepo.getById(any()),
+      ).thenAnswer(
+        (_) async =>
+            _packageRequest(methods: {PaymentMethod.stripe, PaymentMethod.cash}),
+      );
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => _emptyTrips());
+
+      await tester.pumpWidget(_harness(_fakeThread()));
+      await tester.pumpAndSettle();
+
+      // Blocking state — no picker, no trip list, no "create trip" CTA, even
+      // though STRIPE is also accepted on this request.
+      expect(find.text('Portefeuille insuffisant'), findsOneWidget);
+      expect(find.text('Recharger mon portefeuille'), findsOneWidget);
+      expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+      expect(find.byKey(const Key('payment-method-cash')), findsNothing);
+      expect(find.text('Créer un nouveau trajet'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ne bloque pas si CASH n\'est pas accepté par la demande, même si cashCommissionAvailable=false',
+    (tester) async {
+      when(
+        () => negotiationRepo.getById(any()),
+      ).thenAnswer((_) async => _fakeThread(cashCommissionAvailable: false));
+      when(
+        () => packageRequestRepo.getById(any()),
+      ).thenAnswer((_) async => _packageRequest(methods: {PaymentMethod.stripe}));
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => _emptyTrips());
+
+      await tester.pumpWidget(_harness(_fakeThread()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Portefeuille insuffisant'), findsNothing);
+      expect(find.byKey(const Key('payment-method-stripe')), findsOneWidget);
     },
   );
 }
