@@ -333,7 +333,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         tabs: const [
                                           Tab(
                                             child: _TabItem(
-                                              iconAsset: 'zap',
+                                              // 'zap' → 'layout-grid' : cohérence avec le
+                                              // fix bottom nav (audit UX, main_shell.dart).
+                                              iconAsset: 'layout-grid',
                                               label: 'Activité',
                                             ),
                                           ),
