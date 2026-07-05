@@ -84,6 +84,10 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
+import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
+import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
+import 'package:dony/features/incident_report/data/datasources/incident_report_remote_datasource.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -352,6 +356,26 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<CancellationBloc>(
     () => CancellationBloc(
       getIt<CancellationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+
+  // Signalement d'incident
+  getIt.registerLazySingleton<IncidentReportRemoteDatasource>(
+    () => IncidentReportRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<IncidentReportRepository>(
+    () => IncidentReportRepository(getIt<IncidentReportRemoteDatasource>()),
+  );
+  getIt.registerFactory<IncidentReportCubit>(
+    () => IncidentReportCubit(
+      getIt<IncidentReportRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<IncidentPhotosCubit>(
+    () => IncidentPhotosCubit(
+      getIt<IncidentReportRepository>(),
       getIt<AnalyticsService>(),
     ),
   );

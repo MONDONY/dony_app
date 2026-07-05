@@ -26,6 +26,10 @@ abstract final class AnalyticsEvents {
   static const bidPhotoRemoved = 'bid_photo_removed';
   static const bidPhotosViewed = 'bid_photos_viewed';
 
+  // Signalements d'incident
+  static const incidentPhotoAdded = 'incident_photo_added';
+  static const incidentReported   = 'incident_reported';
+
   // Payments
   static const paymentInitiated    = 'payment_initiated';
   static const paymentSucceeded    = 'payment_succeeded';
