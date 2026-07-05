@@ -54,14 +54,6 @@ void main() {
     return container.decoration! as BoxDecoration;
   }
 
-  // Décoration de la pastille (l'unique AnimatedContainer en mode icône).
-  BoxDecoration pillDecoration(WidgetTester tester) {
-    final container = tester.widget<AnimatedContainer>(
-      find.byType(AnimatedContainer),
-    );
-    return container.decoration! as BoxDecoration;
-  }
-
   group('DonyNavItem — mode avatar (avatarName renseigné)', () {
     testWidgets('affiche DonyAvatar, jamais l\'icône bonhomme', (tester) async {
       await tester.pumpWidget(
@@ -71,8 +63,8 @@ void main() {
       expect(find.byType(DonyAvatar), findsOneWidget);
       expect(find.byIcon(Icons.person_rounded), findsNothing);
       expect(find.byIcon(Icons.person_outline_rounded), findsNothing);
-      // Le libellé n'est plus rendu visuellement (exposé via Semantics).
-      expect(find.text('Moi'), findsNothing);
+      // Le libellé est désormais toujours rendu visuellement sous l'icône.
+      expect(find.text('Moi'), findsOneWidget);
     });
 
     testWidgets('anneau primary quand actif', (tester) async {
@@ -113,20 +105,17 @@ void main() {
     });
   });
 
-  group('DonyNavItem — mode icône (pastille pleine)', () {
-    testWidgets('pastille transparente quand inactif', (tester) async {
-      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
-      await tester.pumpAndSettle();
+  group('DonyNavItem — mode icône (fill délégué à l’indicateur partagé)', () {
+    testWidgets(
+      'ne peint plus sa propre pastille (AnimatedContainer) — le fond '
+      'actif est désormais l’indicateur glissant du parent (_DonyBottomNav)',
+      (tester) async {
+        await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+        await tester.pumpAndSettle();
 
-      expect(pillDecoration(tester).color, Colors.transparent);
-    });
-
-    testWidgets('pastille primary pleine quand actif', (tester) async {
-      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
-      await tester.pumpAndSettle();
-
-      expect(pillDecoration(tester).color, DonyColors.primary);
-    });
+        expect(find.byType(AnimatedContainer), findsNothing);
+      },
+    );
 
     testWidgets('icône outlined + couleur subtle quand inactif', (
       tester,
@@ -194,6 +183,41 @@ void main() {
       await tester.pumpWidget(host(buildItem(index: 3, currentIndex: 0)));
 
       expect(find.text('0'), findsNothing);
+    });
+  });
+
+  group('DonyNavItem — libellé visible (audit UX bottom nav)', () {
+    testWidgets('libellé en primary quand actif', (tester) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+      await tester.pumpAndSettle();
+
+      final text = tester.widget<Text>(find.text('Moi'));
+      expect(text.style?.color, DonyColors.primary);
+      expect(text.style?.fontWeight, FontWeight.w700);
+    });
+
+    testWidgets('libellé en onSurfaceVariant quand inactif', (tester) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 0)));
+      await tester.pumpAndSettle();
+
+      final text = tester.widget<Text>(find.text('Moi'));
+      expect(text.style?.color, DonyColors.textSubtle);
+      expect(text.style?.fontWeight, FontWeight.w600);
+    });
+
+    testWidgets('libellé exclu de l\'arbre sémantique (pas de double annonce)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.ancestor(
+          of: find.text('Moi'),
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
     });
   });
 
