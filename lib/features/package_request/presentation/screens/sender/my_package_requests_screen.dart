@@ -140,6 +140,9 @@ class _ListContentState extends State<_ListContent> {
                       r.status == PackageRequestStatus.negotiating,
                 )
                 .length;
+            final negotiatingCount = visible
+                .where((r) => r.status == PackageRequestStatus.negotiating)
+                .length;
             final closedCount = visible
                 .where(
                   (r) =>
@@ -174,6 +177,7 @@ class _ListContentState extends State<_ListContent> {
                   total: visible.length,
                   openCount: openCount,
                   closedCount: closedCount,
+                  negotiatingCount: negotiatingCount,
                   onChanged: (p) =>
                       context.read<RequestFilterCubit>().setPreset(p),
                 ),
@@ -257,11 +261,13 @@ class _FilterRow extends StatelessWidget {
     required this.openCount,
     required this.closedCount,
     required this.onChanged,
+    this.negotiatingCount = 0,
   });
 
   final RequestQuickFilter current;
   final int total, openCount, closedCount;
   final ValueChanged<RequestQuickFilter> onChanged;
+  final int negotiatingCount;
 
   @override
   Widget build(BuildContext context) {
@@ -290,6 +296,8 @@ class _FilterRow extends StatelessWidget {
             child: _FilterChip(
               label: 'Ouvertes ($openCount)',
               active: current == RequestQuickFilter.open,
+              hasNew: negotiatingCount > 0 &&
+                  current != RequestQuickFilter.open,
               onTap: () => onChanged(RequestQuickFilter.open),
             ),
           ),
@@ -312,11 +320,13 @@ class _FilterChip extends StatelessWidget {
     required this.label,
     required this.active,
     required this.onTap,
+    this.hasNew = false,
   });
 
   final String label;
   final bool active;
   final VoidCallback onTap;
+  final bool hasNew;
 
   @override
   Widget build(BuildContext context) {
@@ -335,13 +345,29 @@ class _FilterChip extends StatelessWidget {
           ),
         ),
         child: Center(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: active ? Colors.white : DonyColors.textMuted,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: active ? Colors.white : DonyColors.textMuted,
+                ),
+              ),
+              if (hasNew) ...[
+                const SizedBox(width: 5),
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    color: DonyColors.danger500,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),

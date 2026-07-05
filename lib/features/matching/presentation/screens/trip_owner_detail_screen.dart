@@ -147,9 +147,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
     } catch (_) {
       return false;
     }
-    final currentUserId = authState is AuthAuthenticated
-        ? authState.user.id
-        : null;
+    final currentUserId = authState.currentUserId;
     return currentUserId != null && a.travelerId == currentUserId;
   }
 

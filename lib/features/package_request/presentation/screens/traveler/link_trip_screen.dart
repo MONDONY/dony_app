@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
@@ -26,8 +27,17 @@ import 'package:intl/intl.dart';
 /// They must pick one of their existing trips matching the corridor + date,
 /// or create a new one which will be auto-linked.
 class LinkTripScreen extends StatefulWidget {
-  const LinkTripScreen({required this.thread, super.key});
+  const LinkTripScreen({
+    required this.thread,
+    this.autoCreateDedicated = false,
+    super.key,
+  });
   final NegotiationThread thread;
+
+  /// Si `true`, after loading, navigates directly to the trip creation form
+  /// without the user having to tap "Créer un nouveau trajet".
+  /// Used when navigating from the "Créer un trajet dédié" button.
+  final bool autoCreateDedicated;
 
   @override
   State<LinkTripScreen> createState() => _LinkTripScreenState();
@@ -41,11 +51,18 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   final _matchingTripsNotifier = ValueNotifier<List<AnnouncementModel>>(const []);
   final _selectedTripNotifier = ValueNotifier<AnnouncementModel?>(null);
   final _paymentMethodNotifier = ValueNotifier<PaymentMethod>(PaymentMethod.stripe);
+  final _filteredMethodsNotifier = ValueNotifier<Set<PaymentMethod>>({});
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _load().then((_) {
+      if (widget.autoCreateDedicated &&
+          mounted &&
+          _filteredMethodsNotifier.value.isNotEmpty) {
+        _createNewTrip();
+      }
+    });
   }
 
   @override
@@ -56,6 +73,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     _matchingTripsNotifier.dispose();
     _selectedTripNotifier.dispose();
     _paymentMethodNotifier.dispose();
+    _filteredMethodsNotifier.dispose();
     super.dispose();
   }
 
@@ -72,6 +90,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       // Fetch all the traveler's announcements (paginated, just first page for now)
       final myTrips =
           await getIt<AnnouncementRepository>().getMyAnnouncements();
+
+      // Re-fetch the thread to get a live cashCommissionAvailable — widget.thread
+      // is a snapshot taken at navigation time and never updates on its own (e.g.
+      // right after the traveler tops up their wallet via the CTA below).
+      final freshThread =
+          await getIt<NegotiationRepository>().getById(widget.thread.id);
 
       // Filter by corridor + date window.
       //
@@ -106,14 +130,27 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         return linkable && corridorMatch && dateMatch;
       }).toList();
 
+      // If the sender accepted CASH for this request and the traveler can't cover
+      // the Dony commission, block the whole trip-linking flow — even when another
+      // method (e.g. STRIPE) is also accepted. The sender explicitly opted into
+      // cash as a possible outcome; the traveler must be able to honor it before
+      // engaging, not just fall back silently to a method the sender didn't
+      // necessarily prefer.
+      final accepted = Set<PaymentMethod>.from(request.acceptedPaymentMethods);
+      final cashRequested = accepted.contains(PaymentMethod.cash);
+      final cashOk = freshThread.cashCommissionAvailable;
+      final Set<PaymentMethod> filtered =
+          (cashRequested && !cashOk) ? const <PaymentMethod>{} : accepted;
+
       if (mounted) {
         _requestNotifier.value = request;
         _matchingTripsNotifier.value = matching;
-        // Default to STRIPE; if STRIPE is not in accepted methods, pick first.
-        if (request.acceptedPaymentMethods.contains(PaymentMethod.stripe)) {
+        _filteredMethodsNotifier.value = filtered;
+        // Default to STRIPE; fallback to first available filtered method.
+        if (filtered.contains(PaymentMethod.stripe)) {
           _paymentMethodNotifier.value = PaymentMethod.stripe;
-        } else if (request.acceptedPaymentMethods.isNotEmpty) {
-          _paymentMethodNotifier.value = request.acceptedPaymentMethods.first;
+        } else if (filtered.isNotEmpty) {
+          _paymentMethodNotifier.value = filtered.first;
         }
         _loadingNotifier.value = false;
       }
@@ -123,6 +160,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         _loadingNotifier.value = false;
       }
     }
+  }
+
+  double get _commissionEur {
+    final net = widget.thread.currentPriceEur;
+    final gross = widget.thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
+    return gross - net;
   }
 
   void _selectTrip(AnnouncementModel ann) {
@@ -334,30 +377,44 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                     ? Center(child: CircularProgressIndicator(color: cs.primary))
                     : error != null
                         ? _ErrorView(message: error, onRetry: _load)
-                        : _buildBody(),
-                bottomNavigationBar: ValueListenableBuilder<AnnouncementModel?>(
-                  valueListenable: _selectedTripNotifier,
-                  builder: (context, selectedTrip, _) {
-                    return SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          DonySpacing.lg,
-                          DonySpacing.sm,
-                          DonySpacing.lg,
-                          DonySpacing.base,
-                        ),
-                        child: DonySelectBar(
-                          defaultLabel: 'Sélectionner un trajet',
-                          confirmedLabel: 'Confirmer ce trajet',
-                          selectedSummary: selectedTrip != null
-                              ? (selectedTrip.isKgFree
-                                  ? '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · Kg libre'
-                                  : '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo')
-                              : null,
-                          selectedCount: selectedTrip != null ? '1 trajet' : null,
-                          onConfirm: selectedTrip != null ? _confirmTrip : null,
-                        ),
-                      ),
+                        : ValueListenableBuilder<Set<PaymentMethod>>(
+                            valueListenable: _filteredMethodsNotifier,
+                            builder: (context, filtered, _) => filtered.isEmpty
+                                ? _CashUnavailableView(
+                                    commissionEur: _commissionEur,
+                                    onRecharged: _load,
+                                  )
+                                : _buildBody(),
+                          ),
+                bottomNavigationBar: ValueListenableBuilder<Set<PaymentMethod>>(
+                  valueListenable: _filteredMethodsNotifier,
+                  builder: (context, filtered, _) {
+                    if (filtered.isEmpty) return const SizedBox.shrink();
+                    return ValueListenableBuilder<AnnouncementModel?>(
+                      valueListenable: _selectedTripNotifier,
+                      builder: (context, selectedTrip, _) {
+                        return SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DonySpacing.lg,
+                              DonySpacing.sm,
+                              DonySpacing.lg,
+                              DonySpacing.base,
+                            ),
+                            child: DonySelectBar(
+                              defaultLabel: 'Sélectionner un trajet',
+                              confirmedLabel: 'Confirmer ce trajet',
+                              selectedSummary: selectedTrip != null
+                                  ? (selectedTrip.isKgFree
+                                      ? '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · Kg libre'
+                                      : '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo')
+                                  : null,
+                              selectedCount: selectedTrip != null ? '1 trajet' : null,
+                              onConfirm: selectedTrip != null ? _confirmTrip : null,
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -430,10 +487,15 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                         ),
                       ),
                       const SizedBox(height: DonySpacing.xl),
-                      _PaymentMethodPicker(
-                        methods: r.acceptedPaymentMethods,
-                        selected: selectedPaymentMethod,
-                        onChanged: (m) => _paymentMethodNotifier.value = m,
+                      ValueListenableBuilder<Set<PaymentMethod>>(
+                        valueListenable: _filteredMethodsNotifier,
+                        builder: (context, filteredMethods, _) {
+                          return _PaymentMethodPicker(
+                            methods: filteredMethods,
+                            selected: selectedPaymentMethod,
+                            onChanged: (m) => _paymentMethodNotifier.value = m,
+                          );
+                        },
                       ),
                       const SizedBox(height: DonySpacing.xl),
                       Text(
@@ -593,6 +655,42 @@ class _PaymentMethodPicker extends StatelessWidget {
           }).toList(),
         ),
       ],
+    );
+  }
+}
+
+/// Blocking state shown instead of the trip picker when this request accepts
+/// CASH and the traveler can't cover the Dony commission (empty wallet, no
+/// card on file) — even if another method (e.g. STRIPE) is also accepted.
+/// Linking a trip in this state would only fail later at checkout — better to
+/// stop here with a clear CTA.
+class _CashUnavailableView extends StatelessWidget {
+  const _CashUnavailableView({
+    required this.commissionEur,
+    required this.onRecharged,
+  });
+
+  final double commissionEur;
+  final Future<void> Function() onRecharged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyEmptyState(
+      icon: Icons.account_balance_wallet_outlined,
+      type: DonyEmptyStateType.error,
+      title: 'Portefeuille insuffisant',
+      description: 'L\'expéditeur accepte le paiement en espèces sur cette '
+          'demande, mais il te manque des fonds pour régler la commission '
+          'Dony (${commissionEur.toStringAsFixed(2)} €). Recharge ton '
+          'portefeuille pour pouvoir lier un trajet.',
+      actionLabel: 'Recharger mon portefeuille',
+      onAction: () async {
+        final recharged =
+            await context.push<bool>('/payments/wallet/topup/method');
+        if (recharged ?? false) {
+          await onRecharged();
+        }
+      },
     );
   }
 }

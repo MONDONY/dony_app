@@ -76,17 +76,31 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   /// else Stripe if accepted, else the first accepted method.
   void _resolveDefaultMethod(PackageRequest request) {
     if (_selectedMethod.value != null) return;
-    final accepted = request.acceptedPaymentMethods;
+    final available = _availableMethods(request);
     final fromThread = widget.thread?.paymentMethod;
-    if (fromThread != null && accepted.contains(fromThread)) {
+    if (fromThread != null && available.contains(fromThread)) {
       _selectedMethod.value = fromThread;
-    } else if (accepted.contains(PaymentMethod.stripe)) {
+    } else if (available.contains(PaymentMethod.stripe)) {
       _selectedMethod.value = PaymentMethod.stripe;
-    } else if (accepted.isNotEmpty) {
-      _selectedMethod.value = accepted.first;
+    } else if (available.isNotEmpty) {
+      _selectedMethod.value = available.first;
     } else {
       _selectedMethod.value = fromThread ?? PaymentMethod.stripe;
     }
+  }
+
+  /// Si CASH est accepté sur cette demande et que le voyageur ne peut pas
+  /// couvrir la commission Dony, bloque tout le formulaire — même si une autre
+  /// méthode (ex. STRIPE) est aussi acceptée. Le voyageur doit pouvoir honorer
+  /// le cash avant que l'expéditeur ne s'engage sur cette demande, plutôt que
+  /// de basculer silencieusement vers une méthode que l'expéditeur n'a pas
+  /// forcément privilégiée.
+  Set<PaymentMethod> _availableMethods(PackageRequest request) {
+    final accepted = request.acceptedPaymentMethods;
+    final cashRequested = accepted.contains(PaymentMethod.cash);
+    final cashOk = widget.thread?.cashCommissionAvailable ?? true;
+    if (cashRequested && !cashOk) return const <PaymentMethod>{};
+    return accepted;
   }
 
   void _submit() {
@@ -145,7 +159,21 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 )
-              : Stack(
+              : (state.request != null &&
+                      _availableMethods(state.request!).isEmpty)
+                  ? DonyEmptyState(
+                      icon: Icons.hourglass_empty_rounded,
+                      type: DonyEmptyStateType.error,
+                      title: 'En attente du voyageur',
+                      description: 'Le paiement en espèces est accepté sur '
+                          'cette demande, mais le voyageur n\'a pas encore les '
+                          'fonds pour régler sa commission. Réessaie un peu '
+                          'plus tard, ou demande-lui de recharger son '
+                          'portefeuille.',
+                      actionLabel: 'Retour',
+                      onAction: () => context.pop(),
+                    )
+                  : Stack(
                   children: [
                     SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(
@@ -236,8 +264,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 valueListenable: _selectedMethod,
                                 builder: (context, selected, _) =>
                                     _PaymentMethodChoice(
-                                      methods:
-                                          state.request!.acceptedPaymentMethods,
+                                      methods: _availableMethods(state.request!),
                                       selected: selected,
                                       onChanged: (m) =>
                                           _selectedMethod.value = m,

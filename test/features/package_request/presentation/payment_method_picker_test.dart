@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,9 @@ class _MockPackageRequestRepository extends Mock
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
+
+class _MockNegotiationRepository extends Mock
+    implements NegotiationRepository {}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -53,6 +57,7 @@ PackageRequest _packageRequest({
 
 NegotiationThread _fakeThread({
   NegotiationThreadStatus status = NegotiationThreadStatus.awaitingTrip,
+  bool cashCommissionAvailable = true,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -65,6 +70,7 @@ NegotiationThread _fakeThread({
   lastActivityAt: DateTime(2026, 5, 10),
   createdAt: DateTime(2026, 5, 10),
   messages: const [],
+  cashCommissionAvailable: cashCommissionAvailable,
 );
 
 typedef _MyTripsResult = ({
@@ -78,6 +84,7 @@ _MyTripsResult _emptyTrips() =>
 late _MockNegotiationBloc negotiationBloc;
 late _MockPackageRequestRepository packageRequestRepo;
 late _MockAnnouncementRepository announcementRepo;
+late _MockNegotiationRepository negotiationRepo;
 
 Widget _harness(NegotiationThread thread) {
   final router = GoRouter(
@@ -131,6 +138,13 @@ void main() {
 
     packageRequestRepo = _MockPackageRequestRepository();
     announcementRepo = _MockAnnouncementRepository();
+    negotiationRepo = _MockNegotiationRepository();
+    // Fresh-fetch used by LinkTripScreen to read a live cashCommissionAvailable —
+    // default to the non-blocking thread so existing tests keep exercising the
+    // picker/trip-tiles as before, unless a test overrides this stub.
+    when(
+      () => negotiationRepo.getById(any()),
+    ).thenAnswer((_) async => _fakeThread());
 
     if (getIt.isRegistered<PackageRequestRepository>()) {
       getIt.unregister<PackageRequestRepository>();
@@ -138,8 +152,12 @@ void main() {
     if (getIt.isRegistered<AnnouncementRepository>()) {
       getIt.unregister<AnnouncementRepository>();
     }
+    if (getIt.isRegistered<NegotiationRepository>()) {
+      getIt.unregister<NegotiationRepository>();
+    }
     getIt.registerFactory<PackageRequestRepository>(() => packageRequestRepo);
     getIt.registerFactory<AnnouncementRepository>(() => announcementRepo);
+    getIt.registerFactory<NegotiationRepository>(() => negotiationRepo);
   });
 
   tearDown(() {
@@ -148,6 +166,9 @@ void main() {
     }
     if (getIt.isRegistered<AnnouncementRepository>()) {
       getIt.unregister<AnnouncementRepository>();
+    }
+    if (getIt.isRegistered<NegotiationRepository>()) {
+      getIt.unregister<NegotiationRepository>();
     }
   });
 
@@ -361,6 +382,58 @@ void main() {
       // Wallet-first sheet (recharge OR card), not a dead-end snackbar.
       expect(find.text('Solde insuffisant'), findsOneWidget);
       expect(find.text('Recharger mon wallet'), findsOneWidget);
+    },
+  );
+
+  // ── Test 4: CASH accepted but traveler can't cover it → full block ───────
+
+  testWidgets(
+    'bloque tout le flow si CASH accepté par la demande mais commission non couverte, même avec STRIPE dispo',
+    (tester) async {
+      when(
+        () => negotiationRepo.getById(any()),
+      ).thenAnswer((_) async => _fakeThread(cashCommissionAvailable: false));
+      when(
+        () => packageRequestRepo.getById(any()),
+      ).thenAnswer(
+        (_) async =>
+            _packageRequest(methods: {PaymentMethod.stripe, PaymentMethod.cash}),
+      );
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => _emptyTrips());
+
+      await tester.pumpWidget(_harness(_fakeThread()));
+      await tester.pumpAndSettle();
+
+      // Blocking state — no picker, no trip list, no "create trip" CTA, even
+      // though STRIPE is also accepted on this request.
+      expect(find.text('Portefeuille insuffisant'), findsOneWidget);
+      expect(find.text('Recharger mon portefeuille'), findsOneWidget);
+      expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+      expect(find.byKey(const Key('payment-method-cash')), findsNothing);
+      expect(find.text('Créer un nouveau trajet'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'ne bloque pas si CASH n\'est pas accepté par la demande, même si cashCommissionAvailable=false',
+    (tester) async {
+      when(
+        () => negotiationRepo.getById(any()),
+      ).thenAnswer((_) async => _fakeThread(cashCommissionAvailable: false));
+      when(
+        () => packageRequestRepo.getById(any()),
+      ).thenAnswer((_) async => _packageRequest(methods: {PaymentMethod.stripe}));
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => _emptyTrips());
+
+      await tester.pumpWidget(_harness(_fakeThread()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Portefeuille insuffisant'), findsNothing);
+      expect(find.byKey(const Key('payment-method-stripe')), findsOneWidget);
     },
   );
 }

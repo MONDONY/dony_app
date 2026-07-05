@@ -44,7 +44,17 @@ class _ThreadView extends StatelessWidget {
     return BlocConsumer<NegotiationBloc, NegotiationState>(
       listener: (ctx, state) {
         if (state is NegotiationError) {
-          ErrorPresenter.show(ctx, state.error);
+          if (state.error.code == 'negotiation/commission-charge-failed') {
+            DonySnackbar.show(
+              ctx,
+              message:
+                  'Le paiement cash est impossible : solde et carte du voyageur indisponibles.',
+              type: DonySnackbarType.warning,
+            );
+            ctx.pop();
+          } else {
+            ErrorPresenter.show(ctx, state.error);
+          }
         }
         if (state is NegotiationRejected) {
           DonySnackbar.show(
@@ -320,18 +330,21 @@ class _LoadedViewState extends State<_LoadedView> {
             ),
           ),
         ),
-        if (thread.linkedTrip != null &&
-            thread.status == NegotiationThreadStatus.awaitingPayment)
+        if (thread.linkedTrip != null)
           LinkedTripCard(
             trip: thread.linkedTrip!,
             onTap: () => TripDetailBottomSheet.show(
               context,
               trip: thread.linkedTrip!,
               isSender: viewerUserId != thread.travelerId,
-              onRefuse: (reason) => context
-                  .read<NegotiationBloc>()
-                  .add(NegotiationRefuseTripRequested(
-                      threadId: thread.id, reason: reason)),
+              // Refus uniquement possible avant paiement
+              onRefuse: thread.status ==
+                      NegotiationThreadStatus.awaitingPayment
+                  ? (reason) => context
+                      .read<NegotiationBloc>()
+                      .add(NegotiationRefuseTripRequested(
+                          threadId: thread.id, reason: reason))
+                  : null,
             ),
           ),
         ThreadStateCtaBar(

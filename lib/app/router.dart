@@ -66,6 +66,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/my_pac
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -492,6 +493,7 @@ final appRouter = GoRouter(
           ),
           BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
           BlocProvider(create: (_) => getIt<TripFilterCubit>()),
+          BlocProvider.value(value: getIt<NegotiationListBloc>()),
         ],
         child: const AnnouncementListScreen(showBackButton: true),
       ),
@@ -1233,6 +1235,17 @@ final appRouter = GoRouter(
           value: getIt<NegotiationBloc>()
             ..add(NegotiationFetchRequested(thread.id)),
           child: LinkTripScreen(thread: thread),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/negotiations/:id/create-dedicated-trip',
+      builder: (context, state) {
+        final thread = state.extra as NegotiationThread;
+        return BlocProvider.value(
+          value: getIt<NegotiationBloc>()
+            ..add(NegotiationFetchRequested(thread.id)),
+          child: LinkTripScreen(thread: thread, autoCreateDedicated: true),
         );
       },
     ),
