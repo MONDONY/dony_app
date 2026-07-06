@@ -270,6 +270,54 @@ void main() {
     );
 
     blocTest<RecipientBloc, RecipientState>(
+      'RecipientUpdated with isDefault clears default on other locally-held recipients',
+      build: () {
+        const updatedAsDefault = Recipient(
+          id: 'r-1',
+          fullName: 'Mamadou Diallo',
+          phoneE164: '+221771234567',
+          city: 'Dakar',
+          country: 'SN',
+          isDefault: true,
+        );
+        when(() => repository.update(any(), any()))
+            .thenAnswer((_) async => updatedAsDefault);
+        return RecipientBloc(repository, analytics);
+      },
+      seed: () => const RecipientState(
+        status: RecipientStatus.success,
+        recipients: [
+          _r1,
+          Recipient(
+            id: 'r-2',
+            fullName: 'Aminata Koné',
+            phoneE164: '+22507891234',
+            city: 'Abidjan',
+            country: 'CI',
+            isDefault: true,
+          ),
+        ],
+      ),
+      act: (bloc) => bloc.add(const RecipientUpdated(
+        id: 'r-1',
+        fullName: 'Mamadou Diallo',
+        phoneE164: '+221771234567',
+        city: 'Dakar',
+        country: 'SN',
+        isDefault: true,
+      )),
+      expect: () => [
+        isA<RecipientState>()
+            .having((s) => s.status, 'status', RecipientStatus.loading),
+        isA<RecipientState>()
+            .having((s) => s.recipients.where((r) => r.isDefault).length,
+                'un seul défaut', 1)
+            .having((s) => s.recipients.firstWhere((r) => r.id == 'r-1').isDefault,
+                'r-1 défaut', true),
+      ],
+    );
+
+    blocTest<RecipientBloc, RecipientState>(
       'RecipientPicked → logs analytics event without emitting state',
       build: () => RecipientBloc(repository, analytics),
       act: (bloc) => bloc.add(const RecipientPicked('saved')),
