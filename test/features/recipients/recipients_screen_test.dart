@@ -189,6 +189,29 @@ void main() {
       expect(find.text('Aminata Koné'), findsNothing);
       expect(find.text('Moussa Traoré'), findsNothing);
     });
+
+    testWidgets('shows empty state when search query matches nothing', (tester) async {
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1, _r2, _r3, _r4Default],
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mamadou Diallo'), findsOneWidget);
+      expect(find.text('Aminata Koné'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'zzz-no-match');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aucun résultat'), findsOneWidget);
+      expect(find.text('Mamadou Diallo'), findsNothing);
+      expect(find.text('Aminata Koné'), findsNothing);
+      expect(find.text('Moussa Traoré'), findsNothing);
+      expect(find.text('Ndèye Fall'), findsNothing);
+    });
   });
 
   group('default badge', () {

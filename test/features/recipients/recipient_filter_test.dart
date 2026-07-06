@@ -28,7 +28,17 @@ const _moussa = Recipient(
   country: 'ML',
 );
 
+const _etienne = Recipient(
+  id: 'r-4',
+  fullName: 'Étienne Fontaine',
+  relationship: 'Frère',
+  phoneE164: '+33612345678',
+  city: 'Paris',
+  country: 'FR',
+);
+
 const _all = [_ndeye, _awa, _moussa];
+const _allWithEtienne = [_ndeye, _awa, _moussa, _etienne];
 
 void main() {
   group('filterRecipients', () {
@@ -73,6 +83,14 @@ void main() {
 
     test('trims surrounding whitespace before matching', () {
       expect(filterRecipients(_all, '  awa  '), [_awa]);
+    });
+
+    test('matches accented name with uppercase accented query', () {
+      expect(filterRecipients(_all, 'NDÈYE'), [_ndeye]);
+    });
+
+    test('matches uppercase accented name with lowercase unaccented query', () {
+      expect(filterRecipients(_allWithEtienne, 'etienne'), [_etienne]);
     });
   });
 }
