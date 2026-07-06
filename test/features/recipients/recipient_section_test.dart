@@ -205,6 +205,32 @@ void main() {
     },
   );
 
+  testWidgets(
+    'maybeSaveManualEntry uses fallbackCountry over phone-derived country',
+    (tester) async {
+      await tester.pumpWidget(buildSut(fallbackCity: 'Dakar', fallbackCountry: 'CI'));
+      await tester.pump();
+
+      nameCtrl.text = 'Ama Koffi';
+      phoneCtrl.text = '+221771234567'; // -> SN via countryFromPhone (different from CI)
+      await tester.pump();
+
+      expect(find.byType(SwitchListTile), findsOneWidget);
+
+      controller.maybeSaveManualEntry();
+
+      // fallbackCountry='CI' should win over phone-derived 'SN'
+      final captured = verify(() => sectionBloc.add(captureAny())).captured;
+      final created = captured.whereType<RecipientCreated>();
+      expect(created, hasLength(1));
+      final event = created.single;
+      expect(event.fullName, 'Ama Koffi');
+      expect(event.phoneE164, '+221771234567');
+      expect(event.country, 'CI'); // fallbackCountry wins, not 'SN' from phone
+      expect(event.city, 'Dakar');
+    },
+  );
+
   testWidgets('maybeSaveManualEntry does nothing when toggle off', (
     tester,
   ) async {
