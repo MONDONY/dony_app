@@ -17,9 +17,16 @@ const _kCountries = [
 ];
 
 class RecipientEditScreen extends StatefulWidget {
-  const RecipientEditScreen({super.key, this.recipientId});
+  const RecipientEditScreen({
+    super.key,
+    this.recipientId,
+    this.initialFullName,
+    this.initialPhoneE164,
+  });
 
   final String? recipientId;
+  final String? initialFullName;
+  final String? initialPhoneE164;
 
   @override
   State<RecipientEditScreen> createState() => _RecipientEditScreenState();
@@ -37,6 +44,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   bool _initialized = false;
   String? _phoneError;
   String? _whatsappError;
+  bool _isDefault = false;
 
   bool get _isEditing => widget.recipientId != null;
 
@@ -64,6 +72,16 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.initialFullName != null) _fullNameCtrl.text = widget.initialFullName!;
+    if (widget.initialPhoneE164 != null) {
+      _phoneCtrl.text = widget.initialPhoneE164!;
+      _validatePhone(widget.initialPhoneE164!);
+    }
+  }
+
+  @override
   void dispose() {
     _fullNameCtrl.dispose();
     _relationshipCtrl.dispose();
@@ -84,6 +102,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
     _cityCtrl.text = r.city;
     _country = r.country;
     _notesCtrl.text = r.notes ?? '';
+    _isDefault = r.isDefault;
   }
 
   void _submit(BuildContext context) {
@@ -109,6 +128,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
             country: _country,
             notes:
                 _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+            isDefault: _isDefault,
           ));
     } else {
       context.read<RecipientBloc>().add(RecipientCreated(
@@ -125,6 +145,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
             country: _country,
             notes:
                 _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+            isDefault: _isDefault,
           ));
     }
   }
@@ -249,6 +270,14 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                   ),
                 ),
               ).animate().fadeIn(delay: 280.ms, duration: 280.ms).slideY(begin: 0.03),
+              const SizedBox(height: DonySpacing.base),
+              SwitchListTile.adaptive(
+                value: _isDefault,
+                onChanged: (v) => setState(() => _isDefault = v),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Destinataire par défaut'),
+                subtitle: const Text('Présélectionné lors de tes prochains envois'),
+              ).animate().fadeIn(delay: 320.ms, duration: 280.ms),
             ],
           ),
         );
