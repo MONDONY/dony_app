@@ -13,6 +13,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -50,6 +51,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
   final _promoCtrl = TextEditingController();
+  final _recipientSection = RecipientSectionController();
 
   // ValueNotifiers replace setState for reactive UI — no setState needed
   late final ValueNotifier<double> _weightNotifier;
@@ -141,6 +143,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         BlocListener<BidBloc, BidState>(
           listener: (context, state) {
             if (state is BidCheckoutReady) {
+              _recipientSection.maybeSaveManualEntry();
               context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
                 clientSecret: state.response.clientSecret,
                 publishableKey: state.response.publishableKey,
@@ -276,18 +279,28 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                             // ── Destinataire ──────────────────────────────────────
                             _SectionLabel(label: 'DESTINATAIRE'),
                             const SizedBox(height: DonySpacing.md),
-                            DonyTextField(
-                              controller: _recipientNameCtrl,
-                              label: 'Prénom et nom du destinataire',
-                              hint: 'ex: Amadou Diallo',
-                            ).animate().fadeIn(delay: 160.ms),
-                            const SizedBox(height: DonySpacing.md),
-                            DonyTextField(
-                              controller: _recipientPhoneCtrl,
-                              label: 'Téléphone du destinataire',
-                              hint: 'ex: +221 77 000 00 00',
-                              keyboardType: TextInputType.phone,
-                            ).animate().fadeIn(delay: 180.ms),
+                            RecipientSection(
+                              controller: _recipientSection,
+                              nameCtrl: _recipientNameCtrl,
+                              phoneCtrl: _recipientPhoneCtrl,
+                              fallbackCity: widget.announcement.arrivalCity,
+                              fallbackCountry:
+                                  widget.announcement.arrivalCountryCode,
+                              children: [
+                                DonyTextField(
+                                  controller: _recipientNameCtrl,
+                                  label: 'Prénom et nom du destinataire',
+                                  hint: 'ex: Amadou Diallo',
+                                ).animate().fadeIn(delay: 160.ms),
+                                const SizedBox(height: DonySpacing.md),
+                                DonyTextField(
+                                  controller: _recipientPhoneCtrl,
+                                  label: 'Téléphone du destinataire',
+                                  hint: 'ex: +221 77 000 00 00',
+                                  keyboardType: TextInputType.phone,
+                                ).animate().fadeIn(delay: 180.ms),
+                              ],
+                            ),
                             const SizedBox(height: DonySpacing.xxl),
 
                             // ── Disclaimer card ───────────────────────────────────

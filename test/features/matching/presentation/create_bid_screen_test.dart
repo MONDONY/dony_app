@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -10,12 +14,25 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+/// Task 11 — wiring test for `RecipientSection` inside `CreateBidScreen`.
+///
+/// The deep behaviour of `RecipientSection` (3-state picker, toggle
+/// visibility, manual-entry save payload) is already covered by Task 9's
+/// `recipient_section_test.dart`. Here we only assert the WIRING: the
+/// section renders on the form (picker button, 2 unchanged fields),
+/// `fallbackCity`/`fallbackCountry` come from `widget.announcement`, and
+/// `RecipientSectionController.maybeSaveManualEntry()` fires on
+/// `BidCheckoutReady` (dispatching `RecipientCreated` on the section's own
+/// bloc) before the existing PaymentBloc dispatch — never on error/other
+/// states.
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +42,11 @@ class MockBidBloc extends MockBloc<BidEvent, BidState>
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
 
+class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
+    implements RecipientBloc {}
+
+class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 final _testAnnouncement = AnnouncementModel(
@@ -32,6 +54,10 @@ final _testAnnouncement = AnnouncementModel(
   travelerId: 'trav-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
+  // Deliberately different from the country the phone prefix (+221) would
+  // resolve to (SN) — proves fallbackCountry comes from the announcement,
+  // not from `countryFromPhone`.
+  arrivalCountryCode: 'CI',
   departureDate: DateTime(2026, 6, 15),
   availableKg: 10,
   totalKg: 10,
@@ -101,6 +127,7 @@ Future<void> _enableSubmit(WidgetTester tester) async {
 void main() {
   late MockBidBloc bidBloc;
   late MockPaymentBloc paymentBloc;
+  late MockRecipientBloc recipientBloc;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -120,9 +147,15 @@ void main() {
       publishableKey: '',
       bidId: '',
     ));
+    registerFallbackValue(_FakeRecipientEvent());
   });
 
   setUp(() {
+    // Several tests in this suite emit the exact same "Erreur réseau"
+    // message via ErrorPresenter/DonySnackbar in quick succession — clear
+    // the dedup cache so one test's snackbar doesn't suppress the next's.
+    DonySnackbar.clearDedup();
+
     bidBloc = MockBidBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
@@ -130,11 +163,23 @@ void main() {
     paymentBloc = MockPaymentBloc();
     when(() => paymentBloc.state).thenReturn(const PaymentInitial());
     when(() => paymentBloc.stream).thenAnswer((_) => const Stream.empty());
+
+    recipientBloc = MockRecipientBloc();
+    when(() => recipientBloc.state).thenReturn(const RecipientState());
+    when(() => recipientBloc.stream).thenAnswer((_) => const Stream.empty());
+
+    if (getIt.isRegistered<RecipientBloc>()) {
+      getIt.unregister<RecipientBloc>();
+    }
+    getIt.registerFactory<RecipientBloc>(() => recipientBloc);
   });
 
   tearDown(() {
     bidBloc.close();
     paymentBloc.close();
+    if (getIt.isRegistered<RecipientBloc>()) {
+      getIt.unregister<RecipientBloc>();
+    }
   });
 
   // ── 1. Rendu initial ──────────────────────────────────────────────────────
@@ -150,6 +195,16 @@ void main() {
       expect(find.text('DESCRIPTION (AU VOYAGEUR)'), findsOneWidget);
       expect(find.text('VALEUR DÉCLARÉE (€)'), findsOneWidget);
       expect(find.text('DESTINATAIRE'), findsOneWidget);
+    });
+
+    testWidgets(
+        'affiche le bouton "Choisir un destinataire" et les 2 champs inchangés',
+        (tester) async {
+      await _pumpScreen(tester, bidBloc, paymentBloc);
+
+      expect(find.text('Choisir un destinataire'), findsOneWidget);
+      expect(find.text('Prénom et nom du destinataire'), findsOneWidget);
+      expect(find.text('Téléphone du destinataire'), findsOneWidget);
     });
 
     testWidgets('affiche le nom du voyageur dans l\'appbar', (tester) async {
@@ -475,6 +530,94 @@ void main() {
 
       // Verify PaymentBloc received BidCheckoutPaymentRequested event
       verify(() => paymentBloc.add(any(that: isA<BidCheckoutPaymentRequested>()))).called(1);
+    });
+
+    testWidgets(
+        'BidCheckoutReady → sauvegarde le destinataire saisi manuellement '
+        '(fallbackCity/fallbackCountry de l\'annonce) avant le dispatch '
+        'PaymentBloc', (tester) async {
+      final checkoutResponse = BidCheckoutResponseModel(
+        bidId: 'bid-1',
+        clientSecret: 'pi_test_secret',
+        publishableKey: 'pk_test_123',
+        expiresAt: DateTime.now().add(const Duration(minutes: 15)),
+      );
+      final stateController = StreamController<BidState>();
+      addTearDown(stateController.close);
+
+      whenListen<BidState>(
+        bidBloc,
+        stateController.stream,
+        initialState: BidInitial(),
+      );
+
+      await _pumpScreen(tester, bidBloc, paymentBloc);
+
+      // Recipient name + a valid, unknown E.164 phone → toggle "Enregistrer
+      // ce destinataire" appears and defaults to ON.
+      await tester.enterText(find.byType(TextField).at(2), 'Amadou Diallo');
+      await tester.pump();
+      await tester.enterText(
+          find.byType(TextField).at(3), '+221771112233');
+      await tester.pump();
+      expect(find.byType(SwitchListTile), findsOneWidget);
+
+      stateController.add(BidCheckoutReady(checkoutResponse));
+      await tester.pump();
+      await tester.pump();
+
+      final createdEvents = verify(
+        () => recipientBloc.add(captureAny()),
+      ).captured.whereType<RecipientCreated>();
+      expect(createdEvents, hasLength(1));
+      expect(createdEvents.single.fullName, 'Amadou Diallo');
+      expect(createdEvents.single.phoneE164, '+221771112233');
+      // fallbackCity/fallbackCountry come from widget.announcement, not a
+      // hardcoded value nor countryFromPhone (which would give 'SN' for
+      // +221).
+      expect(createdEvents.single.city, 'Dakar');
+      expect(createdEvents.single.country, 'CI');
+
+      // The existing PaymentBloc dispatch still happens.
+      verify(() => paymentBloc
+              .add(any(that: isA<BidCheckoutPaymentRequested>())))
+          .called(1);
+
+      // Settle the checkout's own SnackBar/animation timers so they don't
+      // bleed into the next test.
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets(
+        'BidError → ne sauvegarde pas de destinataire (dispatch RecipientCreated absent)',
+        (tester) async {
+      final stateController = StreamController<BidState>();
+      addTearDown(stateController.close);
+
+      whenListen<BidState>(
+        bidBloc,
+        stateController.stream,
+        initialState: BidInitial(),
+      );
+
+      await _pumpScreen(tester, bidBloc, paymentBloc);
+
+      await tester.enterText(find.byType(TextField).at(2), 'Amadou Diallo');
+      await tester.pump();
+      await tester.enterText(
+          find.byType(TextField).at(3), '+221771112233');
+      await tester.pump();
+
+      stateController.add(BidError(NetworkException('Erreur réseau')));
+      await tester.pump();
+      await tester.pump();
+
+      verifyNever(
+          () => recipientBloc.add(any(that: isA<RecipientCreated>())));
+
+      // Settle this test's own error SnackBar timer before ending — leaving
+      // it pending was bleeding into the next test's snackbar assertion.
+      await tester.pumpAndSettle();
     });
 
     testWidgets('BidError → affiche message d\'erreur via snackbar',
