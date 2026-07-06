@@ -172,6 +172,14 @@ class SettingsScreen extends StatelessWidget {
                     onTap: () => context.push('/settings/legal/privacy'),
                   ),
                   DonyListTile(
+                    iconAsset: 'flag',
+                    iconColor: cs.onSurfaceVariant,
+                    iconBgColor: cs.surfaceContainerHighest,
+                    label: 'Signaler un problème',
+                    subtitle: 'Incident, bug, litige — avec captures',
+                    onTap: () => context.push('/settings/report-incident'),
+                  ),
+                  DonyListTile(
                     iconAsset: 'bug',
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,

@@ -140,6 +140,9 @@ import 'package:dony/features/settings/presentation/screens/accessibility_settin
 import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
 import 'package:dony/features/settings/presentation/screens/data_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/diagnostics_screen.dart';
+import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
+import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
+import 'package:dony/features/incident_report/presentation/screens/incident_report_screen.dart';
 import 'package:dony/features/settings/presentation/screens/change_pin_screen.dart';
 import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
 import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
@@ -1066,6 +1069,16 @@ final appRouter = GoRouter(
           builder: (context, state) => BlocProvider(
             create: (_) => getIt<DiagnosticsBloc>(),
             child: const DiagnosticsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'report-incident',
+          builder: (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => getIt<IncidentReportCubit>()),
+              BlocProvider(create: (_) => getIt<IncidentPhotosCubit>()),
+            ],
+            child: const IncidentReportScreen(),
           ),
         ),
         GoRoute(
