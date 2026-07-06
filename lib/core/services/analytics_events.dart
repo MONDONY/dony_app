@@ -144,6 +144,12 @@ abstract final class AnalyticsEvents {
   // Favorites
   static const favoritesOpened = 'favorites_opened';
 
+  // Recipients (carnet d'adresses)
+  static const recipientCreated       = 'recipient_created';
+  static const recipientDefaultSet    = 'recipient_default_set';
+  static const recipientSelected      = 'recipient_selected';
+  static const recipientPickerOpened  = 'recipient_picker_opened';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }

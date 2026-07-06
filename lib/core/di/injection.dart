@@ -640,7 +640,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => RecipientRepository(getIt<RecipientDatasource>()),
   );
   getIt.registerFactory<RecipientBloc>(
-    () => RecipientBloc(getIt<RecipientRepository>()),
+    () => RecipientBloc(getIt<RecipientRepository>(), getIt<AnalyticsService>()),
   );
 
   // Subscriptions (abonnements voyageurs)

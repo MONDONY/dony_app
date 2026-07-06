@@ -8,6 +8,7 @@ class Recipient {
   final String city;
   final String country;
   final String? notes;
+  final bool isDefault;
 
   const Recipient({
     required this.id,
@@ -19,6 +20,7 @@ class Recipient {
     required this.city,
     required this.country,
     this.notes,
+    this.isDefault = false,
   });
 
   factory Recipient.fromJson(Map<String, dynamic> json) => Recipient(
@@ -31,6 +33,7 @@ class Recipient {
         city: json['city'] as String,
         country: json['country'] as String,
         notes: json['notes'] as String?,
+        isDefault: json['isDefault'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -43,5 +46,19 @@ class Recipient {
         'city': city,
         'country': country,
         if (notes != null) 'notes': notes,
+        'isDefault': isDefault,
       };
+
+  Recipient copyWith({bool? isDefault}) => Recipient(
+        id: id,
+        fullName: fullName,
+        relationship: relationship,
+        phoneE164: phoneE164,
+        whatsappE164: whatsappE164,
+        street: street,
+        city: city,
+        country: country,
+        notes: notes,
+        isDefault: isDefault ?? this.isDefault,
+      );
 }
