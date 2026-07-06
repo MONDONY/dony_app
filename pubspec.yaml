@@ -48,6 +48,9 @@ dependencies:
   native_exif: ^0.7.0
   flutter_image_compress: ^2.4.0
 
+  # Contacts — picker natif OS (aucune permission READ_CONTACTS requise)
+  flutter_native_contact_picker: ^0.0.12
+
   # Local storage
   hive: ^2.2.3
   hive_flutter: ^1.1.0

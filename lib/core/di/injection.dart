@@ -72,6 +72,7 @@ import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -179,6 +180,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<DeviceIdService>(() => DeviceIdService());
   getIt.registerLazySingleton<DonyMediaService>(() => DonyMediaService());
+  getIt.registerLazySingleton<ContactPickerService>(
+    () => ContactPickerService(),
+  );
   getIt.registerLazySingleton<ApiClient>(
     () => ApiClient(
       baseUrl: apiBaseUrl,
