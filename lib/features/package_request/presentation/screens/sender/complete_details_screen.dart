@@ -10,6 +10,7 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,6 +58,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   final _recipientPhoneCtrl = TextEditingController();
   final _recipientCityCtrl = TextEditingController();
   final _declaredValueCtrl = TextEditingController();
+  final _recipientSection = RecipientSectionController();
 
   /// Payment method chosen by the sender (null until the request is loaded and
   /// the default is resolved from the accepted methods).
@@ -135,6 +137,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
             message: 'Détails enregistrés',
             type: DonySnackbarType.success,
           );
+          _recipientSection.maybeSaveManualEntry();
           // Return the chosen method so the caller opens the payment recap with it.
           final method =
               _selectedMethod.value ??
@@ -195,40 +198,49 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                               const SizedBox(height: DonySpacing.xl),
                             ],
                             _section('Destinataire'),
-                            TextFormField(
-                              controller: _recipientNameCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Nom complet',
-                              ),
-                              validator: _required,
-                            ),
-                            const SizedBox(height: DonySpacing.md),
-                            TextFormField(
-                              controller: _recipientPhoneCtrl,
-                              keyboardType: TextInputType.phone,
-                              decoration: const InputDecoration(
-                                labelText: 'Téléphone',
-                                hintText: '+221771234567',
-                              ),
-                              validator: (v) {
-                                if (v == null || v.trim().isEmpty) {
-                                  return 'Requis';
-                                }
-                                if (!RegExp(
-                                  r'^\+[1-9]\d{6,14}$',
-                                ).hasMatch(v.trim())) {
-                                  return 'Format E.164 (+221…)';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: DonySpacing.md),
-                            TextFormField(
-                              controller: _recipientCityCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Ville / commune',
-                                hintText: 'Ex. Dakar (optionnel)',
-                              ),
+                            RecipientSection(
+                              controller: _recipientSection,
+                              nameCtrl: _recipientNameCtrl,
+                              phoneCtrl: _recipientPhoneCtrl,
+                              cityCtrl: _recipientCityCtrl,
+                              fallbackCity: state.request?.arrivalCity,
+                              children: [
+                                TextFormField(
+                                  controller: _recipientNameCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nom complet',
+                                  ),
+                                  validator: _required,
+                                ),
+                                const SizedBox(height: DonySpacing.md),
+                                TextFormField(
+                                  controller: _recipientPhoneCtrl,
+                                  keyboardType: TextInputType.phone,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Téléphone',
+                                    hintText: '+221771234567',
+                                  ),
+                                  validator: (v) {
+                                    if (v == null || v.trim().isEmpty) {
+                                      return 'Requis';
+                                    }
+                                    if (!RegExp(
+                                      r'^\+[1-9]\d{6,14}$',
+                                    ).hasMatch(v.trim())) {
+                                      return 'Format E.164 (+221…)';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: DonySpacing.md),
+                                TextFormField(
+                                  controller: _recipientCityCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Ville / commune',
+                                    hintText: 'Ex. Dakar (optionnel)',
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: DonySpacing.md),
                             TextFormField(
