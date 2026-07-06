@@ -12,6 +12,8 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -55,6 +57,14 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       context.read<BidBloc>().add(
         const BidMyListAutoRefreshRequested(force: true),
       );
+    }
+    if (index == 3) {
+      // Messages : ConversationListScreen ne charge qu'au premier montage
+      // (StatefulNavigationShell garde l'écran vivant en IndexedStack) — sans
+      // ce refresh, les nouveaux messages/conversations reçus pendant qu'on
+      // était sur un autre onglet restent invisibles tant qu'on ne fait pas
+      // un pull-to-refresh manuel.
+      getIt<ConversationListBloc>().add(const ConversationsLoadRequested());
     }
     widget.navigationShell.goBranch(
       index,
