@@ -22,6 +22,7 @@ import 'package:dony/features/matching/presentation/widgets/grid_item_selection_
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -127,6 +128,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _valueCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
+  final _recipientSection = RecipientSectionController();
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
   final _customItemCtrl = TextEditingController();
@@ -397,6 +399,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError('Téléphone du destinataire obligatoire');
       return;
     }
+
+    // Validation passed — save the manually-entered recipient now, while
+    // RecipientSection is still mounted. Unlike the single-step hosts, this
+    // screen swaps the form step out for the payment-picker step via
+    // AnimatedSwitcher when alternative payment methods are available,
+    // which disposes RecipientSection (and clears its save hook) before
+    // BidCreated/BidCheckoutReady ever arrive.
+    _recipientSection.maybeSaveManualEntry();
 
     final promoCode = _promoCtrl.text.trim().isNotEmpty
         ? _promoCtrl.text.trim()
@@ -849,18 +859,27 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             // ── Destinataire ──────────────────────────────────────────────
             const _SectionLabel(label: 'DESTINATAIRE'),
             const SizedBox(height: DonySpacing.md),
-            DonyTextField(
-              controller: _recipientNameCtrl,
-              label: 'Prénom et nom du destinataire',
-              hint: 'ex: Amadou Diallo',
-            ).animate().fadeIn(delay: 160.ms),
-            const SizedBox(height: DonySpacing.md),
-            DonyTextField(
-              controller: _recipientPhoneCtrl,
-              label: 'Téléphone du destinataire',
-              hint: 'ex: +221 77 000 00 00',
-              keyboardType: TextInputType.phone,
-            ).animate().fadeIn(delay: 180.ms),
+            RecipientSection(
+              controller: _recipientSection,
+              nameCtrl: _recipientNameCtrl,
+              phoneCtrl: _recipientPhoneCtrl,
+              fallbackCity: widget.announcement.arrivalCity,
+              fallbackCountry: widget.announcement.arrivalCountryCode,
+              children: [
+                DonyTextField(
+                  controller: _recipientNameCtrl,
+                  label: 'Prénom et nom du destinataire',
+                  hint: 'ex: Amadou Diallo',
+                ).animate().fadeIn(delay: 160.ms),
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
+                  controller: _recipientPhoneCtrl,
+                  label: 'Téléphone du destinataire',
+                  hint: 'ex: +221 77 000 00 00',
+                  keyboardType: TextInputType.phone,
+                ).animate().fadeIn(delay: 180.ms),
+              ],
+            ),
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Disclaimer ────────────────────────────────────────────────
