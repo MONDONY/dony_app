@@ -216,15 +216,6 @@ void main() {
         selectedTripId: 'trip-a',
         bidsByTrip: {'trip-a': [], 'trip-b': []},
       ));
-      whenListen(
-        cubit,
-        Stream<ScanHubState>.empty(),
-        initialState: loadedState(
-          trips: [tripA, tripB],
-          selectedTripId: 'trip-a',
-          bidsByTrip: {'trip-a': [], 'trip-b': []},
-        ),
-      );
       await tester.pumpWidget(_wrap(cubit));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('trip_switcher')), findsOneWidget);
@@ -285,6 +276,24 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('identify'), findsOneWidget);
     });
+
+    testWidgets(
+      'les points de progression reflètent colisStepProgress (HANDED_OVER '
+      '→ départ scanné, transit/arrivée non)',
+      (tester) async {
+        when(() => cubit.state).thenReturn(loadedState(
+          bidsByTrip: {
+            'trip-1': [_bid('bid-1', 'HANDED_OVER', recipientName: 'Awa Ndiaye')],
+          },
+        ));
+        await tester.pumpWidget(_wrap(cubit));
+        await tester.pumpAndSettle();
+        // HANDED_OVER → colisStepProgress = (depart: true, transit: false,
+        // arrivee: false) : 1 point rempli, 2 points restants.
+        expect(find.byKey(const Key('step_dot_done')), findsOneWidget);
+        expect(find.byKey(const Key('step_dot_todo')), findsNWidgets(2));
+      },
+    );
   });
 
   group('historique des scans', () {

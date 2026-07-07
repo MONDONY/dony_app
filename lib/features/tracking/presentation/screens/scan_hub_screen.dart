@@ -162,7 +162,7 @@ class _TripSwitcher extends StatelessWidget {
 
     return SizedBox(
       key: const Key('trip_switcher'),
-      height: 40,
+      height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: state.trips.length,
@@ -565,20 +565,30 @@ class _ColisRow extends StatelessWidget {
                     'focusNumber': false,
                   },
                 ),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm,
-                    vertical: DonySpacing.xxs,
+                // Le pill visuel reste compact ; on élargit uniquement la
+                // zone tactile à 44×44 pt min (HIG) via ce ConstrainedBox.
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
                   ),
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(DonyRadius.full),
-                  ),
-                  child: Text(
-                    'Scan',
-                    style: tt.labelSmall?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w700,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.xxs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                      ),
+                      child: Text(
+                        'Scan',
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -598,6 +608,7 @@ class _StepDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
+      key: Key(done ? 'step_dot_done' : 'step_dot_todo'),
       width: 18,
       height: 4,
       decoration: BoxDecoration(
