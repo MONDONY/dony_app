@@ -92,23 +92,20 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
             );
           }
 
-          final showSearch = state.recipients.length > 3;
-          final filtered = showSearch
-              ? filterRecipients(state.recipients, _searchCtrl.text)
-              : state.recipients;
+          final filtered =
+              filterRecipients(state.recipients, _searchCtrl.text);
 
           return Column(
             children: [
-              if (showSearch)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.md,
-                    DonySpacing.lg,
-                    0,
-                  ),
-                  child: _SearchField(controller: _searchCtrl),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.md,
+                  DonySpacing.lg,
+                  0,
                 ),
+                child: _SearchField(controller: _searchCtrl),
+              ),
               Expanded(
                 child: filtered.isEmpty
                     ? const DonyEmptyState(

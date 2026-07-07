@@ -145,7 +145,7 @@ void main() {
   });
 
   group('search', () {
-    testWidgets('hides search field when 3 or fewer recipients', (tester) async {
+    testWidgets('shows search field even with 3 or fewer recipients', (tester) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -154,7 +154,7 @@ void main() {
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
     });
 
     testWidgets('shows search field when more than 3 recipients', (tester) async {
