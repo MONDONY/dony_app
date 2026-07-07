@@ -136,39 +136,50 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             // Illustration xl + logo 104px : centrés, mais scrollent si le
             // viewport est trop court (très petit device / gros text scale).
-            LayoutBuilder(
-              builder: (context, constraints) => SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const DonyMascotteAnimated(
-                        type: DonyMascotteType.joyeux,
-                        size: DonyMascotteSize.xl,
-                      ),
-                      const SizedBox(height: DonySpacing.xl),
-                      const DonyLogo(
-                        variant: DonyLogoVariant.onLight,
-                        fontSize: 104,
-                      ),
-                      const SizedBox(height: DonySpacing.xxl),
-                      Text(
-                        'Livrez vos colis en confiance',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: cs.onSurface.withValues(alpha: 0.45),
-                          letterSpacing: 0.4,
+            // Positioned.fill est nécessaire ici : un Stack aligne ses
+            // enfants non positionnés en haut à gauche (topStart) par
+            // défaut, et un SingleChildScrollView sous contraintes lâches
+            // se réduit à la largeur de son contenu — sans ça, tout le bloc
+            // se retrouvait collé au bord gauche de l'écran.
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const DonyMascotteAnimated(
+                          type: DonyMascotteType.joyeux,
+                          size: DonyMascotteSize.xl,
                         ),
-                      ),
-                      const SizedBox(height: DonySpacing.sm),
-                      Text(
-                        'v1.0.0',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                          letterSpacing: 0.5,
+                        const SizedBox(height: DonySpacing.xl),
+                        const DonyLogo(
+                          variant: DonyLogoVariant.onLight,
+                          fontSize: 104,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: DonySpacing.xxl),
+                        Text(
+                          'Livrez vos colis en confiance',
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: cs.onSurface.withValues(alpha: 0.45),
+                                    letterSpacing: 0.4,
+                                  ),
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        Text(
+                          'v1.0.0',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant
+                                        .withValues(alpha: 0.6),
+                                    letterSpacing: 0.5,
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
