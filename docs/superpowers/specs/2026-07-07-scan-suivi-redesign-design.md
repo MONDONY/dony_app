@@ -37,7 +37,7 @@
 1. **AppBar** — « Scan & Suivi », inchangé
 2. **Switcher trajets** — rangée horizontale scrollable de pills, une par trajet actif (`IN_PROGRESS`/`ACTIVE`/`FULL` scannable). **Masqué entièrement si un seul trajet actif** (cas le plus courant — pas de bruit visuel). Tap une pill → filtre tout ce qui suit sur ce trajet.
 3. **Hero compact** — corridor (`Paris → Bamako`), nombre de colis confirmés. Plus de barre de progression départ dédiée (remplacée par les points de progression par colis, cf. section 5).
-4. **Bandeau synchro** — conditionnel, visible uniquement si la queue offline contient des scans pour un colis du trajet actif. Ex : « ⚠️ 1 scan en attente de synchro ». Tap → ouvre `OfflineQueueBottomSheet.show()` existant (déjà fonctionnel, juste jamais alimenté).
+4. **Bandeau synchro** — conditionnel, visible uniquement si la queue offline contient des scans pour un colis du trajet actif. Ex : « ⚠️ 1 scan en attente de synchro ». Tap → `context.push('/tracking/offline-queue')`, route existante vers `OfflineScanQueueScreen` (déjà complet et fonctionnel — liste globale, pas filtrée par trajet, ce qui est correct : on veut voir tous les scans en attente, pas seulement ceux de ce trajet).
 5. **Scan rapide (3 boutons étape)** — Départ / Transit / Arrivée, inchangé fonctionnellement (route `/tracking/scan/identify` avec `etape` + `focusNumber: false`), juste restylé plus compact.
 6. **Champ numéro inline** — `TextField` `DON-XXXXXX` + bouton valider, posé directement sous les boutons étape (pas de navigation pour taper un numéro). Soumission → `TrackingSearchRequested(number)` (même event que l'écran identifier existant). Sur succès, le bid retourné est cherché dans les colis déjà chargés du trajet actif ; l'étape à scanner est déduite automatiquement via `nextRequiredStep(bid)` (même logique que le bouton Scan par ligne) — **pas de sheet de sélection d'étape**, puisque le colis est déjà identifié par son numéro. Navigue directement vers `/tracking/scan/photo` avec `bidId` + étape déduite. Sur échec (numéro inconnu/hors trajets actifs) : message d'erreur inline, même pattern que `TrackingSearchError` dans `scan_identify_screen.dart`.
 7. **Liste des colis** — une ligne dense par colis :
@@ -69,8 +69,9 @@
 - `load()` appelle en plus le nouvel endpoint historique groupé, une fois par trajet actif (ou un seul appel multi-trajets si l'endpoint le permet — à trancher en phase d'implémentation selon la forme de l'endpoint)
 
 **Bandeau synchro** :
-- Lire `HiveService.offlineQueue` (déjà ouvert au démarrage), filtrer les entrées `OfflineScanEntry` dont `bidId` appartient à un bid du trajet sélectionné, non `synced`
-- Mapper vers `OfflineScanItem` (type déjà utilisé par `OfflineQueueBottomSheet`) pour réutiliser le bottom sheet existant tel quel
+- `getIt<HiveService>().offlineQueue` — `Box<Map>` Hive déjà ouvert au démarrage (`hive_service.dart`). Chaque entrée est un `Map<String, dynamic>` avec au moins `bidId` (String) et `eventType` (String) — écrit par `OfflineSyncService.queueScan()`. **Pas de champ `synced`** : une entrée présente dans la box EST par définition en attente (elle est supprimée par `OfflineSyncService.syncAll()` une fois synchronisée avec succès)
+- Compter les entrées dont `entry['bidId']` correspond à un bid du trajet sélectionné (`bidsByTrip[selectedTripId]`) — c'est ce compte qui pilote l'affichage du bandeau
+- Tap → navigue vers l'écran existant (cf. Design, section 4), pas de construction de `OfflineScanItem`/bottom sheet
 
 **Nouveaux widgets** (`scan_hub_screen.dart`, remplacent `_TripHeroCard`/`_EtapesSection`/`_QuickActionsSection` existants) :
 - `_TripSwitcher` (pills, masqué si `trips.length <= 1`)
@@ -96,7 +97,7 @@
 ## Hors scope (explicite)
 
 - Le support multi-trajets ne change rien à `selectScannableTrip` pour les AUTRES écrans qui pourraient l'utiliser — vérifier en phase d'implémentation si `selectScannableTrip` est appelé ailleurs que `scan_hub_cubit.dart` avant de le renommer/changer sa signature (sinon garder l'ancien nom en wrapper autour du nouveau)
-- La queue offline (`HiveService.offlineQueue`) est lue en lecture seule pour le bandeau — pas de changement au mécanisme d'écriture/sync existant (`TrackingBloc`/`OfflineSyncRequested`)
+- La queue offline (`HiveService.offlineQueue`) est lue en lecture seule pour le bandeau — pas de changement à `OfflineSyncService` (écriture/sync) ni à `OfflineScanQueueScreen` (déjà complet, réutilisé tel quel)
 - Pas de refonte de la fiche colis (`/bids/{id}`) — l'écran redirige vers l'existant tel quel
 - Pas de pagination sur l'historique des scans (un trajet a rarement plus d'une dizaine de colis × 3 étapes = ~30 événements max, liste simple suffit)
 
