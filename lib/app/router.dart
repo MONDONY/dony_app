@@ -864,10 +864,16 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: 'new',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
-            child: const RecipientEditScreen(),
-          ),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return BlocProvider(
+              create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
+              child: RecipientEditScreen(
+                initialFullName: extra?['fullName'] as String?,
+                initialPhoneE164: extra?['phone'] as String?,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: ':id',

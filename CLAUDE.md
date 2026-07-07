@@ -367,6 +367,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `corridor_alert_created` | CorridorAlertFormCubit.submit() — création d'une alerte corridor |
 | `corridor_alert_updated` | CorridorAlertFormCubit.submit() — édition d'une alerte corridor |
 | `favorites_opened` | FavoritesScreen.initState — ouverture du hub favoris |
+| `recipient_picker_opened` | RecipientPickerSheet.initState — ouverture de la sheet de sélection destinataire |
+| `recipient_selected` | RecipientBloc._onPicked — destinataire confirmé dans la sheet (propriété `source`: saved/phone_contact/new) |
+| `recipient_created` | RecipientBloc._onCreated — destinataire ajouté au carnet |
+| `recipient_default_set` | RecipientBloc._onDefaultSet — destinataire marqué par défaut |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---
