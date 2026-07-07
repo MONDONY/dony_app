@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
@@ -14,6 +16,8 @@ class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
 class FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+class MockContactPickerService extends Mock implements ContactPickerService {}
 
 // NB: fullName/phone deliberately differ from the DonyTextField hints
 // ('Mamadou Diallo' / '+22177123456') to avoid false-positive text matches
@@ -114,11 +118,23 @@ Widget _wrapCreate(RecipientBloc bloc, {ValueChanged<bool?>? onPopped}) =>
 
 void main() {
   late MockRecipientBloc bloc;
+  late MockContactPickerService contactPicker;
 
   setUpAll(() => registerFallbackValue(FakeRecipientEvent()));
 
   setUp(() {
     bloc = MockRecipientBloc();
+    contactPicker = MockContactPickerService();
+    if (getIt.isRegistered<ContactPickerService>()) {
+      getIt.unregister<ContactPickerService>();
+    }
+    getIt.registerSingleton<ContactPickerService>(contactPicker);
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<ContactPickerService>()) {
+      getIt.unregister<ContactPickerService>();
+    }
   });
 
   testWidgets(
@@ -386,6 +402,78 @@ void main() {
       expect(captured.single.whatsappE164, '+221781112233');
       expect(captured.single.notes, 'Sonner deux fois');
       expect(captured.single.country, 'SN');
+    },
+  );
+
+  testWidgets(
+    'shows the contact import button when creating, not when editing',
+    (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const RecipientState(status: RecipientStatus.success));
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Choisir dans mes contacts'), findsOneWidget);
+
+      whenListen<RecipientState>(
+        bloc,
+        Stream.value(
+          const RecipientState(
+            status: RecipientStatus.success,
+            recipients: [_existing],
+          ),
+        ),
+        initialState: const RecipientState(status: RecipientStatus.loading),
+      );
+      await tester.pumpWidget(_wrapEditing(bloc, recipientId: 'r-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choisir dans mes contacts'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tapping the contact import button fills name and phone from the picked contact',
+    (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const RecipientState(status: RecipientStatus.success));
+      when(() => contactPicker.pick()).thenAnswer(
+        (_) async => const PickedContact(
+          fullName: 'Awa Ndiaye',
+          phone: '+221701234567',
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.text('Choisir dans mes contacts'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Awa Ndiaye'), findsOneWidget);
+      expect(find.text('+221701234567'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'does nothing when the contact picker is cancelled (returns null)',
+    (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const RecipientState(status: RecipientStatus.success));
+      when(() => contactPicker.pick()).thenAnswer((_) async => null);
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.text('Choisir dans mes contacts'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nom complet'), findsOneWidget);
+      final nameField = tester.widget<TextFormField>(
+        find.widgetWithText(TextFormField, 'Nom complet').first,
+      );
+      expect(nameField.controller!.text, isEmpty);
     },
   );
 }

@@ -1,4 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/contact_picker_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
@@ -41,6 +44,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   bool _submitted = false;
   String? _phoneError;
   bool _isDefault = false;
+  bool _importing = false;
 
   bool get _isEditing => widget.recipientId != null;
 
@@ -55,6 +59,26 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
       _phoneError =
           v.isEmpty || _phoneRegex.hasMatch(v) ? null : 'Format invalide (+33612345678)';
     });
+  }
+
+  Future<void> _pickFromPhone() async {
+    setState(() => _importing = true);
+    final contact = await getIt<ContactPickerService>().pick();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _importing = false);
+    if (contact == null) {
+      return;
+    }
+    if (contact.fullName != null && contact.fullName!.isNotEmpty) {
+      _fullNameCtrl.text = contact.fullName!;
+    }
+    if (contact.phone != null && contact.phone!.isNotEmpty) {
+      _phoneCtrl.text = contact.phone!;
+      _validatePhone(contact.phone!);
+    }
+    setState(() {});
   }
 
   @override
@@ -174,6 +198,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
       },
       builder: (context, state) {
         final isLoading = state.status == RecipientStatus.loading;
+        final cs = Theme.of(context).colorScheme;
 
         return DonyPageScaffold(
           title: _isEditing ? 'Modifier le destinataire' : 'Nouveau destinataire',
@@ -185,12 +210,19 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (!_isEditing) ...[
+                _ContactImportButton(
+                  loading: _importing,
+                  onTap: _importing ? null : _pickFromPhone,
+                ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
+                const SizedBox(height: DonySpacing.base),
+              ],
               DonyTextField(
                 controller: _fullNameCtrl,
                 label: 'Nom complet',
                 hint: 'Mamadou Diallo',
                 onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
+              ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
               DonyTextField(
                 controller: _phoneCtrl,
@@ -202,19 +234,75 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                   setState(() {});
                 },
                 errorText: _phoneError,
-              ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
+              ).animate().fadeIn(delay: 80.ms, duration: 280.ms).slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
               SwitchListTile.adaptive(
                 value: _isDefault,
                 onChanged: (v) => setState(() => _isDefault = v),
-                contentPadding: EdgeInsets.zero,
+                tileColor: cs.primary.withValues(alpha: 0.06),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.card),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                ),
                 title: const Text('Destinataire par défaut'),
                 subtitle: const Text('Présélectionné lors de tes prochains envois'),
-              ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
+              ).animate().fadeIn(delay: 120.ms, duration: 280.ms),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _ContactImportButton extends StatelessWidget {
+  const _ContactImportButton({required this.loading, required this.onTap});
+
+  final bool loading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Material(
+      color: cs.primary.withValues(alpha: 0.10),
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.md,
+          ),
+          child: Row(
+            children: [
+              if (loading)
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: cs.primary,
+                  ),
+                )
+              else
+                DonyIcon('contact', size: 18, color: cs.primary),
+              const SizedBox(width: DonySpacing.sm),
+              Text(
+                'Choisir dans mes contacts',
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
