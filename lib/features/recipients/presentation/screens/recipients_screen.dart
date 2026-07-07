@@ -45,6 +45,11 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
     return DonyPageScaffold(
       title: 'Mes destinataires',
       scrollable: false,
+      // Zéro horizontal ici : chaque ligne gère déjà son propre inset
+      // (DonySpacing.lg) via _RecipientTile / _SearchField, comme
+      // CorridorAlertListScreen. Un padding horizontal ici s'ajouterait au
+      // leur et doublerait la marge gauche/droite.
+      padding: const EdgeInsets.fromLTRB(0, DonySpacing.xl, 0, DonySpacing.lg),
       floatingActionButton: Builder(
         builder: (fabCtx) => FloatingActionButton.extended(
           backgroundColor: cs.primary,
