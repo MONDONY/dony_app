@@ -148,10 +148,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             }
           }
           return Scaffold(
-            // Le contenu passe DERRIÈRE la bottom nav flottante (île
-            // glass) : pas de bande opaque qui masque la liste. Scaffold
-            // injecte la hauteur de la nav dans MediaQuery.padding.bottom
-            // du body, donc les écrans en SafeArea réservent l'espace.
+            // Le contenu passe DERRIÈRE la bottom nav (bar ancrée dont le
+            // fond s'étend sous le home indicator). Scaffold injecte la
+            // hauteur de la nav dans MediaQuery.padding.bottom du body,
+            // donc les écrans en SafeArea réservent l'espace.
             extendBody: true,
             body: Column(
               children: [
@@ -173,8 +173,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 /// Bottom nav « barre ancrée » : barre pleine opaque flush avec le bord de
 /// l'écran (pas de marge, pas de glass) — plus lisible qu'une île translucide
 /// sur les fonds chargés (carte, listes colorées) derrière. Une pastille
-/// pleine glisse sous l'onglet actif et l'orb central glossy (onglet Suivi /
-/// scan QR) mord le haut de la barre, façon FAB en encoche. Theme-aware :
+/// pleine glisse sous l'onglet actif ; l'orb glossy (onglet Suivi / scan QR)
+/// est au même niveau que les 4 autres items, pas surélevé. Theme-aware :
 /// couleurs dérivées du [ColorScheme] / brightness courants.
 class _DonyBottomNav extends StatelessWidget {
   const _DonyBottomNav({required this.currentIndex, required this.onTap});
@@ -185,8 +185,10 @@ class _DonyBottomNav extends StatelessWidget {
   /// Hauteur de la zone de contenu (icônes+libellés), hors safe area.
   static const double _barContentHeight = 66;
 
-  /// De combien l'orb mord le haut de la barre (le reste dépasse au-dessus).
-  static const double _orbOverlap = 32;
+  /// Diamètre de l'orb inline — plus petit que [DonyNavOrb.defaultSize]
+  /// pour tenir au même niveau que les icônes des autres items dans
+  /// [_barContentHeight].
+  static const double _orbInlineSize = 40;
 
   @override
   Widget build(BuildContext context) {
@@ -194,9 +196,6 @@ class _DonyBottomNav extends StatelessWidget {
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final barTotalHeight = _barContentHeight + bottomPadding;
-    final outerHeight =
-        barTotalHeight + (DonyNavOrb.defaultSize - _orbOverlap);
 
     return BlocBuilder<AuthBloc, AuthState>(
       buildWhen: (p, c) =>
@@ -220,154 +219,120 @@ class _DonyBottomNav extends StatelessWidget {
             const tab1Label = 'Activités';
             const tab1IconAsset = 'layout-grid';
 
-            return SizedBox(
-              height: outerHeight,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Barre ancrée, pleine, flush avec le bord de l'écran.
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: cs.surface,
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark
-                                ? Colors.black.withValues(alpha: 0.45)
-                                : DonyColors.ink800.withValues(alpha: 0.12),
-                            blurRadius: 16,
-                            offset: const Offset(0, -4),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        // Le fond coloré s'étend sous le home indicator ;
-                        // seul le contenu (icônes/libellés) respecte la
-                        // safe area, comme une tab bar iOS/Android native.
-                        padding: EdgeInsets.only(bottom: bottomPadding),
-                        child: SizedBox(
-                          height: _barContentHeight,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) => Stack(
-                              children: [
-                                _SlidingNavIndicator(
-                                  currentIndex: currentIndex,
-                                  barWidth: constraints.maxWidth,
-                                  color: cs.primary,
-                                ),
-                                Row(
-                                  children: [
-                                    // 0 — Accueil
-                                    Expanded(
-                                      child: DonyNavItem(
-                                        iconAsset: 'search',
-                                        label: 'Rechercher',
-                                        index: 0,
-                                        currentIndex: currentIndex,
-                                        onTap: () => onTap(0),
-                                      ),
-                                    ),
-                                    // 1 — Activités
-                                    Expanded(
-                                      child: DonyNavItem(
-                                        iconAsset: tab1IconAsset,
-                                        label: tab1Label,
-                                        index: 1,
-                                        currentIndex: currentIndex,
-                                        onTap: () => onTap(1),
-                                      ),
-                                    ),
-                                    // 2 — Suivi : remplacé par l'orb central (overlay)
-                                    const Expanded(
-                                      child: SizedBox.shrink(),
-                                    ),
-                                    // 3 — Messages
-                                    Expanded(
-                                      child: Builder(
-                                        builder: (context) {
-                                          final uid = FirebaseAuth
-                                              .instance
-                                              .currentUser
-                                              ?.uid;
-                                          if (uid == null || uid.isEmpty) {
-                                            // Pendant le sign-out : pas de stream
-                                            // Firestore (path vide invalide).
-                                            return DonyNavItem(
-                                              iconAsset: 'message-circle',
-                                              label: 'Messages',
-                                              index: 3,
-                                              currentIndex: currentIndex,
-                                              onTap: () => onTap(3),
-                                            );
-                                          }
-                                          return StreamBuilder<int>(
-                                            stream:
-                                                getIt<
-                                                      FirestoreChatRepository
-                                                    >()
-                                                    .totalUnreadStream(uid),
-                                            builder: (context, snapshot) {
-                                              return DonyNavItem(
-                                                iconAsset: 'message-circle',
-                                                label: 'Messages',
-                                                index: 3,
-                                                currentIndex: currentIndex,
-                                                onTap: () => onTap(3),
-                                                badgeCount:
-                                                    snapshot.data ?? 0,
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    // 4 — Moi (photo de profil style Facebook)
-                                    Expanded(
-                                      child: DonyNavItem(
-                                        iconAsset: 'user',
-                                        label: 'Moi',
-                                        index: 4,
-                                        currentIndex: currentIndex,
-                                        onTap: () => onTap(4),
-                                        isPro: isProAccount,
-                                        avatarUrl: authUser?.avatarUrl,
-                                        avatarName: authUser?.displayName,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Orb central (onglet Suivi / scan QR) — mord le haut de
-                  // la barre façon FAB en encoche ; l'anneau `cs.surface`
-                  // fait la jonction visuelle avec la barre en dessous.
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: barTotalHeight - _orbOverlap,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: cs.surface,
-                        ),
-                        child: DonyNavOrb(
-                          active: currentIndex == 2,
-                          onTap: () => onTap(2),
-                        ),
-                      ),
-                    ),
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                color: cs.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.45)
+                        : DonyColors.ink800.withValues(alpha: 0.12),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
                   ),
                 ],
+              ),
+              child: Padding(
+                // Le fond coloré s'étend sous le home indicator ; seul le
+                // contenu (icônes/libellés) respecte la safe area, comme
+                // une tab bar iOS/Android native.
+                padding: EdgeInsets.only(bottom: bottomPadding),
+                child: SizedBox(
+                  height: _barContentHeight,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Stack(
+                      children: [
+                        _SlidingNavIndicator(
+                          currentIndex: currentIndex,
+                          barWidth: constraints.maxWidth,
+                          color: cs.primary,
+                        ),
+                        Row(
+                          children: [
+                            // 0 — Accueil
+                            Expanded(
+                              child: DonyNavItem(
+                                iconAsset: 'search',
+                                label: 'Rechercher',
+                                index: 0,
+                                currentIndex: currentIndex,
+                                onTap: () => onTap(0),
+                              ),
+                            ),
+                            // 1 — Activités
+                            Expanded(
+                              child: DonyNavItem(
+                                iconAsset: tab1IconAsset,
+                                label: tab1Label,
+                                index: 1,
+                                currentIndex: currentIndex,
+                                onTap: () => onTap(1),
+                              ),
+                            ),
+                            // 2 — Suivi / scan QR : orb au même niveau que
+                            // les autres items, pas surélevé.
+                            Expanded(
+                              child: Center(
+                                child: DonyNavOrb(
+                                  size: _orbInlineSize,
+                                  active: currentIndex == 2,
+                                  onTap: () => onTap(2),
+                                ),
+                              ),
+                            ),
+                            // 3 — Messages
+                            Expanded(
+                              child: Builder(
+                                builder: (context) {
+                                  final uid =
+                                      FirebaseAuth.instance.currentUser?.uid;
+                                  if (uid == null || uid.isEmpty) {
+                                    // Pendant le sign-out : pas de stream
+                                    // Firestore (path vide invalide).
+                                    return DonyNavItem(
+                                      iconAsset: 'message-circle',
+                                      label: 'Messages',
+                                      index: 3,
+                                      currentIndex: currentIndex,
+                                      onTap: () => onTap(3),
+                                    );
+                                  }
+                                  return StreamBuilder<int>(
+                                    stream: getIt<FirestoreChatRepository>()
+                                        .totalUnreadStream(uid),
+                                    builder: (context, snapshot) {
+                                      return DonyNavItem(
+                                        iconAsset: 'message-circle',
+                                        label: 'Messages',
+                                        index: 3,
+                                        currentIndex: currentIndex,
+                                        onTap: () => onTap(3),
+                                        badgeCount: snapshot.data ?? 0,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                            // 4 — Moi (photo de profil style Facebook)
+                            Expanded(
+                              child: DonyNavItem(
+                                iconAsset: 'user',
+                                label: 'Moi',
+                                index: 4,
+                                currentIndex: currentIndex,
+                                onTap: () => onTap(4),
+                                isPro: isProAccount,
+                                avatarUrl: authUser?.avatarUrl,
+                                avatarName: authUser?.displayName,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
           },
