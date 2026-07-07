@@ -186,7 +186,7 @@ class _DonyBottomNav extends StatelessWidget {
   static const double _barContentHeight = 66;
 
   /// De combien l'orb mord le haut de la barre (le reste dépasse au-dessus).
-  static const double _orbOverlap = 14;
+  static const double _orbOverlap = 32;
 
   @override
   Widget build(BuildContext context) {
