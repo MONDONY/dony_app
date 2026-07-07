@@ -224,7 +224,7 @@ void main() {
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
-      expect(find.text('Par défaut'), findsOneWidget);
+      expect(find.text('PAR DÉFAUT'), findsOneWidget);
     });
 
     testWidgets('shows no badge when no recipient is default', (tester) async {
@@ -236,12 +236,12 @@ void main() {
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
-      expect(find.text('Par défaut'), findsNothing);
+      expect(find.text('PAR DÉFAUT'), findsNothing);
     });
   });
 
-  group('add recipient tile', () {
-    testWidgets('shows the add-recipient tile when 3 or fewer recipients', (tester) async {
+  group('add recipient FAB', () {
+    testWidgets('shows the "Ajouter" floating action button', (tester) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -250,22 +250,11 @@ void main() {
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
-      expect(find.text('Ajouter un destinataire'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text('Ajouter'), findsOneWidget);
     });
 
-    testWidgets('hides the add-recipient tile once search kicks in (more than 3)', (tester) async {
-      when(() => bloc.state).thenReturn(
-        const RecipientState(
-          status: RecipientStatus.success,
-          recipients: [_r1, _r2, _r3, _r4Default],
-        ),
-      );
-      await tester.pumpWidget(_wrap(bloc));
-      await tester.pump(const Duration(milliseconds: 600));
-      expect(find.text('Ajouter un destinataire'), findsNothing);
-    });
-
-    testWidgets('tapping the add-recipient tile navigates and reloads on return', (tester) async {
+    testWidgets('tapping the FAB navigates and reloads on return', (tester) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -275,7 +264,7 @@ void main() {
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(find.text('Ajouter un destinataire'));
+      await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
       expect(find.text('New Recipient'), findsOneWidget);
     });

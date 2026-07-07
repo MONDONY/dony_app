@@ -4,7 +4,6 @@ import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/recipient_filter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -33,24 +32,28 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
     super.dispose();
   }
 
+  Future<void> _addRecipient(BuildContext context) async {
+    final changed = await context.push<bool>('/profile/recipients/new');
+    if ((changed ?? false) && context.mounted) {
+      context.read<RecipientBloc>().add(const RecipientLoaded());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return DonyPageScaffold(
       title: 'Mes destinataires',
       scrollable: false,
-      appBarActions: [
-        IconButton(
-          icon: DonyIcon('plus', color: cs.primary),
-          tooltip: 'Ajouter un destinataire',
-          onPressed: () async {
-            final changed = await context.push<bool>('/profile/recipients/new');
-            if ((changed ?? false) && context.mounted) {
-              context.read<RecipientBloc>().add(const RecipientLoaded());
-            }
-          },
+      floatingActionButton: Builder(
+        builder: (fabCtx) => FloatingActionButton.extended(
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Ajouter'),
+          onPressed: () => _addRecipient(fabCtx),
         ),
-      ],
+      ),
       body: BlocBuilder<RecipientBloc, RecipientState>(
         builder: (context, state) {
           if (state.status == RecipientStatus.loading &&
@@ -80,12 +83,7 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
               description:
                   'Ajoute tes proches en Afrique pour envoyer en 1 tap.',
               actionLabel: 'Ajouter mon premier destinataire',
-              onAction: () async {
-                final changed = await context.push<bool>('/profile/recipients/new');
-                if ((changed ?? false) && context.mounted) {
-                  context.read<RecipientBloc>().add(const RecipientLoaded());
-                }
-              },
+              onAction: () => _addRecipient(context),
             );
           }
 
@@ -99,9 +97,9 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
               if (showSearch)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.sm,
+                    DonySpacing.lg,
                     DonySpacing.md,
-                    DonySpacing.sm,
+                    DonySpacing.lg,
                     0,
                   ),
                   child: _SearchField(controller: _searchCtrl),
@@ -114,81 +112,21 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                         description:
                             'Aucun destinataire ne correspond à ta recherche.',
                       )
-                    : showSearch
-                        ? ListView.separated(
-                            padding: EdgeInsets.fromLTRB(
-                              DonySpacing.sm,
-                              DonySpacing.xl,
-                              DonySpacing.sm,
-                              MediaQuery.paddingOf(context).bottom + 100,
-                            ),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: DonySpacing.sm),
-                            itemBuilder: (context, i) {
-                              final recipient = filtered[i];
-                              return _RecipientCard(recipient: recipient)
-                                  .animate()
-                                  .fadeIn(delay: (i * 60).ms, duration: 280.ms)
-                                  .slideY(
-                                      begin: 0.03, curve: Curves.easeOutCubic);
-                            },
-                          )
-                        : LayoutBuilder(
-                            builder: (context, constraints) {
-                              final bottomInset =
-                                  MediaQuery.paddingOf(context).bottom;
-                              return SingleChildScrollView(
-                                padding: EdgeInsets.fromLTRB(
-                                  DonySpacing.sm,
-                                  DonySpacing.xl,
-                                  DonySpacing.sm,
-                                  bottomInset + 24,
-                                ),
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minHeight: constraints.maxHeight -
-                                        DonySpacing.xl -
-                                        bottomInset -
-                                        24,
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      for (var i = 0;
-                                          i < filtered.length;
-                                          i++) ...[
-                                        if (i > 0)
-                                          const SizedBox(
-                                              height: DonySpacing.sm),
-                                        _RecipientCard(
-                                                recipient: filtered[i])
-                                            .animate()
-                                            .fadeIn(
-                                                delay: (i * 60).ms,
-                                                duration: 280.ms)
-                                            .slideY(
-                                                begin: 0.03,
-                                                curve: Curves.easeOutCubic),
-                                      ],
-                                      const SizedBox(height: DonySpacing.lg),
-                                      _AddRecipientTile()
-                                          .animate()
-                                          .fadeIn(
-                                              delay: (filtered.length * 60 +
-                                                      100)
-                                                  .ms,
-                                              duration: 280.ms)
-                                          .slideY(
-                                              begin: 0.03,
-                                              curve: Curves.easeOutCubic),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                    : ListView.separated(
+                        padding: const EdgeInsets.only(
+                          top: DonySpacing.sm,
+                          bottom: DonySpacing.huge,
+                        ),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => Divider(
+                          height: 1,
+                          thickness: 1,
+                          indent: DonySpacing.lg + 44 + DonySpacing.md,
+                          color: cs.outline.withValues(alpha: 0.5),
+                        ),
+                        itemBuilder: (context, i) =>
+                            _RecipientTile(recipient: filtered[i]),
+                      ),
               ),
             ],
           );
@@ -246,8 +184,12 @@ class _SearchField extends StatelessWidget {
   }
 }
 
-class _RecipientCard extends StatelessWidget {
-  const _RecipientCard({required this.recipient});
+/// Ligne plate (style liste sans carte) d'un destinataire : avatar, nom,
+/// téléphone, localisation et menu ⋮. Pas de bordure ni de fond teinté —
+/// séparateurs fins gérés par la liste parente (même style que
+/// [CorridorAlertTile]).
+class _RecipientTile extends StatelessWidget {
+  const _RecipientTile({required this.recipient});
 
   final Recipient recipient;
 
@@ -262,99 +204,73 @@ class _RecipientCard extends StatelessWidget {
       _countryLabel(recipient.country),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: InkWell(
-        onTap: () async {
-          final changed = await context.push<bool>('/profile/recipients/${recipient.id}');
-          if ((changed ?? false) && context.mounted) {
-            context.read<RecipientBloc>().add(const RecipientLoaded());
-          }
-        },
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        child: Padding(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DonyAvatar(name: recipient.fullName, size: DonyAvatarSize.md),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            recipient.fullName,
-                            style: tt.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
+    return InkWell(
+      onTap: () async {
+        final changed =
+            await context.push<bool>('/profile/recipients/${recipient.id}');
+        if ((changed ?? false) && context.mounted) {
+          context.read<RecipientBloc>().add(const RecipientLoaded());
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.lg,
+          vertical: DonySpacing.md,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DonyAvatar(name: recipient.fullName, size: DonyAvatarSize.md),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          recipient.fullName,
+                          style: tt.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (recipient.isDefault)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: cs.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: Text(
-                              'Par défaut',
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    if (recipient.relationship != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        recipient.relationship!,
-                        style: tt.bodySmall
-                            ?.copyWith(color: cs.onSurfaceVariant),
                       ),
+                      if (recipient.isDefault) ...[
+                        const SizedBox(width: DonySpacing.xs),
+                        DonyBadge(
+                          label: 'Par défaut',
+                          type: DonyBadgeType.success,
+                        ),
+                      ],
                     ],
-                    const SizedBox(height: DonySpacing.xs),
-                    Row(
-                      children: [
-                        DonyIcon('phone', size: 14, color: cs.primary),
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          recipient.phoneE164,
-                          style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                        ),
-                      ],
-                    ),
+                  ),
+                  if (recipient.relationship != null) ...[
                     const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        DonyIcon('map-pin',
-                            size: 14, color: cs.onSurfaceVariant),
-                        const SizedBox(width: DonySpacing.xs),
-                        Expanded(
-                          child: Text(
-                            locationParts.join(', '),
-                            style: tt.bodySmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      recipient.relationship!,
+                      style:
+                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    recipient.phoneE164,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (locationParts.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    _LocationChip(label: locationParts.join(', ')),
+                  ],
+                ],
               ),
-              _KebabMenu(recipient: recipient),
-            ],
-          ),
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            _KebabMenu(recipient: recipient),
+          ],
         ),
       ),
     );
@@ -371,52 +287,45 @@ class _RecipientCard extends StatelessWidget {
   }
 }
 
-class _AddRecipientTile extends StatelessWidget {
-  const _AddRecipientTile();
+/// Petit chip « 📍 lieu » — même style que le chip zone des alertes corridor.
+class _LocationChip extends StatelessWidget {
+  const _LocationChip({required this.label});
+
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-
-    return Material(
-      color: cs.primary.withValues(alpha: 0.06),
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        onTap: () async {
-          final changed = await context.push<bool>('/profile/recipients/new');
-          if ((changed ?? false) && context.mounted) {
-            context.read<RecipientBloc>().add(const RecipientLoaded());
-          }
-        },
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.lg,
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.add_rounded, color: cs.primary, size: 24),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                'Ajouter un destinataire',
-                style: tt.bodyMedium?.copyWith(
-                  color: cs.primary,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.xs + 2,
+          vertical: 2,
+        ),
+        decoration: BoxDecoration(
+          color: cs.primaryContainer,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DonyIcon('map-pin', size: 11, color: cs.onPrimaryContainer),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                label,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onPrimaryContainer,
                   fontWeight: FontWeight.w600,
+                  fontSize: 10,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
