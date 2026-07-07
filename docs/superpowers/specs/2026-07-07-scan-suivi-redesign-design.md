@@ -41,7 +41,7 @@
 6. **Liste des colis** — une ligne dense par colis :
    - Numéro DON + nom destinataire
    - 3 points de progression (Départ/Transit/Arrivée : fait/pas fait)
-   - Bouton « Scan » compact en bout de ligne → ouvre directement la caméra pour la **prochaine étape requise** de CE colis précis (pas de sélection d'étape à faire)
+   - Bouton « Scan » compact en bout de ligne → route vers `/tracking/scan/identify` (écran existant, QR **ou** numéro manuel — `ScanIdentifyScreen`) avec `etape` pré-rempli à la **prochaine étape requise** de CE colis précis (pas de sélection d'étape à faire, mais le scan/numéro reste vérifié — pas de bidId préconnu injecté, pour garder la vérification que le colis physique correspond bien)
    - Tap sur la ligne (hors bouton Scan) → navigue vers la fiche colis existante (`context.push('/bids/${bid.id}')`, réutilise la route déjà utilisée par `TripParcelsSection`)
 7. **Historique des scans** — section en bas, liste chronologique (plus récent en premier) : heure, nom destinataire, badge étape. Alimentée par le nouvel endpoint backend groupé (cf. Backend).
 
