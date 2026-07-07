@@ -16,11 +16,15 @@ class DonyNavOrb extends StatelessWidget {
     super.key,
     required this.active,
     required this.onTap,
-    this.size = 58,
+    this.size = defaultSize,
   });
 
   final bool active;
   final VoidCallback onTap;
+
+  /// Diamètre par défaut — exposé pour que le parent (bottom nav) puisse
+  /// calculer la géométrie de l'encoche sans instancier le widget.
+  static const double defaultSize = 58;
   final double size;
 
   @override
