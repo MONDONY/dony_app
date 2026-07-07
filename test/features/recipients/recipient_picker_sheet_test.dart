@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -52,6 +54,23 @@ const _r4Default = Recipient(
   isDefault: true,
 );
 
+const _r5Rel = Recipient(
+  id: 'r-5',
+  fullName: 'Fatou Sow',
+  relationship: 'Maman',
+  phoneE164: '+221760004455',
+  city: 'Thiès',
+  country: 'SN',
+);
+
+const _rNew = Recipient(
+  id: 'r-new',
+  fullName: 'Nouveau Ami',
+  phoneE164: '+33711223344',
+  city: 'Paris',
+  country: 'FR',
+);
+
 void main() {
   setUpAll(() => registerFallbackValue(FakeRecipientEvent()));
 
@@ -96,6 +115,7 @@ void main() {
     RecipientBloc bloc, {
     String? currentPhone,
     required List<Recipient?> resultHolder,
+    bool settle = true,
   }) async {
     if (getIt.isRegistered<RecipientBloc>()) {
       getIt.unregister<RecipientBloc>();
@@ -134,14 +154,35 @@ void main() {
             ),
             GoRoute(
               path: '/profile/recipients/new',
-              builder: (_, _) => const Scaffold(body: Text('New Recipient')),
+              builder: (context, _) => Scaffold(
+                body: Column(
+                  children: [
+                    const Text('New Recipient'),
+                    TextButton(
+                      onPressed: () => context.pop(true),
+                      child: const Text('save-new'),
+                    ),
+                    TextButton(
+                      onPressed: () => context.pop(false),
+                      child: const Text('cancel-new'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
     await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      // Spinner perpétuel à l'écran → pumpAndSettle ne convergerait jamais ;
+      // on pompe juste l'animation d'ouverture de la sheet.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
   }
 
   testWidgets('preselects default recipient and confirms it', (tester) async {
@@ -249,6 +290,190 @@ void main() {
 
     expect(results, [_r1]);
   });
+
+  testWidgets(
+    '« Nouveau destinataire » pushes edit screen, reloads and selects newest',
+    (tester) async {
+      final bloc = MockRecipientBloc();
+      final states = StreamController<RecipientState>();
+      addTearDown(states.close);
+      whenListen(
+        bloc,
+        states.stream,
+        initialState: const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
+      );
+      final results = <Recipient?>[];
+
+      await pumpSheet(tester, bloc, resultHolder: results);
+
+      await tester.tap(find.text('Nouveau destinataire'));
+      await tester.pumpAndSettle();
+      expect(find.text('New Recipient'), findsOneWidget);
+
+      // L'écran d'édition pop(true) → la sheet recharge et dispatch
+      // RecipientPicked('new').
+      await tester.tap(find.text('save-new'));
+      await tester.pumpAndSettle();
+      verify(() => bloc.add(const RecipientLoaded())).called(greaterThan(0));
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'new'),
+          ),
+        ),
+      ).called(1);
+
+      // Le bloc émet la liste rechargée (nouveau en tête) → le listener
+      // sélectionne le plus récent, que « Confirmer » retourne.
+      states.add(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_rNew, _r1],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Confirmer ce destinataire'));
+      await tester.pumpAndSettle();
+      expect(results, [_rNew]);
+    },
+  );
+
+  testWidgets(
+    'contact import pushes prefilled edit screen and tags source phone_contact',
+    (tester) async {
+      final bloc = MockRecipientBloc();
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
+      );
+      when(() => contactPicker.pick()).thenAnswer(
+        (_) async =>
+            const PickedContact(fullName: 'Awa Contact', phone: '+221770009988'),
+      );
+      final results = <Recipient?>[];
+
+      await pumpSheet(tester, bloc, resultHolder: results);
+
+      await tester.tap(find.text('Choisir dans mes contacts'));
+      await tester.pumpAndSettle();
+      expect(find.text('New Recipient'), findsOneWidget);
+
+      await tester.tap(find.text('save-new'));
+      await tester.pumpAndSettle();
+
+      verify(() => contactPicker.pick()).called(1);
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'phone_contact'),
+          ),
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets(
+    'contact import shows spinner while picking and does nothing on cancel',
+    (tester) async {
+      final bloc = MockRecipientBloc();
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
+      );
+      final completer = Completer<PickedContact?>();
+      when(() => contactPicker.pick()).thenAnswer((_) => completer.future);
+      final results = <Recipient?>[];
+
+      await pumpSheet(tester, bloc, resultHolder: results);
+
+      await tester.tap(find.text('Choisir dans mes contacts'));
+      await tester.pump();
+      // Spinner dans la tuile d'action pendant l'attente du picker natif.
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      completer.complete(null); // annulation utilisateur
+      await tester.pumpAndSettle();
+
+      expect(find.text('New Recipient'), findsNothing);
+      verifyNever(() => bloc.add(any(that: isA<RecipientPicked>())));
+    },
+  );
+
+  testWidgets('shows loading indicator while first load is in flight', (
+    tester,
+  ) async {
+    final bloc = MockRecipientBloc();
+    when(() => bloc.state)
+        .thenReturn(const RecipientState(status: RecipientStatus.loading));
+    final results = <Recipient?>[];
+
+    await pumpSheet(tester, bloc, resultHolder: results, settle: false);
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('close button pops the sheet with null', (tester) async {
+    final bloc = MockRecipientBloc();
+    when(() => bloc.state).thenReturn(
+      const RecipientState(
+        status: RecipientStatus.success,
+        recipients: [_r1],
+      ),
+    );
+    final results = <Recipient?>[];
+
+    await pumpSheet(tester, bloc, resultHolder: results);
+
+    await tester.tap(find.byType(IconButton).first);
+    await tester.pumpAndSettle();
+
+    expect(results, [null]);
+    expect(find.text('Confirmer ce destinataire'), findsNothing);
+  });
+
+  testWidgets(
+    'empty search shows « Aucun résultat » and clear button restores list',
+    (tester) async {
+      final bloc = MockRecipientBloc();
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1, _r2, _r5Rel, _r4Default],
+        ),
+      );
+      final results = <Recipient?>[];
+
+      await pumpSheet(tester, bloc, resultHolder: results);
+
+      // Le lien de parenté prime sur le nom en titre de ligne.
+      expect(find.text('Maman'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'zzz-introuvable');
+      await tester.pumpAndSettle();
+      expect(find.text('Aucun résultat'), findsOneWidget);
+
+      // Le bouton clear du champ de recherche restaure la liste.
+      await tester.tap(
+        find.descendant(
+          of: find.byType(TextField),
+          matching: find.byType(IconButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Aucun résultat'), findsNothing);
+      expect(find.text('Maman'), findsOneWidget);
+    },
+  );
 
   testWidgets('confirm button disabled when list empty', (tester) async {
     final bloc = MockRecipientBloc();
