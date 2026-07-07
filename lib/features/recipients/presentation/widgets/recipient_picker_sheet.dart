@@ -270,12 +270,13 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                                       recipient: r,
                                       isSelected: selected?.id == r.id,
                                       onTap: () => setState(() {
+                                        // Only reset pending source if tapping a *different* row.
+                                        // If tapping the same row (already selected), preserve
+                                        // the source ('new' or 'phone_contact') for analytics.
+                                        if (r.id != selected?.id) {
+                                          _pendingSource = null;
+                                        }
                                         _selectedId = r.id;
-                                        // Sélection manuelle d'une ligne →
-                                        // la source redevient 'saved', même
-                                        // après une création dans ce même
-                                        // passage de la sheet.
-                                        _pendingSource = null;
                                       }),
                                     ),
                                   ),

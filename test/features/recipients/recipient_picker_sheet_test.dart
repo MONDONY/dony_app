@@ -405,6 +405,58 @@ void main() {
   );
 
   testWidgets(
+    're-tapping the auto-selected newly-created recipient keeps source as new',
+    (tester) async {
+      final bloc = MockRecipientBloc();
+      final states = StreamController<RecipientState>();
+      addTearDown(states.close);
+      whenListen(
+        bloc,
+        states.stream,
+        initialState: const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
+      );
+      final results = <Recipient?>[];
+
+      await pumpSheet(tester, bloc, resultHolder: results);
+
+      await tester.tap(find.text('Nouveau destinataire'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('save-new'));
+      await tester.pumpAndSettle();
+
+      // Bloc reloads with new recipient in the list.
+      states.add(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_rNew, _r1],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // User re-taps the newly-created (already selected) row.
+      await tester.tap(find.text('Nouveau Ami'));
+      await tester.pumpAndSettle();
+
+      // Confirming should preserve source as 'new' (not reset to 'saved').
+      await tester.tap(find.text('Confirmer ce destinataire'));
+      await tester.pumpAndSettle();
+
+      expect(results, [_rNew]);
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'new'),
+          ),
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets(
     'contact import pushes prefilled edit screen and tags source phone_contact '
     'at confirm time',
     (tester) async {
