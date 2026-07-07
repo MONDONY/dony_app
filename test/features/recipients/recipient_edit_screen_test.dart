@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
@@ -50,8 +52,6 @@ Widget _wrap(
 
 /// Same as [_wrap] but seeds the navigation stack with a parent route so
 /// that `context.pop()` inside [RecipientEditScreen] has somewhere to go.
-/// Needed for the "editing" flow, whose pre-existing listener also pops
-/// the screen right after prefilling on the same success event.
 Widget _wrapEditing(RecipientBloc bloc, {required String recipientId}) =>
     BlocProvider<RecipientBloc>.value(
       value: bloc,
@@ -67,6 +67,43 @@ Widget _wrapEditing(RecipientBloc bloc, {required String recipientId}) =>
                   path: 'edit',
                   builder: (_, __) =>
                       RecipientEditScreen(recipientId: recipientId),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+
+/// Create-mode wrapper: a parent route with a button that
+/// `await context.push<bool>(...)` into [RecipientEditScreen] with no
+/// `recipientId` — mirrors the picker sheet's real `_createNew` flow, which
+/// needs the pushed `true` to know it should reload/select the new entry.
+/// [onPopped] receives the value the edit screen popped with.
+Widget _wrapCreate(RecipientBloc bloc, {ValueChanged<bool?>? onPopped}) =>
+    BlocProvider<RecipientBloc>.value(
+      value: bloc,
+      child: MaterialApp.router(
+        routerConfig: GoRouter(
+          initialLocation: '/parent',
+          routes: [
+            GoRoute(
+              path: '/parent',
+              builder: (context, __) => Scaffold(
+                body: Center(
+                  child: TextButton(
+                    onPressed: () async {
+                      final result = await context.push<bool>('/parent/new');
+                      onPopped?.call(result);
+                    },
+                    child: const Text('Parent'),
+                  ),
+                ),
+              ),
+              routes: [
+                GoRoute(
+                  path: 'new',
+                  builder: (_, __) => const RecipientEditScreen(),
                 ),
               ],
             ),
@@ -123,18 +160,96 @@ void main() {
         initialState: const RecipientState(status: RecipientStatus.loading),
       );
       await tester.pumpWidget(_wrapEditing(bloc, recipientId: 'r-1'));
-      // Deliberately avoid pumpAndSettle(): the pre-existing listener also
-      // triggers a context.pop() right after prefilling on this same event
-      // (unrelated bug, out of scope here) — a single pump is enough to
-      // observe the prefilled fields/toggle before any pop animation settles.
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+      // The insta-pop-on-load bug is fixed (`_submitted` now gates the pop
+      // branch, not `_initialized`) — pumpAndSettle() is safe here, the
+      // screen stays put after the prefill load.
+      await tester.pumpAndSettle();
 
       expect(find.text('Aissatou Ba'), findsOneWidget);
       expect(find.text('+221781112233'), findsOneWidget);
 
       final toggle = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
       expect(toggle.value, isTrue);
+    },
+  );
+
+  testWidgets(
+    'edit mode does NOT pop on the initial prefill load (no submit yet)',
+    (tester) async {
+      whenListen<RecipientState>(
+        bloc,
+        Stream.value(
+          const RecipientState(
+            status: RecipientStatus.success,
+            recipients: [_existing],
+          ),
+        ),
+        initialState: const RecipientState(status: RecipientStatus.loading),
+      );
+      await tester.pumpWidget(_wrapEditing(bloc, recipientId: 'r-1'));
+      await tester.pumpAndSettle();
+
+      // The form is still on screen (not popped back to the parent route)
+      // even though a success state was already emitted for the prefill.
+      expect(find.text('Modifier le destinataire'), findsOneWidget);
+      expect(find.text('Recipients'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'create mode pops true after a real post-submit success (fix 1)',
+    (tester) async {
+      // Nested route stack so `context.pop(true)` has a parent to land on
+      // and we can assert we're back there (mirrors the picker's real
+      // `_createNew` flow, which awaits `context.push<bool>(...)`).
+      final states = StreamController<RecipientState>();
+      addTearDown(states.close);
+      whenListen<RecipientState>(
+        bloc,
+        states.stream,
+        // Mirrors the router-created bloc in the real create flow:
+        // `getIt<RecipientBloc>()..add(RecipientLoaded)` — an initial load
+        // success arrives before any submit. With the fix this must NOT
+        // pop (only a real submit should).
+        initialState: const RecipientState(status: RecipientStatus.success),
+      );
+      bool? popped;
+      await tester.pumpWidget(_wrapCreate(bloc, onPopped: (v) => popped = v));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Parent'));
+      await tester.pumpAndSettle();
+
+      // Still on the create screen after the initial load success.
+      expect(find.text('Nouveau destinataire'), findsOneWidget);
+      expect(find.text('Parent'), findsNothing);
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Nom complet').first,
+        'Fatou Sow',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Téléphone (E.164)').first,
+        '+221771234567',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Ville').first,
+        'Dakar',
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Enregistrer'));
+      await tester.pump();
+
+      // Drive the post-submit loading -> success emission.
+      states.add(const RecipientState(status: RecipientStatus.loading));
+      await tester.pump();
+      states.add(const RecipientState(status: RecipientStatus.success));
+      await tester.pumpAndSettle();
+
+      // Popped back with `true` to the parent route.
+      expect(find.text('Parent'), findsOneWidget);
+      expect(find.text('Nouveau destinataire'), findsNothing);
+      expect(popped, isTrue);
     },
   );
 

@@ -1,13 +1,14 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
+import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// E.164 phone regex: +<1-9>\d{1,14}
-final _phoneRegex = RegExp(r'^\+[1-9]\d{1,14}$');
+/// E.164 phone regex — see [kRecipientPhoneE164].
+final _phoneRegex = kRecipientPhoneE164;
 
 const _kCountries = [
   _Country('SN', 'Sénégal'),
@@ -42,6 +43,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   String _country = 'SN';
   final _notesCtrl = TextEditingController();
   bool _initialized = false;
+  bool _submitted = false;
   String? _phoneError;
   String? _whatsappError;
   bool _isDefault = false;
@@ -109,6 +111,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
     if (!_isValid) {
       return;
     }
+    _submitted = true;
     final phone = _phoneCtrl.text.trim();
     final whatsapp = _whatsappCtrl.text.trim();
 
@@ -163,7 +166,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
             _initialized = true;
           }
         }
-        if (_initialized && state.status == RecipientStatus.success) {
+        if (_submitted && state.status == RecipientStatus.success) {
           DonySnackbar.show(
             context,
             message: _isEditing

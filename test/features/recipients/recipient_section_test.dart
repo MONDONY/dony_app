@@ -153,6 +153,38 @@ void main() {
     },
   );
 
+  testWidgets(
+    'reloads the recipient list even when the picker is dismissed without '
+    'picking anything (fix 3: avoids a stale toggle after in-sheet create)',
+    (tester) async {
+      final pickerBloc = MockRecipientBloc();
+      when(() => pickerBloc.state).thenReturn(
+        const RecipientState(status: RecipientStatus.success, recipients: [_r1]),
+      );
+      getIt.registerFactory<RecipientBloc>(() => pickerBloc);
+
+      await tester.pumpWidget(buildSut());
+      await tester.pump();
+
+      // sectionBloc.add() is called once with RecipientLoaded in initState.
+      verify(() => sectionBloc.add(const RecipientLoaded())).called(1);
+
+      await tester.tap(find.text('Choisir un destinataire'));
+      await tester.pumpAndSettle();
+
+      // Dismiss the sheet without confirming (close button -> pops null).
+      await tester.tap(find.byType(IconButton).first);
+      await tester.pumpAndSettle();
+
+      // Still on the initial state (no recipient selected)...
+      expect(find.text('Choisir un destinataire'), findsOneWidget);
+      // ...but the section's own bloc was reloaded a second time, so a
+      // recipient created-then-abandoned inside the sheet is reflected in
+      // `_phoneIsKnown`/`_toggleVisible` right away.
+      verify(() => sectionBloc.add(const RecipientLoaded())).called(1);
+    },
+  );
+
   testWidgets('toggle hidden when phone matches a saved recipient', (
     tester,
   ) async {

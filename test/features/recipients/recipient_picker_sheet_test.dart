@@ -205,7 +205,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(results, [_r4Default]);
-    verify(() => bloc.add(const RecipientPicked('saved'))).called(1);
+    verify(
+      () => bloc.add(
+        any(that: isA<RecipientPicked>().having((e) => e.source, 'source', 'saved')),
+      ),
+    ).called(1);
   });
 
   testWidgets(
@@ -313,19 +317,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('New Recipient'), findsOneWidget);
 
-      // L'écran d'édition pop(true) → la sheet recharge et dispatch
-      // RecipientPicked('new').
+      // L'écran d'édition pop(true) → la sheet recharge, MAIS ne dispatch
+      // PAS encore RecipientPicked : la source reste en attente jusqu'à la
+      // confirmation, pour éviter un double comptage analytics (fix 2).
       await tester.tap(find.text('save-new'));
       await tester.pumpAndSettle();
       verify(() => bloc.add(const RecipientLoaded())).called(greaterThan(0));
-      verify(
-        () => bloc.add(
-          any(
-            that: isA<RecipientPicked>()
-                .having((e) => e.source, 'source', 'new'),
-          ),
-        ),
-      ).called(1);
+      verifyNever(() => bloc.add(any(that: isA<RecipientPicked>())));
 
       // Le bloc émet la liste rechargée (nouveau en tête) → le listener
       // sélectionne le plus récent, que « Confirmer » retourne.
@@ -340,15 +338,83 @@ void main() {
       await tester.tap(find.text('Confirmer ce destinataire'));
       await tester.pumpAndSettle();
       expect(results, [_rNew]);
+      // La confirmation tire l'unique event RecipientPicked, tagué avec la
+      // source posée par le flux de création ('new').
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'new'),
+          ),
+        ),
+      ).called(1);
     },
   );
 
   testWidgets(
-    'contact import pushes prefilled edit screen and tags source phone_contact',
+    '« Nouveau destinataire » then manually picking a different existing '
+    'row reverts the confirm source to saved',
     (tester) async {
       final bloc = MockRecipientBloc();
-      when(() => bloc.state).thenReturn(
+      final states = StreamController<RecipientState>();
+      addTearDown(states.close);
+      whenListen(
+        bloc,
+        states.stream,
+        initialState: const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
+      );
+      final results = <Recipient?>[];
+
+      await pumpSheet(tester, bloc, resultHolder: results);
+
+      await tester.tap(find.text('Nouveau destinataire'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('save-new'));
+      await tester.pumpAndSettle();
+
+      states.add(
         const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_rNew, _r1],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // L'utilisateur change ensuite manuellement de sélection vers un
+      // destinataire pré-existant : la source doit retomber à 'saved',
+      // pas rester 'new'.
+      await tester.tap(find.text('Mamadou Diallo'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Confirmer ce destinataire'));
+      await tester.pumpAndSettle();
+
+      expect(results, [_r1]);
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'saved'),
+          ),
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets(
+    'contact import pushes prefilled edit screen and tags source phone_contact '
+    'at confirm time',
+    (tester) async {
+      final bloc = MockRecipientBloc();
+      final states = StreamController<RecipientState>();
+      addTearDown(states.close);
+      whenListen(
+        bloc,
+        states.stream,
+        initialState: const RecipientState(
           status: RecipientStatus.success,
           recipients: [_r1],
         ),
@@ -369,6 +435,20 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => contactPicker.pick()).called(1);
+      // Pas encore d'event RecipientPicked : en attente de la confirmation.
+      verifyNever(() => bloc.add(any(that: isA<RecipientPicked>())));
+
+      states.add(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_rNew, _r1],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Confirmer ce destinataire'));
+      await tester.pumpAndSettle();
+
       verify(
         () => bloc.add(
           any(

@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
+import 'package:dony/features/recipients/data/phone_validation.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_picker_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,7 +70,7 @@ class _RecipientSectionState extends State<RecipientSection> {
   bool _save = true;
   bool _suppressListener = false;
 
-  static final _e164 = RegExp(r'^\+[1-9]\d{6,14}$');
+  static final _e164 = kRecipientPhoneE164;
 
   @override
   void initState() {
@@ -112,7 +113,16 @@ class _RecipientSectionState extends State<RecipientSection> {
       context,
       currentPhone: widget.phoneCtrl.text.trim(),
     );
-    if (recipient == null || !mounted) {
+    if (!mounted) {
+      return;
+    }
+    // Toujours recharger, même si la sheet a été fermée sans confirmer :
+    // l'utilisateur a pu y créer un destinataire puis l'avoir refermée sans
+    // le sélectionner — la liste locale doit refléter ce nouvel enregistrement
+    // (sinon le toggle « Enregistrer » resterait visible pour un numéro déjà
+    // dans le carnet → doublon à la soumission).
+    _bloc.add(const RecipientLoaded());
+    if (recipient == null) {
       return;
     }
     _suppressListener = true;
@@ -121,7 +131,6 @@ class _RecipientSectionState extends State<RecipientSection> {
     widget.cityCtrl?.text = recipient.city;
     _suppressListener = false;
     setState(() => _selected = recipient);
-    _bloc.add(const RecipientLoaded()); // le picker a pu créer des entrées
   }
 
   bool get _phoneIsKnown => _bloc.state.recipients.any(

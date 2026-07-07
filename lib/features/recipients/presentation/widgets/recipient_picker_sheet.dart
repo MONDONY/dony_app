@@ -44,6 +44,12 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
   String? _selectedId;
   bool _importing = false;
 
+  /// Source de l'événement `recipient_selected` en attente : posée par
+  /// [_createNew] au lieu de tirer l'event tout de suite, pour éviter un
+  /// double comptage avec l'event tiré au clic « Confirmer ». Réinitialisée
+  /// à `null` (→ 'saved') dès que l'utilisateur retape manuellement une ligne.
+  String? _pendingSource;
+
   @override
   void initState() {
     super.initState();
@@ -93,9 +99,12 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
       extra: {'fullName': fullName, 'phone': phone},
     );
     if ((created ?? false) && mounted) {
-      bloc
-        ..add(const RecipientLoaded())
-        ..add(RecipientPicked(source));
+      bloc.add(const RecipientLoaded());
+      // Ne PAS tirer RecipientPicked ici : le bouton « Confirmer » le fera
+      // avec la bonne source au moment où l'utilisateur valide réellement
+      // sa sélection (évite un double event si l'utilisateur change ensuite
+      // d'avis et confirme un autre destinataire).
+      _pendingSource = source;
       // La liste est triée par updatedAt desc → le nouveau est en tête.
       // On vide la sélection manuelle pour que _selected retombe dessus
       // via le stream du bloc (voir BlocListener ci-dessous).
@@ -260,8 +269,14 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                                     (r) => _RecipientRow(
                                       recipient: r,
                                       isSelected: selected?.id == r.id,
-                                      onTap: () =>
-                                          setState(() => _selectedId = r.id),
+                                      onTap: () => setState(() {
+                                        _selectedId = r.id;
+                                        // Sélection manuelle d'une ligne →
+                                        // la source redevient 'saved', même
+                                        // après une création dans ce même
+                                        // passage de la sheet.
+                                        _pendingSource = null;
+                                      }),
                                     ),
                                   ),
                                 ] else if (state.recipients.isNotEmpty)
@@ -296,8 +311,9 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                               ? null
                               : () {
                                   context.read<RecipientBloc>().add(
-                                    const RecipientPicked('saved'),
+                                    RecipientPicked(_pendingSource ?? 'saved'),
                                   );
+                                  _pendingSource = null;
                                   Navigator.of(context).pop(selected);
                                 },
                         ),
