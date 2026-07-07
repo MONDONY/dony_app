@@ -240,6 +240,47 @@ void main() {
     });
   });
 
+  group('add recipient tile', () {
+    testWidgets('shows the add-recipient tile when 3 or fewer recipients', (tester) async {
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Ajouter un destinataire'), findsOneWidget);
+    });
+
+    testWidgets('hides the add-recipient tile once search kicks in (more than 3)', (tester) async {
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1, _r2, _r3, _r4Default],
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Ajouter un destinataire'), findsNothing);
+    });
+
+    testWidgets('tapping the add-recipient tile navigates and reloads on return', (tester) async {
+      when(() => bloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
+      );
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Ajouter un destinataire'));
+      await tester.pumpAndSettle();
+      expect(find.text('New Recipient'), findsOneWidget);
+    });
+  });
+
   group('kebab menu — set as default', () {
     // The PopupMenuItem row (icon + "Définir par défaut") is wider than
     // Material's fixed menu max width (_kMenuMaxWidth = 280) once laid out

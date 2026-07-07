@@ -114,25 +114,81 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                         description:
                             'Aucun destinataire ne correspond à ta recherche.',
                       )
-                    : ListView.separated(
-                        padding: EdgeInsets.fromLTRB(
-                          DonySpacing.sm,
-                          DonySpacing.xl,
-                          DonySpacing.sm,
-                          MediaQuery.paddingOf(context).bottom + 100,
-                        ),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: DonySpacing.sm),
-                        itemBuilder: (context, i) {
-                          final recipient = filtered[i];
-                          return _RecipientCard(recipient: recipient)
-                              .animate()
-                              .fadeIn(delay: (i * 60).ms, duration: 280.ms)
-                              .slideY(
-                                  begin: 0.03, curve: Curves.easeOutCubic);
-                        },
-                      ),
+                    : showSearch
+                        ? ListView.separated(
+                            padding: EdgeInsets.fromLTRB(
+                              DonySpacing.sm,
+                              DonySpacing.xl,
+                              DonySpacing.sm,
+                              MediaQuery.paddingOf(context).bottom + 100,
+                            ),
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: DonySpacing.sm),
+                            itemBuilder: (context, i) {
+                              final recipient = filtered[i];
+                              return _RecipientCard(recipient: recipient)
+                                  .animate()
+                                  .fadeIn(delay: (i * 60).ms, duration: 280.ms)
+                                  .slideY(
+                                      begin: 0.03, curve: Curves.easeOutCubic);
+                            },
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final bottomInset =
+                                  MediaQuery.paddingOf(context).bottom;
+                              return SingleChildScrollView(
+                                padding: EdgeInsets.fromLTRB(
+                                  DonySpacing.sm,
+                                  DonySpacing.xl,
+                                  DonySpacing.sm,
+                                  bottomInset + 24,
+                                ),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: constraints.maxHeight -
+                                        DonySpacing.xl -
+                                        bottomInset -
+                                        24,
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      for (var i = 0;
+                                          i < filtered.length;
+                                          i++) ...[
+                                        if (i > 0)
+                                          const SizedBox(
+                                              height: DonySpacing.sm),
+                                        _RecipientCard(
+                                                recipient: filtered[i])
+                                            .animate()
+                                            .fadeIn(
+                                                delay: (i * 60).ms,
+                                                duration: 280.ms)
+                                            .slideY(
+                                                begin: 0.03,
+                                                curve: Curves.easeOutCubic),
+                                      ],
+                                      const SizedBox(height: DonySpacing.lg),
+                                      _AddRecipientTile()
+                                          .animate()
+                                          .fadeIn(
+                                              delay: (filtered.length * 60 +
+                                                      100)
+                                                  .ms,
+                                              duration: 280.ms)
+                                          .slideY(
+                                              begin: 0.03,
+                                              curve: Curves.easeOutCubic),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
               ),
             ],
           );
@@ -312,6 +368,58 @@ class _RecipientCard extends StatelessWidget {
       'CM': 'Cameroun',
     };
     return labels[code] ?? code;
+  }
+}
+
+class _AddRecipientTile extends StatelessWidget {
+  const _AddRecipientTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Material(
+      color: cs.primary.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        onTap: () async {
+          final changed = await context.push<bool>('/profile/recipients/new');
+          if ((changed ?? false) && context.mounted) {
+            context.read<RecipientBloc>().add(const RecipientLoaded());
+          }
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.lg,
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.10),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.add_rounded, color: cs.primary, size: 24),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                'Ajouter un destinataire',
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
