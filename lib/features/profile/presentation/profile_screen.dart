@@ -222,141 +222,135 @@ class _ProfileScreenState extends State<ProfileScreen>
                           },
                           child: NestedScrollView(
                             controller: _scroll,
-                            headerSliverBuilder:
-                                (context, innerBoxIsScrolled) => [
-                                  // ── AppBar avec ProfileHeader existant ────
-                                  SliverAppBar(
-                                    expandedHeight: expandedHeight,
-                                    pinned: true,
-                                    elevation: 0,
-                                    scrolledUnderElevation: 0,
-                                    automaticallyImplyLeading: false,
-                                    centerTitle: false,
-                                    forceElevated: innerBoxIsScrolled,
-                                    backgroundColor: cs.surface,
-                                    surfaceTintColor: Colors.transparent,
-                                    title: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Opacity(
-                                          opacity: progress,
-                                          child: DonyAvatar(
-                                            name: displayName,
-                                            imageUrl: user?.avatarUrl,
-                                            size: DonyAvatarSize.xs,
-                                            verified: isKycVerified,
-                                            pro: isProAccount,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.sm),
-                                        Flexible(
-                                          child: Opacity(
-                                            opacity: progress,
-                                            child: Text(
-                                              displayName,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleSmall!
-                                                  .copyWith(
-                                                    color: cs.onSurface,
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ),
-                                        if (isKycVerified) ...[
-                                          const SizedBox(width: DonySpacing.xs),
-                                          Opacity(
-                                            opacity: progress,
-                                            child: DonyIcon(
-                                              'badge-check',
-                                              size: 13,
-                                              color: isProAccount
-                                                  ? DonyColors.kycBadgeGold
-                                                  : DonyColors.kycBadgeBlue,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    actions: const [],
-                                    flexibleSpace: FlexibleSpaceBar(
-                                      // none : pas de parallax/étirement du
-                                      // background (sinon il est agrandi puis
-                                      // décalé → vide entre header et tabs).
-                                      collapseMode: CollapseMode.none,
-                                      // Le background est forcé à la taille de
-                                      // l'extent du sliver. Au 1er frame (avant
-                                      // mesure de la sonde) `expandedHeight` peut
-                                      // sous-estimer la hauteur réelle du header
-                                      // (nom 2 lignes, chips qui wrap…) → la
-                                      // Column déborderait. Le ScrollView non
-                                      // scrollable laisse le header prendre sa
-                                      // hauteur naturelle : box trop courte =
-                                      // clip silencieux (zéro overflow), box
-                                      // correcte = rendu identique (top-aligné).
-                                      background: SingleChildScrollView(
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        child: profileHeader,
+                            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                              // ── AppBar avec ProfileHeader existant ────
+                              SliverAppBar(
+                                expandedHeight: expandedHeight,
+                                pinned: true,
+                                elevation: 0,
+                                scrolledUnderElevation: 0,
+                                automaticallyImplyLeading: false,
+                                centerTitle: false,
+                                forceElevated: innerBoxIsScrolled,
+                                backgroundColor: cs.surface,
+                                surfaceTintColor: Colors.transparent,
+                                title: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Opacity(
+                                      opacity: progress,
+                                      child: DonyAvatar(
+                                        name: displayName,
+                                        imageUrl: user?.avatarUrl,
+                                        size: DonyAvatarSize.xs,
+                                        verified: isKycVerified,
+                                        pro: isProAccount,
                                       ),
                                     ),
-                                  ),
-                                  // ── Tab bar sticky ────────────────────────
-                                  SliverPersistentHeader(
-                                    pinned: true,
-                                    delegate: _ProfileTabBarDelegate(
-                                      tabBar: TabBar(
-                                        controller: _tabController,
-                                        labelColor: cs.primary,
-                                        unselectedLabelColor:
-                                            cs.onSurfaceVariant,
-                                        indicatorColor: cs.primary,
-                                        indicatorSize: TabBarIndicatorSize.tab,
-                                        labelStyle: Theme.of(context)
-                                            .textTheme
-                                            .labelLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                        unselectedLabelStyle: Theme.of(context)
-                                            .textTheme
-                                            .labelLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                        dividerColor: cs.outline.withValues(
-                                          alpha: 0.4,
+                                    const SizedBox(width: DonySpacing.sm),
+                                    Flexible(
+                                      child: Opacity(
+                                        opacity: progress,
+                                        child: Text(
+                                          displayName,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall!
+                                              .copyWith(
+                                                color: cs.onSurface,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        tabs: const [
-                                          Tab(
-                                            child: _TabItem(
-                                              // 'zap' → 'layout-grid' : cohérence avec le
-                                              // fix bottom nav (audit UX, main_shell.dart).
-                                              iconAsset: 'layout-grid',
-                                              label: 'Activité',
-                                            ),
-                                          ),
-                                          Tab(
-                                            child: _TabItem(
-                                              iconAsset: 'user-cog',
-                                              label: 'Compte',
-                                            ),
-                                          ),
-                                          Tab(
-                                            child: _TabItem(
-                                              iconAsset: 'sliders-horizontal',
-                                              label: 'Réglages',
-                                            ),
-                                          ),
-                                        ],
                                       ),
-                                      backgroundColor: cs.surface,
                                     ),
+                                    if (isKycVerified) ...[
+                                      const SizedBox(width: DonySpacing.xs),
+                                      Opacity(
+                                        opacity: progress,
+                                        child: DonyIcon(
+                                          'badge-check',
+                                          size: 13,
+                                          color: isProAccount
+                                              ? DonyColors.kycBadgeGold
+                                              : DonyColors.kycBadgeBlue,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                actions: const [],
+                                flexibleSpace: FlexibleSpaceBar(
+                                  // none : pas de parallax/étirement du
+                                  // background (sinon il est agrandi puis
+                                  // décalé → vide entre header et tabs).
+                                  collapseMode: CollapseMode.none,
+                                  // Le background est forcé à la taille de
+                                  // l'extent du sliver. Au 1er frame (avant
+                                  // mesure de la sonde) `expandedHeight` peut
+                                  // sous-estimer la hauteur réelle du header
+                                  // (nom 2 lignes, chips qui wrap…) → la
+                                  // Column déborderait. Le ScrollView non
+                                  // scrollable laisse le header prendre sa
+                                  // hauteur naturelle : box trop courte =
+                                  // clip silencieux (zéro overflow), box
+                                  // correcte = rendu identique (top-aligné).
+                                  background: SingleChildScrollView(
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    child: profileHeader,
                                   ),
-                                ],
+                                ),
+                              ),
+                              // ── Tab bar sticky ────────────────────────
+                              SliverPersistentHeader(
+                                pinned: true,
+                                delegate: _ProfileTabBarDelegate(
+                                  tabBar: TabBar(
+                                    controller: _tabController,
+                                    labelColor: cs.primary,
+                                    unselectedLabelColor: cs.onSurfaceVariant,
+                                    indicatorColor: cs.primary,
+                                    indicatorSize: TabBarIndicatorSize.tab,
+                                    labelStyle: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                    unselectedLabelStyle: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(fontWeight: FontWeight.w500),
+                                    dividerColor: cs.outline.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                    tabs: const [
+                                      Tab(
+                                        child: _TabItem(
+                                          // 'zap' → 'layout-grid' : cohérence avec le
+                                          // fix bottom nav (audit UX, main_shell.dart).
+                                          iconAsset: 'layout-grid',
+                                          label: 'Activité',
+                                        ),
+                                      ),
+                                      Tab(
+                                        child: _TabItem(
+                                          iconAsset: 'user-cog',
+                                          label: 'Compte',
+                                        ),
+                                      ),
+                                      Tab(
+                                        child: _TabItem(
+                                          iconAsset: 'sliders-horizontal',
+                                          label: 'Réglages',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: cs.surface,
+                                ),
+                              ),
+                            ],
                             body: TabBarView(
                               controller: _tabController,
                               children: [
@@ -366,8 +360,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   isSender: isSender,
                                   upcomingAnnouncements: upcomingAnnouncements,
                                   activeBids: activeBids,
-                                  bidState: bidState,
-                                  announcementState: announcementState,
                                 ),
                                 _AccountTab(
                                   user: user,
@@ -455,8 +447,6 @@ class _ActivityTab extends StatelessWidget {
     required this.isSender,
     required this.upcomingAnnouncements,
     required this.activeBids,
-    required this.bidState,
-    required this.announcementState,
   });
 
   final UserModel? user;
@@ -464,15 +454,11 @@ class _ActivityTab extends StatelessWidget {
   final bool isSender;
   final int upcomingAnnouncements;
   final int activeBids;
-  final BidState bidState;
-  final AnnouncementState announcementState;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final isLoading =
-        bidState is BidLoading || announcementState is AnnouncementLoading;
 
     return ListView(
       key: const Key('profile_activity_tab'),
@@ -506,23 +492,6 @@ class _ActivityTab extends StatelessWidget {
           ).animate().fadeIn(delay: 80.ms),
           const SizedBox(height: DonySpacing.lg),
         ],
-
-        // ── Stats hero (inchangé) ───────────────────────────────────────
-        _SectionLabel(
-          label: isTraveler ? 'ACTIVITÉ · VOYAGEUR' : 'ACTIVITÉ · EXPÉDITEUR',
-          cs: cs,
-        ),
-        _ActivitySection(
-              isTraveler: isTraveler,
-              totalTrips: user?.totalTrips ?? 0,
-              totalShipments: user?.totalShipments ?? 0,
-              isLoading: isLoading,
-              averageRating: user?.averageRating,
-            )
-            .animate()
-            .fadeIn(delay: 100.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        const SizedBox(height: DonySpacing.xl),
 
         // ── EN COURS ────────────────────────────────────────────────────
         _SectionLabel(label: 'EN COURS', cs: cs),
@@ -765,8 +734,9 @@ class _AccountTab extends StatelessWidget {
                   DonyListTile(
                     iconAsset: 'award',
                     iconColor: isProAccount ? cs.success : cs.warning,
-                    iconBgColor:
-                        isProAccount ? cs.successLight : cs.warningLight,
+                    iconBgColor: isProAccount
+                        ? cs.successLight
+                        : cs.warningLight,
                     label: isProAccount
                         ? 'Mon profil PRO'
                         : 'Passer en compte PRO',
@@ -784,14 +754,14 @@ class _AccountTab extends StatelessWidget {
                   label: 'Parrainages',
                   trailing: Text(
                     '0 invité',
-                    style:
-                        tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+                    style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   onTap: () => context.push('/profile/referral'),
                 ),
                 BlocBuilder<ReferralBloc, ReferralState>(
                   builder: (context, referralState) {
-                    final alreadyReferred = referralState is ReferralLoaded &&
+                    final alreadyReferred =
+                        referralState is ReferralLoaded &&
                         referralState.info.hasBeenReferred;
                     if (alreadyReferred) return const SizedBox.shrink();
                     return DonyListTile(
@@ -801,12 +771,13 @@ class _AccountTab extends StatelessWidget {
                       label: 'J\'ai un code parrain',
                       showDivider: false,
                       onTap: () async {
-                        final redeemed =
-                            await RedeemCodeBottomSheet.show(context);
+                        final redeemed = await RedeemCodeBottomSheet.show(
+                          context,
+                        );
                         if ((redeemed ?? false) && context.mounted) {
-                          context
-                              .read<ReferralBloc>()
-                              .add(const ReferralLoadRequested());
+                          context.read<ReferralBloc>().add(
+                            const ReferralLoadRequested(),
+                          );
                         }
                       },
                     );
@@ -1090,122 +1061,6 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-// ── Section Activité (stats card) ─────────────────────────────────────────────
-
-class _ActivitySection extends StatelessWidget {
-  const _ActivitySection({
-    required this.isTraveler,
-    required this.totalTrips,
-    required this.totalShipments,
-    required this.isLoading,
-    this.averageRating,
-  });
-
-  final bool isTraveler;
-  final int totalTrips;
-  final int totalShipments;
-  final bool isLoading;
-  final double? averageRating;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final mainValue = isLoading
-        ? '—'
-        : '${isTraveler ? totalTrips : totalShipments}';
-    final mainLabel = isTraveler ? 'Trajets' : 'Envois';
-    final ratingValue = averageRating != null
-        ? averageRating!.toStringAsFixed(1)
-        : '—';
-    final thirdLabel = isTraveler ? 'Livraison' : 'Économisés';
-    // thirdValue est '—' tant que le backend n'expose pas deliveryRate / savings
-
-    return DonyCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.md,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ActivityStat(
-              value: mainValue,
-              label: mainLabel,
-              isLoading: isLoading,
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 28,
-            color: cs.outline.withValues(alpha: 0.4),
-          ),
-          Expanded(
-            child: _ActivityStat(
-              value: ratingValue,
-              label: 'Ma note',
-              isLoading: isLoading,
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 28,
-            color: cs.outline.withValues(alpha: 0.4),
-          ),
-          Expanded(
-            child: _ActivityStat(
-              value: '—',
-              label: thirdLabel,
-              isLoading: false,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActivityStat extends StatelessWidget {
-  const _ActivityStat({
-    required this.value,
-    required this.label,
-    required this.isLoading,
-  });
-
-  final String value;
-  final String label;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        if (isLoading)
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
-          )
-        else
-          Text(
-            value,
-            style: tt.titleLarge?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        const SizedBox(height: DonySpacing.xxs),
-        Text(
-          label,
-          style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-}
-
 // ── Section label ─────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
@@ -1347,11 +1202,7 @@ class _ProfileCompletionBanner extends StatelessWidget {
                     color: cs.warning.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
-                  child: DonyIcon(
-                    'notebook-pen',
-                    color: cs.warning,
-                    size: 18,
-                  ),
+                  child: DonyIcon('notebook-pen', color: cs.warning, size: 18),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -1375,11 +1226,7 @@ class _ProfileCompletionBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                DonyIcon(
-                  'chevron-right',
-                  color: cs.onSurfaceVariant,
-                  size: 18,
-                ),
+                DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
               ],
             ),
             const SizedBox(height: DonySpacing.md),
