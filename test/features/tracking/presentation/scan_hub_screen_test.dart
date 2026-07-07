@@ -500,5 +500,42 @@ void main() {
 
       expect(find.textContaining('introuvable'), findsOneWidget);
     });
+
+    testWidgets(
+      'bid résolu mais hors des colis confirmés du trajet → erreur inline, '
+      'pas de navigation',
+      (tester) async {
+        final trackingBloc = _MockTrackingBloc();
+        final states = [
+          TrackingInitial(),
+          TrackingSearchLoading(),
+          TrackingSearchLoaded(const TrackingSearchModel(
+            trackingNumber: 'TRK999999',
+            bidId: 'bid-other-trip',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            currentStep: 'ACCEPTED',
+            stepLabel: 'Voyage confirmé',
+            paymentStatus: 'ESCROW',
+          )),
+        ];
+        whenListen(trackingBloc, Stream.fromIterable(states),
+            initialState: TrackingInitial());
+
+        // Le trajet sélectionné n'a qu'un seul colis confirmé — le bid
+        // résolu par TrackingBloc ('bid-other-trip') n'y figure pas.
+        when(() => cubit.state).thenReturn(loadedState(
+          bidsByTrip: {
+            'trip-1': [_bid('bid-1', 'ACCEPTED')],
+          },
+        ));
+
+        await tester.pumpWidget(_wrap(cubit, trackingBloc));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('introuvable'), findsOneWidget);
+        expect(find.textContaining('photo-'), findsNothing);
+      },
+    );
   });
 }

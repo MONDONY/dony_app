@@ -43,6 +43,17 @@ ScanHubProgress computeScanProgress(List<BidModel> bids) {
   );
 }
 
+/// Sous-ensemble de [bids] réellement confirmés/embarqués sur le trajet —
+/// mêmes statuts que ceux comptés par [computeScanProgress]
+/// (`_confirmedStatuses` : `ACCEPTED`/`HANDED_OVER`/`IN_TRANSIT`/`COMPLETED`).
+/// Source unique de vérité pour « quels bids sont scannables » dans le hub
+/// Scan & Suivi — exclut `PENDING`, `REJECTED` et tout `CANCELLED` (y compris
+/// les auto-annulés, déjà hors de `_confirmedStatuses`).
+List<BidModel> confirmedColis(List<BidModel> bids) =>
+    bids.where((b) => _confirmedStatuses.contains(b.status)).toList(
+          growable: false,
+        );
+
 /// Étape à scanner ensuite pour ce colis, dérivée de son statut. `null` si
 /// toutes les étapes sont déjà scannées (statut `COMPLETED`).
 String? nextRequiredStep(BidModel bid) {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
@@ -18,6 +19,15 @@ class _MockBidRepo extends Mock implements BidRepository {}
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
 class _MockTrackingRepo extends Mock implements TrackingRepository {}
+
+BidModel _bid(String id, String status) => BidModel(
+      id: id,
+      announcementId: 'a',
+      senderId: 's',
+      status: status,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
 
 AnnouncementModel _trip(String id, String status, [DateTime? date]) =>
     AnnouncementModel(
@@ -313,6 +323,36 @@ void main() {
       ],
     );
   });
+
+  blocTest<ScanHubCubit, ScanHubState>(
+    'selectedTripBids exclut PENDING/REJECTED, garde ACCEPTED/HANDED_OVER',
+    build: () {
+      when(() => annRepo.getMyAnnouncements()).thenAnswer(
+        (_) async =>
+            (announcements: [_trip('a', 'IN_PROGRESS')], totalElements: 1),
+      );
+      when(() => bidRepo.getBidsForAnnouncement('a')).thenAnswer(
+        (_) async => [
+          _bid('pending', 'PENDING'),
+          _bid('rejected', 'REJECTED'),
+          _bid('accepted', 'ACCEPTED'),
+          _bid('handed-over', 'HANDED_OVER'),
+        ],
+      );
+      when(() => trackingRepo.getTripScanHistory('a'))
+          .thenAnswer((_) async => []);
+      return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
+    },
+    act: (c) => c.load(),
+    expect: () => [
+      isA<ScanHubLoading>(),
+      isA<ScanHubLoaded>().having(
+        (s) => s.selectedTripBids.map((b) => b.id).toSet(),
+        'selectedTripBids ids',
+        {'accepted', 'handed-over'},
+      ),
+    ],
+  );
 
   blocTest<ScanHubCubit, ScanHubState>(
     'erreur bidRepo.getBidsForAnnouncement → ScanHubError',

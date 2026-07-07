@@ -91,6 +91,39 @@ void main() {
     });
   });
 
+  group('confirmedColis', () {
+    test('garde les statuts confirmés, exclut PENDING/REJECTED/CANCELLED', () {
+      final accepted = _bid('ACCEPTED');
+      final handedOver = _bid('HANDED_OVER');
+      final inTransit = _bid('IN_TRANSIT');
+      final completed = _bid('COMPLETED');
+      final pending = _bid('PENDING');
+      final rejected = _bid('REJECTED');
+      final cancelled = _bid('CANCELLED');
+      final result = confirmedColis([
+        accepted,
+        handedOver,
+        inTransit,
+        completed,
+        pending,
+        rejected,
+        cancelled,
+      ]);
+      expect(
+        result,
+        containsAll(<BidModel>[accepted, handedOver, inTransit, completed]),
+      );
+      expect(result, isNot(contains(pending)));
+      expect(result, isNot(contains(rejected)));
+      expect(result, isNot(contains(cancelled)));
+      expect(result.length, 4);
+    });
+
+    test('liste vide → liste vide', () {
+      expect(confirmedColis(const []), isEmpty);
+    });
+  });
+
   group('colisStepProgress', () {
     test('ACCEPTED → aucune étape faite', () {
       final p = colisStepProgress(_bid('ACCEPTED'));

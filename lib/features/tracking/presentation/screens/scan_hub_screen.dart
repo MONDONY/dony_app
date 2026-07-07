@@ -713,6 +713,11 @@ class _NumberEntryField extends StatefulWidget {
 
 class _NumberEntryFieldState extends State<_NumberEntryField> {
   final _controller = TextEditingController();
+  // État local ephémère (pas une donnée métier BLoC) : signale un numéro
+  // valide résolu par TrackingBloc mais qui ne correspond à aucun colis
+  // confirmé du trajet sélectionné (autre trajet, ou déjà entièrement
+  // scanné). Même pattern que `_showReasonError` dans cancellation_dialog.dart.
+  bool _numberNotFound = false;
 
   @override
   void dispose() {
@@ -723,6 +728,7 @@ class _NumberEntryFieldState extends State<_NumberEntryField> {
   void _submit(BuildContext context) {
     final number = _controller.text.trim();
     if (number.isEmpty) return;
+    setState(() => _numberNotFound = false);
     context.read<TrackingBloc>().add(TrackingSearchRequested(number));
   }
 
@@ -740,7 +746,13 @@ class _NumberEntryFieldState extends State<_NumberEntryField> {
               .where((b) => b.id == state.result.bidId)
               .firstOrNull;
           final etape = bid != null ? nextRequiredStep(bid) : null;
-          if (etape == null) return;
+          if (etape == null) {
+            // Numéro valide mais hors du trajet actif (autre trajet) ou déjà
+            // entièrement scanné (COMPLETED) → erreur inline plutôt qu'un tap
+            // mort (spec §6 « numéro inconnu / hors trajets actifs »).
+            setState(() => _numberNotFound = true);
+            return;
+          }
           context.push<void>(
             '/tracking/scan/photo',
             extra: <String, dynamic>{
@@ -755,7 +767,9 @@ class _NumberEntryFieldState extends State<_NumberEntryField> {
         final isLoading = state is TrackingSearchLoading;
         // Message fixe plutôt que le texte brut de l'exception — même
         // convention que ScanIdentifyScreen (scan_identify_screen.dart:303).
-        final error = state is TrackingSearchError
+        // Couvre aussi le cas `_numberNotFound` (numéro résolu mais hors du
+        // trajet actif / déjà entièrement scanné) avec le même message.
+        final error = (state is TrackingSearchError || _numberNotFound)
             ? 'Numéro introuvable. Vérifiez et réessayez.'
             : null;
 

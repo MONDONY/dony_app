@@ -42,8 +42,12 @@ class ScanHubLoaded extends ScanHubState {
   AnnouncementModel get selectedTrip =>
       trips.firstWhere((t) => t.id == selectedTripId);
 
+  /// Colis confirmés/scannables du trajet sélectionné — filtre
+  /// [bidsByTrip] via [confirmedColis] pour que tout consommateur (liste,
+  /// bandeau synchro, résolution du champ numéro) ignore les bids
+  /// `PENDING`/`REJECTED`/`CANCELLED`. [bidsByTrip] lui-même reste brut.
   List<BidModel> get selectedTripBids =>
-      bidsByTrip[selectedTripId] ?? const [];
+      confirmedColis(bidsByTrip[selectedTripId] ?? const []);
 
   ScanHubProgress get progress => computeScanProgress(selectedTripBids);
 }
