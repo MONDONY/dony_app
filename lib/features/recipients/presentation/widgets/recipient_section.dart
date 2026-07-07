@@ -128,7 +128,7 @@ class _RecipientSectionState extends State<RecipientSection> {
     _suppressListener = true;
     widget.nameCtrl.text = recipient.fullName;
     widget.phoneCtrl.text = recipient.phoneE164;
-    widget.cityCtrl?.text = recipient.city;
+    widget.cityCtrl?.text = recipient.city ?? '';
     _suppressListener = false;
     setState(() => _selected = recipient);
   }
@@ -271,7 +271,11 @@ class _SelectedCard extends StatelessWidget {
                   style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 Text(
-                  '${recipient.fullName} · ${recipient.phoneE164} · ${recipient.city}',
+                  [
+                    recipient.fullName,
+                    recipient.phoneE164,
+                    if (recipient.city != null) recipient.city!,
+                  ].join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),

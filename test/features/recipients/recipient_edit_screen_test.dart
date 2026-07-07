@@ -231,10 +231,6 @@ void main() {
         find.widgetWithText(TextFormField, 'Téléphone (E.164)').first,
         '+221771234567',
       );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Ville').first,
-        'Dakar',
-      );
       await tester.pump();
 
       await tester.tap(find.text('Enregistrer'));
@@ -269,10 +265,6 @@ void main() {
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Téléphone (E.164)').first,
         '+221771234567',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Ville').first,
-        'Dakar',
       );
       await tester.pump();
 
@@ -309,10 +301,6 @@ void main() {
         find.widgetWithText(TextFormField, 'Téléphone (E.164)').first,
         '+221771234567',
       );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Ville').first,
-        'Dakar',
-      );
       await tester.pump();
 
       await tester.tap(find.text('Enregistrer'));
@@ -323,6 +311,81 @@ void main() {
       ).captured.cast<RecipientCreated>();
       expect(captured, hasLength(1));
       expect(captured.single.isDefault, isFalse);
+    },
+  );
+
+  testWidgets(
+    'create mode sends null city and a country inferred from the phone prefix',
+    (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const RecipientState(status: RecipientStatus.success));
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Nom complet').first,
+        'Kouassi Yao',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Téléphone (E.164)').first,
+        '+2250101234567', // CI prefix, distinct from the SN default
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Enregistrer'));
+      await tester.pump();
+
+      final captured = verify(
+        () => bloc.add(captureAny(that: isA<RecipientCreated>())),
+      ).captured.cast<RecipientCreated>();
+      expect(captured, hasLength(1));
+      expect(captured.single.city, isNull);
+      expect(captured.single.country, 'CI');
+    },
+  );
+
+  testWidgets(
+    'edit mode preserves fields with no UI (city, relationship, street, '
+    'whatsapp, notes) instead of wiping them on submit',
+    (tester) async {
+      const existingWithHiddenFields = Recipient(
+        id: 'r-2',
+        fullName: 'Aissatou Ba',
+        relationship: 'Mère',
+        phoneE164: '+221781112233',
+        whatsappE164: '+221781112233',
+        street: '12 rue Blaise Diagne',
+        city: 'Dakar',
+        country: 'SN',
+        notes: 'Sonner deux fois',
+      );
+      whenListen<RecipientState>(
+        bloc,
+        Stream.value(
+          const RecipientState(
+            status: RecipientStatus.success,
+            recipients: [existingWithHiddenFields],
+          ),
+        ),
+        initialState: const RecipientState(status: RecipientStatus.loading),
+      );
+      await tester.pumpWidget(_wrapEditing(bloc, recipientId: 'r-2'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Enregistrer'));
+      await tester.pump();
+
+      final captured = verify(
+        () => bloc.add(captureAny(that: isA<RecipientUpdated>())),
+      ).captured.cast<RecipientUpdated>();
+      expect(captured, hasLength(1));
+      expect(captured.single.city, 'Dakar');
+      expect(captured.single.relationship, 'Mère');
+      expect(captured.single.street, '12 rue Blaise Diagne');
+      expect(captured.single.whatsappE164, '+221781112233');
+      expect(captured.single.notes, 'Sonner deux fois');
+      expect(captured.single.country, 'SN');
     },
   );
 }

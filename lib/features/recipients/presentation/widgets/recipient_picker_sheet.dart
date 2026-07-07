@@ -430,7 +430,11 @@ class _RecipientRow extends StatelessWidget {
         ],
       ),
       subtitle: Text(
-        '${recipient.fullName} · ${recipient.phoneE164} · ${recipient.city}',
+        [
+          recipient.fullName,
+          recipient.phoneE164,
+          if (recipient.city != null) recipient.city!,
+        ].join(' · '),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),

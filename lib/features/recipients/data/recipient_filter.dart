@@ -7,7 +7,7 @@ List<Recipient> filterRecipients(List<Recipient> recipients, String query) {
   if (q.isEmpty) return recipients;
   return recipients.where((r) {
     final haystack = _fold(
-      '${r.fullName} ${r.relationship ?? ''} ${r.city} ${r.phoneE164}',
+      '${r.fullName} ${r.relationship ?? ''} ${r.city ?? ''} ${r.phoneE164}',
     );
     return haystack.contains(q);
   }).toList();

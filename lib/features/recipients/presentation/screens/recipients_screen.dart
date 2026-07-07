@@ -202,7 +202,7 @@ class _RecipientCard extends StatelessWidget {
 
     final locationParts = [
       if (recipient.street != null) recipient.street!,
-      recipient.city,
+      if (recipient.city != null) recipient.city!,
       _countryLabel(recipient.country),
     ];
 

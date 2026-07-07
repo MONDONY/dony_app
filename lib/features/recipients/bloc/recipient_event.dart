@@ -15,7 +15,7 @@ class RecipientCreated extends RecipientEvent {
     required this.phoneE164,
     this.whatsappE164,
     this.street,
-    required this.city,
+    this.city,
     required this.country,
     this.notes,
     this.isDefault = false,
@@ -26,7 +26,7 @@ class RecipientCreated extends RecipientEvent {
   final String phoneE164;
   final String? whatsappE164;
   final String? street;
-  final String city;
+  final String? city;
   final String country;
   final String? notes;
   final bool isDefault;
@@ -40,7 +40,7 @@ class RecipientUpdated extends RecipientEvent {
     required this.phoneE164,
     this.whatsappE164,
     this.street,
-    required this.city,
+    this.city,
     required this.country,
     this.notes,
     this.isDefault = false,
@@ -52,7 +52,7 @@ class RecipientUpdated extends RecipientEvent {
   final String phoneE164;
   final String? whatsappE164;
   final String? street;
-  final String city;
+  final String? city;
   final String country;
   final String? notes;
   final bool isDefault;

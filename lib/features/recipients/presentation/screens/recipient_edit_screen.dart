@@ -2,6 +2,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/phone_validation.dart';
+import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart'
+    show countryFromPhone;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,13 +11,6 @@ import 'package:go_router/go_router.dart';
 
 /// E.164 phone regex — see [kRecipientPhoneE164].
 final _phoneRegex = kRecipientPhoneE164;
-
-const _kCountries = [
-  _Country('SN', 'Sénégal'),
-  _Country('CI', "Côte d'Ivoire"),
-  _Country('ML', 'Mali'),
-  _Country('CM', 'Cameroun'),
-];
 
 class RecipientEditScreen extends StatefulWidget {
   const RecipientEditScreen({
@@ -45,7 +40,6 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   bool _initialized = false;
   bool _submitted = false;
   String? _phoneError;
-  String? _whatsappError;
   bool _isDefault = false;
 
   bool get _isEditing => widget.recipientId != null;
@@ -53,23 +47,13 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   bool get _isValid =>
       _fullNameCtrl.text.trim().isNotEmpty &&
       _phoneCtrl.text.trim().isNotEmpty &&
-      _phoneRegex.hasMatch(_phoneCtrl.text.trim()) &&
-      _cityCtrl.text.trim().isNotEmpty;
+      _phoneRegex.hasMatch(_phoneCtrl.text.trim());
 
   void _validatePhone(String value) {
     final v = value.trim();
     setState(() {
       _phoneError =
           v.isEmpty || _phoneRegex.hasMatch(v) ? null : 'Format invalide (+33612345678)';
-    });
-  }
-
-  void _validateWhatsapp(String value) {
-    final v = value.trim();
-    setState(() {
-      _whatsappError = v.isEmpty || _phoneRegex.hasMatch(v)
-          ? null
-          : 'Format invalide (+22177123456)';
     });
   }
 
@@ -101,7 +85,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
     _phoneCtrl.text = r.phoneE164;
     _whatsappCtrl.text = r.whatsappE164 ?? '';
     _streetCtrl.text = r.street ?? '';
-    _cityCtrl.text = r.city;
+    _cityCtrl.text = r.city ?? '';
     _country = r.country;
     _notesCtrl.text = r.notes ?? '';
     _isDefault = r.isDefault;
@@ -114,6 +98,10 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
     _submitted = true;
     final phone = _phoneCtrl.text.trim();
     final whatsapp = _whatsappCtrl.text.trim();
+    final city = _cityCtrl.text.trim();
+    // No country UI in this trimmed-down form — preserve the prefilled
+    // value when editing, infer it from the phone prefix when creating.
+    final country = _isEditing ? _country : countryFromPhone(phone);
 
     if (_isEditing) {
       context.read<RecipientBloc>().add(RecipientUpdated(
@@ -127,8 +115,8 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
             street: _streetCtrl.text.trim().isEmpty
                 ? null
                 : _streetCtrl.text.trim(),
-            city: _cityCtrl.text.trim(),
-            country: _country,
+            city: city.isEmpty ? null : city,
+            country: country,
             notes:
                 _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
             isDefault: _isDefault,
@@ -144,8 +132,8 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
             street: _streetCtrl.text.trim().isEmpty
                 ? null
                 : _streetCtrl.text.trim(),
-            city: _cityCtrl.text.trim(),
-            country: _country,
+            city: city.isEmpty ? null : city,
+            country: country,
             notes:
                 _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
             isDefault: _isDefault,
@@ -186,7 +174,6 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
       },
       builder: (context, state) {
         final isLoading = state.status == RecipientStatus.loading;
-        final tt = Theme.of(context).textTheme;
 
         return DonyPageScaffold(
           title: _isEditing ? 'Modifier le destinataire' : 'Nouveau destinataire',
@@ -206,13 +193,6 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
               ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
               DonyTextField(
-                controller: _relationshipCtrl,
-                label: 'Lien (optionnel)',
-                hint: 'Ex : Mère, Frère, Ami…',
-                onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
-              DonyTextField(
                 controller: _phoneCtrl,
                 label: 'Téléphone (E.164)',
                 hint: '+22177123456',
@@ -222,57 +202,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                   setState(() {});
                 },
                 errorText: _phoneError,
-              ).animate().fadeIn(delay: 80.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
-              DonyTextField(
-                controller: _whatsappCtrl,
-                label: 'WhatsApp (optionnel, E.164)',
-                hint: '+22177123456',
-                keyboardType: TextInputType.phone,
-                onChanged: (v) {
-                  _validateWhatsapp(v);
-                  setState(() {});
-                },
-                errorText: _whatsappError,
-              ).animate().fadeIn(delay: 120.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.xl),
-              Text(
-                'Adresse de livraison',
-                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-              ).animate().fadeIn(delay: 140.ms, duration: 280.ms),
-              const SizedBox(height: DonySpacing.sm),
-              DonyTextField(
-                controller: _streetCtrl,
-                label: 'Rue (optionnel)',
-                hint: '12 rue Blaise Diagne',
-                onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(delay: 160.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
-              DonyTextField(
-                controller: _cityCtrl,
-                label: 'Ville',
-                hint: 'Dakar',
-                onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(delay: 200.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
-              _CountryDropdown(
-                value: _country,
-                onChanged: (v) => setState(() => _country = v ?? _country),
-              ).animate().fadeIn(delay: 240.ms, duration: 280.ms),
-              const SizedBox(height: DonySpacing.base),
-              TextFormField(
-                controller: _notesCtrl,
-                maxLines: 3,
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Notes (optionnel)',
-                  hintText: 'Informations utiles pour la livraison…',
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.md,
-                  ),
-                ),
-              ).animate().fadeIn(delay: 280.ms, duration: 280.ms).slideY(begin: 0.03),
+              ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
               SwitchListTile.adaptive(
                 value: _isDefault,
@@ -280,60 +210,11 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Destinataire par défaut'),
                 subtitle: const Text('Présélectionné lors de tes prochains envois'),
-              ).animate().fadeIn(delay: 320.ms, duration: 280.ms),
+              ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
             ],
           ),
         );
       },
     );
   }
-}
-
-class _CountryDropdown extends StatelessWidget {
-  const _CountryDropdown({required this.value, required this.onChanged});
-
-  final String value;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.outline),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          onChanged: onChanged,
-          style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-          hint: Text(
-            'Pays de destination',
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          items: _kCountries
-              .map((c) => DropdownMenuItem(
-                    value: c.code,
-                    child: Text(c.label),
-                  ))
-              .toList(),
-        ),
-      ),
-    );
-  }
-}
-
-class _Country {
-  const _Country(this.code, this.label);
-  final String code;
-  final String label;
 }

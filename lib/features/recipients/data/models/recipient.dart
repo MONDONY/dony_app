@@ -5,7 +5,7 @@ class Recipient {
   final String phoneE164;
   final String? whatsappE164;
   final String? street;
-  final String city;
+  final String? city;
   final String country;
   final String? notes;
   final bool isDefault;
@@ -17,7 +17,7 @@ class Recipient {
     required this.phoneE164,
     this.whatsappE164,
     this.street,
-    required this.city,
+    this.city,
     required this.country,
     this.notes,
     this.isDefault = false,
@@ -30,7 +30,7 @@ class Recipient {
         phoneE164: json['phoneE164'] as String,
         whatsappE164: json['whatsappE164'] as String?,
         street: json['street'] as String?,
-        city: json['city'] as String,
+        city: json['city'] as String?,
         country: json['country'] as String,
         notes: json['notes'] as String?,
         isDefault: json['isDefault'] as bool? ?? false,
@@ -43,7 +43,7 @@ class Recipient {
         'phoneE164': phoneE164,
         if (whatsappE164 != null) 'whatsappE164': whatsappE164,
         if (street != null) 'street': street,
-        'city': city,
+        if (city != null) 'city': city,
         'country': country,
         if (notes != null) 'notes': notes,
         'isDefault': isDefault,
