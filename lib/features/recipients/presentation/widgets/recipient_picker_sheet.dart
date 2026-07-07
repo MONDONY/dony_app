@@ -348,30 +348,40 @@ class _ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return ListTile(
-      onTap: onTap,
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: cs.primaryContainer,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.lg,
+        vertical: DonySpacing.xs,
+      ),
+      child: ListTile(
+        onTap: onTap,
+        tileColor: cs.primary.withValues(alpha: 0.06),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
-        child: loading
-            ? Padding(
-                padding: const EdgeInsets.all(10),
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: cs.primary,
-                ),
-              )
-            : DonyIcon(icon, size: 18, color: cs.primary),
-      ),
-      title: Text(
-        label,
-        style: tt.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: cs.primary,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+          ),
+          child: loading
+              ? Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: cs.primary,
+                  ),
+                )
+              : DonyIcon(icon, size: 18, color: cs.primary),
+        ),
+        title: Text(
+          label,
+          style: tt.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: cs.primary,
+          ),
         ),
       ),
     );

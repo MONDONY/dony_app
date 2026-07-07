@@ -204,7 +204,7 @@ class _PickerButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Material(
-      color: cs.primaryContainer.withValues(alpha: 0.4),
+      color: cs.primary.withValues(alpha: 0.10),
       borderRadius: BorderRadius.circular(DonyRadius.md),
       child: InkWell(
         onTap: onTap,
@@ -213,10 +213,6 @@ class _PickerButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
             horizontal: DonySpacing.base,
             vertical: DonySpacing.md,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(color: cs.primary.withValues(alpha: 0.4)),
           ),
           child: Row(
             children: [

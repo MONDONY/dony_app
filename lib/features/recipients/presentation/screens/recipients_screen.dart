@@ -99,9 +99,9 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
               if (showSearch)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
+                    DonySpacing.sm,
                     DonySpacing.md,
-                    DonySpacing.lg,
+                    DonySpacing.sm,
                     0,
                   ),
                   child: _SearchField(controller: _searchCtrl),
@@ -116,9 +116,9 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                       )
                     : ListView.separated(
                         padding: EdgeInsets.fromLTRB(
-                          DonySpacing.lg,
+                          DonySpacing.sm,
                           DonySpacing.xl,
-                          DonySpacing.lg,
+                          DonySpacing.sm,
                           MediaQuery.paddingOf(context).bottom + 100,
                         ),
                         itemCount: filtered.length,
@@ -208,9 +208,8 @@ class _RecipientCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: cs.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
       ),
       child: InkWell(
         onTap: () async {
