@@ -3,6 +3,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
+import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 
 class TrackingRepository {
   final ApiClient _apiClient;
@@ -43,6 +44,18 @@ class TrackingRepository {
     final response = await _apiClient.dio.get('/tracking/$bidId/events');
     final list = response.data as List<dynamic>;
     return list.map((e) => TrackingEventModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<TripScanHistoryEntryModel>> getTripScanHistory(
+    String announcementId,
+  ) async {
+    final response = await _apiClient.dio
+        .get('/tracking/announcements/$announcementId/events');
+    final list = response.data as List<dynamic>;
+    return list
+        .map((e) =>
+            TripScanHistoryEntryModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<String> uploadTrackingPhoto(String bidId, String filePath) async {
