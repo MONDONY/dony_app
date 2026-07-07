@@ -27,7 +27,8 @@
 - Ajouter un historique chronologique des scans effectués
 - Afficher le statut hors-ligne/synchro (bandeau conditionnel, visible seulement s'il y a des scans en attente)
 - Supporter plusieurs trajets actifs simultanés (switcher)
-- Retirer les 2 boutons « Scanner QR / Numéro » génériques — remplacés par le scan par étape (rafale) et le scan par ligne colis
+- Retirer le bouton « Scanner QR » générique — remplacé par le scan par étape (rafale) et le scan par ligne colis
+- Garder la saisie manuelle du numéro (`DON-XXXXXX`), mais directement sur le hub (champ inline), pas derrière une navigation
 
 ## Design
 
@@ -38,12 +39,13 @@
 3. **Hero compact** — corridor (`Paris → Bamako`), nombre de colis confirmés. Plus de barre de progression départ dédiée (remplacée par les points de progression par colis, cf. section 5).
 4. **Bandeau synchro** — conditionnel, visible uniquement si la queue offline contient des scans pour un colis du trajet actif. Ex : « ⚠️ 1 scan en attente de synchro ». Tap → ouvre `OfflineQueueBottomSheet.show()` existant (déjà fonctionnel, juste jamais alimenté).
 5. **Scan rapide (3 boutons étape)** — Départ / Transit / Arrivée, inchangé fonctionnellement (route `/tracking/scan/identify` avec `etape` + `focusNumber: false`), juste restylé plus compact.
-6. **Liste des colis** — une ligne dense par colis :
+6. **Champ numéro inline** — `TextField` `DON-XXXXXX` + bouton valider, posé directement sous les boutons étape (pas de navigation pour taper un numéro). Soumission → `TrackingSearchRequested(number)` (même event que l'écran identifier existant). Sur succès, le bid retourné est cherché dans les colis déjà chargés du trajet actif ; l'étape à scanner est déduite automatiquement via `nextRequiredStep(bid)` (même logique que le bouton Scan par ligne) — **pas de sheet de sélection d'étape**, puisque le colis est déjà identifié par son numéro. Navigue directement vers `/tracking/scan/photo` avec `bidId` + étape déduite. Sur échec (numéro inconnu/hors trajets actifs) : message d'erreur inline, même pattern que `TrackingSearchError` dans `scan_identify_screen.dart`.
+7. **Liste des colis** — une ligne dense par colis :
    - Numéro DON + nom destinataire
    - 3 points de progression (Départ/Transit/Arrivée : fait/pas fait)
    - Bouton « Scan » compact en bout de ligne → route vers `/tracking/scan/identify` (écran existant, QR **ou** numéro manuel — `ScanIdentifyScreen`) avec `etape` pré-rempli à la **prochaine étape requise** de CE colis précis (pas de sélection d'étape à faire, mais le scan/numéro reste vérifié — pas de bidId préconnu injecté, pour garder la vérification que le colis physique correspond bien)
    - Tap sur la ligne (hors bouton Scan) → navigue vers la fiche colis existante (`context.push('/bids/${bid.id}')`, réutilise la route déjà utilisée par `TripParcelsSection`)
-7. **Historique des scans** — section en bas, liste chronologique (plus récent en premier) : heure, nom destinataire, badge étape. Alimentée par le nouvel endpoint backend groupé (cf. Backend).
+8. **Historique des scans** — section en bas, liste chronologique (plus récent en premier) : heure, nom destinataire, badge étape. Alimentée par le nouvel endpoint backend groupé (cf. Backend).
 
 ### États
 
@@ -75,11 +77,12 @@
 - `_TripHeroCompact` (remplace `_TripHeroCard`, plus de barre de progression départ)
 - `_SyncBanner` (conditionnel)
 - `_QuickScanSteps` (remplace `_EtapesSection`, retire le texte d'aide sur la photo obligatoire — redondant une fois qu'on voit le badge photo directement dans le flow de scan)
+- `_NumberEntryField` (nouveau) — `TextField` + submit, `StatefulWidget` (contrôleur local). Émet `TrackingSearchRequested(number)` sur `TrackingBloc` (déjà utilisé par `scan_identify_screen.dart`, même bloc partagé). Le hub doit donc être wrappé dans un `BlocProvider<TrackingBloc>`/écouter son state (`BlocListener` sur `TrackingSearchLoaded`/`TrackingSearchError`) pour réagir à la résolution — pattern à copier depuis `_handleSearchLoaded` de `scan_identify_screen.dart`, adapté pour résoudre l'étape via `nextRequiredStep()` sur le bid trouvé dans `bidsByTrip[selectedTripId]` au lieu d'ouvrir `_EtapePickerSheet` (qui est private à `scan_identify_screen.dart`, non réutilisable depuis le hub — de toute façon inutile ici puisque l'étape se déduit automatiquement)
 - `_ColisListSection` (nouveau, remplace le compteur seul)
 - `_ColisRow` (nouveau, ligne dense + bouton Scan)
 - `_ScanHistorySection` (nouveau)
 
-**Supprimés** : `_QuickActionsSection`, `_QuickBtn` (boutons Scanner QR / Numéro génériques)
+**Supprimés** : `_QuickActionsSection`, `_QuickBtn` (bouton Scanner QR générique — le bouton Numéro est remplacé par `_NumberEntryField`, inline plutôt qu'une navigation)
 
 ### Backend
 
@@ -101,5 +104,5 @@
 
 - `scan_hub_selectors_test.dart` (existe probablement déjà pour `selectScannableTrip`/`computeScanProgress` — à vérifier et étendre) : couvrir `selectScannableTrips` (plusieurs trajets, tri, cas 0/1/N trajets)
 - `scan_hub_cubit_test.dart` : `selectTrip()` change l'état sans appel réseau, `load()` gère l'échec du nouvel endpoint historique sans faire échouer tout l'écran (dégrader gracieusement — historique vide + le reste fonctionne)
-- Widget tests `scan_hub_screen_test.dart` : switcher masqué si 1 trajet, visible + filtrant si N, bandeau synchro absent/présent selon la queue, bouton Scan par ligne navigue avec la bonne étape
+- Widget tests `scan_hub_screen_test.dart` : switcher masqué si 1 trajet, visible + filtrant si N, bandeau synchro absent/présent selon la queue, bouton Scan par ligne navigue avec la bonne étape, champ numéro inline → succès navigue direct vers la photo avec l'étape déduite, échec affiche l'erreur inline sans crasher l'écran
 - Backend : test d'intégration nouvel endpoint (ownership, tri, plusieurs bids/trajets)
