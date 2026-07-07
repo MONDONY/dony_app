@@ -1,9 +1,14 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +21,9 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 
 class _MockScanHubCubit extends MockCubit<ScanHubState>
     implements ScanHubCubit {}
+
+class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
+    implements TrackingBloc {}
 
 // Étend directement PathProviderPlatform (pas `PlatformInterface implements`)
 // — le token privé de vérification n'est accessible qu'en héritant réellement
@@ -67,18 +75,30 @@ BidModel _bid(String id, String status, {String? recipientName}) => BidModel(
       updatedAt: DateTime(2026, 1, 1),
     );
 
-GoRouter _router(ScanHubCubit cubit) => GoRouter(
+GoRouter _router(ScanHubCubit cubit, TrackingBloc trackingBloc) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (_, __) => BlocProvider<ScanHubCubit>.value(
-        value: cubit,
+      builder: (_, __) => MultiBlocProvider(
+        providers: [
+          BlocProvider<ScanHubCubit>.value(value: cubit),
+          BlocProvider<TrackingBloc>.value(value: trackingBloc),
+        ],
         child: const ScanHubView(),
       ),
     ),
     GoRoute(
       path: '/tracking/scan/identify',
       builder: (_, __) => const Scaffold(body: Text('identify')),
+    ),
+    GoRoute(
+      path: '/tracking/scan/photo',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return Scaffold(
+          body: Text('photo-${extra['bidId']}-${extra['etape']}'),
+        );
+      },
     ),
     GoRoute(
       path: '/tracking/offline-queue',
@@ -96,8 +116,22 @@ GoRouter _router(ScanHubCubit cubit) => GoRouter(
   ],
 );
 
-Widget _wrap(ScanHubCubit cubit) =>
-    MaterialApp.router(routerConfig: _router(cubit));
+// Un `_MockTrackingBloc()` frais n'a pas de `.state` stubbé — mocktail lève
+// `MissingStubError` au premier accès (cf. `stub()` dans
+// scan_identify_screen_test.dart, qui fait la même chose explicitement à
+// chaque test). Les tests d'avant Task 6 n'ont pas de raison de connaître
+// `TrackingBloc` : on lui donne ici un état par défaut inerte plutôt que de
+// changer chaque site d'appel existant.
+TrackingBloc _defaultTrackingBloc() {
+  final bloc = _MockTrackingBloc();
+  when(() => bloc.state).thenReturn(TrackingInitial());
+  return bloc;
+}
+
+Widget _wrap(ScanHubCubit cubit, [TrackingBloc? trackingBloc]) =>
+    MaterialApp.router(
+      routerConfig: _router(cubit, trackingBloc ?? _defaultTrackingBloc()),
+    );
 
 void main() {
   late _MockScanHubCubit cubit;
@@ -114,6 +148,7 @@ void main() {
     }
     getIt.registerLazySingleton<HiveService>(() => HiveService());
     await getIt<HiveService>().init();
+    registerFallbackValue(TrackingSearchRequested(''));
   });
 
   tearDownAll(() async {
@@ -381,5 +416,89 @@ void main() {
     await tester.pumpWidget(_wrap(cubit));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  group('champ numéro inline', () {
+    testWidgets('affiche le champ et le bouton valider', (tester) async {
+      when(() => cubit.state).thenReturn(loadedState());
+      await tester.pumpWidget(_wrap(cubit));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('number_entry_field')), findsOneWidget);
+    });
+
+    testWidgets(
+      'soumission valide déclenche TrackingSearchRequested',
+      (tester) async {
+        final trackingBloc = _MockTrackingBloc();
+        when(() => trackingBloc.state).thenReturn(TrackingInitial());
+        when(() => cubit.state).thenReturn(loadedState());
+
+        await tester.pumpWidget(_wrap(cubit, trackingBloc));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('number_entry_field')),
+          'TRK000001',
+        );
+        await tester.tap(find.byKey(const Key('number_entry_submit')));
+        await tester.pumpAndSettle();
+
+        verify(() => trackingBloc.add(any(
+              that: isA<TrackingSearchRequested>()
+                  .having((e) => e.number, 'number', 'TRK000001'),
+            ))).called(1);
+      },
+    );
+
+    testWidgets(
+      'succès résout l\'étape via le bid connu et navigue vers la photo',
+      (tester) async {
+        final trackingBloc = _MockTrackingBloc();
+        final states = [
+          TrackingInitial(),
+          TrackingSearchLoading(),
+          TrackingSearchLoaded(const TrackingSearchModel(
+            trackingNumber: 'TRK000001',
+            bidId: 'bid-1',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            currentStep: 'ACCEPTED',
+            stepLabel: 'Voyage confirmé',
+            paymentStatus: 'ESCROW',
+          )),
+        ];
+        whenListen(trackingBloc, Stream.fromIterable(states),
+            initialState: TrackingInitial());
+
+        when(() => cubit.state).thenReturn(loadedState(
+          bidsByTrip: {
+            'trip-1': [_bid('bid-1', 'HANDED_OVER')],
+          },
+        ));
+
+        await tester.pumpWidget(_wrap(cubit, trackingBloc));
+        await tester.pumpAndSettle();
+
+        expect(find.text('photo-bid-1-TRANSIT'), findsOneWidget);
+      },
+    );
+
+    testWidgets('échec affiche une erreur inline', (tester) async {
+      final trackingBloc = _MockTrackingBloc();
+      final states = [
+        TrackingInitial(),
+        TrackingSearchLoading(),
+        TrackingSearchError(const NetworkException('Not found')),
+      ];
+      whenListen(trackingBloc, Stream.fromIterable(states),
+          initialState: TrackingInitial());
+
+      when(() => cubit.state).thenReturn(loadedState());
+
+      await tester.pumpWidget(_wrap(cubit, trackingBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('introuvable'), findsOneWidget);
+    });
   });
 }

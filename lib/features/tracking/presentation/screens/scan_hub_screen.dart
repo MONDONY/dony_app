@@ -8,6 +8,9 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -58,8 +61,11 @@ class ScanHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<ScanHubCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => getIt<ScanHubCubit>()..load()),
+        BlocProvider(create: (_) => getIt<TrackingBloc>()),
+      ],
       child: ScanHubView(onTrackParcel: onTrackParcel),
     );
   }
@@ -130,7 +136,7 @@ class ScanHubView extends StatelessWidget {
                     _SyncBanner(state: state),
                     const _EtapesSection(),
                     const SizedBox(height: DonySpacing.base),
-                    // Task 6 inserts _NumberEntryField here.
+                    const _NumberEntryField(),
                     const SizedBox(height: DonySpacing.xl),
                     _ColisListSection(bids: state.selectedTripBids),
                     const SizedBox(height: DonySpacing.xl),
@@ -692,6 +698,134 @@ class _ScanHistorySection extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+// ── Champ numéro inline ──────────────────────────────────────────────────────
+
+class _NumberEntryField extends StatefulWidget {
+  const _NumberEntryField();
+
+  @override
+  State<_NumberEntryField> createState() => _NumberEntryFieldState();
+}
+
+class _NumberEntryFieldState extends State<_NumberEntryField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit(BuildContext context) {
+    final number = _controller.text.trim();
+    if (number.isEmpty) return;
+    context.read<TrackingBloc>().add(TrackingSearchRequested(number));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return BlocConsumer<TrackingBloc, TrackingState>(
+      listener: (context, state) {
+        if (state is TrackingSearchLoaded) {
+          final scanHubState = context.read<ScanHubCubit>().state;
+          if (scanHubState is! ScanHubLoaded) return;
+          final bid = scanHubState.selectedTripBids
+              .where((b) => b.id == state.result.bidId)
+              .firstOrNull;
+          final etape = bid != null ? nextRequiredStep(bid) : null;
+          if (etape == null) return;
+          context.push<void>(
+            '/tracking/scan/photo',
+            extra: <String, dynamic>{
+              'bidId': state.result.bidId,
+              'etape': etape,
+              'packageLabel': state.result.trackingNumber,
+            },
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is TrackingSearchLoading;
+        // Message fixe plutôt que le texte brut de l'exception — même
+        // convention que ScanIdentifyScreen (scan_identify_screen.dart:303).
+        final error = state is TrackingSearchError
+            ? 'Numéro introuvable. Vérifiez et réessayez.'
+            : null;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: const Key('number_entry_field'),
+                    controller: _controller,
+                    enabled: !isLoading,
+                    textCapitalization: TextCapitalization.characters,
+                    style: tt.bodyMedium?.copyWith(letterSpacing: 1),
+                    decoration: InputDecoration(
+                      hintText: 'DON-XXXXXX',
+                      prefixIcon: const DonyEmoji.parcel(size: 20),
+                      filled: true,
+                      fillColor: cs.surface,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.md,
+                        vertical: DonySpacing.sm,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        borderSide: BorderSide(color: cs.outline),
+                      ),
+                    ),
+                    onSubmitted: (_) => _submit(context),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                DonyPressable(
+                  key: const Key('number_entry_submit'),
+                  // DonyPressable.onTap est non-nullable (contrairement au
+                  // pattern `onPressed: null` des boutons standards) — on
+                  // neutralise l'appel pendant le chargement plutôt que de
+                  // passer null.
+                  onTap: isLoading ? () {} : () => _submit(context),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
+                    child: isLoading
+                        ? Padding(
+                            padding: const EdgeInsets.all(DonySpacing.sm),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.onPrimary,
+                            ),
+                          )
+                        : Icon(Icons.arrow_forward_rounded, color: cs.onPrimary),
+                  ),
+                ),
+              ],
+            ),
+            if (error != null) ...[
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                error,
+                style: tt.bodySmall?.copyWith(color: cs.error),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
