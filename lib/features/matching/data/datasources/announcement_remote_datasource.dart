@@ -65,16 +65,35 @@ class AnnouncementRemoteDatasource {
   }
 
   Future<({List<AnnouncementModel> announcements, int totalElements})>
-      getMyAnnouncements({int page = 0}) async {
+      getMyAnnouncements() async {
+    const pageSize = 50;
+    // On charge TOUTES les pages : la liste ET les compteurs de filtres
+    // (Tous/Actifs/Terminés/Annulés, calculés côté client) doivent refléter
+    // l'intégralité des trajets, pas seulement les 50 premiers. Cas courant
+    // (≤ 50 trajets) = une seule requête.
+    final first = await _fetchMyAnnouncementsPage(0, pageSize);
+    final all = [...first.announcements];
+    final total = first.totalElements;
+    final totalPages = (total / pageSize).ceil();
+    for (var page = 1; page < totalPages; page++) {
+      final next = await _fetchMyAnnouncementsPage(page, pageSize);
+      all.addAll(next.announcements);
+    }
+    return (announcements: all, totalElements: total);
+  }
+
+  Future<({List<AnnouncementModel> announcements, int totalElements})>
+      _fetchMyAnnouncementsPage(int page, int size) async {
     final response = await _apiClient.dio.get(
       '/announcements/my',
-      queryParameters: {'page': page, 'size': 50},
+      queryParameters: {'page': page, 'size': size},
     );
     final data = response.data as Map<String, dynamic>;
     final announcements = (data['content'] as List)
         .map((json) => AnnouncementModel.fromJson(json as Map<String, dynamic>))
         .toList();
-    final totalElements = (data['totalElements'] as num?)?.toInt() ?? announcements.length;
+    final totalElements =
+        (data['totalElements'] as num?)?.toInt() ?? announcements.length;
     return (announcements: announcements, totalElements: totalElements);
   }
 
