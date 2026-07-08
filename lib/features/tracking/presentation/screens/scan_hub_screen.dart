@@ -219,17 +219,14 @@ class _TripSwitcher extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return SizedBox(
+    // Pas de scroll horizontal : les pilules passent à la ligne (Wrap).
+    return Wrap(
       key: const Key('trip_switcher'),
-      height: 44,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: state.trips.length,
-        separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.sm),
-        itemBuilder: (context, i) {
-          final trip = state.trips[i];
-          final active = trip.id == state.selectedTripId;
-          return DonyPressable(
+      spacing: DonySpacing.sm,
+      runSpacing: DonySpacing.sm,
+      children: [
+        for (final trip in state.trips)
+          DonyPressable(
             onTap: () => context.read<ScanHubCubit>().selectTrip(trip.id),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
@@ -239,9 +236,11 @@ class _TripSwitcher extends StatelessWidget {
                 vertical: DonySpacing.sm,
               ),
               decoration: BoxDecoration(
-                color: active ? cs.primary : cs.surface,
+                color: trip.id == state.selectedTripId
+                    ? cs.primary
+                    : cs.surface,
                 borderRadius: BorderRadius.circular(DonyRadius.full),
-                boxShadow: active
+                boxShadow: trip.id == state.selectedTripId
                     ? [
                         BoxShadow(
                           color: cs.primary.withValues(alpha: 0.28),
@@ -255,14 +254,15 @@ class _TripSwitcher extends StatelessWidget {
                 '${trip.departureCity} → ${trip.arrivalCity} · '
                 '${_formatDate(trip.departureDate)}',
                 style: tt.labelMedium?.copyWith(
-                  color: active ? cs.onPrimary : cs.onSurface,
+                  color: trip.id == state.selectedTripId
+                      ? cs.onPrimary
+                      : cs.onSurface,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+      ],
     );
   }
 }
