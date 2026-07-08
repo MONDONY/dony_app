@@ -220,16 +220,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('trip_switcher')), findsOneWidget);
 
-      // Les deux pastilles ET le hero affichent le corridor ; on cible la
-      // dernière pastille DANS le switcher (trip-b, inactive) — pas le hero.
-      await tester.tap(
-        find
-            .descendant(
-              of: find.byKey(const Key('trip_switcher')),
-              matching: find.textContaining('Paris → Dakar'),
-            )
-            .last,
-      );
+      // Le bandeau « Changer de trajet » ouvre le volet ; on y choisit trip-b.
+      await tester.tap(find.byKey(const Key('trip_switcher')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('trip_option_trip-b')));
       await tester.pumpAndSettle();
       verify(() => cubit.selectTrip('trip-b')).called(1);
     });

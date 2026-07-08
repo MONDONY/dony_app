@@ -142,11 +142,6 @@ class ScanHubView extends StatelessWidget {
                           onTap: onTrackParcel!,
                         ),
                       ),
-                    if (state.trips.length > 1)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: DonySpacing.base),
-                        child: _TripSwitcher(state: state),
-                      ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: DonySpacing.base),
                       child: AnimatedSwitcher(
@@ -156,7 +151,7 @@ class ScanHubView extends StatelessWidget {
                         transitionBuilder: _fadeSlide,
                         child: _TripHeroCompact(
                           key: tripKey,
-                          trip: state.selectedTrip,
+                          state: state,
                         ),
                       ),
                     ),
@@ -208,77 +203,36 @@ String _formatDate(DateTime date) {
   return DateFormat('d MMMM yyyy', 'fr').format(date);
 }
 
-// ── Switcher multi-trajet ────────────────────────────────────────────────────
-
-class _TripSwitcher extends StatelessWidget {
-  const _TripSwitcher({required this.state});
-  final ScanHubLoaded state;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    // Pas de scroll horizontal : les pilules passent à la ligne (Wrap).
-    return Wrap(
-      key: const Key('trip_switcher'),
-      spacing: DonySpacing.sm,
-      runSpacing: DonySpacing.sm,
-      children: [
-        for (final trip in state.trips)
-          DonyPressable(
-            onTap: () => context.read<ScanHubCubit>().selectTrip(trip.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md,
-                vertical: DonySpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: trip.id == state.selectedTripId
-                    ? cs.primary
-                    : cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.full),
-                boxShadow: trip.id == state.selectedTripId
-                    ? [
-                        BoxShadow(
-                          color: cs.primary.withValues(alpha: 0.28),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : _softShadow(),
-              ),
-              child: Text(
-                '${trip.departureCity} → ${trip.arrivalCity} · '
-                '${_formatDate(trip.departureDate)}',
-                style: tt.labelMedium?.copyWith(
-                  color: trip.id == state.selectedTripId
-                      ? cs.onPrimary
-                      : cs.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// ── Hero trajet compact ──────────────────────────────────────────────────────
+// ── Hero trajet compact = sélecteur de trajet ────────────────────────────────
 
 class _TripHeroCompact extends StatelessWidget {
-  const _TripHeroCompact({super.key, required this.trip});
-  final AnnouncementModel trip;
+  const _TripHeroCompact({super.key, required this.state});
+  final ScanHubLoaded state;
+
+  void _openPicker(BuildContext context) {
+    // La feuille s'ouvre sur le root navigator (hors provider) → on capture le
+    // cubit ici, où il reste accessible.
+    final cubit = context.read<ScanHubCubit>();
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Choisir un trajet',
+      child: _TripPicker(
+        trips: state.trips,
+        selectedTripId: state.selectedTripId,
+        onSelect: cubit.selectTrip,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final trip = state.selectedTrip;
+    final multi = state.trips.length > 1;
 
-    return Container(
+    final card = Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
@@ -294,29 +248,170 @@ class _TripHeroCompact extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            '${trip.departureCity} → ${trip.arrivalCity}',
-            style: tt.headlineMedium?.copyWith(
-              color: DonyColors.neutral0,
-              fontWeight: FontWeight.w800,
+          Padding(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${trip.departureCity} → ${trip.arrivalCity}',
+                  style: tt.headlineMedium?.copyWith(
+                    color: DonyColors.neutral0,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  _formatDate(trip.departureDate),
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.neutral0.withValues(alpha: 0.75),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            _formatDate(trip.departureDate),
-            style: tt.bodySmall?.copyWith(
-              color: DonyColors.neutral0.withValues(alpha: 0.75),
+          // Bandeau explicite « Changer de trajet » (seulement si plusieurs).
+          if (multi)
+            Container(
+              key: const Key('trip_switcher'),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.md,
+              ),
+              color: DonyColors.neutral0.withValues(alpha: 0.16),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.swap_vert_rounded,
+                    color: DonyColors.neutral0,
+                    size: 18,
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Text(
+                    'Changer de trajet',
+                    style: tt.labelLarge?.copyWith(
+                      color: DonyColors.neutral0,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${state.trips.length}',
+                    style: tt.labelLarge?.copyWith(
+                      color: DonyColors.neutral0.withValues(alpha: 0.9),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: DonyColors.neutral0,
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
         ],
       ),
+    );
+
+    if (!multi) return card;
+    return DonyPressable(onTap: () => _openPicker(context), child: card);
+  }
+}
+
+// ── Sélecteur de trajet (volet) ──────────────────────────────────────────────
+
+class _TripPicker extends StatelessWidget {
+  const _TripPicker({
+    required this.trips,
+    required this.selectedTripId,
+    required this.onSelect,
+  });
+
+  final List<AnnouncementModel> trips;
+  final String selectedTripId;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final trip in trips)
+          Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.xs),
+            child: DonyPressable(
+              key: Key('trip_option_${trip.id}'),
+              onTap: () {
+                onSelect(trip.id);
+                Navigator.of(context).pop();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.md,
+                  vertical: DonySpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: trip.id == selectedTripId
+                      ? cs.primary.withValues(alpha: 0.10)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                      ),
+                      child: Icon(
+                        Icons.flight_rounded,
+                        size: 18,
+                        color: cs.primary,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${trip.departureCity} → ${trip.arrivalCity}',
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            _formatDate(trip.departureDate),
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (trip.id == selectedTripId)
+                      Icon(Icons.check_rounded, color: cs.primary, size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
