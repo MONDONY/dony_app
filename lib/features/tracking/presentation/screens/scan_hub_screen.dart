@@ -1,14 +1,34 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
+import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+/// Ombre douce commune — remplace les bordures dures sur les cartes du hub
+/// (principe « ombres > bordures » : rendu plus fluide, moins chargé).
+List<BoxShadow> _softShadow({double strength = 1}) => [
+      BoxShadow(
+        color: const Color(0xFF0D1B2A).withValues(alpha: 0.05 * strength),
+        blurRadius: 3,
+        offset: const Offset(0, 1),
+      ),
+      BoxShadow(
+        color: const Color(0xFF0D1B2A).withValues(alpha: 0.06 * strength),
+        blurRadius: 14,
+        offset: const Offset(0, 5),
+      ),
+    ];
 
 class _EtapeInfo {
   final String code;
@@ -97,11 +117,10 @@ class ScanHubView extends StatelessWidget {
               );
             case ScanHubEmpty():
               return const _NoTripState();
-            case ScanHubLoaded(:final trip, :final progress):
-              // Animation d'entrée jouée une fois : ScanHubLoaded est un état
-              // terminal (le cubit charge une seule fois, pas de refresh). Si un
-              // rafraîchissement de progression est ajouté un jour, sortir le
-              // `.animate()` du sous-arbre piloté par l'état pour éviter le replay.
+            case ScanHubLoaded():
+              // Clé par trajet : au changement de trajet, hero + liste colis
+              // font un fondu-glissé (AnimatedSwitcher) au lieu d'un swap sec.
+              final tripKey = ValueKey<String>(state.selectedTripId);
               return SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(
                   DonySpacing.lg,
@@ -111,31 +130,52 @@ class ScanHubView extends StatelessWidget {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children:
-                      [
-                            if (onTrackParcel != null) ...[
-                              SecondaryActivityEntry(
-                                iconAsset: 'package',
-                                label: 'Suivre un colis',
-                                onTap: onTrackParcel!,
-                              ),
-                              const SizedBox(height: DonySpacing.lg),
-                            ],
-                            _TripHeroCard(
-                              corridor:
-                                  '${trip.departureCity} → ${trip.arrivalCity}',
-                              dateLabel: _formatDate(trip.departureDate),
-                              confirmedColis: progress.confirmedColis,
-                              scannedDepart: progress.scannedDepart,
-                            ),
-                            const SizedBox(height: DonySpacing.xl),
-                            const _EtapesSection(),
-                            const SizedBox(height: DonySpacing.xl),
-                            const _QuickActionsSection(),
-                          ]
-                          .animate(interval: 60.ms)
-                          .fadeIn(duration: 280.ms)
-                          .slideY(begin: 0.06, curve: Curves.easeOutCubic),
+                  // Entrée en cascade : chaque section apparaît en fondu-glissé,
+                  // décalée de 55 ms (joue une fois, structure stable).
+                  children: <Widget>[
+                    if (onTrackParcel != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+                        child: SecondaryActivityEntry(
+                          iconAsset: 'package',
+                          label: 'Suivre un colis',
+                          onTap: onTrackParcel!,
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: DonySpacing.base),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 240),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: _fadeSlide,
+                        child: _TripHeroCompact(
+                          key: tripKey,
+                          state: state,
+                        ),
+                      ),
+                    ),
+                    _SyncBanner(state: state),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: DonySpacing.xl),
+                      child: _EtapesSection(),
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 240),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: _fadeSlide,
+                      child: Padding(
+                        key: tripKey,
+                        padding: const EdgeInsets.only(bottom: DonySpacing.xl),
+                        child: _ColisListSection(bids: state.selectedTripBids),
+                      ),
+                    ),
+                    _ScanHistorySection(history: state.scanHistory),
+                  ]
+                      .animate(interval: 55.ms)
+                      .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+                      .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
                 ),
               );
           }
@@ -145,30 +185,54 @@ class ScanHubView extends StatelessWidget {
   }
 }
 
+/// Transition fondu + léger glissé pour AnimatedSwitcher (changement de trajet).
+Widget _fadeSlide(Widget child, Animation<double> animation) {
+  return FadeTransition(
+    opacity: animation,
+    child: SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.04),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    ),
+  );
+}
+
 String _formatDate(DateTime date) {
   return DateFormat('d MMMM yyyy', 'fr').format(date);
 }
 
-class _TripHeroCard extends StatelessWidget {
-  const _TripHeroCard({
-    required this.corridor,
-    required this.dateLabel,
-    required this.confirmedColis,
-    required this.scannedDepart,
-  });
+// ── Hero trajet compact = sélecteur de trajet ────────────────────────────────
 
-  final String corridor;
-  final String dateLabel;
-  final int confirmedColis;
-  final int scannedDepart;
+class _TripHeroCompact extends StatelessWidget {
+  const _TripHeroCompact({super.key, required this.state});
+  final ScanHubLoaded state;
+
+  void _openPicker(BuildContext context) {
+    // La feuille s'ouvre sur le root navigator (hors provider) → on capture le
+    // cubit ici, où il reste accessible.
+    final cubit = context.read<ScanHubCubit>();
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Choisir un trajet',
+      child: _TripPicker(
+        trips: state.trips,
+        selectedTripId: state.selectedTripId,
+        onSelect: cubit.selectTrip,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final progress = confirmedColis == 0 ? 0.0 : scannedDepart / confirmedColis;
+    final trip = state.selectedTrip;
+    final multi = state.trips.length > 1;
 
-    return Container(
+    final card = Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
@@ -176,84 +240,243 @@ class _TripHeroCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(DonyRadius.card),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'TRAJET ACTIF',
-            style: tt.labelSmall?.copyWith(
-              color: DonyColors.neutral0.withValues(alpha: 0.7),
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            corridor,
-            style: tt.headlineMedium?.copyWith(
-              color: DonyColors.neutral0,
-              fontWeight: FontWeight.w800,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            '$dateLabel · $confirmedColis colis confirmés',
-            style: tt.bodySmall?.copyWith(
-              color: DonyColors.neutral0.withValues(alpha: 0.75),
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: DonySpacing.md),
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.sm),
-            decoration: BoxDecoration(
-              color: DonyColors.neutral0.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
+          Padding(
+            padding: const EdgeInsets.all(DonySpacing.base),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Scans départ',
-                      style: tt.labelSmall?.copyWith(
-                        color: DonyColors.neutral0.withValues(alpha: 0.85),
-                      ),
-                    ),
-                    Text(
-                      '$scannedDepart / $confirmedColis',
-                      style: tt.labelSmall?.copyWith(
-                        color: DonyColors.neutral0,
-                        fontWeight: FontWeight.w800,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: DonyColors.neutral0.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(cs.success),
-                    minHeight: 4,
+                Text(
+                  '${trip.departureCity} → ${trip.arrivalCity}',
+                  style: tt.headlineMedium?.copyWith(
+                    color: DonyColors.neutral0,
+                    fontWeight: FontWeight.w800,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  _formatDate(trip.departureDate),
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.neutral0.withValues(alpha: 0.75),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+          // Bandeau explicite « Changer de trajet » (seulement si plusieurs).
+          if (multi)
+            Container(
+              key: const Key('trip_switcher'),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.md,
+              ),
+              color: DonyColors.neutral0.withValues(alpha: 0.16),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.swap_vert_rounded,
+                    color: DonyColors.neutral0,
+                    size: 18,
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Text(
+                    'Changer de trajet',
+                    style: tt.labelLarge?.copyWith(
+                      color: DonyColors.neutral0,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${state.trips.length}',
+                    style: tt.labelLarge?.copyWith(
+                      color: DonyColors.neutral0.withValues(alpha: 0.9),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: DonyColors.neutral0,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
         ],
+      ),
+    );
+
+    if (!multi) return card;
+    return DonyPressable(onTap: () => _openPicker(context), child: card);
+  }
+}
+
+// ── Sélecteur de trajet (volet) ──────────────────────────────────────────────
+
+class _TripPicker extends StatelessWidget {
+  const _TripPicker({
+    required this.trips,
+    required this.selectedTripId,
+    required this.onSelect,
+  });
+
+  final List<AnnouncementModel> trips;
+  final String selectedTripId;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final trip in trips)
+          Padding(
+            padding: const EdgeInsets.only(bottom: DonySpacing.xs),
+            child: DonyPressable(
+              key: Key('trip_option_${trip.id}'),
+              onTap: () {
+                onSelect(trip.id);
+                Navigator.of(context).pop();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.md,
+                  vertical: DonySpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: trip.id == selectedTripId
+                      ? cs.primary.withValues(alpha: 0.10)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                      ),
+                      child: Icon(
+                        Icons.flight_rounded,
+                        size: 18,
+                        color: cs.primary,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${trip.departureCity} → ${trip.arrivalCity}',
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            _formatDate(trip.departureDate),
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (trip.id == selectedTripId)
+                      Icon(Icons.check_rounded, color: cs.primary, size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Bandeau synchro ──────────────────────────────────────────────────────────
+
+class _SyncBanner extends StatelessWidget {
+  const _SyncBanner({required this.state});
+  final ScanHubLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    final bidIds = state.selectedTripBids.map((b) => b.id).toSet();
+    final queue = getIt<HiveService>().offlineQueue;
+    final pendingCount = queue.values.where((raw) {
+      final entry = Map<String, dynamic>.from(raw);
+      return bidIds.contains(entry['bidId']);
+    }).length;
+
+    if (pendingCount == 0) {
+      return const SizedBox.shrink();
+    }
+
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.base),
+      child: DonyPressable(
+        key: const Key('sync_banner'),
+        onTap: () => context.push('/tracking/offline-queue'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: cs.warningLight,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            boxShadow: _softShadow(),
+          ),
+          child: Row(
+            children: [
+              DonyIcon('triangle-alert', color: cs.warning, size: 16),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  '$pendingCount scan${pendingCount > 1 ? 's' : ''} en '
+                  'attente de synchro',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.warning,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              DonyIcon('chevron-right', color: cs.warning, size: 16),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
+
+// ── Empty / error states ─────────────────────────────────────────────────────
 
 class _NoTripState extends StatelessWidget {
   const _NoTripState();
@@ -290,6 +513,8 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
+// ── Scan rapide (3 boutons étape) ────────────────────────────────────────────
+
 class _EtapesSection extends StatelessWidget {
   const _EtapesSection();
 
@@ -302,34 +527,21 @@ class _EtapesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'CHOISIR UNE ÉTAPE',
+          'SCAN RAPIDE',
           style: tt.labelSmall?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 1,
           ),
         ),
         const SizedBox(height: DonySpacing.sm),
+        // 3 cartes séparées en ombre douce (pas de cadre bordé unique).
         Row(
-          children: _etapes
-              .map(
-                (e) => Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: e.code == 'ARRIVEE' ? 0 : DonySpacing.sm,
-                    ),
-                    child: _EtapeChip(etape: e),
-                  ),
-                ),
-              )
-              .toList(),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        Text(
-          'Photo obligatoire au départ et à l\'arrivée. Au transit, la photo est facultative.',
-          style: tt.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            height: 1.4,
-          ),
+          children: [
+            for (var i = 0; i < _etapes.length; i++) ...[
+              if (i > 0) const SizedBox(width: DonySpacing.sm),
+              Expanded(child: _EtapeChip(etape: _etapes[i])),
+            ],
+          ],
         ),
       ],
     );
@@ -350,7 +562,12 @@ class _EtapeChip extends StatelessWidget {
         '/tracking/scan/identify',
         extra: <String, dynamic>{'etape': etape.code, 'focusNumber': false},
       ),
-      child: DonyCard(
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          boxShadow: _softShadow(),
+        ),
         padding: const EdgeInsets.symmetric(
           vertical: DonySpacing.md,
           horizontal: DonySpacing.sm,
@@ -376,9 +593,6 @@ class _EtapeChip extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: DonySpacing.xs),
-            // Slot de hauteur fixe, pleine largeur : badge photo (départ/arrivée)
-            // ou vide (transit), pour garder les 3 chips alignés. FittedBox =
-            // garantie zéro overflow même sur écran étroit.
             SizedBox(
               height: 20,
               width: double.infinity,
@@ -393,7 +607,6 @@ class _EtapeChip extends StatelessWidget {
   }
 }
 
-/// Badge compact « 📷 Photo » — exigence photo de l'étape.
 class _PhotoBadge extends StatelessWidget {
   const _PhotoBadge();
 
@@ -429,8 +642,11 @@ class _PhotoBadge extends StatelessWidget {
   }
 }
 
-class _QuickActionsSection extends StatelessWidget {
-  const _QuickActionsSection();
+// ── Liste des colis ──────────────────────────────────────────────────────────
+
+class _ColisListSection extends StatelessWidget {
+  const _ColisListSection({required this.bids});
+  final List<BidModel> bids;
 
   @override
   Widget build(BuildContext context) {
@@ -441,89 +657,226 @@ class _QuickActionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'OU IDENTIFIER DIRECTEMENT',
+          'COLIS (${bids.length})',
           style: tt.labelSmall?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 1,
           ),
         ),
         const SizedBox(height: DonySpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: _QuickBtn(
-                iconAsset: 'scan-line',
-                label: 'Scanner QR',
-                subtitle: 'Caméra directe',
-                onTap: () => context.push('/tracking/scan'),
-              ),
+        if (bids.isEmpty)
+          Text(
+            'Aucun colis confirmé sur ce trajet pour l\'instant.',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          )
+        else
+          ...bids.map(
+            (bid) => Padding(
+              padding: const EdgeInsets.only(bottom: DonySpacing.xs),
+              child: _ColisRow(bid: bid),
             ),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(
-              child: _QuickBtn(
-                iconAsset: 'grid-3x3',
-                label: 'Numéro',
-                subtitle: 'DON-XXXXXX',
-                onTap: () => context.push(
-                  '/tracking/scan/identify',
-                  extra: <String, dynamic>{'etape': null, 'focusNumber': true},
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
       ],
     );
   }
 }
 
-class _QuickBtn extends StatelessWidget {
-  const _QuickBtn({
-    required this.iconAsset,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-  });
-  final String iconAsset;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
+class _ColisRow extends StatelessWidget {
+  const _ColisRow({required this.bid});
+  final BidModel bid;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final progress = colisStepProgress(bid);
+    final nextStep = nextRequiredStep(bid);
+    final label = bid.recipientName ?? bid.id;
+
+    return DonyPressable(
+      onTap: () => context.push('/bids/${bid.id}'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          boxShadow: _softShadow(),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: DonySpacing.xxs),
+                  Row(
+                    children: [
+                      _StepDot(done: progress.depart),
+                      const SizedBox(width: DonySpacing.xxs),
+                      _StepDot(done: progress.transit),
+                      const SizedBox(width: DonySpacing.xxs),
+                      _StepDot(done: progress.arrivee),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (nextStep != null)
+              DonyPressable(
+                onTap: () => context.push(
+                  '/tracking/scan/identify',
+                  extra: <String, dynamic>{
+                    'etape': nextStep,
+                    'focusNumber': false,
+                  },
+                ),
+                // Le pill visuel reste compact ; on élargit uniquement la
+                // zone tactile à 44×44 pt min (HIG) via ce ConstrainedBox.
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.xxs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                      ),
+                      child: Text(
+                        'Scan',
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepDot extends StatelessWidget {
+  const _StepDot({required this.done});
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: Key(done ? 'step_dot_done' : 'step_dot_todo'),
+      width: 18,
+      height: 4,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cs.outline.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      // Le segment « fait » se remplit de gauche à droite (effet progression).
+      child: done
+          ? Container(color: cs.success).animate().scaleX(
+                begin: 0,
+                end: 1,
+                alignment: Alignment.centerLeft,
+                duration: 420.ms,
+                curve: Curves.easeOutCubic,
+              )
+          : null,
+    );
+  }
+}
+
+// ── Historique des scans ─────────────────────────────────────────────────────
+
+class _ScanHistorySection extends StatelessWidget {
+  const _ScanHistorySection({required this.history});
+  final List<TripScanHistoryEntryModel> history;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return DonyPressable(
-      onTap: onTap,
-      child: DonyCard(
-        padding: const EdgeInsets.all(DonySpacing.md),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(DonySpacing.sm),
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-              ),
-              child: DonyIcon(iconAsset, color: cs.primary, size: 20),
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w700),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              subtitle,
-              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'HISTORIQUE DES SCANS',
+          style: tt.labelSmall?.copyWith(
+            color: cs.onSurfaceVariant,
+            letterSpacing: 1,
+          ),
         ),
-      ),
+        const SizedBox(height: DonySpacing.sm),
+        if (history.isEmpty)
+          Text(
+            'Aucun scan pour l\'instant',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          )
+        else
+          ...history.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: DonySpacing.xs),
+              child: Row(
+                children: [
+                  Text(
+                    DateFormat('HH:mm').format(entry.scannedAt),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: Text(
+                      entry.recipientName ?? entry.donNumber ?? '—',
+                      style: tt.bodySmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm,
+                      vertical: DonySpacing.xxs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.successLight,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Text(
+                      switch (entry.eventType) {
+                        'DEPART' => 'Départ',
+                        'TRANSIT' => 'Transit',
+                        'ARRIVEE' => 'Arrivée',
+                        _ => entry.eventType,
+                      },
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.success,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

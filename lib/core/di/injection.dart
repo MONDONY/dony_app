@@ -580,6 +580,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnnouncementRepository>(),
       getIt<BidRepository>(),
       getIt<AnalyticsService>(),
+      getIt<TrackingRepository>(),
     ),
   );
 
