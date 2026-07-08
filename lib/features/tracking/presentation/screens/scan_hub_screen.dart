@@ -15,6 +15,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+/// Ombre douce commune — remplace les bordures dures sur les cartes du hub
+/// (principe « ombres > bordures » : rendu plus fluide, moins chargé).
+List<BoxShadow> _softShadow({double strength = 1}) => [
+      BoxShadow(
+        color: const Color(0xFF0D1B2A).withValues(alpha: 0.05 * strength),
+        blurRadius: 3,
+        offset: const Offset(0, 1),
+      ),
+      BoxShadow(
+        color: const Color(0xFF0D1B2A).withValues(alpha: 0.06 * strength),
+        blurRadius: 14,
+        offset: const Offset(0, 5),
+      ),
+    ];
+
 class _EtapeInfo {
   final String code;
   final String label;
@@ -103,6 +118,9 @@ class ScanHubView extends StatelessWidget {
             case ScanHubEmpty():
               return const _NoTripState();
             case ScanHubLoaded():
+              // Clé par trajet : au changement de trajet, hero + liste colis
+              // font un fondu-glissé (AnimatedSwitcher) au lieu d'un swap sec.
+              final tripKey = ValueKey<String>(state.selectedTripId);
               return SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(
                   DonySpacing.lg,
@@ -112,28 +130,57 @@ class ScanHubView extends StatelessWidget {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (onTrackParcel != null) ...[
-                      SecondaryActivityEntry(
-                        iconAsset: 'package',
-                        label: 'Suivre un colis',
-                        onTap: onTrackParcel!,
+                  // Entrée en cascade : chaque section apparaît en fondu-glissé,
+                  // décalée de 55 ms (joue une fois, structure stable).
+                  children: <Widget>[
+                    if (onTrackParcel != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+                        child: SecondaryActivityEntry(
+                          iconAsset: 'package',
+                          label: 'Suivre un colis',
+                          onTap: onTrackParcel!,
+                        ),
                       ),
-                      const SizedBox(height: DonySpacing.lg),
-                    ],
-                    if (state.trips.length > 1) ...[
-                      _TripSwitcher(state: state),
-                      const SizedBox(height: DonySpacing.base),
-                    ],
-                    _TripHeroCompact(trip: state.selectedTrip),
-                    const SizedBox(height: DonySpacing.base),
+                    if (state.trips.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: DonySpacing.base),
+                        child: _TripSwitcher(state: state),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: DonySpacing.base),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 240),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: _fadeSlide,
+                        child: _TripHeroCompact(
+                          key: tripKey,
+                          trip: state.selectedTrip,
+                        ),
+                      ),
+                    ),
                     _SyncBanner(state: state),
-                    const _EtapesSection(),
-                    const SizedBox(height: DonySpacing.xl),
-                    _ColisListSection(bids: state.selectedTripBids),
-                    const SizedBox(height: DonySpacing.xl),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: DonySpacing.xl),
+                      child: _EtapesSection(),
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 240),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: _fadeSlide,
+                      child: Padding(
+                        key: tripKey,
+                        padding: const EdgeInsets.only(bottom: DonySpacing.xl),
+                        child: _ColisListSection(bids: state.selectedTripBids),
+                      ),
+                    ),
                     _ScanHistorySection(history: state.scanHistory),
-                  ],
+                  ]
+                      .animate(interval: 55.ms)
+                      .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+                      .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
                 ),
               );
           }
@@ -141,6 +188,20 @@ class ScanHubView extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Transition fondu + léger glissé pour AnimatedSwitcher (changement de trajet).
+Widget _fadeSlide(Widget child, Animation<double> animation) {
+  return FadeTransition(
+    opacity: animation,
+    child: SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.04),
+        end: Offset.zero,
+      ).animate(animation),
+      child: child,
+    ),
+  );
 }
 
 String _formatDate(DateTime date) {
@@ -170,7 +231,9 @@ class _TripSwitcher extends StatelessWidget {
           final active = trip.id == state.selectedTripId;
           return DonyPressable(
             onTap: () => context.read<ScanHubCubit>().selectTrip(trip.id),
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
               padding: const EdgeInsets.symmetric(
                 horizontal: DonySpacing.md,
                 vertical: DonySpacing.sm,
@@ -178,9 +241,15 @@ class _TripSwitcher extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active ? cs.primary : cs.surface,
                 borderRadius: BorderRadius.circular(DonyRadius.full),
-                border: Border.all(
-                  color: active ? cs.primary : cs.outline,
-                ),
+                boxShadow: active
+                    ? [
+                        BoxShadow(
+                          color: cs.primary.withValues(alpha: 0.28),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : _softShadow(),
               ),
               child: Text(
                 '${trip.departureCity} → ${trip.arrivalCity} · '
@@ -201,7 +270,7 @@ class _TripSwitcher extends StatelessWidget {
 // ── Hero trajet compact ──────────────────────────────────────────────────────
 
 class _TripHeroCompact extends StatelessWidget {
-  const _TripHeroCompact({required this.trip});
+  const _TripHeroCompact({super.key, required this.trip});
   final AnnouncementModel trip;
 
   @override
@@ -217,6 +286,13 @@ class _TripHeroCompact extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(DonyRadius.card),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
@@ -241,7 +317,7 @@ class _TripHeroCompact extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.04);
+    );
   }
 }
 
@@ -280,7 +356,7 @@ class _SyncBanner extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.warningLight,
             borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(color: cs.warning),
+            boxShadow: _softShadow(),
           ),
           child: Row(
             children: [
@@ -363,21 +439,14 @@ class _EtapesSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: DonySpacing.sm),
-        // Un seul cadre pour les 3 étapes (segments), séparés par un fin trait
-        // — plutôt que 3 cartes bordées distinctes.
-        DonyCard(
-          padding: EdgeInsets.zero,
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                for (var i = 0; i < _etapes.length; i++) ...[
-                  if (i > 0)
-                    VerticalDivider(width: 1, thickness: 1, color: cs.outline),
-                  Expanded(child: _EtapeChip(etape: _etapes[i])),
-                ],
-              ],
-            ),
-          ),
+        // 3 cartes séparées en ombre douce (pas de cadre bordé unique).
+        Row(
+          children: [
+            for (var i = 0; i < _etapes.length; i++) ...[
+              if (i > 0) const SizedBox(width: DonySpacing.sm),
+              Expanded(child: _EtapeChip(etape: _etapes[i])),
+            ],
+          ],
         ),
       ],
     );
@@ -398,7 +467,12 @@ class _EtapeChip extends StatelessWidget {
         '/tracking/scan/identify',
         extra: <String, dynamic>{'etape': etape.code, 'focusNumber': false},
       ),
-      child: Padding(
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          boxShadow: _softShadow(),
+        ),
         padding: const EdgeInsets.symmetric(
           vertical: DonySpacing.md,
           horizontal: DonySpacing.sm,
@@ -526,7 +600,12 @@ class _ColisRow extends StatelessWidget {
 
     return DonyPressable(
       onTap: () => context.push('/bids/${bid.id}'),
-      child: DonyCard(
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          boxShadow: _softShadow(),
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.md,
           vertical: DonySpacing.sm,
@@ -611,10 +690,21 @@ class _StepDot extends StatelessWidget {
       key: Key(done ? 'step_dot_done' : 'step_dot_todo'),
       width: 18,
       height: 4,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: done ? cs.success : cs.outline.withValues(alpha: 0.4),
+        color: cs.outline.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
+      // Le segment « fait » se remplit de gauche à droite (effet progression).
+      child: done
+          ? Container(color: cs.success).animate().scaleX(
+                begin: 0,
+                end: 1,
+                alignment: Alignment.centerLeft,
+                duration: 420.ms,
+                curve: Curves.easeOutCubic,
+              )
+          : null,
     );
   }
 }
