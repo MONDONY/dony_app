@@ -169,7 +169,7 @@ void main() {
   });
 
   test('getMyAnnouncements delegates correctly', () async {
-    when(() => mockDs.getMyAnnouncements(page: any(named: 'page')))
+    when(() => mockDs.getMyAnnouncements())
         .thenAnswer((_) async => (announcements: [_ann()], totalElements: 1));
 
     final result = await repo.getMyAnnouncements();

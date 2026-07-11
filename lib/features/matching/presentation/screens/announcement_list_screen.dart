@@ -72,9 +72,35 @@ class AnnouncementListScreen extends StatefulWidget {
   State<AnnouncementListScreen> createState() => _AnnouncementListScreenState();
 }
 
-class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
+class _AnnouncementListScreenState extends State<AnnouncementListScreen>
+    with WidgetsBindingObserver {
   List<AnnouncementModel> _lastList = [];
   bool _tickerWasActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Au retour au premier plan, rafraîchir si cet onglet est visible — pour
+    // que les statuts de trajet (bascule automatique côté serveur) soient à
+    // jour sans avoir à changer d'onglet ni tirer pour rafraîchir.
+    if (state == AppLifecycleState.resumed &&
+        mounted &&
+        TickerMode.valuesOf(context).enabled) {
+      context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+      context.read<TripsSummaryCubit>().load();
+    }
+  }
 
   @override
   void didChangeDependencies() {

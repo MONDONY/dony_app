@@ -198,9 +198,29 @@ void main() {
                 'content': [_announcementJson, _announcementJson],
               }, '/announcements/my'));
 
-      final result = await datasource.getMyAnnouncements(page: 1);
+      final result = await datasource.getMyAnnouncements();
 
       expect(result.totalElements, 2);
+    });
+
+    test('charge toutes les pages quand le total dépasse une page', () async {
+      when(() => mockDio.get('/announcements/my',
+              queryParameters: {'page': 0, 'size': 50}))
+          .thenAnswer((_) async => _ok({
+                'content': List.generate(50, (_) => _announcementJson),
+                'totalElements': 75,
+              }, '/announcements/my'));
+      when(() => mockDio.get('/announcements/my',
+              queryParameters: {'page': 1, 'size': 50}))
+          .thenAnswer((_) async => _ok({
+                'content': List.generate(25, (_) => _announcementJson),
+                'totalElements': 75,
+              }, '/announcements/my'));
+
+      final result = await datasource.getMyAnnouncements();
+
+      expect(result.announcements, hasLength(75));
+      expect(result.totalElements, 75);
     });
   });
 

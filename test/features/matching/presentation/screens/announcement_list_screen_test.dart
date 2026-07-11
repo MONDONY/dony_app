@@ -15,6 +15,7 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +32,10 @@ class _FakeAnnouncementDeleteRequested extends Fake
 class MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
+
+class _MockNegotiationListBloc
+    extends MockBloc<NegotiationListEvent, NegotiationListState>
+    implements NegotiationListBloc {}
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
@@ -92,6 +97,8 @@ Future<void> _pump(
 
   final summaryCubit = TripsSummaryCubit(mockRepo);
   final filterCubit = TripFilterCubit(mockAnalytics);
+  final negoBloc = _MockNegotiationListBloc();
+  when(() => negoBloc.state).thenReturn(NegotiationListState());
 
   final router = GoRouter(
     initialLocation: '/',
@@ -103,6 +110,7 @@ Future<void> _pump(
             BlocProvider<AnnouncementBloc>.value(value: bloc),
             BlocProvider<TripsSummaryCubit>.value(value: summaryCubit),
             BlocProvider<TripFilterCubit>.value(value: filterCubit),
+            BlocProvider<NegotiationListBloc>.value(value: negoBloc),
           ],
           child: AnnouncementListScreen(
             onSendParcel: onSendParcel,
