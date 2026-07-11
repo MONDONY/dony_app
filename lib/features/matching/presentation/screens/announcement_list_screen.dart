@@ -20,21 +20,24 @@ import 'package:go_router/go_router.dart';
 // ── Status sort priority ──────────────────────────────────────────────────────
 
 int _statusPriority(String status) => switch (status) {
-      'IN_PROGRESS' => 0,
-      'ACTIVE' => 1,
-      'FULL' => 2,
-      'COMPLETED' => 3,
-      'CANCELLED' => 4,
-      _ => 5,
+      'DRAFT' => 0,
+      'IN_PROGRESS' => 1,
+      'ACTIVE' => 2,
+      'FULL' => 3,
+      'COMPLETED' => 4,
+      'CANCELLED' => 5,
+      _ => 6,
     };
 
 // ── Chip counts ───────────────────────────────────────────────────────────────
 
-({int all, int active, int completed, int cancelled}) _counts(
+({int all, int draft, int active, int completed, int cancelled}) _counts(
     List<AnnouncementModel> list) {
-  int a = 0, c = 0, x = 0;
+  int d = 0, a = 0, c = 0, x = 0;
   for (final item in list) {
-    if (item.status == 'ACTIVE' ||
+    if (item.status == 'DRAFT') {
+      d++;
+    } else if (item.status == 'ACTIVE' ||
         item.status == 'FULL' ||
         item.status == 'IN_PROGRESS') {
       a++;
@@ -44,7 +47,7 @@ int _statusPriority(String status) => switch (status) {
       x++;
     }
   }
-  return (all: list.length, active: a, completed: c, cancelled: x);
+  return (all: list.length, draft: d, active: a, completed: c, cancelled: x);
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -339,7 +342,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
   }
 
   List<StatusChipData<TripStatusFilter>> _buildChips(
-    ({int all, int active, int completed, int cancelled}) counts,
+    ({int all, int draft, int active, int completed, int cancelled}) counts,
     ColorScheme cs,
     TripStatusFilter currentFilter,
   ) {
@@ -349,6 +352,13 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
         value: TripStatusFilter.all,
         count: counts.all,
       ),
+      if (counts.draft > 0)
+        StatusChipData(
+          label: 'Brouillons',
+          value: TripStatusFilter.draft,
+          count: counts.draft,
+          dotColor: cs.warning,
+        ),
       StatusChipData(
         label: 'Actifs',
         value: TripStatusFilter.active,
@@ -525,6 +535,7 @@ class _EmptyView extends StatelessWidget {
   String get _title => rawListEmpty
       ? 'Aucun trajet à venir'
       : switch (activeFilter) {
+          TripStatusFilter.draft => 'Aucun brouillon',
           TripStatusFilter.active => 'Aucun trajet actif',
           TripStatusFilter.completed => 'Aucun historique',
           TripStatusFilter.cancelled => 'Aucune annulation',
@@ -534,6 +545,8 @@ class _EmptyView extends StatelessWidget {
   String get _description => rawListEmpty
       ? 'Publiez votre premier trajet et commencez à transporter des colis.'
       : switch (activeFilter) {
+          TripStatusFilter.draft =>
+            'Vos trajets enregistrés sans publication apparaîtront ici.',
           TripStatusFilter.active =>
             'Vos trajets en cours et à venir apparaîtront ici.',
           TripStatusFilter.completed =>

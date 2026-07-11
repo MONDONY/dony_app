@@ -48,4 +48,15 @@ void main() {
     expect(state.matchesQuery('Paris', 'Dakar'), isTrue);
     expect(state.matchesQuery('Paris', 'Bamako'), isFalse);
   });
+
+  test('draft ne matche que DRAFT', () {
+    const state = TripFilterState(filter: TripStatusFilter.draft);
+    expect(state.matchesStatus('DRAFT'), isTrue);
+    expect(state.matchesStatus('ACTIVE'), isFalse);
+  });
+
+  test('all matche aussi DRAFT', () {
+    const state = TripFilterState();
+    expect(state.matchesStatus('DRAFT'), isTrue);
+  });
 }

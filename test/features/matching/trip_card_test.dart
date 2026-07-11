@@ -267,6 +267,18 @@ void main() {
     expect(find.textContaining('en attente'), findsNothing);
   });
 
+  testWidgets('affiche le badge Brouillon pour un trajet DRAFT',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(status: 'DRAFT'),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Brouillon'), findsOneWidget);
+  });
+
   testWidgets('onTap déclenché', (tester) async {
     var tapped = false;
     await tester.pumpWidget(_wrap(TripCard(

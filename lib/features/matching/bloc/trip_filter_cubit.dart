@@ -6,7 +6,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Filtre statut de la liste « Mes trajets » (chips type Airbnb).
-enum TripStatusFilter { all, active, completed, cancelled }
+enum TripStatusFilter { all, draft, active, completed, cancelled }
 
 const _activeStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 
@@ -21,6 +21,7 @@ class TripFilterState extends Equatable {
 
   bool matchesStatus(String status) => switch (filter) {
         TripStatusFilter.all => true,
+        TripStatusFilter.draft => status == 'DRAFT',
         TripStatusFilter.active => _activeStatuses.contains(status),
         TripStatusFilter.completed => status == 'COMPLETED',
         TripStatusFilter.cancelled => status == 'CANCELLED',
