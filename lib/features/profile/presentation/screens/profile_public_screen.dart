@@ -11,7 +11,6 @@ import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sh
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
-import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -121,89 +120,16 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
             userId: viewedUserId,
             profile: state.profile,
             recentRatings: state.recentRatings,
+            showSubscribeButton: showButton,
           );
         } else {
           body = const SizedBox.shrink();
         }
 
-        // Use a raw Scaffold so the hero band can be truly edge-to-edge
-        // (DonyPageScaffold wraps the body in a Padding which would indent it).
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: DonyAppBar(title: appBarTitle),
-          body: showButton
-              ? Column(
-                  children: [
-                    Expanded(child: body),
-                    _StickySubscribeBar(),
-                  ],
-                )
-              : body,
-        );
-      },
-    );
-  }
-}
-
-// ─── Sticky subscribe bar ─────────────────────────────────────────────────────
-
-class _StickySubscribeBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final bottom = MediaQuery.paddingOf(context).bottom;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(top: BorderSide(color: cs.outline)),
-        boxShadow: DonyShadows.sticky,
-      ),
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.md,
-        DonySpacing.lg,
-        DonySpacing.md + bottom,
-      ),
-      child: const _SubscribeButton(),
-    );
-  }
-}
-
-// ─── Subscribe button ─────────────────────────────────────────────────────────
-
-class _SubscribeButton extends StatelessWidget {
-  const _SubscribeButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<TravelerSubscribeBloc, TravelerSubscribeState>(
-      builder: (context, state) {
-        final isLoading = state.status == TravelerSubscribeStatus.loading ||
-            state.status == TravelerSubscribeStatus.initial;
-
-        if (state.subscribed) {
-          return DonyButton(
-            label: 'Abonné',
-            iconAsset: 'check',
-            variant: DonyButtonVariant.secondary,
-            isLoading: isLoading,
-            onPressed: isLoading
-                ? null
-                : () => context
-                    .read<TravelerSubscribeBloc>()
-                    .add(const UnsubscribePressed()),
-          );
-        }
-
-        return DonyButton(
-          label: "S'abonner à ce voyageur",
-          iconAsset: 'bell',
-          isLoading: isLoading,
-          onPressed: isLoading
-              ? null
-              : () => context
-                  .read<TravelerSubscribeBloc>()
-                  .add(const SubscribePressed()),
+          body: body,
         );
       },
     );
@@ -239,19 +165,21 @@ class _LoadedView extends StatelessWidget {
     required this.userId,
     required this.profile,
     required this.recentRatings,
+    required this.showSubscribeButton,
   });
 
   final String userId;
   final ProfilePublicModel profile;
   final RatingSummary recentRatings;
+  final bool showSubscribeButton;
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // ── Hero — full-bleed gradient band (NO horizontal margin) ────────────
+        // ── Hero — flat, centered ───────────────────────────────────────────────
         SliverToBoxAdapter(
-          child: _HeroBand(profile: profile)
+          child: _ProfileHero(profile: profile)
               .animate()
               .fadeIn(duration: 300.ms)
               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
@@ -348,96 +276,75 @@ class _FlatSection extends StatelessWidget {
   }
 }
 
-// ─── Hero band — full-bleed gradient ─────────────────────────────────────────
+// ─── Profile hero — flat background, centered ────────────────────────────────
 
-class _HeroBand extends StatelessWidget {
-  const _HeroBand({required this.profile});
+class _ProfileHero extends StatelessWidget {
+  const _ProfileHero({required this.profile, this.subscribeAction});
 
   final ProfilePublicModel profile;
+  final Widget? subscribeAction;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     final ratingStr = profile.averageRating > 0
         ? profile.averageRating.toStringAsFixed(1)
         : '—';
-    // memberSince contient déjà « Membre depuis … » (côté back) — ne pas re-préfixer.
     final metaLine =
         '⭐ $ratingStr · ${profile.ratingCount} avis · ${profile.memberSince}';
 
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [DonyColors.blue500, Color(0xFF3F73F2)],
-        ),
-      ),
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
+        DonySpacing.base,
         DonySpacing.lg,
-        DonySpacing.lg,
-        DonySpacing.xl,
+        DonySpacing.sm,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar + name + pills in a row
-          Row(
-            children: [
-              // Avatar with white ring
-              _HeroAvatar(
-                name: profile.displayName,
-                imageUrl: profile.avatarUrl,
-                verified: profile.kycVerified,
-              ),
-              const SizedBox(width: DonySpacing.base),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.displayName,
-                      style: tt.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    if (profile.kycVerified ||
-                        profile.isProAccount ||
-                        profile.isKiloPro) ...[
-                      const SizedBox(height: DonySpacing.xs),
-                      Wrap(
-                        spacing: DonySpacing.xs,
-                        runSpacing: DonySpacing.xs,
-                        children: [
-                          if (profile.kycVerified)
-                            const _HeroPill(label: '✓ Vérifié'),
-                          if (profile.isProAccount)
-                            const _HeroPill(label: 'PRO'),
-                          if (profile.isKiloPro)
-                            const _HeroPill(label: 'Kilo Pro'),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+          _HeroAvatar(
+            name: profile.displayName,
+            imageUrl: profile.avatarUrl,
+            verified: profile.kycVerified,
           ),
-          const SizedBox(height: DonySpacing.md),
-          // Meta line
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            profile.displayName,
+            style: tt.headlineLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: cs.onSurface,
+              letterSpacing: -0.3,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (profile.kycVerified || profile.isProAccount || profile.isKiloPro) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: DonySpacing.xs,
+              runSpacing: DonySpacing.xs,
+              children: [
+                if (profile.kycVerified) const _HeroPill(label: '✓ Vérifié'),
+                if (profile.isProAccount) const _HeroPill(label: 'PRO'),
+                if (profile.isKiloPro) const _HeroPill(label: 'Kilo Pro'),
+              ],
+            ),
+          ],
+          const SizedBox(height: DonySpacing.xs),
           Text(
             metaLine,
             style: tt.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w600,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
+          if (subscribeAction != null) ...[
+            const SizedBox(height: DonySpacing.base),
+            subscribeAction!,
+          ],
         ],
       ),
     );
@@ -457,6 +364,7 @@ class _HeroAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     const size = 64.0;
     final initials = _initials(name);
 
@@ -478,16 +386,12 @@ class _HeroAvatar extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // White ring (concentric: ring at 66px wraps 64px content)
         Container(
           width: size + 4,
           height: size + 4,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
-              width: 2,
-            ),
+            border: Border.all(color: cs.primary.withValues(alpha: 0.35), width: 2),
           ),
           child: Padding(
             padding: const EdgeInsets.all(1),
@@ -504,16 +408,12 @@ class _HeroAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: DonyColors.warning500,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: cs.surface, width: 2),
               ),
               alignment: Alignment.center,
               child: const Text(
                 '✓',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w800),
               ),
             ),
           ),
@@ -537,22 +437,13 @@ class _HeroAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        // Use a warm gradient for initials avatar on the hero
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [DonyColors.terra400, DonyColors.terra600],
-        ),
+        color: DonyColors.terra500,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
+        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
       ),
     );
   }
@@ -566,21 +457,16 @@ class _HeroPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.22),
+        color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         label,
-        style: tt.labelSmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-        ),
+        style: tt.labelSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w800),
       ),
     );
   }

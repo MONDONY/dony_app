@@ -314,6 +314,44 @@ void main() {
     expect(find.text('Fatou Diallo'), findsWidgets);
   });
 
+  testWidgets('hero has no blue gradient background', (tester) async {
+    await tester.pumpWidget(_wrapLoaded(profile: _profile));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final containers = tester.widgetList<Container>(find.byType(Container));
+    final hasBlueGradient = containers.any((c) {
+      final decoration = c.decoration;
+      return decoration is BoxDecoration && decoration.gradient != null;
+    });
+    expect(hasBlueGradient, isFalse);
+  });
+
+  testWidgets('no sticky bar container above the scroll area', (tester) async {
+    final subBloc = MockTravelerSubscribeBloc();
+    const subState = TravelerSubscribeState(
+      status: TravelerSubscribeStatus.ready,
+      subscribed: false,
+    );
+    when(() => subBloc.state).thenReturn(subState);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        subscribeBloc: subBloc,
+        showSubscribe: true,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // The Scaffold body must be the loaded content directly — no
+    // Column([Expanded(body), stickyBar]) wrapper anymore — and the
+    // scrollable content (CustomScrollView) is present in the tree.
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.body, isNot(isA<Column>()));
+    expect(find.byType(CustomScrollView), findsOneWidget);
+  });
+
   // ── 4. KYC badge ─────────────────────────────────────────────────────────
 
   testWidgets('shows KYC badge when verified', (tester) async {
