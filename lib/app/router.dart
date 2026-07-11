@@ -143,6 +143,7 @@ import 'package:dony/features/settings/presentation/screens/diagnostics_screen.d
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
 import 'package:dony/features/incident_report/presentation/screens/incident_report_screen.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/settings/presentation/screens/change_pin_screen.dart';
 import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
 import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
@@ -1079,13 +1080,23 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'report-incident',
-          builder: (context, state) => MultiBlocProvider(
-            providers: [
-              BlocProvider(create: (_) => getIt<IncidentReportCubit>()),
-              BlocProvider(create: (_) => getIt<IncidentPhotosCubit>()),
-            ],
-            child: const IncidentReportScreen(),
-          ),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            final targetType =
+                extra?['targetType'] as IncidentTargetType? ??
+                    IncidentTargetType.app;
+            final targetId = extra?['targetId'] as String?;
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (_) => getIt<IncidentReportCubit>()),
+                BlocProvider(create: (_) => getIt<IncidentPhotosCubit>()),
+              ],
+              child: IncidentReportScreen(
+                targetType: targetType,
+                targetId: targetId,
+              ),
+            );
+          },
         ),
         GoRoute(
           path: 'legal/terms',
