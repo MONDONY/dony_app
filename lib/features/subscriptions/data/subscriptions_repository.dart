@@ -94,7 +94,7 @@ class SubscriptionItem {
 
   factory SubscriptionItem.fromJson(Map<String, dynamic> json) => SubscriptionItem(
         travelerId: json['travelerId'] as String,
-        travelerName: json['travelerName'] as String,
+        travelerName: json['travelerName'] as String? ?? 'Voyageur',
         isProAccount: json['isProAccount'] as bool? ?? false,
         averageRating: (json['averageRating'] as num?)?.toDouble(),
         ongoingTripsCount: (json['ongoingTripsCount'] as num?)?.toInt() ?? 0,
