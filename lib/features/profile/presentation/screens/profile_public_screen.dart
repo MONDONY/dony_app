@@ -1191,7 +1191,7 @@ class _SubscribeAction extends StatelessWidget {
 
         return DonyButton(
           label: "S'abonner",
-          iconAsset: 'bell',
+          iconAsset: 'plus',
           fullWidth: false,
           isLoading: isLoading,
           onPressed: isLoading
