@@ -166,6 +166,15 @@ Widget _wrap(
             path: '/profile/reviews',
             builder: (_, _) => const Scaffold(body: Text('Reviews')),
           ),
+          GoRoute(
+            path: '/settings/report-incident',
+            builder: (_, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return Scaffold(
+                body: Text('Reported: ${extra?['targetId']}'),
+              );
+            },
+          ),
         ],
       ),
     ),
@@ -699,5 +708,130 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => subBloc.add(const UnsubscribePressed())).called(1);
+  });
+
+  // ── 10. Report action (⋮) ─────────────────────────────────────────────────
+
+  testWidgets('report icon absent when viewing own profile', (tester) async {
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        screenUserId: _userId,
+        authUserId: _userId, // own profile
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byTooltip('Signaler'), findsNothing);
+  });
+
+  testWidgets(
+      'report icon present, tap navigates to report-incident with user target',
+      (tester) async {
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        screenUserId: _userId,
+        authUserId: _currentUserId, // different user → not own profile
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byTooltip('Signaler'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Signaler'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reported: user-1'), findsOneWidget);
+  });
+
+  // ── 11. Coverage — avatar network image + contact/availability section ──────
+
+  testWidgets(
+      'shows hero avatar, review avatar and disponibilité section when data present',
+      (tester) async {
+    const profileWithAvatarAndContact = ProfilePublicModel(
+      userId: _userId,
+      displayName: 'Fatou Diallo',
+      avatarUrl: 'https://example.com/avatar.jpg',
+      kycVerified: true,
+      isProAccount: false,
+      isKiloPro: false,
+      completedBidsCount: 12,
+      averageRating: 4.8,
+      ratingCount: 7,
+      memberSince: 'mars 2025',
+      badges: [],
+      contactMode: 'both',
+      responseDelayHours: 5,
+    );
+    final summaryWithAuthorAvatar = RatingSummary(
+      averageRating: 4.8,
+      ratingCount: 7,
+      distribution: const {1: 0, 2: 0, 3: 0, 4: 2, 5: 5},
+      ratings: [
+        RatingItem(
+          stars: 5,
+          comment: 'Parfait !',
+          createdAt: DateTime.utc(2026, 3),
+          excluded: false,
+          authorName: 'Moussa Koné',
+          authorAvatarUrl: 'https://example.com/author.jpg',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+        ),
+      ],
+      page: 0,
+      totalPages: 1,
+    );
+    final b = MockProfilePublicBloc();
+    final loadedState = ProfilePublicLoaded(
+      profile: profileWithAvatarAndContact,
+      recentRatings: summaryWithAuthorAvatar,
+    );
+    when(() => b.state).thenReturn(loadedState);
+    when(() => b.stream).thenAnswer((_) => Stream.value(loadedState));
+
+    await tester.pumpWidget(_wrap(b));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(Image), findsWidgets);
+    expect(find.text('DISPONIBILITÉ', skipOffstage: false), findsOneWidget);
+    expect(find.text('Appel & message', skipOffstage: false), findsOneWidget);
+    expect(find.text('Répond en < 5h', skipOffstage: false), findsOneWidget);
+  });
+
+  testWidgets('disponibilité section shows call-only and message-only labels',
+      (tester) async {
+    for (final entry in {
+      'call': 'Joignable par appel',
+      'message': 'Joignable par message',
+    }.entries) {
+      final profile = ProfilePublicModel(
+        userId: _userId,
+        displayName: 'Fatou Diallo',
+        kycVerified: true,
+        isProAccount: false,
+        isKiloPro: false,
+        completedBidsCount: 12,
+        averageRating: 4.8,
+        ratingCount: 7,
+        memberSince: 'mars 2025',
+        badges: const [],
+        contactMode: entry.key,
+      );
+      final b = MockProfilePublicBloc();
+      final loadedState = ProfilePublicLoaded(
+        profile: profile,
+        recentRatings: _ratingSummary,
+      );
+      when(() => b.state).thenReturn(loadedState);
+      when(() => b.stream).thenAnswer((_) => Stream.value(loadedState));
+
+      await tester.pumpWidget(_wrap(b));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text(entry.value, skipOffstage: false), findsOneWidget);
+    }
   });
 }

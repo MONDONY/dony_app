@@ -129,9 +129,28 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
           body = const SizedBox.shrink();
         }
 
+        final cs = Theme.of(context).colorScheme;
+
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: DonyAppBar(title: appBarTitle),
+          appBar: DonyAppBar(
+            title: appBarTitle,
+            actions: isOwnProfile
+                ? null
+                : [
+                    IconButton(
+                      tooltip: 'Signaler',
+                      icon: DonyIcon('flag', color: cs.onSurfaceVariant),
+                      onPressed: () => context.push(
+                        '/settings/report-incident',
+                        extra: {
+                          'targetType': IncidentTargetType.user,
+                          'targetId': viewedUserId,
+                        },
+                      ),
+                    ),
+                  ],
+          ),
           body: body,
         );
       },
