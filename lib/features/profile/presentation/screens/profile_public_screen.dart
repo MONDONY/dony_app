@@ -483,7 +483,7 @@ class _HeroPill extends StatelessWidget {
   }
 }
 
-// ─── Stats row — 3 equal columns, no box ─────────────────────────────────────
+// ─── Stats row — 2 equal columns, no box ─────────────────────────────────────
 
 class _StatsRow extends StatelessWidget {
   const _StatsRow({required this.profile});
@@ -493,10 +493,6 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
-    final delayLabel = profile.responseDelayHours != null
-        ? '~${profile.responseDelayHours}h'
-        : '—';
 
     return IntrinsicHeight(
       child: Row(
@@ -522,19 +518,6 @@ class _StatsRow extends StatelessWidget {
               label: 'Livraisons',
               iconAsset: 'package',
               iconColor: cs.primary,
-            ),
-          ),
-          VerticalDivider(
-            color: cs.outline.withValues(alpha: 0.6),
-            width: 1,
-            thickness: 1,
-          ),
-          Expanded(
-            child: _StatItem(
-              value: delayLabel,
-              label: 'Répond en',
-              iconAsset: 'timer',
-              iconColor: cs.onSurfaceVariant,
             ),
           ),
         ],

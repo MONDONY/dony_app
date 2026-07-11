@@ -441,17 +441,16 @@ void main() {
     expect(find.text('LANGUES', skipOffstage: false), findsNothing);
   });
 
-  // ── 7. Stats row: 3 cols, no "Membre depuis" stat ────────────────────────
+  // ── 7. Stats row: 2 cols, no "Répond en" / "Membre depuis" stat ──────────
 
-  testWidgets('stats row shows Note, Livraisons, Répond en (3 columns)',
+  testWidgets('stats row shows Note and Livraisons only (2 columns)',
       (tester) async {
     await tester.pumpWidget(_wrapLoaded(profile: _profile));
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Note', skipOffstage: false), findsOneWidget);
     expect(find.text('Livraisons', skipOffstage: false), findsOneWidget);
-    expect(find.text('Répond en', skipOffstage: false), findsOneWidget);
-    // "Membre depuis" should NOT appear as a stat column
+    expect(find.text('Répond en', skipOffstage: false), findsNothing);
     expect(find.text('Membre depuis', skipOffstage: false), findsNothing);
   });
 
