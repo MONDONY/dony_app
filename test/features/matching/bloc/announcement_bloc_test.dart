@@ -51,6 +51,7 @@ AnnouncementModel buildAnnouncement({String id = 'ann-001'}) => AnnouncementMode
 void main() {
   late MockAnnouncementRepository mockRepo;
   late MockHiveService mockHive;
+  late _FakeBox userPrefsBox;
 
   setUpAll(() {
     registerFallbackValue(kTestPickupAddress);
@@ -60,7 +61,8 @@ void main() {
   setUp(() {
     mockRepo = MockAnnouncementRepository();
     mockHive = MockHiveService();
-    when(() => mockHive.userPrefs).thenReturn(_FakeBox());
+    userPrefsBox = _FakeBox();
+    when(() => mockHive.userPrefs).thenReturn(userPrefsBox);
   });
 
   AnnouncementBloc buildBloc() {
@@ -318,6 +320,52 @@ void main() {
       },
     );
 
+    // VERROU : la création DIRECTE (saveAsDraft: false, comportement par défaut)
+    // doit écrire le flag Hive "premier pas voyageur" — seul le cas brouillon
+    // (testé plus bas, group « brouillon ») en est dispensé. Sans ce test, une
+    // inversion de la condition `!event.saveAsDraft` (announcement_bloc.dart:66)
+    // passerait inaperçue : le test brouillon vérifie `isNull`, mais aucun test
+    // n'affirmait le `isTrue` symétrique côté publication directe.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'création directe (sans saveAsDraft) écrit kHasPublishedAsTraveler',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            )).thenAnswer((_) async => ann);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementCreated>(),
+      ],
+      verify: (_) {
+        expect(userPrefsBox.get(HiveService.kHasPublishedAsTraveler), isTrue);
+      },
+    );
+
     blocTest<AnnouncementBloc, AnnouncementState>(
       'ForbiddenException autre code → [Loading, AnnouncementError]',
       build: () {
@@ -349,6 +397,258 @@ void main() {
         handoverWindowStart: DateTime(2026, 6, 14, 16),
         handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementError>(),
+      ],
+    );
+  });
+
+  // ─── AnnouncementCreateRequested(saveAsDraft: true) ──────────────────────────
+
+  group('AnnouncementCreateRequested — brouillon', () {
+    final ann = buildAnnouncement();
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'création en brouillon propage saveAsDraft et n\'écrit pas kHasPublishedAsTraveler',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
+              saveAsDraft: any(named: 'saveAsDraft'),
+            )).thenAnswer((_) async => ann);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+        saveAsDraft: true,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementCreated>(),
+      ],
+      verify: (_) {
+        final captured = verify(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
+              saveAsDraft: captureAny(named: 'saveAsDraft'),
+            )).captured;
+        expect(captured.single, isTrue);
+        expect(userPrefsBox.get(HiveService.kHasPublishedAsTraveler), isNull);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'draft-limit-reached émet AnnouncementDraftLimitReached',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
+              saveAsDraft: any(named: 'saveAsDraft'),
+            )).thenThrow(
+                ForbiddenException('Limite de brouillons atteinte', 'draft-limit-reached'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+        saveAsDraft: true,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementDraftLimitReached>(),
+      ],
+    );
+
+    // RÉGRESSION (mirroir du cas pro-limit-reached ci-dessus, cf. l.162-167) : en
+    // prod, le datasource laisse remonter un DioException brut dont .error porte
+    // la ForbiddenException posée par l'interceptor — PAS une ForbiddenException
+    // nue. Ce test reproduit le wrapping réel pour draft-limit-reached.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'DioException(draft-limit-reached) → [Loading, AnnouncementDraftLimitReached]',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
+              saveAsDraft: any(named: 'saveAsDraft'),
+            )).thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/announcements'),
+              error: ForbiddenException(
+                  'Limite de brouillons atteinte', 'draft-limit-reached'),
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+        saveAsDraft: true,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementDraftLimitReached &&
+            s.message.contains('Limite de brouillons')),
+      ],
+    );
+  });
+
+  // ─── AnnouncementPublishRequested ─────────────────────────────────────────────
+
+  group('AnnouncementPublishRequested', () {
+    final ann = buildAnnouncement();
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'publication réussie → [Loading, AnnouncementPublished] + kHasPublishedAsTraveler',
+      build: () {
+        when(() => mockRepo.publishAnnouncement('a1')).thenAnswer((_) async => ann);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementPublished>(),
+      ],
+      verify: (_) {
+        expect(userPrefsBox.get(HiveService.kHasPublishedAsTraveler), isTrue);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'publish kyc-not-verified émet AnnouncementKycRequired',
+      build: () {
+        when(() => mockRepo.publishAnnouncement('a1'))
+            .thenThrow(ForbiddenException('KYC requis', 'kyc-not-verified'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementKycRequired>(),
+      ],
+    );
+
+    // RÉGRESSION (mirroir du cas pro-limit-reached de la création, cf. l.162-167) :
+    // en prod, le datasource laisse remonter un DioException brut dont .error
+    // porte la ForbiddenException posée par l'interceptor — PAS une
+    // ForbiddenException nue. Ce test reproduit le wrapping réel pour
+    // kyc-not-verified sur la publication.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'DioException(kyc-not-verified) → [Loading, AnnouncementKycRequired]',
+      build: () {
+        when(() => mockRepo.publishAnnouncement('a1')).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/announcements/a1/publish'),
+          error: ForbiddenException('KYC requis', 'kyc-not-verified'),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementKycRequired && s.message.contains('KYC requis')),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'publish departure-date-passed émet AnnouncementDepartureDatePassed',
+      build: () {
+        when(() => mockRepo.publishAnnouncement('a1')).thenThrow(
+            const ValidationException('Date passée', code: 'departure-date-passed'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementDepartureDatePassed>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'publish pro-limit-reached émet AnnouncementProLimitReached',
+      build: () {
+        when(() => mockRepo.publishAnnouncement('a1'))
+            .thenThrow(ForbiddenException('Limite', 'pro-limit-reached'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementProLimitReached>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur générique publish → [Loading, AnnouncementError]',
+      build: () {
+        when(() => mockRepo.publishAnnouncement('a1')).thenThrow(Exception('Server error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
       expect: () => [
         isA<AnnouncementLoading>(),
         isA<AnnouncementError>(),

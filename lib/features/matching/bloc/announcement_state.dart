@@ -70,3 +70,28 @@ class AnnouncementProLimitReached extends AnnouncementState {
   final String message;
   AnnouncementProLimitReached(this.message);
 }
+
+/// Émis après la publication réussie d'un trajet (brouillon → ACTIF).
+class AnnouncementPublished extends AnnouncementState {
+  final AnnouncementModel announcement;
+  AnnouncementPublished(this.announcement);
+}
+
+/// Le compte a atteint sa limite de brouillons (voyageur non-PRO).
+class AnnouncementDraftLimitReached extends AnnouncementState {
+  final String message;
+  AnnouncementDraftLimitReached(this.message);
+}
+
+/// La publication requiert une identité vérifiée (KYC) au préalable.
+class AnnouncementKycRequired extends AnnouncementState {
+  final String message;
+  AnnouncementKycRequired(this.message);
+}
+
+/// La date de départ du trajet est passée : publication refusée tant que
+/// l'utilisateur n'a pas corrigé la date.
+class AnnouncementDepartureDatePassed extends AnnouncementState {
+  final String message;
+  AnnouncementDepartureDatePassed(this.message);
+}

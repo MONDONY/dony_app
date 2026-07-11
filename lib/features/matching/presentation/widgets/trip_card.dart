@@ -45,6 +45,8 @@ class TripCard extends StatelessWidget {
   /// own-trip add, but the optimistic UI would flash before the error arrives.
   final bool showFavorite;
 
+  // DRAFT n'est jamais considéré comme « passé » : un brouillon n'a pas
+  // encore vécu, il attend d'être publié.
   bool get _isPast =>
       announcement.status == 'COMPLETED' ||
       announcement.status == 'CANCELLED';
@@ -52,6 +54,12 @@ class TripCard extends StatelessWidget {
   /// Returns (bgColor, fgColor, label, shouldPulse) for the status badge.
   ({Color bg, Color fg, String label, bool pulse}) _badge(ColorScheme cs) =>
       switch (announcement.status) {
+        'DRAFT' => (
+            bg: DonyColors.neutral100,
+            fg: cs.warning,
+            label: 'Brouillon',
+            pulse: false
+          ),
         'ACTIVE' => (
             bg: cs.successLight,
             fg: cs.success,
