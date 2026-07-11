@@ -67,7 +67,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   late final ValueNotifier<bool> _canContinueNotifier;
   late final ValueNotifier<bool> _canContinueStep1Notifier;
   late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
-  VoidCallback? _submit;
+  void Function({bool saveAsDraft})? _submit;
   bool Function()? _validateStep0;
 
   @override
@@ -365,6 +365,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                                     .pop();
                                                 _submit?.call();
                                               },
+                                              onSaveDraft: () {
+                                                // Même fermeture du sheet que onConfirm.
+                                                Navigator.of(ctx2,
+                                                        rootNavigator: true)
+                                                    .pop();
+                                                _submit
+                                                    ?.call(saveAsDraft: true);
+                                              },
                                               isSubmitting: isLoading,
                                               departureTime:
                                                   _departureTimeNotifier.value,
@@ -404,7 +412,7 @@ class _TripFormContent extends StatefulWidget {
   final ValueNotifier<bool>? canContinueStep1Notifier;
   final ValueNotifier<int>? currentStepNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
-  final void Function(VoidCallback)? onSubmitReady;
+  final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
 
   /// Injecte le callback de validation de l'étape 0 dans le parent.
   /// Le callback retourne true si tous les champs obligatoires de l'étape 0
@@ -857,7 +865,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     return '$h:$m';
   }
 
-  void _submit() {
+  void _submit({bool saveAsDraft = false}) {
     final departureCity = _departureCityNotifier.value;
     final arrivalCity = _arrivalCityNotifier.value;
     final departureDate = _departureDateNotifier.value;
@@ -1012,6 +1020,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             pricingMode: pricingModeWire,
             handoverWindowStart: handoverStart,
             handoverWindowEnd: handoverEnd,
+            saveAsDraft: saveAsDraft,
           ));
     }
   }
@@ -1172,6 +1181,20 @@ class _TripFormContentState extends State<_TripFormContent> {
               final confirmed = await DonyDialog.show(
                 context,
                 title: 'Limite mensuelle atteinte',
+                message: state.message,
+                confirmLabel: 'Passer en PRO',
+                cancelLabel: 'Plus tard',
+              );
+              if (confirmed == true && context.mounted) {
+                unawaited(context.push('/profile/upgrade-to-pro'));
+              }
+            }
+          } else if (state is AnnouncementDraftLimitReached) {
+            context.pop();
+            if (context.mounted) {
+              final confirmed = await DonyDialog.show(
+                context,
+                title: 'Limite de brouillons atteinte',
                 message: state.message,
                 confirmLabel: 'Passer en PRO',
                 cancelLabel: 'Plus tard',

@@ -22,16 +22,30 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     BuildContext context, {
     required AnnouncementFormState formState,
     required VoidCallback onConfirm,
+    VoidCallback? onSaveDraft,
     bool isSubmitting = false,
     TimeOfDay? departureTime,
   }) {
     return DonyBottomSheet.show<void>(
       context,
       title: 'Aperçu de votre annonce',
-      stickyBottom: DonyButton(
-        label: 'Publier l\'annonce',
-        onPressed: isSubmitting ? null : onConfirm,
-        isLoading: isSubmitting,
+      stickyBottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Publier l\'annonce',
+            onPressed: isSubmitting ? null : onConfirm,
+            isLoading: isSubmitting,
+          ),
+          if (onSaveDraft != null) ...[
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              label: 'Enregistrer comme brouillon',
+              variant: DonyButtonVariant.secondary,
+              onPressed: isSubmitting ? null : onSaveDraft,
+            ),
+          ],
+        ],
       ),
       child: AnnouncementPreviewSheet(
         formState: formState,
