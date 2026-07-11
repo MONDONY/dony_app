@@ -9,8 +9,10 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
@@ -46,9 +48,16 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// Clé du [RepaintBoundary] enveloppant l'écran — capture d'écran du bouton bug.
   final GlobalKey _boundaryKey = GlobalKey();
 
+  /// Dernière annonce connue (chargée ou passée en `extra`) — sert de repli
+  /// pour construire les [CreateTripArgs] quand le listener reçoit un state
+  /// d'erreur (ex. [AnnouncementDepartureDatePassed]) qui ne porte pas le
+  /// modèle complet.
+  AnnouncementModel? _current;
+
   @override
   void initState() {
     super.initState();
+    _current = widget.initial;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(
         getIt<AnalyticsService>().logEvent(
@@ -74,6 +83,11 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
         key: _boundaryKey,
         child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
           listener: (context, state) {
+            if (state is AnnouncementDetailLoaded) {
+              _current = state.announcement;
+            } else if (state is AnnouncementUpdated) {
+              _current = state.announcement;
+            }
             if (state is AnnouncementDeleted) {
               DonySnackbar.show(
                 context,
@@ -94,6 +108,32 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               }
             } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
               unawaited(_onDeleteBlocked(context, state.announcementId));
+            } else if (state is AnnouncementPublished) {
+              _current = state.announcement;
+              DonySnackbar.show(
+                context,
+                message: 'Trajet publié !',
+                type: DonySnackbarType.success,
+              );
+              context.read<AnnouncementBloc>().add(
+                AnnouncementDetailRequested(widget.announcementId),
+              );
+            } else if (state is AnnouncementKycRequired) {
+              DonySnackbar.show(
+                context,
+                message: state.message,
+                type: DonySnackbarType.warning,
+              );
+              context.push('/kyc/status');
+            } else if (state is AnnouncementDepartureDatePassed) {
+              DonySnackbar.show(
+                context,
+                message: state.message,
+                type: DonySnackbarType.warning,
+              );
+              unawaited(_onDepartureDatePassed(context));
+            } else if (state is AnnouncementProLimitReached) {
+              unawaited(_onProLimitReached(context, state.message));
             } else if (state is AnnouncementError) {
               ErrorPresenter.show(context, state.error);
             }
@@ -118,6 +158,15 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (a.status == 'DRAFT') ...[
+                    const DonyStatusBanner(
+                      type: DonyStatusBannerType.warning,
+                      title: 'Ce trajet est un brouillon',
+                      message:
+                          'Il est invisible pour les expéditeurs tant qu\'il n\'est pas publié.',
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                  ],
                   AnnouncementDetailBody(a: a),
                   const SizedBox(height: DonySpacing.lg),
                   OwnerActionGrid(
@@ -172,6 +221,39 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
         context,
         announcementId: announcementId,
       );
+    }
+  }
+
+  /// La date de départ est passée : publication refusée tant que
+  /// l'utilisateur ne corrige pas la date. Ouvre directement l'édition.
+  Future<void> _onDepartureDatePassed(BuildContext context) async {
+    final current = _current;
+    if (current == null) {
+      return;
+    }
+    final changed = await context.push<bool>(
+      '/trips/create',
+      extra: CreateTripArgs(announcement: current),
+    );
+    if ((changed ?? false) && context.mounted) {
+      context.read<AnnouncementBloc>().add(
+        AnnouncementDetailRequested(widget.announcementId),
+      );
+    }
+  }
+
+  /// Limite mensuelle de trajets PRO atteinte — invite à passer PRO (pattern
+  /// repris de [CreateTripScreen]).
+  Future<void> _onProLimitReached(BuildContext context, String message) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Limite mensuelle atteinte',
+      message: message,
+      confirmLabel: 'Passer en PRO',
+      cancelLabel: 'Plus tard',
+    );
+    if (confirmed == true && context.mounted) {
+      unawaited(context.push('/profile/upgrade-to-pro'));
     }
   }
 }

@@ -272,6 +272,7 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, bg, fg) = switch (status) {
       'ACTIVE' => ('● ACTIF', const Color(0xFF16A34A), Colors.white),
+      'DRAFT' => ('✎ BROUILLON', const Color(0xFFB45309), Colors.white),
       'FULL' => ('● COMPLET', const Color(0xFFF59E0B), Colors.white),
       'IN_PROGRESS' => ('● EN COURS', const Color(0xFF16A34A), Colors.white),
       'COMPLETED' => ('✓ TERMINÉ', Colors.white24, Colors.white),

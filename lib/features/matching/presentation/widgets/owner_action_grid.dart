@@ -59,17 +59,31 @@ class OwnerActionGrid extends StatelessWidget {
     final hasPending = pendingCount > 0;
     final hasColis = colisCount > 0;
 
-    // Gating édition / suppression (inchangé).
-    final canEdit = a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0;
+    // Gating édition / suppression — un brouillon (DRAFT) est modifiable ET
+    // supprimable au même titre qu'un trajet ACTIF sans demande (le backend
+    // autorise désormais la suppression d'un DRAFT).
+    final canEdit = (a.status == 'ACTIVE' || a.status == 'DRAFT') &&
+        (a.bidsCount ?? 0) == 0;
     final isCancelled = a.status == 'CANCELLED';
-    final canDelete =
-        (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
+    final canDelete = ((a.status == 'ACTIVE' || a.status == 'DRAFT') &&
+            (a.bidsCount ?? 0) == 0) ||
+        isCancelled;
     final isActive = a.status == 'ACTIVE';
 
     // Tuiles présentes selon le statut. Construites dans une liste pour éviter
     // les demi-tuiles vides (ex. trajet COMPLETED/FULL n'a ni Demandes ni
     // Supprimer → la grille se réduit proprement aux tuiles réelles).
     final tiles = <Widget>[
+      // ── Publier (brouillon uniquement) — toujours en première position ──
+      if (a.status == 'DRAFT')
+        _tile(
+          iconAsset: 'send',
+          label: 'Publier',
+          accent: cs.primary,
+          onTap: () => context.read<AnnouncementBloc>().add(
+            AnnouncementPublishRequested(a.id),
+          ),
+        ),
       // ── Demandes → écran « À traiter » ; désactivé si rien en attente ──
       _tile(
         iconAsset: 'package',
