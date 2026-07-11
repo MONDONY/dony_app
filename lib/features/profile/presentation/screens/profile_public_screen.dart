@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
@@ -11,10 +12,12 @@ import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sh
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 // ─── Route args ───────────────────────────────────────────────────────────────
@@ -179,7 +182,11 @@ class _LoadedView extends StatelessWidget {
       slivers: [
         // ── Hero — flat, centered ───────────────────────────────────────────────
         SliverToBoxAdapter(
-          child: _ProfileHero(profile: profile)
+          child: _ProfileHero(
+            profile: profile,
+            subscribeAction:
+                showSubscribeButton ? const _SubscribeAction() : null,
+          )
               .animate()
               .fadeIn(duration: 300.ms)
               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
@@ -1116,6 +1123,81 @@ class _InitialsCircle extends StatelessWidget {
           color: cs.primary,
         ),
       ),
+    );
+  }
+}
+
+// ─── Subscribe action — compact button + interactive bell (in-hero) ──────────
+
+class _SubscribeAction extends StatelessWidget {
+  const _SubscribeAction();
+
+  Future<void> _confirmUnsubscribe(BuildContext context) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Se désabonner ?',
+      message: 'Vous ne recevrez plus les notifications de ce voyageur.',
+      confirmLabel: 'Se désabonner',
+      cancelLabel: 'Annuler',
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'bell-off',
+    );
+    if ((confirmed ?? false) && context.mounted) {
+      context.read<TravelerSubscribeBloc>().add(const UnsubscribePressed());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return BlocBuilder<TravelerSubscribeBloc, TravelerSubscribeState>(
+      builder: (context, state) {
+        final isLoading = state.status == TravelerSubscribeStatus.loading ||
+            state.status == TravelerSubscribeStatus.initial;
+
+        if (state.subscribed) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DonyButton(
+                label: 'Abonné ✓',
+                variant: DonyButtonVariant.secondary,
+                fullWidth: false,
+                isLoading: isLoading,
+                onPressed:
+                    isLoading ? null : () => _confirmUnsubscribe(context),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              IconButton(
+                tooltip: state.pushEnabled
+                    ? 'Désactiver les notifications'
+                    : 'Activer les notifications',
+                icon: DonyIcon(
+                  state.pushEnabled ? 'bell' : 'bell-off',
+                  color: cs.primary,
+                ),
+                onPressed: isLoading
+                    ? null
+                    : () => context
+                        .read<TravelerSubscribeBloc>()
+                        .add(TogglePushPressed(!state.pushEnabled)),
+              ),
+            ],
+          );
+        }
+
+        return DonyButton(
+          label: "S'abonner",
+          iconAsset: 'bell',
+          fullWidth: false,
+          isLoading: isLoading,
+          onPressed: isLoading
+              ? null
+              : () =>
+                  context.read<TravelerSubscribeBloc>().add(const SubscribePressed()),
+        );
+      },
     );
   }
 }

@@ -529,10 +529,10 @@ void main() {
         find.textContaining('→', skipOffstage: false), findsNothing);
   });
 
-  // ── 9. Subscribe button gating ────────────────────────────────────────────
+  // ── 9. Subscribe action — compact, in-hero ────────────────────────────────
 
   testWidgets(
-      'sticky subscribe button appears when showSubscribe=true and userId != currentUser',
+      'subscribe button appears when showSubscribe=true and userId != currentUser',
       (tester) async {
     final subBloc = MockTravelerSubscribeBloc();
     const subState = TravelerSubscribeState(
@@ -547,17 +547,16 @@ void main() {
         profile: _profile,
         subscribeBloc: subBloc,
         showSubscribe: true,
-        screenUserId: _userId, // viewed profile = user-1
-        authUserId: _currentUserId, // logged-in = current-user-99 (different)
+        screenUserId: _userId,
+        authUserId: _currentUserId,
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text("S'abonner à ce voyageur"), findsOneWidget);
+    expect(find.text("S'abonner"), findsOneWidget);
   });
 
-  testWidgets('sticky subscribe button absent when showSubscribe=false',
-      (tester) async {
+  testWidgets('subscribe button absent when showSubscribe=false', (tester) async {
     await tester.pumpWidget(
       _wrapLoaded(
         profile: _profile,
@@ -568,34 +567,32 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text("S'abonner à ce voyageur"), findsNothing);
-    expect(find.text('Abonné'), findsNothing);
+    expect(find.text("S'abonner"), findsNothing);
+    expect(find.text('Abonné ✓'), findsNothing);
   });
 
-  testWidgets(
-      'sticky subscribe button absent when viewing own profile (userId == currentUserId)',
-      (tester) async {
-    // screenUserId == authUserId → own profile → no button
+  testWidgets('subscribe button absent when viewing own profile', (tester) async {
     await tester.pumpWidget(
       _wrapLoaded(
         profile: _profile,
         showSubscribe: true,
-        screenUserId: _userId, // user-1
+        screenUserId: _userId,
         authUserId: _userId, // same → own profile
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text("S'abonner à ce voyageur"), findsNothing);
-    expect(find.text('Abonné'), findsNothing);
+    expect(find.text("S'abonner"), findsNothing);
+    expect(find.text('Abonné ✓'), findsNothing);
   });
 
-  testWidgets('subscribe button shows "Abonné" when already subscribed',
+  testWidgets('shows "Abonné ✓" + bell icon when already subscribed',
       (tester) async {
     final subBloc = MockTravelerSubscribeBloc();
     const subState = TravelerSubscribeState(
       status: TravelerSubscribeStatus.ready,
       subscribed: true,
+      pushEnabled: true,
     );
     when(() => subBloc.state).thenReturn(subState);
     when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
@@ -611,7 +608,97 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Abonné'), findsOneWidget);
-    expect(find.text("S'abonner à ce voyageur"), findsNothing);
+    expect(find.text('Abonné ✓'), findsOneWidget);
+    expect(find.text("S'abonner"), findsNothing);
+    expect(find.byTooltip('Désactiver les notifications'), findsOneWidget);
+  });
+
+  testWidgets('tapping subscribe dispatches SubscribePressed', (tester) async {
+    final subBloc = MockTravelerSubscribeBloc();
+    const subState = TravelerSubscribeState(
+      status: TravelerSubscribeStatus.ready,
+      subscribed: false,
+    );
+    when(() => subBloc.state).thenReturn(subState);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        subscribeBloc: subBloc,
+        showSubscribe: true,
+        screenUserId: _userId,
+        authUserId: _currentUserId,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.text("S'abonner"));
+    verify(() => subBloc.add(const SubscribePressed())).called(1);
+  });
+
+  testWidgets('tapping bell dispatches TogglePushPressed(!pushEnabled)',
+      (tester) async {
+    final subBloc = MockTravelerSubscribeBloc();
+    const subState = TravelerSubscribeState(
+      status: TravelerSubscribeStatus.ready,
+      subscribed: true,
+      pushEnabled: true,
+    );
+    when(() => subBloc.state).thenReturn(subState);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        subscribeBloc: subBloc,
+        showSubscribe: true,
+        screenUserId: _userId,
+        authUserId: _currentUserId,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.byTooltip('Désactiver les notifications'));
+
+    // TogglePushPressed doesn't implement ==, capture and verify the field
+    // (same pattern as HubTogglePush in traveler_profile_hub_screen_test.dart).
+    final captured = verify(() => subBloc.add(captureAny())).captured;
+    final toggle = captured.whereType<TogglePushPressed>().toList();
+    expect(toggle, hasLength(1));
+    expect(toggle.single.enabled, isFalse);
+  });
+
+  testWidgets('tapping "Abonné ✓" opens confirm dialog, confirming unsubscribes',
+      (tester) async {
+    final subBloc = MockTravelerSubscribeBloc();
+    const subState = TravelerSubscribeState(
+      status: TravelerSubscribeStatus.ready,
+      subscribed: true,
+      pushEnabled: false,
+    );
+    when(() => subBloc.state).thenReturn(subState);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        subscribeBloc: subBloc,
+        showSubscribe: true,
+        screenUserId: _userId,
+        authUserId: _currentUserId,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.text('Abonné ✓'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Se désabonner ?'), findsOneWidget);
+
+    await tester.tap(find.text('Se désabonner'));
+    await tester.pumpAndSettle();
+
+    verify(() => subBloc.add(const UnsubscribePressed())).called(1);
   });
 }
