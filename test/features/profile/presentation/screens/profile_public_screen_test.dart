@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -319,11 +320,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     final containers = tester.widgetList<Container>(find.byType(Container));
-    final hasBlueGradient = containers.any((c) {
+    final hasBlueHeroGradient = containers.any((c) {
       final decoration = c.decoration;
-      return decoration is BoxDecoration && decoration.gradient != null;
+      if (decoration is! BoxDecoration || decoration.gradient is! LinearGradient) {
+        return false;
+      }
+      final colors = (decoration.gradient! as LinearGradient).colors;
+      return colors.contains(DonyColors.blue500);
     });
-    expect(hasBlueGradient, isFalse);
+    expect(hasBlueHeroGradient, isFalse);
   });
 
   testWidgets('no sticky bar container above the scroll area', (tester) async {

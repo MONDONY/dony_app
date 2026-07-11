@@ -437,7 +437,11 @@ class _HeroAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: const BoxDecoration(
-        color: DonyColors.terra500,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [DonyColors.terra400, DonyColors.terra600],
+        ),
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
