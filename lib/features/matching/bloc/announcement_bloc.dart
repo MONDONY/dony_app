@@ -18,6 +18,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
 
   AnnouncementBloc(this._repository, this._hive, this._analytics) : super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
+    on<AnnouncementPublishRequested>(_onPublishRequested);
     on<AnnouncementListRequested>(_onListRequested);
     on<AnnouncementDetailRequested>(_onDetailRequested);
     on<AnnouncementUpdateRequested>(_onUpdateRequested);
@@ -58,9 +59,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         pricingMode: event.pricingMode,
         handoverWindowStart: event.handoverWindowStart,
         handoverWindowEnd: event.handoverWindowEnd,
+        saveAsDraft: event.saveAsDraft,
       );
-      await _hive.userPrefs
-          .put(HiveService.kHasPublishedAsTraveler, true);
+      // Un brouillon n'est pas une publication : le flag "premier pas voyageur"
+      // ne doit être posé que lorsque le trajet est réellement actif/visible.
+      if (!event.saveAsDraft) {
+        await _hive.userPrefs
+            .put(HiveService.kHasPublishedAsTraveler, true);
+      }
       emit(AnnouncementCreated(announcement));
       unawaited(_analytics.logEvent(
         AnalyticsEvents.announcementCreated,
@@ -68,6 +74,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
           'corridor': '${event.departureCity}→${event.arrivalCity}',
           'available_kg': event.availableKg,
           'price_per_kg': event.pricePerKg,
+          'is_draft': event.saveAsDraft,
         },
       ));
     } catch (e) {
@@ -76,8 +83,35 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       // sinon `pro-limit-reached` tombait dans le cas générique et l'utilisateur
       // ne voyait qu'un vague « Action non autorisée » au lieu de l'invite PRO.
       final error = unwrapDioError(e);
-      if (error is ForbiddenException && error.code == 'pro-limit-reached') {
+      if (error is ForbiddenException && error.code == 'draft-limit-reached') {
+        emit(AnnouncementDraftLimitReached(error.message));
+      } else if (error is ForbiddenException && error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error.message));
+      } else {
+        emit(AnnouncementError(error));
+      }
+    }
+  }
+
+  Future<void> _onPublishRequested(
+    AnnouncementPublishRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    // Anti double-soumission (cf. _onCreateRequested).
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.publishAnnouncement(event.id);
+      await _hive.userPrefs.put(HiveService.kHasPublishedAsTraveler, true);
+      emit(AnnouncementPublished(announcement));
+    } catch (e) {
+      final error = unwrapDioError(e);
+      if (error is ForbiddenException && error.code == 'kyc-not-verified') {
+        emit(AnnouncementKycRequired(error.message));
+      } else if (error is ForbiddenException && error.code == 'pro-limit-reached') {
+        emit(AnnouncementProLimitReached(error.message));
+      } else if (error is AppException && error.code == 'departure-date-passed') {
+        emit(AnnouncementDepartureDatePassed(error.message));
       } else {
         emit(AnnouncementError(error));
       }

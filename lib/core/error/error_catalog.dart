@@ -90,6 +90,36 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.workspace_premium_outlined,
     ),
+    'draft-limit-reached': ErrorPresentation(
+      title: 'Limite de brouillons atteinte',
+      message: 'Passe en PRO pour créer davantage de brouillons.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.drafts_outlined,
+    ),
+    'not-a-draft': ErrorPresentation(
+      title: 'Déjà publié',
+      message: 'Ce trajet n\'est pas un brouillon.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.info_outline_rounded,
+    ),
+    'publishing-suspended': ErrorPresentation(
+      title: 'Publication suspendue',
+      message: 'La publication est suspendue sur ton compte. Contacte le support.',
+      severity: ErrorSeverity.critical,
+      icon: Icons.gpp_bad_rounded,
+    ),
+    'kyc-not-verified': ErrorPresentation(
+      title: 'Identité non vérifiée',
+      message: 'Vérifie ton identité avant de publier un trajet.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.badge_outlined,
+    ),
+    'departure-date-passed': ErrorPresentation(
+      title: 'Date de départ passée',
+      message: 'Modifie la date de départ avant de publier ce trajet.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.event_busy_rounded,
+    ),
 
     // ─── Colis / Bids ────────────────────────────────────────────────
     'bid-not-found': ErrorPresentation(

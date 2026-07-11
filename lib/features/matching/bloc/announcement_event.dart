@@ -25,6 +25,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final String pricingMode;
   final DateTime handoverWindowStart;
   final DateTime handoverWindowEnd;
+  final bool saveAsDraft;
 
   AnnouncementCreateRequested({
     required this.departureCity,
@@ -47,7 +48,14 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.pricingMode = 'KG',
     required this.handoverWindowStart,
     required this.handoverWindowEnd,
+    this.saveAsDraft = false,
   });
+}
+
+/// Publie un trajet précédemment sauvegardé en brouillon (statut DRAFT → ACTIVE).
+class AnnouncementPublishRequested extends AnnouncementEvent {
+  final String id;
+  AnnouncementPublishRequested(this.id);
 }
 
 class AnnouncementListRequested extends AnnouncementEvent {}

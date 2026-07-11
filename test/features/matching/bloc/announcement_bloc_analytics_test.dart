@@ -102,7 +102,12 @@ void main() {
 
     verify(() => backend.capture(
       AnalyticsEvents.announcementCreated,
-      {'corridor': 'Paris→Dakar', 'available_kg': 10.0, 'price_per_kg': 15.0},
+      {
+        'corridor': 'Paris→Dakar',
+        'available_kg': 10.0,
+        'price_per_kg': 15.0,
+        'is_draft': false,
+      },
     )).called(1);
   });
 
