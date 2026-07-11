@@ -7,7 +7,7 @@
 
 `ProfilePublicScreen` (`lib/features/profile/presentation/screens/profile_public_screen.dart`) affiche le profil d'un utilisateur consulté par un autre. Deux problèmes identifiés à partir de maquettes comparées en cours de brainstorming (style BlaBlaCar/TikTok) :
 
-1. Le hero band (`_HeroBand`, L353) est un bandeau bleu plein écran (gradient `DonyColors.blue500 → #3F73F2`) qui alourdit l'écran, et le bouton d'abonnement est dans une `_StickySubscribeBar` (L150) fixée en bas — retirée du flux naturel, toujours pleine largeur (contrainte `DonyButton` : hauteur 52px, toujours pleine largeur).
+1. Le hero band (`_HeroBand`, L353) est un bandeau bleu plein écran (gradient `DonyColors.blue500 → #3F73F2`) qui alourdit l'écran, et le bouton d'abonnement est dans une `_StickySubscribeBar` (L150) fixée en bas — hors du flux naturel de scroll, pleine largeur.
 2. Aucun moyen de signaler l'utilisateur consulté depuis son profil, alors que l'infra existe déjà : backend `ReportTargetType.USER` (`dony-back/src/main/java/com/dony/api/signalements/ReportTargetType.java`) + endpoint générique `POST /reports`, et côté Flutter `IncidentReportCubit`/`IncidentReportRepository` (`lib/features/incident_report/`) qui les enveloppe déjà avec `IncidentTargetType.user`.
 
 **Hors scope (confirmé pendant le brainstorming, ne pas toucher) :**
@@ -76,15 +76,35 @@ actions: isOwnProfile ? null : [
   IconButton(
     tooltip: 'Signaler',
     icon: DonyIcon('flag', color: cs.onSurfaceVariant),
-    onPressed: () => _showReportSheet(context, viewedUserId, profile.displayName),
+    onPressed: () => context.push(
+      '/settings/report-incident',
+      extra: {'targetType': IncidentTargetType.user, 'targetId': viewedUserId},
+    ),
   ),
 ],
 ```
 
-- Pas de menu intermédiaire à options multiples (une seule action = pas besoin d'une liste, cf. retour "design pas simple" du brainstorming). Le tap ouvre **directement** la sheet de raisons, sur le modèle de `_showReportSheet` dans `traveler_options_sheet.dart` (L222-306) : handle, titre `"Signaler ${displayName}"`, sous-titre "Votre signalement sera traité par l'équipe Dony.", `RadioListTile` sur la même liste de raisons (`'Comportement inapproprié'`, `'Informations fausses'`, `'Tentative d'arnaque'`, `'Non-respect des délais'`, `'Autre'`), bouton `DonyButton(variant: destructive, label: 'Envoyer le signalement')` désactivé tant que rien n'est sélectionné.
-- **Différence avec le pattern existant** : au lieu d'appeler un service de signalement lié à un `bid`, on appelle `IncidentReportCubit.submit(targetType: IncidentTargetType.user, targetId: viewedUserId, reason: selected!)`. Le cubit doit être disponible via `BlocProvider` sur cet écran (vérifier `injection.dart` : `IncidentReportCubit` est déjà `registerFactory` pour l'écran `incident_report` — l'enregistrer aussi ici, ou wrapper la sheet dans un `BlocProvider(create: (_) => getIt<IncidentReportCubit>())` local comme le fait `HandoverBottomSheet`/`EditProfileBottomSheet` pour un besoin ponctuel).
-- Succès → `DonySnackbar.show(type: success, message: 'Signalement envoyé. Merci !')` + `context.pop()`. Erreur → `DonySnackbar.show(type: error, message: state.message)`.
-- **Analytics** : `IncidentReportCubit.submit` déclenche déjà `AnalyticsEvents.incidentReported` (`{'target_type': 'USER', 'photo_count': 0}`) — rien à ajouter côté events, juste vérifier que ce event existe bien dans la table du `CLAUDE.md` (déjà le cas : `incident_report` feature existante) et l'y documenter s'il n'y est pas encore listé pour ce contexte précis (profil public).
+- **Pas de sheet custom** — l'écran `IncidentReportScreen` (`lib/features/incident_report/presentation/screens/incident_report_screen.dart`) existe déjà, avec motif (`incidentReasons`), description, photos optionnelles, et accepte déjà `targetType`/`targetId` en constructeur. Son commentaire de tête anticipe littéralement ce cas : *"les points d'entrée contextuels (profil utilisateur, colis…) passent leur cible"*. Seul manque le branchement du `state.extra` sur la route — la route `/settings/report-incident` (`router.dart:1080-1089`) construit aujourd'hui `const IncidentReportScreen()` sans lire `state.extra`.
+- **Modification nécessaire dans `router.dart`** : lire `state.extra as Map<String, dynamic>?` (convention déjà utilisée ailleurs dans ce fichier, ex. L398/L681/L868) pour extraire `targetType`/`targetId`, défaut `IncidentTargetType.app`/`null` si absent (comportement actuel préservé pour l'entrée réglages) :
+  ```dart
+  GoRoute(
+    path: 'report-incident',
+    builder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      final targetType = extra?['targetType'] as IncidentTargetType? ?? IncidentTargetType.app;
+      final targetId = extra?['targetId'] as String?;
+      return MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<IncidentReportCubit>()),
+          BlocProvider(create: (_) => getIt<IncidentPhotosCubit>()),
+        ],
+        child: IncidentReportScreen(targetType: targetType, targetId: targetId),
+      );
+    },
+  ),
+  ```
+- `IncidentReportCubit`/`IncidentPhotosCubit` sont fournis par cette route elle-même — rien à ajouter côté DI pour `/profile/public`.
+- **Analytics** : `IncidentReportCubit.submit` déclenche déjà `AnalyticsEvents.incidentReported` (`{'target_type': 'USER', 'photo_count': N}`) — rien à ajouter côté events.
 
 ---
 
@@ -110,8 +130,7 @@ actions: isOwnProfile ? null : [
 | cloche toggle | Tap cloche → `TogglePushPressed(!pushEnabled)` ajouté au bloc ; icône passe `bell` ↔ `bell-off` selon `state.pushEnabled` |
 | stats 2 colonnes | "Répond en" absent, seuls "Note" et "Livraisons" présents |
 | action ⋮ absente sur son propre profil | `isOwnProfile == true` → pas d'icône flag dans les actions |
-| action ⋮ présente | `isOwnProfile == false` → icône flag présente, tap ouvre la sheet de signalement |
-| signalement soumis | Sélection raison + tap "Envoyer" → `IncidentReportCubit.submit` appelé avec `targetType: user`, `targetId: viewedUserId` |
+| action ⋮ présente + navigue | `isOwnProfile == false` → icône flag présente, tap → `context.push('/settings/report-incident', extra: {...})` avec `targetType: IncidentTargetType.user`, `targetId: viewedUserId` |
 | avis inchangés | Toujours plafonnés à 3 + lien "Voir tous les avis (N)" si `ratingCount > 0` |
 
 Couverture ≥ 90 % sur le fichier modifié (règle projet).
@@ -124,10 +143,8 @@ Couverture ≥ 90 % sur le fichier modifié (règle projet).
 - [ ] `_StickySubscribeBar` + son usage dans `Scaffold.body` supprimés
 - [ ] Bouton d'abonnement réécrit avec `DonyButton(fullWidth: false)` (pattern repris de `_SubscribedRow`, `traveler_profile_hub_screen.dart:461-511`) + cloche interactive branchée sur `TogglePushPressed`
 - [ ] `_StatsRow` : colonne "Répond en" retirée, 2 colonnes restantes
-- [ ] `DonyAppBar.actions` : icône flag ajoutée si `!isOwnProfile`, ouvre directement la sheet de raisons (pas de menu intermédiaire)
-- [ ] Sheet de signalement branchée sur `IncidentReportCubit.submit(targetType: IncidentTargetType.user, ...)`
-- [ ] `IncidentReportCubit` disponible sur l'écran (DI ou `BlocProvider` local à la sheet)
+- [ ] `DonyAppBar.actions` : icône flag ajoutée si `!isOwnProfile`, navigue vers `/settings/report-incident`
+- [ ] `router.dart` : route `report-incident` lit `state.extra` pour `targetType`/`targetId` (défaut `app`/`null` préservé)
 - [ ] Sections À propos/Langues/Transport/Badges/Disponibilité/Avis non modifiées (vérifier non-régression visuelle)
 - [ ] Tous les tests passent (`flutter test`)
 - [ ] Couverture ≥ 90 %
-- [ ] Table des events `CLAUDE.md` : vérifier/documenter `incident_report_submitted` (ou event existant) pour le contexte "profil public"
