@@ -110,7 +110,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         emit(AnnouncementKycRequired(error.message));
       } else if (error is ForbiddenException && error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error.message));
-      } else if (error is AppException && error.code == 'departure-date-passed') {
+      } else if (error.code == 'departure-date-passed') {
         emit(AnnouncementDepartureDatePassed(error.message));
       } else {
         emit(AnnouncementError(error));
