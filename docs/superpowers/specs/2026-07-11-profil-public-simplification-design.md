@@ -39,24 +39,23 @@ Column (centré, crossAxisAlignment.center)
 └── si showButton : _SubscribeAction (nouveau widget, voir ci-dessous)
 ```
 
-### `_SubscribeAction` — nouveau widget, PAS `DonyButton`
+### Bouton d'abonnement — réutilise `DonyButton(fullWidth: false)`, pattern déjà en prod
 
-`DonyButton` impose hauteur 52px + pleine largeur (règle du design system) — inadapté ici, le bouton doit être **compact, centré, largeur au contenu** (référence : bouton "Suivre" TikTok). Nouveau petit composant local à `profile_public_screen.dart` (pas dans `core/design/` — usage unique) :
+Pas besoin de nouveau composant : `DonyButton` supporte déjà `fullWidth: false` (contenu centré, pas de largeur imposée). Un widget quasi-identique à ce qu'on veut existe déjà : `_SubscribedRow` dans `lib/features/subscriptions/presentation/traveler_profile_hub_screen.dart:461-511`, qui combine `DonyButton(fullWidth:false)` + `IconButton` cloche branché sur `TogglePushPressed`. On reprend exactement ce pattern, réécrit pour consommer `TravelerSubscribeBloc` (au lieu de `TravelerHubBloc` utilisé par l'écran hub) :
 
-```dart
-class _SubscribePill extends StatelessWidget {
-  final String label;
-  final String iconAsset;
-  final bool filled;      // true = fond cs.primary plein ; false = fond cs.primaryContainer
-  final bool isLoading;
-  final VoidCallback? onPressed;
-}
-```
-
-- **Non abonné** : `filled: true` — fond `cs.primary` plein, texte blanc, icône `+`, label `"S'abonner"`. Hauteur 38px, `padding: EdgeInsets.symmetric(horizontal: 24)`, `borderRadius: DonyRadius.full`. `onPressed` → `SubscribePressed()` (inchangé).
-- **Abonné** : `filled: false` — fond `cs.primaryContainer`, texte/icône `cs.primary`, icône check, label `"Abonné"`. `onPressed` → confirmation puis `UnsubscribePressed()` (comportement inchangé, juste le style qui change).
-- À côté (row, `SizedBox(width: DonySpacing.sm)` entre les deux) : un second élément **rond, non interactif**, icône 🔔 (`DonyIcon('bell')`), visible **uniquement si `state.subscribed == true`** — indicateur visuel "tu recevras des notifications", pas un toggle séparé (le domaine `TravelerSubscribeBloc` n'a qu'un seul état abonné/non-abonné, pas de préférence de notification distincte — inventer ce concept serait hors scope).
+- **Non abonné** : `DonyButton(label: "S'abonner", iconAsset: 'bell', fullWidth: false, isLoading: ..., onPressed: () => bloc.add(const SubscribePressed()))`.
+- **Abonné** : `DonyButton(label: 'Abonné ✓', variant: secondary, fullWidth: false, onPressed: () => _confirmUnsubscribe(context))` + `SizedBox(width: DonySpacing.sm)` + `IconButton` cloche **interactive** :
+  ```dart
+  IconButton(
+    tooltip: pushEnabled ? 'Désactiver les notifications' : 'Activer les notifications',
+    icon: DonyIcon(pushEnabled ? 'bell' : 'bell-off', color: cs.primary),
+    onPressed: () => context.read<TravelerSubscribeBloc>().add(TogglePushPressed(!pushEnabled)),
+  )
+  ```
+  Le state `TravelerSubscribeState.pushEnabled` (déjà présent, `traveler_subscribe_state.dart:6`) alimente l'icône `bell`/`bell-off` exactement comme dans `_SubscribedRow`. **La cloche est donc interactive** (toggle notifications), pas décorative — correction par rapport à une première hypothèse écartée après lecture du bloc.
+- Confirmation de désabonnement : réutiliser `DonyDialog.show(title: 'Se désabonner ?', message: 'Vous ne recevrez plus les notifications de ce voyageur.', confirmLabel: 'Se désabonner', variant: destructive, iconAsset: 'bell-off')` comme dans `_confirmUnsubscribe` (`traveler_profile_hub_screen.dart:466-481`), puis `context.read<TravelerSubscribeBloc>().add(const UnsubscribePressed())`.
 - `isLoading` réutilise `state.status == loading/initial` comme aujourd'hui.
+- Le tout centré horizontalement dans le hero via un `Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center)` — pas de `Expanded`, contrairement au hub bar qui est pleine largeur en bas d'écran.
 
 ### Stats row (`_StatsRow`, L591)
 
@@ -107,7 +106,8 @@ actions: isOwnProfile ? null : [
 | hero sans gradient | Le hero ne contient plus de `Container` à `gradient` bleu |
 | pas de sticky bar | `_StickySubscribeBar` absent du widget tree même si `showSubscribe: true` |
 | bouton compact non abonné | `state.subscribed == false` → pilule "S'abonner" pleine largeur **absente**, largeur intrinsèque |
-| bouton + cloche abonné | `state.subscribed == true` → label "Abonné" + icône cloche visible à côté, séparée |
+| bouton + cloche abonné | `state.subscribed == true` → label "Abonné ✓" + icône cloche visible à côté, séparée |
+| cloche toggle | Tap cloche → `TogglePushPressed(!pushEnabled)` ajouté au bloc ; icône passe `bell` ↔ `bell-off` selon `state.pushEnabled` |
 | stats 2 colonnes | "Répond en" absent, seuls "Note" et "Livraisons" présents |
 | action ⋮ absente sur son propre profil | `isOwnProfile == true` → pas d'icône flag dans les actions |
 | action ⋮ présente | `isOwnProfile == false` → icône flag présente, tap ouvre la sheet de signalement |
@@ -122,7 +122,7 @@ Couverture ≥ 90 % sur le fichier modifié (règle projet).
 
 - [ ] `_HeroBand` : gradient bleu retiré, fond transparent, contenu centré
 - [ ] `_StickySubscribeBar` + son usage dans `Scaffold.body` supprimés
-- [ ] Nouveau widget `_SubscribePill` (compact, non-`DonyButton`) + variante "abonné" avec cloche séparée non-interactive
+- [ ] Bouton d'abonnement réécrit avec `DonyButton(fullWidth: false)` (pattern repris de `_SubscribedRow`, `traveler_profile_hub_screen.dart:461-511`) + cloche interactive branchée sur `TogglePushPressed`
 - [ ] `_StatsRow` : colonne "Répond en" retirée, 2 colonnes restantes
 - [ ] `DonyAppBar.actions` : icône flag ajoutée si `!isOwnProfile`, ouvre directement la sheet de raisons (pas de menu intermédiaire)
 - [ ] Sheet de signalement branchée sur `IncidentReportCubit.submit(targetType: IncidentTargetType.user, ...)`
