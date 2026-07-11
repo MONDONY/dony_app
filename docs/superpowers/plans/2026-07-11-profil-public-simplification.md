@@ -542,7 +542,7 @@ Dans `test/features/profile/presentation/screens/profile_public_screen_test.dart
 
     expect(find.text('Abonné ✓'), findsOneWidget);
     expect(find.text("S'abonner"), findsNothing);
-    expect(find.byIcon, findsNothing); // sanity: no stray Icon-based check
+    expect(find.byTooltip('Désactiver les notifications'), findsOneWidget);
   });
 
   testWidgets('tapping subscribe dispatches SubscribePressed', (tester) async {
@@ -629,8 +629,6 @@ Dans `test/features/profile/presentation/screens/profile_public_screen_test.dart
   });
 }
 ```
-
-Retirer la ligne `expect(find.byIcon, findsNothing);` du test "shows Abonné ✓ + bell icon" si `flutter analyze` la signale invalide (`find.byIcon` attend un argument) — cette ligne est un garde-fou optionnel, la remplacer simplement par la suppression de la ligne si elle ne compile pas telle quelle.
 
 - [ ] **Step 2: Lancer les tests, vérifier l'échec**
 
