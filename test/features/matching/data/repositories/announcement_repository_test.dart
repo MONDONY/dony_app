@@ -108,6 +108,66 @@ void main() {
     expect(capturedMode, TransportMode.train);
   });
 
+  test('createAnnouncement propage saveAsDraft au datasource', () async {
+    when(() => mockDs.createAnnouncement(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+          handoverWindowStart: any(named: 'handoverWindowStart'),
+          handoverWindowEnd: any(named: 'handoverWindowEnd'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        )).thenAnswer((_) async => _ann());
+
+    await repo.createAnnouncement(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2024, 6, 1),
+      pickupAddress: kPickup,
+      deliveryAddress: kDelivery,
+      availableKg: 10.0,
+      pricePerKg: 12.0,
+      transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      saveAsDraft: true,
+    );
+
+    final captured = verify(() => mockDs.createAnnouncement(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+          handoverWindowStart: any(named: 'handoverWindowStart'),
+          handoverWindowEnd: any(named: 'handoverWindowEnd'),
+          saveAsDraft: captureAny(named: 'saveAsDraft'),
+        )).captured;
+    expect(captured.single, isTrue);
+  });
+
+  test('publishAnnouncement délègue au datasource', () async {
+    final testAnnouncement = _ann();
+    when(() => mockDs.publishAnnouncement('a1'))
+        .thenAnswer((_) async => testAnnouncement);
+
+    final result = await repo.publishAnnouncement('a1');
+
+    expect(result, same(testAnnouncement));
+    verify(() => mockDs.publishAnnouncement('a1')).called(1);
+  });
+
   test('getMyAnnouncements delegates correctly', () async {
     when(() => mockDs.getMyAnnouncements(page: any(named: 'page')))
         .thenAnswer((_) async => (announcements: [_ann()], totalElements: 1));

@@ -32,6 +32,7 @@ class AnnouncementRemoteDatasource {
     String pricingMode = 'KG',
     required DateTime handoverWindowStart,
     required DateTime handoverWindowEnd,
+    bool saveAsDraft = false,
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
@@ -58,10 +59,16 @@ class AnnouncementRemoteDatasource {
         'pricingMode': pricingMode,
         'handoverWindowStart': handoverWindowStart.toUtc().toIso8601String(),
         'handoverWindowEnd': handoverWindowEnd.toUtc().toIso8601String(),
+        if (saveAsDraft) 'saveAsDraft': true,
       },
     );
 
     return AnnouncementModel.fromJson(response.data);
+  }
+
+  Future<AnnouncementModel> publishAnnouncement(String id) async {
+    final response = await _apiClient.dio.post('/announcements/$id/publish');
+    return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<({List<AnnouncementModel> announcements, int totalElements})>

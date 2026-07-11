@@ -31,6 +31,7 @@ class AnnouncementRepository {
     String pricingMode = 'KG',
     required DateTime handoverWindowStart,
     required DateTime handoverWindowEnd,
+    bool saveAsDraft = false,
   }) async {
     return _remoteDatasource.createAnnouncement(
       departureCity: departureCity,
@@ -53,8 +54,12 @@ class AnnouncementRepository {
       pricingMode: pricingMode,
       handoverWindowStart: handoverWindowStart,
       handoverWindowEnd: handoverWindowEnd,
+      saveAsDraft: saveAsDraft,
     );
   }
+
+  Future<AnnouncementModel> publishAnnouncement(String id) =>
+      _remoteDatasource.publishAnnouncement(id);
 
   Future<({List<AnnouncementModel> announcements, int totalElements})>
       getMyAnnouncements({int page = 0}) async {
