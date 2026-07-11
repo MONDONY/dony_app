@@ -141,7 +141,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
           builder: (context, state) {
             final a = state is AnnouncementDetailLoaded
                 ? state.announcement
-                : widget.initial;
+                : (_current ?? widget.initial);
             if (a == null) {
               return Center(
                 child: CircularProgressIndicator(color: cs.primary),

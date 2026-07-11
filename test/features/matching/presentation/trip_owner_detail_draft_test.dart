@@ -11,6 +11,8 @@
 // test/features/matching/presentation/screens/trip_owner_detail_screen_test.dart
 // (MockBloc mocktail + MultiBlocProvider + GoRouter minimal).
 
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
@@ -92,6 +94,7 @@ Future<void> _pump(
   required _MockBidBloc bidBloc,
   required _MockCancellationBloc cancelBloc,
   required _MockAuthBloc authBloc,
+  AnnouncementModel? initial,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1.0;
@@ -109,7 +112,10 @@ Future<void> _pump(
             BlocProvider<CancellationBloc>.value(value: cancelBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: const TripOwnerDetailScreen(announcementId: 'ann-trip-001'),
+          child: TripOwnerDetailScreen(
+            announcementId: 'ann-trip-001',
+            initial: initial,
+          ),
         ),
       ),
       GoRoute(
@@ -326,5 +332,47 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('BROUILLON'), findsOneWidget);
+  });
+
+  testWidgets(
+      'après publication (AnnouncementPublished sans reload), la bannière '
+      'brouillon et la tuile Publier disparaissent', (tester) async {
+    final draft = _makeAnnouncement(status: 'DRAFT');
+    final published = _makeAnnouncement(status: 'ACTIVE');
+
+    // État initial : DetailLoaded en DRAFT, ET widget.initial passé en DRAFT
+    // (comme lors d'une navigation depuis la liste avec `extra:`), pour
+    // reproduire le repli sur `widget.initial` figé si le rechargement
+    // déclenché après publication n'aboutit pas.
+    when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(draft));
+    final controller = StreamController<AnnouncementState>();
+    whenListen(
+      annBloc,
+      controller.stream,
+      initialState: AnnouncementDetailLoaded(draft),
+    );
+    addTearDown(controller.close);
+
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+        initial: draft);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('brouillon'), findsWidgets);
+    expect(find.text('Publier'), findsOneWidget);
+
+    // Le bloc émet l'état intermédiaire AnnouncementPublished (ACTIVE), sans
+    // que le AnnouncementDetailLoaded du reload ne suive (ex. erreur réseau
+    // transitoire sur AnnouncementDetailRequested).
+    controller.add(AnnouncementPublished(published));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.textContaining('brouillon'), findsNothing);
+    expect(find.text('Publier'), findsNothing);
+    expect(find.textContaining('BROUILLON'), findsNothing);
   });
 }
