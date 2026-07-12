@@ -4,7 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -370,7 +370,7 @@ class _PlaceholderBox extends StatelessWidget {
       color: cs.primaryContainer.withValues(alpha: 0.45),
       child: Center(
         child: Text(
-          ContentCategory.emojiForLabel(
+          emojiForLabel(
             item.categories.isEmpty ? null : item.categories.first,
           ),
           style: const TextStyle(fontSize: 30),

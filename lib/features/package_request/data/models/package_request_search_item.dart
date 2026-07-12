@@ -1,5 +1,5 @@
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:equatable/equatable.dart';
-import 'content_category.dart';
 import 'parcel_size.dart';
 import 'payment_method.dart';
 
@@ -77,7 +77,7 @@ class PackageRequestSearchItem extends Equatable {
         dateToleranceDays: json['dateToleranceDays'] as int,
         weightKg: (json['weightKg'] as num).toDouble(),
         parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
-        categories: ContentCategory.splitWire(
+        categories: splitContentCategoryLabels(
           json['contentCategory'] as String?,
         ),
         targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),

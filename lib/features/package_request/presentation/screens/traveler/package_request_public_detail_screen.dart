@@ -11,7 +11,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
@@ -620,7 +620,7 @@ class _CategoryChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            ContentCategory.emojiForLabel(label),
+            emojiForLabel(label),
             style: const TextStyle(fontSize: 13),
           ),
           const SizedBox(width: 5),

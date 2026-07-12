@@ -1,6 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter/material.dart';
@@ -136,13 +136,13 @@ class _PhotoHero extends StatelessWidget {
               item.photoUrl!,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => _PhotoPlaceholder(
-                emoji: ContentCategory.emojiForLabel(item.primaryCategory),
+                emoji: emojiForLabel(item.primaryCategory),
                 cs: cs,
               ),
             )
           else
             _PhotoPlaceholder(
-              emoji: ContentCategory.emojiForLabel(item.primaryCategory),
+              emoji: emojiForLabel(item.primaryCategory),
               cs: cs,
             ),
 
@@ -393,7 +393,7 @@ class _InfoSection extends StatelessWidget {
               const SizedBox(width: 8),
               if (item.primaryCategory != null) ...[
                 Text(
-                  ContentCategory.emojiForLabel(item.primaryCategory),
+                  emojiForLabel(item.primaryCategory),
                   style: const TextStyle(fontSize: 11),
                 ),
                 const SizedBox(width: 3),

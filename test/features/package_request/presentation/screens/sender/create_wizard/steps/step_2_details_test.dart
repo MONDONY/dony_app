@@ -1,11 +1,13 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
@@ -23,13 +25,17 @@ class _MockFormBloc
     extends MockBloc<PackageRequestFormEvent, PackageRequestFormState>
     implements PackageRequestFormBloc {}
 
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
+
 void main() {
   late _MockRepo repo;
   late _MockFormBloc mockBloc;
 
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
-    registerFallbackValue(ContentCategory.vetements);
     registerFallbackValue(
       FormStep1Submitted(
         departureCity: 'a',
@@ -48,6 +54,19 @@ void main() {
     when(
       () => mockBloc.stream,
     ).thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
+
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
+    getIt.registerFactory<IContentCategoryRepository>(
+      () => _FakeContentCategoryRepository(),
+    );
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
   });
 
   Widget wrap(Widget child, {PackageRequestFormBloc? bloc}) => MaterialApp(
@@ -96,10 +115,14 @@ void main() {
       expect(find.text('Valise'), findsOneWidget);
     });
 
-    testWidgets('rend 8 OptionButton de catégorie prédéfinie', (tester) async {
+    testWidgets('rend 10 OptionButton de catégorie prédéfinie', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const Step2Details()));
-      // 8 prédéfinies (les 9 valeurs moins « Autre », qui passe par l'input libre)
-      expect(find.byType(OptionButton), findsNWidgets(8));
+      await tester.pump();
+      // 10 prédéfinies (catalogue 11 catégories moins « Autre », qui passe
+      // par l'input libre).
+      expect(find.byType(OptionButton), findsNWidgets(10));
     });
 
     testWidgets('submit sans catégorie → message d'
@@ -150,8 +173,8 @@ void main() {
         find.byKey(const Key('description-input')),
         'Colis fragile, vases en verre',
       );
-      await tester.ensureVisible(find.text('Vêtements'));
-      await tester.tap(find.text('Vêtements'));
+      await tester.ensureVisible(find.text('Vêtements & tissus'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
       key.currentState!.submit();
       await tester.pump();
@@ -166,8 +189,8 @@ void main() {
       final key = GlobalKey<Step2DetailsState>();
       await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
       await tester.enterText(find.byType(TextFormField).first, '5');
-      await tester.ensureVisible(find.text('Vêtements'));
-      await tester.tap(find.text('Vêtements'));
+      await tester.ensureVisible(find.text('Vêtements & tissus'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
       key.currentState!.submit();
       await tester.pump();

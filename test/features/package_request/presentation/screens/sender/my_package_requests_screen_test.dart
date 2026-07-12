@@ -4,7 +4,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
@@ -23,7 +22,7 @@ PackageRequest _request({
   String departureCity = 'Paris',
   String arrivalCity = 'Dakar',
   PackageRequestStatus status = PackageRequestStatus.open,
-  ContentCategory contentCategory = ContentCategory.vetements,
+  String categoryLabel = 'Vêtements & tissus',
   double? targetPriceEur = 35,
 }) => PackageRequest(
   id: 'pr-${arrivalCity.toLowerCase()}-${status.name}',
@@ -35,7 +34,7 @@ PackageRequest _request({
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
-  categories: [contentCategory.label],
+  categories: [categoryLabel],
   targetPriceEur: targetPriceEur,
   status: status,
   createdAt: DateTime(2026, 5, 10),

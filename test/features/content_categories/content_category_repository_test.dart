@@ -112,4 +112,32 @@ void main() {
       expect(iconForCode('CODE_INCONNU'), Icons.inventory_2_rounded);
     });
   });
+
+  group('emojiForLabel', () {
+    test('returns the canonical emoji for a known label', () {
+      expect(emojiForLabel('Documents & administratif'), '📄');
+    });
+
+    test('returns 📦 for a free-text label outside the catalog', () {
+      expect(emojiForLabel('Poissons'), '📦');
+    });
+
+    test('returns 📦 for null', () {
+      expect(emojiForLabel(null), '📦');
+    });
+  });
+
+  group('splitContentCategoryLabels', () {
+    test('splits, trims and drops empty entries', () {
+      expect(
+        splitContentCategoryLabels('Vêtements & tissus,Livres , Poissons'),
+        ['Vêtements & tissus', 'Livres', 'Poissons'],
+      );
+    });
+
+    test('returns an empty list for null or empty input', () {
+      expect(splitContentCategoryLabels(null), isEmpty);
+      expect(splitContentCategoryLabels(''), isEmpty);
+    });
+  });
 }

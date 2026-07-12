@@ -1,5 +1,5 @@
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
@@ -120,7 +120,8 @@ class PackageRequest extends Equatable {
       transportMode:
           transportModeFromWire(json['transportMode'] as String?) ??
           TransportMode.plane,
-      categories: ContentCategory.splitWire(json['contentCategory'] as String?),
+      categories:
+          splitContentCategoryLabels(json['contentCategory'] as String?),
       description: json['description'] as String?,
       targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
       photoUrl: json['photoUrl'] as String?,

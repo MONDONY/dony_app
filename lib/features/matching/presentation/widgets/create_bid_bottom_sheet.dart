@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -30,16 +32,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-const _contentCategories = [
-  'Vêtements',
-  'Médicaments',
-  'Alim. sèche',
-  'Documents',
-  'Hi-fi',
-  'Téléphone',
-  'Autre',
-];
 
 const _kAccentBorder = 3.0;
 
@@ -132,6 +124,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
   final _customItemCtrl = TextEditingController();
+  // Seedé synchrone avec le catalogue embarqué (fallbackCatalog) — jamais
+  // vide au premier frame — puis remplacé par le catalogue live du
+  // repository dès qu'il répond (avec repli automatique hors ligne, voir
+  // ContentCategoryRepository.getCategories()).
+  final _catalogLabelsNotifier = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
   final _disclaimerNotifier = ValueNotifier<bool>(false);
   final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
 
@@ -155,7 +154,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   List<String> get _acceptedCategories {
     final accepted = widget.announcement.acceptedContentTypes;
     if (accepted != null && accepted.isNotEmpty) return accepted;
-    return _contentCategories;
+    return _catalogLabelsNotifier.value;
   }
 
   List<String> get _refusedCategories =>
@@ -204,6 +203,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _syncFormButtonState());
+
+    unawaited(_loadCatalog());
+  }
+
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) return;
+    _catalogLabelsNotifier.value = categories.map((c) => c.label).toList();
   }
 
   @override
@@ -232,6 +240,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _quoteNotifier.dispose();
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
+    _catalogLabelsNotifier.dispose();
     _disclaimerNotifier.dispose();
     _gridQuantitiesNotifier.dispose();
     _stepNotifier.dispose();
@@ -801,10 +810,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ],
 
             // ── Contenu ───────────────────────────────────────────────────
-            ValueListenableBuilder<Set<String>>(
-              valueListenable: _categoriesNotifier,
-              builder: (_, categories, __) =>
-                  _buildContentSection(context, categories),
+            ListenableBuilder(
+              listenable:
+                  Listenable.merge([_categoriesNotifier, _catalogLabelsNotifier]),
+              builder: (_, __) =>
+                  _buildContentSection(context, _categoriesNotifier.value),
             ),
             const SizedBox(height: DonySpacing.xxl),
 

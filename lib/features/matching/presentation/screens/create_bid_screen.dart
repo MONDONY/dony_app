@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -11,6 +13,8 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
@@ -21,16 +25,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-const _contentCategories = [
-  'Vêtements',
-  'Médicaments',
-  'Alim. sèche',
-  'Documents',
-  'Hi-fi',
-  'Téléphone',
-  'Autre',
-];
 
 // Layout constants
 // _kScrollPad removed — bottom padding is now dynamic (MediaQuery.padding.bottom + 160)
@@ -60,8 +54,31 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // null = pas de quote calculé ; non-null = quote appliqué (promo ou non)
   final _quoteNotifier = ValueNotifier<Object?>(null); // BidQuoteResponse | String (erreur)
 
+  // Catalogue de types de contenu — seedé synchrone avec le catalogue
+  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
+  // repository dès qu'il répond (repli automatique hors ligne intégré).
+  final _catalogLabelsNotifier = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
+  final _customCatCtrl = TextEditingController();
+
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
+
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) return;
+    _catalogLabelsNotifier.value = categories.map((c) => c.label).toList();
+  }
+
+  void _addCustomCategory() {
+    final value = _customCatCtrl.text.trim();
+    if (value.isEmpty) return;
+    final updated = Set<String>.from(_categoriesNotifier.value)..add(value);
+    _categoriesNotifier.value = updated;
+    _customCatCtrl.clear();
+  }
 
   void _applyPromoCode() {
     final code = _promoCtrl.text.trim();
@@ -82,6 +99,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _weightNotifier = ValueNotifier<double>(
       widget.announcement.availableKg >= 5 ? 5 : widget.announcement.availableKg,
     );
+    unawaited(_loadCatalog());
   }
 
   @override
@@ -91,8 +109,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
     _promoCtrl.dispose();
+    _customCatCtrl.dispose();
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
+    _catalogLabelsNotifier.dispose();
     _disclaimerNotifier.dispose();
     _quoteNotifier.dispose();
     super.dispose();
@@ -178,11 +198,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 listenable: Listenable.merge([
                   _weightNotifier,
                   _categoriesNotifier,
+                  _catalogLabelsNotifier,
                   _disclaimerNotifier,
                 ]),
                 builder: (context, _) {
                   final weightKg = _weightNotifier.value;
                   final categories = _categoriesNotifier.value;
+                  final catalogLabels = _catalogLabelsNotifier.value;
+                  final customCategories = categories
+                      .where((c) => !catalogLabels.contains(c))
+                      .toList();
                   final disclaimerAccepted = _disclaimerNotifier.value;
                   final serviceFee = (weightKg * _pricePerKg) * donyCommissionRate;
                   final basePrice = weightKg * _pricePerKg;
@@ -219,21 +244,32 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                             Wrap(
                               spacing: DonySpacing.sm,
                               runSpacing: DonySpacing.sm,
-                              children: _contentCategories
-                                  .map((cat) => _CategoryChip(
-                                        label: cat,
-                                        selected: categories.contains(cat),
-                                        onTap: () {
-                                          final updated = Set<String>.from(categories);
-                                          if (updated.contains(cat)) {
-                                            updated.remove(cat);
-                                          } else {
-                                            updated.add(cat);
-                                          }
-                                          _categoriesNotifier.value = updated;
-                                        },
-                                      ))
-                                  .toList(),
+                              children: [
+                                for (final cat in catalogLabels)
+                                  _CategoryChip(
+                                    label: cat,
+                                    selected: categories.contains(cat),
+                                    onTap: () {
+                                      final updated = Set<String>.from(categories);
+                                      if (updated.contains(cat)) {
+                                        updated.remove(cat);
+                                      } else {
+                                        updated.add(cat);
+                                      }
+                                      _categoriesNotifier.value = updated;
+                                    },
+                                  ),
+                                for (final cat in customCategories)
+                                  _CategoryChip(
+                                    label: cat,
+                                    selected: true,
+                                    onTap: () {
+                                      final updated = Set<String>.from(categories)
+                                        ..remove(cat);
+                                      _categoriesNotifier.value = updated;
+                                    },
+                                  ),
+                              ],
                             ).animate().fadeIn(delay: 60.ms),
                             const SizedBox(height: DonySpacing.xxl),
 
@@ -299,6 +335,30 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                   hint: 'ex: +221 77 000 00 00',
                                   keyboardType: TextInputType.phone,
                                 ).animate().fadeIn(delay: 180.ms),
+                              ],
+                            ),
+                            const SizedBox(height: DonySpacing.xxl),
+
+                            // ── Autre type de contenu (saisie libre) ──────────────
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    key: const Key('custom-category-input'),
+                                    controller: _customCatCtrl,
+                                    onSubmitted: (_) => _addCustomCategory(),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Ajouter un autre type…',
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  key: const Key('add-custom-category-btn'),
+                                  icon: const Icon(Icons.add_rounded),
+                                  onPressed: _addCustomCategory,
+                                  tooltip: 'Ajouter',
+                                ),
                               ],
                             ),
                             const SizedBox(height: DonySpacing.xxl),
