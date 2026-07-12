@@ -54,6 +54,28 @@ void main() {
     expect(list.first.lastAnnouncement!.arrivalCity, 'Dakar');
   });
 
+  test('getMySubscriptions fallback sur "Voyageur" si travelerName est null',
+      () async {
+    when(() => dio.get('/me/subscriptions')).thenAnswer(
+      (_) async => _ok([
+        {
+          'travelerId': 't2',
+          'travelerName': null,
+          'isProAccount': false,
+          'averageRating': null,
+          'ongoingTripsCount': 0,
+          'pushEnabled': false,
+          'hasNew': false,
+          'lastAnnouncement': null,
+        },
+      ], '/me/subscriptions'),
+    );
+
+    final list = await ds.getMySubscriptions();
+    expect(list, hasLength(1));
+    expect(list.first.travelerName, 'Voyageur');
+  });
+
   test('getStatus parse subscribed/pushEnabled', () async {
     when(() => dio.get('/travelers/t1/subscription')).thenAnswer(
       (_) async => _ok({
