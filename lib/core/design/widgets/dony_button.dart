@@ -5,7 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-enum DonyButtonVariant { primary, secondary, ghost, destructive, success }
+enum DonyButtonVariant { primary, secondary, ghost, destructive, success, accent }
 
 class DonyButton extends StatefulWidget {
   const DonyButton({
@@ -155,6 +155,17 @@ class _DonyButtonState extends State<DonyButton> {
           onPressed: widget.isLoading ? null : widget.onPressed,
           child: content,
         ),
+      DonyButtonVariant.accent => _GlowButton(
+          colors: isLight
+              ? [const Color(0xFFE8865B), DonyColors.terra500]
+              : [DonyColors.terraDark500, const Color(0xFFC85A2E)],
+          shadows: isLight ? DonyShadow.accent : DonyShadow.accent,
+          foreground: DonyColors.textOnBrand,
+          pressed: _pressed,
+          fullWidth: widget.fullWidth,
+          onPressed: widget.isLoading ? null : widget.onPressed,
+          child: content,
+        ),
       DonyButtonVariant.secondary => OutlinedButton(
           onPressed: widget.isLoading ? null : widget.onPressed,
           style: OutlinedButton.styleFrom(
@@ -193,6 +204,7 @@ class _DonyButtonState extends State<DonyButton> {
         DonyButtonVariant.primary     => DonyColors.textOnBrand,
         DonyButtonVariant.success     => DonyColors.textOnBrand,
         DonyButtonVariant.destructive => DonyColors.textOnBrand,
+        DonyButtonVariant.accent      => DonyColors.textOnBrand,
         DonyButtonVariant.secondary   => cs.primary,
         DonyButtonVariant.ghost       => cs.onSurfaceVariant,
       };

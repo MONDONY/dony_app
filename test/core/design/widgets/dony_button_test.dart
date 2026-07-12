@@ -214,5 +214,30 @@ void main() {
       final btn = tester.widget<TextButton>(find.byType(TextButton));
       expect(btn.onPressed, isNull);
     });
+
+    // ─── Accent variant ─────────────────────────────────────────────────────
+
+    testWidgets('DonyButtonVariant.accent renders with terracotta gradient background',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        DonyButton(
+          label: 'Voir mon trajet',
+          variant: DonyButtonVariant.accent,
+          onPressed: () {},
+        ),
+      ));
+      await tester.pump();
+
+      final container = tester.widget<AnimatedContainer>(
+        find.byType(AnimatedContainer),
+      );
+      final decoration = container.decoration as BoxDecoration;
+      final gradient = decoration.gradient as LinearGradient;
+
+      expect(
+        gradient.colors,
+        containsAll(<Color>[const Color(0xFFD96A3A)]),
+      );
+    });
   });
 }
