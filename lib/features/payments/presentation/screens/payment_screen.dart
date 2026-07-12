@@ -10,13 +10,13 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
-import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
+import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 
@@ -64,27 +64,20 @@ class PaymentScreen extends StatelessWidget {
 
   Future<void> _presentPaymentSheet(
       BuildContext context, PaymentSheetReady state) async {
-    try {
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: donyPaymentSheetParams(state.clientSecret),
-      );
-      await Stripe.instance.presentPaymentSheet();
-
-      if (context.mounted) {
+    final total = state.amount + state.commissionAmount;
+    await DonyPaymentSheet.show(
+      context,
+      config: PaymentSheetConfig(
+        clientSecret: state.clientSecret,
+        amountEur: total,
+        paymentMethodTypes: state.paymentMethodTypes,
+      ),
+      contextLabel: 'Envoi de ${bid.recipientName ?? 'votre colis'}',
+      onSuccess: () {
+        if (!context.mounted) return;
         context.read<PaymentBloc>().add(const PaymentSheetCompleted());
-      }
-    } on StripeException catch (e) {
-      if (context.mounted && e.error.code != FailureCode.Canceled) {
-        context.read<PaymentBloc>().add(
-            PaymentFailed(e.error.localizedMessage ?? 'Paiement refusé'));
-      }
-    } catch (_) {
-      if (context.mounted) {
-        context
-            .read<PaymentBloc>()
-            .add(const PaymentFailed('Erreur lors du paiement'));
-      }
-    }
+      },
+    );
   }
 }
 

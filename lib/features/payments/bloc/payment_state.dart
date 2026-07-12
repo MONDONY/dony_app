@@ -59,16 +59,19 @@ class PaymentSheetReady extends PaymentState {
   final double amount;
   final double commissionAmount;
   final String paymentId;
+  final List<String> paymentMethodTypes;
 
   const PaymentSheetReady({
     required this.clientSecret,
     required this.amount,
     required this.commissionAmount,
     required this.paymentId,
+    this.paymentMethodTypes = const [],
   });
 
   @override
-  List<Object?> get props => [clientSecret, amount, commissionAmount, paymentId];
+  List<Object?> get props =>
+      [clientSecret, amount, commissionAmount, paymentId, paymentMethodTypes];
 }
 
 /// Feuille de paiement complétée — escrow actif, en attente de livraison.

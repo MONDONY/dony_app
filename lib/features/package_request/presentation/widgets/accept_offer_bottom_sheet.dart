@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
@@ -9,10 +8,11 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 
 class AcceptOfferBottomSheet {
   const AcceptOfferBottomSheet._();
@@ -88,42 +88,43 @@ class AcceptOfferBottomSheet {
                       }
                       try {
                         if (isCheckout) {
-                          // Stripe escrow flow:
-                          //  1. Backend creates the PaymentIntent and returns clientSecret.
-                          //  2. PaymentSheet collects the card, confirms the PI client-side.
-                          //  3. The Stripe webhook payment_intent.amount_capturable_updated
-                          //     fires server-side → NegotiationPaymentListener finalizes thread.
-                          //  4. We also call /checkout sync as a safety-net so the user sees
-                          //     ACCEPTED immediately without depending on webhook latency.
-                          try {
-                            final init = await getIt<NegotiationRepository>()
-                                .initiatePayment(threadId);
-                            await Stripe.instance.initPaymentSheet(
-                              paymentSheetParameters:
-                                  donyPaymentSheetParams(init.clientSecret),
-                            );
-                            await Stripe.instance.presentPaymentSheet();
-                            bloc.add(NegotiationCheckoutRequested(
-                              threadId: threadId,
-                              paymentIntentId: init.paymentIntentId,
-                            ));
-                          } on StripeException catch (e) {
-                            processing.value = false;
-                            if (ctx.mounted) {
-                              final isCanceled = e.error.code == FailureCode.Canceled;
-                            DonySnackbar.show(
-                                ctx,
-                                message: isCanceled ? 'Paiement annulé' : 'Erreur paiement : ${e.error.message ?? ""}',
-                                type: isCanceled ? DonySnackbarType.warning : DonySnackbarType.error,
-                              );
-                            }
-                            return;
-                          }
+                          // Stripe escrow flow :
+                          //  1. Backend crée le PaymentIntent (clientSecret).
+                          //  2. DonyPaymentSheet collecte le paiement, confirme le PI.
+                          //  3. Le webhook payment_intent.amount_capturable_updated
+                          //     finalise le thread server-side (NegotiationPaymentListener).
+                          //  4. onSuccess appelle aussi /checkout en synchrone (filet de
+                          //     sécurité) pour que l'utilisateur voie ACCEPTED sans
+                          //     dépendre de la latence webhook.
+                          final init = await getIt<NegotiationRepository>()
+                              .initiatePayment(threadId);
+                          await DonyPaymentSheet.show(
+                            ctx,
+                            config: PaymentSheetConfig(
+                              clientSecret: init.clientSecret,
+                              amountEur: init.amountEur,
+                              paymentMethodTypes: init.paymentMethodTypes,
+                            ),
+                            contextLabel: isTraveler
+                                ? 'Paiement de l\'offre acceptée'
+                                : 'Paiement de votre offre',
+                            onSuccess: () {
+                              bloc.add(NegotiationCheckoutRequested(
+                                threadId: threadId,
+                                paymentIntentId: init.paymentIntentId,
+                              ));
+                              if (ctx.mounted) {
+                                Navigator.of(ctx, rootNavigator: true).pop();
+                              }
+                            },
+                          );
+                          // Sheet fermée sans paiement (swipe) → réarmer le bouton.
+                          processing.value = false;
                         } else {
                           bloc.add(NegotiationAcceptRequested(threadId: threadId));
-                        }
-                        if (ctx.mounted) {
-                          Navigator.of(ctx, rootNavigator: true).pop();
+                          if (ctx.mounted) {
+                            Navigator.of(ctx, rootNavigator: true).pop();
+                          }
                         }
                       } catch (e) {
                         processing.value = false;

@@ -14,6 +14,11 @@ PaymentModel _$PaymentModelFromJson(Map<String, dynamic> json) => PaymentModel(
   commissionAmount: (json['commissionAmount'] as num).toDouble(),
   status: $enumDecode(_$PaymentStatusEnumMap, json['status']),
   disputed: json['disputed'] as bool? ?? false,
+  paymentMethodTypes:
+      (json['paymentMethodTypes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      [],
 );
 
 Map<String, dynamic> _$PaymentModelToJson(PaymentModel instance) =>
@@ -25,6 +30,7 @@ Map<String, dynamic> _$PaymentModelToJson(PaymentModel instance) =>
       'commissionAmount': instance.commissionAmount,
       'status': _$PaymentStatusEnumMap[instance.status]!,
       'disputed': instance.disputed,
+      'paymentMethodTypes': instance.paymentMethodTypes,
     };
 
 const _$PaymentStatusEnumMap = {

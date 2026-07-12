@@ -305,7 +305,7 @@ void main() {
         commissionAmount: 6.0,
         paymentId: 'p1',
       );
-      expect(s.props, ['cs', 50.0, 6.0, 'p1']);
+      expect(s.props, ['cs', 50.0, 6.0, 'p1', <String>[]]);
     });
 
     test('PaymentEscrowPending props include amount', () {

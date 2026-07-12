@@ -114,6 +114,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
         amount: payment.amount,
         commissionAmount: payment.commissionAmount,
         paymentId: payment.id,
+        paymentMethodTypes: payment.paymentMethodTypes,
       ));
     } catch (e) {
       emit(PaymentError(unwrapDioError(e)));

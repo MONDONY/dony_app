@@ -17,6 +17,10 @@ class PaymentModel {
   final PaymentStatus status;
   @JsonKey(defaultValue: false)
   final bool disputed;
+  // Types du PaymentIntent (ex. ["card","paypal"]) — bouton PayPal conditionnel
+  // dans la DonyPaymentSheet.
+  @JsonKey(defaultValue: [])
+  final List<String> paymentMethodTypes;
 
   const PaymentModel({
     required this.id,
@@ -26,6 +30,7 @@ class PaymentModel {
     required this.commissionAmount,
     required this.status,
     this.disputed = false,
+    this.paymentMethodTypes = const [],
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) =>
