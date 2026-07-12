@@ -641,6 +641,7 @@ void main() {
         clientSecret: '',
         publishableKey: '',
         bidId: '',
+        amountEur: 0,
       ));
       when(() => _currentPaymentBloc.add(any())).thenReturn(null);
 

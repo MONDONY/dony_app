@@ -155,6 +155,7 @@ void main() {
       clientSecret: '',
       publishableKey: '',
       bidId: '',
+      amountEur: 0,
     ));
     registerFallbackValue(_FakeRecipientEvent());
   });

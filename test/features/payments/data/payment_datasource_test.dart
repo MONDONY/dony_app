@@ -220,4 +220,58 @@ void main() {
       );
     });
   });
+
+  // ── listSavedPaymentMethods ──────────────────────────────────────────────────
+
+  group('listSavedPaymentMethods', () {
+    test('parses les cartes enregistrées', () async {
+      when(() => mockDio.get('/payments/me/payment-methods')).thenAnswer(
+        (_) async => _ok(
+          [
+            {
+              'id': 'pm_1',
+              'brand': 'visa',
+              'last4': '4242',
+              'expMonth': 8,
+              'expYear': 2027,
+            }
+          ],
+          '/payments/me/payment-methods',
+        ),
+      );
+
+      final result = await datasource.listSavedPaymentMethods();
+
+      expect(result, hasLength(1));
+      expect(result.first.id, 'pm_1');
+      expect(result.first.last4, '4242');
+    });
+
+    test('liste vide quand le backend ne renvoie rien', () async {
+      when(() => mockDio.get('/payments/me/payment-methods'))
+          .thenAnswer((_) async => _ok([], '/payments/me/payment-methods'));
+
+      final result = await datasource.listSavedPaymentMethods();
+
+      expect(result, isEmpty);
+    });
+  });
+
+  // ── updateSavePaymentMethod ──────────────────────────────────────────────────
+
+  group('updateSavePaymentMethod', () {
+    test('PATCH avec le flag save', () async {
+      when(() => mockDio.patch(
+            '/payments/intents/pi_123/save-payment-method',
+            data: {'save': false},
+          )).thenAnswer((_) async => _ok(null, '/payments/intents/pi_123/save-payment-method'));
+
+      await datasource.updateSavePaymentMethod('pi_123', false);
+
+      verify(() => mockDio.patch(
+            '/payments/intents/pi_123/save-payment-method',
+            data: {'save': false},
+          )).called(1);
+    });
+  });
 }

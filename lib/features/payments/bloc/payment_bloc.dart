@@ -36,6 +36,8 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       clientSecret: event.clientSecret,
       publishableKey: event.publishableKey,
       bidId: event.bidId,
+      amountEur: event.amountEur,
+      paymentMethodTypes: event.paymentMethodTypes,
     ));
   }
 

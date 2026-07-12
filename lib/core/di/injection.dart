@@ -149,6 +149,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
+import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
@@ -340,6 +341,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<PaymentBloc>(
     () => PaymentBloc(getIt<PaymentRepository>(), getIt<AnalyticsService>()),
   );
+  getIt.registerLazySingleton<PaymentGateway>(() => StripePaymentGateway());
 
   // Wallet
   getIt.registerLazySingleton<WalletRemoteDatasource>(

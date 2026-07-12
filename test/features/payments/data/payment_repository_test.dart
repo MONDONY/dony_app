@@ -3,6 +3,7 @@ import 'package:dony/features/payments/data/datasources/payment_remote_datasourc
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/models/payment_status.dart';
+import 'package:dony/features/payments/data/models/saved_card_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -129,6 +130,50 @@ void main() {
       when(() => mockDs.getPaymentForBid(any()))
           .thenThrow(Exception('network error'));
       expect(() => repo.getPaymentForBid('bid-1'),
+          throwsA(isA<NetworkException>()));
+    });
+  });
+
+  // ── listSavedPaymentMethods ──────────────────────────────────────────────────
+
+  group('listSavedPaymentMethods', () {
+    const card = SavedCardModel(
+      id: 'pm_1',
+      brand: 'visa',
+      last4: '4242',
+      expMonth: 8,
+      expYear: 2027,
+    );
+
+    test('returns cards from datasource', () async {
+      when(() => mockDs.listSavedPaymentMethods())
+          .thenAnswer((_) async => const [card]);
+      final result = await repo.listSavedPaymentMethods();
+      expect(result, hasLength(1));
+    });
+
+    test('wraps Exception in NetworkException', () async {
+      when(() => mockDs.listSavedPaymentMethods())
+          .thenThrow(Exception('network error'));
+      expect(() => repo.listSavedPaymentMethods(),
+          throwsA(isA<NetworkException>()));
+    });
+  });
+
+  // ── updateSavePaymentMethod ──────────────────────────────────────────────────
+
+  group('updateSavePaymentMethod', () {
+    test('delegates to datasource', () async {
+      when(() => mockDs.updateSavePaymentMethod('pi_1', false))
+          .thenAnswer((_) async {});
+      await repo.updateSavePaymentMethod('pi_1', false);
+      verify(() => mockDs.updateSavePaymentMethod('pi_1', false)).called(1);
+    });
+
+    test('wraps Exception in NetworkException', () async {
+      when(() => mockDs.updateSavePaymentMethod(any(), any()))
+          .thenThrow(Exception('network error'));
+      expect(() => repo.updateSavePaymentMethod('pi_1', false),
           throwsA(isA<NetworkException>()));
     });
   });
