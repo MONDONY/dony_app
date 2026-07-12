@@ -1233,12 +1233,18 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         context.pop();
         if (context.mounted) {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => DonySuccessScreen(
+            // Le contexte de CreateBidScreen vient d'être poppé — au moment
+            // du tap CTA son element est désactivé et GoRouter.of(context)
+            // jetterait « Looking up a deactivated widget's ancestor is
+            // unsafe ». On navigue donc via le contexte de la route succès,
+            // toujours monté sous le Navigator racine.
+            builder: (routeContext) => DonySuccessScreen(
               mascotteType: DonyMascotteType.securise,
               title: 'Offre payée !',
               subtitle: 'Le voyageur va être notifié de ta demande.',
               ctaLabel: 'Voir mon envoi',
-              onCta: () => context.go('/bids/${state.bidId}?from=payment'),
+              onCta: () =>
+                  routeContext.go('/bids/${state.bidId}?from=payment'),
             ),
           ));
         }
