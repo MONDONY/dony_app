@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -359,9 +363,15 @@ class _CreateAnnouncementContentState
   final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
-    {'Vêtements', 'Médicaments', 'Documents'},
+    {'Vêtements & tissus', 'Médicaments traditionnels', 'Documents & administratif'},
   );
   final _customAcceptedNotifier = ValueNotifier<Set<String>>({});
+  // Catalogue de types de contenu — seedé synchrone avec le catalogue
+  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
+  // repository dès qu'il répond (repli automatique hors ligne intégré).
+  final _catalogLabelsNotifier = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
   final _cashEnabledNotifier = ValueNotifier<bool>(false);
   late final ValueNotifier<bool> _kgPriceEnabledNotifier;
@@ -394,9 +404,17 @@ class _CreateAnnouncementContentState
     return parsed != null && parsed > 0;
   }
 
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) return;
+    _catalogLabelsNotifier.value = categories.map((c) => c.label).toList();
+  }
+
   @override
   void initState() {
     super.initState();
+    unawaited(_loadCatalog());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<CommissionMethodBloc>().add(CommissionMethodLoadRequested());
@@ -445,10 +463,10 @@ class _CreateAnnouncementContentState
 
       if (a.acceptedContentTypes != null) {
         final presets = Set<String>.from(
-          a.acceptedContentTypes!.where(kContentTypes.contains),
+          a.acceptedContentTypes!.where(_catalogLabelsNotifier.value.contains),
         );
         final custom = Set<String>.from(
-          a.acceptedContentTypes!.where((t) => !kContentTypes.contains(t)),
+          a.acceptedContentTypes!.where((t) => !_catalogLabelsNotifier.value.contains(t)),
         );
         _selectedContentNotifier.value = presets;
         _customAcceptedNotifier.value = custom;
@@ -758,6 +776,7 @@ class _CreateAnnouncementContentState
     _priceOptionNotifier.dispose();
     _selectedContentNotifier.dispose();
     _customAcceptedNotifier.dispose();
+    _catalogLabelsNotifier.dispose();
     _refusedTypesNotifier.dispose();
     _transportModeNotifier.dispose();
     _pickupAddressNotifier.dispose();
@@ -1134,9 +1153,9 @@ class _CreateAnnouncementContentState
     }
 
     _selectedContentNotifier.value =
-        t.acceptedCategories.where(kContentTypes.contains).toSet();
+        t.acceptedCategories.where(_catalogLabelsNotifier.value.contains).toSet();
     _customAcceptedNotifier.value =
-        t.acceptedCategories.where((c) => !kContentTypes.contains(c)).toSet();
+        t.acceptedCategories.where((c) => !_catalogLabelsNotifier.value.contains(c)).toSet();
 
     final unit = switch (t.capacityUnit) {
       'KG_FREE' => CapacityUnit.kgFree,
@@ -1334,6 +1353,7 @@ class _CreateAnnouncementContentState
         selectedContentNotifier: _selectedContentNotifier,
         customAcceptedNotifier: _customAcceptedNotifier,
         refusedTypesNotifier: _refusedTypesNotifier,
+        catalogLabelsNotifier: _catalogLabelsNotifier,
         descriptionCtrl: _descriptionCtrl,
         customAcceptedCtrl: _customAcceptedCtrl,
         refusedCtrl: _refusedCtrl,

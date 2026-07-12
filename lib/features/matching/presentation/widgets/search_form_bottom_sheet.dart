@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
@@ -5,6 +7,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
@@ -13,27 +17,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-// Content types mirroring what travelers can declare in CreateAnnouncement
-const _contentTypes = [
-  'Vêtements',
-  'Médicaments',
-  'Alim. sèche',
-  'Hi-fi',
-  'Documents',
-  'Téléphone',
-  'Cosmétiques',
-];
-
-const _contentTypeIcons = <String, String>{
-  'Vêtements': 'shirt',
-  'Médicaments': 'pill',
-  'Alim. sèche': 'refrigerator',
-  'Hi-fi': 'speaker',
-  'Documents': 'file-text',
-  'Téléphone': 'smartphone',
-  'Cosmétiques': 'scan-face',
-};
 
 class SearchFormBottomSheet {
   static Future<SearchParams?> show(
@@ -138,10 +121,25 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   late final ValueNotifier<bool> _kycVerifiedOnlyNotifier;
   late final ValueNotifier<String?> _contentTypeNotifier;
   late final ValueNotifier<UrgencyFilter?> _urgencyFilterNotifier;
+  // Catalogue de types de contenu — seedé synchrone avec le catalogue
+  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
+  // repository dès qu'il répond (repli automatique hors ligne intégré).
+  final _catalogLabelsNotifier = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
+  final _customContentCtrl = TextEditingController();
+
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) return;
+    _catalogLabelsNotifier.value = categories.map((c) => c.label).toList();
+  }
 
   @override
   void initState() {
     super.initState();
+    unawaited(_loadCatalog());
     final p = widget.initialParams;
     _departureCityNotifier = ValueNotifier<String?>(p?.departureCity);
     _arrivalCityNotifier = ValueNotifier<String?>(p?.arrivalCity);
@@ -203,6 +201,8 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _kycVerifiedOnlyNotifier.dispose();
     _contentTypeNotifier.dispose();
     _urgencyFilterNotifier.dispose();
+    _catalogLabelsNotifier.dispose();
+    _customContentCtrl.dispose();
     super.dispose();
   }
 
@@ -222,6 +222,13 @@ class _SearchFormContentState extends State<_SearchFormContent> {
       contentType: _contentTypeNotifier.value,
       urgencyFilter: _urgencyFilterNotifier.value,
     ));
+  }
+
+  void _submitCustomContentType() {
+    final value = _customContentCtrl.text.trim();
+    if (value.isEmpty) return;
+    _contentTypeNotifier.value = value;
+    _customContentCtrl.clear();
   }
 
   void _reset() {
@@ -274,6 +281,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
         _kycVerifiedOnlyNotifier,
         _contentTypeNotifier,
         _urgencyFilterNotifier,
+        _catalogLabelsNotifier,
       ]),
       builder: (context, _) {
         return Column(
@@ -398,11 +406,11 @@ class _SearchFormContentState extends State<_SearchFormContent> {
             Wrap(
               spacing: DonySpacing.sm,
               runSpacing: DonySpacing.sm,
-              children: _contentTypes.map((type) {
+              children: _catalogLabelsNotifier.value.map((type) {
                 final isSelected = _contentTypeNotifier.value == type;
                 return _ContentTypeChip(
                   label: type,
-                  iconAsset: _contentTypeIcons[type] ?? 'package',
+                  emoji: emojiForLabel(type),
                   selected: isSelected,
                   onTap: () {
                     _contentTypeNotifier.value = isSelected ? null : type;
@@ -410,6 +418,28 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                 );
               }).toList(),
             ).animate().fadeIn(delay: 100.ms),
+            const SizedBox(height: DonySpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: const Key('content-type-free-text'),
+                    controller: _customContentCtrl,
+                    onSubmitted: (_) => _submitCustomContentType(),
+                    decoration: const InputDecoration(
+                      hintText: 'Ajouter un autre type…',
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  key: const Key('content-type-free-text-add-btn'),
+                  icon: const Icon(Icons.add_rounded),
+                  onPressed: _submitCustomContentType,
+                  tooltip: 'Ajouter',
+                ),
+              ],
+            ),
             const SizedBox(height: DonySpacing.xl),
 
             // ── Urgence du départ ────────────────────────────────────────
@@ -785,11 +815,11 @@ class _ContentTypeChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    required this.iconAsset,
+    required this.emoji,
   });
 
   final String label;
-  final String iconAsset;
+  final String emoji;
   final bool selected;
   final VoidCallback onTap;
 
@@ -812,9 +842,7 @@ class _ContentTypeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIcon(iconAsset,
-                size: 14,
-                color: selected ? cs.primary : cs.onSurfaceVariant),
+            Text(emoji, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: DonySpacing.xs),
             Text(
               label,

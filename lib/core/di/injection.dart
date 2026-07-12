@@ -35,6 +35,8 @@ import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
+import 'package:dony/features/content_categories/data/content_category_datasource.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
@@ -429,6 +431,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<ConnectOnboardingBloc>(
     () => ConnectOnboardingBloc(getIt<IConnectOnboardingRepository>()),
+  );
+
+  // Content categories (catalogue unifié des types de contenu de colis)
+  getIt.registerLazySingleton<ContentCategoryDatasource>(
+    () => ContentCategoryDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<IContentCategoryRepository>(
+    () => ContentCategoryRepository(getIt<ContentCategoryDatasource>()),
   );
 
   // Profile (upgrade PRO + statistiques PRO)

@@ -7,6 +7,8 @@ import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -46,6 +48,13 @@ class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
 class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+/// Repository de catalogue mocké — prouve que l'écran affiche le catalogue
+/// fourni par le repository (pas une liste figée en dur).
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -116,7 +125,7 @@ Future<void> _pumpScreen(WidgetTester tester, MockBidBloc bidBloc, MockPaymentBl
 // Selects one category + checks disclaimer → makes canSubmit = true.
 // Requires _pumpScreen to have been called first.
 Future<void> _enableSubmit(WidgetTester tester) async {
-  await tester.tap(find.text('Vêtements'));
+  await tester.tap(find.text('Vêtements & tissus'));
   await tester.pump();
   await tester.tap(find.byType(Checkbox).first);
   await tester.pump();
@@ -172,6 +181,13 @@ void main() {
       getIt.unregister<RecipientBloc>();
     }
     getIt.registerFactory<RecipientBloc>(() => recipientBloc);
+
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
+    getIt.registerFactory<IContentCategoryRepository>(
+      () => _FakeContentCategoryRepository(),
+    );
   });
 
   tearDown(() {
@@ -179,6 +195,9 @@ void main() {
     paymentBloc.close();
     if (getIt.isRegistered<RecipientBloc>()) {
       getIt.unregister<RecipientBloc>();
+    }
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
     }
   });
 
@@ -213,21 +232,29 @@ void main() {
       expect(find.textContaining('Ibrahima Diallo'), findsOneWidget);
     });
 
-    testWidgets('affiche les 7 chips de catégorie', (tester) async {
-      await _pumpScreen(tester, bidBloc, paymentBloc);
+    testWidgets(
+      'affiche le catalogue fourni par le repository (pas une liste figée) '
+      'et permet une saisie libre',
+      (tester) async {
+        await _pumpScreen(tester, bidBloc, paymentBloc);
 
-      for (final cat in [
-        'Vêtements',
-        'Médicaments',
-        'Alim. sèche',
-        'Documents',
-        'Hi-fi',
-        'Téléphone',
-        'Autre',
-      ]) {
-        expect(find.text(cat), findsOneWidget);
-      }
-    });
+        // Les 11 catégories du catalogue (mocké via _FakeContentCategoryRepository)
+        // sont affichées — la source est le repository, pas une constante figée.
+        for (final category in fallbackCatalog) {
+          expect(find.text(category.label), findsOneWidget);
+        }
+
+        // Saisie libre : ajouter un type absent du catalogue.
+        await tester.enterText(
+          find.byKey(const Key('custom-category-input')),
+          'Poissons',
+        );
+        await tester.tap(find.byKey(const Key('add-custom-category-btn')));
+        await tester.pump();
+
+        expect(find.text('Poissons'), findsOneWidget);
+      },
+    );
 
     testWidgets('bouton désactivé sans catégorie ni disclaimer',
         (tester) async {
@@ -314,7 +341,7 @@ void main() {
         (tester) async {
       await _pumpScreen(tester, bidBloc, paymentBloc);
 
-      await tester.tap(find.text('Médicaments'));
+      await tester.tap(find.text('Médicaments traditionnels'));
       await tester.pump();
 
       expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check'), findsOneWidget);
@@ -324,9 +351,9 @@ void main() {
         (tester) async {
       await _pumpScreen(tester, bidBloc, paymentBloc);
 
-      await tester.tap(find.text('Documents'));
+      await tester.tap(find.text('Documents & administratif'));
       await tester.pump();
-      await tester.tap(find.text('Documents'));
+      await tester.tap(find.text('Documents & administratif'));
       await tester.pump();
 
       expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check'), findsNothing);
@@ -335,9 +362,9 @@ void main() {
     testWidgets('sélection multiple → plusieurs icônes check', (tester) async {
       await _pumpScreen(tester, bidBloc, paymentBloc);
 
-      await tester.tap(find.text('Vêtements'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
-      await tester.tap(find.text('Médicaments'));
+      await tester.tap(find.text('Médicaments traditionnels'));
       await tester.pump();
 
       expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check'), findsNWidgets(2));

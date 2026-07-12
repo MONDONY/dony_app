@@ -1,4 +1,7 @@
 // Step 2 widget test — catégories multiples (chips multi + input libre + ajout).
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -11,11 +14,29 @@ import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
+
 void main() {
   late _MockPackageRepo packageRepo;
 
   setUp(() {
     packageRepo = _MockPackageRepo();
+
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
+    getIt.registerFactory<IContentCategoryRepository>(
+      () => _FakeContentCategoryRepository(),
+    );
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
   });
 
   Widget wrap(Widget child) => MaterialApp(
@@ -51,15 +72,15 @@ void main() {
     testWidgets('chips prédéfinies en multi-sélection', (tester) async {
       await tester.pumpWidget(wrap(const Step2Details()));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Vêtements'));
-      await tester.tap(find.text('Vêtements'));
+      await tester.ensureVisible(find.text('Vêtements & tissus'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
-      await tester.ensureVisible(find.text('Documents'));
-      await tester.tap(find.text('Documents'));
+      await tester.ensureVisible(find.text('Documents & administratif'));
+      await tester.tap(find.text('Documents & administratif'));
       await tester.pump();
       // Les deux restent affichées (pas d'exclusivité).
-      expect(find.text('Vêtements'), findsOneWidget);
-      expect(find.text('Documents'), findsOneWidget);
+      expect(find.text('Vêtements & tissus'), findsOneWidget);
+      expect(find.text('Documents & administratif'), findsOneWidget);
     });
 
     testWidgets(

@@ -4,14 +4,16 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
-import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,6 +33,13 @@ class PrixConditionsStep extends StatelessWidget {
   final ValueNotifier<Set<String>> selectedContentNotifier;
   final ValueNotifier<Set<String>> customAcceptedNotifier;
   final ValueNotifier<Set<String>> refusedTypesNotifier;
+
+  /// Catalogue de labels de types de contenu — piloté par le repository
+  /// (`ContentCategoryRepository`), avec repli embarqué. Remplace l'ancienne
+  /// liste figée de types de contenu. Propriété du parent (host
+  /// `create_announcement_bottom_sheet.dart` / `create_trip_screen.dart`)
+  /// comme les autres notifiers.
+  final ValueNotifier<List<String>> catalogLabelsNotifier;
   final TextEditingController descriptionCtrl;
   final TextEditingController customAcceptedCtrl;
   final TextEditingController refusedCtrl;
@@ -62,6 +71,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.selectedContentNotifier,
     required this.customAcceptedNotifier,
     required this.refusedTypesNotifier,
+    required this.catalogLabelsNotifier,
     required this.descriptionCtrl,
     required this.customAcceptedCtrl,
     required this.refusedCtrl,
@@ -594,116 +604,39 @@ class PrixConditionsStep extends StatelessWidget {
           listenable: Listenable.merge([
             selectedContentNotifier,
             customAcceptedNotifier,
+            catalogLabelsNotifier,
           ]),
           builder: (context, _) {
-            final selected = selectedContentNotifier.value;
-            final custom = customAcceptedNotifier.value;
+            final catalogLabels = catalogLabelsNotifier.value;
+            final catalog = catalogLabels
+                .map((label) => ContentCategory(
+                      code: label,
+                      label: label,
+                      emoji: emojiForLabel(label),
+                    ))
+                .toList();
+            final catalogSet = catalogLabels.toSet();
+            final combinedSelected = <String>{
+              ...selectedContentNotifier.value,
+              ...customAcceptedNotifier.value,
+            }.toList();
 
             return CaSectionCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Predefined chips
-                  Padding(
-                    padding: const EdgeInsets.all(DonySpacing.base),
-                    child: Wrap(
-                      spacing: DonySpacing.xs,
-                      runSpacing: DonySpacing.xs,
-                      children: kContentTypes.map((type) {
-                        final isSelected = selected.contains(type);
-                        return GestureDetector(
-                          onTap: () {
-                            final updated = Set<String>.from(selected);
-                            if (isSelected) {
-                              updated.remove(type);
-                            } else {
-                              updated.add(type);
-                            }
-                            selectedContentNotifier.value = updated;
-                          },
-                          child: AnimatedContainer(
-                            duration: 160.ms,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.md,
-                              vertical: DonySpacing.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? cs.success
-                                  : Theme.of(context)
-                                      .scaffoldBackgroundColor,
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.full),
-                              border: Border.all(
-                                color:
-                                    isSelected ? cs.success : cs.outline,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (isSelected) ...[
-                                  const DonyIcon('check',
-                                      size: 12, color: DonyColors.white),
-                                  const SizedBox(width: DonySpacing.xs),
-                                ],
-                                Text(
-                                  type,
-                                  style: tt.bodySmall?.copyWith(
-                                    color: isSelected
-                                        ? DonyColors.white
-                                        : cs.onSurface,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  // Custom items
-                  if (custom.isNotEmpty) ...[
-                    const CaRowDivider(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.sm,
-                      ),
-                      child: Wrap(
-                        spacing: DonySpacing.xs,
-                        runSpacing: DonySpacing.xs,
-                        children: custom
-                            .map((item) => CaRemovableChip(
-                                  label: item,
-                                  accentColor: cs.success,
-                                  onRemove: () {
-                                    final updated =
-                                        Set<String>.from(custom)
-                                          ..remove(item);
-                                    customAcceptedNotifier.value = updated;
-                                  },
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                  const CaRowDivider(),
-                  CaInlineAddRow(
-                    controller: customAcceptedCtrl,
-                    hint: 'Ajouter un autre type…',
-                    onAdd: () {
-                      final val = customAcceptedCtrl.text.trim();
-                      if (val.isEmpty) return;
-                      customAcceptedNotifier.value = {
-                        ...customAcceptedNotifier.value,
-                        val,
-                      };
-                      customAcceptedCtrl.clear();
-                    },
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(DonySpacing.base),
+                child: ContentCategoryComboBox(
+                  keyPrefix: 'accepted-content',
+                  catalog: catalog,
+                  selected: combinedSelected,
+                  onChanged: (labels) {
+                    final labelSet = labels.toSet();
+                    selectedContentNotifier.value =
+                        labelSet.where(catalogSet.contains).toSet();
+                    customAcceptedNotifier.value = labelSet
+                        .where((l) => !catalogSet.contains(l))
+                        .toSet();
+                  },
+                ),
               ),
             );
           },
@@ -714,50 +647,32 @@ class PrixConditionsStep extends StatelessWidget {
         const CaSectionLabel(
             label: 'Ce que je refuse', iconAsset: 'ban'),
         const SizedBox(height: DonySpacing.sm),
-        ValueListenableBuilder<Set<String>>(
-          valueListenable: refusedTypesNotifier,
-          builder: (context, refused, _) {
+        ListenableBuilder(
+          listenable: Listenable.merge([
+            refusedTypesNotifier,
+            catalogLabelsNotifier,
+          ]),
+          builder: (context, _) {
+            final catalogLabels = catalogLabelsNotifier.value;
+            final catalog = catalogLabels
+                .map((label) => ContentCategory(
+                      code: label,
+                      label: label,
+                      emoji: emojiForLabel(label),
+                    ))
+                .toList();
+
             return CaSectionCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CaInlineAddRow(
-                    controller: refusedCtrl,
-                    hint: 'Ex: Liquides, Denrées périssables…',
-                    accentColor: cs.error,
-                    onAdd: () {
-                      final val = refusedCtrl.text.trim();
-                      if (val.isEmpty) return;
-                      refusedTypesNotifier.value = {...refused, val};
-                      refusedCtrl.clear();
-                    },
-                  ),
-                  if (refused.isNotEmpty) ...[
-                    const CaRowDivider(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.sm,
-                      ),
-                      child: Wrap(
-                        spacing: DonySpacing.xs,
-                        runSpacing: DonySpacing.xs,
-                        children: refused
-                            .map((item) => CaRemovableChip(
-                                  label: item,
-                                  accentColor: cs.error,
-                                  onRemove: () {
-                                    final updated =
-                                        Set<String>.from(refused)
-                                          ..remove(item);
-                                    refusedTypesNotifier.value = updated;
-                                  },
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(DonySpacing.base),
+                child: ContentCategoryComboBox(
+                  keyPrefix: 'refused-content',
+                  catalog: catalog,
+                  selected: refusedTypesNotifier.value.toList(),
+                  hint: 'Ex: Liquides, Denrées périssables…',
+                  onChanged: (labels) =>
+                      refusedTypesNotifier.value = labels.toSet(),
+                ),
               ),
             );
           },

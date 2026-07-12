@@ -4,6 +4,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
@@ -59,6 +61,11 @@ class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
 class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 // ── GetIt captures ─────────────────────────────────────────────────────────────
 //
@@ -161,7 +168,7 @@ Future<void> _openSheet(
 }
 
 Future<void> _enableSubmitButton(WidgetTester tester) async {
-  await tester.tap(find.text('Vêtements'));
+  await tester.tap(find.text('Vêtements & tissus'));
   await tester.pump();
   await tester.tap(find.byType(Checkbox).first);
   await tester.pump();
@@ -215,6 +222,11 @@ void main() {
     }
     if (!getIt.isRegistered<RecipientBloc>()) {
       getIt.registerFactory<RecipientBloc>(() => _currentRecipientBloc);
+    }
+    if (!getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.registerFactory<IContentCategoryRepository>(
+        () => _FakeContentCategoryRepository(),
+      );
     }
   });
 

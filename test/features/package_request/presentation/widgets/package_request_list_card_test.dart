@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -10,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 PackageRequestSearchItem _item({
-  ContentCategory category = ContentCategory.vetements,
+  String categoryLabel = 'Vêtements & tissus',
   ParcelSize size = ParcelSize.medium,
   double? targetPrice = 35,
   String? photoUrl,
@@ -26,7 +25,7 @@ PackageRequestSearchItem _item({
   dateToleranceDays: 2,
   weightKg: 5,
   parcelSize: size,
-  categories: [category.label],
+  categories: [categoryLabel],
   targetPriceEur: targetPrice,
   photoUrl: photoUrl,
   photoUrls: photoUrls,
@@ -58,7 +57,7 @@ void main() {
         await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
         await tester.pumpAndSettle();
         expect(find.text('Demande d\'envoi'), findsOneWidget);
-        expect(find.text('5 kg · Vêtements · M'), findsOneWidget);
+        expect(find.text('5 kg · Vêtements & tissus · M'), findsOneWidget);
         expect(find.textContaining('Paris → Dakar'), findsOneWidget);
         expect(find.text('35 €'), findsOneWidget);
       },
@@ -119,7 +118,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           PackageRequestListCard(
-            item: _item(category: ContentCategory.medicaments),
+            item: _item(categoryLabel: 'Médicaments traditionnels'),
           ),
         ),
       );
@@ -156,7 +155,7 @@ void main() {
         wrap(PackageRequestListCard(item: _item(), onTap: () => tapped = true)),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('5 kg · Vêtements · M'));
+      await tester.tap(find.text('5 kg · Vêtements & tissus · M'));
       await tester.pump();
       expect(tapped, isTrue);
     });
@@ -166,7 +165,7 @@ void main() {
         wrap(PackageRequestListCard(item: _item(), onMakeOffer: () {})),
       );
       await tester.pumpAndSettle();
-      expect(find.text('5 kg · Vêtements · M'), findsOneWidget);
+      expect(find.text('5 kg · Vêtements & tissus · M'), findsOneWidget);
     });
 
     testWidgets('pas de CTA « Faire une offre »', (tester) async {

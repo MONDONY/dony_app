@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
-import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
     show OptionButton;
@@ -36,12 +40,22 @@ class Step2DetailsState extends State<Step2Details> {
   /// Catégories libres ajoutées par l'utilisateur (ordonnées).
   final List<String> _customCats = [];
 
-  /// Message d'erreur si aucune catégorie n'est choisie à la soumission.
+  /// Message d'erreur si aucune catégorie n'est choisie à la soumission (ou
+  /// si la limite de sélection est atteinte).
   String? _catError;
 
-  /// Catégories prédéfinies (hors « Autre ») proposées en chips.
-  static final _predefined = ContentCategory.values
-      .where((c) => c != ContentCategory.autre)
+  /// Nombre max de catégories sélectionnables. Le DTO backend
+  /// (`PackageRequestCreateRequest.contentCategory`) est `@Size(max=255)` et
+  /// la valeur envoyée est `categories.join(',')` : 11 libellés canoniques
+  /// joints avoisinent déjà ~250 caractères, donc on plafonne côté Flutter
+  /// plutôt que de risquer un 422 silencieux sur une sélection large.
+  static const _kMaxCategories = 5;
+
+  /// Catégories prédéfinies (hors « Autre ») proposées en chips — seedées
+  /// synchrone avec le catalogue embarqué, puis remplacées par le catalogue
+  /// live du repository dès qu'il répond (repli hors ligne intégré).
+  List<ContentCategory> _predefined = fallbackCatalog
+      .where((c) => c.code != 'AUTRE')
       .toList(growable: false);
 
   @override
@@ -56,8 +70,9 @@ class Step2DetailsState extends State<Step2Details> {
           : w.toString();
     }
     if (s.parcelSize != null) _size = s.parcelSize!;
+    final predefinedLabels = _predefined.map((c) => c.label).toSet();
     for (final cat in s.categories) {
-      if (ContentCategory.predefinedLabels.contains(cat)) {
+      if (predefinedLabels.contains(cat)) {
         _selectedCats.add(cat);
       } else {
         _customCats.add(cat);
@@ -66,6 +81,16 @@ class Step2DetailsState extends State<Step2Details> {
     if (s.description != null && s.description!.isNotEmpty) {
       _descriptionCtrl.text = s.description!;
     }
+    unawaited(_loadCatalog());
+  }
+
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) return;
+    setState(() {
+      _predefined = categories.where((c) => c.code != 'AUTRE').toList();
+    });
   }
 
   @override
@@ -76,7 +101,13 @@ class Step2DetailsState extends State<Step2Details> {
     super.dispose();
   }
 
+  bool get _atSelectionLimit => _allCategories.length >= _kMaxCategories;
+
   void _toggleCat(String label) {
+    if (!_selectedCats.contains(label) && _atSelectionLimit) {
+      setState(() => _catError = 'Maximum $_kMaxCategories catégories');
+      return;
+    }
     setState(() {
       if (_selectedCats.contains(label)) {
         _selectedCats.remove(label);
@@ -90,6 +121,10 @@ class Step2DetailsState extends State<Step2Details> {
   void _addCustom() {
     final v = _customCatCtrl.text.trim();
     if (v.isEmpty) return;
+    if (_atSelectionLimit) {
+      setState(() => _catError = 'Maximum $_kMaxCategories catégories');
+      return;
+    }
     if (!_customCats.contains(v) && !_selectedCats.contains(v)) {
       setState(() {
         _customCats.add(v);

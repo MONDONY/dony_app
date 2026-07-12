@@ -13,6 +13,7 @@
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -97,6 +98,9 @@ Widget _host({
   final selectedContentNotifier = ValueNotifier<Set<String>>({});
   final customAcceptedNotifier = ValueNotifier<Set<String>>({});
   final refusedTypesNotifier = ValueNotifier<Set<String>>({});
+  final catalogLabelsNotifier = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
   final descriptionCtrl = TextEditingController();
   final customAcceptedCtrl = TextEditingController();
   final refusedCtrl = TextEditingController();
@@ -122,6 +126,7 @@ Widget _host({
             selectedContentNotifier: selectedContentNotifier,
             customAcceptedNotifier: customAcceptedNotifier,
             refusedTypesNotifier: refusedTypesNotifier,
+            catalogLabelsNotifier: catalogLabelsNotifier,
             descriptionCtrl: descriptionCtrl,
             customAcceptedCtrl: customAcceptedCtrl,
             refusedCtrl: refusedCtrl,
@@ -274,17 +279,72 @@ void main() {
       expect(find.text("Ce que j'accepte"), findsOneWidget);
     });
 
-    testWidgets('les chips de types de contenu prédéfinis sont affichés',
-        (tester) async {
-      await _pump(tester);
-      for (final type in kContentTypes) {
-        expect(
-          find.text(type),
-          findsOneWidget,
-          reason: 'Chip "$type" doit être présent dans Ce que j\'accepte',
+    testWidgets(
+      'focus sur le combobox « accepte » ouvre le catalogue complet (11 items) — pas une liste figée',
+      (tester) async {
+        await _pump(tester);
+        await tester.tap(find.byKey(const Key('accepted-content-field')));
+        await tester.pumpAndSettle();
+        for (final category in fallbackCatalog) {
+          expect(
+            find.byKey(Key('accepted-content-item-${category.label}')),
+            findsOneWidget,
+            reason:
+                'Item "${category.label}" doit être présent dans le combobox "Ce que j\'accepte"',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      'focus sur le combobox « refuse » ouvre aussi le catalogue complet',
+      (tester) async {
+        await tester.pumpWidget(_host());
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump();
+        await tester.dragUntilVisible(
+          find.byKey(const Key('refused-content-field')),
+          find.byType(SingleChildScrollView),
+          const Offset(0, -200),
         );
-      }
-    });
+        await tester.tap(find.byKey(const Key('refused-content-field')));
+        await tester.pumpAndSettle();
+        for (final category in fallbackCatalog) {
+          expect(
+            find.byKey(Key('refused-content-item-${category.label}')),
+            findsOneWidget,
+            reason:
+                'Item "${category.label}" doit être présent dans le combobox "Ce que je refuse"',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      'saisie libre dans le combobox "Ce que j\'accepte" ajoute un élément custom',
+      (tester) async {
+        // Grand viewport pour que le champ + l'overlay tiennent entièrement
+        // dans la fenêtre de test (évite un overlay tronqué en bas d'écran).
+        tester.view.physicalSize = const Size(800, 2000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await _pump(tester);
+        await tester.tap(find.byKey(const Key('accepted-content-field')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('accepted-content-field')),
+          'Poissons',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('accepted-content-item-add')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('accepted-content-tag-Poissons')),
+          findsOneWidget,
+        );
+      },
+    );
 
     // ── Section CE QUE JE REFUSE ──────────────────────────────────────────────
 
@@ -293,6 +353,31 @@ void main() {
       await _pump(tester);
       expect(find.text('Ce que je refuse'), findsOneWidget);
     });
+
+    testWidgets(
+      'saisie libre dans le combobox "Ce que je refuse" ajoute un élément custom',
+      (tester) async {
+        await _pump(tester);
+        await tester.dragUntilVisible(
+          find.byKey(const Key('refused-content-field')),
+          find.byType(SingleChildScrollView),
+          const Offset(0, -200),
+        );
+        await tester.tap(find.byKey(const Key('refused-content-field')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('refused-content-field')),
+          'Alcool',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('refused-content-item-add')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('refused-content-tag-Alcool')),
+          findsOneWidget,
+        );
+      },
+    );
 
     // ── Section NOTE AUX EXPÉDITEURS ─────────────────────────────────────────
 
@@ -419,6 +504,9 @@ void main() {
       final selContent = ValueNotifier<Set<String>>({});
       final custAccepted = ValueNotifier<Set<String>>({});
       final refused = ValueNotifier<Set<String>>({});
+      final catalogLabels = ValueNotifier<List<String>>(
+        fallbackCatalog.map((c) => c.label).toList(),
+      );
       final descCtrl = TextEditingController();
       final custAccCtrl = TextEditingController();
       final refCtrl = TextEditingController();
@@ -443,6 +531,7 @@ void main() {
                   selectedContentNotifier: selContent,
                   customAcceptedNotifier: custAccepted,
                   refusedTypesNotifier: refused,
+                  catalogLabelsNotifier: catalogLabels,
                   descriptionCtrl: descCtrl,
                   customAcceptedCtrl: custAccCtrl,
                   refusedCtrl: refCtrl,

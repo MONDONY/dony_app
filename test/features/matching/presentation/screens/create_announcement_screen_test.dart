@@ -3,6 +3,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -40,6 +42,11 @@ class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
 
 class MockCityRepository extends Mock implements CityRepository {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 class MockTripTemplateBloc
     extends MockBloc<TripTemplateEvent, TripTemplateState>
@@ -154,6 +161,9 @@ void main() {
     when(() => mockCityRepo.searchCities(any())).thenAnswer((_) async => []);
     when(() => mockCityRepo.getPopularCorridors()).thenAnswer((_) async => []);
     getIt.registerFactory<CitySearchBloc>(() => CitySearchBloc(mockCityRepo));
+    getIt.registerFactory<IContentCategoryRepository>(
+      () => _FakeContentCategoryRepository(),
+    );
   });
 
   tearDownAll(() {
