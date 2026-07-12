@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
-import 'package:dony/core/design/widgets/dony_snackbar.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -16,11 +16,14 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/data/payment_gateway.dart';
+import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -48,6 +51,24 @@ class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
 class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+class _MockLocalAuthService extends Mock implements LocalAuthService {}
+
+class _MockBox extends Mock implements Box {}
+
+class _MockPaymentGateway extends Mock implements PaymentGateway {}
+
+class _MockPaymentRepository extends Mock implements PaymentRepository {}
+
+/// [HiveService.userPrefs] normally opens a real Hive box — overridden here
+/// so tests can inject a [Box] mock without touching the filesystem.
+class _FakeHiveService extends HiveService {
+  _FakeHiveService(this._box);
+  final Box _box;
+
+  @override
+  Box get userPrefs => _box;
+}
 
 /// Repository de catalogue mocké — prouve que l'écran affiche le catalogue
 /// fourni par le repository (pas une liste figée en dur).
@@ -664,6 +685,123 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Erreur réseau'), findsOneWidget);
+    });
+  });
+
+  // ── 6. Paiement Stripe réussi → DonySuccessScreen ────────────────────────
+
+  group('Paiement Stripe réussi', () {
+    late _MockLocalAuthService authService;
+    late _MockBox userPrefsBox;
+    late _MockPaymentGateway paymentGateway;
+    late _MockPaymentRepository paymentRepository;
+
+    setUp(() {
+      authService = _MockLocalAuthService();
+      userPrefsBox = _MockBox();
+      // Biométrie activée + réussie → requirePaymentAuth ne passe jamais par
+      // l'écran PIN '/auth/local' (pas de route stub nécessaire).
+      when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
+      when(() => authService.isBiometricAvailable())
+          .thenAnswer((_) async => true);
+      when(() => authService.authenticateWithBiometric())
+          .thenAnswer((_) async => true);
+
+      paymentGateway = _MockPaymentGateway();
+      // PlatformPayButton (Apple/Google Pay) plante hors iOS/Android réel —
+      // on désactive le wallet et paie via PayPal (bouton Flutter classique).
+      when(() => paymentGateway.isPlatformPaySupported())
+          .thenAnswer((_) async => false);
+      when(() => paymentGateway.confirmPayPal(any()))
+          .thenAnswer((_) async {});
+
+      paymentRepository = _MockPaymentRepository();
+      when(() => paymentRepository.listSavedPaymentMethods())
+          .thenAnswer((_) async => []);
+
+      if (getIt.isRegistered<LocalAuthService>()) {
+        getIt.unregister<LocalAuthService>();
+      }
+      getIt.registerFactory<LocalAuthService>(() => authService);
+
+      if (getIt.isRegistered<HiveService>()) {
+        getIt.unregister<HiveService>();
+      }
+      getIt.registerFactory<HiveService>(() => _FakeHiveService(userPrefsBox));
+
+      if (getIt.isRegistered<PaymentGateway>()) {
+        getIt.unregister<PaymentGateway>();
+      }
+      getIt.registerFactory<PaymentGateway>(() => paymentGateway);
+
+      if (getIt.isRegistered<PaymentRepository>()) {
+        getIt.unregister<PaymentRepository>();
+      }
+      getIt.registerFactory<PaymentRepository>(() => paymentRepository);
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<LocalAuthService>()) {
+        getIt.unregister<LocalAuthService>();
+      }
+      if (getIt.isRegistered<HiveService>()) {
+        getIt.unregister<HiveService>();
+      }
+      if (getIt.isRegistered<PaymentGateway>()) {
+        getIt.unregister<PaymentGateway>();
+      }
+      if (getIt.isRegistered<PaymentRepository>()) {
+        getIt.unregister<PaymentRepository>();
+      }
+    });
+
+    testWidgets(
+        'CheckoutPaymentSheetReady + paiement PayPal réussi → '
+        'DonySuccessScreen puis CTA vers /bids/{id}?from=payment',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      whenListen<PaymentState>(
+        paymentBloc,
+        Stream.fromIterable([
+          const CheckoutPaymentSheetReady(
+            clientSecret: 'pi_test_secret',
+            publishableKey: 'pk_test',
+            bidId: 'bid-42',
+            amountEur: 56.0,
+            paymentMethodTypes: ['paypal'],
+          ),
+        ]),
+        initialState: const PaymentInitial(),
+      );
+
+      await tester.pumpWidget(_buildScreen(bidBloc, paymentBloc));
+      await tester.pumpAndSettle();
+
+      // La DonyPaymentSheet est ouverte (PayPal dispo, aucune carte
+      // enregistrée) → on paie via le bouton PayPal.
+      await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
+      await tester.pump(); // PaymentSheetProcessing
+      await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
+      await tester
+          .pump(const Duration(milliseconds: 900)); // déclenchement onSuccess
+      await tester.pumpAndSettle();
+
+      verify(() => bidBloc.add(any(
+              that: isA<BidConfirmPaymentRequested>()
+                  .having((e) => e.bidId, 'bidId', 'bid-42'))))
+          .called(1);
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Offre payée !'), findsOneWidget);
+
+      await tester.tap(find.text('Voir mon envoi'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bid detail screen'), findsOneWidget);
     });
   });
 }

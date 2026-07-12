@@ -536,9 +536,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         // Synchronously confirm the payment with the backend so the bid is
         // promoted to PENDING immediately (does not depend on the Stripe webhook).
         context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
-        // ?from=payment makes the bid-detail back arrow route to /home (mes envois)
-        // instead of popping back to the just-completed checkout form.
-        context.push('/bids/${state.bidId}?from=payment');
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => DonySuccessScreen(
+            mascotteType: DonyMascotteType.securise,
+            title: 'Offre payée !',
+            subtitle: 'Le voyageur va être notifié de ta demande.',
+            ctaLabel: 'Voir mon envoi',
+            // ?from=payment makes the bid-detail back arrow route to /home (mes
+            // envois) instead of popping back to the just-completed checkout form.
+            onCta: () => context.go('/bids/${state.bidId}?from=payment'),
+          ),
+        ));
       },
     );
   }

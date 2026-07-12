@@ -1232,7 +1232,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
         context.pop();
         if (context.mounted) {
-          unawaited(context.push('/bids/${state.bidId}?from=payment'));
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => DonySuccessScreen(
+              mascotteType: DonyMascotteType.securise,
+              title: 'Offre payée !',
+              subtitle: 'Le voyageur va être notifié de ta demande.',
+              ctaLabel: 'Voir mon envoi',
+              onCta: () => context.go('/bids/${state.bidId}?from=payment'),
+            ),
+          ));
         }
       },
     );
