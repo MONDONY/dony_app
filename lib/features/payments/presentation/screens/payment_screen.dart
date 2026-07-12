@@ -282,56 +282,13 @@ class _EscrowConfirmedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      appBar: const DonyAppBar(
-        title: 'Paiement confirmé',
-        showBackButton: false,
-      ),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              children: [
-                const SizedBox(height: DonySpacing.xxl),
-                const DonyMascotteAnimated(
-                  type: DonyMascotteType.securise,
-                  size: DonyMascotteSize.lg,
-                  withGlow: true,
-                ),
-                const SizedBox(height: DonySpacing.xl),
-                Text(
-                  'Envoi réservé !',
-                  style: tt.displayLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: DonySpacing.md),
-                Text(
-                  '${amount.toStringAsFixed(2)} € sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
-                  textAlign: TextAlign.center,
-                  style: tt.bodyLarge?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xxl),
-                DonyButton(
-                  label: 'Voir mes envois',
-                  onPressed: () => context.go('/home'),
-                ),
-              ],
-            )
-                .animate()
-                .fadeIn(duration: 400.ms)
-                .scale(begin: const Offset(0.92, 0.92), curve: Curves.easeOutCubic),
-          ),
-        );
-      }),
+    return DonySuccessScreen(
+      mascotteType: DonyMascotteType.securise,
+      title: 'Envoi réservé !',
+      subtitle:
+          '${amount.toStringAsFixed(2)} € sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
+      ctaLabel: 'Voir mes envois',
+      onCta: () => context.go('/home'),
     );
   }
 }
