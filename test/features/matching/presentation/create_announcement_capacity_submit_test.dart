@@ -17,6 +17,8 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -67,6 +69,11 @@ class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
 
 class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 class MockCityRepository extends Mock implements CityRepository {}
 
@@ -212,6 +219,12 @@ void main() {
 
     if (!getIt.isRegistered<CitySearchBloc>()) {
       getIt.registerFactory<CitySearchBloc>(() => CitySearchBloc(cityRepo));
+    }
+    // Le bottom sheet charge le catalogue de types de contenu via getIt.
+    if (!getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.registerFactory<IContentCategoryRepository>(
+        () => _FakeContentCategoryRepository(),
+      );
     }
   });
 

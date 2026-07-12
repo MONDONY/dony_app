@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
@@ -12,16 +16,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 import 'package:intl/intl.dart';
-
-/// Catégories de contenu sélectionnables pour filtrer l'alerte (optionnel).
-const _kAlertContentTypes = <String>[
-  'Documents',
-  'Vêtements',
-  'Électronique',
-  'Nourriture',
-  'Cosmétiques',
-  'Médicaments',
-];
 
 abstract final class CorridorAlertFormSheet {
   static Future<void> show(
@@ -110,10 +104,41 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
   /// car la zone n'est émise qu'après le 1er frame du picker).
   late bool _zoneOn;
 
+  final _customCategoryCtrl = TextEditingController();
+  // Catalogue de types de contenu — seedé synchrone avec le catalogue
+  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
+  // repository dès qu'il répond (repli automatique hors ligne intégré).
+  List<String> _catalogLabels = fallbackCatalog.map((c) => c.label).toList();
+
   @override
   void initState() {
     super.initState();
     _zoneOn = context.read<CorridorAlertFormCubit>().state.hasZone;
+    unawaited(_loadCatalog());
+  }
+
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) return;
+    setState(() {
+      _catalogLabels = categories.map((c) => c.label).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _customCategoryCtrl.dispose();
+    super.dispose();
+  }
+
+  void _addCustomCategory(CorridorAlertFormCubit cubit) {
+    final value = _customCategoryCtrl.text.trim();
+    if (value.isEmpty) return;
+    if (!cubit.state.contentCategories.contains(value)) {
+      cubit.toggleCategory(value);
+    }
+    _customCategoryCtrl.clear();
   }
 
   @override
@@ -213,14 +238,44 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
           Wrap(
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
-            children: _kAlertContentTypes.map((type) {
-              final selected = state.contentCategories.contains(type);
-              return DonyChip(
-                label: type,
-                selected: selected,
-                onTap: () => cubit.toggleCategory(type),
-              );
-            }).toList(),
+            children: [
+              for (final type in _catalogLabels)
+                DonyChip(
+                  label: type,
+                  selected: state.contentCategories.contains(type),
+                  onTap: () => cubit.toggleCategory(type),
+                ),
+              for (final type in state.contentCategories.where(
+                (c) => !_catalogLabels.contains(c),
+              ))
+                DonyChip(
+                  label: type,
+                  selected: true,
+                  onTap: () => cubit.toggleCategory(type),
+                ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const Key('alert-custom-category-input'),
+                  controller: _customCategoryCtrl,
+                  onSubmitted: (_) => _addCustomCategory(cubit),
+                  decoration: const InputDecoration(
+                    hintText: 'Ajouter un autre type…',
+                    isDense: true,
+                  ),
+                ),
+              ),
+              IconButton(
+                key: const Key('alert-add-custom-category-btn'),
+                icon: const Icon(Icons.add_rounded),
+                onPressed: () => _addCustomCategory(cubit),
+                tooltip: 'Ajouter',
+              ),
+            ],
           ),
         ],
         const SizedBox(height: DonySpacing.md),

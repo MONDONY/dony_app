@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -7,6 +9,8 @@ import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -29,15 +33,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 const _priceOptions = [5.0, 6.0, 7.0, 8.0];
-const _contentTypes = [
-  'Vêtements',
-  'Médicaments',
-  'Alim. sèche',
-  'Hi-fi',
-  'Documents',
-  'Téléphone',
-  'Cosmétiques',
-];
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
@@ -68,10 +63,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   late final ValueNotifier<double> _availableKgNotifier;
   final _priceOptionNotifier = ValueNotifier<int>(1);
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
-  final _selectedContentNotifier = ValueNotifier<Set<String>>(
-    {'Vêtements', 'Médicaments', 'Alim. sèche', 'Hi-fi'},
-  );
+  final _selectedContentNotifier = ValueNotifier<Set<String>>({
+    'Vêtements & tissus',
+    'Médicaments traditionnels',
+    'Alimentation sèche',
+    'Téléphone & électronique',
+  });
   final _customAcceptedNotifier = ValueNotifier<Set<String>>({});
+  // Catalogue de types de contenu — seedé synchrone avec le catalogue
+  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
+  // repository dès qu'il répond (repli automatique hors ligne intégré).
+  final _catalogLabelsNotifier = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
   final _cashEnabledNotifier = ValueNotifier<bool>(false);
   final _descriptionCtrl = TextEditingController();
@@ -93,6 +97,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     _availableKgNotifier = ValueNotifier<double>(
       defaultKg.toDouble().clamp(1.0, 23.0),
     );
+    unawaited(_loadCatalog());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<CommissionMethodBloc>().add(CommissionMethodLoadRequested());
@@ -133,10 +138,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
       if (a.acceptedContentTypes != null) {
         final presets = Set<String>.from(
-          a.acceptedContentTypes!.where(_contentTypes.contains),
+          a.acceptedContentTypes!.where(_catalogLabelsNotifier.value.contains),
         );
         final custom = Set<String>.from(
-          a.acceptedContentTypes!.where((t) => !_contentTypes.contains(t)),
+          a.acceptedContentTypes!
+              .where((t) => !_catalogLabelsNotifier.value.contains(t)),
         );
         _selectedContentNotifier.value = presets;
         _customAcceptedNotifier.value = custom;
@@ -162,6 +168,13 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     }
   }
 
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) return;
+    _catalogLabelsNotifier.value = categories.map((c) => c.label).toList();
+  }
+
   @override
   void dispose() {
     _cashEnabledNotifier.dispose();
@@ -181,6 +194,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     _priceOptionNotifier.dispose();
     _selectedContentNotifier.dispose();
     _customAcceptedNotifier.dispose();
+    _catalogLabelsNotifier.dispose();
     _refusedTypesNotifier.dispose();
     _transportModeNotifier.dispose();
     super.dispose();
@@ -210,10 +224,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       }
     }
     _priceOptionNotifier.value = closest;
-    _selectedContentNotifier.value =
-        t.acceptedCategories.where(_contentTypes.contains).toSet();
-    _customAcceptedNotifier.value =
-        t.acceptedCategories.where((c) => !_contentTypes.contains(c)).toSet();
+    _selectedContentNotifier.value = t.acceptedCategories
+        .where(_catalogLabelsNotifier.value.contains)
+        .toSet();
+    _customAcceptedNotifier.value = t.acceptedCategories
+        .where((c) => !_catalogLabelsNotifier.value.contains(c))
+        .toSet();
     DonySnackbar.show(
       context,
       message: 'Modèle « ${t.label} » appliqué',
@@ -1113,6 +1129,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   listenable: Listenable.merge([
                     _selectedContentNotifier,
                     _customAcceptedNotifier,
+                    _catalogLabelsNotifier,
                   ]),
                   builder: (context, _) {
                     final selected = _selectedContentNotifier.value;
@@ -1128,7 +1145,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                             child: Wrap(
                               spacing: DonySpacing.xs,
                               runSpacing: DonySpacing.xs,
-                              children: _contentTypes.map((type) {
+                              children: _catalogLabelsNotifier.value.map((type) {
                                 final isSelected = selected.contains(type);
                                 return GestureDetector(
                                   onTap: () {
@@ -1235,13 +1252,83 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // ── CE QUE JE REFUSE ────────────────────────────────────────
                 const _SectionLabel(label: 'CE QUE JE REFUSE', iconAsset: 'ban'),
                 const SizedBox(height: DonySpacing.sm),
-                ValueListenableBuilder<Set<String>>(
-                  valueListenable: _refusedTypesNotifier,
-                  builder: (context, refused, _) {
+                ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _refusedTypesNotifier,
+                    _catalogLabelsNotifier,
+                  ]),
+                  builder: (context, _) {
+                    final refused = _refusedTypesNotifier.value;
+                    final catalogLabels = _catalogLabelsNotifier.value;
+                    final catalogLabelSet = catalogLabels.toSet();
+                    final customRefused = refused
+                        .where((r) => !catalogLabelSet.contains(r))
+                        .toList();
+
                     return _SectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Predefined chips (catalogue complet, à cocher).
+                          Padding(
+                            padding: const EdgeInsets.all(DonySpacing.base),
+                            child: Wrap(
+                              spacing: DonySpacing.xs,
+                              runSpacing: DonySpacing.xs,
+                              children: catalogLabels.map((type) {
+                                final isSelected = refused.contains(type);
+                                return GestureDetector(
+                                  onTap: () {
+                                    final updated = Set<String>.from(refused);
+                                    if (isSelected) {
+                                      updated.remove(type);
+                                    } else {
+                                      updated.add(type);
+                                    }
+                                    _refusedTypesNotifier.value = updated;
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: 160.ms,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: DonySpacing.md,
+                                      vertical: DonySpacing.xs,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? cs.error
+                                          : Theme.of(context)
+                                              .scaffoldBackgroundColor,
+                                      borderRadius:
+                                          BorderRadius.circular(DonyRadius.full),
+                                      border: Border.all(
+                                        color: isSelected ? cs.error : cs.outline,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (isSelected) ...[
+                                          const DonyIcon('ban',
+                                              size: 12, color: DonyColors.white),
+                                          const SizedBox(width: DonySpacing.xs),
+                                        ],
+                                        Text(
+                                          type,
+                                          style: tt.bodySmall?.copyWith(
+                                            color: isSelected
+                                                ? DonyColors.white
+                                                : cs.onSurface,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          const _RowDivider(),
                           _InlineAddRow(
                             controller: _refusedCtrl,
                             hint: 'Ex: Liquides, Denrées périssables…',
@@ -1255,7 +1342,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               _refusedCtrl.clear();
                             },
                           ),
-                          if (refused.isNotEmpty) ...[
+                          if (customRefused.isNotEmpty) ...[
                             const _RowDivider(),
                             Padding(
                               padding: const EdgeInsets.symmetric(
@@ -1265,7 +1352,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               child: Wrap(
                                 spacing: DonySpacing.xs,
                                 runSpacing: DonySpacing.xs,
-                                children: refused.map((item) => _RemovableChip(
+                                children: customRefused.map((item) => _RemovableChip(
                                   label: item,
                                   accentColor: cs.error,
                                   onRemove: () {

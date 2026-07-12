@@ -7,6 +7,7 @@
 // - Ajout d'un type refusé via CaInlineAddRow
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -51,6 +52,7 @@ Widget _host({
   ValueNotifier<Set<String>>? selectedContent,
   ValueNotifier<Set<String>>? customAccepted,
   ValueNotifier<Set<String>>? refusedTypes,
+  ValueNotifier<List<String>>? catalogLabels,
   TextEditingController? descriptionCtrl,
   TextEditingController? customAcceptedCtrl,
   TextEditingController? refusedCtrl,
@@ -90,6 +92,10 @@ Widget _host({
                 customAccepted ?? ValueNotifier<Set<String>>({}),
             refusedTypesNotifier:
                 refusedTypes ?? ValueNotifier<Set<String>>({}),
+            catalogLabelsNotifier: catalogLabels ??
+                ValueNotifier<List<String>>(
+                  fallbackCatalog.map((c) => c.label).toList(),
+                ),
             descriptionCtrl: descriptionCtrl ?? TextEditingController(),
             customAcceptedCtrl: customAcceptedCtrl ?? TextEditingController(),
             refusedCtrl: refusedCtrl ?? TextEditingController(),
@@ -201,22 +207,39 @@ void main() {
       final selected = ValueNotifier<Set<String>>({});
       await _pump(tester, selectedContent: selected);
 
-      // Tap sur "Vêtements"
-      await tester.tap(find.text('Vêtements'));
+      // Tap sur "Vêtements & tissus" — chip de la section "Ce que j'accepte"
+      // (.first ; la section "Ce que je refuse" affiche aussi ce libellé).
+      final chip = find.text('Vêtements & tissus').first;
+      await tester.dragUntilVisible(
+        chip,
+        find.byType(SingleChildScrollView),
+        const Offset(0, -200),
+      );
+      await tester.pump();
+      await tester.tap(chip);
       await tester.pump();
 
-      expect(selected.value.contains('Vêtements'), isTrue);
+      expect(selected.value.contains('Vêtements & tissus'), isTrue);
     });
 
     testWidgets('tap sur chip déjà sélectionné le désélectionne', (tester) async {
-      final selected = ValueNotifier<Set<String>>({'Vêtements'});
+      final selected = ValueNotifier<Set<String>>({'Vêtements & tissus'});
       await _pump(tester, selectedContent: selected);
 
-      // Tap sur "Vêtements" déjà sélectionné
-      await tester.tap(find.text('Vêtements'));
+      // Tap sur "Vêtements & tissus" déjà sélectionné (chip de la section
+      // "Ce que j'accepte" — .first, la section "Ce que je refuse" affiche
+      // aussi ce libellé mais non sélectionné dans refusedTypes).
+      final chip = find.text('Vêtements & tissus').first;
+      await tester.dragUntilVisible(
+        chip,
+        find.byType(SingleChildScrollView),
+        const Offset(0, -200),
+      );
+      await tester.pump();
+      await tester.tap(chip);
       await tester.pump();
 
-      expect(selected.value.contains('Vêtements'), isFalse);
+      expect(selected.value.contains('Vêtements & tissus'), isFalse);
     });
 
     testWidgets('les chips de contenu custom sont affichés quand customAccepted est non vide',

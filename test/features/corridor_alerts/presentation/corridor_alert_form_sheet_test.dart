@@ -3,6 +3,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
@@ -18,6 +20,11 @@ class MockFormCubit extends MockCubit<CorridorAlertFormState>
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 CorridorAlertModel _alert({
   AlertDirection direction = AlertDirection.travelerWantsPackages,
@@ -84,6 +91,16 @@ Future<void> _pumpSheet(
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
+
+  setUp(() {
+    // Le formulaire charge le catalogue de types de contenu via getIt —
+    // requis dans tous les tests, y compris ceux hors direction "colis"
+    // (le champ n'est rendu que si showColisFilters, mais _loadCatalog()
+    // s'exécute inconditionnellement dans initState).
+    GetIt.I.registerFactory<IContentCategoryRepository>(
+      () => _FakeContentCategoryRepository(),
+    );
+  });
 
   tearDown(() => GetIt.I.reset());
 
@@ -335,4 +352,76 @@ void main() {
     expect(find.byKey(const Key('alert-direction-segment')), findsNothing);
     expect(find.byKey(const Key('corridor-alert-min-weight')), findsNothing);
   });
+
+  // ---------------------------------------------------------------------------
+  // Catalogue de types de contenu (Task 7) — catalogue fourni par le
+  // repository, pas la liste figée _kAlertContentTypes ("Électronique" et
+  // "Nourriture" ont disparu, remplacés par le catalogue unifié).
+  // ---------------------------------------------------------------------------
+
+  testWidgets(
+    'affiche le catalogue fourni par le repository (pas une liste figée)',
+    (tester) async {
+      await _pumpSheet(tester, isTraveler: true);
+
+      for (final category in fallbackCatalog) {
+        expect(find.text(category.label), findsOneWidget);
+      }
+      // Anciennes valeurs figées disparues (migrées par V171).
+      expect(find.text('Électronique'), findsNothing);
+      expect(find.text('Nourriture'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'saisie libre + Ajouter appelle cubit.toggleCategory avec le libellé libre',
+    (tester) async {
+      final cubit = MockFormCubit();
+      final cityBloc = MockCitySearchBloc();
+      when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+      when(() => cubit.isEditing).thenReturn(false);
+      when(() => cubit.state).thenReturn(const CorridorAlertFormState(
+        direction: AlertDirection.travelerWantsPackages,
+      ));
+      when(() => cubit.toggleCategory(any())).thenReturn(null);
+
+      GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
+          ({CorridorAlertModel? editing, AlertDirection direction}), void>(
+        (params, _) => cubit,
+      );
+      GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('alert-custom-category-input')),
+        'Poissons',
+      );
+      await tester.tap(
+        find.byKey(const Key('alert-add-custom-category-btn')),
+      );
+      await tester.pump();
+
+      verify(() => cubit.toggleCategory('Poissons')).called(1);
+    },
+  );
 }

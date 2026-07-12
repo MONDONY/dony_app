@@ -13,6 +13,7 @@
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -97,6 +98,9 @@ Widget _host({
   final selectedContentNotifier = ValueNotifier<Set<String>>({});
   final customAcceptedNotifier = ValueNotifier<Set<String>>({});
   final refusedTypesNotifier = ValueNotifier<Set<String>>({});
+  final catalogLabelsNotifier = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
   final descriptionCtrl = TextEditingController();
   final customAcceptedCtrl = TextEditingController();
   final refusedCtrl = TextEditingController();
@@ -122,6 +126,7 @@ Widget _host({
             selectedContentNotifier: selectedContentNotifier,
             customAcceptedNotifier: customAcceptedNotifier,
             refusedTypesNotifier: refusedTypesNotifier,
+            catalogLabelsNotifier: catalogLabelsNotifier,
             descriptionCtrl: descriptionCtrl,
             customAcceptedCtrl: customAcceptedCtrl,
             refusedCtrl: refusedCtrl,
@@ -274,17 +279,38 @@ void main() {
       expect(find.text("Ce que j'accepte"), findsOneWidget);
     });
 
-    testWidgets('les chips de types de contenu prédéfinis sont affichés',
-        (tester) async {
-      await _pump(tester);
-      for (final type in kContentTypes) {
-        expect(
-          find.text(type),
-          findsOneWidget,
-          reason: 'Chip "$type" doit être présent dans Ce que j\'accepte',
+    testWidgets(
+      'les chips du catalogue (repository) sont affichées — pas une liste figée',
+      (tester) async {
+        await _pump(tester);
+        for (final category in fallbackCatalog) {
+          // Chaque libellé du catalogue apparaît deux fois : une fois comme
+          // chip « Ce que j'accepte », une fois comme chip « Ce que je
+          // refuse » — les deux sections proposent désormais le catalogue
+          // complet.
+          expect(
+            find.text(category.label),
+            findsNWidgets(2),
+            reason:
+                'Chip "${category.label}" doit être présente dans les deux sections',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      'saisie libre dans "Ce que j\'accepte" ajoute un élément custom',
+      (tester) async {
+        await _pump(tester);
+        final acceptField = find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.hintText == 'Ajouter un autre type…',
         );
-      }
-    });
+        await tester.enterText(acceptField, 'Poissons');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+        expect(find.text('Poissons'), findsOneWidget);
+      },
+    );
 
     // ── Section CE QUE JE REFUSE ──────────────────────────────────────────────
 
@@ -293,6 +319,22 @@ void main() {
       await _pump(tester);
       expect(find.text('Ce que je refuse'), findsOneWidget);
     });
+
+    testWidgets(
+      'saisie libre dans "Ce que je refuse" ajoute un élément custom',
+      (tester) async {
+        await _pump(tester);
+        final refuseField = find.byWidgetPredicate(
+          (w) =>
+              w is TextField &&
+              w.decoration?.hintText == 'Ex: Liquides, Denrées périssables…',
+        );
+        await tester.enterText(refuseField, 'Alcool');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+        expect(find.text('Alcool'), findsOneWidget);
+      },
+    );
 
     // ── Section NOTE AUX EXPÉDITEURS ─────────────────────────────────────────
 
@@ -419,6 +461,9 @@ void main() {
       final selContent = ValueNotifier<Set<String>>({});
       final custAccepted = ValueNotifier<Set<String>>({});
       final refused = ValueNotifier<Set<String>>({});
+      final catalogLabels = ValueNotifier<List<String>>(
+        fallbackCatalog.map((c) => c.label).toList(),
+      );
       final descCtrl = TextEditingController();
       final custAccCtrl = TextEditingController();
       final refCtrl = TextEditingController();
@@ -443,6 +488,7 @@ void main() {
                   selectedContentNotifier: selContent,
                   customAcceptedNotifier: custAccepted,
                   refusedTypesNotifier: refused,
+                  catalogLabelsNotifier: catalogLabels,
                   descriptionCtrl: descCtrl,
                   customAcceptedCtrl: custAccCtrl,
                   refusedCtrl: refCtrl,

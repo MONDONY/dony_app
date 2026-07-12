@@ -2,6 +2,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -40,6 +42,11 @@ class MockCommissionMethodBloc
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 class MockTripTemplateBloc
     extends MockBloc<TripTemplateEvent, TripTemplateState>
@@ -206,6 +213,11 @@ void main() {
         when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
         return bloc;
       });
+    }
+    if (!getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.registerFactory<IContentCategoryRepository>(
+        () => _FakeContentCategoryRepository(),
+      );
     }
   });
 

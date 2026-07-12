@@ -31,6 +31,13 @@ class PrixConditionsStep extends StatelessWidget {
   final ValueNotifier<Set<String>> selectedContentNotifier;
   final ValueNotifier<Set<String>> customAcceptedNotifier;
   final ValueNotifier<Set<String>> refusedTypesNotifier;
+
+  /// Catalogue de labels de types de contenu — piloté par le repository
+  /// (`ContentCategoryRepository`), avec repli embarqué. Remplace l'ancienne
+  /// liste figée de types de contenu. Propriété du parent (host
+  /// `create_announcement_bottom_sheet.dart` / `create_trip_screen.dart`)
+  /// comme les autres notifiers.
+  final ValueNotifier<List<String>> catalogLabelsNotifier;
   final TextEditingController descriptionCtrl;
   final TextEditingController customAcceptedCtrl;
   final TextEditingController refusedCtrl;
@@ -62,6 +69,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.selectedContentNotifier,
     required this.customAcceptedNotifier,
     required this.refusedTypesNotifier,
+    required this.catalogLabelsNotifier,
     required this.descriptionCtrl,
     required this.customAcceptedCtrl,
     required this.refusedCtrl,
@@ -594,10 +602,12 @@ class PrixConditionsStep extends StatelessWidget {
           listenable: Listenable.merge([
             selectedContentNotifier,
             customAcceptedNotifier,
+            catalogLabelsNotifier,
           ]),
           builder: (context, _) {
             final selected = selectedContentNotifier.value;
             final custom = customAcceptedNotifier.value;
+            final catalogLabels = catalogLabelsNotifier.value;
 
             return CaSectionCard(
               child: Column(
@@ -609,7 +619,7 @@ class PrixConditionsStep extends StatelessWidget {
                     child: Wrap(
                       spacing: DonySpacing.xs,
                       runSpacing: DonySpacing.xs,
-                      children: kContentTypes.map((type) {
+                      children: catalogLabels.map((type) {
                         final isSelected = selected.contains(type);
                         return GestureDetector(
                           onTap: () {
@@ -714,13 +724,84 @@ class PrixConditionsStep extends StatelessWidget {
         const CaSectionLabel(
             label: 'Ce que je refuse', iconAsset: 'ban'),
         const SizedBox(height: DonySpacing.sm),
-        ValueListenableBuilder<Set<String>>(
-          valueListenable: refusedTypesNotifier,
-          builder: (context, refused, _) {
+        ListenableBuilder(
+          listenable: Listenable.merge([
+            refusedTypesNotifier,
+            catalogLabelsNotifier,
+          ]),
+          builder: (context, _) {
+            final refused = refusedTypesNotifier.value;
+            final catalogLabels = catalogLabelsNotifier.value;
+            final catalogLabelSet = catalogLabels.toSet();
+            // Entrées libres uniquement — les entrées du catalogue sont déjà
+            // représentées par les chips à cocher ci-dessous (pas de doublon).
+            final customRefused =
+                refused.where((r) => !catalogLabelSet.contains(r)).toList();
+
             return CaSectionCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Predefined chips (catalogue complet, à cocher).
+                  Padding(
+                    padding: const EdgeInsets.all(DonySpacing.base),
+                    child: Wrap(
+                      spacing: DonySpacing.xs,
+                      runSpacing: DonySpacing.xs,
+                      children: catalogLabels.map((type) {
+                        final isSelected = refused.contains(type);
+                        return GestureDetector(
+                          onTap: () {
+                            final updated = Set<String>.from(refused);
+                            if (isSelected) {
+                              updated.remove(type);
+                            } else {
+                              updated.add(type);
+                            }
+                            refusedTypesNotifier.value = updated;
+                          },
+                          child: AnimatedContainer(
+                            duration: 160.ms,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.md,
+                              vertical: DonySpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? cs.error
+                                  : Theme.of(context)
+                                      .scaffoldBackgroundColor,
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.full),
+                              border: Border.all(
+                                color: isSelected ? cs.error : cs.outline,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSelected) ...[
+                                  const DonyIcon('ban',
+                                      size: 12, color: DonyColors.white),
+                                  const SizedBox(width: DonySpacing.xs),
+                                ],
+                                Text(
+                                  type,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: isSelected
+                                        ? DonyColors.white
+                                        : cs.onSurface,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const CaRowDivider(),
                   CaInlineAddRow(
                     controller: refusedCtrl,
                     hint: 'Ex: Liquides, Denrées périssables…',
@@ -732,7 +813,7 @@ class PrixConditionsStep extends StatelessWidget {
                       refusedCtrl.clear();
                     },
                   ),
-                  if (refused.isNotEmpty) ...[
+                  if (customRefused.isNotEmpty) ...[
                     const CaRowDivider(),
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -742,7 +823,7 @@ class PrixConditionsStep extends StatelessWidget {
                       child: Wrap(
                         spacing: DonySpacing.xs,
                         runSpacing: DonySpacing.xs,
-                        children: refused
+                        children: customRefused
                             .map((item) => CaRemovableChip(
                                   label: item,
                                   accentColor: cs.error,
