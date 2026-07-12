@@ -13,6 +13,7 @@ import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class AcceptOfferBottomSheet {
   const AcceptOfferBottomSheet._();
@@ -115,6 +116,17 @@ class AcceptOfferBottomSheet {
                               ));
                               if (ctx.mounted) {
                                 Navigator.of(ctx, rootNavigator: true).pop();
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (routeContext) => DonySuccessScreen(
+                                    mascotteType: DonyMascotteType.securise,
+                                    title: 'Offre acceptée et payée !',
+                                    subtitle:
+                                        'Le voyageur est notifié, la livraison peut être suivie depuis le fil.',
+                                    ctaLabel: 'Voir le suivi',
+                                    onCta: () => routeContext
+                                        .go('/negotiations/$threadId'),
+                                  ),
+                                ));
                               }
                             },
                           );
