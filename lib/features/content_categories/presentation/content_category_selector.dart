@@ -261,11 +261,30 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     return 280;
   }
 
+  /// Hauteur maximale de la liste : bornée par l'espace réellement disponible
+  /// sous le champ (moins une marge de sécurité), pour que la liste ne déborde
+  /// jamais de l'écran et que le scroll interne soit visible/actif.
+  double _dropdownMaxHeight(BuildContext context) {
+    const margin = 16.0;
+    const anchorGap = 6.0;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final box = _fieldBoxKey.currentContext?.findRenderObject();
+    if (box is RenderBox && box.hasSize) {
+      final fieldBottom = box.localToGlobal(Offset(0, box.size.height)).dy;
+      final available =
+          screenHeight - bottomInset - fieldBottom - anchorGap - margin;
+      return available.clamp(160.0, 320.0);
+    }
+    return 320;
+  }
+
   Widget _buildOverlay(BuildContext context) {
     final width = _fieldWidth;
     final filtered = _filteredCatalog;
     final showAddRow = _showAddRow;
     final query = _controller.text.trim();
+    final maxHeight = _dropdownMaxHeight(context);
 
     return Stack(
       children: [
@@ -288,6 +307,7 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
                 alignment: Alignment.topLeft,
                 child: _ComboDropdown(
                   width: width,
+                  maxHeight: maxHeight,
                   catalog: filtered,
                   selected: _selected,
                   query: query,
@@ -378,6 +398,7 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 class _ComboDropdown extends StatelessWidget {
   const _ComboDropdown({
     required this.width,
+    required this.maxHeight,
     required this.catalog,
     required this.selected,
     required this.query,
@@ -388,6 +409,7 @@ class _ComboDropdown extends StatelessWidget {
   });
 
   final double width;
+  final double maxHeight;
   final List<ContentCategory> catalog;
   final Set<String> selected;
   final String query;
@@ -408,7 +430,7 @@ class _ComboDropdown extends StatelessWidget {
       child: SizedBox(
         width: width,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 560),
+          constraints: BoxConstraints(maxHeight: maxHeight),
           // Column eager (pas de lazy-build) : le catalogue est petit (~11
           // items) et les tests widgets doivent pouvoir trouver n'importe
           // quel item sans scroller manuellement au préalable.
@@ -550,9 +572,10 @@ class _AddRow extends StatelessWidget {
 
 // ─── Tag supprimable ───────────────────────────────────────────────────────
 
-/// Tag de sélection (au-dessus du champ). Le bouton ✕ a une zone tactile de
-/// 44×44 (règle hit area) sans alourdir le pill visuel — le glyphe reste
-/// petit (14px), centré dans la zone tactile.
+/// Tag de sélection (au-dessus du champ) — compact, gabarit chip Material
+/// (~32 px de haut) pour que plusieurs tags tiennent par ligne. Le ✕ garde
+/// une zone tactile de 32×32 (pattern deleteIcon des chips denses), glyphe
+/// 12 px.
 class _ComboTag extends StatelessWidget {
   const _ComboTag({
     super.key,
@@ -570,7 +593,8 @@ class _ComboTag extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.only(left: DonySpacing.md),
+      height: 32,
+      padding: const EdgeInsets.only(left: DonySpacing.sm),
       decoration: BoxDecoration(
         color: cs.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -579,8 +603,8 @@ class _ComboTag extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 13)),
-          const SizedBox(width: DonySpacing.xs),
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
           Text(
             label,
             style: tt.bodySmall?.copyWith(
@@ -592,10 +616,10 @@ class _ComboTag extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             onTap: onRemove,
             child: SizedBox(
-              width: 44,
-              height: 44,
+              width: 32,
+              height: 32,
               child: Center(
-                child: DonyIcon('x', size: 14, color: cs.primary),
+                child: DonyIcon('x', size: 12, color: cs.primary),
               ),
             ),
           ),

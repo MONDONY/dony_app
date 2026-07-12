@@ -104,6 +104,10 @@ void main() {
 
       await tester.tap(fieldFinder());
       await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('content-combo-item-Livres')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('content-combo-item-Livres')));
       await tester.pumpAndSettle();
 
@@ -141,7 +145,11 @@ void main() {
 
     await tester.tap(fieldFinder());
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('content-combo-item-Livres')));
+    await tester.ensureVisible(
+        find.byKey(const Key('content-combo-item-Livres')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('content-combo-item-Livres')));
     await tester.pumpAndSettle();
 
     expect(emitted, isEmpty);
@@ -248,7 +256,15 @@ void main() {
 
       await tester.tap(fieldFinder());
       await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('content-combo-item-Livres')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('content-combo-item-Livres')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('content-combo-item-Documents & administratif')),
+      );
       await tester.pumpAndSettle();
       await tester.tap(
         find.byKey(const Key('content-combo-item-Documents & administratif')),
