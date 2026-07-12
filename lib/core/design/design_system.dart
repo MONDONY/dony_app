@@ -43,6 +43,7 @@ export 'package:dony/core/design/widgets/dony_select_bar.dart';
 // Structural
 export 'package:dony/core/design/widgets/dony_section_header.dart';
 export 'package:dony/core/design/widgets/dony_snackbar.dart';
+export 'package:dony/core/design/widgets/dony_success_screen.dart';
 export 'package:dony/core/design/widgets/dony_status_banner.dart';
 export 'package:dony/core/design/widgets/dony_step_indicator.dart';
 export 'package:dony/core/design/widgets/dony_text_field.dart';
