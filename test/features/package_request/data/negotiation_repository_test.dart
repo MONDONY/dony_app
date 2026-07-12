@@ -214,12 +214,16 @@ void main() {
         (_) async => _ok({
           'clientSecret': 'pi_test_secret',
           'stripePaymentIntentId': 'pi_test_id',
+          'amount': 45.0,
+          'paymentMethodTypes': ['card', 'paypal'],
         }, '/negotiations/th-1/initiate-payment'),
       );
 
       final result = await repo.initiatePayment('th-1');
       expect(result.clientSecret, 'pi_test_secret');
       expect(result.paymentIntentId, 'pi_test_id');
+      expect(result.amountEur, 45.0);
+      expect(result.paymentMethodTypes, ['card', 'paypal']);
     });
   });
 

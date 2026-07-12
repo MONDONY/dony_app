@@ -22,7 +22,9 @@ import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
@@ -517,6 +519,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             clientSecret: state.response.clientSecret,
             publishableKey: state.response.publishableKey,
             bidId: state.response.bidId,
+            amountEur: _computeStripeTotal(),
+            paymentMethodTypes: state.response.paymentMethodTypes,
           ));
     } else if (state is BidQuoteLoaded) {
       _quoteNotifier.value = state.quote;
@@ -1215,27 +1219,23 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       return;
     }
 
-    try {
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: donyPaymentSheetParams(state.clientSecret),
-      );
-      await Stripe.instance.presentPaymentSheet();
-
-      if (!context.mounted) return;
-      context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
-      context.pop();
-      if (context.mounted) {
-        unawaited(context.push('/bids/${state.bidId}?from=payment'));
-      }
-    } on StripeException catch (e) {
-      if (e.error.code == FailureCode.Canceled) {
-        _showError('Paiement annulé');
-      } else {
-        _showError('Erreur de paiement: ${e.error.message}');
-      }
-    } catch (e) {
-      _showError('Erreur: ${e.toString()}');
-    }
+    await DonyPaymentSheet.show(
+      context,
+      config: PaymentSheetConfig(
+        clientSecret: state.clientSecret,
+        amountEur: state.amountEur,
+        paymentMethodTypes: state.paymentMethodTypes,
+      ),
+      contextLabel: 'Envoi vers ${widget.announcement.arrivalCity}',
+      onSuccess: () {
+        if (!context.mounted) return;
+        context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
+        context.pop();
+        if (context.mounted) {
+          unawaited(context.push('/bids/${state.bidId}?from=payment'));
+        }
+      },
+    );
   }
 }
 

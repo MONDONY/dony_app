@@ -128,13 +128,19 @@ class NegotiationRepository {
   /// Sender initiates the Stripe escrow payment for an AWAITING_PAYMENT thread.
   /// Returns the Stripe clientSecret to confirm via PaymentSheet on Flutter side.
   /// The thread is finalized to ACCEPTED async via webhook.
-  Future<({String clientSecret, String paymentIntentId})> initiatePayment(String id) async {
+  Future<({String clientSecret, String paymentIntentId, double amountEur, List<String> paymentMethodTypes})>
+      initiatePayment(String id) async {
     final response = await _apiClient.dio
         .post<Map<String, dynamic>>('/negotiations/$id/initiate-payment');
     final data = response.data!;
     return (
       clientSecret: data['clientSecret'] as String,
       paymentIntentId: data['stripePaymentIntentId'] as String,
+      amountEur: (data['amount'] as num).toDouble(),
+      paymentMethodTypes: (data['paymentMethodTypes'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
   }
 

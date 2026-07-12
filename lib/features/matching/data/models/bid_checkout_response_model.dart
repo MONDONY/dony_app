@@ -9,11 +9,17 @@ class BidCheckoutResponseModel {
   final String publishableKey;
   final DateTime expiresAt;
 
+  /// Types du PaymentIntent (ex. ["card","paypal"]) — bouton PayPal conditionnel
+  /// dans la DonyPaymentSheet.
+  @JsonKey(defaultValue: [])
+  final List<String> paymentMethodTypes;
+
   const BidCheckoutResponseModel({
     required this.bidId,
     required this.clientSecret,
     required this.publishableKey,
     required this.expiresAt,
+    this.paymentMethodTypes = const [],
   });
 
   factory BidCheckoutResponseModel.fromJson(Map<String, dynamic> json) =>

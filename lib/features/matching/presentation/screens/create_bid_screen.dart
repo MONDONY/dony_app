@@ -16,7 +16,9 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -156,6 +158,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         message: message, type: DonySnackbarType.error);
   }
 
+  /// Montant affiché sur le bouton « Payer » de la DonyPaymentSheet.
+  /// Préfère le devis serveur (promo incluse) ; recalcule localement sinon.
+  double _computeStripeTotal() {
+    final quote = _quoteNotifier.value;
+    if (quote is BidQuoteResponse) return quote.totalEur;
+    return netToSenderPrice(_weightNotifier.value * _pricePerKg);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
@@ -168,6 +178,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 clientSecret: state.response.clientSecret,
                 publishableKey: state.response.publishableKey,
                 bidId: state.response.bidId,
+                amountEur: _computeStripeTotal(),
+                paymentMethodTypes: state.response.paymentMethodTypes,
               ));
             } else if (state is BidQuoteLoaded) {
               _quoteNotifier.value = state.quote;
@@ -511,31 +523,24 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       return;
     }
 
-    try {
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: donyPaymentSheetParams(state.clientSecret),
-      );
-
-      await Stripe.instance.presentPaymentSheet();
-
-      if (!context.mounted) return;
-      // Synchronously confirm the payment with the backend so the bid is
-      // promoted to PENDING immediately (does not depend on the Stripe webhook).
-      context
-          .read<BidBloc>()
-          .add(BidConfirmPaymentRequested(state.bidId));
-      // ?from=payment makes the bid-detail back arrow route to /home (mes envois)
-      // instead of popping back to the just-completed checkout form.
-      context.push('/bids/${state.bidId}?from=payment');
-    } on StripeException catch (e) {
-      if (e.error.code == FailureCode.Canceled) {
-        _showError('Paiement annulé');
-      } else {
-        _showError('Erreur de paiement: ${e.error.message}');
-      }
-    } catch (e) {
-      _showError('Erreur: ${e.toString()}');
-    }
+    await DonyPaymentSheet.show(
+      context,
+      config: PaymentSheetConfig(
+        clientSecret: state.clientSecret,
+        amountEur: state.amountEur,
+        paymentMethodTypes: state.paymentMethodTypes,
+      ),
+      contextLabel: 'Envoi vers ${widget.announcement.arrivalCity}',
+      onSuccess: () {
+        if (!context.mounted) return;
+        // Synchronously confirm the payment with the backend so the bid is
+        // promoted to PENDING immediately (does not depend on the Stripe webhook).
+        context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
+        // ?from=payment makes the bid-detail back arrow route to /home (mes envois)
+        // instead of popping back to the just-completed checkout form.
+        context.push('/bids/${state.bidId}?from=payment');
+      },
+    );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {

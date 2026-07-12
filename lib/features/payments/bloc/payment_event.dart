@@ -12,15 +12,20 @@ class BidCheckoutPaymentRequested extends PaymentEvent {
   final String clientSecret;
   final String publishableKey;
   final String bidId;
+  final double amountEur;
+  final List<String> paymentMethodTypes;
 
   const BidCheckoutPaymentRequested({
     required this.clientSecret,
     required this.publishableKey,
     required this.bidId,
+    required this.amountEur,
+    this.paymentMethodTypes = const [],
   });
 
   @override
-  List<Object?> get props => [clientSecret, publishableKey, bidId];
+  List<Object?> get props =>
+      [clientSecret, publishableKey, bidId, amountEur, paymentMethodTypes];
 }
 
 /// Lance la création du compte Stripe puis génère le lien d'onboarding.

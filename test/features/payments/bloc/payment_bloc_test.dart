@@ -305,7 +305,7 @@ void main() {
         commissionAmount: 6.0,
         paymentId: 'p1',
       );
-      expect(s.props, ['cs', 50.0, 6.0, 'p1']);
+      expect(s.props, ['cs', 50.0, 6.0, 'p1', <String>[]]);
     });
 
     test('PaymentEscrowPending props include amount', () {
@@ -326,6 +326,7 @@ void main() {
     const clientSecret = 'pi_test_secret_xxx';
     const publishableKey = 'pk_test_xxx';
     const bidId = 'bid-001';
+    const amountEur = 56.0;
 
     blocTest<PaymentBloc, PaymentState>(
       'emits [PaymentInitial, CheckoutPaymentSheetReady] on first checkout',
@@ -334,6 +335,7 @@ void main() {
         clientSecret: clientSecret,
         publishableKey: publishableKey,
         bidId: bidId,
+        amountEur: amountEur,
       )),
       expect: () => [
         const PaymentInitial(),
@@ -341,6 +343,7 @@ void main() {
           clientSecret: clientSecret,
           publishableKey: publishableKey,
           bidId: bidId,
+          amountEur: amountEur,
         ),
       ],
     );
@@ -354,6 +357,7 @@ void main() {
           clientSecret: clientSecret,
           publishableKey: publishableKey,
           bidId: bidId,
+          amountEur: amountEur,
         ));
         await Future<void>.delayed(Duration.zero);
         // Deuxième checkout avec le MÊME clientSecret (idempotency backend)
@@ -361,6 +365,7 @@ void main() {
           clientSecret: clientSecret,
           publishableKey: publishableKey,
           bidId: bidId,
+          amountEur: amountEur,
         ));
       },
       expect: () => [
@@ -369,12 +374,14 @@ void main() {
           clientSecret: clientSecret,
           publishableKey: publishableKey,
           bidId: bidId,
+          amountEur: amountEur,
         ),
         const PaymentInitial(),
         const CheckoutPaymentSheetReady(
           clientSecret: clientSecret,
           publishableKey: publishableKey,
           bidId: bidId,
+          amountEur: amountEur,
         ),
       ],
     );

@@ -36,6 +36,8 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       clientSecret: event.clientSecret,
       publishableKey: event.publishableKey,
       bidId: event.bidId,
+      amountEur: event.amountEur,
+      paymentMethodTypes: event.paymentMethodTypes,
     ));
   }
 
@@ -112,6 +114,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
         amount: payment.amount,
         commissionAmount: payment.commissionAmount,
         paymentId: payment.id,
+        paymentMethodTypes: payment.paymentMethodTypes,
       ));
     } catch (e) {
       emit(PaymentError(unwrapDioError(e)));

@@ -10,11 +10,11 @@ import 'package:dony/features/package_request/data/models/payment_method.dart'
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
-import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
+import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 
 /// Placeholder paymentIntentId sent to the backend when the sender confirms a
 /// CASH agreement. There is no online PaymentIntent for cash — the backend
@@ -101,29 +101,30 @@ class PaymentRecapBottomSheet {
                         try {
                           final init = await getIt<NegotiationRepository>()
                               .initiatePayment(thread.id);
-                          await Stripe.instance.initPaymentSheet(
-                            paymentSheetParameters:
-                                donyPaymentSheetParams(init.clientSecret),
+                          if (!ctx.mounted) return;
+                          await DonyPaymentSheet.show(
+                            ctx,
+                            config: PaymentSheetConfig(
+                              clientSecret: init.clientSecret,
+                              amountEur: init.amountEur,
+                              paymentMethodTypes: init.paymentMethodTypes,
+                            ),
+                            contextLabel: isCash
+                                ? 'Confirmation de l\'accord'
+                                : 'Paiement en escrow',
+                            onSuccess: () {
+                              bloc.add(NegotiationCheckoutRequested(
+                                threadId: thread.id,
+                                paymentIntentId: init.paymentIntentId,
+                                paymentMethod: method,
+                              ));
+                              if (ctx.mounted) {
+                                Navigator.of(ctx, rootNavigator: true).pop();
+                              }
+                            },
                           );
-                          await Stripe.instance.presentPaymentSheet();
-                          bloc.add(NegotiationCheckoutRequested(
-                            threadId: thread.id,
-                            paymentIntentId: init.paymentIntentId,
-                            paymentMethod: method,
-                          ));
-                          if (ctx.mounted) {
-                            Navigator.of(ctx, rootNavigator: true).pop();
-                          }
-                        } on StripeException catch (e) {
+                          // Sheet fermée sans paiement (swipe) → réarmer le bouton.
                           processing.value = false;
-                          if (ctx.mounted) {
-                            final isCanceled = e.error.code == FailureCode.Canceled;
-                            DonySnackbar.show(
-                              ctx,
-                              message: isCanceled ? 'Paiement annulé' : 'Erreur paiement : ${e.error.message ?? ""}',
-                              type: isCanceled ? DonySnackbarType.warning : DonySnackbarType.error,
-                            );
-                          }
                         } catch (_) {
                           processing.value = false;
                           if (ctx.mounted) {

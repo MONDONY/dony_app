@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
+import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
+import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -83,51 +83,37 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     return _rawAmount;
   }
 
-  /// Présente la Payment Sheet Stripe avec le clientSecret renvoyé par le
+  /// Présente la DonyPaymentSheet avec le clientSecret renvoyé par le
   /// backend. Après confirmation, le webhook Stripe `payment_intent.succeeded`
   /// (metadata wallet_topup=true) crédite le wallet côté serveur — il suffit
-  /// donc de revenir au wallet, qui recharge son solde. Même pattern que
-  /// `PaymentScreen._presentPaymentSheet`.
+  /// donc de revenir au wallet, qui recharge son solde.
   Future<void> _presentStripePaymentSheet(
     BuildContext context,
     String clientSecret,
   ) async {
-    try {
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: donyPaymentSheetParams(clientSecret),
-      );
-      await Stripe.instance.presentPaymentSheet();
-
-      if (!context.mounted) {
-        return;
-      }
-      DonySnackbar.show(
-        context,
-        message: 'Recharge réussie — votre solde sera crédité dans un instant.',
-        type: DonySnackbarType.success,
-      );
-      // pop(true) plutôt que go() : préserve la pile de navigation (le bouton
-      // retour du wallet continue de fonctionner) et signale au wallet qu'il
-      // doit recharger son solde (crédité de façon asynchrone via webhook).
-      context.pop(true);
-    } on StripeException catch (e) {
-      // L'utilisateur a annulé la feuille de paiement → pas d'erreur affichée.
-      if (context.mounted && e.error.code != FailureCode.Canceled) {
+    await DonyPaymentSheet.show(
+      context,
+      config: PaymentSheetConfig(
+        clientSecret: clientSecret,
+        amountEur: _amount,
+        // Le backend ne déclare pas PayPal sur le PaymentIntent de recharge
+        // wallet — le bouton PayPal reste donc masqué (dégradation propre).
+        paymentMethodTypes: const [],
+      ),
+      contextLabel: 'Recharge de votre solde dony',
+      onSuccess: () {
+        if (!context.mounted) return;
         DonySnackbar.show(
           context,
-          message: e.error.localizedMessage ?? 'Paiement refusé',
-          type: DonySnackbarType.error,
+          message: 'Recharge réussie — votre solde sera crédité dans un instant.',
+          type: DonySnackbarType.success,
         );
-      }
-    } catch (_) {
-      if (context.mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Erreur lors du paiement',
-          type: DonySnackbarType.error,
-        );
-      }
-    }
+        // pop(true) plutôt que go() : préserve la pile de navigation (le bouton
+        // retour du wallet continue de fonctionner) et signale au wallet qu'il
+        // doit recharger son solde (crédité de façon asynchrone via webhook).
+        context.pop(true);
+      },
+    );
   }
 
   @override
