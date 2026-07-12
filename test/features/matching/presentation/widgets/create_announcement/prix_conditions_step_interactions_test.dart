@@ -15,7 +15,6 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -202,169 +201,184 @@ void main() {
     });
   });
 
-  group('PrixConditionsStep — section "Ce que j\'accepte"', () {
-    testWidgets('tap sur chip de contenu le sélectionne', (tester) async {
+  group('PrixConditionsStep — combobox "Ce que j\'accepte"', () {
+    testWidgets('tap sur un item du catalogue le sélectionne', (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       final selected = ValueNotifier<Set<String>>({});
       await _pump(tester, selectedContent: selected);
 
-      // Tap sur "Vêtements & tissus" — chip de la section "Ce que j'accepte"
-      // (.first ; la section "Ce que je refuse" affiche aussi ce libellé).
-      final chip = find.text('Vêtements & tissus').first;
-      await tester.dragUntilVisible(
-        chip,
-        find.byType(SingleChildScrollView),
-        const Offset(0, -200),
+      await tester.tap(find.byKey(const Key('accepted-content-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('accepted-content-item-Vêtements & tissus')),
       );
-      await tester.pump();
-      await tester.tap(chip);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(selected.value.contains('Vêtements & tissus'), isTrue);
     });
 
-    testWidgets('tap sur chip déjà sélectionné le désélectionne', (tester) async {
+    testWidgets('re-tap sur un item déjà sélectionné le désélectionne', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       final selected = ValueNotifier<Set<String>>({'Vêtements & tissus'});
       await _pump(tester, selectedContent: selected);
 
-      // Tap sur "Vêtements & tissus" déjà sélectionné (chip de la section
-      // "Ce que j'accepte" — .first, la section "Ce que je refuse" affiche
-      // aussi ce libellé mais non sélectionné dans refusedTypes).
-      final chip = find.text('Vêtements & tissus').first;
-      await tester.dragUntilVisible(
-        chip,
-        find.byType(SingleChildScrollView),
-        const Offset(0, -200),
+      await tester.tap(find.byKey(const Key('accepted-content-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('accepted-content-item-Vêtements & tissus')),
       );
-      await tester.pump();
-      await tester.tap(chip);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(selected.value.contains('Vêtements & tissus'), isFalse);
     });
 
-    testWidgets('les chips de contenu custom sont affichés quand customAccepted est non vide',
-        (tester) async {
-      final customAccepted = ValueNotifier<Set<String>>({'Mon article custom'});
-      await _pump(tester, customAccepted: customAccepted);
+    testWidgets(
+      'les tags custom sont affichés quand customAccepted est non vide',
+      (tester) async {
+        final customAccepted = ValueNotifier<Set<String>>({
+          'Mon article custom',
+        });
+        await _pump(tester, customAccepted: customAccepted);
 
-      expect(find.text('Mon article custom'), findsOneWidget);
-    });
+        expect(
+          find.byKey(const Key('accepted-content-tag-Mon article custom')),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
-  group('PrixConditionsStep — section "Ce que je refuse"', () {
-    testWidgets('les chips de refus sont affichés quand refusedTypes est non vide',
-        (tester) async {
-      final refused = ValueNotifier<Set<String>>({'Liquides'});
+  group('PrixConditionsStep — combobox "Ce que je refuse"', () {
+    testWidgets(
+      'les tags de refus sont affichés quand refusedTypes est non vide',
+      (tester) async {
+        final refused = ValueNotifier<Set<String>>({'Liquides'});
+        await _pump(tester, refusedTypes: refused);
+
+        await tester.dragUntilVisible(
+          find.byKey(const Key('refused-content-tag-Liquides')),
+          find.byType(SingleChildScrollView),
+          const Offset(0, -200),
+        );
+        expect(
+          find.byKey(const Key('refused-content-tag-Liquides')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('ajout via le combobox met à jour refusedTypesNotifier', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final refused = ValueNotifier<Set<String>>({});
       await _pump(tester, refusedTypes: refused);
 
-      expect(find.text('Liquides'), findsOneWidget);
-    });
-
-    testWidgets('ajout via CaInlineAddRow met à jour refusedTypesNotifier',
-        (tester) async {
-      final refused = ValueNotifier<Set<String>>({});
-      final refCtrl = TextEditingController();
-      await _pump(tester, refusedTypes: refused, refusedCtrl: refCtrl);
-
-      // Faire défiler jusqu'au bas pour voir la section "Ce que je refuse"
       await tester.dragUntilVisible(
-        find.text('Ce que je refuse'),
+        find.byKey(const Key('refused-content-field')),
         find.byType(SingleChildScrollView),
         const Offset(0, -200),
       );
-      await tester.pump();
-
-      // Utiliser le contrôleur directement pour simuler la saisie
-      refCtrl.text = 'Explosifs';
-      await tester.pump();
-
-      // Taper sur l'icône d'ajout (Icons.add_rounded) dans la section refus
-      await tester.tap(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plus').last,
+      await tester.tap(find.byKey(const Key('refused-content-field')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('refused-content-field')),
+        'Explosifs',
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('refused-content-item-add')));
+      await tester.pumpAndSettle();
 
       expect(refused.value.contains('Explosifs'), isTrue);
     });
 
-    testWidgets('suppression d\'un chip refused met à jour refusedTypesNotifier',
-        (tester) async {
+    testWidgets('✕ sur un tag refused met à jour refusedTypesNotifier', (
+      tester,
+    ) async {
       final refused = ValueNotifier<Set<String>>({'Armes'});
       await _pump(tester, refusedTypes: refused);
 
-      // Faire défiler jusqu'au bas
+      final tag = find.byKey(const Key('refused-content-tag-Armes'));
       await tester.dragUntilVisible(
-        find.text('Armes'),
+        tag,
         find.byType(SingleChildScrollView),
         const Offset(0, -200),
       );
-      await tester.pump();
+      expect(tag, findsOneWidget);
 
-      expect(find.text('Armes'), findsOneWidget);
-
-      // Tap sur la croix du chip
       await tester.tap(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x').last,
+        find.descendant(of: tag, matching: find.byType(GestureDetector)),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(refused.value.contains('Armes'), isFalse);
     });
   });
 
-  group('PrixConditionsStep — section "Ce que j\'accepte" — ajout/suppression custom',
-      () {
-    testWidgets('ajout via CaInlineAddRow customAccepted met à jour le notifier',
+  group(
+    'PrixConditionsStep — combobox "Ce que j\'accepte" — ajout/suppression custom',
+    () {
+      testWidgets(
+        'ajout via le combobox customAccepted met à jour le notifier',
         (tester) async {
-      // Grand viewport pour que la section "Ce que j'accepte" soit dans le rendu
-      // après l'ajout du toggle KG/MIXED qui pousse le contenu vers le bas.
-      tester.view.physicalSize = const Size(800, 4000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+          // Grand viewport pour que la section "Ce que j'accepte" soit dans le
+          // rendu après l'ajout du toggle KG/MIXED qui pousse le contenu vers
+          // le bas, et que l'overlay du combobox tienne dans la fenêtre.
+          tester.view.physicalSize = const Size(800, 4000);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
 
-      final customAccepted = ValueNotifier<Set<String>>({});
-      final customCtrl = TextEditingController();
-      await _pump(
-          tester, customAccepted: customAccepted, customAcceptedCtrl: customCtrl);
+          final customAccepted = ValueNotifier<Set<String>>({});
+          await _pump(tester, customAccepted: customAccepted);
 
-      // Utiliser le contrôleur directement
-      customCtrl.text = 'Bijoux';
-      await tester.pump();
+          await tester.tap(find.byKey(const Key('accepted-content-field')));
+          await tester.pumpAndSettle();
+          await tester.enterText(
+            find.byKey(const Key('accepted-content-field')),
+            'Bijoux',
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(
+            find.byKey(const Key('accepted-content-item-add')),
+          );
+          await tester.pumpAndSettle();
 
-      // Taper sur l'icône d'ajout — le premier add_rounded dans le tree
-      // appartient à la section "Ce que j'accepte"
-      await tester.tap(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plus').first,
-        warnIfMissed: false,
+          expect(customAccepted.value.contains('Bijoux'), isTrue);
+        },
       );
-      await tester.pump();
 
-      expect(customAccepted.value.contains('Bijoux'), isTrue);
-    });
+      testWidgets('suppression d\'un tag customAccepted met à jour le notifier',
+          (tester) async {
+        tester.view.physicalSize = const Size(800, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
 
-    testWidgets('suppression d\'un chip customAccepted met à jour le notifier',
-        (tester) async {
-      // Grand viewport pour que la section "Ce que j'accepte" soit dans le rendu
-      // après l'ajout du toggle KG/MIXED qui pousse le contenu vers le bas.
-      tester.view.physicalSize = const Size(800, 4000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+        final customAccepted = ValueNotifier<Set<String>>({'Bijoux'});
+        await _pump(tester, customAccepted: customAccepted);
 
-      final customAccepted = ValueNotifier<Set<String>>({'Bijoux'});
-      await _pump(tester, customAccepted: customAccepted);
+        final tag = find.byKey(const Key('accepted-content-tag-Bijoux'));
+        expect(tag, findsOneWidget);
 
-      expect(find.text('Bijoux'), findsOneWidget);
+        await tester.tap(
+          find.descendant(of: tag, matching: find.byType(GestureDetector)),
+        );
+        await tester.pumpAndSettle();
 
-      // Tap sur la croix du chip
-      await tester.tap(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x').first,
-        warnIfMissed: false,
-      );
-      await tester.pump();
-
-      expect(customAccepted.value.contains('Bijoux'), isFalse);
-    });
-  });
+        expect(customAccepted.value.contains('Bijoux'), isFalse);
+      });
+    },
+  );
 
   group('PrixConditionsStep — switch Espèces', () {
     testWidgets('switch espèces peut être activé quand carte commission valide',

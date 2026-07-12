@@ -280,35 +280,69 @@ void main() {
     });
 
     testWidgets(
-      'les chips du catalogue (repository) sont affichées — pas une liste figée',
+      'focus sur le combobox « accepte » ouvre le catalogue complet (11 items) — pas une liste figée',
       (tester) async {
         await _pump(tester);
+        await tester.tap(find.byKey(const Key('accepted-content-field')));
+        await tester.pumpAndSettle();
         for (final category in fallbackCatalog) {
-          // Chaque libellé du catalogue apparaît deux fois : une fois comme
-          // chip « Ce que j'accepte », une fois comme chip « Ce que je
-          // refuse » — les deux sections proposent désormais le catalogue
-          // complet.
           expect(
-            find.text(category.label),
-            findsNWidgets(2),
+            find.byKey(Key('accepted-content-item-${category.label}')),
+            findsOneWidget,
             reason:
-                'Chip "${category.label}" doit être présente dans les deux sections',
+                'Item "${category.label}" doit être présent dans le combobox "Ce que j\'accepte"',
           );
         }
       },
     );
 
     testWidgets(
-      'saisie libre dans "Ce que j\'accepte" ajoute un élément custom',
+      'focus sur le combobox « refuse » ouvre aussi le catalogue complet',
       (tester) async {
-        await _pump(tester);
-        final acceptField = find.byWidgetPredicate(
-          (w) => w is TextField && w.decoration?.hintText == 'Ajouter un autre type…',
-        );
-        await tester.enterText(acceptField, 'Poissons');
-        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpWidget(_host());
+        await tester.pump(const Duration(milliseconds: 200));
         await tester.pump();
-        expect(find.text('Poissons'), findsOneWidget);
+        await tester.dragUntilVisible(
+          find.byKey(const Key('refused-content-field')),
+          find.byType(SingleChildScrollView),
+          const Offset(0, -200),
+        );
+        await tester.tap(find.byKey(const Key('refused-content-field')));
+        await tester.pumpAndSettle();
+        for (final category in fallbackCatalog) {
+          expect(
+            find.byKey(Key('refused-content-item-${category.label}')),
+            findsOneWidget,
+            reason:
+                'Item "${category.label}" doit être présent dans le combobox "Ce que je refuse"',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      'saisie libre dans le combobox "Ce que j\'accepte" ajoute un élément custom',
+      (tester) async {
+        // Grand viewport pour que le champ + l'overlay tiennent entièrement
+        // dans la fenêtre de test (évite un overlay tronqué en bas d'écran).
+        tester.view.physicalSize = const Size(800, 2000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await _pump(tester);
+        await tester.tap(find.byKey(const Key('accepted-content-field')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('accepted-content-field')),
+          'Poissons',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('accepted-content-item-add')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('accepted-content-tag-Poissons')),
+          findsOneWidget,
+        );
       },
     );
 
@@ -321,18 +355,27 @@ void main() {
     });
 
     testWidgets(
-      'saisie libre dans "Ce que je refuse" ajoute un élément custom',
+      'saisie libre dans le combobox "Ce que je refuse" ajoute un élément custom',
       (tester) async {
         await _pump(tester);
-        final refuseField = find.byWidgetPredicate(
-          (w) =>
-              w is TextField &&
-              w.decoration?.hintText == 'Ex: Liquides, Denrées périssables…',
+        await tester.dragUntilVisible(
+          find.byKey(const Key('refused-content-field')),
+          find.byType(SingleChildScrollView),
+          const Offset(0, -200),
         );
-        await tester.enterText(refuseField, 'Alcool');
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.pump();
-        expect(find.text('Alcool'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('refused-content-field')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('refused-content-field')),
+          'Alcool',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('refused-content-item-add')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('refused-content-tag-Alcool')),
+          findsOneWidget,
+        );
       },
     );
 

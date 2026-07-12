@@ -1,12 +1,19 @@
+import 'dart:collection';
+
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Sélecteur multiple réutilisable de types de contenu.
+/// Sélecteur multiple de types de contenu — combobox à liste déroulante.
 ///
-/// Liste déroulante à cocher alimentée par [repository] (catalogue backend,
-/// avec repli hors ligne intégré — voir [IContentCategoryRepository]) +
-/// champ « Ajouter un autre type… » pour la saisie libre.
+/// Wrapper qui charge le catalogue depuis [repository] (cache + repli hors
+/// ligne — voir [IContentCategoryRepository]) puis délègue le rendu à
+/// [ContentCategoryComboBox]. Pendant le chargement (ou en cas de catalogue
+/// vide inattendu), le catalogue embarqué ([fallbackCatalog]) est affiché :
+/// le sélecteur n'est jamais vide ni bloquant en attendant le réseau.
 ///
 /// Émet toujours une [List<String>] de LABELS (canoniques et/ou libres) via
 /// [onChanged] — jamais de code technique, jamais `emoji + label`.
@@ -16,13 +23,18 @@ class ContentCategorySelector extends StatefulWidget {
     required this.repository,
     required this.selected,
     required this.onChanged,
-    this.freeTextHint = 'Ajouter un autre type…',
+    this.hint = 'Ajouter un type de contenu…',
+    this.keyPrefix = 'content-combo',
   });
 
   final IContentCategoryRepository repository;
   final List<String> selected;
   final ValueChanged<List<String>> onChanged;
-  final String freeTextHint;
+  final String hint;
+
+  /// Préfixe des [Key] internes — permet de distinguer plusieurs instances
+  /// sur un même écran (ex: "accepté" vs "refusé") dans les tests.
+  final String keyPrefix;
 
   @override
   State<ContentCategorySelector> createState() =>
@@ -30,122 +42,565 @@ class ContentCategorySelector extends StatefulWidget {
 }
 
 class _ContentCategorySelectorState extends State<ContentCategorySelector> {
-  late final ValueNotifier<List<ContentCategory>> _catalogNotifier;
-  late final ValueNotifier<Set<String>> _selectedNotifier;
-  final _customCtrl = TextEditingController();
+  List<ContentCategory>? _catalog;
 
   @override
   void initState() {
     super.initState();
-    _catalogNotifier = ValueNotifier<List<ContentCategory>>(const []);
-    _selectedNotifier = ValueNotifier<Set<String>>(widget.selected.toSet());
-    _loadCatalog();
+    _load();
   }
 
-  Future<void> _loadCatalog() async {
+  Future<void> _load() async {
     final categories = await widget.repository.getCategories();
     if (!mounted) {
       return;
     }
-    _catalogNotifier.value = categories;
-  }
-
-  @override
-  void dispose() {
-    _catalogNotifier.dispose();
-    _selectedNotifier.dispose();
-    _customCtrl.dispose();
-    super.dispose();
-  }
-
-  void _toggle(String label) {
-    final updated = Set<String>.from(_selectedNotifier.value);
-    if (!updated.remove(label)) {
-      updated.add(label);
-    }
-    _selectedNotifier.value = updated;
-    widget.onChanged(updated.toList());
-  }
-
-  void _addCustom() {
-    final value = _customCtrl.text.trim();
-    if (value.isEmpty) {
-      return;
-    }
-    final updated = Set<String>.from(_selectedNotifier.value)..add(value);
-    _selectedNotifier.value = updated;
-    widget.onChanged(updated.toList());
-    _customCtrl.clear();
+    setState(() => _catalog = categories);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<ContentCategory>>(
-      valueListenable: _catalogNotifier,
-      builder: (context, catalog, _) {
-        // Pendant le chargement (ou en cas de catalogue vide inattendu), on
-        // affiche déjà le catalogue embarqué : le sélecteur n'est jamais vide
-        // ni bloquant en attendant le réseau.
-        final displayCatalog = catalog.isEmpty ? fallbackCatalog : catalog;
-        return ValueListenableBuilder<Set<String>>(
-          valueListenable: _selectedNotifier,
-          builder: (context, selected, _) {
-            final catalogLabels = displayCatalog.map((c) => c.label).toSet();
-            final customSelected = selected
-                .where((label) => !catalogLabels.contains(label))
-                .toList();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final catalog = _catalog;
+    return ContentCategoryComboBox(
+      catalog: (catalog == null || catalog.isEmpty) ? fallbackCatalog : catalog,
+      selected: widget.selected,
+      onChanged: widget.onChanged,
+      hint: widget.hint,
+      keyPrefix: widget.keyPrefix,
+    );
+  }
+}
+
+/// Combobox multi-sélection pur (contrôlé) — pas d'accès réseau.
+///
+/// - Les éléments sélectionnés s'affichent en tags supprimables au-dessus du
+///   champ.
+/// - Le focus sur le champ ouvre une liste déroulante (overlay ancré sous le
+///   champ) listant tout [catalog] (emoji + label), avec un ✓ sur les items
+///   déjà sélectionnés.
+/// - Taper filtre la liste (insensible à la casse, espaces de bord ignorés).
+/// - Tap sur un item = toggle ; la liste reste ouverte (multi-sélection) et
+///   le champ se vide après chaque sélection.
+/// - Si le texte tapé ne matche aucun item du catalogue, la liste affiche une
+///   ligne « Ajouter "X" » qui ajoute X comme type libre.
+/// - La liste se ferme au tap extérieur et à la perte de focus. Les tags
+///   restent affichés indépendamment de l'état de la liste.
+///
+/// Émet toujours une [List<String>] de labels via [onChanged].
+class ContentCategoryComboBox extends StatefulWidget {
+  const ContentCategoryComboBox({
+    super.key,
+    required this.catalog,
+    required this.selected,
+    required this.onChanged,
+    this.hint = 'Ajouter un type de contenu…',
+    this.keyPrefix = 'content-combo',
+  });
+
+  final List<ContentCategory> catalog;
+  final List<String> selected;
+  final ValueChanged<List<String>> onChanged;
+  final String hint;
+  final String keyPrefix;
+
+  @override
+  State<ContentCategoryComboBox> createState() =>
+      _ContentCategoryComboBoxState();
+}
+
+class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
+    with SingleTickerProviderStateMixin {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+  final _layerLink = LayerLink();
+  final _fieldBoxKey = GlobalKey();
+
+  late final AnimationController _animController;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
+
+  OverlayEntry? _overlayEntry;
+  late LinkedHashSet<String> _selected;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = LinkedHashSet<String>.from(widget.selected);
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _fadeAnim = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOutCubic,
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, -0.04),
+      end: Offset.zero,
+    ).animate(_fadeAnim);
+    _focusNode.addListener(_onFocusChanged);
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant ContentCategoryComboBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final incoming = LinkedHashSet<String>.from(widget.selected);
+    if (!setEquals(incoming, _selected)) {
+      _selected = incoming;
+      if (mounted) {
+        setState(() {});
+      }
+      _overlayEntry?.markNeedsBuild();
+    } else if (!listEquals(widget.catalog, oldWidget.catalog)) {
+      _overlayEntry?.markNeedsBuild();
+    }
+  }
+
+  @override
+  void dispose() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _animController.dispose();
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (_controller.text == _query) {
+      return;
+    }
+    setState(() => _query = _controller.text);
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  void _onFocusChanged() {
+    if (_focusNode.hasFocus) {
+      _openOverlay();
+    } else {
+      _closeOverlay();
+    }
+    setState(() {}); // rafraîchit la bordure focus du champ
+  }
+
+  List<ContentCategory> get _filteredCatalog {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) {
+      return widget.catalog;
+    }
+    return widget.catalog
+        .where((c) => c.label.toLowerCase().contains(q))
+        .toList();
+  }
+
+  bool get _showAddRow => _query.trim().isNotEmpty && _filteredCatalog.isEmpty;
+
+  void _emit() => widget.onChanged(_selected.toList());
+
+  void _toggle(String label) {
+    setState(() {
+      if (!_selected.remove(label)) {
+        _selected.add(label);
+      }
+    });
+    _emit();
+    _controller.clear();
+    if (!_focusNode.hasFocus) {
+      _focusNode.requestFocus();
+    }
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  void _addCustom() {
+    final value = _controller.text.trim();
+    if (value.isEmpty) {
+      return;
+    }
+    setState(() => _selected.add(value));
+    _emit();
+    _controller.clear();
+    if (!_focusNode.hasFocus) {
+      _focusNode.requestFocus();
+    }
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  void _removeTag(String label) {
+    setState(() => _selected.remove(label));
+    _emit();
+    _overlayEntry?.markNeedsBuild();
+  }
+
+  void _openOverlay() {
+    if (_overlayEntry != null) {
+      return;
+    }
+    _overlayEntry = OverlayEntry(builder: _buildOverlay);
+    Overlay.of(context).insert(_overlayEntry!);
+    _animController.forward(from: 0);
+  }
+
+  void _closeOverlay() {
+    final entry = _overlayEntry;
+    if (entry == null) {
+      return;
+    }
+    _overlayEntry = null;
+    _animController.reverse().whenCompleteOrCancel(entry.remove);
+  }
+
+  double get _fieldWidth {
+    final box = _fieldBoxKey.currentContext?.findRenderObject();
+    if (box is RenderBox && box.hasSize) {
+      return box.size.width;
+    }
+    return 280;
+  }
+
+  Widget _buildOverlay(BuildContext context) {
+    final width = _fieldWidth;
+    final filtered = _filteredCatalog;
+    final showAddRow = _showAddRow;
+    final query = _controller.text.trim();
+
+    return Stack(
+      children: [
+        // Barrière transparente plein écran : ferme la liste au tap extérieur.
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => _focusNode.unfocus(),
+          ),
+        ),
+        CompositedTransformFollower(
+          link: _layerLink,
+          targetAnchor: Alignment.bottomLeft,
+          offset: const Offset(0, 6),
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: SlideTransition(
+              position: _slideAnim,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: _ComboDropdown(
+                  width: width,
+                  catalog: filtered,
+                  selected: _selected,
+                  query: query,
+                  showAddRow: showAddRow,
+                  keyPrefix: widget.keyPrefix,
+                  onToggle: _toggle,
+                  onAddCustom: _addCustom,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final isFocused = _focusNode.hasFocus;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_selected.isNotEmpty) ...[
+          Wrap(
+            spacing: DonySpacing.xs,
+            runSpacing: DonySpacing.xs,
+            children: _selected
+                .map(
+                  (label) => _ComboTag(
+                    key: Key('${widget.keyPrefix}-tag-$label'),
+                    label: label,
+                    emoji: emojiForLabel(label),
+                    onRemove: () => _removeTag(label),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+        ],
+        CompositedTransformTarget(
+          link: _layerLink,
+          child: AnimatedContainer(
+            key: _fieldBoxKey,
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              border: Border.all(
+                color: isFocused ? cs.primary : cs.outline,
+                width: isFocused ? 1.5 : 1,
+              ),
+            ),
+            child: TextField(
+              key: Key('${widget.keyPrefix}-field'),
+              controller: _controller,
+              focusNode: _focusNode,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: widget.hint,
+                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.md,
+                ),
+                suffixIcon: DonyIcon(
+                  'chevron-down',
+                  size: 16,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Overlay dropdown ──────────────────────────────────────────────────────
+
+class _ComboDropdown extends StatelessWidget {
+  const _ComboDropdown({
+    required this.width,
+    required this.catalog,
+    required this.selected,
+    required this.query,
+    required this.showAddRow,
+    required this.keyPrefix,
+    required this.onToggle,
+    required this.onAddCustom,
+  });
+
+  final double width;
+  final List<ContentCategory> catalog;
+  final Set<String> selected;
+  final String query;
+  final bool showAddRow;
+  final String keyPrefix;
+  final ValueChanged<String> onToggle;
+  final VoidCallback onAddCustom;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Material(
+      elevation: 8,
+      shadowColor: DonyColors.shadow,
+      color: cs.surface,
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      child: SizedBox(
+        width: width,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 560),
+          // Column eager (pas de lazy-build) : le catalogue est petit (~11
+          // items) et les tests widgets doivent pouvoir trouver n'importe
+          // quel item sans scroller manuellement au préalable.
+          child: SingleChildScrollView(
+            key: Key('$keyPrefix-dropdown'),
+            padding: const EdgeInsets.all(DonySpacing.xs),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final category in displayCatalog)
-                  CheckboxListTile(
-                    key: Key('content-category-${category.code}'),
-                    value: selected.contains(category.label),
-                    onChanged: (_) => _toggle(category.label),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('${category.emoji} ${category.label}'),
-                  ),
-                for (final label in customSelected)
-                  CheckboxListTile(
-                    key: Key('content-category-custom-$label'),
-                    value: true,
-                    onChanged: (_) => _toggle(label),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(label),
-                  ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('content-category-free-text'),
-                        controller: _customCtrl,
-                        textCapitalization: TextCapitalization.sentences,
-                        onSubmitted: (_) => _addCustom(),
-                        decoration: InputDecoration(
-                          hintText: widget.freeTextHint,
-                          isDense: true,
-                        ),
+              children: showAddRow
+                  ? [
+                      _AddRow(
+                        key: Key('$keyPrefix-item-add'),
+                        query: query,
+                        onTap: onAddCustom,
                       ),
+                    ]
+                  : [
+                      for (final category in catalog)
+                        _ComboItem(
+                          key: Key('$keyPrefix-item-${category.label}'),
+                          category: category,
+                          selected: selected.contains(category.label),
+                          onTap: () => onToggle(category.label),
+                        ),
+                    ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Item de catalogue dans la liste déroulante — rayon interne concentrique
+/// au rayon du conteneur de l'overlay (`DonyRadius.md` = `DonyRadius.sm` +
+/// padding `DonySpacing.xs`). Hit area ≥ 44px.
+class _ComboItem extends StatelessWidget {
+  const _ComboItem({
+    super.key,
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final ContentCategory category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.xs,
+        vertical: 2,
+      ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Container(
+            alignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+              color: selected ? cs.primary.withValues(alpha: 0.08) : null,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+            child: Row(
+              children: [
+                Text(category.emoji, style: const TextStyle(fontSize: 18)),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: Text(
+                    category.label,
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                  ),
+                ),
+                if (selected)
+                  DonyIcon('check', size: 16, color: cs.primary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ligne « Ajouter "X" » — remplace l'ancien bouton "+" de saisie libre.
+class _AddRow extends StatelessWidget {
+  const _AddRow({super.key, required this.query, required this.onTap});
+
+  final String query;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.xs,
+        vertical: 2,
+      ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Container(
+            alignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+            child: Row(
+              children: [
+                DonyIcon('plus', size: 16, color: cs.primary),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: Text(
+                    'Ajouter « $query »',
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w600,
                     ),
-                    IconButton(
-                      key: const Key('content-category-add-btn'),
-                      icon: const Icon(Icons.add_rounded),
-                      onPressed: _addCustom,
-                      tooltip: 'Ajouter',
-                    ),
-                  ],
+                  ),
                 ),
               ],
-            );
-          },
-        );
-      },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Tag supprimable ───────────────────────────────────────────────────────
+
+/// Tag de sélection (au-dessus du champ). Le bouton ✕ a une zone tactile de
+/// 44×44 (règle hit area) sans alourdir le pill visuel — le glyphe reste
+/// petit (14px), centré dans la zone tactile.
+class _ComboTag extends StatelessWidget {
+  const _ComboTag({
+    super.key,
+    required this.label,
+    required this.emoji,
+    required this.onRemove,
+  });
+
+  final String label;
+  final String emoji;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.only(left: DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            label,
+            style: tt.bodySmall?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onRemove,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: DonyIcon('x', size: 14, color: cs.primary),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
