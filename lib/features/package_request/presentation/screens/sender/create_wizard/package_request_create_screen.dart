@@ -93,14 +93,38 @@ class _PackageRequestCreateScreenState
   ) {
     if (state.submissionStatus == FormSubmissionStatus.success &&
         state.createdRequest != null) {
-      DonySnackbar.show(
-        context,
-        message: state.isEditing
-            ? 'Demande modifiée'
-            : 'Demande publiée — les voyageurs sont notifiés',
-        type: DonySnackbarType.success,
-      );
-      context.pop();
+      final isEditing = state.isEditing;
+      final requestId = state.createdRequest!.id;
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (routeContext) => DonySuccessScreen(
+          mascotteType: DonyMascotteType.tenantColis,
+          title: isEditing ? 'Demande modifiée !' : 'Demande publiée !',
+          subtitle: isEditing
+              ? 'Tes modifications sont en ligne.'
+              : 'Les voyageurs sont notifiés — tu recevras des offres '
+                  'très vite.',
+          ctaLabel: 'Voir ma demande',
+          onCta: () {
+            // Le contexte de la route succès (routeContext) reste monté
+            // sous le Navigator racine après le pop ci-dessous — on capture
+            // donc le GoRouter AVANT de popper, pour éviter « Looking up a
+            // deactivated widget's ancestor is unsafe » (même classe de bug
+            // que le fix bid-payé, feb86b71).
+            final router = GoRouter.of(routeContext);
+            Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
+            context.pop(); // ferme le wizard — aucune valeur attendue par
+            // les appelants (context.push<void>(...), refresh inconditionnel
+            // après l'await, jamais gaté sur la valeur du pop)
+            router.push('/package-requests/$requestId');
+          },
+          // Pas d'onClose custom : aucun appelant ne gate son refresh sur la
+          // valeur du pop (my_package_requests_screen, envoyer_hub_screen et
+          // package_request_public_detail_screen rafraîchissent tous de
+          // façon inconditionnelle après l'await) — le comportement par
+          // défaut (X → go('/home')) est donc sûr, comme pour
+          // create_trip_screen/create_announcement_screen.
+        ),
+      ));
     } else if (state.submissionStatus == FormSubmissionStatus.error) {
       ErrorPresenter.show(
         context,
