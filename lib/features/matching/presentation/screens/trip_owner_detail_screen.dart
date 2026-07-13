@@ -110,14 +110,20 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               unawaited(_onDeleteBlocked(context, state.announcementId));
             } else if (state is AnnouncementPublished) {
               _current = state.announcement;
-              DonySnackbar.show(
-                context,
-                message: 'Trajet publié !',
-                type: DonySnackbarType.success,
-              );
               context.read<AnnouncementBloc>().add(
                 AnnouncementDetailRequested(widget.announcementId),
               );
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (routeContext) => DonySuccessScreen(
+                  mascotteType: DonyMascotteType.joyeux,
+                  title: 'Trajet publié !',
+                  subtitle:
+                      'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',
+                  ctaLabel: 'Continuer',
+                  ctaVariant: DonyButtonVariant.accent,
+                  onCta: () => Navigator.of(routeContext).pop(), // revient au détail, déjà rafraîchi
+                ),
+              ));
             } else if (state is AnnouncementKycRequired) {
               DonySnackbar.show(
                 context,
