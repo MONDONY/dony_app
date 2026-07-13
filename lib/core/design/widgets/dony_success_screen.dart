@@ -3,12 +3,15 @@ import 'package:dony/core/design/utils/dony_layout.dart';
 import 'package:dony/core/design/widgets/dony_app_bar.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_mascotte.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 /// Écran plein affiché après une action majeure réussie (paiement confirmé,
 /// trajet publié, livraison confirmée). Pas d'auto-navigation : l'utilisateur
-/// quitte l'écran uniquement via [onCta].
+/// quitte l'écran uniquement via [onCta] — ou via le bouton fermer en haut à
+/// droite, qui ramène par défaut vers `/home` (voir [onClose]).
 class DonySuccessScreen extends StatelessWidget {
   const DonySuccessScreen({
     super.key,
@@ -18,6 +21,7 @@ class DonySuccessScreen extends StatelessWidget {
     required this.ctaLabel,
     required this.onCta,
     this.ctaVariant = DonyButtonVariant.primary,
+    this.onClose,
   });
 
   final DonyMascotteType mascotteType;
@@ -27,15 +31,46 @@ class DonySuccessScreen extends StatelessWidget {
   final VoidCallback onCta;
   final DonyButtonVariant ctaVariant;
 
+  /// Appelé au tap sur le bouton fermer (X). Par défaut (null), navigue vers
+  /// `/home` — utile pour permettre à un écran appelant de surcharger ce
+  /// comportement (ex: retour vers un autre onglet).
+  final VoidCallback? onClose;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: const DonyAppBar(
+      appBar: DonyAppBar(
         title: '',
         showBackButton: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: DonySpacing.base),
+            child: Tooltip(
+              message: 'Fermer',
+              child: Semantics(
+                button: true,
+                label: 'Fermer',
+                child: InkWell(
+                  onTap: onClose ?? () => GoRouter.of(context).go('/home'),
+                  customBorder: const CircleBorder(),
+                  child: Container(
+                    width: DonySpacing.icon,
+                    height: DonySpacing.icon,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: cs.surface,
+                      border: Border.all(color: cs.outline),
+                    ),
+                    child: DonyIcon('x', size: DonySpacing.iconSm, color: cs.onSurface),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Builder(builder: (context) {
         final h = DonyLayout.hPadding(context);
