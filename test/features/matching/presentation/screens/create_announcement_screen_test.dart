@@ -302,6 +302,7 @@ void main() {
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Trajet publié !'), findsOneWidget);
+      expect(find.text('Partager mon trajet'), findsOneWidget);
     });
 
     testWidgets(
@@ -320,6 +321,8 @@ void main() {
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Trajet modifié !'), findsOneWidget);
+      // Le partage ne s'affiche qu'à la publication, pas à l'édition.
+      expect(find.text('Partager mon trajet'), findsNothing);
     });
 
     testWidgets(

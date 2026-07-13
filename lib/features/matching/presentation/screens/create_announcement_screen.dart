@@ -32,6 +32,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 const _priceOptions = [5.0, 6.0, 7.0, 8.0];
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
@@ -593,6 +594,16 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 router.go('/announcements');
               },
               analyticsContext: 'trip_published_announcement',
+              secondaryLabel: _isEdit ? null : 'Partager mon trajet',
+              onSecondary: _isEdit
+                  ? null
+                  : () => unawaited(Share.share(
+                        '✈️ Je voyage ${announcement.departureCity} → '
+                        '${announcement.arrivalCity} le '
+                        '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
+                        'avec de la place dans mes bagages !\n'
+                        'Réserve tes kilos sur dony 📦',
+                      )),
             ),
           ));
         } else if (state is AnnouncementProLimitReached) {

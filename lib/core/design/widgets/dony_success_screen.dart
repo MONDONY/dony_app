@@ -32,6 +32,8 @@ class DonySuccessScreen extends StatefulWidget {
     this.ctaVariant = DonyButtonVariant.primary,
     this.onClose,
     this.analyticsContext,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   final DonyMascotteType mascotteType;
@@ -45,6 +47,15 @@ class DonySuccessScreen extends StatefulWidget {
   /// `/home` — utile pour permettre à un écran appelant de surcharger ce
   /// comportement (ex: retour vers un autre onglet).
   final VoidCallback? onClose;
+
+  /// Libellé d'une action secondaire optionnelle (ex: « Partager mon trajet »),
+  /// affichée sous le CTA principal. Ignoré si [onSecondary] est `null`.
+  final String? secondaryLabel;
+
+  /// Callback de l'action secondaire. Le bouton secondaire n'est rendu que si
+  /// [secondaryLabel] ET [onSecondary] sont non-null — sinon rien n'est ajouté
+  /// à l'écran (comportement inchangé pour les appelants existants).
+  final VoidCallback? onSecondary;
 
   /// Slug identifiant le flux d'origine (ex: `trip_published`) — envoyé comme
   /// propriété `context` sur les events analytics de cet écran (vue,
@@ -155,6 +166,11 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
   void _handleCtaTap() {
     _trackEvent(AnalyticsEvents.successScreenCtaTapped);
     widget.onCta();
+  }
+
+  void _handleSecondaryTap() {
+    _trackEvent(AnalyticsEvents.successScreenSecondaryTapped);
+    widget.onSecondary!();
   }
 
   void _handleClose(BuildContext context) {
@@ -278,6 +294,16 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                           variant: widget.ctaVariant,
                           onPressed: _handleCtaTap,
                         ),
+                        if (widget.secondaryLabel != null &&
+                            widget.onSecondary != null) ...[
+                          const SizedBox(height: DonySpacing.md),
+                          DonyButton(
+                            label: widget.secondaryLabel!,
+                            variant: DonyButtonVariant.secondary,
+                            iconAsset: 'share-2',
+                            onPressed: _handleSecondaryTap,
+                          ),
+                        ],
                       ],
                     )
                     .animate()

@@ -39,6 +39,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CreateTripArgs {
   final AnnouncementModel? announcement;
@@ -1216,6 +1217,16 @@ class _TripFormContentState extends State<_TripFormContent> {
                   router.push('/announcements/${announcement.id}/trip');
                 },
                 analyticsContext: 'trip_published',
+                secondaryLabel: isEdit ? null : 'Partager mon trajet',
+                onSecondary: isEdit
+                    ? null
+                    : () => unawaited(Share.share(
+                          '✈️ Je voyage ${announcement.departureCity} → '
+                          '${announcement.arrivalCity} le '
+                          '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
+                          'avec de la place dans mes bagages !\n'
+                          'Réserve tes kilos sur dony 📦',
+                        )),
               ),
             ));
           } else if (state is AnnouncementProLimitReached) {

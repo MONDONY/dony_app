@@ -21,6 +21,8 @@ void main() {
     required VoidCallback onCta,
     VoidCallback? onClose,
     String? analyticsContext,
+    String? secondaryLabel,
+    VoidCallback? onSecondary,
   }) =>
       MaterialApp(
         theme: AppTheme.light,
@@ -32,6 +34,8 @@ void main() {
           onCta: onCta,
           onClose: onClose,
           analyticsContext: analyticsContext,
+          secondaryLabel: secondaryLabel,
+          onSecondary: onSecondary,
         ),
       );
 
@@ -299,5 +303,86 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
       expect(tester.takeException(), isNull);
     });
+  });
+
+  // ── Action secondaire ────────────────────────────────────────────────────
+
+  group('action secondaire', () {
+    testWidgets(
+      'secondaryLabel + onSecondary fournis : le bouton secondaire s\'affiche',
+      (tester) async {
+        await tester.pumpWidget(
+          host(
+            onCta: () {},
+            secondaryLabel: 'Partager mon trajet',
+            onSecondary: () {},
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.text('Partager mon trajet'), findsOneWidget);
+        expect(find.byType(DonyButton), findsNWidgets(2));
+      },
+    );
+
+    testWidgets(
+      'sans secondaryLabel/onSecondary : aucun bouton secondaire',
+      (tester) async {
+        await tester.pumpWidget(host(onCta: () {}));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(DonyButton), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tap sur le bouton secondaire appelle onSecondary exactement une fois',
+      (tester) async {
+        var callCount = 0;
+        await tester.pumpWidget(
+          host(
+            onCta: () {},
+            secondaryLabel: 'Partager mon trajet',
+            onSecondary: () => callCount++,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+
+        await tester.tap(find.text('Partager mon trajet'));
+        await tester.pump();
+
+        expect(callCount, 1);
+      },
+    );
+
+    testWidgets(
+      'analyticsContext fourni : secondary_tapped part au tap secondaire',
+      (tester) async {
+        final analytics = _MockAnalyticsService();
+        when(() => analytics.logEvent(
+              any(),
+              properties: any(named: 'properties'),
+            )).thenAnswer((_) async {});
+        getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+
+        await tester.pumpWidget(
+          host(
+            onCta: () {},
+            analyticsContext: 'trip_published',
+            secondaryLabel: 'Partager mon trajet',
+            onSecondary: () {},
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 500));
+
+        await tester.tap(find.text('Partager mon trajet'));
+        await tester.pump();
+
+        verify(() => analytics.logEvent(
+              AnalyticsEvents.successScreenSecondaryTapped,
+              properties: {'context': 'trip_published'},
+            )).called(1);
+      },
+    );
   });
 }
