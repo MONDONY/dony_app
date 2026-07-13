@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -69,6 +70,9 @@ class _MockNegotiationBloc
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class _MockPriceGridRepository extends Mock implements PriceGridRepository {}
+
+class _MockContentCategoryRepository extends Mock
+    implements IContentCategoryRepository {}
 
 // ── Fake event fallbacks (only for non-sealed abstract events) ────────────────
 
@@ -222,6 +226,16 @@ void main() {
       );
     }
 
+    // IContentCategoryRepository — _TripFormContentState.initState calls
+    // getIt<IContentCategoryRepository>().getCategories() via an unawaited
+    // _loadCatalog(). Pre-existing gap (not related to Task 6) that left an
+    // uncaught async StateError on every test rendering the full form.
+    if (!getIt.isRegistered<IContentCategoryRepository>()) {
+      final repo = _MockContentCategoryRepository();
+      when(() => repo.getCategories()).thenAnswer((_) async => const []);
+      getIt.registerSingleton<IContentCategoryRepository>(repo);
+    }
+
     // AnnouncementBloc factory — CreateTripScreen calls getIt<AnnouncementBloc>()
     if (!getIt.isRegistered<AnnouncementBloc>()) {
       getIt.registerFactory<AnnouncementBloc>(() {
@@ -260,6 +274,16 @@ void main() {
         when(() => b.stream).thenAnswer((_) => const Stream.empty());
         return b;
       });
+    }
+
+    // StripeAccountBloc factory — CreateTripScreen.build() always creates its
+    // own BlocProvider<StripeAccountBloc>(create: (_) => getIt<...>()),
+    // shadowing whatever `.value` provider a test wraps it with. Pre-existing
+    // gap (not related to Task 6) that was leaving every BLoC-listener test
+    // in this file with a spurious uncaught `StateError` on the very first
+    // pumpAndSettle — registering it here fixes the noise for all tests.
+    if (!getIt.isRegistered<StripeAccountBloc>()) {
+      getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
     }
   });
 
@@ -905,7 +929,7 @@ void main() {
     });
 
     testWidgets(
-      'AnnouncementCreated pop la vue (mode création)',
+      'AnnouncementCreated affiche DonySuccessScreen (mode création)',
       (tester) async {
         setupViewport(tester);
         var didPop = false;
@@ -946,17 +970,21 @@ void main() {
 
         expect(find.byType(CreateTripScreen), findsOneWidget);
 
-        // Emit AnnouncementCreated → listener calls context.pop(true)
+        // Emit AnnouncementCreated → listener pousse DonySuccessScreen
+        // (le pop(true) n'intervient plus qu'après le tap CTA — voir le test
+        // dédié au double-pop ci-dessous)
         annStreamCtrl.add(AnnouncementCreated(_makeAnnouncement()));
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
 
-        expect(didPop, isTrue);
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Trajet publié !'), findsOneWidget);
+        expect(didPop, isFalse);
       },
     );
 
     testWidgets(
-      'AnnouncementUpdated pop la vue (mode édition)',
+      'AnnouncementUpdated affiche DonySuccessScreen (mode édition)',
       (tester) async {
         setupViewport(tester);
         var didPop = false;
@@ -999,9 +1027,88 @@ void main() {
 
         annStreamCtrl.add(AnnouncementUpdated(_makeAnnouncement()));
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
 
-        expect(didPop, isTrue);
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Trajet modifié !'), findsOneWidget);
+        expect(didPop, isFalse);
+      },
+    );
+
+    testWidgets(
+      'le CTA de DonySuccessScreen ferme create_trip_screen avec pop(true) '
+      'puis navigue vers le détail du trajet (contrat bool préservé)',
+      (tester) async {
+        setupViewport(tester);
+        bool? pushResult;
+        var pushCompleted = false;
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, __) => Scaffold(
+                body: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    onPressed: () async {
+                      // Même contrat que announcement_list_screen.dart#_createTrip :
+                      // context.push<bool>('/trips/create') attend la valeur
+                      // renvoyée par le pop(true) du listener.
+                      final result = await ctx.push<bool>('/trips/create');
+                      pushResult = result;
+                      pushCompleted = true;
+                    },
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/trips/create',
+              builder: (_, __) => BlocProvider<StripeAccountBloc>.value(
+                value: _makeStripeBloc(),
+                child: const CreateTripScreen(args: null),
+              ),
+            ),
+            // Route de destination du CTA — vérifie qu'on atterrit bien sur
+            // le détail du trajet réel (/announcements/{id}/trip, cf.
+            // lib/app/router.dart), pas '/trips/{id}' (qui n'existe pas).
+            GoRoute(
+              path: '/announcements/:id/trip',
+              builder: (_, state) => Scaffold(
+                body: Text('trip-detail-${state.pathParameters['id']}'),
+              ),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+        );
+        await tester.pump();
+
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+
+        annStreamCtrl.add(AnnouncementCreated(_makeAnnouncement()));
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+        // Tap le CTA — ne doit pas jeter (bug de contexte désactivé, fix
+        // task 4 feb86b71) et doit préserver le contrat bool pour les 3
+        // appelants (announcement_list_screen.dart, owner_action_grid.dart,
+        // trip_owner_detail_screen.dart).
+        await tester.tap(find.text('Voir mon trajet'));
+        await tester.pumpAndSettle();
+
+        expect(pushCompleted, isTrue);
+        expect(pushResult, isTrue);
+        expect(find.text('trip-detail-ann-test-1'), findsOneWidget);
       },
     );
 

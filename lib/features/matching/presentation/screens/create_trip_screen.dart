@@ -1191,7 +1191,32 @@ class _TripFormContentState extends State<_TripFormContent> {
       child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) async {
           if (state is AnnouncementCreated || state is AnnouncementUpdated) {
-            context.pop(true); // caller rafraîchit via le bool retourné par context.push<bool>
+            final announcement = state is AnnouncementCreated
+                ? state.announcement
+                : (state as AnnouncementUpdated).announcement;
+            final isEdit = state is AnnouncementUpdated;
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (routeContext) => DonySuccessScreen(
+                mascotteType: DonyMascotteType.joyeux,
+                title: isEdit ? 'Trajet modifié !' : 'Trajet publié !',
+                subtitle:
+                    'Ton trajet ${announcement.departureCity} → ${announcement.arrivalCity} est en ligne.',
+                ctaLabel: 'Voir mon trajet',
+                ctaVariant: DonyButtonVariant.accent,
+                onCta: () {
+                  // Le contexte de la route succès (routeContext) reste monté
+                  // sous le Navigator racine après les deux pops ci-dessous —
+                  // on capture donc le GoRouter AVANT de popper, pour éviter
+                  // « Looking up a deactivated widget's ancestor is unsafe »
+                  // (même classe de bug que le fix bid-payé, feb86b71).
+                  final router = GoRouter.of(routeContext);
+                  Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
+                  Navigator.of(context)
+                      .pop(true); // ferme create_trip_screen — contrat bool intact pour les 3 appelants
+                  router.push('/announcements/${announcement.id}/trip');
+                },
+              ),
+            ));
           } else if (state is AnnouncementProLimitReached) {
             context.pop();
             if (context.mounted) {
