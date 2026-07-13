@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
@@ -302,5 +303,97 @@ void main() {
 
     expect(find.textContaining('Bid détail'), findsOneWidget);
     expect(find.textContaining('from=payment'), findsOneWidget);
+  });
+
+  // ── BidCreated — offre hors-QR (cash / mobile money) ────────────────────────
+  //
+  // À la création, le bid est PENDING : le voyageur n'a pas encore accepté.
+  // L'écran de succès doit donc parler d'une offre ENVOYÉE (pas payée) et
+  // expliquer les implications du moyen de paiement choisi.
+
+  BidModel bidWithMethod(String id, BidPaymentMethod method) => BidModel(
+        id: id,
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        weightKg: 5,
+        status: 'PENDING',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        paymentMethod: method,
+      );
+
+  Future<void> openSheet(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_buildHarness(_announcement()));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+    expect(find.text('Envoyer un colis'), findsOneWidget);
+  }
+
+  testWidgets(
+      'BidCreated (CASH) → sheet fermé, DonySuccessScreen « Offre envoyée ! », '
+      'navigation seulement après le CTA', (tester) async {
+    final bidStates = StreamController<BidState>.broadcast();
+    addTearDown(bidStates.close);
+    when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+
+    await openSheet(tester);
+
+    bidStates.add(BidCreated(bidWithMethod('bid-cash-1', BidPaymentMethod.cash)));
+    await tester.pumpAndSettle();
+
+    // 1. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
+    //    SANS navigation vers le détail du bid à ce stade.
+    expect(find.text('Envoyer un colis'), findsNothing);
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Offre envoyée !'), findsOneWidget);
+    expect(
+      find.textContaining('en main propre à la remise du colis'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Bid détail'), findsNothing);
+
+    // 2. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
+    await tester.tap(find.text('Voir mon envoi'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Bid détail'), findsOneWidget);
+    expect(find.textContaining('from=payment'), findsOneWidget);
+  });
+
+  testWidgets('BidCreated (WAVE) → subtitle explique le paiement via Wave',
+      (tester) async {
+    final bidStates = StreamController<BidState>.broadcast();
+    addTearDown(bidStates.close);
+    when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+
+    await openSheet(tester);
+
+    bidStates.add(BidCreated(bidWithMethod('bid-wave-1', BidPaymentMethod.wave)));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Offre envoyée !'), findsOneWidget);
+    expect(find.textContaining('via Wave'), findsOneWidget);
+  });
+
+  testWidgets(
+      'BidCreated (ORANGE_MONEY) → subtitle explique le paiement via Orange Money',
+      (tester) async {
+    final bidStates = StreamController<BidState>.broadcast();
+    addTearDown(bidStates.close);
+    when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+
+    await openSheet(tester);
+
+    bidStates.add(
+        BidCreated(bidWithMethod('bid-om-1', BidPaymentMethod.orangeMoney)));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Offre envoyée !'), findsOneWidget);
+    expect(find.textContaining('via Orange Money'), findsOneWidget);
   });
 }

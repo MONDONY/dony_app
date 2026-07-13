@@ -512,7 +512,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (state is BidCreated) {
       context.pop();
       if (context.mounted) {
-        unawaited(context.push('/bids/${state.bid.id}?from=payment'));
+        _showOfflinePaymentSuccess(context, state.bid);
       }
     } else if (state is BidCheckoutReady) {
       context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
@@ -530,6 +530,44 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     } else if (state is BidError) {
       ErrorPresenter.show(context, state.error);
     }
+  }
+
+  /// Affiche l'écran de succès pour une offre créée en CASH/Wave/Orange Money.
+  ///
+  /// À ce stade le bid est PENDING : le voyageur n'a pas encore accepté.
+  /// Le message doit donc parler d'une offre ENVOYÉE, pas d'un paiement
+  /// effectué, et expliquer ce qui se passera pour le moyen de paiement choisi.
+  void _showOfflinePaymentSuccess(BuildContext context, BidModel bid) {
+    const title = 'Offre envoyée !';
+    final subtitle = switch (bid.paymentMethod) {
+      BidPaymentMethod.cash =>
+        'Paiement en espèces : si le voyageur accepte, tu remets le montant '
+            'en main propre à la remise du colis. Aucun débit en ligne — '
+            'prépare l\'appoint.',
+      BidPaymentMethod.wave =>
+        'Le voyageur va examiner ta demande. Le paiement se fera via Wave '
+            'une fois l\'offre acceptée.',
+      BidPaymentMethod.orangeMoney =>
+        'Le voyageur va examiner ta demande. Le paiement se fera via Orange '
+            'Money une fois l\'offre acceptée.',
+      BidPaymentMethod.stripe => 'Le voyageur va examiner ta demande.',
+    };
+
+    Navigator.of(context).push(MaterialPageRoute(
+      // Le contexte de CreateBidScreen vient d'être poppé — au moment
+      // du tap CTA son element est désactivé et GoRouter.of(context)
+      // jetterait « Looking up a deactivated widget's ancestor is
+      // unsafe ». On navigue donc via le contexte de la route succès,
+      // toujours monté sous le Navigator racine.
+      builder: (routeContext) => DonySuccessScreen(
+        mascotteType: DonyMascotteType.tenantColis,
+        title: title,
+        subtitle: subtitle,
+        ctaLabel: 'Voir mon envoi',
+        onCta: () => routeContext.go('/bids/${bid.id}?from=payment'),
+        analyticsContext: 'bid_created_offline_payment',
+      ),
+    ));
   }
 
   Future<void> _onPaymentState(
