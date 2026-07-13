@@ -159,7 +159,7 @@ class _DonyButtonState extends State<DonyButton> {
           colors: isLight
               ? [const Color(0xFFE8865B), DonyColors.terra500]
               : [DonyColors.terraDark500, const Color(0xFFC85A2E)],
-          shadows: isLight ? DonyShadow.accent : DonyShadow.accent,
+          shadows: DonyShadow.accent, // pas de variante sombre du glow accent
           foreground: DonyColors.textOnBrand,
           pressed: _pressed,
           fullWidth: widget.fullWidth,

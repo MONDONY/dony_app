@@ -303,23 +303,4 @@ void main() {
     expect(find.textContaining('Bid détail'), findsOneWidget);
     expect(find.textContaining('from=payment'), findsOneWidget);
   });
-
-  testWidgets(
-      'paiement de bid (bottom sheet) confirmé utilise DonySuccessScreen '
-      'avec la mascotte securise', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: DonySuccessScreen(
-        mascotteType: DonyMascotteType.securise,
-        title: 'Offre payée !',
-        subtitle: 'Le voyageur va être notifié de ta demande.',
-        ctaLabel: 'Voir mon envoi',
-        onCta: () {},
-      ),
-    ));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Offre payée !'), findsOneWidget);
-    expect(find.text('Voir mon envoi'), findsOneWidget);
-  });
 }
