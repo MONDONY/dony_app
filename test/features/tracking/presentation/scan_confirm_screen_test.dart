@@ -1,8 +1,13 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -22,6 +27,13 @@ class MockRatingBloc extends MockBloc<RatingEvent, RatingState>
   MockRatingBloc() {
     when(() => state).thenReturn(const RatingInitial());
     whenListen(this, const Stream<RatingState>.empty());
+  }
+}
+
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {
+  MockAuthBloc() {
+    when(() => state).thenReturn(const AuthInitial());
   }
 }
 
@@ -48,6 +60,7 @@ Widget _wrap(
         providers: [
           BlocProvider<TrackingBloc>.value(value: bloc),
           BlocProvider<RatingBloc>(create: (_) => MockRatingBloc()),
+          BlocProvider<AuthBloc>(create: (_) => MockAuthBloc()),
         ],
         child: ScanConfirmScreen(
           bidId: 'bid-123',
@@ -183,8 +196,8 @@ void main() {
     expect(find.text('Scan en attente'), findsOneWidget);
   });
 
-  // ─── DeliveryConfirmSuccess → showDialog ─────────────────────────────────
-  testWidgets('état DeliveryConfirmSuccess — affiche dialogue livré',
+  // ─── DeliveryConfirmSuccess → DonySuccessScreen ──────────────────────────
+  testWidgets('état DeliveryConfirmSuccess — affiche DonySuccessScreen livré',
       (tester) async {
     final bloc = MockTrackingBloc();
     when(() => bloc.state).thenReturn(TrackingInitial());
@@ -195,6 +208,7 @@ void main() {
     );
     await tester.pumpWidget(_wrap('ARRIVEE', bloc));
     await tester.pumpAndSettle();
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Colis livré !'), findsOneWidget);
   });
 
@@ -268,7 +282,7 @@ void main() {
 
   // ─── DeliveryConfirmSuccess — RatingBottomSheet non simultané ────────────
   testWidgets(
-      'DeliveryConfirmSuccess — RatingBottomSheet pas affiché en même temps que le dialog',
+      'DeliveryConfirmSuccess — RatingBottomSheet pas affiché en même temps que l\'écran succès',
       (tester) async {
     final bloc = MockTrackingBloc();
     when(() => bloc.state).thenReturn(TrackingInitial());
@@ -279,14 +293,14 @@ void main() {
     );
     await tester.pumpWidget(_wrap('ARRIVEE', bloc));
     await tester.pumpAndSettle();
-    // Dialog succès visible
+    // Écran succès visible
     expect(find.text('Colis livré !'), findsOneWidget);
     // Rating sheet PAS affiché en même temps (régression)
     expect(find.textContaining('Évaluer'), findsNothing);
   });
 
-  // ─── DeliveryConfirmSuccess — bouton Terminé présent dans le dialog ──────
-  testWidgets('DeliveryConfirmSuccess — bouton Terminé présent dans le dialog',
+  // ─── DeliveryConfirmSuccess — bouton Terminer présent ────────────────────
+  testWidgets('DeliveryConfirmSuccess — bouton Terminer présent',
       (tester) async {
     final bloc = MockTrackingBloc();
     when(() => bloc.state).thenReturn(TrackingInitial());
@@ -298,6 +312,41 @@ void main() {
     await tester.pumpWidget(_wrap('ARRIVEE', bloc));
     await tester.pumpAndSettle();
     expect(find.text('Colis livré !'), findsOneWidget);
-    expect(find.text('Terminé'), findsOneWidget);
+    expect(find.text('Terminer'), findsOneWidget);
+  });
+
+  // ─── DeliveryConfirmSuccess — tap Terminer : RatingBottomSheet puis /tracking
+  testWidgets(
+      'DeliveryConfirmSuccess — tap Terminer affiche RatingBottomSheet puis '
+      'navigue vers /tracking après fermeture',
+      (tester) async {
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(
+      bloc,
+      Stream.fromIterable(
+          [DeliveryConfirmSuccess(_fakeEvent(eventType: 'ARRIVEE'))]),
+    );
+    await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+    await tester.pumpAndSettle();
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+    await tester.tap(find.text('Terminer'));
+    await tester.pump(); // déclenche l'appel async RatingBottomSheet.show
+    await tester.pumpAndSettle(); // animation d'ouverture de la sheet
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(RatingBottomSheet), findsOneWidget);
+    // Toujours sur l'écran succès tant que la sheet n'est pas fermée.
+    expect(find.text('hub'), findsNothing);
+
+    // Ferme la sheet comme le ferait l'utilisateur.
+    final sheetContext = tester.element(find.byType(RatingBottomSheet));
+    Navigator.of(sheetContext).pop();
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(RatingBottomSheet), findsNothing);
+    expect(find.text('hub'), findsOneWidget);
   });
 }

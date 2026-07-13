@@ -84,14 +84,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
-          _showSuccess(context, state.event.stepLabel, isFinal: false);
+          _showSuccess(context, state.event.stepLabel);
         } else if (state is QrScanQueued) {
           _showQueued(context);
         } else if (state is DeliveryConfirmSuccess) {
-          _showSuccess(
+          _navigateToDeliverySuccess(
             context,
             state.event.stepLabel,
-            isFinal: true,
             finalBidId: state.event.bidId,
           );
         }
@@ -323,12 +322,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     );
   }
 
-  void _showSuccess(
-    BuildContext context,
-    String label, {
-    required bool isFinal,
-    String? finalBidId,
-  }) {
+  void _showSuccess(BuildContext context, String label) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -339,16 +333,13 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyMascotteAnimated(
-              type: isFinal
-                  ? DonyMascotteType.securise
-                  : DonyMascotteType.confiant,
+            const DonyMascotteAnimated(
+              type: DonyMascotteType.confiant,
               size: DonyMascotteSize.lg,
-              withGlow: isFinal,
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              isFinal ? 'Colis livré !' : 'Scan enregistré !',
+              'Scan enregistré !',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -364,22 +355,8 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () async {
+              onPressed: () {
                 ctx.pop();
-                if (isFinal && finalBidId != null) {
-                  await RatingBottomSheet.show(
-                    context,
-                    bidId: finalBidId,
-                    travelerName: "l'expéditeur",
-                    isTravelerRating: true,
-                  );
-                }
-                if (!context.mounted) return;
-                if (isFinal) {
-                  context
-                      .read<AuthBloc>()
-                      .add(const AuthProfileRefreshRequested());
-                }
                 context.go('/tracking');
               },
               style: FilledButton.styleFrom(
@@ -394,6 +371,33 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
         ],
       ),
     );
+  }
+
+  void _navigateToDeliverySuccess(
+    BuildContext context,
+    String label, {
+    required String finalBidId,
+  }) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => DonySuccessScreen(
+        mascotteType: DonyMascotteType.securise,
+        title: 'Colis livré !',
+        subtitle: label,
+        ctaLabel: 'Terminer',
+        ctaVariant: DonyButtonVariant.success,
+        onCta: () async {
+          await RatingBottomSheet.show(
+            context,
+            bidId: finalBidId,
+            travelerName: "l'expéditeur",
+            isTravelerRating: true,
+          );
+          if (!context.mounted) return;
+          context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+          context.go('/tracking');
+        },
+      ),
+    ));
   }
 
   void _showQueued(BuildContext context) {
