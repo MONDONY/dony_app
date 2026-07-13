@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_mascotte.dart';
@@ -7,7 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 void main() {
-  Widget host({required VoidCallback onCta, VoidCallback? onClose}) => MaterialApp(
+  Widget host({required VoidCallback onCta, VoidCallback? onClose}) =>
+      MaterialApp(
         theme: AppTheme.light,
         home: DonySuccessScreen(
           mascotteType: DonyMascotteType.securise,
@@ -53,7 +56,9 @@ void main() {
     expect(find.text('Voir mes envois'), findsOneWidget);
   });
 
-  testWidgets('tap sur le CTA appelle onCta exactement une fois', (tester) async {
+  testWidgets('tap sur le CTA appelle onCta exactement une fois', (
+    tester,
+  ) async {
     var callCount = 0;
     await tester.pumpWidget(host(onCta: () => callCount++));
     await tester.pump(const Duration(milliseconds: 500));
@@ -64,14 +69,16 @@ void main() {
     expect(callCount, 1);
   });
 
-  testWidgets('pas d\'auto-navigation : le CTA reste visible après 5 secondes',
-      (tester) async {
-    await tester.pumpWidget(host(onCta: () {}));
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.pump(const Duration(seconds: 5));
+  testWidgets(
+    'pas d\'auto-navigation : le CTA reste visible après 5 secondes',
+    (tester) async {
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(seconds: 5));
 
-    expect(find.text('Voir mes envois'), findsOneWidget);
-  });
+      expect(find.text('Voir mes envois'), findsOneWidget);
+    },
+  );
 
   testWidgets('affiche le bouton fermer (x)', (tester) async {
     await tester.pumpWidget(host(onCta: () {}));
@@ -80,19 +87,23 @@ void main() {
     expect(find.byTooltip('Fermer'), findsOneWidget);
   });
 
-  testWidgets('tap sur le bouton fermer appelle onClose exactement une fois quand fourni',
-      (tester) async {
-    var callCount = 0;
-    await tester.pumpWidget(host(onCta: () {}, onClose: () => callCount++));
-    await tester.pump(const Duration(milliseconds: 500));
+  testWidgets(
+    'tap sur le bouton fermer appelle onClose exactement une fois quand fourni',
+    (tester) async {
+      var callCount = 0;
+      await tester.pumpWidget(host(onCta: () {}, onClose: () => callCount++));
+      await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.byTooltip('Fermer'));
-    await tester.pump();
+      await tester.tap(find.byTooltip('Fermer'));
+      await tester.pump();
 
-    expect(callCount, 1);
-  });
+      expect(callCount, 1);
+    },
+  );
 
-  testWidgets('sans onClose, tap sur fermer navigue vers /home', (tester) async {
+  testWidgets('sans onClose, tap sur fermer navigue vers /home', (
+    tester,
+  ) async {
     await tester.pumpWidget(hostWithRouter(onCta: () {}));
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -100,5 +111,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Home stub'), findsOneWidget);
+  });
+
+  testWidgets('un retour arrière système (back gesture/bouton) est ignoré : '
+      'l\'écran de succès reste affiché', (tester) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        navigatorKey: navigatorKey,
+        home: const Scaffold(body: Text('Formulaire sous-jacent')),
+      ),
+    );
+    await tester.pump();
+
+    unawaited(
+      navigatorKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => DonySuccessScreen(
+            mascotteType: DonyMascotteType.securise,
+            title: 'Envoi réservé !',
+            subtitle: 'Ton paiement est sécurisé.',
+            ctaLabel: 'Voir mes envois',
+            onCta: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Envoi réservé !'), findsOneWidget);
+
+    // Simule un retour arrière système (geste iOS / bouton Android).
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Envoi réservé !'), findsOneWidget);
+    expect(find.text('Formulaire sous-jacent'), findsNothing);
   });
 }
