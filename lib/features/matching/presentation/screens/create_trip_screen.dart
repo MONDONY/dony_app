@@ -1170,7 +1170,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                   NegotiationThreadStatus.awaitingPayment) {
             context.pop();
             DonySnackbar.show(context,
-                message: 'Trajet lié — l\'expéditeur peut désormais payer.',
+                message: 'Trajet lié. L\'expéditeur peut désormais payer.',
                 type: DonySnackbarType.success);
           } else if (state is NegotiationError) {
             ErrorPresenter.show(context, state.error);

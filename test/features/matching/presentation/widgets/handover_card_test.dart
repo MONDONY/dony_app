@@ -45,9 +45,9 @@ void main() {
     expect(find.text('Aéroport CDG — Terminal 2E'), findsOneWidget);
   });
 
-  testWidgets('lieu absent → "—" affiché', (tester) async {
+  testWidgets('lieu absent → "-" affiché', (tester) async {
     await _pump(tester, _bid(handoverLocation: null));
-    expect(find.text('—'), findsOneWidget);
+    expect(find.text('-'), findsOneWidget);
   });
 
   testWidgets('affiche les dates début/fin quand renseignées', (tester) async {

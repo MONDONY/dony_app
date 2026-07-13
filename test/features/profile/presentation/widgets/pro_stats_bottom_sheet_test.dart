@@ -102,7 +102,7 @@ void main() {
       await tester.pumpWidget(_buildSheet(_kNoDestinations));
       await tester.pumpAndSettle();
 
-      expect(find.text('— / 5.0'), findsOneWidget);
+      expect(find.text('- / 5.0'), findsOneWidget);
     });
 
     testWidgets('affiche les barres de progression', (tester) async {

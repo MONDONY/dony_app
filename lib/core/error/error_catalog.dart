@@ -400,7 +400,7 @@ abstract final class ErrorCatalog {
     'SERVER_ERROR': ErrorPresentation(
       title: 'Erreur serveur',
       message:
-          'Quelque chose s\'est mal passé de notre côté. On regarde ça — réessaie dans un instant.',
+          'Quelque chose s\'est mal passé de notre côté. On regarde ça, réessaie dans un instant.',
       severity: ErrorSeverity.error,
       icon: Icons.cloud_off_rounded,
     ),

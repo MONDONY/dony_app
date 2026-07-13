@@ -13,9 +13,9 @@ class DestinataireCard extends StatelessWidget {
       title: 'Destinataire',
       child: Column(
         children: [
-          InfoRow(label: 'Nom', value: bid.recipientName ?? '—'),
+          InfoRow(label: 'Nom', value: bid.recipientName ?? '-'),
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '—'),
+          InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '-'),
         ],
       ),
     );

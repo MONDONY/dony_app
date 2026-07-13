@@ -21,8 +21,8 @@ class SubscriptionTile extends StatelessWidget {
     final subtitle = item.lastAnnouncement != null && item.hasNew
         ? '${item.lastAnnouncement!.departureCity} → ${item.lastAnnouncement!.arrivalCity}'
         : (item.ongoingTripsCount > 0
-            ? '⭐ ${item.averageRating?.toStringAsFixed(1) ?? '—'} · ${item.ongoingTripsCount} trajet(s) en cours'
-            : '⭐ ${item.averageRating?.toStringAsFixed(1) ?? '—'} · aucun trajet en cours');
+            ? '⭐ ${item.averageRating?.toStringAsFixed(1) ?? '-'} · ${item.ongoingTripsCount} trajet(s) en cours'
+            : '⭐ ${item.averageRating?.toStringAsFixed(1) ?? '-'} · aucun trajet en cours');
     return InkWell(
       onTap: onTap,
       child: Padding(

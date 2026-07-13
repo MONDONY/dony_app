@@ -98,7 +98,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Optionnel — accélère les offres.',
+                  'Optionnel, accélère les offres.',
                   style: tt.bodyMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.4,

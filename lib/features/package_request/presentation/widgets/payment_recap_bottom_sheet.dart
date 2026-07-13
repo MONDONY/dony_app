@@ -126,7 +126,7 @@ class PaymentRecapBottomSheet {
                                     mascotteType: DonyMascotteType.securise,
                                     title: 'Offre acceptée et payée !',
                                     subtitle:
-                                        'Ton argent est bloqué en escrow sécurisé — le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
+                                        'Ton argent est bloqué en escrow sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
                                     ctaLabel: 'Voir le suivi',
                                     onCta: () => routeContext
                                         .go('/negotiations/${thread.id}'),
@@ -167,7 +167,7 @@ class PaymentRecapBottomSheet {
                               mascotteType: DonyMascotteType.donneColis,
                               title: 'Accord confirmé !',
                               subtitle:
-                                  'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. Aucun débit en ligne — prépare l\'appoint. Les frais dony sont réglés par le voyageur.',
+                                  'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. Aucun débit en ligne. Prépare l\'appoint. Les frais dony sont réglés par le voyageur.',
                               ctaLabel: 'Voir le suivi',
                               onCta: () => routeContext
                                   .go('/negotiations/${thread.id}'),

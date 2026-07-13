@@ -85,7 +85,7 @@ void main() {
       expect(find.text('PRIX ACTUEL'), findsOneWidget);
       // No last-round warning when roundsRemaining > 0
       expect(
-          find.text('⚠ Dernier round — Accepter ou Refuser uniquement'),
+          find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
           findsNothing);
     });
 
@@ -118,7 +118,7 @@ void main() {
       )));
       await tester.pumpAndSettle();
       expect(
-          find.text('⚠ Dernier round — Accepter ou Refuser uniquement'),
+          find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
           findsOneWidget);
     });
 
@@ -132,7 +132,7 @@ void main() {
       )));
       await tester.pumpAndSettle();
       expect(
-          find.text('⚠ Dernier round — Accepter ou Refuser uniquement'),
+          find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
           findsNothing);
     });
 

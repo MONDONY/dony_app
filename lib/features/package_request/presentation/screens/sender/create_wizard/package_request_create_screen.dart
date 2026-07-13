@@ -30,7 +30,7 @@ abstract final class PackageRequestCreateWizard {
         title: 'Modifier votre demande ?',
         message:
             'Des voyageurs négocient actuellement cette demande. La '
-            'modifier annulera toutes les offres en cours — ils devront vous '
+            'modifier annulera toutes les offres en cours. Ils devront vous '
             'reproposer un trajet.',
         confirmLabel: 'Modifier quand même',
         cancelLabel: 'Annuler',
@@ -101,7 +101,7 @@ class _PackageRequestCreateScreenState
           title: isEditing ? 'Demande modifiée !' : 'Demande publiée !',
           subtitle: isEditing
               ? 'Tes modifications sont en ligne.'
-              : 'Les voyageurs sont notifiés — tu recevras des offres '
+              : 'Les voyageurs sont notifiés. Tu recevras des offres '
                   'très vite.',
           ctaLabel: 'Voir ma demande',
           onCta: () {

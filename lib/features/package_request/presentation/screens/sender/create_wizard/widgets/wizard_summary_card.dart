@@ -71,20 +71,20 @@ class WizardSummaryCard extends StatelessWidget {
   }
 
   String _corridorText(PackageRequestFormState s) {
-    final dep = s.departureCity ?? '—';
-    final arr = s.arrivalCity ?? '—';
+    final dep = s.departureCity ?? '-';
+    final arr = s.arrivalCity ?? '-';
     return '$dep → $arr';
   }
 
   String _dateText(PackageRequestFormState s) {
-    if (s.desiredDate == null) return '—';
+    if (s.desiredDate == null) return '-';
     final f = DateFormat('d MMM. y', 'fr_FR').format(s.desiredDate!);
     final tol = s.dateToleranceDays ?? 0;
     return tol == 0 ? f : '$f ±${tol}j';
   }
 
   String _packageText(PackageRequestFormState s) {
-    final size = s.parcelSize?.wireName ?? '—';
+    final size = s.parcelSize?.wireName ?? '-';
     final w = s.weightKg;
     final wStr = w == null
         ? ''

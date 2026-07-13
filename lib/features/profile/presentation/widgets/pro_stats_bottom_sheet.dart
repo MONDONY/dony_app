@@ -83,7 +83,7 @@ class ProStatsBottomSheet extends StatelessWidget {
                     value: stats.averageRating / 5.0,
                     displayText: stats.averageRating > 0
                         ? '${stats.averageRating.toStringAsFixed(1)} / 5.0 ★'
-                        : '— / 5.0',
+                        : '- / 5.0',
                     // cs.secondary = terra500 en light, adapté en dark
                     color: cs.secondary,
                   ),

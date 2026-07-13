@@ -121,7 +121,7 @@ class ShipmentCard extends StatelessWidget {
   String _weightLabel() {
     final kg = bid.weightKg;
     if (kg == null) {
-      return '— kg';
+      return '- kg';
     }
     final whole = kg.truncateToDouble() == kg;
     return '${kg.toStringAsFixed(whole ? 0 : 1).replaceAll('.', ',')} kg';
@@ -432,7 +432,7 @@ class _RouteRow extends StatelessWidget {
       children: [
         Flexible(
           child: Text(
-            bid.departureCity ?? '—',
+            bid.departureCity ?? '-',
             style: tt.headlineMedium?.copyWith(color: cs.onSurface),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
@@ -448,7 +448,7 @@ class _RouteRow extends StatelessWidget {
         ),
         Flexible(
           child: Text(
-            bid.arrivalCity ?? '—',
+            bid.arrivalCity ?? '-',
             style: tt.headlineMedium?.copyWith(color: cs.onSurface),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,

@@ -126,11 +126,11 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
         ? [
             'Compte créé ✓',
             'Cherche un voyageur sur la carte ou publie une demande',
-            'Vérifie ton identité (KYC) — requis pour payer',
+            'Vérifie ton identité (KYC), requis pour payer',
           ]
         : [
             'Compte créé ✓',
-            'Vérifie ton identité (KYC) — obligatoire pour voyager',
+            'Vérifie ton identité (KYC), obligatoire pour voyager',
             'Publie les détails de ton trajet (date, corridor, kg dispo)',
           ];
 

@@ -547,7 +547,7 @@ class _PendingHint extends StatelessWidget {
     final String message;
     if (kycStatus == 'PENDING') {
       message =
-          "Vérification d'identité en cours — Stripe Identity vous contactera sous 24h. Revenez ici une fois vérifié.";
+          "Vérification d'identité en cours. Stripe Identity vous contactera sous 24h. Revenez ici une fois vérifié.";
     } else if (kycStatus != 'VERIFIED') {
       message =
           'Complétez les étapes ci-dessus pour activer votre compte voyageur.';

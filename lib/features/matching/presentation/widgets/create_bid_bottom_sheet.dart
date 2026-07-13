@@ -542,8 +542,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final subtitle = switch (bid.paymentMethod) {
       BidPaymentMethod.cash =>
         'Paiement en espèces : si le voyageur accepte, tu remets le montant '
-            'en main propre à la remise du colis. Aucun débit en ligne — '
-            'prépare l\'appoint.',
+            'en main propre à la remise du colis. Aucun débit en ligne. '
+            'Prépare l\'appoint.',
       BidPaymentMethod.wave =>
         'Le voyageur va examiner ta demande. Le paiement se fera via Wave '
             'une fois l\'offre acceptée.',
@@ -818,7 +818,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Requis — au moins 1 article',
+                                        'Requis : au moins 1 article',
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.onSurfaceVariant,
                                         ),
@@ -892,7 +892,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               decoration: InputDecoration(
                 hintText: '120',
                 helperText:
-                    'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
+                    'Plafond : 500 € (couvre l\'assurance en cas de sinistre)',
                 helperStyle:
                     Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context)
@@ -1482,7 +1482,7 @@ class _WeightSectionState extends State<_WeightSection> {
         ),
         const SizedBox(height: DonySpacing.xxs),
         Text(
-          'Kilo libre — choisissez votre poids',
+          'Kilo libre : choisissez votre poids',
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),

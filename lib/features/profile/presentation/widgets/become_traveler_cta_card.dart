@@ -30,7 +30,7 @@ class BecomeTravelerCtaCard extends StatelessWidget {
 
     final String statusText;
     if (allDone) {
-      statusText = 'Dossier complet — prêt à voyager';
+      statusText = 'Dossier complet : prêt à voyager';
     } else if (done == 0) {
       statusText = '2 étapes pour commencer';
     } else {

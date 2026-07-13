@@ -351,7 +351,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                               ),
                             ),
                             child:
-                                const Text('Passer — continuer sans photo'),
+                                const Text('Passer : continuer sans photo'),
                           ),
                         ),
                       ],

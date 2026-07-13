@@ -50,7 +50,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                   trailing: Text(
                     state.appVersion != null
                         ? 'v${state.appVersion} (${state.buildNumber})'
-                        : '—',
+                        : '-',
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                     ),

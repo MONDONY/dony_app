@@ -214,7 +214,7 @@ class TravelerCard extends StatelessWidget {
                         children: [
                           DonyIcon('star', size: 13, color: cs.warning),
                           Text(
-                            rating != null ? rating.toStringAsFixed(1) : '—',
+                            rating != null ? rating.toStringAsFixed(1) : '-',
                             style: tt.titleSmall?.copyWith(
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),

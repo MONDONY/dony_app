@@ -221,9 +221,9 @@ String _buildAcceptedSubtitle(BidModel bid) {
 
   final base = parts.join(' · ');
   if (base.isNotEmpty) {
-    return '$base.\nPrésentez le QR — ou collez-le sur le colis.';
+    return '$base.\nPrésentez le QR, ou collez-le sur le colis.';
   }
-  return 'Présentez le QR — ou collez-le sur le colis.';
+  return 'Présentez le QR, ou collez-le sur le colis.';
 }
 
 String _buildInTransitSubtitle(BidModel bid) {

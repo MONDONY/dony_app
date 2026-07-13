@@ -159,7 +159,7 @@ class _PaymentSummaryView extends StatelessWidget {
                   type: DonyStatusBannerType.info,
                   iconAsset: 'lock',
                   message:
-                      'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
+                      'Votre paiement est sécurisé, libéré uniquement après confirmation de livraison par le destinataire.',
                 ),
                 const SizedBox(height: DonySpacing.xl),
                 if (error != null) ...[
@@ -231,7 +231,7 @@ class _SummaryCard extends StatelessWidget {
                 if (bid.pricingMode == BidPricingMode.kg || bid.pricingMode == BidPricingMode.mixed) ...[
                   DonyInfoRow(
                     label: 'Poids',
-                    value: bid.weightKg != null ? '${bid.weightKg!.toStringAsFixed(1)} kg' : '—',
+                    value: bid.weightKg != null ? '${bid.weightKg!.toStringAsFixed(1)} kg' : '-',
                   ),
                   const DonyInfoRow.divider(),
                   DonyInfoRow(
@@ -240,7 +240,7 @@ class _SummaryCard extends StatelessWidget {
                     // jamais le tarif net à l'expéditeur.
                     value: bid.senderPricePerKg != null
                         ? '${formatKgPrice(bid.senderPricePerKg!)} €/kg'
-                        : '—',
+                        : '-',
                   ),
                 ] else if (bid.pricingMode == BidPricingMode.grid) ...[
                   DonyInfoRow(

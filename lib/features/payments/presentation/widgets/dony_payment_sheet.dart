@@ -323,7 +323,7 @@ class _NewCardViewState extends State<_NewCardView> {
             const SizedBox(width: DonySpacing.xs),
             Expanded(
               child: Text(
-                'Champ sécurisé Stripe — dony ne stocke jamais votre numéro de carte',
+                'Champ sécurisé Stripe, dony ne stocke jamais votre numéro de carte',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -391,7 +391,7 @@ class _SuccessView extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
-                    'Les fonds sont conservés en séquestre — le voyageur sera '
+                    'Les fonds sont conservés en séquestre, le voyageur sera '
                     'payé après la remise du colis.',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),

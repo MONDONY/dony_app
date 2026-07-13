@@ -211,7 +211,7 @@ class _PhotoHero extends StatelessWidget {
             )
           else if (distanceLabel != null &&
               distanceLabel!.isNotEmpty &&
-              distanceLabel != '—')
+              distanceLabel != '-')
             Positioned(
               top: 8,
               left: 8,

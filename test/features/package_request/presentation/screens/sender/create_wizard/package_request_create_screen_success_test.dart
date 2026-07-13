@@ -251,7 +251,7 @@ void main() {
     expect(find.text('Demande publiée !'), findsOneWidget);
     expect(
       find.text(
-        'Les voyageurs sont notifiés — tu recevras des offres très vite.',
+        'Les voyageurs sont notifiés. Tu recevras des offres très vite.',
       ),
       findsOneWidget,
     );

@@ -19,7 +19,7 @@ class HandoverCard extends StatelessWidget {
       title: 'Fenêtre de remise',
       child: Column(
         children: [
-          InfoRow(label: 'Lieu', value: bid.handoverLocation ?? '—'),
+          InfoRow(label: 'Lieu', value: bid.handoverLocation ?? '-'),
           if (bid.handoverWindowStart != null) ...[
             const SizedBox(height: DonySpacing.sm),
             InfoRow(

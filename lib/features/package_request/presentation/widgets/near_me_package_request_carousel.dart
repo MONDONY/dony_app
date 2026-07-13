@@ -91,7 +91,7 @@ class _NearMePackageRequestCarouselState
     if (widget.userPosition == null ||
         item.departureLat == null ||
         item.departureLng == null) {
-      return '—';
+      return '-';
     }
     final km = _haversineKm(
       widget.userPosition!.lat,

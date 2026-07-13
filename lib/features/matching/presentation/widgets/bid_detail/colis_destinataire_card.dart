@@ -24,7 +24,7 @@ class ColisDestinataireCard extends StatelessWidget {
     if (bid.contentCategory != null && bid.contentCategory!.isNotEmpty) {
       parts.add(bid.contentCategory!);
     }
-    return parts.isNotEmpty ? parts.join(' · ') : '—';
+    return parts.isNotEmpty ? parts.join(' · ') : '-';
   }
 
   @override
@@ -47,12 +47,12 @@ class ColisDestinataireCard extends StatelessWidget {
             label: 'Valeur déclarée',
             value: bid.declaredValueEur != null
                 ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
-                : '— (à compléter)',
+                : '- (à compléter)',
           ),
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(label: 'Destinataire', value: bid.recipientName ?? '—'),
+          InfoRow(label: 'Destinataire', value: bid.recipientName ?? '-'),
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '—'),
+          InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '-'),
         ],
       ),
     );
