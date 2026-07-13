@@ -130,6 +130,7 @@ class PaymentRecapBottomSheet {
                                     ctaLabel: 'Voir le suivi',
                                     onCta: () => routeContext
                                         .go('/negotiations/${thread.id}'),
+                                    analyticsContext: 'negotiation_payment',
                                   ),
                                 ));
                               }

@@ -125,6 +125,7 @@ class AcceptOfferBottomSheet {
                                     ctaLabel: 'Voir le suivi',
                                     onCta: () => routeContext
                                         .go('/negotiations/$threadId'),
+                                    analyticsContext: 'negotiation_payment',
                                   ),
                                 ));
                               }

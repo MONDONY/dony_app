@@ -592,6 +592,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
                 router.go('/announcements');
               },
+              analyticsContext: 'trip_published_announcement',
             ),
           ));
         } else if (state is AnnouncementProLimitReached) {

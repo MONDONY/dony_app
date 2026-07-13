@@ -130,6 +130,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
               context.pop(true);
               router.go('/home');
             },
+            analyticsContext: 'wallet_topup',
           ),
         ));
       },

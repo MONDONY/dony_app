@@ -396,6 +396,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
           context.go('/tracking');
         },
+        analyticsContext: 'delivery_confirmed',
       ),
     ));
   }

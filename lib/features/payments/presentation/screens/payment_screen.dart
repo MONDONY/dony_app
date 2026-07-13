@@ -289,6 +289,7 @@ class _EscrowConfirmedView extends StatelessWidget {
           '${amount.toStringAsFixed(2)} € sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
       ctaLabel: 'Voir mes envois',
       onCta: () => context.go('/home'),
+      analyticsContext: 'escrow_payment',
     );
   }
 }

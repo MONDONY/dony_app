@@ -122,6 +122,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   ctaLabel: 'Continuer',
                   ctaVariant: DonyButtonVariant.accent,
                   onCta: () => Navigator.of(routeContext).pop(), // revient au détail, déjà rafraîchi
+                  analyticsContext: 'trip_draft_published',
                 ),
               ));
             } else if (state is AnnouncementKycRequired) {

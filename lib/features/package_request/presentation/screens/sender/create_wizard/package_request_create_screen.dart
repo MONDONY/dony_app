@@ -123,6 +123,7 @@ class _PackageRequestCreateScreenState
           // façon inconditionnelle après l'await) — le comportement par
           // défaut (X → go('/home')) est donc sûr, comme pour
           // create_trip_screen/create_announcement_screen.
+          analyticsContext: 'package_request_published',
         ),
       ));
     } else if (state.submissionStatus == FormSubmissionStatus.error) {

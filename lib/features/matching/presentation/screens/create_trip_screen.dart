@@ -1215,6 +1215,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                       .pop(true); // ferme create_trip_screen — contrat bool intact pour les 3 appelants
                   router.push('/announcements/${announcement.id}/trip');
                 },
+                analyticsContext: 'trip_published',
               ),
             ));
           } else if (state is AnnouncementProLimitReached) {

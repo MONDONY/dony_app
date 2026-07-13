@@ -4,12 +4,24 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_mascotte.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
+
+// ── Test doubles ─────────────────────────────────────────────────────────────
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 void main() {
-  Widget host({required VoidCallback onCta, VoidCallback? onClose}) =>
+  Widget host({
+    required VoidCallback onCta,
+    VoidCallback? onClose,
+    String? analyticsContext,
+  }) =>
       MaterialApp(
         theme: AppTheme.light,
         home: DonySuccessScreen(
@@ -19,6 +31,7 @@ void main() {
           ctaLabel: 'Voir mes envois',
           onCta: onCta,
           onClose: onClose,
+          analyticsContext: analyticsContext,
         ),
       );
 
@@ -46,6 +59,18 @@ void main() {
     );
     return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
   }
+
+  setUp(() {
+    if (getIt.isRegistered<AnalyticsService>()) {
+      getIt.unregister<AnalyticsService>();
+    }
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<AnalyticsService>()) {
+      getIt.unregister<AnalyticsService>();
+    }
+  });
 
   testWidgets('affiche titre, sous-titre et label du CTA', (tester) async {
     await tester.pumpWidget(host(onCta: () {}));
@@ -149,4 +174,95 @@ void main() {
     expect(find.text('Envoi réservé !'), findsOneWidget);
     expect(find.text('Formulaire sous-jacent'), findsNothing);
   });
+
+  // ── Analytics ─────────────────────────────────────────────────────────────
+
+  group('analytics', () {
+    late _MockAnalyticsService analytics;
+
+    setUp(() {
+      analytics = _MockAnalyticsService();
+      when(() => analytics.logEvent(
+            any(),
+            properties: any(named: 'properties'),
+          )).thenAnswer((_) async {});
+      getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+    });
+
+    testWidgets('analyticsContext fourni : viewed part au montage', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(onCta: () {}, analyticsContext: 'trip_published'),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      verify(() => analytics.logEvent(
+            AnalyticsEvents.successScreenViewed,
+            properties: {'context': 'trip_published'},
+          )).called(1);
+    });
+
+    testWidgets('analyticsContext fourni : cta_tapped part au tap CTA', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(onCta: () {}, analyticsContext: 'trip_published'),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.tap(find.byType(DonyButton));
+      await tester.pump();
+
+      verify(() => analytics.logEvent(
+            AnalyticsEvents.successScreenCtaTapped,
+            properties: {'context': 'trip_published'},
+          )).called(1);
+    });
+
+    testWidgets('analyticsContext fourni : closed part au tap fermer', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(onCta: () {}, onClose: () {}, analyticsContext: 'trip_published'),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.tap(find.byTooltip('Fermer'));
+      await tester.pump();
+
+      verify(() => analytics.logEvent(
+            AnalyticsEvents.successScreenClosed,
+            properties: {'context': 'trip_published'},
+          )).called(1);
+    });
+
+    testWidgets('sans analyticsContext : aucun event envoyé', (tester) async {
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.tap(find.byType(DonyButton));
+      await tester.pump();
+
+      verifyNever(() => analytics.logEvent(any(), properties: any(named: 'properties')));
+    });
+  });
+
+  testWidgets(
+    'sans AnalyticsService enregistré dans getIt, aucune exception '
+    '(analytics best-effort)',
+    (tester) async {
+      // Pas d'enregistrement getIt ici — setUp() de haut niveau garantit
+      // qu'AnalyticsService n'est pas déjà présent.
+      await tester.pumpWidget(
+        host(onCta: () {}, analyticsContext: 'trip_published'),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.tap(find.byType(DonyButton));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

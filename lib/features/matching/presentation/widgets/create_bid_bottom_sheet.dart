@@ -1245,6 +1245,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               ctaLabel: 'Voir mon envoi',
               onCta: () =>
                   routeContext.go('/bids/${state.bidId}?from=payment'),
+              analyticsContext: 'bid_payment',
             ),
           ));
         }

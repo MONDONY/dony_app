@@ -152,4 +152,9 @@ abstract final class AnalyticsEvents {
 
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
+
+  // Success screen (écran de succès générique — DonySuccessScreen)
+  static const successScreenViewed    = 'success_screen_viewed';
+  static const successScreenCtaTapped = 'success_screen_cta_tapped';
+  static const successScreenClosed    = 'success_screen_closed';
 }
