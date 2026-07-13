@@ -265,4 +265,39 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  // ── Confetti ─────────────────────────────────────────────────────────────
+
+  group('confetti', () {
+    testWidgets('joue un burst de confettis au montage sans exception', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byKey(const ValueKey('dony-success-confetti')), findsOneWidget);
+
+      // La durée du burst (~1.8s) doit s'écouler sans lever d'exception.
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('reduced motion : le painter de confettis est absent', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: host(onCta: () {}),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byKey(const ValueKey('dony-success-confetti')), findsNothing);
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

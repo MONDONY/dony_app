@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/utils/dony_layout.dart';
 import 'package:dony/core/design/widgets/dony_app_bar.dart';
@@ -53,12 +55,39 @@ class DonySuccessScreen extends StatefulWidget {
   State<DonySuccessScreen> createState() => _DonySuccessScreenState();
 }
 
-class _DonySuccessScreenState extends State<DonySuccessScreen> {
+class _DonySuccessScreenState extends State<DonySuccessScreen>
+    with SingleTickerProviderStateMixin {
+  // 160 (DonyMascotteSize.lg) × 1.4 — même multiplicateur que le halo dans
+  // DonyMascotteAnimated (withGlow: true), pour que le burst reste centré
+  // dessus sans déborder du layout.
+  static const _confettiAreaSize = 224.0;
+
+  static const _confettiParticleCount = 28;
+  static const _confettiColors = [
+    DonyColors.blue500,
+    DonyColors.blue300,
+    DonyColors.terra500,
+    DonyColors.terra300,
+    DonyColors.success500,
+  ];
+
+  late final AnimationController _confettiController;
+  late final List<_ConfettiParticle> _confettiParticles;
+
+  bool _reducedMotion = false;
+  bool _confettiDecided = false;
+
   @override
   void initState() {
     super.initState();
 
     HapticFeedback.mediumImpact();
+
+    _confettiController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    _confettiParticles = _generateConfettiParticles();
 
     _trackEvent(AnalyticsEvents.successScreenViewed);
 
@@ -66,6 +95,45 @@ class _DonySuccessScreenState extends State<DonySuccessScreen> {
       SemanticsService.announce(
         '${widget.title}. ${widget.subtitle}',
         TextDirection.ltr,
+      );
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // MediaQuery n'est disponible qu'une fois les dépendances établies (pas
+    // safe en initState) — on ne décide qu'une seule fois si le burst doit
+    // jouer, malgré les rebuilds ultérieurs de didChangeDependencies.
+    if (_confettiDecided) return;
+    _confettiDecided = true;
+
+    _reducedMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (!_reducedMotion) {
+      _confettiController.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  List<_ConfettiParticle> _generateConfettiParticles() {
+    // Seed fixe : burst visuellement stable d'un rebuild à l'autre, pas de
+    // recalcul aléatoire à chaque frame (les particules sont générées une
+    // seule fois dans initState).
+    final random = math.Random(42);
+    return List.generate(_confettiParticleCount, (i) {
+      return _ConfettiParticle(
+        angle: random.nextDouble() * 2 * math.pi,
+        distance: 36 + random.nextDouble() * 90,
+        fallDistance: 60 + random.nextDouble() * 100,
+        size: 4 + random.nextDouble() * 4,
+        rotations: (random.nextDouble() - 0.5) * 6,
+        isCircle: random.nextBool(),
+        color: _confettiColors[i % _confettiColors.length],
       );
     });
   }
@@ -158,10 +226,36 @@ class _DonySuccessScreenState extends State<DonySuccessScreen> {
                 Column(
                       children: [
                         const SizedBox(height: DonySpacing.xxl),
-                        DonyMascotteAnimated(
-                          type: widget.mascotteType,
-                          size: DonyMascotteSize.lg,
-                          withGlow: true,
+                        SizedBox(
+                          width: _confettiAreaSize,
+                          height: _confettiAreaSize,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              if (!_reducedMotion)
+                                Positioned.fill(
+                                  child: IgnorePointer(
+                                    key: const ValueKey('dony-success-confetti'),
+                                    child: AnimatedBuilder(
+                                      animation: _confettiController,
+                                      builder: (context, _) => CustomPaint(
+                                        painter: _ConfettiPainter(
+                                          progress: Curves.easeOut.transform(
+                                            _confettiController.value,
+                                          ),
+                                          particles: _confettiParticles,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              DonyMascotteAnimated(
+                                type: widget.mascotteType,
+                                size: DonyMascotteSize.lg,
+                                withGlow: true,
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: DonySpacing.xl),
                         Text(
@@ -199,4 +293,96 @@ class _DonySuccessScreenState extends State<DonySuccessScreen> {
       ),
     );
   }
+}
+
+/// Description physique d'une particule de confetti — position de lancer,
+/// trajectoire et apparence figées à la génération (voir
+/// [_DonySuccessScreenState._generateConfettiParticles]).
+@immutable
+class _ConfettiParticle {
+  const _ConfettiParticle({
+    required this.angle,
+    required this.distance,
+    required this.fallDistance,
+    required this.size,
+    required this.rotations,
+    required this.isCircle,
+    required this.color,
+  });
+
+  /// Direction du lancer, en radians (0 = droite, sens horaire).
+  final double angle;
+
+  /// Distance parcourue en éventail (fan out) avant que la gravité prenne
+  /// le relais, en px.
+  final double distance;
+
+  /// Chute additionnelle en fin de course (gravité), en px.
+  final double fallDistance;
+
+  /// Côté du carré / diamètre du cercle, en px — 4 à 8px (discret).
+  final double size;
+
+  /// Nombre de tours sur la durée du burst (peut être négatif).
+  final double rotations;
+
+  final bool isCircle;
+  final Color color;
+}
+
+/// Peint un burst de confettis discret centré sur la mascotte de
+/// [DonySuccessScreen]. `progress` (0 → 1) est déjà passé par l'appelant à
+/// travers une courbe easeOut — le painter ne fait qu'interpoler la
+/// trajectoire de chaque particule et son opacité.
+class _ConfettiPainter extends CustomPainter {
+  const _ConfettiPainter({required this.progress, required this.particles});
+
+  final double progress;
+  final List<_ConfettiParticle> particles;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (final particle in particles) {
+      // Éventail rapide (les 60% premiers du run), puis la gravité domine.
+      final fanOut = math.min(progress * 1.6, 1.0);
+      final dx = math.cos(particle.angle) * particle.distance * fanOut;
+      final dy = math.sin(particle.angle) * particle.distance * fanOut +
+          particle.fallDistance * progress * progress;
+
+      // Fade in rapide (10% du run) puis fade out linéaire sur le reste —
+      // « subtile, pas carnaval ».
+      final opacity = progress < 0.1
+          ? progress / 0.1
+          : (1 - (progress - 0.1) / 0.9).clamp(0.0, 1.0);
+      if (opacity <= 0) continue;
+
+      final paint = Paint()
+        ..color = particle.color.withValues(alpha: opacity);
+      final position = center + Offset(dx, dy);
+
+      canvas.save();
+      canvas.translate(position.dx, position.dy);
+      canvas.rotate(particle.rotations * progress * 2 * math.pi);
+      if (particle.isCircle) {
+        canvas.drawCircle(Offset.zero, particle.size / 2, paint);
+      } else {
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: particle.size,
+            height: particle.size * 0.6,
+          ),
+          paint,
+        );
+      }
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
