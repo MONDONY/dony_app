@@ -219,8 +219,8 @@ void main() {
     });
 
     testWidgets(
-        'affiche SnackBar "Offre acceptée — paiement en espèces à la remise" '
-        'et dispatch NegotiationAcceptRequested quand isCheckout: false',
+        'affiche DonySuccessScreen "Accord confirmé !" et dispatch '
+        'NegotiationAcceptRequested quand isCheckout: false',
         (tester) async {
       await tester.pumpWidget(_buildApp(bloc: bloc, isCheckout: false));
       await tester.tap(find.byKey(const Key('open')));
@@ -233,12 +233,10 @@ void main() {
         await tester.pump(const Duration(milliseconds: 60));
       }
 
-      // Vérifie que le SnackBar est affiché avec le message correct
-      expect(find.byType(SnackBar), findsOneWidget);
-      expect(
-        find.text('Offre acceptée — paiement en espèces à la remise'),
-        findsOneWidget,
-      );
+      // Vérifie que le DonySuccessScreen est affiché avec les implications
+      // du paiement en espèces.
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Accord confirmé !'), findsOneWidget);
 
       // Vérifie que NegotiationAcceptRequested a été envoyé
       verify(() => bloc.add(any(

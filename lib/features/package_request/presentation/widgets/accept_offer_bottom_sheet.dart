@@ -136,13 +136,19 @@ class AcceptOfferBottomSheet {
                         } else {
                           bloc.add(NegotiationAcceptRequested(threadId: threadId));
                           if (ctx.mounted) {
-                            DonySnackbar.show(
-                              ctx,
-                              message:
-                                  'Offre acceptée — paiement en espèces à la remise',
-                              type: DonySnackbarType.info,
-                            );
                             Navigator.of(ctx, rootNavigator: true).pop();
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (routeContext) => DonySuccessScreen(
+                                mascotteType: DonyMascotteType.donneColis,
+                                title: 'Accord confirmé !',
+                                subtitle:
+                                    'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. Aucun débit en ligne — prépare l\'appoint. Les frais dony sont réglés par le voyageur.',
+                                ctaLabel: 'Voir le suivi',
+                                onCta: () =>
+                                    routeContext.go('/negotiations/$threadId'),
+                                analyticsContext: 'negotiation_cash_agreement',
+                              ),
+                            ));
                           }
                         }
                       } catch (e) {

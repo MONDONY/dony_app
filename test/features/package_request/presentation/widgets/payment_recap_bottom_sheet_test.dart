@@ -280,4 +280,81 @@ void main() {
       expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
     });
   });
+
+  // ── Confirmation cash → DonySuccessScreen ──────────────────────────────
+
+  group('Confirmation accord cash', () {
+    setUpAll(() {
+      registerFallbackValue(const NegotiationCheckoutRequested(
+        threadId: 'thread-recap-1',
+        paymentIntentId: kCashPaymentSentinel,
+      ));
+    });
+
+    Widget buildRoutedApp() {
+      final thread = _makeThread(paymentMethod: PaymentMethod.cash);
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (ctx, state) => Scaffold(
+              body: BlocProvider.value(
+                value: bloc,
+                child: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    key: const Key('open'),
+                    onPressed: () => PaymentRecapBottomSheet.show(
+                      ctx,
+                      bloc: bloc,
+                      thread: thread,
+                    ),
+                    child: const Text('Ouvrir'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/negotiations/:id',
+            builder: (_, state) => Scaffold(
+              body: Center(
+                child: Text('Fil de négociation ${state.pathParameters['id']}'),
+              ),
+            ),
+          ),
+        ],
+      );
+      return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+    }
+
+    testWidgets(
+        'confirmation cash → NegotiationCheckoutRequested(kCashPaymentSentinel) '
+        '+ DonySuccessScreen "Accord confirmé !" puis CTA vers /negotiations/{threadId}',
+        (tester) async {
+      await tester.pumpWidget(buildRoutedApp());
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(DonyButton, 'Confirmer l\'accord'));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(any(
+              that: isA<NegotiationCheckoutRequested>()
+                  .having((e) => e.threadId, 'threadId', 'thread-recap-1')
+                  .having((e) => e.paymentIntentId, 'paymentIntentId',
+                      kCashPaymentSentinel))))
+          .called(1);
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Accord confirmé !'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Voir le suivi'));
+      await tester.tap(find.text('Voir le suivi'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+    });
+  });
 }

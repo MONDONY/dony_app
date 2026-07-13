@@ -162,6 +162,18 @@ class PaymentRecapBottomSheet {
                         ));
                         if (ctx.mounted) {
                           Navigator.of(ctx, rootNavigator: true).pop();
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (routeContext) => DonySuccessScreen(
+                              mascotteType: DonyMascotteType.donneColis,
+                              title: 'Accord confirmé !',
+                              subtitle:
+                                  'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. Aucun débit en ligne — prépare l\'appoint. Les frais dony sont réglés par le voyageur.',
+                              ctaLabel: 'Voir le suivi',
+                              onCta: () => routeContext
+                                  .go('/negotiations/${thread.id}'),
+                              analyticsContext: 'negotiation_cash_agreement',
+                            ),
+                          ));
                         }
                       }
                     },
