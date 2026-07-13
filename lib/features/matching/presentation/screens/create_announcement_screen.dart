@@ -571,12 +571,29 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
       listener: (context, state) {
         if (state is AnnouncementCreated || state is AnnouncementUpdated) {
-          DonySnackbar.show(
-            context,
-            message: _isEdit ? 'Trajet modifié !' : 'Trajet publié !',
-            type: DonySnackbarType.success,
-          );
-          context.go('/announcements');
+          final announcement = state is AnnouncementCreated
+              ? state.announcement
+              : (state as AnnouncementUpdated).announcement;
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (routeContext) => DonySuccessScreen(
+              mascotteType: DonyMascotteType.joyeux,
+              title: _isEdit ? 'Trajet modifié !' : 'Trajet publié !',
+              subtitle:
+                  'Ton trajet ${announcement.departureCity} → ${announcement.arrivalCity} est en ligne.',
+              ctaLabel: 'Voir mon trajet',
+              ctaVariant: DonyButtonVariant.accent,
+              onCta: () {
+                // Le contexte de la route succès (routeContext) reste monté
+                // sous le Navigator racine après le pop ci-dessous — on
+                // capture donc le GoRouter AVANT de popper, pour éviter
+                // « Looking up a deactivated widget's ancestor is unsafe »
+                // (même classe de bug que le fix bid-payé, feb86b71).
+                final router = GoRouter.of(routeContext);
+                Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
+                router.go('/announcements');
+              },
+            ),
+          ));
         } else if (state is AnnouncementProLimitReached) {
           DonyDialog.show(
             context,

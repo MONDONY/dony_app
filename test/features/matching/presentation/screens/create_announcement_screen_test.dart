@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
@@ -273,5 +275,70 @@ void main() {
 
     // Le label "Train" doit être visible (chip rendu)
     expect(find.text('Train'), findsOneWidget);
+  });
+
+  // ── 4. Écran de succès (DonySuccessScreen) ────────────────────────────────
+
+  group('CreateAnnouncementScreen — BLoC listener (succès)', () {
+    late StreamController<AnnouncementState> annStreamCtrl;
+
+    setUp(() {
+      annStreamCtrl = StreamController<AnnouncementState>.broadcast();
+      when(() => bloc.stream).thenAnswer((_) => annStreamCtrl.stream);
+    });
+
+    tearDown(() async {
+      await annStreamCtrl.close();
+    });
+
+    testWidgets(
+        'AnnouncementCreated affiche DonySuccessScreen (mode création)',
+        (tester) async {
+      await _pumpScreen(tester, bloc, commissionBloc: commissionBloc);
+
+      annStreamCtrl.add(AnnouncementCreated(_editingAnnouncement()));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Trajet publié !'), findsOneWidget);
+    });
+
+    testWidgets(
+        'AnnouncementUpdated affiche DonySuccessScreen (mode édition)',
+        (tester) async {
+      await _pumpScreen(
+        tester,
+        bloc,
+        announcement: _editingAnnouncement(),
+        commissionBloc: commissionBloc,
+      );
+
+      annStreamCtrl.add(AnnouncementUpdated(_editingAnnouncement()));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Trajet modifié !'), findsOneWidget);
+    });
+
+    testWidgets(
+        'le CTA de DonySuccessScreen navigue vers /announcements sans throw',
+        (tester) async {
+      await _pumpScreen(tester, bloc, commissionBloc: commissionBloc);
+
+      annStreamCtrl.add(AnnouncementCreated(_editingAnnouncement()));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+      // Ne doit pas jeter (bug de contexte désactivé, même classe que le
+      // fix task 4/6) et doit atterrir sur la liste des annonces.
+      await tester.tap(find.text('Voir mon trajet'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Announcements list'), findsOneWidget);
+    });
   });
 }
