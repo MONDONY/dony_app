@@ -273,6 +273,7 @@ void main() {
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Offre acceptée et payée !'), findsOneWidget);
 
+      await tester.ensureVisible(find.text('Voir le suivi'));
       await tester.tap(find.text('Voir le suivi'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));

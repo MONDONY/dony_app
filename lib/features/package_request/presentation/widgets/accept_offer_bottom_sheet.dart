@@ -121,7 +121,7 @@ class AcceptOfferBottomSheet {
                                     mascotteType: DonyMascotteType.securise,
                                     title: 'Offre acceptée et payée !',
                                     subtitle:
-                                        'Le voyageur est notifié, la livraison peut être suivie depuis le fil.',
+                                        'Ton argent est bloqué en escrow sécurisé — le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
                                     ctaLabel: 'Voir le suivi',
                                     onCta: () => routeContext
                                         .go('/negotiations/$threadId'),
