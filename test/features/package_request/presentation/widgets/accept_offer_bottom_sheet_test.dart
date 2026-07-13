@@ -180,6 +180,74 @@ void main() {
 
   // ── Checkout Stripe réussi → DonySuccessScreen ─────────────────────────
 
+  group('Acceptation offre cash (non-checkout)', () {
+    late _MockLocalAuthService authService;
+    late _MockBox userPrefsBox;
+
+    setUpAll(() {
+      registerFallbackValue(const NegotiationAcceptRequested(threadId: 't-1'));
+    });
+
+    setUp(() {
+      authService = _MockLocalAuthService();
+      userPrefsBox = _MockBox();
+      when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
+      when(() => authService.isBiometricAvailable())
+          .thenAnswer((_) async => true);
+      when(() => authService.authenticateWithBiometric())
+          .thenAnswer((_) async => true);
+
+      if (getIt.isRegistered<LocalAuthService>()) {
+        getIt.unregister<LocalAuthService>();
+      }
+      getIt.registerFactory<LocalAuthService>(() => authService);
+
+      if (getIt.isRegistered<HiveService>()) {
+        getIt.unregister<HiveService>();
+      }
+      getIt.registerFactory<HiveService>(() => _FakeHiveService(userPrefsBox));
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<LocalAuthService>()) {
+        getIt.unregister<LocalAuthService>();
+      }
+      if (getIt.isRegistered<HiveService>()) {
+        getIt.unregister<HiveService>();
+      }
+    });
+
+    testWidgets(
+        'affiche SnackBar "Offre acceptée — paiement en espèces à la remise" '
+        'et dispatch NegotiationAcceptRequested quand isCheckout: false',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(bloc: bloc, isCheckout: false));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      // Tap le bouton pour accepter l'offre
+      await tester.tap(find.textContaining('Confirmer ('));
+      // Attend l'authentification biométrique
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 60));
+      }
+
+      // Vérifie que le SnackBar est affiché avec le message correct
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(
+        find.text('Offre acceptée — paiement en espèces à la remise'),
+        findsOneWidget,
+      );
+
+      // Vérifie que NegotiationAcceptRequested a été envoyé
+      verify(() => bloc.add(any(
+              that: isA<NegotiationAcceptRequested>()
+                  .having((e) => e.threadId, 'threadId', 't-1'))))
+          .called(1);
+    });
+  });
+
   group('Paiement checkout Stripe réussi', () {
     late _MockLocalAuthService authService;
     late _MockBox userPrefsBox;

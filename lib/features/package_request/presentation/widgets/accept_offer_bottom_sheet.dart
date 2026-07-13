@@ -135,6 +135,12 @@ class AcceptOfferBottomSheet {
                         } else {
                           bloc.add(NegotiationAcceptRequested(threadId: threadId));
                           if (ctx.mounted) {
+                            DonySnackbar.show(
+                              ctx,
+                              message:
+                                  'Offre acceptée — paiement en espèces à la remise',
+                              type: DonySnackbarType.info,
+                            );
                             Navigator.of(ctx, rootNavigator: true).pop();
                           }
                         }
