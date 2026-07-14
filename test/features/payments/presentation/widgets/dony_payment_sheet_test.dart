@@ -26,7 +26,9 @@ void main() {
     bloc = MockPaymentSheetBloc(_config);
   });
 
-  Future<void> openSheet(WidgetTester tester) async {
+  /// [settle] : false pour les états qui animent en continu (spinner du
+  /// bouton Carte) — pumpAndSettle ne convergerait jamais, on borne les pumps.
+  Future<void> openSheet(WidgetTester tester, {bool settle = true}) async {
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
         body: Builder(
@@ -44,7 +46,13 @@ void main() {
       ),
     ));
     await tester.tap(find.text('Ouvrir'));
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 60));
+      }
+    }
   }
 
   group('Vue principale — boutons conditionnels', () {
@@ -118,6 +126,32 @@ void main() {
 
       await openSheet(tester);
 
+      final button = tester.widget<ElevatedButton>(find.descendant(
+        of: find.byKey(const Key('paymentSheetCardButton')),
+        matching: find.byType(ElevatedButton),
+      ));
+      expect(button.onPressed, isNull);
+      // Le spinner n'apparaît que quand c'est le flux carte qui tourne.
+      expect(find.byKey(const Key('paymentSheetCardButtonSpinner')),
+          findsNothing);
+    });
+
+    testWidgets('spinner + désactivé pendant le vol du flux carte',
+        (tester) async {
+      const ready = PaymentSheetResolved(
+        walletAvailable: false,
+        paypalAvailable: false,
+      );
+      when(() => bloc.state).thenReturn(const PaymentSheetProcessing(
+        ready: ready,
+        method: PaymentMethodKind.card,
+      ));
+
+      await openSheet(tester, settle: false);
+
+      expect(find.byKey(const Key('paymentSheetCardButtonSpinner')),
+          findsOneWidget);
+      expect(find.text('Carte'), findsNothing);
       final button = tester.widget<ElevatedButton>(find.descendant(
         of: find.byKey(const Key('paymentSheetCardButton')),
         matching: find.byType(ElevatedButton),

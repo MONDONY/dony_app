@@ -231,7 +231,7 @@ void main() {
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'échec de confirmation → failure transitoire puis ready ré-armé',
+      'échec de confirmation → failure avec message carte lisible puis ready ré-armé',
       build: () {
         when(() => repository.createEphemeralKey(any()))
             .thenAnswer((_) async => _ephemeralKey);
@@ -249,13 +249,17 @@ void main() {
       act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
       expect: () => [
         const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
-        const PaymentSheetFailure(message: 'carte refusée', ready: ready),
+        const PaymentSheetFailure(
+          message: PaymentSheetBloc.cardUnavailableMessage,
+          ready: ready,
+        ),
         ready,
       ],
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
-      'échec réseau sur la clé éphémère → failure transitoire puis ready ré-armé',
+      'échec réseau sur la clé éphémère → failure avec message carte lisible '
+      'puis ready ré-armé (jamais le toString brut)',
       build: () {
         when(() => repository.createEphemeralKey(any()))
             .thenThrow(Exception('réseau'));
@@ -265,7 +269,10 @@ void main() {
       act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
       expect: () => [
         const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
-        isA<PaymentSheetFailure>(),
+        const PaymentSheetFailure(
+          message: PaymentSheetBloc.cardUnavailableMessage,
+          ready: ready,
+        ),
         ready,
       ],
       verify: (_) {
@@ -275,6 +282,37 @@ void main() {
               customerEphemeralKeySecret:
                   any(named: 'customerEphemeralKeySecret'),
             ));
+      },
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'double tap pendant le vol → une seule requête ephemeral-key',
+      build: () {
+        when(() => repository.createEphemeralKey(any())).thenAnswer((_) async {
+          // Laisse le second événement se glisser pendant le premier vol.
+          await Future<void>.delayed(Duration.zero);
+          return _ephemeralKey;
+        });
+        when(() => gateway.initPaymentSheet(
+              clientSecret: any(named: 'clientSecret'),
+              customerId: any(named: 'customerId'),
+              customerEphemeralKeySecret:
+                  any(named: 'customerEphemeralKeySecret'),
+            )).thenAnswer((_) async {});
+        when(() => gateway.presentPaymentSheet()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      seed: () => ready,
+      act: (bloc) => bloc
+        ..add(const PaymentSheetCardPressed())
+        ..add(const PaymentSheetCardPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetSuccess(method: PaymentMethodKind.card),
+      ],
+      verify: (_) {
+        verify(() => repository.createEphemeralKey(any())).called(1);
+        verify(() => gateway.presentPaymentSheet()).called(1);
       },
     );
   });

@@ -86,9 +86,18 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         () => _gateway.confirmPayPal(config.clientSecret),
       );
 
+  /// Message unique du parcours carte : toute défaillance technique
+  /// (clé éphémère, init, présentation) hors annulation utilisateur.
+  static const cardUnavailableMessage =
+      'Le paiement par carte est indisponible pour le moment. '
+      'Réessaie dans un instant.';
+
   /// Récupère la clé éphémère du customer puis délègue toute la saisie/
   /// sélection de carte à la PaymentSheet native Stripe — elle confirme
   /// elle-même le PaymentIntent une fois l'utilisateur validé.
+  ///
+  /// Tout échec non-annulation est remappé sur [cardUnavailableMessage] :
+  /// le toString() brut d'une AppException réseau n'est pas montrable.
   Future<void> _onCardPressed(
     PaymentSheetCardPressed event,
     Emitter<PaymentSheetState> emit,
@@ -97,15 +106,21 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         emit,
         PaymentMethodKind.card,
         () async {
-          final ephemeralKey = await _repository.createEphemeralKey(
-            kStripeEphemeralKeyApiVersion,
-          );
-          await _gateway.initPaymentSheet(
-            clientSecret: config.clientSecret,
-            customerId: ephemeralKey.customerId,
-            customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
-          );
-          await _gateway.presentPaymentSheet();
+          try {
+            final ephemeralKey = await _repository.createEphemeralKey(
+              kStripeEphemeralKeyApiVersion,
+            );
+            await _gateway.initPaymentSheet(
+              clientSecret: config.clientSecret,
+              customerId: ephemeralKey.customerId,
+              customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
+            );
+            await _gateway.presentPaymentSheet();
+          } on PaymentCancelledException {
+            rethrow; // annulation silencieuse, gérée par _confirm
+          } catch (_) {
+            throw const PaymentConfirmationException(cardUnavailableMessage);
+          }
         },
       );
 
@@ -114,6 +129,12 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     PaymentMethodKind method,
     Future<void> Function() action,
   ) async {
+    // Anti double-tap : le transformer par défaut de bloc traite les
+    // événements en concurrence — sans ce garde, deux taps rapides lancent
+    // deux chaînes de confirmation parallèles (observé en prod : 5 POST
+    // ephemeral-key). L'émission de Processing est synchrone avant le
+    // premier await, donc le second handler voit toujours ce garde.
+    if (state is PaymentSheetProcessing) return;
     final ready = _currentReady;
     if (ready == null) return;
     emit(PaymentSheetProcessing(ready: ready, method: method));

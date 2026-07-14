@@ -150,6 +150,8 @@ class _MainView extends StatelessWidget {
         ],
         _CardButton(
           enabled: !processing,
+          isLoading: state is PaymentSheetProcessing &&
+              state.method == PaymentMethodKind.card,
           onPressed: () => bloc.add(const PaymentSheetCardPressed()),
         ),
       ],
@@ -193,10 +195,19 @@ class _PayPalButton extends StatelessWidget {
 
 /// Ouvre la PaymentSheet native Stripe — même gabarit (hauteur, rayon,
 /// pleine largeur) que le bouton Apple Pay/Google Pay, fond dony-primary.
+///
+/// Comme le bouton PayPal, il est désactivé dès qu'un moyen est en cours de
+/// traitement ; en plus, il affiche un spinner quand c'est SA chaîne qui
+/// tourne (clé éphémère → initPaymentSheet → presentPaymentSheet).
 class _CardButton extends StatelessWidget {
-  const _CardButton({required this.enabled, required this.onPressed});
+  const _CardButton({
+    required this.enabled,
+    required this.isLoading,
+    required this.onPressed,
+  });
 
   final bool enabled;
+  final bool isLoading;
   final VoidCallback onPressed;
 
   @override
@@ -208,7 +219,7 @@ class _CardButton extends StatelessWidget {
       height: 48,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: enabled ? onPressed : null,
+        onPressed: enabled && !isLoading ? onPressed : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: cs.primary,
           foregroundColor: cs.onPrimary,
@@ -217,17 +228,27 @@ class _CardButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            DonyIcon('credit-card', size: 18, color: cs.onPrimary),
-            const SizedBox(width: DonySpacing.xs),
-            const Text(
-              'Carte',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-            ),
-          ],
-        ),
+        child: isLoading
+            ? SizedBox(
+                key: const Key('paymentSheetCardButtonSpinner'),
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: cs.onPrimary,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  DonyIcon('credit-card', size: 18, color: cs.onPrimary),
+                  const SizedBox(width: DonySpacing.xs),
+                  const Text(
+                    'Carte',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                  ),
+                ],
+              ),
       ),
     );
   }
