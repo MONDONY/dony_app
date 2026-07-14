@@ -542,8 +542,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final subtitle = switch (bid.paymentMethod) {
       BidPaymentMethod.cash =>
         'Paiement en espèces : si le voyageur accepte, tu remets le montant '
-            'en main propre à la remise du colis. Aucun débit en ligne. '
-            'Prépare l\'appoint.',
+            'en main propre à la remise du colis. En cas d\'annulation après la '
+            'remise, dony ne peut pas te rembourser immédiatement mais '
+            's\'assurera que le voyageur te restitue ton argent.',
       BidPaymentMethod.wave =>
         'Le voyageur va examiner ta demande. Le paiement se fera via Wave '
             'une fois l\'offre acceptée.',

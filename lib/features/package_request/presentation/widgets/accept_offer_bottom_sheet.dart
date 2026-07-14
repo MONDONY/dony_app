@@ -142,7 +142,7 @@ class AcceptOfferBottomSheet {
                                 mascotteType: DonyMascotteType.donneColis,
                                 title: 'Accord confirmé !',
                                 subtitle:
-                                    'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. Aucun débit en ligne. Prépare l\'appoint. Les frais dony sont réglés par le voyageur.',
+                                    'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, dony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
                                 ctaLabel: 'Voir le suivi',
                                 onCta: () =>
                                     routeContext.go('/negotiations/$threadId'),
