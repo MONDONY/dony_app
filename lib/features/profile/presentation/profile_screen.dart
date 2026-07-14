@@ -14,7 +14,6 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/activity_hub_card.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
@@ -112,12 +111,6 @@ class _ProfileScreenState extends State<ProfileScreen>
               builder: (context, bidState) {
                 return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                   builder: (context, announcementState) {
-                    final bids = bidState is BidListLoaded
-                        ? bidState.bids
-                        : <BidModel>[];
-                    final activeBids = bids
-                        .where((b) => b.status == 'ACCEPTED')
-                        .length;
                     final announcements =
                         announcementState is AnnouncementListLoaded
                         ? announcementState.announcements
@@ -362,7 +355,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   isTraveler: isTraveler,
                                   isSender: isSender,
                                   activeAnnouncements: activeAnnouncements,
-                                  activeBids: activeBids,
                                 ),
                                 _AccountTab(
                                   user: user,
@@ -449,14 +441,12 @@ class _ActivityTab extends StatelessWidget {
     required this.isTraveler,
     required this.isSender,
     required this.activeAnnouncements,
-    required this.activeBids,
   });
 
   final UserModel? user;
   final bool isTraveler;
   final bool isSender;
   final int activeAnnouncements;
-  final int activeBids;
 
   @override
   Widget build(BuildContext context) {
@@ -530,22 +520,6 @@ class _ActivityTab extends StatelessWidget {
         if (isTraveler || isSender) const SizedBox(height: DonySpacing.sm),
         DonyListSection(
               tiles: [
-                DonyListTile(
-                  iconAsset: 'package',
-                  iconColor: cs.secondary,
-                  iconBgColor: cs.secondaryContainer,
-                  label: 'Mes envois en cours',
-                  trailing: activeBids > 0
-                      ? Text(
-                          '$activeBids en cours',
-                          style: tt.labelMedium?.copyWith(
-                            color: cs.secondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )
-                      : null,
-                  onTap: () => context.go('/announcements'),
-                ),
                 DonyListTile(
                   iconAsset: 'handshake',
                   iconColor: cs.primary,
