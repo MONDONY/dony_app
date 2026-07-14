@@ -115,9 +115,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                         announcementState is AnnouncementListLoaded
                         ? announcementState.announcements
                         : <AnnouncementModel>[];
-                    final upcomingAnnouncements = announcements
+                    final activeAnnouncements = announcements
                         .where(
-                          (a) => a.status == 'ACTIVE' || a.status == 'FULL',
+                          (a) =>
+                              a.status == 'ACTIVE' ||
+                              a.status == 'FULL' ||
+                              a.status == 'IN_PROGRESS',
                         )
                         .length;
 
@@ -351,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   user: user,
                                   isTraveler: isTraveler,
                                   isSender: isSender,
-                                  upcomingAnnouncements: upcomingAnnouncements,
+                                  activeAnnouncements: activeAnnouncements,
                                 ),
                                 _AccountTab(
                                   user: user,
@@ -437,13 +440,13 @@ class _ActivityTab extends StatelessWidget {
     required this.user,
     required this.isTraveler,
     required this.isSender,
-    required this.upcomingAnnouncements,
+    required this.activeAnnouncements,
   });
 
   final UserModel? user;
   final bool isTraveler;
   final bool isSender;
-  final int upcomingAnnouncements;
+  final int activeAnnouncements;
 
   @override
   Widget build(BuildContext context) {
@@ -490,13 +493,13 @@ class _ActivityTab extends StatelessWidget {
                 iconAsset: 'plane',
                 title: 'Mes trajets et colis',
                 subtitle: 'Gère tes trajets et colis embarqués',
-                countLabel: upcomingAnnouncements > 0
-                    ? '$upcomingAnnouncements à venir'
+                countLabel: activeAnnouncements > 0
+                    ? '$activeAnnouncements actifs'
                     : null,
                 onTap: () => context.push(
                   '/trajets-colis',
                   extra: (
-                    upcomingCount: upcomingAnnouncements,
+                    upcomingCount: activeAnnouncements,
                     isSender: isSender,
                   ),
                 ),

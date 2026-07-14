@@ -35,7 +35,7 @@ class MesTrajetsColisScreen extends StatelessWidget {
         label: 'Mes trajets',
         trailing: upcomingCount > 0
             ? Text(
-                '$upcomingCount à venir',
+                '$upcomingCount actifs',
                 style: tt.labelMedium?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w600,

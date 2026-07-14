@@ -72,20 +72,20 @@ void main() {
       expect(find.text('Mes adresses'), findsOneWidget);
     });
 
-    testWidgets('shows "X à venir" badge when upcomingCount > 0', (
+    testWidgets('shows "X actifs" badge when upcomingCount > 0', (
       tester,
     ) async {
       await tester.pumpWidget(_buildHarness(upcomingCount: 3));
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.text('3 à venir'), findsOneWidget);
+      expect(find.text('3 actifs'), findsOneWidget);
     });
 
-    testWidgets('no "à venir" badge when upcomingCount == 0', (tester) async {
+    testWidgets('no "actifs" badge when upcomingCount == 0', (tester) async {
       await tester.pumpWidget(_buildHarness());
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.textContaining('à venir'), findsNothing);
+      expect(find.textContaining('actifs'), findsNothing);
     });
 
     testWidgets('tapping "Mes trajets" navigates to /announcements', (
