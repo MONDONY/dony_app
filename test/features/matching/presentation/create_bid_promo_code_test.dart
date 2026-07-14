@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
@@ -16,9 +19,12 @@ import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -34,7 +40,15 @@ class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
     implements BidPhotosCubit {}
 
+class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
+    implements RecipientBloc {}
+
 class _FakeBidEvent extends Fake implements BidEvent {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 // ── Données de test ──────────────────────────────────────────────────────────
 
@@ -78,9 +92,11 @@ void main() {
   late _MockPaymentBloc paymentBloc;
   late _MockWalletBloc walletBloc;
   late _MockBidPhotosCubit photosCubit;
+  late _MockRecipientBloc recipientBloc;
   late StreamController<BidState> bidStream;
 
-  setUpAll(() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
     registerFallbackValue(_FakeBidEvent());
   });
 
@@ -90,6 +106,7 @@ void main() {
     paymentBloc = _MockPaymentBloc();
     walletBloc = _MockWalletBloc();
     photosCubit = _MockBidPhotosCubit();
+    recipientBloc = _MockRecipientBloc();
 
     whenListen(bidBloc, bidStream.stream, initialState: BidInitial());
     whenListen(paymentBloc, const Stream<PaymentState>.empty(),
@@ -98,6 +115,9 @@ void main() {
         initialState: WalletInitial());
     whenListen(photosCubit, const Stream<List<BidPhotoUpload>>.empty(),
         initialState: const <BidPhotoUpload>[]);
+    when(() => photosCubit.readyKeys).thenReturn(const <String>[]);
+    whenListen(recipientBloc, const Stream<RecipientState>.empty(),
+        initialState: const RecipientState());
 
     // Enregistrement dans getIt
     void _register<T extends Object>(T mock) {
@@ -109,6 +129,13 @@ void main() {
     _register<PaymentBloc>(paymentBloc);
     _register<WalletBloc>(walletBloc);
     _register<BidPhotosCubit>(photosCubit);
+    _register<RecipientBloc>(recipientBloc);
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
+    getIt.registerSingleton<IContentCategoryRepository>(
+      _FakeContentCategoryRepository(),
+    );
   });
 
   tearDown(() async {
@@ -117,10 +144,16 @@ void main() {
     if (getIt.isRegistered<PaymentBloc>()) getIt.unregister<PaymentBloc>();
     if (getIt.isRegistered<WalletBloc>()) getIt.unregister<WalletBloc>();
     if (getIt.isRegistered<BidPhotosCubit>()) getIt.unregister<BidPhotosCubit>();
+    if (getIt.isRegistered<RecipientBloc>()) getIt.unregister<RecipientBloc>();
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
   });
 
-  /// App de test avec GoRouter (requis par create_bid_bottom_sheet pour
-  /// les navigations internes via context.push).
+  /// App de test avec GoRouter. Depuis le refactor 06a9a2bc (#126),
+  /// CreateBidBottomSheet.show() délègue à context.push('/bids/new') vers
+  /// l'écran plein CreateBidScreen — la route miroir de lib/app/router.dart
+  /// est donc requise ici.
   Widget _testApp() {
     final router = GoRouter(
       routes: [
@@ -137,22 +170,42 @@ void main() {
             ),
           ),
         ),
+        GoRoute(
+          path: '/bids/new',
+          builder: (_, state) => CreateBidScreen(
+            announcement: state.extra as AnnouncementModel,
+          ),
+        ),
         GoRoute(path: '/bids/:id', builder: (_, __) => const SizedBox()),
       ],
     );
-    return MaterialApp.router(routerConfig: router);
+    return MaterialApp.router(
+      routerConfig: router,
+      theme: AppTheme.light,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+    );
   }
 
   Future<void> _openSheet(WidgetTester tester) async {
+    // Grand viewport : tout le formulaire est visible sans scroll, ce qui
+    // fiabilise les finders (le scroll reste possible via _scrollTo).
+    tester.view.physicalSize = const Size(800, 5000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(_testApp());
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
   }
 
-  /// Scroll jusqu'à ce que [finder] soit visible dans la sheet.
+  /// Scroll jusqu'à ce que [finder] soit visible dans l'écran.
   Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
     await tester.scrollUntilVisible(finder, 80,
-        scrollable: find.byType(Scrollable).last);
+        scrollable: find.byType(Scrollable).first);
   }
 
   // ── 1. Affichage initial du champ ─────────────────────────────────────────

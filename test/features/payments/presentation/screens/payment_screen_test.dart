@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -112,6 +113,10 @@ void main() {
   });
 
   setUp(() {
+    // DonySnackbar v2 (#123) déduplique les messages identiques < 400 ms via
+    // un cache statique partagé entre les tests — reset pour que chaque test
+    // vérifie son propre snackbar.
+    DonySnackbar.clearDedup();
     mockBloc = MockPaymentBloc();
     mockConfigBloc = MockConfigBloc();
     mockLocalAuth = MockLocalAuthService();

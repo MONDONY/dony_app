@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
@@ -11,6 +13,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -29,7 +32,17 @@ class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
     implements BidPhotosCubit {}
 
+class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
+    implements RecipientBloc {}
+
 class _FakeBidEvent extends Fake implements BidEvent {}
+
+class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 // ── Données de test ──────────────────────────────────────────────────────────
 
@@ -64,10 +77,12 @@ void main() {
   late _MockPaymentBloc paymentBloc;
   late _MockWalletBloc walletBloc;
   late _MockBidPhotosCubit photosCubit;
+  late _MockRecipientBloc recipientBloc;
   late StreamController<BidState> bidStream;
 
   setUpAll(() {
     registerFallbackValue(_FakeBidEvent());
+    registerFallbackValue(_FakeRecipientEvent());
   });
 
   setUp(() {
@@ -76,8 +91,13 @@ void main() {
     paymentBloc = _MockPaymentBloc();
     walletBloc = _MockWalletBloc();
     photosCubit = _MockBidPhotosCubit();
+    recipientBloc = _MockRecipientBloc();
 
     whenListen(bidBloc, bidStream.stream, initialState: BidInitial());
+    // Depuis 57ce4308 (PR #130, recipient quick action), la RecipientSection
+    // de CreateBidScreen résout getIt<RecipientBloc>() dans initState.
+    whenListen(recipientBloc, const Stream<RecipientState>.empty(),
+        initialState: const RecipientState());
     whenListen(paymentBloc, const Stream<PaymentState>.empty(),
         initialState: const PaymentInitial());
     whenListen(walletBloc, const Stream<WalletState>.empty(),
@@ -94,6 +114,15 @@ void main() {
     register<PaymentBloc>(paymentBloc);
     register<WalletBloc>(walletBloc);
     register<BidPhotosCubit>(photosCubit);
+    register<RecipientBloc>(recipientBloc);
+
+    // Depuis 8b164c47 (PR #139, catalogue unifié), CreateBidScreen charge le
+    // catalogue de types de contenu via getIt<IContentCategoryRepository>().
+    if (!getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.registerFactory<IContentCategoryRepository>(
+        () => _FakeContentCategoryRepository(),
+      );
+    }
   });
 
   tearDown(() async {
@@ -103,6 +132,12 @@ void main() {
     if (getIt.isRegistered<WalletBloc>()) getIt.unregister<WalletBloc>();
     if (getIt.isRegistered<BidPhotosCubit>()) {
       getIt.unregister<BidPhotosCubit>();
+    }
+    if (getIt.isRegistered<RecipientBloc>()) {
+      getIt.unregister<RecipientBloc>();
+    }
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
     }
   });
 
@@ -120,6 +155,15 @@ void main() {
                 child: const Text('Ouvrir'),
               ),
             ),
+          ),
+        ),
+        // Depuis 06a9a2bc (PR #126), CreateBidBottomSheet.show() délègue à
+        // context.push('/bids/new') : CreateBidScreen est un écran GoRouter
+        // plein écran — miroir de l'enregistrement réel dans lib/app/router.dart.
+        GoRoute(
+          path: '/bids/new',
+          builder: (_, state) => CreateBidScreen(
+            announcement: state.extra as AnnouncementModel,
           ),
         ),
         GoRoute(path: '/bids/:id', builder: (_, __) => const SizedBox()),
@@ -170,7 +214,10 @@ void main() {
         ),
       );
 
-      // Saisir dans l'input inline puis taper le bouton +.
+      // Saisir dans l'input inline puis taper le bouton + (écran plein
+      // scrollable depuis PR #126 — scroller jusqu'à la rangée d'ajout).
+      await tester.ensureVisible(find.byKey(const Key('custom-item-input')));
+      await tester.pumpAndSettle();
       await tester.enterText(
           find.byKey(const Key('custom-item-input')), 'Épices maison');
       await tester.tap(find.byKey(const Key('add-item-btn')));
