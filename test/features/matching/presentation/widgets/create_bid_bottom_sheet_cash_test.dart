@@ -4,6 +4,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
@@ -17,6 +19,7 @@ import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sh
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +40,16 @@ class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
     implements BidPhotosCubit {}
 
+class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
+    implements RecipientBloc {}
+
+class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
+
 // ── GetIt captures ─────────────────────────────────────────────────────────────
 //
 // CreateBidBottomSheet.show() calls getIt<BidBloc>(), getIt<PaymentBloc>(),
@@ -47,6 +60,7 @@ late _MockBidBloc _currentBidBloc;
 late _MockPaymentBloc _currentPaymentBloc;
 late _MockWalletBloc _currentWalletBloc;
 late _MockBidPhotosCubit _currentPhotosCubit;
+late _MockRecipientBloc _currentRecipientBloc;
 
 // ── Fixtures ───────────────────────────────────────────────────────────────────
 
@@ -162,6 +176,16 @@ Widget _buildHarness(AnnouncementModel announcement) {
           ),
         ),
       ),
+      // CreateBidBottomSheet.show() delegates to context.push('/bids/new')
+      // (post-06a9a2bc refactor, PR #126 : CreateBidScreen est un écran
+      // GoRouter plein écran, plus une modal) — reflète la vraie route de
+      // lib/app/router.dart.
+      GoRoute(
+        path: '/bids/new',
+        builder: (_, state) => CreateBidScreen(
+          announcement: state.extra as AnnouncementModel,
+        ),
+      ),
       GoRoute(
         path: '/bids/:id',
         builder: (_, __) =>
@@ -198,8 +222,9 @@ Future<void> _openSheet(
 }
 
 // Selects a category + checks disclaimer so canSubmit becomes true.
+// Label issu du catalogue unifié (PR #139) : 'Vêtements & tissus'.
 Future<void> _enableSubmitButton(WidgetTester tester) async {
-  await tester.tap(find.text('Vêtements'));
+  await tester.tap(find.text('Vêtements & tissus'));
   await tester.pump();
   await tester.tap(find.byType(Checkbox).first);
   await tester.pump();
@@ -269,6 +294,15 @@ void main() {
     if (!getIt.isRegistered<BidPhotosCubit>()) {
       getIt.registerFactory<BidPhotosCubit>(() => _currentPhotosCubit);
     }
+    if (!getIt.isRegistered<RecipientBloc>()) {
+      getIt.registerFactory<RecipientBloc>(() => _currentRecipientBloc);
+    }
+    if (!getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.registerFactory<IContentCategoryRepository>(
+        _FakeContentCategoryRepository.new,
+      );
+    }
+    registerFallbackValue(_FakeRecipientEvent());
   });
 
   setUp(() {
@@ -296,6 +330,13 @@ void main() {
         .thenAnswer((_) => const Stream.empty());
     when(() => _currentPhotosCubit.close()).thenAnswer((_) async {});
     when(() => _currentPhotosCubit.readyKeys).thenReturn(const <String>[]);
+
+    _currentRecipientBloc = _MockRecipientBloc();
+    when(() => _currentRecipientBloc.state).thenReturn(const RecipientState());
+    when(() => _currentRecipientBloc.stream)
+        .thenAnswer((_) => const Stream.empty());
+    when(() => _currentRecipientBloc.close()).thenAnswer((_) async {});
+    when(() => _currentRecipientBloc.add(any())).thenReturn(null);
   });
 
   // ── 1. Visibilité du sélecteur ─────────────────────────────────────────────
@@ -414,8 +455,9 @@ void main() {
   // ── 4. Navigation sur BidCreated ──────────────────────────────────────────
 
   group('Navigation après BidCreated', () {
-    testWidgets('BidCreated → sheet fermé et navigation vers /bids/{id}',
-        (tester) async {
+    testWidgets(
+        'BidCreated → sheet fermé, DonySuccessScreen affiché, '
+        'CTA « Voir mon envoi » navigue vers /bids/{id}', (tester) async {
       final stateController = StreamController<BidState>.broadcast();
       addTearDown(stateController.close);
 
@@ -432,7 +474,17 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      // Sheet dismissed, navigated to bid detail.
+      // Depuis PR #141 (écrans de succès unifiés) : l'écran de création est
+      // fermé et DonySuccessScreen « Offre envoyée ! » s'affiche — la
+      // navigation vers le détail du bid n'a lieu qu'après le CTA.
+      expect(find.text('Envoyer un colis'), findsNothing);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Offre envoyée !'), findsOneWidget);
+      expect(find.text('Bid détail'), findsNothing);
+
+      // CTA → navigation vers /bids/{id} (règle métier conservée).
+      await tester.tap(find.text('Voir mon envoi'));
+      await tester.pumpAndSettle();
       expect(find.text('Bid détail'), findsOneWidget);
     });
   });
@@ -474,7 +526,7 @@ void main() {
       await _openSheet(tester, _mixedAnnouncement());
 
       // Select a category and accept disclaimer; slider starts at 5 → hasWeight = true.
-      await tester.tap(find.text('Vêtements'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();
@@ -496,7 +548,7 @@ void main() {
       await _openSheet(tester, _mixedAnnouncement());
 
       // Select a category and accept disclaimer; slider starts at 5 (weight > 0).
-      await tester.tap(find.text('Vêtements'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();
@@ -518,7 +570,7 @@ void main() {
       await _openSheet(tester, _announcement());
 
       // Select a category and accept disclaimer.
-      await tester.tap(find.text('Vêtements'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();
@@ -826,7 +878,7 @@ void main() {
       await _openSheet(tester, _mixedGridOnlyAnnouncement());
 
       // Select a category and accept disclaimer — but no grid articles chosen.
-      await tester.tap(find.text('Vêtements'));
+      await tester.tap(find.text('Vêtements & tissus'));
       await tester.pump();
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();

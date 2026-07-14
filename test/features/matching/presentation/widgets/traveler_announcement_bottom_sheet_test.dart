@@ -3,6 +3,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -13,14 +15,17 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -41,6 +46,14 @@ class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 
 class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
     implements BidPhotosCubit {}
+
+class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
+    implements RecipientBloc {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -106,27 +119,51 @@ Widget _harness({
   when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
   when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
 
+  // Depuis 06a9a2bc (PR #126), CreateBidBottomSheet.show() délègue à
+  // context.push('/bids/new') : le harness fournit donc un GoRouter avec la
+  // route CreateBidScreen — miroir de l'enregistrement réel de router.dart.
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Builder(
+          builder: (ctx) => Scaffold(
+            body: TextButton(
+              onPressed: () =>
+                  showTravelerAnnouncementSheet(ctx, announcement: announcement),
+              child: const Text('Ouvrir'),
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/bids/new',
+        builder: (_, state) => CreateBidScreen(
+          announcement: state.extra as AnnouncementModel,
+        ),
+      ),
+      GoRoute(
+        path: '/bids/:id',
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: Text('Bid détail'))),
+      ),
+    ],
+  );
+
   return MultiBlocProvider(
     providers: [
       BlocProvider<AuthBloc>.value(value: authBloc),
       BlocProvider<BidBloc>.value(value: bidBloc),
     ],
-    child: MaterialApp(
+    child: MaterialApp.router(
+      routerConfig: router,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
-      home: Builder(
-        builder: (ctx) => Scaffold(
-          body: TextButton(
-            onPressed: () =>
-                showTravelerAnnouncementSheet(ctx, announcement: announcement),
-            child: const Text('Ouvrir'),
-          ),
-        ),
-      ),
     ),
   );
 }
@@ -354,6 +391,7 @@ void main() {
     late _MockPaymentBloc mockPaymentBloc;
     late _MockWalletBloc mockWalletBloc;
     late _MockBidPhotosCubit mockPhotosCubit;
+    late _MockRecipientBloc mockRecipientBloc;
 
     setUp(() {
       GetIt.I.reset();
@@ -385,11 +423,25 @@ void main() {
       when(() => mockPhotosCubit.close()).thenAnswer((_) async {});
       when(() => mockPhotosCubit.readyKeys).thenReturn(const <String>[]);
 
+      // Depuis 57ce4308 (PR #130), la RecipientSection de CreateBidScreen
+      // résout getIt<RecipientBloc>() dans initState.
+      mockRecipientBloc = _MockRecipientBloc();
+      when(() => mockRecipientBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
+      when(() => mockRecipientBloc.state).thenReturn(const RecipientState());
+      when(() => mockRecipientBloc.close()).thenAnswer((_) async {});
+
       GetIt.I.registerFactory<KycBloc>(() => mockKycBloc);
       GetIt.I.registerFactory<BidBloc>(() => mockBidBloc);
       GetIt.I.registerFactory<PaymentBloc>(() => mockPaymentBloc);
       GetIt.I.registerFactory<WalletBloc>(() => mockWalletBloc);
       GetIt.I.registerFactory<BidPhotosCubit>(() => mockPhotosCubit);
+      GetIt.I.registerFactory<RecipientBloc>(() => mockRecipientBloc);
+      // Depuis 8b164c47 (PR #139, catalogue unifié), CreateBidScreen charge
+      // le catalogue via getIt<IContentCategoryRepository>().
+      GetIt.I.registerFactory<IContentCategoryRepository>(
+        () => _FakeContentCategoryRepository(),
+      );
     });
 
     tearDown(() => GetIt.I.reset());

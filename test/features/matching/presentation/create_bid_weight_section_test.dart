@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
@@ -11,9 +14,12 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -29,7 +35,17 @@ class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
     implements BidPhotosCubit {}
 
+class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
+    implements RecipientBloc {}
+
 class _FakeBidEvent extends Fake implements BidEvent {}
+
+class _FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 // ── Données de test ──────────────────────────────────────────────────────────
 
@@ -62,10 +78,13 @@ void main() {
   late _MockPaymentBloc paymentBloc;
   late _MockWalletBloc walletBloc;
   late _MockBidPhotosCubit photosCubit;
+  late _MockRecipientBloc recipientBloc;
   late StreamController<BidState> bidStream;
 
-  setUpAll(() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
     registerFallbackValue(_FakeBidEvent());
+    registerFallbackValue(_FakeRecipientEvent());
   });
 
   setUp(() {
@@ -74,6 +93,7 @@ void main() {
     paymentBloc = _MockPaymentBloc();
     walletBloc = _MockWalletBloc();
     photosCubit = _MockBidPhotosCubit();
+    recipientBloc = _MockRecipientBloc();
 
     whenListen(bidBloc, bidStream.stream, initialState: BidInitial());
     whenListen(paymentBloc, const Stream<PaymentState>.empty(),
@@ -82,6 +102,9 @@ void main() {
         initialState: WalletInitial());
     whenListen(photosCubit, const Stream<List<BidPhotoUpload>>.empty(),
         initialState: const <BidPhotoUpload>[]);
+    when(() => photosCubit.readyKeys).thenReturn(const <String>[]);
+    whenListen(recipientBloc, const Stream<RecipientState>.empty(),
+        initialState: const RecipientState());
 
     void register<T extends Object>(T mock) {
       if (getIt.isRegistered<T>()) getIt.unregister<T>();
@@ -92,6 +115,8 @@ void main() {
     register<PaymentBloc>(paymentBloc);
     register<WalletBloc>(walletBloc);
     register<BidPhotosCubit>(photosCubit);
+    register<RecipientBloc>(recipientBloc);
+    register<IContentCategoryRepository>(_FakeContentCategoryRepository());
   });
 
   tearDown(() async {
@@ -100,6 +125,10 @@ void main() {
     if (getIt.isRegistered<PaymentBloc>()) getIt.unregister<PaymentBloc>();
     if (getIt.isRegistered<WalletBloc>()) getIt.unregister<WalletBloc>();
     if (getIt.isRegistered<BidPhotosCubit>()) getIt.unregister<BidPhotosCubit>();
+    if (getIt.isRegistered<RecipientBloc>()) getIt.unregister<RecipientBloc>();
+    if (getIt.isRegistered<IContentCategoryRepository>()) {
+      getIt.unregister<IContentCategoryRepository>();
+    }
   });
 
   Widget testApp(AnnouncementModel announcement) {
@@ -118,17 +147,35 @@ void main() {
             ),
           ),
         ),
+        // CreateBidBottomSheet.show() délègue à context.push('/bids/new')
+        // depuis le refactor 06a9a2bc (#126) : CreateBidScreen est un écran
+        // GoRouter plein écran — miroir de lib/app/router.dart.
+        GoRoute(
+          path: '/bids/new',
+          builder: (_, state) => CreateBidScreen(
+            announcement: state.extra! as AnnouncementModel,
+          ),
+        ),
         GoRoute(path: '/bids/:id', builder: (_, _) => const SizedBox()),
       ],
     );
-    return MaterialApp.router(routerConfig: router);
+    return MaterialApp.router(
+      routerConfig: router,
+      theme: AppTheme.light,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+    );
   }
 
   Future<void> openSheet(
     WidgetTester tester,
     AnnouncementModel announcement,
   ) async {
-    tester.view.physicalSize = const Size(1000, 1800);
+    tester.view.physicalSize = const Size(1000, 5000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(testApp(announcement));

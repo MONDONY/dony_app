@@ -26,6 +26,7 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockPackageRequestBloc
@@ -141,6 +142,26 @@ void main() {
     _unregister<EnvoisRefreshNotifier>();
   });
 
+  // Le wizard de création (PR #124) est un écran GoRouter plein écran :
+  // PackageRequestCreateWizard.show → context.push('/package-requests/new').
+  // Le harnais fournit donc un GoRouter avec cette route (placeholder léger,
+  // le wizard réel a ses propres tests).
+  Widget router({required Widget home}) {
+    return MaterialApp.router(
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, __) => home),
+          GoRoute(
+            path: '/package-requests/new',
+            builder: (_, __) => const Scaffold(
+              body: Center(child: Text('wizard-screen')),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget wrap({String kycStatus = 'NOT_STARTED'}) {
     final authBloc = _MockAuthBloc();
     when(() => authBloc.state).thenReturn(
@@ -167,7 +188,7 @@ void main() {
         BlocProvider<KycBloc>.value(value: kycBloc),
         BlocProvider<PaymentBloc>.value(value: paymentBloc),
       ],
-      child: const MaterialApp(home: EnvoyerHubScreen()),
+      child: router(home: const EnvoyerHubScreen()),
     );
   }
 
@@ -241,9 +262,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.text('+ Nouveau'));
-      // Ne pas pumpAndSettle : le wizard (VERIFIED path) tente de résoudre
-      // CitySearchBloc non enregistré dans ce test.
+      await tester.pumpAndSettle();
+
       expect(find.text('Vérification requise'), findsNothing);
+      // VERIFIED → navigation directe vers le wizard plein écran.
+      expect(find.text('wizard-screen'), findsOneWidget);
     });
 
     testWidgets(
@@ -269,13 +292,17 @@ void main() {
             BlocProvider<AuthBloc>.value(value: authBloc),
             BlocProvider<PaymentBloc>.value(value: paymentBloc),
           ],
-          child: const MaterialApp(home: EnvoyerHubScreen()),
+          child: router(home: const EnvoyerHubScreen()),
         ),
       );
       await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.text('+ Nouveau'));
+      await tester.pumpAndSettle();
+
       expect(find.text('Vérification requise'), findsNothing);
+      // VERIFIED (via AuthProfileUpdated) → navigation directe vers le wizard.
+      expect(find.text('wizard-screen'), findsOneWidget);
     });
   });
 }
