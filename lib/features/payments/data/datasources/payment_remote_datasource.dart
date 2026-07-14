@@ -1,8 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
+import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/models/saved_card_model.dart';
-import 'package:dio/dio.dart';
 
 class PaymentRemoteDatasource {
   final ApiClient _client;
@@ -47,6 +48,14 @@ class PaymentRemoteDatasource {
       '/payments/intents/$paymentIntentId/save-payment-method',
       data: {'save': save},
     );
+  }
+
+  Future<EphemeralKeyModel> createEphemeralKey(String stripeVersion) async {
+    final response = await _client.dio.post(
+      '/payments/me/ephemeral-key',
+      data: {'stripeVersion': stripeVersion},
+    );
+    return EphemeralKeyModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<PaymentModel?> getPaymentForBid(String bidId) async {

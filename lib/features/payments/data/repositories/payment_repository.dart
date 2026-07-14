@@ -1,6 +1,7 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
+import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/models/saved_card_model.dart';
 
@@ -60,6 +61,17 @@ class PaymentRepository {
   Future<void> updateSavePaymentMethod(String paymentIntentId, bool save) async {
     try {
       await _datasource.updateSavePaymentMethod(paymentIntentId, save);
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  /// Clé éphémère Stripe pour la PaymentSheet native (carte).
+  /// [stripeVersion] doit correspondre à la version d'API attendue par le
+  /// SDK natif embarqué (voir [kStripeEphemeralKeyApiVersion]).
+  Future<EphemeralKeyModel> createEphemeralKey(String stripeVersion) async {
+    try {
+      return await _datasource.createEphemeralKey(stripeVersion);
     } catch (e) {
       throw unwrapDioError(e);
     }
