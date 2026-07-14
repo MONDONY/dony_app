@@ -84,6 +84,43 @@ void main() {
     );
 
     blocTest<ChatBloc, ChatState>(
+      'calls markConversationRead even in read-only '
+      '(sinon le unread_* d\'une conv à interlocuteur supprimé ne redescend jamais)',
+      build: () {
+        when(() => firestoreRepo.messagesStream(any()))
+            .thenAnswer((_) => Stream.value([]));
+        when(() => firestoreRepo.markConversationRead(any(), any()))
+            .thenAnswer((_) async {});
+        when(() => firestoreRepo.markMessagesRead(
+              firestoreConversationId: any(named: 'firestoreConversationId'),
+              currentUserUid: any(named: 'currentUserUid'),
+            )).thenAnswer((_) async {});
+        return makeBloc();
+      },
+      act: (b) => b.add(
+        const ChatSubscribeRequested(
+          'conv_bid1',
+          currentUserUid: 'uid-me',
+          isReadOnly: true,
+        ),
+      ),
+      expect: () => [
+        isA<ChatLoading>(),
+        isA<ChatReadOnly>(),
+      ],
+      verify: (_) {
+        verify(() => firestoreRepo.markConversationRead('conv_bid1', 'uid-me'))
+            .called(1);
+        verify(() => firestoreRepo.markMessagesRead(
+              firestoreConversationId: 'conv_bid1',
+              currentUserUid: 'uid-me',
+            )).called(1);
+        // en read-only, pas d'abonnement au stream de suppression
+        verifyNever(() => firestoreRepo.conversationDeletedStream(any()));
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
       'does NOT call markConversationRead when uid is empty',
       build: () {
         when(() => firestoreRepo.messagesStream(any()))
