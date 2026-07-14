@@ -14,7 +14,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -366,13 +366,63 @@ void main() {
 
     // Le bloc émet l'état intermédiaire AnnouncementPublished (ACTIVE), sans
     // que le AnnouncementDetailLoaded du reload ne suive (ex. erreur réseau
-    // transitoire sur AnnouncementDetailRequested).
+    // transitoire sur AnnouncementDetailRequested). Cet état déclenche aussi
+    // la navigation plein écran vers DonySuccessScreen — on laisse
+    // l'animation de route se terminer avant d'inspecter l'écran sous-jacent.
     controller.add(AnnouncementPublished(published));
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.textContaining('brouillon'), findsNothing);
     expect(find.text('Publier'), findsNothing);
     expect(find.textContaining('BROUILLON'), findsNothing);
+  });
+
+  testWidgets(
+      'AnnouncementPublished affiche un DonySuccessScreen plein écran ; '
+      'tap sur Continuer revient au détail déjà rafraîchi', (tester) async {
+    final draft = _makeAnnouncement(status: 'DRAFT');
+    final published = _makeAnnouncement(status: 'ACTIVE');
+
+    when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(draft));
+    final controller = StreamController<AnnouncementState>();
+    whenListen(
+      annBloc,
+      controller.stream,
+      initialState: AnnouncementDetailLoaded(draft),
+    );
+    addTearDown(controller.close);
+
+    await _pump(tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+        initial: draft);
+    await tester.pumpAndSettle();
+
+    controller.add(AnnouncementPublished(published));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Trajet publié !'), findsOneWidget);
+
+    verify(
+      () => annBloc.add(
+        any(
+          that: predicate<AnnouncementEvent>(
+            (e) =>
+                e is AnnouncementDetailRequested &&
+                e.id == 'ann-trip-001',
+            'AnnouncementDetailRequested(ann-trip-001)',
+          ),
+        ),
+      ),
+    ).called(1);
+
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonySuccessScreen), findsNothing);
+    expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
   });
 }

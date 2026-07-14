@@ -62,7 +62,7 @@ class VoyageurContactCard extends StatelessWidget {
 
     final ratingLabel = bid.travelerAverageRating != null
         ? '★ ${bid.travelerAverageRating!.toStringAsFixed(1)}'
-        : '★ —';
+        : '★ -';
     final tripsLabel = bid.travelerTotalTrips != null
         ? '· ${bid.travelerTotalTrips} trajet${bid.travelerTotalTrips! > 1 ? 's' : ''}'
         : '';

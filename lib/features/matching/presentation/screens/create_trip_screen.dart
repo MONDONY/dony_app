@@ -39,6 +39,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CreateTripArgs {
   final AnnouncementModel? announcement;
@@ -1169,7 +1170,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                   NegotiationThreadStatus.awaitingPayment) {
             context.pop();
             DonySnackbar.show(context,
-                message: 'Trajet lié — l\'expéditeur peut désormais payer.',
+                message: 'Trajet lié. L\'expéditeur peut désormais payer.',
                 type: DonySnackbarType.success);
           } else if (state is NegotiationError) {
             ErrorPresenter.show(context, state.error);
@@ -1191,7 +1192,43 @@ class _TripFormContentState extends State<_TripFormContent> {
       child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) async {
           if (state is AnnouncementCreated || state is AnnouncementUpdated) {
-            context.pop(true); // caller rafraîchit via le bool retourné par context.push<bool>
+            final announcement = state is AnnouncementCreated
+                ? state.announcement
+                : (state as AnnouncementUpdated).announcement;
+            final isEdit = state is AnnouncementUpdated;
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (routeContext) => DonySuccessScreen(
+                mascotteType: DonyMascotteType.joyeux,
+                title: isEdit ? 'Trajet modifié !' : 'Trajet publié !',
+                subtitle:
+                    'Ton trajet ${announcement.departureCity} → ${announcement.arrivalCity} est en ligne.',
+                ctaLabel: 'Voir mon trajet',
+                ctaVariant: DonyButtonVariant.accent,
+                onCta: () {
+                  // Le contexte de la route succès (routeContext) reste monté
+                  // sous le Navigator racine après les deux pops ci-dessous —
+                  // on capture donc le GoRouter AVANT de popper, pour éviter
+                  // « Looking up a deactivated widget's ancestor is unsafe »
+                  // (même classe de bug que le fix bid-payé, feb86b71).
+                  final router = GoRouter.of(routeContext);
+                  Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
+                  Navigator.of(context)
+                      .pop(true); // ferme create_trip_screen — contrat bool intact pour les 3 appelants
+                  router.push('/announcements/${announcement.id}/trip');
+                },
+                analyticsContext: 'trip_published',
+                secondaryLabel: isEdit ? null : 'Partager mon trajet',
+                onSecondary: isEdit
+                    ? null
+                    : () => unawaited(Share.share(
+                          '✈️ Je voyage ${announcement.departureCity} → '
+                          '${announcement.arrivalCity} le '
+                          '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
+                          'avec de la place dans mes bagages !\n'
+                          'Réserve tes kilos sur dony 📦',
+                        )),
+              ),
+            ));
           } else if (state is AnnouncementProLimitReached) {
             context.pop();
             if (context.mounted) {

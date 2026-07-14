@@ -133,7 +133,7 @@ class DonyFeedbackButton extends StatelessWidget {
       outerContext,
       title: 'Un problème sur cet écran ?',
       subtitle:
-          'Décrivez le bug — une capture de l\'écran sera jointe automatiquement.',
+          'Décrivez le bug : une capture de l\'écran sera jointe automatiquement.',
       // wrapper provides the shared form state to both child (TextField) and
       // stickyBottom (DonyButton) — pattern recommandé CLAUDE.md pour état local.
       wrapper: (content) => _FeedbackFormProvider(

@@ -515,7 +515,7 @@ class _PublicPricePreview extends StatelessWidget {
           Text(
             hasPrice
                 ? '${senderPricePerKg.toStringAsFixed(senderPricePerKg % 1 == 0 ? 0 : 1)} €/kg'
-                : '—',
+                : '-',
             style: tt.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: cs.success,

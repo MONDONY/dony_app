@@ -15,6 +15,7 @@ import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// Placeholder paymentIntentId sent to the backend when the sender confirms a
 /// CASH agreement. There is no online PaymentIntent for cash — the backend
@@ -120,6 +121,18 @@ class PaymentRecapBottomSheet {
                               ));
                               if (ctx.mounted) {
                                 Navigator.of(ctx, rootNavigator: true).pop();
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (routeContext) => DonySuccessScreen(
+                                    mascotteType: DonyMascotteType.securise,
+                                    title: 'Offre acceptée et payée !',
+                                    subtitle:
+                                        'Ton argent est bloqué en escrow sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
+                                    ctaLabel: 'Voir le suivi',
+                                    onCta: () => routeContext
+                                        .go('/negotiations/${thread.id}'),
+                                    analyticsContext: 'negotiation_payment',
+                                  ),
+                                ));
                               }
                             },
                           );
@@ -149,6 +162,18 @@ class PaymentRecapBottomSheet {
                         ));
                         if (ctx.mounted) {
                           Navigator.of(ctx, rootNavigator: true).pop();
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (routeContext) => DonySuccessScreen(
+                              mascotteType: DonyMascotteType.donneColis,
+                              title: 'Accord confirmé !',
+                              subtitle:
+                                  'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, dony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
+                              ctaLabel: 'Voir le suivi',
+                              onCta: () => routeContext
+                                  .go('/negotiations/${thread.id}'),
+                              analyticsContext: 'negotiation_cash_agreement',
+                            ),
+                          ));
                         }
                       }
                     },

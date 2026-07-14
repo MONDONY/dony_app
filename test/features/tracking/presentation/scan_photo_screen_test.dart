@@ -23,19 +23,19 @@ void main() {
   testWidgets('DEPART — pas de bouton Passer', (tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: _router('DEPART')));
     await tester.pump();
-    expect(find.text('Passer — continuer sans photo'), findsNothing);
+    expect(find.text('Passer : continuer sans photo'), findsNothing);
   });
 
   testWidgets('ARRIVEE — pas de bouton Passer', (tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: _router('ARRIVEE')));
     await tester.pump();
-    expect(find.text('Passer — continuer sans photo'), findsNothing);
+    expect(find.text('Passer : continuer sans photo'), findsNothing);
   });
 
   testWidgets('TRANSIT — bouton Passer visible', (tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: _router('TRANSIT')));
     await tester.pump();
-    expect(find.text('Passer — continuer sans photo'), findsOneWidget);
+    expect(find.text('Passer : continuer sans photo'), findsOneWidget);
   });
 
   // ─── Label du colis ────────────────────────────────────────────────────────

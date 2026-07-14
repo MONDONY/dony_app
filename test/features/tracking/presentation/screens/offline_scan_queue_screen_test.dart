@@ -63,7 +63,7 @@ void main() {
     testWidgets('shows FILE D\'ATTENTE — 0 when empty', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
-      expect(find.text("FILE D'ATTENTE — 0"), findsOneWidget);
+      expect(find.text("FILE D'ATTENTE (0)"), findsOneWidget);
     });
 
     testWidgets('shows empty state message when queue is empty', (tester) async {
@@ -93,7 +93,7 @@ void main() {
     testWidgets('shows correct count in section header', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
-      expect(find.text("FILE D'ATTENTE — 2"), findsOneWidget);
+      expect(find.text("FILE D'ATTENTE (2)"), findsOneWidget);
     });
 
     testWidgets('shows short bid codes for each item', (tester) async {

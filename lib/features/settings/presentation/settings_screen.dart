@@ -176,7 +176,7 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,
                     label: 'Signaler un problème',
-                    subtitle: 'Incident, bug, litige — avec captures',
+                    subtitle: 'Incident, bug, litige (avec captures)',
                     onTap: () => context.push('/settings/report-incident'),
                   ),
                   DonyListTile(

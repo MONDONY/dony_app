@@ -21,7 +21,7 @@ class AddressLocationStatus extends StatelessWidget {
         : Icons.edit_location_alt_outlined;
     final text = localized
         ? 'Adresse localisée'
-        : 'Adresse non localisée — tu peux la saisir à la main';
+        : 'Adresse non localisée, tu peux la saisir à la main';
 
     return Padding(
       padding: const EdgeInsets.only(top: DonySpacing.sm, left: DonySpacing.xs),

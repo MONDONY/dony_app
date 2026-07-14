@@ -79,8 +79,8 @@ class _ColisMatchView extends StatelessWidget {
                 tooltip: enabled == null
                     ? 'Notifications de match'
                     : on
-                        ? 'Notifications activées — appuyer pour couper'
-                        : 'Notifications coupées — appuyer pour activer',
+                        ? 'Notifications activées, appuyer pour couper'
+                        : 'Notifications coupées, appuyer pour activer',
                 onPressed: enabled == null
                     ? null
                     : () => ctx

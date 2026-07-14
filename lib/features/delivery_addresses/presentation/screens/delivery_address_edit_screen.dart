@@ -297,7 +297,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                 controller: _streetCtrl,
                 service: getIt<AddressAutocompleteService>(),
                 label: 'Rue, quartier',
-                hint: 'Optionnel — Ex : Rue 10, Almadies',
+                hint: 'Optionnel (ex : Rue 10, Almadies)',
                 prefixIcon: Icons.search_rounded,
                 prefixIconColor: cs.secondary,
                 onChanged: (_) => setState(() {}),
@@ -318,7 +318,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   hintText:
-                      "Optionnel — appeler à l'arrivée, portail rouge…",
+                      "Optionnel : appeler à l'arrivée, portail rouge…",
                   prefixIcon: Padding(
                     padding: const EdgeInsets.only(
                       left: DonySpacing.md,

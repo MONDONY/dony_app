@@ -293,7 +293,7 @@ class _BilletDates extends StatelessWidget {
 
   /// Tronque un time string "HH:mm:ss" en "HH:mm".
   String _trimTime(String? t) {
-    if (t == null || t.isEmpty) return '—';
+    if (t == null || t.isEmpty) return '-';
     return t.length >= 5 ? t.substring(0, 5) : t;
   }
 

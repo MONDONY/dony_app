@@ -194,7 +194,7 @@ class _QrTalonButton extends StatelessWidget {
       label: Text(
         compact
             ? 'QR du colis'
-            : 'QR du colis — à présenter ou coller sur le colis',
+            : 'QR du colis (à présenter ou coller sur le colis)',
         textAlign: TextAlign.center,
       ),
       style: OutlinedButton.styleFrom(
@@ -345,11 +345,11 @@ class _TravelerDecisionSummary extends StatelessWidget {
 
     final weight = bid.weightKg != null
         ? '${bid.weightKg!.toStringAsFixed(1)} kg'
-        : '—';
+        : '-';
     final value = bid.declaredValueEur != null
         ? '${bid.declaredValueEur!.toStringAsFixed(0)} €'
-        : '—';
-    final category = bid.contentCategory ?? '—';
+        : '-';
+    final category = bid.contentCategory ?? '-';
 
     return Row(
       children: [

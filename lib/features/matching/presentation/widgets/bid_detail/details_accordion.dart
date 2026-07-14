@@ -44,7 +44,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
 
   String _formatHandoverDate(DateTime? d) {
     if (d == null) {
-      return '—';
+      return '-';
     }
     try {
       return DateFormat('dd/MM/yyyy HH:mm', 'fr').format(d.toLocal());
@@ -55,7 +55,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
 
   String _formatDepartureDate(DateTime? d) {
     if (d == null) {
-      return '—';
+      return '-';
     }
     try {
       return DateFormat('EEE dd MMM yyyy', 'fr').format(d.toLocal());
@@ -136,7 +136,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                         const SizedBox(height: DonySpacing.sm),
                         InfoRow(
                           label: 'Lieu',
-                          value: bid.handoverLocation ?? '—',
+                          value: bid.handoverLocation ?? '-',
                         ),
                         if (bid.handoverWindowStart != null) ...[
                           const SizedBox(height: DonySpacing.sm),

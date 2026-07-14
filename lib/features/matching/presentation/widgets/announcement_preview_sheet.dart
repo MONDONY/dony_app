@@ -69,7 +69,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
 
     final dateStr = formState.departureDate != null
         ? DateFormat('dd MMM yyyy', 'fr_FR').format(formState.departureDate!)
-        : '—';
+        : '-';
 
     // Le voyageur touche le prix net qu'il fixe ; la commission Dony est en sus
     // (payée par l'expéditeur). Pas de décote ×0,88 sur ce qu'il reçoit.
@@ -81,7 +81,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     final prixStr = formState.pricePerKg != null
         ? '${formState.pricePerKg!.toStringAsFixed(0)} €/kg'
             '${netEstimate != null ? ' · estimation ${netEstimate.toStringAsFixed(0)}€ net' : ''}'
-        : '—';
+        : '-';
 
     return Padding(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -92,7 +92,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             iconAsset: 'plane-takeoff',
             label: 'Trajet',
             value:
-                '${formState.departureCity ?? '—'} → ${formState.arrivalCity ?? '—'}',
+                '${formState.departureCity ?? '-'} → ${formState.arrivalCity ?? '-'}',
           ),
           _PreviewRow(
             iconAsset: 'calendar',
@@ -169,8 +169,8 @@ class AnnouncementPreviewSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       formState.priceWarning == PriceWarning.tooLow
-                          ? 'Prix bas — vous pourrez le modifier après publication'
-                          : 'Prix élevé — vous pourrez le modifier après publication',
+                          ? 'Prix bas. Vous pourrez le modifier après publication.'
+                          : 'Prix élevé. Vous pourrez le modifier après publication.',
                       style: tt.bodySmall?.copyWith(color: cs.warning),
                     ),
                   ),

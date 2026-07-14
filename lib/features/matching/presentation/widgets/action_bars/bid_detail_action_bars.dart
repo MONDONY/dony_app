@@ -467,12 +467,12 @@ class EscrowBadge extends StatelessWidget {
       PaymentStatus.released => (
         'circle-check',
         cs.success,
-        'Voyageur payé — $amount €',
+        'Voyageur payé · $amount €',
       ),
       PaymentStatus.refunded => (
         'refresh-cw',
         cs.onSurfaceVariant,
-        'Remboursé — $amount €',
+        'Remboursé · $amount €',
       ),
       PaymentStatus.failed => (
         'circle-alert',
@@ -487,9 +487,9 @@ class EscrowBadge extends StatelessWidget {
       _ when bidStatus == 'ACCEPTED' => (
         'lock',
         cs.success,
-        'Paiement sécurisé — $amount €',
+        'Paiement sécurisé · $amount €',
       ),
-      _ => ('lock', cs.success, 'Paiement sécurisé — $amount €'),
+      _ => ('lock', cs.success, 'Paiement sécurisé · $amount €'),
     };
   }
 }

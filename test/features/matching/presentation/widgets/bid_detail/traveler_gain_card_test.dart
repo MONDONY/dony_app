@@ -30,7 +30,7 @@ Future<void> _pump(WidgetTester tester, BidModel bid) => tester.pumpWidget(
 void main() {
   test('travelerAmountLabel formate le net à 2 décimales', () {
     expect(travelerAmountLabel(_bid(status: 'ACCEPTED', total: 48)), '48.00');
-    expect(travelerAmountLabel(_bid(status: 'ACCEPTED', total: null)), '—');
+    expect(travelerAmountLabel(_bid(status: 'ACCEPTED', total: null)), '-');
   });
 
   testWidgets('Stripe actif → "Vous recevez" + séquestré', (tester) async {

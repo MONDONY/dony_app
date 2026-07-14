@@ -84,7 +84,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       listener: (context, state) {
         if (_submitted && state.status == TripRecurrenceStatus.success) {
           DonySnackbar.show(context,
-              message: 'Récurrence activée — tes trajets seront publiés automatiquement',
+              message: 'Récurrence activée. Tes trajets seront publiés automatiquement.',
               type: DonySnackbarType.success);
           context.pop(true);
         }
@@ -182,7 +182,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
-                          _departureTime == null ? 'Optionnel — choisir une heure' : _timeWire!,
+                          _departureTime == null ? 'Optionnel : choisir une heure' : _timeWire!,
                           style: tt.bodyMedium?.copyWith(
                             color: _departureTime == null ? cs.onSurfaceVariant : cs.onSurface,
                           ),

@@ -212,7 +212,7 @@ class _SenderOpenActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Accepter — Tu paies ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
+          label: 'Accepter : Tu paies ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
           onPressed: actionInProgress
               ? null
               : () => AcceptOfferBottomSheet.show(
@@ -284,7 +284,7 @@ class _TravelerOpenActions extends StatelessWidget {
         // Accept button — visible only when backend says canAccept
         if (thread.canAccept) ...[
           DonyButton(
-            label: 'Accepter — Tu reçois ${thread.currentPriceEur.toStringAsFixed(0)} €',
+            label: 'Accepter : Tu reçois ${thread.currentPriceEur.toStringAsFixed(0)} €',
             onPressed: actionInProgress
                 ? null
                 : () => AcceptOfferBottomSheet.show(

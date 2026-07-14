@@ -17,7 +17,7 @@ double? travelerNetAmount(BidModel bid) {
 /// Montant net formaté à 2 décimales, ou `—`.
 String travelerAmountLabel(BidModel bid) {
   final a = travelerNetAmount(bid);
-  return a != null ? a.toStringAsFixed(2) : '—';
+  return a != null ? a.toStringAsFixed(2) : '-';
 }
 
 /// Carte gain voyageur — montant reçu + état séquestre.

@@ -844,7 +844,7 @@ class _ScanHistorySection extends StatelessWidget {
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Text(
-                      entry.recipientName ?? entry.donNumber ?? '—',
+                      entry.recipientName ?? entry.donNumber ?? '-',
                       style: tt.bodySmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

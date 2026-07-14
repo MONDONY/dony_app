@@ -470,7 +470,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
-                          _arrivalTime == null ? 'Optionnel — choisir une heure' : _arrivalWire!,
+                          _arrivalTime == null ? 'Optionnel : choisir une heure' : _arrivalWire!,
                           style: tt.bodyMedium?.copyWith(
                             color: _arrivalTime == null ? cs.onSurfaceVariant : cs.onSurface,
                           ),

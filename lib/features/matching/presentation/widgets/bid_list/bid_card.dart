@@ -52,7 +52,7 @@ class BidCard extends StatelessWidget {
         ? '${bid.totalAmountEur!.toStringAsFixed(0)} €'
         : bid.pricePerKg != null
         ? '${((bid.weightKg ?? 0) * bid.pricePerKg!).toStringAsFixed(0)} €'
-        : '—';
+        : '-';
     final content = bid.contentCategory ?? bid.description;
     final hasTracking =
         bid.trackingNumber != null && bid.trackingNumber!.isNotEmpty;
@@ -135,7 +135,7 @@ class BidCard extends StatelessWidget {
                         ? '${bid.weightKg!.toStringAsFixed(0)} kg'
                         : bid.pricingMode == BidPricingMode.grid
                         ? 'Forfait'
-                        : '—',
+                        : '-',
                   ),
                   if (content != null && content.isNotEmpty)
                     _MetaPill(iconAsset: 'package', label: content),
@@ -302,8 +302,8 @@ class _PaymentHint extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final iconAsset = isCash ? 'banknote' : 'lock';
     final label = isCash
-        ? '💵 Paiement en espèces — en attente de votre réponse'
-        : '💳 Paiement reçu — en attente de votre réponse';
+        ? '💵 Paiement en espèces : en attente de votre réponse'
+        : '💳 Paiement reçu : en attente de votre réponse';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(

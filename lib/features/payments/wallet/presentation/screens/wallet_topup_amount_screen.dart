@@ -103,15 +103,36 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       contextLabel: 'Recharge de votre solde dony',
       onSuccess: () {
         if (!context.mounted) return;
-        DonySnackbar.show(
-          context,
-          message: 'Recharge réussie — votre solde sera crédité dans un instant.',
-          type: DonySnackbarType.success,
-        );
-        // pop(true) plutôt que go() : préserve la pile de navigation (le bouton
-        // retour du wallet continue de fonctionner) et signale au wallet qu'il
-        // doit recharger son solde (crédité de façon asynchrone via webhook).
-        context.pop(true);
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (routeContext) => DonySuccessScreen(
+            mascotteType: DonyMascotteType.securise,
+            title: 'Recharge réussie !',
+            subtitle: 'Ton solde sera crédité dans un instant.',
+            ctaLabel: 'Voir mon solde',
+            onCta: () {
+              Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
+              // pop(true) plutôt que go() : préserve la pile de navigation (le
+              // bouton retour du wallet continue de fonctionner) et signale au
+              // wallet qu'il doit recharger son solde (crédité de façon
+              // asynchrone via webhook).
+              context.pop(true);
+            },
+            // Le bouton fermer (X) par défaut navigue directement vers /home
+            // sans repasser par pop(true) — le wallet, strictement dépendant
+            // du bool renvoyé par le push (`ok != true` → pas de refresh),
+            // resterait alors avec un solde périmé. On capture le router
+            // AVANT les pops (routeContext est dépilé par le premier pop, la
+            // classe de bug est la même que le fix bid-payé feb86b71), puis
+            // on préserve le contrat bool avant de quitter vers /home.
+            onClose: () {
+              final router = GoRouter.of(routeContext);
+              Navigator.of(routeContext).pop();
+              context.pop(true);
+              router.go('/home');
+            },
+            analyticsContext: 'wallet_topup',
+          ),
+        ));
       },
     );
   }

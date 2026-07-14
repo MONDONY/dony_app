@@ -272,7 +272,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         const SizedBox(height: DonySpacing.md),
         Text(
           "Cela prend généralement moins d'une minute, parfois quelques minutes. "
-          'Vous pouvez fermer cet écran — vous serez notifié du résultat.',
+          'Vous pouvez fermer cet écran, vous serez notifié du résultat.',
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,

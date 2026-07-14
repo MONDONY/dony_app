@@ -570,7 +570,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
             Padding(
               padding: const EdgeInsets.only(top: 4, left: 4),
               child: Text(
-                'Aucun résultat — essayez "Ma position actuelle"',
+                'Aucun résultat, essayez "Ma position actuelle"',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),

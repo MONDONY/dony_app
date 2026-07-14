@@ -1841,7 +1841,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           ? 'Élargis ta zone ou désactive "Près de moi"'
                           : _activeFilterCount > 0
                           ? 'Modifie tes filtres pour voir plus de voyageurs.'
-                          : 'De nouveaux trajets sont publiés chaque jour — reviens bientôt.',
+                          : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
                       mascotte: DonyMascotteType.assis,
                       actionLabel: !_isNearMeActive && _activeFilterCount > 0
                           ? 'Effacer les filtres'

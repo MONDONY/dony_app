@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -317,6 +318,34 @@ void main() {
       verifyNever(() => mockLocalAuth.isBiometricAvailable());
       verifyNever(() => mockLocalAuth.authenticateWithBiometric());
       verify(() => mockBloc.add(PaymentInitiated('bid-1'))).called(1);
+    });
+  });
+
+  group('PaymentScreen escrow confirmed state', () {
+    testWidgets(
+        'affiche DonySuccessScreen quand le paiement escrow est confirmé',
+        (tester) async {
+      whenListen<PaymentState>(
+        mockBloc,
+        Stream.value(const PaymentEscrowPending(50.0)),
+        initialState: const PaymentEscrowPending(50.0),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Envoi réservé !'), findsOneWidget);
     });
   });
 }

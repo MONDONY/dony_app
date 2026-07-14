@@ -89,7 +89,7 @@ class _OnboardingView extends StatelessWidget {
                     type: DonyStatusBannerType.warning,
                     iconAsset: 'clock',
                     message:
-                        'Vérification en cours — Stripe finalise votre compte. Si vous avez déjà terminé l\'inscription, rafraîchissez le statut.',
+                        'Vérification en cours : Stripe finalise votre compte. Si vous avez déjà terminé l\'inscription, rafraîchissez le statut.',
                   ),
                   const SizedBox(height: DonySpacing.md),
                   DonyButton(
@@ -291,7 +291,7 @@ class _ActiveAccountView extends StatelessWidget {
                       iconAsset: 'zap',
                       title: 'Virement automatique',
                       subtitle:
-                          'Aucune action requise — Stripe vire directement sur votre RIB.',
+                          'Aucune action requise, Stripe vire directement sur votre RIB.',
                     ),
                     const Divider(height: 1, indent: 70),
                     _InfoRow(

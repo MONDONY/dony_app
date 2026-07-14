@@ -259,7 +259,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
               DonyTextField(
                 controller: _floorCtrl,
                 label: 'Étage / Appartement',
-                hint: 'Optionnel — Ex : Bât. B, 3ème étage',
+                hint: 'Optionnel (Ex : Bât. B, 3ème étage)',
                 prefixWidget:
                     DonyIcon('door-open', size: 20, color: cs.primary),
                 onChanged: (_) => setState(() {}),
@@ -273,7 +273,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                 maxLines: 3,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Optionnel — digicode, horaires…',
+                  hintText: 'Optionnel : digicode, horaires…',
                   prefixIcon: Padding(
                     padding: const EdgeInsets.only(
                       left: DonySpacing.md,

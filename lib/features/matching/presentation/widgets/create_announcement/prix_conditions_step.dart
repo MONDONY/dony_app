@@ -334,7 +334,7 @@ class PrixConditionsStep extends StatelessWidget {
                               selectedIdx == -1
                                   ? 'Sélectionnez un prix pour voir l\'estimation'
                                   : kg == 0
-                                      ? 'Capacité illimitée — estimation selon la demande'
+                                      ? 'Capacité illimitée : estimation selon la demande'
                                       : 'Vous touchez ${travelerNet.toStringAsFixed(0)}€ · l\'expéditeur paie ${senderTotal.toStringAsFixed(0)}€',
                               style: tt.bodySmall?.copyWith(
                                 color: selectedIdx == -1
@@ -950,7 +950,7 @@ class _LockedPriceNote extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  "Le montant de ce colis a été convenu avec l'expéditeur — "
+                  "Le montant de ce colis a été convenu avec l'expéditeur, "
                   'non modifiable ici.',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),

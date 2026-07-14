@@ -512,7 +512,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (state is BidCreated) {
       context.pop();
       if (context.mounted) {
-        unawaited(context.push('/bids/${state.bid.id}?from=payment'));
+        _showOfflinePaymentSuccess(context, state.bid);
       }
     } else if (state is BidCheckoutReady) {
       context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
@@ -530,6 +530,45 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     } else if (state is BidError) {
       ErrorPresenter.show(context, state.error);
     }
+  }
+
+  /// Affiche l'écran de succès pour une offre créée en CASH/Wave/Orange Money.
+  ///
+  /// À ce stade le bid est PENDING : le voyageur n'a pas encore accepté.
+  /// Le message doit donc parler d'une offre ENVOYÉE, pas d'un paiement
+  /// effectué, et expliquer ce qui se passera pour le moyen de paiement choisi.
+  void _showOfflinePaymentSuccess(BuildContext context, BidModel bid) {
+    const title = 'Offre envoyée !';
+    final subtitle = switch (bid.paymentMethod) {
+      BidPaymentMethod.cash =>
+        'Paiement en espèces : si le voyageur accepte, tu remets le montant '
+            'en main propre à la remise du colis. En cas d\'annulation après la '
+            'remise, dony ne peut pas te rembourser immédiatement mais '
+            's\'assurera que le voyageur te restitue ton argent.',
+      BidPaymentMethod.wave =>
+        'Le voyageur va examiner ta demande. Le paiement se fera via Wave '
+            'une fois l\'offre acceptée.',
+      BidPaymentMethod.orangeMoney =>
+        'Le voyageur va examiner ta demande. Le paiement se fera via Orange '
+            'Money une fois l\'offre acceptée.',
+      BidPaymentMethod.stripe => 'Le voyageur va examiner ta demande.',
+    };
+
+    Navigator.of(context).push(MaterialPageRoute(
+      // Le contexte de CreateBidScreen vient d'être poppé — au moment
+      // du tap CTA son element est désactivé et GoRouter.of(context)
+      // jetterait « Looking up a deactivated widget's ancestor is
+      // unsafe ». On navigue donc via le contexte de la route succès,
+      // toujours monté sous le Navigator racine.
+      builder: (routeContext) => DonySuccessScreen(
+        mascotteType: DonyMascotteType.tenantColis,
+        title: title,
+        subtitle: subtitle,
+        ctaLabel: 'Voir mon envoi',
+        onCta: () => routeContext.go('/bids/${bid.id}?from=payment'),
+        analyticsContext: 'bid_created_offline_payment',
+      ),
+    ));
   }
 
   Future<void> _onPaymentState(
@@ -780,7 +819,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Requis — au moins 1 article',
+                                        'Requis : au moins 1 article',
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.onSurfaceVariant,
                                         ),
@@ -854,7 +893,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               decoration: InputDecoration(
                 hintText: '120',
                 helperText:
-                    'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
+                    'Plafond : 500 € (couvre l\'assurance en cas de sinistre)',
                 helperStyle:
                     Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context)
@@ -1232,7 +1271,23 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
         context.pop();
         if (context.mounted) {
-          unawaited(context.push('/bids/${state.bidId}?from=payment'));
+          Navigator.of(context).push(MaterialPageRoute(
+            // Le contexte de CreateBidScreen vient d'être poppé — au moment
+            // du tap CTA son element est désactivé et GoRouter.of(context)
+            // jetterait « Looking up a deactivated widget's ancestor is
+            // unsafe ». On navigue donc via le contexte de la route succès,
+            // toujours monté sous le Navigator racine.
+            builder: (routeContext) => DonySuccessScreen(
+              mascotteType: DonyMascotteType.securise,
+              title: 'Offre payée !',
+              subtitle:
+                  'Ton paiement est bloqué en escrow sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
+              ctaLabel: 'Voir mon envoi',
+              onCta: () =>
+                  routeContext.go('/bids/${state.bidId}?from=payment'),
+              analyticsContext: 'bid_payment',
+            ),
+          ));
         }
       },
     );
@@ -1428,7 +1483,7 @@ class _WeightSectionState extends State<_WeightSection> {
         ),
         const SizedBox(height: DonySpacing.xxs),
         Text(
-          'Kilo libre — choisissez votre poids',
+          'Kilo libre : choisissez votre poids',
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),

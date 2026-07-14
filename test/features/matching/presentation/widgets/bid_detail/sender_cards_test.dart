@@ -618,12 +618,12 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('travelerAverageRating null → shows "★ —"', (tester) async {
+    testWidgets('travelerAverageRating null → shows "★ -"', (tester) async {
       final bid = _bid(travelerAverageRating: null, travelerTotalTrips: null);
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.text('★ —'), findsOneWidget);
+      expect(find.text('★ -'), findsOneWidget);
     });
   });
 

@@ -191,7 +191,7 @@ void main() {
       expect(find.byType(Slider), findsNothing);
       expect(find.byKey(const Key('weight-increment')), findsOneWidget);
       expect(find.byKey(const Key('weight-decrement')), findsOneWidget);
-      expect(find.text('Kilo libre — choisissez votre poids'), findsOneWidget);
+      expect(find.text('Kilo libre : choisissez votre poids'), findsOneWidget);
     });
 
     testWidgets('poids initial = 5 (pas 1, malgré availableKg = 1)',

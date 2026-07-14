@@ -19,6 +19,8 @@ import 'package:dony/features/matching/presentation/widgets/trip_parcels_section
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
 ///
@@ -110,14 +112,29 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               unawaited(_onDeleteBlocked(context, state.announcementId));
             } else if (state is AnnouncementPublished) {
               _current = state.announcement;
-              DonySnackbar.show(
-                context,
-                message: 'Trajet publié !',
-                type: DonySnackbarType.success,
-              );
               context.read<AnnouncementBloc>().add(
                 AnnouncementDetailRequested(widget.announcementId),
               );
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (routeContext) => DonySuccessScreen(
+                  mascotteType: DonyMascotteType.joyeux,
+                  title: 'Trajet publié !',
+                  subtitle:
+                      'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',
+                  ctaLabel: 'Continuer',
+                  ctaVariant: DonyButtonVariant.accent,
+                  onCta: () => Navigator.of(routeContext).pop(), // revient au détail, déjà rafraîchi
+                  analyticsContext: 'trip_draft_published',
+                  secondaryLabel: 'Partager mon trajet',
+                  onSecondary: () => unawaited(Share.share(
+                    '✈️ Je voyage ${state.announcement.departureCity} → '
+                    '${state.announcement.arrivalCity} le '
+                    '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
+                    'avec de la place dans mes bagages !\n'
+                    'Réserve tes kilos sur dony 📦',
+                  )),
+                ),
+              ));
             } else if (state is AnnouncementKycRequired) {
               DonySnackbar.show(
                 context,

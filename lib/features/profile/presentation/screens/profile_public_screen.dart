@@ -317,7 +317,7 @@ class _ProfileHero extends StatelessWidget {
 
     final ratingStr = profile.averageRating > 0
         ? profile.averageRating.toStringAsFixed(1)
-        : '—';
+        : '-';
     final metaLine =
         '⭐ $ratingStr · ${profile.ratingCount} avis · ${profile.memberSince}';
 
@@ -520,7 +520,7 @@ class _StatsRow extends StatelessWidget {
             child: _StatItem(
               value: profile.averageRating > 0
                   ? profile.averageRating.toStringAsFixed(1)
-                  : '—',
+                  : '-',
               label: 'Note',
               iconAsset: 'star',
               iconColor: DonyColors.warning500,

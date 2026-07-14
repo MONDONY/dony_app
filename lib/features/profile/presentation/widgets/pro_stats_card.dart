@@ -175,7 +175,7 @@ class _LoadedContent extends StatelessWidget {
               label: 'Note',
               value: stats.averageRating > 0
                   ? '${stats.averageRating.toStringAsFixed(1)} ★'
-                  : '—',
+                  : '-',
             ),
             const Spacer(),
             Text(

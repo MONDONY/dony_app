@@ -101,7 +101,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
 
             Text(
-              "FILE D'ATTENTE — $count",
+              "FILE D'ATTENTE ($count)",
               style: tt.labelMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 letterSpacing: 0.8,

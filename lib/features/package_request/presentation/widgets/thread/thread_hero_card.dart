@@ -207,7 +207,7 @@ class ThreadHeroCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '⚠ Dernier round — Accepter ou Refuser uniquement',
+                      '⚠ Dernier round : Accepter ou Refuser uniquement',
                       style:
                           Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontSize: 11,

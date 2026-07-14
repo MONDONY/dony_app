@@ -27,7 +27,7 @@ class PriceHintWidget extends StatelessWidget {
         iconAsset: 'triangle-alert',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
-        message: 'Prix bas — risque de méfiance de l\'expéditeur',
+        message: 'Prix bas : risque de méfiance de l\'expéditeur',
       );
     }
 
@@ -38,7 +38,7 @@ class PriceHintWidget extends StatelessWidget {
         iconAsset: 'triangle-alert',
         iconColor: cs.warning,
         bgColor: cs.warningLight,
-        message: 'Prix élevé — peu de demandes attendues',
+        message: 'Prix élevé : peu de demandes attendues',
       );
     }
 

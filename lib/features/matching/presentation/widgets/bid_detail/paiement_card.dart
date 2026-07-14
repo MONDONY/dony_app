@@ -117,7 +117,7 @@ class PaiementCard extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
-            '$senderLabel séquestré — libéré à la livraison',
+            '$senderLabel séquestré : libéré à la livraison',
             style: tt.bodySmall?.copyWith(color: cs.onSurface),
           ),
         ),
@@ -125,5 +125,5 @@ class PaiementCard extends StatelessWidget {
     );
   }
 
-  static String _fmt(double? v) => v != null ? '${v.toStringAsFixed(2)} €' : '—';
+  static String _fmt(double? v) => v != null ? '${v.toStringAsFixed(2)} €' : '-';
 }

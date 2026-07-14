@@ -239,11 +239,11 @@ void main() {
     },
   );
 
-  testWidgets('voyageur + PENDING sans valeur déclarée → "—" pour la valeur', (
+  testWidgets('voyageur + PENDING sans valeur déclarée → "-" pour la valeur', (
     tester,
   ) async {
     await _pump(tester, _bid(status: 'PENDING'), false);
-    expect(find.text('—'), findsWidgets);
+    expect(find.text('-'), findsWidgets);
   });
 
   testWidgets('voyageur + HANDED_OVER → lien "Scanner les étapes" (Suivi)', (
