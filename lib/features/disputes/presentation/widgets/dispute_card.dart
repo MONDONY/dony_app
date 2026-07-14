@@ -12,7 +12,9 @@ class DisputeCard extends StatelessWidget {
 
   String get _otherPartyLine {
     final name = dispute.otherPartyName;
-    if (name == null) return 'Envoi supprimé';
+    if (name == null) {
+      return 'Envoi supprimé';
+    }
     final prefix = dispute.myRole == 'SENDER' ? 'Voyageur' : 'Expéditeur';
     return '$prefix : $name';
   }
