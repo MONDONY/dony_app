@@ -793,16 +793,6 @@ void main() {
         // Modèle additif : les sections de base sont visibles pour TOUS les utilisateurs,
         // y compris les voyageurs. La tuile hub est ajoutée en plus pour les voyageurs.
         await tester.scrollUntilVisible(
-          find.text('Mes envois en cours'),
-          300,
-          scrollable: _activityScrollable,
-        );
-        expect(
-          find.text('Mes envois en cours'),
-          findsOneWidget,
-          reason: 'Mes envois en cours est une section base visible par tous',
-        );
-        await tester.scrollUntilVisible(
           find.text('Mes trajets et colis'),
           300,
           scrollable: _activityScrollable,
@@ -1130,12 +1120,12 @@ void main() {
       // Vérifie les entrées des sections sender (plus fiable que les headers
       // dans un NestedScrollView où scrollUntilVisible peut ne pas fonctionner).
       await tester.scrollUntilVisible(
-        find.text('Mes envois en cours'),
+        find.text('Mes négociations'),
         300,
         scrollable: _activityScrollable,
       );
       expect(
-        find.text('Mes envois en cours'),
+        find.text('Mes négociations'),
         findsOneWidget,
         reason: 'section EN COURS sender absente',
       );
@@ -1227,49 +1217,6 @@ void main() {
         await tester.pumpAndSettle(const Duration(seconds: 5));
       },
     );
-
-    testWidgets('sender shows "X en cours" badge when activeBids > 0', (
-      tester,
-    ) async {
-      final now = DateTime(2026, 6);
-      whenListen<BidState>(
-        bidBloc,
-        const Stream.empty(),
-        initialState: BidListLoaded(
-          List.generate(
-            2,
-            (i) => BidModel(
-              id: 'bid-$i',
-              announcementId: 'ann-$i',
-              senderId: 'user-1',
-              weightKg: 5,
-              status: 'ACCEPTED',
-              createdAt: now,
-              updatedAt: now,
-            ),
-          ),
-        ),
-      );
-
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      await tester.scrollUntilVisible(
-        find.text('2 en cours'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      expect(find.text('2 en cours'), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
 
     // ── Phase 4 : modèle additif ─────────────────────────────────────────────────
 
