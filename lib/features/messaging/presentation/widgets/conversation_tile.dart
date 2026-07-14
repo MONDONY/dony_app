@@ -1,7 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -19,10 +22,17 @@ class ConversationTile extends StatelessWidget {
     return Material(
       color: unread ? const Color(0xFFF4F7FF) : cs.surface,
       child: InkWell(
-        onTap: () => context.push(
-          '/conversations/${conversation.id}',
-          extra: conversation,
-        ),
+        onTap: () async {
+          // Le chat a son propre ChatBloc (registerFactory) : la liste ne sait
+          // pas qu'un message a été envoyé/lu tant qu'on ne recharge pas au
+          // retour (règle CLAUDE.md « Rafraîchissement après navigation »).
+          final bloc = context.read<ConversationListBloc>();
+          await context.push(
+            '/conversations/${conversation.id}',
+            extra: conversation,
+          );
+          bloc.add(const ConversationsLoadRequested());
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: DonySpacing.lg,

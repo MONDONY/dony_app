@@ -230,6 +230,24 @@ void main() {
       expect(find.text('Chat'), findsOneWidget);
     });
 
+    testWidgets(
+        'après retour du chat (pop), recharge la liste pour refléter le '
+        'dernier message envoyé/lu', (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+      clearInteractions(bloc);
+
+      await tester.tap(find.text('Aïcha Bah'));
+      await tester.pumpAndSettle();
+      expect(find.text('Chat'), findsOneWidget);
+
+      Navigator.of(tester.element(find.text('Chat'))).pop();
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(const ConversationsLoadRequested()))
+          .called(greaterThanOrEqualTo(1));
+    });
+
     testWidgets('_formatTime shows maintenant for sub-1-minute message',
         (tester) async {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_convNow]));
