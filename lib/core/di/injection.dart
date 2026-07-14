@@ -89,6 +89,7 @@ import 'package:dony/features/cancellation/data/datasources/cancellation_remote_
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:dony/features/disputes/data/datasources/dispute_remote_datasource.dart';
 import 'package:dony/features/disputes/data/repositories/dispute_repository.dart';
+import 'package:dony/features/disputes/bloc/dispute_list_bloc.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
 import 'package:dony/features/incident_report/data/datasources/incident_report_remote_datasource.dart';
@@ -813,5 +814,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<DisputeRepository>(
     () => DisputeRepository(getIt<DisputeRemoteDatasource>()),
+  );
+  getIt.registerFactory<DisputeListBloc>(
+    () => DisputeListBloc(getIt<DisputeRepository>(), getIt<AnalyticsService>()),
   );
 }
