@@ -1,3 +1,4 @@
+import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -86,18 +87,28 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         () => _gateway.confirmPayPal(config.clientSecret),
       );
 
-  /// Message unique du parcours carte : toute défaillance technique
-  /// (clé éphémère, init, présentation) hors annulation utilisateur.
+  /// Message du parcours carte quand la clé éphémère est irrécupérable :
+  /// le toString() brut d'une AppException réseau n'est pas montrable.
   static const cardUnavailableMessage =
       'Le paiement par carte est indisponible pour le moment. '
       'Réessaie dans un instant.';
 
+  /// Dernier filet de [_confirm] pour une erreur non mappée par le gateway.
+  static const genericFailureMessage =
+      'Le paiement a échoué. Réessaie dans un instant.';
+
+  /// Clé éphémère mémoïsée pour la durée de vie de la sheet : un tap
+  /// Carte annulé puis retenté ne refait pas l'aller-retour réseau
+  /// (la clé Stripe reste valide bien plus longtemps que la sheet).
+  Future<EphemeralKeyModel>? _ephemeralKeyFuture;
+
   /// Récupère la clé éphémère du customer puis délègue toute la saisie/
-  /// sélection de carte à la PaymentSheet native Stripe — elle confirme
+  /// sélection de carte à la PaymentSheet native Stripe. Elle confirme
   /// elle-même le PaymentIntent une fois l'utilisateur validé.
   ///
-  /// Tout échec non-annulation est remappé sur [cardUnavailableMessage] :
-  /// le toString() brut d'une AppException réseau n'est pas montrable.
+  /// Les erreurs Stripe (carte refusée…) remontent déjà localisées via le
+  /// gateway, comme pour wallet/PayPal ; seul l'échec de la clé éphémère
+  /// est remappé sur [cardUnavailableMessage].
   Future<void> _onCardPressed(
     PaymentSheetCardPressed event,
     Emitter<PaymentSheetState> emit,
@@ -106,21 +117,20 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
         emit,
         PaymentMethodKind.card,
         () async {
+          final EphemeralKeyModel ephemeralKey;
           try {
-            final ephemeralKey = await _repository.createEphemeralKey(
-              kStripeEphemeralKeyApiVersion,
-            );
-            await _gateway.initPaymentSheet(
-              clientSecret: config.clientSecret,
-              customerId: ephemeralKey.customerId,
-              customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
-            );
-            await _gateway.presentPaymentSheet();
-          } on PaymentCancelledException {
-            rethrow; // annulation silencieuse, gérée par _confirm
+            ephemeralKey =
+                await (_ephemeralKeyFuture ??= _repository.createEphemeralKey());
           } catch (_) {
+            _ephemeralKeyFuture = null; // ne pas mémoïser un échec
             throw const PaymentConfirmationException(cardUnavailableMessage);
           }
+          await _gateway.initPaymentSheet(
+            clientSecret: config.clientSecret,
+            customerId: ephemeralKey.customerId,
+            customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
+          );
+          await _gateway.presentPaymentSheet();
         },
       );
 
@@ -146,8 +156,10 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     } on PaymentConfirmationException catch (e) {
       emit(PaymentSheetFailure(message: e.message, ready: ready));
       emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
-    } catch (e) {
-      emit(PaymentSheetFailure(message: e.toString(), ready: ready));
+    } catch (_) {
+      // Dernier filet : une erreur non mappée par le gateway n'a pas de
+      // message montrable (toString technique), on reste générique.
+      emit(PaymentSheetFailure(message: genericFailureMessage, ready: ready));
       emit(ready);
     }
   }

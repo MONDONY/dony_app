@@ -70,7 +70,7 @@ void main() {
     when(() => paymentGateway.presentPaymentSheet()).thenAnswer((_) async {});
 
     paymentRepository = _MockPaymentRepository();
-    when(() => paymentRepository.createEphemeralKey(any())).thenAnswer(
+    when(() => paymentRepository.createEphemeralKey()).thenAnswer(
       (_) async => const EphemeralKeyModel(
         ephemeralKeySecret: 'ek_test_secret',
         customerId: 'cus_test',

@@ -3,7 +3,6 @@ import 'package:dony/features/payments/data/datasources/payment_remote_datasourc
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
-import 'package:dony/features/payments/data/models/saved_card_model.dart';
 
 class PaymentRepository {
   final PaymentRemoteDatasource _datasource;
@@ -50,28 +49,12 @@ class PaymentRepository {
     }
   }
 
-  Future<List<SavedCardModel>> listSavedPaymentMethods() async {
+  /// Clé éphémère Stripe pour la PaymentSheet native (carte). La version
+  /// d'API attendue par le SDK natif est appliquée par le datasource
+  /// (voir kStripeEphemeralKeyApiVersion dans payment_gateway.dart).
+  Future<EphemeralKeyModel> createEphemeralKey() async {
     try {
-      return await _datasource.listSavedPaymentMethods();
-    } catch (e) {
-      throw unwrapDioError(e);
-    }
-  }
-
-  Future<void> updateSavePaymentMethod(String paymentIntentId, bool save) async {
-    try {
-      await _datasource.updateSavePaymentMethod(paymentIntentId, save);
-    } catch (e) {
-      throw unwrapDioError(e);
-    }
-  }
-
-  /// Clé éphémère Stripe pour la PaymentSheet native (carte).
-  /// [stripeVersion] doit correspondre à la version d'API attendue par le
-  /// SDK natif embarqué (voir [kStripeEphemeralKeyApiVersion]).
-  Future<EphemeralKeyModel> createEphemeralKey(String stripeVersion) async {
-    try {
-      return await _datasource.createEphemeralKey(stripeVersion);
+      return await _datasource.createEphemeralKey();
     } catch (e) {
       throw unwrapDioError(e);
     }

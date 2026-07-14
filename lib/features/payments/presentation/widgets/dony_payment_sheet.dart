@@ -142,113 +142,96 @@ class _MainView extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
         ],
         if (ready.paypalAvailable) ...[
-          _PayPalButton(
+          _SheetMethodButton(
+            key: const Key('paymentSheetPayPalButton'),
+            background: _payPalGold,
+            foreground: Colors.black87,
             enabled: !processing,
             onPressed: () => bloc.add(const PaymentSheetPayPalPressed()),
+            child: const Text('PayPal', style: _methodLabelStyle),
           ),
           const SizedBox(height: DonySpacing.md),
         ],
-        _CardButton(
+        // Ouvre la PaymentSheet native Stripe : spinner quand c'est SA chaîne
+        // qui tourne (clé éphémère → initPaymentSheet → presentPaymentSheet).
+        _SheetMethodButton(
+          key: const Key('paymentSheetCardButton'),
+          background: cs.primary,
+          foreground: cs.onPrimary,
           enabled: !processing,
           isLoading: state is PaymentSheetProcessing &&
               state.method == PaymentMethodKind.card,
+          spinnerKey: const Key('paymentSheetCardButtonSpinner'),
           onPressed: () => bloc.add(const PaymentSheetCardPressed()),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              DonyIcon('credit-card', size: 18, color: cs.onPrimary),
+              const SizedBox(width: DonySpacing.xs),
+              const Text('Carte', style: _methodLabelStyle),
+            ],
+          ),
         ),
       ],
     );
   }
 }
 
-class _PayPalButton extends StatelessWidget {
-  const _PayPalButton({required this.enabled, required this.onPressed});
+// Charte or officielle PayPal.
+const _payPalGold = Color(0xFFFFC439);
 
+const _methodLabelStyle = TextStyle(fontWeight: FontWeight.w800, fontSize: 16);
+
+/// Gabarit commun des boutons de moyen de paiement (PayPal, Carte) : même
+/// hauteur, rayon et pleine largeur que le bouton Apple Pay/Google Pay.
+/// Désactivé dès qu'un moyen est en traitement ; [isLoading] remplace le
+/// label par un spinner quand c'est la chaîne de CE bouton qui tourne.
+class _SheetMethodButton extends StatelessWidget {
+  const _SheetMethodButton({
+    super.key,
+    required this.background,
+    required this.foreground,
+    required this.enabled,
+    this.isLoading = false,
+    this.spinnerKey,
+    required this.onPressed,
+    required this.child,
+  });
+
+  final Color background;
+  final Color foreground;
   final bool enabled;
+  final bool isLoading;
+  final Key? spinnerKey;
   final VoidCallback onPressed;
-
-  // Charte or officielle PayPal.
-  static const _payPalGold = Color(0xFFFFC439);
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      key: const Key('paymentSheetPayPalButton'),
       height: 48,
       width: double.infinity,
       child: ElevatedButton(
         onPressed: enabled ? onPressed : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _payPalGold,
-          foregroundColor: Colors.black87,
-          disabledBackgroundColor: _payPalGold.withValues(alpha: 0.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.lg),
-          ),
-        ),
-        child: const Text(
-          'PayPal',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-        ),
-      ),
-    );
-  }
-}
-
-/// Ouvre la PaymentSheet native Stripe — même gabarit (hauteur, rayon,
-/// pleine largeur) que le bouton Apple Pay/Google Pay, fond dony-primary.
-///
-/// Comme le bouton PayPal, il est désactivé dès qu'un moyen est en cours de
-/// traitement ; en plus, il affiche un spinner quand c'est SA chaîne qui
-/// tourne (clé éphémère → initPaymentSheet → presentPaymentSheet).
-class _CardButton extends StatelessWidget {
-  const _CardButton({
-    required this.enabled,
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  final bool enabled;
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return SizedBox(
-      key: const Key('paymentSheetCardButton'),
-      height: 48,
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: enabled && !isLoading ? onPressed : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: cs.primary,
-          foregroundColor: cs.onPrimary,
-          disabledBackgroundColor: cs.primary.withValues(alpha: 0.5),
+          backgroundColor: background,
+          foregroundColor: foreground,
+          disabledBackgroundColor: background.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
         ),
         child: isLoading
             ? SizedBox(
-                key: const Key('paymentSheetCardButtonSpinner'),
+                key: spinnerKey,
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: cs.onPrimary,
+                  color: foreground,
                 ),
               )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  DonyIcon('credit-card', size: 18, color: cs.onPrimary),
-                  const SizedBox(width: DonySpacing.xs),
-                  const Text(
-                    'Carte',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                  ),
-                ],
-              ),
+            : child,
       ),
     );
   }

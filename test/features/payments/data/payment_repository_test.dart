@@ -2,8 +2,8 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/models/payment_status.dart';
-import 'package:dony/features/payments/data/models/saved_card_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -134,46 +134,24 @@ void main() {
     });
   });
 
-  // ── listSavedPaymentMethods ──────────────────────────────────────────────────
+  // ── createEphemeralKey ───────────────────────────────────────────────────────
 
-  group('listSavedPaymentMethods', () {
-    const card = SavedCardModel(
-      id: 'pm_1',
-      brand: 'visa',
-      last4: '4242',
-      expMonth: 8,
-      expYear: 2027,
+  group('createEphemeralKey', () {
+    const key = EphemeralKeyModel(
+      ephemeralKeySecret: 'ek_test_secret',
+      customerId: 'cus_123',
     );
 
-    test('returns cards from datasource', () async {
-      when(() => mockDs.listSavedPaymentMethods())
-          .thenAnswer((_) async => const [card]);
-      final result = await repo.listSavedPaymentMethods();
-      expect(result, hasLength(1));
+    test('returns key from datasource', () async {
+      when(() => mockDs.createEphemeralKey()).thenAnswer((_) async => key);
+      final result = await repo.createEphemeralKey();
+      expect(result, key);
     });
 
     test('wraps Exception in NetworkException', () async {
-      when(() => mockDs.listSavedPaymentMethods())
+      when(() => mockDs.createEphemeralKey())
           .thenThrow(Exception('network error'));
-      expect(() => repo.listSavedPaymentMethods(),
-          throwsA(isA<NetworkException>()));
-    });
-  });
-
-  // ── updateSavePaymentMethod ──────────────────────────────────────────────────
-
-  group('updateSavePaymentMethod', () {
-    test('delegates to datasource', () async {
-      when(() => mockDs.updateSavePaymentMethod('pi_1', false))
-          .thenAnswer((_) async {});
-      await repo.updateSavePaymentMethod('pi_1', false);
-      verify(() => mockDs.updateSavePaymentMethod('pi_1', false)).called(1);
-    });
-
-    test('wraps Exception in NetworkException', () async {
-      when(() => mockDs.updateSavePaymentMethod(any(), any()))
-          .thenThrow(Exception('network error'));
-      expect(() => repo.updateSavePaymentMethod('pi_1', false),
+      expect(() => repo.createEphemeralKey(),
           throwsA(isA<NetworkException>()));
     });
   });
