@@ -6,6 +6,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockNegotiationBloc
@@ -135,6 +136,38 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.byType(DonyAvatar), findsOneWidget);
+    });
+
+    testWidgets(
+        'bouton retour sans pile de navigation (arrivée via go depuis un '
+        'écran de succès) → repli vers /negotiations', (tester) async {
+      when(() => bloc.state).thenReturn(const NegotiationInitial());
+      final router = GoRouter(
+        initialLocation: '/negotiations/t-1',
+        routes: [
+          GoRoute(
+            path: '/negotiations',
+            builder: (_, __) =>
+                const Scaffold(body: Text('LISTE_NEGOCIATIONS')),
+          ),
+          GoRoute(
+            path: '/negotiations/:id',
+            builder: (_, __) => const NegotiationThreadScreen(
+              threadId: 't-1',
+              viewerUserId: 'sender-1',
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byTooltip('Retour'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('LISTE_NEGOCIATIONS'), findsOneWidget);
     });
   });
 }
