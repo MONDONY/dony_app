@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
+import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
-import 'package:dony/features/payments/data/models/saved_card_model.dart';
-import 'package:dio/dio.dart';
+import 'package:dony/features/payments/data/payment_gateway.dart'
+    show kStripeEphemeralKeyApiVersion;
 
 class PaymentRemoteDatasource {
   final ApiClient _client;
@@ -32,21 +34,12 @@ class PaymentRemoteDatasource {
     return PaymentModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<List<SavedCardModel>> listSavedPaymentMethods() async {
-    final response = await _client.dio.get('/payments/me/payment-methods');
-    return (response.data as List<dynamic>)
-        .map((e) => SavedCardModel.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<void> updateSavePaymentMethod(
-    String paymentIntentId,
-    bool save,
-  ) async {
-    await _client.dio.patch(
-      '/payments/intents/$paymentIntentId/save-payment-method',
-      data: {'save': save},
+  Future<EphemeralKeyModel> createEphemeralKey() async {
+    final response = await _client.dio.post(
+      '/payments/me/ephemeral-key',
+      data: {'stripeVersion': kStripeEphemeralKeyApiVersion},
     );
+    return EphemeralKeyModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<PaymentModel?> getPaymentForBid(String bidId) async {

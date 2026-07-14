@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -26,8 +27,9 @@ import '../../../helpers/mock_analytics_backend.dart';
 /// No PayPal button here — `WalletTopupAmountScreen` builds its
 /// `PaymentSheetConfig` with `paymentMethodTypes: const []` (the backend
 /// never declares PayPal on a wallet-recharge PaymentIntent) — so the
-/// success path is driven via the "Nouvelle carte" + "Payer" flow instead
-/// of the PayPal button used by other DonySuccessScreen migration tests.
+/// success path is driven via the "Carte" button (native Stripe
+/// PaymentSheet) instead of the PayPal button used by other DonySuccessScreen
+/// migration tests.
 ///
 /// `WalletBloc` is deliberately constructed INSIDE each `testWidgets` body
 /// (not in `setUp`) — created in `setUp`, its internal event-transformer
@@ -57,15 +59,23 @@ void main() {
 
     paymentGateway = _MockPaymentGateway();
     // PlatformPayButton (Apple/Google Pay) plante hors iOS/Android réel —
-    // on le désactive et paie via une nouvelle carte.
+    // on le désactive et paie via le bouton Carte (PaymentSheet native Stripe).
     when(() => paymentGateway.isPlatformPaySupported())
         .thenAnswer((_) async => false);
-    when(() => paymentGateway.confirmWithNewCard(any()))
-        .thenAnswer((_) async {});
+    when(() => paymentGateway.initPaymentSheet(
+          clientSecret: any(named: 'clientSecret'),
+          customerId: any(named: 'customerId'),
+          customerEphemeralKeySecret: any(named: 'customerEphemeralKeySecret'),
+        )).thenAnswer((_) async {});
+    when(() => paymentGateway.presentPaymentSheet()).thenAnswer((_) async {});
 
     paymentRepository = _MockPaymentRepository();
-    when(() => paymentRepository.listSavedPaymentMethods())
-        .thenAnswer((_) async => []);
+    when(() => paymentRepository.createEphemeralKey()).thenAnswer(
+      (_) async => const EphemeralKeyModel(
+        ephemeralKeySecret: 'ek_test_secret',
+        customerId: 'cus_test',
+      ),
+    );
 
     if (getIt.isRegistered<PaymentGateway>()) {
       getIt.unregister<PaymentGateway>();
@@ -144,11 +154,12 @@ void main() {
   }
 
   /// Amène le harness jusqu'à la vue succès de la DonyPaymentSheet : ouvre
-  /// l'écran, saisit 20 €, lance la recharge, choisit « Nouvelle carte » et
-  /// paie. `pumpAndSettle` n'est pas utilisable une fois la sheet ouverte
-  /// (bouton « Payer » en `isLoading` monté sous la sheet) — on enchaîne donc
-  /// des pumps bornés pour vider les gaps async, comme dans les autres
-  /// migrations DonySuccessScreen de cette branche.
+  /// l'écran, saisit 20 €, lance la recharge, paie via le bouton « Carte »
+  /// (PaymentSheet native Stripe mockée par le gateway). `pumpAndSettle`
+  /// n'est pas utilisable une fois la sheet ouverte (bouton « Carte » en
+  /// cours de traitement monté sous la sheet) — on enchaîne donc des pumps
+  /// bornés pour vider les gaps async, comme dans les autres migrations
+  /// DonySuccessScreen de cette branche.
   Future<void> _driveToPaymentSuccess(WidgetTester tester) async {
     final walletBloc = WalletBloc(
       walletRepository,
@@ -170,11 +181,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 60));
     }
 
-    expect(find.byKey(const Key('paymentSheetNewCardTile')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('paymentSheetNewCardTile')));
-    await tester.pump();
-
-    await tester.tap(find.byKey(const Key('paymentSheetPayButton')));
+    expect(find.byKey(const Key('paymentSheetCardButton')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('paymentSheetCardButton')));
     await tester.pump(); // PaymentSheetProcessing
     await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
     await tester

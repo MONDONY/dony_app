@@ -37,6 +37,10 @@ class AcceptOfferBottomSheet {
     /// If true, this is the FINAL payment step (status was AWAITING_PAYMENT).
     /// If false, this is the initial price acceptance (status was OPEN → AWAITING_TRIP).
     bool isCheckout = false,
+    /// Whether the thread already has a traveler trip linked. Drives the
+    /// success-screen copy: a traveler accepting with a linked trip skips the
+    /// AWAITING_TRIP step (backend goes straight to AWAITING_PAYMENT).
+    bool hasLinkedTrip = false,
   }) async {
     // Garde anti-double-tap : le bouton n'était pas désactivé pendant le flux
     // asynchrone (auth + Stripe), donc un 2e tap relançait l'action (double
@@ -135,18 +139,32 @@ class AcceptOfferBottomSheet {
                           processing.value = false;
                         } else {
                           bloc.add(NegotiationAcceptRequested(threadId: threadId));
+                          // Copy selon le rôle et l'étape suivante réelle : le
+                          // moyen de paiement n'est choisi qu'au moment de
+                          // finaliser les détails, donc aucune mention
+                          // d'espèces ou d'escrow ici.
+                          final String subtitle;
+                          if (!isTraveler) {
+                            subtitle =
+                                'Vous êtes d\'accord sur le prix. Le voyageur va confirmer son trajet, puis tu finaliseras les détails de l\'envoi et le règlement depuis le fil.';
+                          } else if (hasLinkedTrip) {
+                            subtitle =
+                                'Vous êtes d\'accord sur le prix. L\'expéditeur va finaliser les détails de l\'envoi et le règlement, tu seras notifié à chaque étape.';
+                          } else {
+                            subtitle =
+                                'Vous êtes d\'accord sur le prix. Prochaine étape : lie ou crée un trajet pour cette offre afin que l\'expéditeur puisse finaliser le règlement.';
+                          }
                           if (ctx.mounted) {
                             Navigator.of(ctx, rootNavigator: true).pop();
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (routeContext) => DonySuccessScreen(
                                 mascotteType: DonyMascotteType.donneColis,
                                 title: 'Accord confirmé !',
-                                subtitle:
-                                    'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, dony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
+                                subtitle: subtitle,
                                 ctaLabel: 'Voir le suivi',
                                 onCta: () =>
                                     routeContext.go('/negotiations/$threadId'),
-                                analyticsContext: 'negotiation_cash_agreement',
+                                analyticsContext: 'negotiation_agreement',
                               ),
                             ));
                           }

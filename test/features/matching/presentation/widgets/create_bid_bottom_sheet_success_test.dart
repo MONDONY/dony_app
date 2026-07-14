@@ -208,9 +208,6 @@ void main() {
     when(() => paymentGateway.confirmPayPal(any())).thenAnswer((_) async {});
 
     paymentRepository = _MockPaymentRepository();
-    when(() => paymentRepository.listSavedPaymentMethods())
-        .thenAnswer((_) async => []);
-
     void register<T extends Object>(T Function() factory) {
       if (getIt.isRegistered<T>()) {
         getIt.unregister<T>();

@@ -105,7 +105,11 @@ class _ThreadView extends StatelessWidget {
               final cs = Theme.of(ctx).colorScheme;
               return IconButton(
                 tooltip: 'Retour',
-                onPressed: () => context.pop(),
+                // Arrivée possible via go() (écran de succès post-acceptation) :
+                // la pile est alors vide, pop() lèverait "nothing to pop".
+                onPressed: () => context.canPop()
+                    ? context.pop()
+                    : context.go('/negotiations'),
                 icon: Container(
                   width: 36,
                   height: 36,

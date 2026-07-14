@@ -6,7 +6,7 @@ sealed class PaymentSheetEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Ouverture de la sheet : résout wallet / PayPal / cartes enregistrées.
+/// Ouverture de la sheet : résout wallet / PayPal.
 class PaymentSheetStarted extends PaymentSheetEvent {
   const PaymentSheetStarted();
 }
@@ -21,28 +21,7 @@ class PaymentSheetPayPalPressed extends PaymentSheetEvent {
   const PaymentSheetPayPalPressed();
 }
 
-/// Choix de carte : enregistrée (radio) ou nouvelle carte.
-class PaymentSheetCardChoiceChanged extends PaymentSheetEvent {
-  final CardChoice choice;
-  const PaymentSheetCardChoiceChanged(this.choice);
-  @override
-  List<Object?> get props => [choice];
-}
-
-/// Tap sur « Payer {montant} » (stickyBottom) — confirme le choix de carte.
-class PaymentSheetPayPressed extends PaymentSheetEvent {
-  const PaymentSheetPayPressed();
-}
-
-/// Retour de la vue « Nouvelle carte » vers la vue principale (efface le choix).
-class PaymentSheetBackToMainPressed extends PaymentSheetEvent {
-  const PaymentSheetBackToMainPressed();
-}
-
-/// Toggle « Enregistrer cette carte » (PATCH backend, non bloquant).
-class PaymentSheetSaveCardToggled extends PaymentSheetEvent {
-  final bool save;
-  const PaymentSheetSaveCardToggled(this.save);
-  @override
-  List<Object?> get props => [save];
+/// Tap sur le bouton « Carte » — ouvre la PaymentSheet native Stripe.
+class PaymentSheetCardPressed extends PaymentSheetEvent {
+  const PaymentSheetCardPressed();
 }

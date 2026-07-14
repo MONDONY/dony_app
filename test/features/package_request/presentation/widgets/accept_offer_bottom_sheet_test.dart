@@ -44,6 +44,7 @@ Widget _buildApp({
   required _MockNegotiationBloc bloc,
   bool isTraveler = false,
   bool isCheckout = false,
+  bool hasLinkedTrip = false,
   double? grossPriceEur,
 }) {
   return MaterialApp(
@@ -62,6 +63,7 @@ Widget _buildApp({
               grossPriceEur: grossPriceEur,
               isTraveler: isTraveler,
               isCheckout: isCheckout,
+              hasLinkedTrip: hasLinkedTrip,
             ),
             child: const Text('Ouvrir'),
           ),
@@ -218,31 +220,62 @@ void main() {
       }
     });
 
-    testWidgets(
-        'affiche DonySuccessScreen "Accord confirmé !" et dispatch '
-        'NegotiationAcceptRequested quand isCheckout: false',
-        (tester) async {
-      await tester.pumpWidget(_buildApp(bloc: bloc, isCheckout: false));
+    Future<void> accept(WidgetTester tester) async {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
-
-      // Tap le bouton pour accepter l'offre
       await tester.tap(find.textContaining('Confirmer ('));
       // Attend l'authentification biométrique
       for (var i = 0; i < 8; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
+    }
 
-      // Vérifie que le DonySuccessScreen est affiché avec les implications
-      // du paiement en espèces.
+    testWidgets(
+        'expéditeur accepte → DonySuccessScreen "Accord confirmé !", copy '
+        'orienté prochaine étape (trajet puis règlement), sans mention espèces, '
+        'et dispatch NegotiationAcceptRequested', (tester) async {
+      await tester.pumpWidget(
+          _buildApp(bloc: bloc, isCheckout: false, isTraveler: false));
+      await accept(tester);
+
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Accord confirmé !'), findsOneWidget);
+      expect(find.textContaining('Le voyageur va confirmer son trajet'),
+          findsOneWidget);
+      expect(find.textContaining('espèces'), findsNothing);
 
-      // Vérifie que NegotiationAcceptRequested a été envoyé
       verify(() => bloc.add(any(
               that: isA<NegotiationAcceptRequested>()
                   .having((e) => e.threadId, 'threadId', 't-1'))))
           .called(1);
+    });
+
+    testWidgets(
+        'voyageur accepte sans trajet lié → copy orienté "lie un trajet", '
+        'sans mention espèces', (tester) async {
+      await tester.pumpWidget(_buildApp(
+          bloc: bloc, isCheckout: false, isTraveler: true, hasLinkedTrip: false));
+      await accept(tester);
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Accord confirmé !'), findsOneWidget);
+      expect(find.textContaining('lie ou crée un trajet'), findsOneWidget);
+      expect(find.textContaining('espèces'), findsNothing);
+      expect(find.textContaining('tu remets le montant'), findsNothing);
+    });
+
+    testWidgets(
+        'voyageur accepte avec trajet déjà lié → copy "l\'expéditeur va '
+        'finaliser", sans mention espèces', (tester) async {
+      await tester.pumpWidget(_buildApp(
+          bloc: bloc, isCheckout: false, isTraveler: true, hasLinkedTrip: true));
+      await accept(tester);
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Accord confirmé !'), findsOneWidget);
+      expect(find.textContaining('L\'expéditeur va finaliser'), findsOneWidget);
+      expect(find.textContaining('espèces'), findsNothing);
+      expect(find.textContaining('tu remets le montant'), findsNothing);
     });
   });
 
@@ -281,9 +314,6 @@ void main() {
           .thenAnswer((_) async {});
 
       paymentRepository = _MockPaymentRepository();
-      when(() => paymentRepository.listSavedPaymentMethods())
-          .thenAnswer((_) async => []);
-
       negotiationRepository = _MockNegotiationRepository();
       when(() => negotiationRepository.initiatePayment('t-1')).thenAnswer(
         (_) async => (

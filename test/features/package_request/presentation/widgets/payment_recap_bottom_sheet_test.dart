@@ -132,9 +132,6 @@ void main() {
           .thenAnswer((_) async {});
 
       paymentRepository = _MockPaymentRepository();
-      when(() => paymentRepository.listSavedPaymentMethods())
-          .thenAnswer((_) async => []);
-
       negotiationRepository = _MockNegotiationRepository();
       when(() => negotiationRepository.initiatePayment('thread-recap-1'))
           .thenAnswer(
