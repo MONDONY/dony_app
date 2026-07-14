@@ -248,6 +248,87 @@ void main() {
       expect(find.text('Aucun résultat'), findsOneWidget);
     });
 
+    testWidgets(
+        'swipe Supprimer + confirmation dispatche ConversationDeleteRequested '
+        'même sous un Navigator imbriqué (shell branch)', (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      // Reproduit la prod : l'écran vit dans le Navigator imbriqué d'un
+      // StatefulShellBranch alors que showDialog pousse sur le root navigator.
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(
+              builder: (_) => BlocProvider<ConversationListBloc>.value(
+                value: bloc,
+                child: const ConversationListScreen(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.drag(find.text('Aïcha Bah'), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Supprimer'));
+      await tester.pumpAndSettle();
+      expect(find.text('Supprimer la conversation ?'), findsOneWidget);
+
+      await tester.tap(find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Supprimer'),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      verify(() => bloc.add(any(
+            that: predicate<ConversationListEvent>(
+              (e) =>
+                  e is ConversationDeleteRequested &&
+                  e.conversationId == 'conv-1',
+              'is ConversationDeleteRequested(conv-1)',
+            ),
+          ))).called(1);
+    });
+
+    testWidgets(
+        'Annuler dans le dialog ne dispatche pas ConversationDeleteRequested',
+        (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(
+              builder: (_) => BlocProvider<ConversationListBloc>.value(
+                value: bloc,
+                child: const ConversationListScreen(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.drag(find.text('Aïcha Bah'), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Supprimer'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      verifyNever(() => bloc.add(any(
+            that: predicate<ConversationListEvent>(
+              (e) => e is ConversationDeleteRequested,
+              'is ConversationDeleteRequested',
+            ),
+          )));
+    });
+
     testWidgets('pull-to-refresh dispatches ConversationsLoadRequested',
         (tester) async {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));

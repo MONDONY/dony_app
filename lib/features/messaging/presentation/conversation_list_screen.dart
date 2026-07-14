@@ -486,30 +486,39 @@ class _SlidableTile extends StatelessWidget {
             label: 'Archiver',
           ),
           SlidableAction(
-            onPressed: (ctx) => showDialog<bool>(
-              context: ctx,
-              builder: (_) => AlertDialog(
-                title: const Text('Supprimer la conversation ?'),
-                content: const Text(
-                    'Cette action est irréversible.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(false),
-                    child: const Text('Annuler'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    child: const Text('Supprimer',
-                        style: TextStyle(color: Colors.red)),
-                  ),
-                ],
-              ),
-            ).then((confirmed) {
-              if (confirmed == true && ctx.mounted) {
-                ctx.read<ConversationListBloc>()
-                    .add(ConversationDeleteRequested(conversation.id));
-              }
-            }),
+            onPressed: (ctx) {
+              // Capturer le bloc avant le dialog : le volet Slidable se
+              // referme au tap (autoClose) et démonte ctx pendant que le
+              // dialog est ouvert — un ctx.read dans le .then échouerait.
+              final bloc = ctx.read<ConversationListBloc>();
+              showDialog<bool>(
+                context: ctx,
+                // Le dialog vit sur le root navigator alors que la tuile est
+                // dans le Navigator imbriqué du StatefulShellBranch : les pop
+                // doivent utiliser le contexte du dialog, sinon ils dépilent
+                // la branche et la Future ne se résout jamais.
+                builder: (dialogCtx) => AlertDialog(
+                  title: const Text('Supprimer la conversation ?'),
+                  content: const Text(
+                      'Cette action est irréversible.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogCtx).pop(false),
+                      child: const Text('Annuler'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogCtx).pop(true),
+                      child: const Text('Supprimer',
+                          style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              ).then((confirmed) {
+                if (confirmed == true) {
+                  bloc.add(ConversationDeleteRequested(conversation.id));
+                }
+              });
+            },
             backgroundColor: cs.error,
             foregroundColor: cs.onError,
             icon: Icons.delete_outline_rounded,

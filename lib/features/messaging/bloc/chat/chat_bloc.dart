@@ -39,7 +39,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
 
-    if (event.currentUserUid.isNotEmpty && !event.isReadOnly) {
+    // Marquer lu aussi en read-only : sinon le compteur unread_* d'une
+    // conversation dont l'interlocuteur a supprimé son compte ou sa copie
+    // ne redescend jamais et le badge Messages reste bloqué.
+    if (event.currentUserUid.isNotEmpty) {
       unawaited(
         _firestoreRepo.markConversationRead(
           event.firestoreConversationId,
