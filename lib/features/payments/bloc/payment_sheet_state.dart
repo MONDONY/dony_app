@@ -1,24 +1,6 @@
 part of 'payment_sheet_bloc.dart';
 
-enum PaymentMethodKind { wallet, paypal, savedCard, newCard }
-
-/// Choix courant dans la section cartes de la vue principale.
-sealed class CardChoice extends Equatable {
-  const CardChoice();
-  @override
-  List<Object?> get props => [];
-}
-
-class SavedCardChoice extends CardChoice {
-  final SavedCardModel card;
-  const SavedCardChoice(this.card);
-  @override
-  List<Object?> get props => [card];
-}
-
-class NewCardChoice extends CardChoice {
-  const NewCardChoice();
-}
+enum PaymentMethodKind { wallet, paypal, card }
 
 sealed class PaymentSheetState extends Equatable {
   const PaymentSheetState();
@@ -34,33 +16,14 @@ class PaymentSheetLoading extends PaymentSheetState {
 class PaymentSheetResolved extends PaymentSheetState {
   final bool walletAvailable;
   final bool paypalAvailable;
-  final List<SavedCardModel> savedCards;
-  final CardChoice? cardChoice;
-  final bool saveCard;
 
   const PaymentSheetResolved({
     required this.walletAvailable,
     required this.paypalAvailable,
-    required this.savedCards,
-    this.cardChoice,
-    required this.saveCard,
   });
 
-  PaymentSheetResolved copyWith({
-    CardChoice? cardChoice,
-    bool? saveCard,
-  }) =>
-      PaymentSheetResolved(
-        walletAvailable: walletAvailable,
-        paypalAvailable: paypalAvailable,
-        savedCards: savedCards,
-        cardChoice: cardChoice ?? this.cardChoice,
-        saveCard: saveCard ?? this.saveCard,
-      );
-
   @override
-  List<Object?> get props =>
-      [walletAvailable, paypalAvailable, savedCards, cardChoice, saveCard];
+  List<Object?> get props => [walletAvailable, paypalAvailable];
 }
 
 /// Confirmation en cours — [ready] garde la vue affichée derrière le loader.

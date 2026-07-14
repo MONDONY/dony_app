@@ -1,11 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
-import 'package:dony/features/payments/data/models/saved_card_model.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockPaymentSheetBloc extends MockBloc<PaymentSheetEvent, PaymentSheetState>
@@ -15,14 +12,6 @@ class MockPaymentSheetBloc extends MockBloc<PaymentSheetEvent, PaymentSheetState
   @override
   final PaymentSheetConfig config;
 }
-
-const _visa = SavedCardModel(
-  id: 'pm_1',
-  brand: 'visa',
-  last4: '4242',
-  expMonth: 8,
-  expYear: 2027,
-);
 
 const _config = PaymentSheetConfig(
   clientSecret: 'pi_123_secret_abc',
@@ -59,20 +48,19 @@ void main() {
   }
 
   group('Vue principale — boutons conditionnels', () {
-    testWidgets('sans wallet ni PayPal ni cartes : seule « Nouvelle carte »',
+    testWidgets('sans wallet ni PayPal : seul le bouton Carte',
         (tester) async {
       when(() => bloc.state).thenReturn(const PaymentSheetResolved(
         walletAvailable: false,
         paypalAvailable: false,
-        savedCards: [],
-        saveCard: true,
       ));
 
       await openSheet(tester);
 
       expect(find.byKey(const Key('paymentSheetWalletButton')), findsNothing);
       expect(find.byKey(const Key('paymentSheetPayPalButton')), findsNothing);
-      expect(find.byKey(const Key('paymentSheetNewCardTile')), findsOneWidget);
+      expect(find.byKey(const Key('paymentSheetCardButton')), findsOneWidget);
+      expect(find.text('Carte'), findsOneWidget);
     });
 
     testWidgets('avec PayPal disponible : bouton PayPal affiché',
@@ -80,95 +68,76 @@ void main() {
       when(() => bloc.state).thenReturn(const PaymentSheetResolved(
         walletAvailable: false,
         paypalAvailable: true,
-        savedCards: [],
-        saveCard: true,
       ));
 
       await openSheet(tester);
 
       expect(find.byKey(const Key('paymentSheetPayPalButton')), findsOneWidget);
       expect(find.text('PayPal'), findsOneWidget);
+      expect(find.byKey(const Key('paymentSheetCardButton')), findsOneWidget);
     });
 
-    testWidgets('avec cartes enregistrées : chaque carte listée',
+    testWidgets('plus de section « Cartes enregistrées » ni de saisie inline',
         (tester) async {
       when(() => bloc.state).thenReturn(const PaymentSheetResolved(
         walletAvailable: false,
         paypalAvailable: false,
-        savedCards: [_visa],
-        saveCard: true,
-      ));
-
-      await openSheet(tester);
-
-      expect(find.text('Visa •••• 4242'), findsOneWidget);
-      expect(
-          find.byKey(const Key('paymentSheetSavedCard_pm_1')), findsOneWidget);
-    });
-
-    testWidgets('sans cartes enregistrées : section masquée', (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: false,
-        savedCards: [],
-        saveCard: true,
       ));
 
       await openSheet(tester);
 
       expect(find.text('Cartes enregistrées'), findsNothing);
+      expect(find.text('Nouvelle carte'), findsNothing);
+      expect(find.byKey(const Key('paymentSheetCardFormField')), findsNothing);
     });
   });
 
-  group('Sélection de carte', () {
-    testWidgets('tap sur une carte enregistrée dispatch le bon choix',
+  group('Bouton Carte', () {
+    testWidgets('tap dispatch PaymentSheetCardPressed', (tester) async {
+      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
+        walletAvailable: false,
+        paypalAvailable: false,
+      ));
+
+      await openSheet(tester);
+      await tester.tap(find.byKey(const Key('paymentSheetCardButton')));
+
+      verify(() => bloc.add(const PaymentSheetCardPressed())).called(1);
+    });
+
+    testWidgets('désactivé pendant le traitement d\'un autre moyen',
+        (tester) async {
+      const ready = PaymentSheetResolved(
+        walletAvailable: false,
+        paypalAvailable: true,
+      );
+      when(() => bloc.state).thenReturn(const PaymentSheetProcessing(
+        ready: ready,
+        method: PaymentMethodKind.paypal,
+      ));
+
+      await openSheet(tester);
+
+      final button = tester.widget<ElevatedButton>(find.descendant(
+        of: find.byKey(const Key('paymentSheetCardButton')),
+        matching: find.byType(ElevatedButton),
+      ));
+      expect(button.onPressed, isNull);
+    });
+  });
+
+  group('Sticky bottom — plus de bouton « Payer »', () {
+    testWidgets('aucun bouton Payer générique, uniquement la note sécurité',
         (tester) async {
       when(() => bloc.state).thenReturn(const PaymentSheetResolved(
         walletAvailable: false,
         paypalAvailable: false,
-        savedCards: [_visa],
-        saveCard: true,
-      ));
-
-      await openSheet(tester);
-      await tester.tap(find.byKey(const Key('paymentSheetSavedCard_pm_1')));
-
-      verify(() => bloc.add(const PaymentSheetCardChoiceChanged(
-          SavedCardChoice(_visa)))).called(1);
-    });
-
-    testWidgets('carte sélectionnée active le bouton payer', (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: false,
-        savedCards: [_visa],
-        cardChoice: SavedCardChoice(_visa),
-        saveCard: true,
       ));
 
       await openSheet(tester);
 
-      final button = tester
-          .widget<DonyButton>(find.byKey(const Key('paymentSheetPayButton')));
-      expect(button.onPressed, isNotNull);
-      final amountLabel =
-          NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(56.0);
-      expect(find.text('Payer $amountLabel'), findsOneWidget);
-    });
-
-    testWidgets('aucun choix : bouton payer désactivé', (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: false,
-        savedCards: [_visa],
-        saveCard: true,
-      ));
-
-      await openSheet(tester);
-
-      final button = tester
-          .widget<DonyButton>(find.byKey(const Key('paymentSheetPayButton')));
-      expect(button.onPressed, isNull);
+      expect(find.byKey(const Key('paymentSheetPayButton')), findsNothing);
+      expect(find.text('Paiement sécurisé par Stripe'), findsOneWidget);
     });
   });
 
@@ -176,7 +145,7 @@ void main() {
     testWidgets('affiche l\'encart escrow et le bouton de sortie',
         (tester) async {
       when(() => bloc.state)
-          .thenReturn(const PaymentSheetSuccess(method: PaymentMethodKind.wallet));
+          .thenReturn(const PaymentSheetSuccess(method: PaymentMethodKind.card));
 
       await openSheet(tester);
 
@@ -191,8 +160,6 @@ void main() {
       const ready = PaymentSheetResolved(
         walletAvailable: false,
         paypalAvailable: false,
-        savedCards: [],
-        saveCard: true,
       );
       whenListen<PaymentSheetState>(
         bloc,

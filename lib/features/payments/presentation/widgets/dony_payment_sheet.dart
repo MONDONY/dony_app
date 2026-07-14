@@ -7,12 +7,14 @@ import 'package:dony/features/payments/data/repositories/payment_repository.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:intl/intl.dart';
 
-/// Bottom sheet de paiement custom dony (carte + cartes enregistrées +
-/// Apple Pay/Google Pay + PayPal), Stripe restant le seul processeur.
+/// Bottom sheet de paiement custom dony (Apple Pay/Google Pay + PayPal +
+/// bouton « Carte »), Stripe restant le seul processeur.
 ///
-/// PCI : la saisie carte passe exclusivement par [CardFormField] natif Stripe.
+/// PCI : la saisie carte est intégralement déléguée à la PaymentSheet native
+/// Stripe (bouton « Carte » → [PaymentGateway.initPaymentSheet] +
+/// [PaymentGateway.presentPaymentSheet]) — aucun champ de saisie carte custom
+/// dans dony.
 abstract final class DonyPaymentSheet {
   static Future<void> show(
     BuildContext context, {
@@ -41,10 +43,7 @@ abstract final class DonyPaymentSheet {
   }
 }
 
-String _formatAmount(double amountEur) =>
-    NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(amountEur);
-
-enum _ViewKind { loading, main, newCard, success }
+enum _ViewKind { loading, main, success }
 
 _ViewKind _resolveView(PaymentSheetState state) {
   if (state is PaymentSheetSuccess) return _ViewKind.success;
@@ -54,8 +53,7 @@ _ViewKind _resolveView(PaymentSheetState state) {
     PaymentSheetFailure(:final ready) => ready,
     _ => null,
   };
-  if (ready == null) return _ViewKind.loading;
-  return ready.cardChoice is NewCardChoice ? _ViewKind.newCard : _ViewKind.main;
+  return ready == null ? _ViewKind.loading : _ViewKind.main;
 }
 
 class _Body extends StatelessWidget {
@@ -79,8 +77,6 @@ class _Body extends StatelessWidget {
               return const _LoadingView();
             case _ViewKind.main:
               return _MainView(contextLabel: contextLabel);
-            case _ViewKind.newCard:
-              return const _NewCardView();
             case _ViewKind.success:
               return _SuccessView(state: state as PaymentSheetSuccess);
           }
@@ -150,78 +146,13 @@ class _MainView extends StatelessWidget {
             enabled: !processing,
             onPressed: () => bloc.add(const PaymentSheetPayPalPressed()),
           ),
-          const SizedBox(height: DonySpacing.lg),
+          const SizedBox(height: DonySpacing.md),
         ],
-        if (ready.savedCards.isNotEmpty) ...[
-          Text('Cartes enregistrées', style: tt.titleSmall),
-          const SizedBox(height: DonySpacing.sm),
-          for (final card in ready.savedCards)
-            _CardTile(
-              key: Key('paymentSheetSavedCard_${card.id}'),
-              label: card.displayLabel,
-              selected: ready.cardChoice == SavedCardChoice(card),
-              onTap: () => bloc.add(
-                PaymentSheetCardChoiceChanged(SavedCardChoice(card)),
-              ),
-            ),
-          const SizedBox(height: DonySpacing.sm),
-        ],
-        _CardTile(
-          key: const Key('paymentSheetNewCardTile'),
-          label: 'Nouvelle carte',
-          icon: 'plus',
-          selected: false,
-          onTap: () => bloc.add(
-            const PaymentSheetCardChoiceChanged(NewCardChoice()),
-          ),
+        _CardButton(
+          enabled: !processing,
+          onPressed: () => bloc.add(const PaymentSheetCardPressed()),
         ),
       ],
-    );
-  }
-}
-
-class _CardTile extends StatelessWidget {
-  const _CardTile({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.icon,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final String? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return DonyPressable(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: DonySpacing.sm),
-        padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base, vertical: DonySpacing.md),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-            width: selected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-        ),
-        child: Row(
-          children: [
-            DonyIcon(icon ?? 'credit-card', size: 20, color: cs.onSurfaceVariant),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(child: Text(label, style: tt.bodyMedium)),
-            if (selected)
-              DonyIcon('circle-check', size: 20, color: cs.primary),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -260,85 +191,44 @@ class _PayPalButton extends StatelessWidget {
   }
 }
 
-class _NewCardView extends StatefulWidget {
-  const _NewCardView();
+/// Ouvre la PaymentSheet native Stripe — même gabarit (hauteur, rayon,
+/// pleine largeur) que le bouton Apple Pay/Google Pay, fond dony-primary.
+class _CardButton extends StatelessWidget {
+  const _CardButton({required this.enabled, required this.onPressed});
 
-  @override
-  State<_NewCardView> createState() => _NewCardViewState();
-}
+  final bool enabled;
+  final VoidCallback onPressed;
 
-class _NewCardViewState extends State<_NewCardView> {
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final bloc = context.read<PaymentSheetBloc>();
-    final state = context.watch<PaymentSheetBloc>().state;
-    final ready = switch (state) {
-      final PaymentSheetResolved s => s,
-      PaymentSheetProcessing(:final ready) => ready,
-      PaymentSheetFailure(:final ready) => ready,
-      _ => null,
-    };
-    if (ready == null) return const _LoadingView();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            IconButton(
-              key: const Key('paymentSheetBackToMain'),
-              onPressed: () => bloc.add(
-                const PaymentSheetBackToMainPressed(),
-              ),
-              icon: const DonyIcon('x', size: 18),
-              padding: EdgeInsets.zero,
-            ),
-            const SizedBox(width: DonySpacing.xs),
-            Text('Nouvelle carte', style: tt.headlineMedium),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.md),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-          decoration: BoxDecoration(
-            border: Border.all(color: cs.outline),
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-          ),
-          child: CardFormField(
-            key: const Key('paymentSheetCardFormField'),
-            style: CardFormStyle(
-              backgroundColor: Colors.transparent,
-              textColor: cs.onSurface,
-              placeholderColor: cs.onSurfaceVariant,
-            ),
+    return SizedBox(
+      key: const Key('paymentSheetCardButton'),
+      height: 48,
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: enabled ? onPressed : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
+          disabledBackgroundColor: cs.primary.withValues(alpha: 0.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
         ),
-        const SizedBox(height: DonySpacing.md),
-        Row(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
+            DonyIcon('credit-card', size: 18, color: cs.onPrimary),
             const SizedBox(width: DonySpacing.xs),
-            Expanded(
-              child: Text(
-                'Champ sécurisé Stripe, dony ne stocke jamais votre numéro de carte',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
+            const Text(
+              'Carte',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
           ],
         ),
-        const SizedBox(height: DonySpacing.md),
-        DonyCheckbox(
-          key: const Key('paymentSheetSaveCardToggle'),
-          label: 'Enregistrer cette carte',
-          subtitle: 'Pour vos prochains paiements',
-          value: ready.saveCard,
-          onChanged: (v) =>
-              bloc.add(PaymentSheetSaveCardToggled(v ?? true)),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -435,45 +325,19 @@ class _StickyBottom extends StatelessWidget {
           );
         }
 
-        final bloc = context.read<PaymentSheetBloc>();
-        final ready = switch (state) {
-          final PaymentSheetResolved s => s,
-          PaymentSheetProcessing(:final ready) => ready,
-          PaymentSheetFailure(:final ready) => ready,
-          _ => null,
-        };
-        if (ready == null) {
-          return const DonyButton(label: 'Payer', onPressed: null);
-        }
-
-        final amountLabel = _formatAmount(bloc.config.amountEur);
-        final processing = state is PaymentSheetProcessing;
-        final canPay = ready.cardChoice != null;
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
+        // Chaque moyen de paiement (Apple/Google Pay, PayPal, Carte) est
+        // auto-suffisant : plus de bouton « Payer » générique à activer via
+        // un choix de carte — la note de sécurité reste seule en sticky.
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DonyButton(
-              key: const Key('paymentSheetPayButton'),
-              label: 'Payer $amountLabel',
-              isLoading: processing,
-              onPressed: canPay && !processing
-                  ? () => bloc.add(const PaymentSheetPayPressed())
-                  : null,
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                DonyIcon('shield', size: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant),
-                const SizedBox(width: DonySpacing.xxs),
-                Text(
-                  'Paiement sécurisé par Stripe',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
-                ),
-              ],
+            DonyIcon('shield', size: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            const SizedBox(width: DonySpacing.xxs),
+            Text(
+              'Paiement sécurisé par Stripe',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         );
