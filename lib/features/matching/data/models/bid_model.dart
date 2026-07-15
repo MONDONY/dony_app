@@ -105,6 +105,12 @@ class BidModel {
   final String? cancellationNoShowStatus;
   final DateTime? contestationDeadline;
 
+  // Signalement d'absence à la livraison (no-show réception, distinct de
+  // cancellationNoShowStatus qui couvre l'absence à la remise/avant départ).
+  final String? deliveryNoShowStatus;
+  final DateTime? deliveryNoShowContestationDeadline;
+  final bool? deliveryNoShowReportedByTraveler;
+
   // Annulation après remise (D5/D7) : code de retour détenu par l'expéditeur, saisi
   // par le voyageur pour confirmer la restitution physique du colis.
   // `returnCode` n'est renseigné par le backend que pour l'expéditeur (sender-gated).
@@ -195,6 +201,9 @@ class BidModel {
     this.commissionStatus,
     this.cancellationNoShowStatus,
     this.contestationDeadline,
+    this.deliveryNoShowStatus,
+    this.deliveryNoShowContestationDeadline,
+    this.deliveryNoShowReportedByTraveler,
     this.returnCode,
     this.returnDeadline,
     this.returnedAt,
@@ -265,6 +274,14 @@ class BidModel {
       status == 'HANDED_OVER' &&
       (resolvedDepartureAt == null ||
           DateTime.now().isBefore(resolvedDepartureAt!));
+
+  /// Signalement d'absence à la livraison possible : bid IN_TRANSIT, trajet
+  /// déjà parti, aucun signalement en cours ou contesté sur ce bid.
+  bool get canReportDeliveryNoShow =>
+      status == 'IN_TRANSIT' &&
+      deliveryNoShowStatus == null &&
+      resolvedDepartureAt != null &&
+      DateTime.now().isAfter(resolvedDepartureAt!);
 
   /// Nom à afficher pour l'expéditeur (même logique que TravelerProfile.resolvedName).
   /// Si le nom est défini → retourne le nom (le téléphone est géré séparément dans l'UI).

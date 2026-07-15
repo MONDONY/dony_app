@@ -310,4 +310,53 @@ void main() {
       }
     });
   });
+
+  group('BidModel.canReportDeliveryNoShow', () {
+    test('true si IN_TRANSIT, trajet parti, aucun signalement', () {
+      final bid = BidModel(
+        id: 'b1', announcementId: 'a1', senderId: 's1', weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1), updatedAt: DateTime(2026, 1, 1),
+        departureAt: DateTime.now().subtract(const Duration(days: 1)),
+        deliveryNoShowStatus: null,
+      );
+      expect(bid.canReportDeliveryNoShow, isTrue);
+    });
+
+    test('false si un signalement existe déjà', () {
+      final bid = BidModel(
+        id: 'b1', announcementId: 'a1', senderId: 's1', weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1), updatedAt: DateTime(2026, 1, 1),
+        departureAt: DateTime.now().subtract(const Duration(days: 1)),
+        deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+      );
+      expect(bid.canReportDeliveryNoShow, isFalse);
+    });
+
+    test('false si le trajet n\'est pas encore parti', () {
+      final bid = BidModel(
+        id: 'b1', announcementId: 'a1', senderId: 's1', weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1), updatedAt: DateTime(2026, 1, 1),
+        departureAt: DateTime.now().add(const Duration(days: 1)),
+      );
+      expect(bid.canReportDeliveryNoShow, isFalse);
+    });
+
+    test('fromJson mappe deliveryNoShowStatus et deliveryNoShowContestationDeadline', () {
+      final json = {
+        'id': 'b1', 'announcementId': 'a1', 'senderId': 's1', 'weightKg': 5.0,
+        'status': 'IN_TRANSIT',
+        'createdAt': '2026-01-01T00:00:00', 'updatedAt': '2026-01-01T00:00:00',
+        'deliveryNoShowStatus': 'CONTESTED',
+        'deliveryNoShowContestationDeadline': '2026-07-16T10:00:00Z',
+        'deliveryNoShowReportedByTraveler': true,
+      };
+      final bid = BidModel.fromJson(json);
+      expect(bid.deliveryNoShowStatus, 'CONTESTED');
+      expect(bid.deliveryNoShowContestationDeadline, isNotNull);
+      expect(bid.deliveryNoShowReportedByTraveler, isTrue);
+    });
+  });
 }
