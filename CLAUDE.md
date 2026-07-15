@@ -327,6 +327,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `message_blocked` | ChatScreen._sendText() — message refusé par ChatMessageValidator (propriété `reason`) |
 | `wallet_topup_started` | WalletTopupAmountScreen.initState |
 | `wallet_topup_completed` | WalletBloc (après topup réussi) |
+| `disputes_opened` | DisputeListBloc._onLoad — premier chargement de « Mes litiges » (propriété `count`) |
+| `dispute_detail_opened` | DisputeDetailScreen.initState — ouverture du détail d'un litige (propriété `status`) |
 | `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
 | `cancellation_initiated` | CancellationBloc._onTripCancellationRequested() |
 | `rematch_accepted` | *(à implémenter)* |
