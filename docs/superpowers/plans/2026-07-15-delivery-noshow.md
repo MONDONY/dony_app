@@ -1590,7 +1590,7 @@ Toutes les tasks sur la branche existante `feature/delivery-noshow` (contient d�
 
 **Interfaces:**
 - Consumes: rien.
-- Produces: `BidModel.deliveryNoShowStatus` (String?), `BidModel.deliveryNoShowContestationDeadline` (DateTime?), `BidModel.canReportDeliveryNoShow` (bool getter) — utilisés par B4/B5.
+- Produces: `BidModel.deliveryNoShowStatus` (String?), `BidModel.deliveryNoShowContestationDeadline` (DateTime?), `BidModel.deliveryNoShowReportedByTraveler` (bool?), `BidModel.canReportDeliveryNoShow` (bool getter) — utilisés par B4/B5.
 
 - [ ] **Step 1: Test rouge**
 
@@ -1634,10 +1634,12 @@ test('fromJson mappe deliveryNoShowStatus et deliveryNoShowContestationDeadline'
     'createdAt': '2026-01-01T00:00:00', 'updatedAt': '2026-01-01T00:00:00',
     'deliveryNoShowStatus': 'CONTESTED',
     'deliveryNoShowContestationDeadline': '2026-07-16T10:00:00Z',
+    'deliveryNoShowReportedByTraveler': true,
   };
   final bid = BidModel.fromJson(json);
   expect(bid.deliveryNoShowStatus, 'CONTESTED');
   expect(bid.deliveryNoShowContestationDeadline, isNotNull);
+  expect(bid.deliveryNoShowReportedByTraveler, isTrue);
 });
 ```
 (Compléter les champs `required`/non-nullable manquants du constructeur `BidModel` selon ce qu'exige le compilateur — vérifier `bid_model.dart` pour la liste exacte des paramètres obligatoires avant d'exécuter.)
@@ -1656,6 +1658,7 @@ Après le champ `cancellationNoShowStatus` (ligne 105) :
 ```dart
   final String? deliveryNoShowStatus;
   final DateTime? deliveryNoShowContestationDeadline;
+  final bool? deliveryNoShowReportedByTraveler;
 ```
 
 Dans le constructeur, après `this.cancellationNoShowStatus,` (ligne 196) :
@@ -1684,7 +1687,7 @@ Après le getter `canCancelAfterHandover` (ligne ~267), ajouter :
 flutter pub run build_runner build --delete-conflicting-outputs > /tmp/dony-b1-codegen.log 2>&1; echo "EXIT_CODE=$?" >> /tmp/dony-b1-codegen.log
 tail -15 /tmp/dony-b1-codegen.log
 ```
-Attendu : EXIT_CODE=0, `bid_model.g.dart` régénéré avec les 2 nouveaux champs.
+Attendu : EXIT_CODE=0, `bid_model.g.dart` régénéré avec les 3 nouveaux champs.
 
 - [ ] **Step 5: Vérifier vert**
 
