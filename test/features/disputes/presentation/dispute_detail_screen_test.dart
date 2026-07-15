@@ -129,4 +129,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('SupportStub'), findsOneWidget);
   });
+
+  testWidgets(
+    '/disputes/detail ouvert sans extra → redirige vers /disputes sans crash',
+    (tester) async {
+      final router = GoRouter(
+        initialLocation: '/disputes/detail',
+        routes: [
+          GoRoute(
+            path: '/disputes',
+            builder: (_, __) => const Scaffold(body: Text('ListeStub')),
+          ),
+          GoRoute(
+            path: '/disputes/detail',
+            redirect: (context, state) =>
+                state.extra is DisputeModel ? null : '/disputes',
+            builder: (context, state) =>
+                DisputeDetailScreen(dispute: state.extra! as DisputeModel),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('ListeStub'), findsOneWidget);
+    },
+  );
 }

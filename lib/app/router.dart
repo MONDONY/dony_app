@@ -651,6 +651,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/disputes/detail',
+      redirect: (context, state) =>
+          state.extra is DisputeModel ? null : '/disputes',
       builder: (context, state) =>
           DisputeDetailScreen(dispute: state.extra! as DisputeModel),
     ),
