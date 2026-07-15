@@ -147,6 +147,12 @@ void main() {
   late _MockRatingBloc ratingBloc;
   late _MockPaymentRepository paymentRepository;
 
+  setUpAll(() {
+    // Requis par mocktail pour verify(() => bidBloc.add(any(that: isA<...>())))
+    // (finding I1) — un event concret de refetch suffit comme fallback.
+    registerFallbackValue(BidDetailRequested('fallback'));
+  });
+
   setUp(() {
     bidBloc = _MockBidBloc();
     acceptanceBloc = _MockBidAcceptanceBloc();
@@ -637,6 +643,89 @@ void main() {
         );
 
         expect(find.text('Confirmer ma présence'), findsOneWidget);
+      },
+    );
+  });
+
+  // ── Finding I1 (revue finale) : écoute DeliveryNoShow* sur le CancellationBloc ─
+  // DeliveryNoShowReported/DeliveryNoShowContested (ajoutés par feature/delivery-
+  // noshow) n'étaient pas écoutés par le BlocListener<CancellationBloc> de cet
+  // écran : ni snackbar ni refetch de _bid, laissant DeliveryNoShowCtaCell
+  // cliquable jusqu'au prochain poll (10s). Aucun test ne couvrait déjà ce
+  // BlocListener pour les branches voisines (NoShowReported, NoShowConfirmed,
+  // etc.) dans ce fichier — ce groupe couvre donc à la fois la régression et
+  // établit le pattern pour les branches sœurs.
+  group('BlocListener<CancellationBloc> — DeliveryNoShow*', () {
+    testWidgets(
+      'DeliveryNoShowReported → snackbar info + refetch BidDetailRequested',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        whenListen(
+          cancellationBloc,
+          Stream<CancellationState>.fromIterable([DeliveryNoShowReported()]),
+          initialState: CancellationInitial(),
+        );
+
+        await _pump(
+          tester,
+          bid: _makeBid(status: 'ACCEPTED'),
+          authBloc: authBloc,
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(
+            "Absence signalée. L'autre partie a 24 h pour contester.",
+          ),
+          findsOneWidget,
+        );
+        // 1 appel dans initState + 1 refetch déclenché par le listener.
+        verify(
+          () => bidBloc.add(any(that: isA<BidDetailRequested>())),
+        ).called(2);
+      },
+    );
+
+    testWidgets(
+      'DeliveryNoShowContested → snackbar succès + refetch BidDetailRequested',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        whenListen(
+          cancellationBloc,
+          Stream<CancellationState>.fromIterable([DeliveryNoShowContested()]),
+          initialState: CancellationInitial(),
+        );
+
+        await _pump(
+          tester,
+          bid: _makeBid(status: 'ACCEPTED'),
+          authBloc: authBloc,
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining(
+            'Contestation envoyée. Notre équipe va examiner votre demande.',
+          ),
+          findsOneWidget,
+        );
+        verify(
+          () => bidBloc.add(any(that: isA<BidDetailRequested>())),
+        ).called(2);
       },
     );
   });
