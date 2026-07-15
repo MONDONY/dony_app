@@ -132,10 +132,14 @@ class _PhotoHero extends StatelessWidget {
         children: [
           // Photo ou placeholder emoji
           if (item.photoUrl != null)
-            Image.network(
-              item.photoUrl!,
+            DonyImage(
+              url: item.photoUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _PhotoPlaceholder(
+              placeholder: (_) => _PhotoPlaceholder(
+                emoji: emojiForLabel(item.primaryCategory),
+                cs: cs,
+              ),
+              errorWidget: (_) => _PhotoPlaceholder(
                 emoji: emojiForLabel(item.primaryCategory),
                 cs: cs,
               ),

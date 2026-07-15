@@ -21,6 +21,7 @@ export 'package:dony/core/design/widgets/dony_badge.dart';
 export 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 export 'package:dony/core/design/widgets/dony_button.dart';
 export 'package:dony/core/design/widgets/dony_card.dart';
+export 'package:dony/core/design/widgets/dony_image.dart';
 export 'package:dony/core/design/widgets/dony_pressable.dart';
 // Form controls
 export 'package:dony/core/design/widgets/required_label.dart';

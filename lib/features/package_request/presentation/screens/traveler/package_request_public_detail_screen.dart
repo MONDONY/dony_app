@@ -672,6 +672,7 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
               onPageChanged: (i) => setState(() => _index = i),
               itemBuilder: (_, i) => CachedNetworkImage(
                 imageUrl: widget.urls[i],
+                cacheKey: DonyImage.stableCacheKey(widget.urls[i]),
                 fit: BoxFit.cover,
                 placeholder: (_, _) =>
                     ColoredBox(color: cs.surfaceContainerHighest),
