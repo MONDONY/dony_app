@@ -84,6 +84,49 @@ void main() {
     });
   });
 
+  group('reportDeliveryNoShow', () {
+    test('calls POST /cancellations/bids/{bidId}/report-delivery-noshow', () async {
+      when(() => mockDio.post(
+            '/cancellations/bids/bid-4/report-delivery-noshow',
+          )).thenAnswer((_) async =>
+              _ok(null, '/cancellations/bids/bid-4/report-delivery-noshow'));
+
+      await datasource.reportDeliveryNoShow('bid-4');
+
+      verify(() => mockDio.post('/cancellations/bids/bid-4/report-delivery-noshow'))
+          .called(1);
+    });
+  });
+
+  group('reportTravelerDeliveryNoShow', () {
+    test('calls POST /cancellations/bids/{bidId}/report-traveler-delivery-noshow', () async {
+      when(() => mockDio.post(
+            '/cancellations/bids/bid-5/report-traveler-delivery-noshow',
+          )).thenAnswer((_) async => _ok(
+              null, '/cancellations/bids/bid-5/report-traveler-delivery-noshow'));
+
+      await datasource.reportTravelerDeliveryNoShow('bid-5');
+
+      verify(() => mockDio
+              .post('/cancellations/bids/bid-5/report-traveler-delivery-noshow'))
+          .called(1);
+    });
+  });
+
+  group('contestDeliveryNoShow', () {
+    test('calls POST /cancellations/bids/{bidId}/contest-delivery-noshow', () async {
+      when(() => mockDio.post(
+            '/cancellations/bids/bid-6/contest-delivery-noshow',
+          )).thenAnswer((_) async =>
+              _ok(null, '/cancellations/bids/bid-6/contest-delivery-noshow'));
+
+      await datasource.contestDeliveryNoShow('bid-6');
+
+      verify(() => mockDio.post('/cancellations/bids/bid-6/contest-delivery-noshow'))
+          .called(1);
+    });
+  });
+
   group('confirmNoShow', () {
     test('calls POST /cancellations/bids/{bidId}/confirm-noshow-self', () async {
       when(() => mockDio.post(

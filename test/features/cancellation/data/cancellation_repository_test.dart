@@ -61,6 +61,30 @@ void main() {
     verify(() => mockDs.contestNoShow('bid-2')).called(1);
   });
 
+  test('reportDeliveryNoShow delegates to datasource', () async {
+    when(() => mockDs.reportDeliveryNoShow('bid-4')).thenAnswer((_) async {});
+
+    await repo.reportDeliveryNoShow('bid-4');
+
+    verify(() => mockDs.reportDeliveryNoShow('bid-4')).called(1);
+  });
+
+  test('reportTravelerDeliveryNoShow delegates to datasource', () async {
+    when(() => mockDs.reportTravelerDeliveryNoShow('bid-5')).thenAnswer((_) async {});
+
+    await repo.reportTravelerDeliveryNoShow('bid-5');
+
+    verify(() => mockDs.reportTravelerDeliveryNoShow('bid-5')).called(1);
+  });
+
+  test('contestDeliveryNoShow delegates to datasource', () async {
+    when(() => mockDs.contestDeliveryNoShow('bid-6')).thenAnswer((_) async {});
+
+    await repo.contestDeliveryNoShow('bid-6');
+
+    verify(() => mockDs.contestDeliveryNoShow('bid-6')).called(1);
+  });
+
   test('confirmNoShow delegates to datasource', () async {
     when(() => mockDs.confirmNoShow('bid-3')).thenAnswer((_) async {});
 
