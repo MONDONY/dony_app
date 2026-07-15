@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/cancellation/presentation/widgets/delivery_noshow_cta_cell.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
@@ -94,6 +95,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: true),
       SenderHeroCard(bid: widget.bid),
+      DeliveryNoShowCtaCell(bid: widget.bid, isSender: true),
       if (_activeStatuses.contains(status))
         VoyageurContactCard(bid: widget.bid),
       ColisDestinataireCard(bid: widget.bid),
