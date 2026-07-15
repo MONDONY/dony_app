@@ -36,6 +36,18 @@ class CancellationRemoteDatasource {
     await _apiClient.dio.post('/cancellations/bids/$bidId/contest-noshow');
   }
 
+  Future<void> reportDeliveryNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/report-delivery-noshow');
+  }
+
+  Future<void> reportTravelerDeliveryNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/report-traveler-delivery-noshow');
+  }
+
+  Future<void> contestDeliveryNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/contest-delivery-noshow');
+  }
+
   /// L'expéditeur confirme lui-même son absence signalée par le voyageur :
   /// le bid est annulé, pas de débit (endpoint dédié SENDER).
   Future<void> confirmNoShow(String bidId) async {

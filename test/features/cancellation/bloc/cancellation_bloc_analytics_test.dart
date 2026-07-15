@@ -72,6 +72,42 @@ void main() {
         .called(1);
   });
 
+  test('delivery_no_show_reported_by_traveler fires on DeliveryNoShowReportRequested success', () async {
+    when(() => repo.reportDeliveryNoShow(any())).thenAnswer((_) async {});
+
+    final bloc = makeBloc();
+    bloc.add(DeliveryNoShowReportRequested('bid-1'));
+    await bloc.stream.firstWhere((s) => s is DeliveryNoShowReported);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => backend.capture(AnalyticsEvents.deliveryNoShowReportedByTraveler, any()))
+        .called(1);
+  });
+
+  test('delivery_no_show_reported_by_sender fires on TravelerDeliveryNoShowReportRequested success', () async {
+    when(() => repo.reportTravelerDeliveryNoShow(any())).thenAnswer((_) async {});
+
+    final bloc = makeBloc();
+    bloc.add(TravelerDeliveryNoShowReportRequested('bid-1'));
+    await bloc.stream.firstWhere((s) => s is DeliveryNoShowReported);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => backend.capture(AnalyticsEvents.deliveryNoShowReportedBySender, any()))
+        .called(1);
+  });
+
+  test('delivery_no_show_contested fires on DeliveryNoShowContestRequested success', () async {
+    when(() => repo.contestDeliveryNoShow(any())).thenAnswer((_) async {});
+
+    final bloc = makeBloc();
+    bloc.add(DeliveryNoShowContestRequested('bid-1'));
+    await bloc.stream.firstWhere((s) => s is DeliveryNoShowContested);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => backend.capture(AnalyticsEvents.deliveryNoShowContested, any()))
+        .called(1);
+  });
+
   test('no event when disabled', () async {
     when(() => repo.cancelTrip(announcementId: any(named: 'announcementId'), reason: any(named: 'reason')))
         .thenAnswer((_) async => _fakeCancellation);

@@ -27,6 +27,24 @@ class NoShowContestRequested extends CancellationEvent {
   NoShowContestRequested(this.bidId);
 }
 
+/// Le voyageur signale que le destinataire n'est pas venu à la remise (arrivée).
+class DeliveryNoShowReportRequested extends CancellationEvent {
+  final String bidId;
+  DeliveryNoShowReportRequested(this.bidId);
+}
+
+/// L'expéditeur signale que le voyageur ne livre pas / est injoignable (arrivée).
+class TravelerDeliveryNoShowReportRequested extends CancellationEvent {
+  final String bidId;
+  TravelerDeliveryNoShowReportRequested(this.bidId);
+}
+
+/// La partie adverse conteste un signalement d'absence à la livraison.
+class DeliveryNoShowContestRequested extends CancellationEvent {
+  final String bidId;
+  DeliveryNoShowContestRequested(this.bidId);
+}
+
 /// L'expéditeur confirme son absence signalée par le voyageur (le bid sera
 /// annulé, pas de débit).
 class NoShowConfirmRequested extends CancellationEvent {
