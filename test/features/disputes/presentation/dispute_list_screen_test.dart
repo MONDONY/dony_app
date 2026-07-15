@@ -89,7 +89,7 @@ void main() {
     // pour éviter un Timer en vol au tearDown du test.
     await tester.pumpAndSettle();
 
-    expect(find.text('Contestation no-show'), findsNWidgets(2));
+    expect(find.text("Contestation d'absence"), findsNWidgets(2));
     expect(find.text('En instruction'), findsOneWidget);
     expect(find.text('Résolu'), findsOneWidget);
     expect(find.textContaining('Lyon'), findsNWidgets(2));
@@ -115,7 +115,7 @@ void main() {
   testWidgets('tap card → push détail', (tester) async {
     await tester.pumpWidget(_harness(state: DisputeListLoaded([_dispute()])));
     await tester.pump();
-    await tester.tap(find.text('Contestation no-show'));
+    await tester.tap(find.text("Contestation d'absence"));
     await tester.pumpAndSettle();
     expect(find.text('DetailStub'), findsOneWidget);
   });

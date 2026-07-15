@@ -1,6 +1,6 @@
 /// Traductions d'affichage des valeurs backend (spec, section Traductions).
 String disputeTypeLabel(String type) => switch (type) {
-  'SENDER_NO_SHOW_CONTESTED' => 'Contestation no-show',
+  'SENDER_NO_SHOW_CONTESTED' => "Contestation d'absence",
   _ => type,
 };
 

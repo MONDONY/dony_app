@@ -79,7 +79,9 @@ class DisputeTimeline extends StatelessWidget {
           dotColor: cs.primary,
           title: 'Litige ouvert',
           subtitle:
-              '${df.format(dispute.createdAt)} · vous avez contesté le no-show',
+              dispute.myRole == 'SENDER'
+                  ? "${df.format(dispute.createdAt)} · vous avez contesté l'absence du voyageur"
+                  : "${df.format(dispute.createdAt)} · l'expéditeur a contesté une absence à la remise",
         ),
         step(
           dotColor: resolved ? cs.primary : cs.warning,

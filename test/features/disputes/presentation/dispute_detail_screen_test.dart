@@ -15,6 +15,7 @@ DisputeModel _dispute({
   String status = 'OPEN',
   bool refundFrozen = true,
   bool isBeneficiary = false,
+  String myRole = 'SENDER',
 }) => DisputeModel(
   id: 'd-$status',
   bidId: 'b1',
@@ -22,7 +23,7 @@ DisputeModel _dispute({
   status: status,
   refundFrozen: refundFrozen,
   createdAt: DateTime(2026, 7, 12),
-  myRole: 'SENDER',
+  myRole: myRole,
   otherPartyName: 'Awa K.',
   departureCity: 'Lyon',
   arrivalCity: 'Abidjan',
@@ -117,6 +118,34 @@ void main() {
       expect(find.textContaining('sous 72 h'), findsWidgets);
       expect(find.textContaining('Remboursement gelé'), findsOneWidget);
       expect(find.text('Décision rendue'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    "timeline expéditeur : « vous avez contesté l'absence du voyageur »",
+    (tester) async {
+      await tester.pumpWidget(_harness(_dispute()));
+      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining("vous avez contesté l'absence du voyageur"),
+        findsOneWidget,
+      );
+      expect(find.textContaining('no-show'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    "timeline voyageur : « l'expéditeur a contesté une absence »",
+    (tester) async {
+      await tester.pumpWidget(_harness(_dispute(myRole: 'TRAVELER')));
+      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining("l'expéditeur a contesté une absence à la remise"),
+        findsOneWidget,
+      );
+      expect(find.textContaining('vous avez contesté'), findsNothing);
     },
   );
 
