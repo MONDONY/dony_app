@@ -158,4 +158,8 @@ abstract final class AnalyticsEvents {
   static const successScreenCtaTapped      = 'success_screen_cta_tapped';
   static const successScreenClosed         = 'success_screen_closed';
   static const successScreenSecondaryTapped = 'success_screen_secondary_tapped';
+
+  // Litiges
+  static const disputesOpened      = 'disputes_opened';
+  static const disputeDetailOpened = 'dispute_detail_opened';
 }
