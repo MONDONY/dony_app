@@ -496,6 +496,24 @@ void main() {
     expect(find.textContaining('Absence contestée'), findsOneWidget);
   });
 
+  // ── Test 17f: bannière absence livraison contestée (sender, adversaire) ────
+
+  testWidgets(
+      'bannière deliveryNoShowStatus=CONTESTED (adversaire, expéditeur, je viens de contester) → "Contestation envoyée", pas de bouton',
+      (tester) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      deliveryNoShowStatus: 'CONTESTED',
+      deliveryNoShowReportedByTraveler: true,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Contestation envoyée'), findsOneWidget);
+    expect(find.textContaining('Une absence est signalée'), findsNothing);
+    expect(find.text('Contester ce signalement'), findsNothing);
+  });
+
   // ── Test 17e: tap "Contester ce signalement" (sender) → dispatch ───────────
 
   testWidgets(

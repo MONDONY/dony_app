@@ -436,6 +436,26 @@ void main() {
   });
 
   testWidgets(
+      'bannière deliveryNoShowStatus=CONTESTED (adversaire, je viens de contester) → "Contestation envoyée", pas de bouton',
+      (tester) async {
+    final bid = BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      weightKg: 5,
+      status: 'IN_TRANSIT',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+      deliveryNoShowStatus: 'CONTESTED',
+      deliveryNoShowReportedByTraveler: false,
+    );
+    await _pump(tester, bid);
+    expect(find.textContaining('Contestation envoyée'), findsOneWidget);
+    expect(find.textContaining('Une absence est signalée'), findsNothing);
+    expect(find.text('Contester ce signalement'), findsNothing);
+  });
+
+  testWidgets(
       'tap "Contester ce signalement" → DeliveryNoShowContestRequested émis',
       (tester) async {
     final bid = BidModel(

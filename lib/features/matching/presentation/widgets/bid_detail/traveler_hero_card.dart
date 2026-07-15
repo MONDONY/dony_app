@@ -466,9 +466,12 @@ class _DeliveryNoShowHero extends StatelessWidget {
         final isLoading = state is CancellationLoading;
         return _HeroShell(
           variant: TravelerHeroVariant.alert,
-          title: '⚠ Une absence est signalée',
-          subtitle: 'Une absence à la livraison a été signalée sur cet envoi. '
-              'Vous pouvez contester si ce signalement est erroné.',
+          title: contested ? '⚖ Contestation envoyée' : '⚠ Une absence est signalée',
+          subtitle: contested
+              ? 'Votre contestation a été transmise. Notre équipe examine '
+                  'la demande et vous tiendra informé.'
+              : 'Une absence à la livraison a été signalée sur cet envoi. '
+                  'Vous pouvez contester si ce signalement est erroné.',
           footer: contested
               ? null
               : _HeroButton(
