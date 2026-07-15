@@ -74,11 +74,6 @@ import 'package:dony/features/package_request/presentation/screens/shared/my_neg
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
-import 'package:dony/features/disputes/bloc/dispute_list_bloc.dart';
-import 'package:dony/features/disputes/bloc/dispute_list_event.dart';
-import 'package:dony/features/disputes/data/models/dispute_model.dart';
-import 'package:dony/features/disputes/presentation/dispute_detail_screen.dart';
-import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
@@ -323,8 +318,9 @@ final appRouter = GoRouter(
     // ── Création d'une offre (hors shell) ───────────────────────────────
     GoRoute(
       path: '/bids/new',
-      builder: (_, state) =>
-          CreateBidScreen(announcement: state.extra as AnnouncementModel),
+      builder: (_, state) => CreateBidScreen(
+        announcement: state.extra as AnnouncementModel,
+      ),
     ),
 
     // ── Bid detail (hors shell) ──────────────────────────────────────────
@@ -480,10 +476,8 @@ final appRouter = GoRouter(
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+                Tween(begin: const Offset(0, 1), end: Offset.zero)
+                    .chain(CurveTween(curve: Curves.easeOutCubic)),
               ),
               child: child,
             );
@@ -643,18 +637,7 @@ final appRouter = GoRouter(
 
     GoRoute(
       path: '/disputes',
-      builder: (context, state) => BlocProvider(
-        create: (_) =>
-            getIt<DisputeListBloc>()..add(const DisputesLoadRequested()),
-        child: const DisputeListScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/disputes/detail',
-      redirect: (context, state) =>
-          state.extra is DisputeModel ? null : '/disputes',
-      builder: (context, state) =>
-          DisputeDetailScreen(dispute: state.extra! as DisputeModel),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Litiges'),
     ),
     GoRoute(
       path: '/admin',
@@ -719,15 +702,13 @@ final appRouter = GoRouter(
       path: '/announcements/:id/trip',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        final extra = state.extra is AnnouncementModel
-            ? state.extra as AnnouncementModel
-            : null;
+        final extra =
+            state.extra is AnnouncementModel ? state.extra as AnnouncementModel : null;
         return MultiBlocProvider(
           providers: [
             BlocProvider(
               create: (_) =>
-                  getIt<AnnouncementBloc>()
-                    ..add(AnnouncementDetailRequested(id)),
+                  getIt<AnnouncementBloc>()..add(AnnouncementDetailRequested(id)),
             ),
             BlocProvider(
               create: (_) => getIt<BidBloc>()..add(BidListRequested(id)),
@@ -774,12 +755,14 @@ final appRouter = GoRouter(
       path: '/trajets-colis',
       builder: (context, state) {
         final extra = state.extra;
-        final upcomingCount = extra is ({int upcomingCount, bool isSender})
-            ? extra.upcomingCount
-            : (extra as int? ?? 0);
-        final isSender = extra is ({int upcomingCount, bool isSender})
-            ? extra.isSender
-            : false;
+        final upcomingCount =
+            extra is ({int upcomingCount, bool isSender})
+                ? extra.upcomingCount
+                : (extra as int? ?? 0);
+        final isSender =
+            extra is ({int upcomingCount, bool isSender})
+                ? extra.isSender
+                : false;
         return MesTrajetsColisScreen(
           upcomingCount: upcomingCount,
           isSender: isSender,
@@ -788,7 +771,10 @@ final appRouter = GoRouter(
     ),
 
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
-    GoRoute(path: '/mes-colis', builder: (_, __) => const MesColisScreen()),
+    GoRoute(
+      path: '/mes-colis',
+      builder: (_, __) => const MesColisScreen(),
+    ),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────
     GoRoute(
@@ -882,8 +868,7 @@ final appRouter = GoRouter(
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>?;
             return BlocProvider(
-              create: (_) =>
-                  getIt<RecipientBloc>()..add(const RecipientLoaded()),
+              create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
               child: RecipientEditScreen(
                 initialFullName: extra?['fullName'] as String?,
                 initialPhoneE164: extra?['phone'] as String?,
@@ -1099,7 +1084,7 @@ final appRouter = GoRouter(
             final extra = state.extra as Map<String, dynamic>?;
             final targetType =
                 extra?['targetType'] as IncidentTargetType? ??
-                IncidentTargetType.app;
+                    IncidentTargetType.app;
             final targetId = extra?['targetId'] as String?;
             return MultiBlocProvider(
               providers: [
@@ -1216,8 +1201,9 @@ final appRouter = GoRouter(
     // ── Marketplace de demandes d'envoi (package requests) ─────────────────
     GoRoute(
       path: '/package-requests/new',
-      builder: (_, state) =>
-          PackageRequestCreateScreen(initial: state.extra as PackageRequest?),
+      builder: (_, state) => PackageRequestCreateScreen(
+        initial: state.extra as PackageRequest?,
+      ),
     ),
     GoRoute(
       path: '/package-requests/me',
