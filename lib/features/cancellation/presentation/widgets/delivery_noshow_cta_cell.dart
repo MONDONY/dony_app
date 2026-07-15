@@ -23,8 +23,6 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
     if (!bid.canReportDeliveryNoShow) {
       return const SizedBox.shrink();
     }
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final title = isSender
         ? 'Le voyageur ne livre pas'
         : "Signaler l'absence du destinataire";
@@ -32,49 +30,15 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
         ? 'Injoignable ou refus de remettre le colis'
         : "Si vous êtes sur place et qu'il ne répond pas";
 
-    return Material(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DonyRadius.card),
+    return DonyCard(
+      padding: EdgeInsets.zero,
+      child: DonyListTile(
+        icon: isSender ? Icons.flight_rounded : Icons.person_off_rounded,
+        label: title,
+        subtitle: subtitle,
+        destructive: true,
+        showDivider: false,
         onTap: () => _showSheet(context),
-        child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            border: Border.all(color: cs.outlineVariant),
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: cs.errorContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                child: Icon(
-                  isSender ? Icons.flight_rounded : Icons.person_off_rounded,
-                  color: cs.error,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                    Text(subtitle,
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
-            ],
-          ),
-        ),
       ),
     );
   }
