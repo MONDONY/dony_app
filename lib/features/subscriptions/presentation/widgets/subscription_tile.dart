@@ -27,7 +27,7 @@ class SubscriptionTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base, vertical: DonySpacing.md),
         child: Row(
           children: [
-            DonyAvatar(name: item.travelerName),
+            DonyAvatar(name: item.travelerName, imageUrl: item.avatarUrl),
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Column(

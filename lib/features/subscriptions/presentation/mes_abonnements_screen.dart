@@ -216,7 +216,7 @@ class _StoryAvatar extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: DonyAvatar(name: item.travelerName),
+                child: DonyAvatar(name: item.travelerName, imageUrl: item.avatarUrl),
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
