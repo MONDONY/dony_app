@@ -43,7 +43,7 @@ Dégradé radial nuit fixe (choix de marque assumé, identique en light/dark mod
 - Barre latérale gauche (4-5px) en dégradé linéaire `cs.primary → DonyColors.accent` (bleu→terracotta), coins arrondis à gauche uniquement.
 - Contenu : ville départ (gros, `titleLarge`/Hanken Grotesk) + date en dessous (petit, muted) — séparateur pointillé vertical — ville arrivée + `kg dispo` (ou `Complet` en rouge/`cs.error` si `availableKg == 0`) — prix à droite en `cs.primary`, gros et gras.
 - Séparateur pointillé : nouveau `_DashedDivider` (petit `CustomPainter`, orientation verticale, ~15 lignes) — pas de nouvelle dépendance pub (aucun package dashed/dotted déjà présent dans `pubspec.yaml`).
-- État "complet" : prix et ville d'arrivée passent en `cs.onSurfaceVariant` (grisé), garde le bouton "Réserver" désactivé comme aujourd'hui (comportement `onReserve` inchangé — juste le style).
+- État "complet" (`availableKg <= 0`) : prix et libellé "Complet" (au lieu de "X kg dispo") passent en `cs.onSurfaceVariant`/`cs.error` — **purement cosmétique**. Vérifié dans le code actuel (`TravelerAnnouncementCard`, `traveler_announcement_card.dart:161-175`) : il n'existe aujourd'hui aucune désactivation du bouton "Réserver" basée sur `availableKg` — le bouton reste toujours actif (`onReserve` toujours appelable). Le redesign ne doit pas introduire de désactivation : ce serait un changement de comportement, hors scope (voir section Scope).
 - Toutes les couleurs de ce composant (hors la barre dégradée, décorative) passent par `cs.*` pour le dark mode.
 
 ### 4. `_SubscriptionStoryRow` (nouveau, en tête de `MesAbonnementsScreen`)
