@@ -14,7 +14,7 @@
 - Toutes les couleurs sauf le fond du hero (choix de marque fixe, non theme-aware) passent par `Theme.of(context).colorScheme` — jamais de `Color(0xFF...)` hardcodé ailleurs (`lib/core/design/CLAUDE.md`).
 - Espacements/rayons via `DonySpacing`/`DonyRadius` — jamais de valeur en dur.
 - Aucune régression sur les tests existants : `test/features/subscriptions/traveler_profile_hub_screen_test.dart` (17 tests), `test/features/subscriptions/traveler_announcement_card_test.dart` (7 tests), `test/features/subscriptions/mes_abonnements_screen_test.dart` (8 tests) — seul le test `hasNew` de `mes_abonnements_screen_test.dart` est explicitement mis à jour (Task 3), tous les autres doivent rester verts sans modification.
-- Le bouton "Réserver" de la card trajet reste **toujours actif** (aucune désactivation basée sur `availableKg`, comportement actuel vérifié — voir spec section 3).
+- Le bouton "Réserver" de la card trajet est désactivé (`onPressed: null`) quand `availableKg <= 0` — décision revue après livraison suite à un retour utilisateur en test device (commit `39b2ad8c`, hors des 4 tasks initiales de ce plan).
 - Aucun nouveau package dans `pubspec.yaml`.
 - Couverture ≥ 90 % sur les fichiers modifiés (`flutter test --coverage`).
 
