@@ -98,7 +98,7 @@ class _ProfileHeader extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            cs.successLight,
+            DonyColors.proBg2,
             Theme.of(context).scaffoldBackgroundColor,
           ],
         ),
@@ -139,11 +139,11 @@ class _LoadedProfileHeader extends StatelessWidget {
       children: [
         // Fond nuit fixe (choix de marque assumé, non theme-aware — voir spec
         // section "Dark mode" : ce hero reste identique en light/dark mode).
-        Positioned.fill(
+        const Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: RadialGradient(
-                center: const Alignment(-0.6, -0.9),
+                center: Alignment(-0.6, -0.9),
                 radius: 1.4,
                 colors: [
                   DonyColors.proBg3,
@@ -172,7 +172,7 @@ class _LoadedProfileHeader extends StatelessWidget {
         Align(
           alignment: Alignment.bottomLeft,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               DonySpacing.base,
               0,
               DonySpacing.base,
@@ -224,19 +224,19 @@ class _LoadedProfileHeader extends StatelessWidget {
                         runSpacing: DonySpacing.xs,
                         children: [
                           if (profile.isProAccount)
-                            _ProfileBadge(
+                            const _ProfileBadge(
                               lucideIcon: 'star',
                               label: 'Compte PRO',
                               iconColor: DonyColors.kycBadgeGold,
                             ),
                           if (profile.isKiloPro)
-                            _ProfileBadge(
+                            const _ProfileBadge(
                               iconAsset: 'package',
                               label: 'Kilo Pro',
                               iconColor: DonyColors.kycBadgeGold,
                             ),
                           if (profile.kycVerified)
-                            _ProfileBadge(
+                            const _ProfileBadge(
                               lucideIcon: 'badge-check',
                               label: 'Identité vérifiée',
                               iconColor: DonyColors.kycBadgeBlue,

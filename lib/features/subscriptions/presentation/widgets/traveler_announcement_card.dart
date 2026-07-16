@@ -78,7 +78,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                 height: 1.5,
                                 color: cs.primary.withValues(alpha: 0.3),
                               ),
-                              const DonyEmoji.planeTakeoff(size: 16),
+                              const DonyEmoji.planeTakeoff(),
                               Container(
                                 width: 28,
                                 height: 1.5,

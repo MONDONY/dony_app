@@ -116,7 +116,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const DonyIcon('trash-2', color: Colors.white, size: 24),
+                const DonyIcon('trash-2', color: Colors.white),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Désabonner',
@@ -179,7 +179,7 @@ class _SubscriptionStoryRow extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.md),
+        separatorBuilder: (_, _) => const SizedBox(width: DonySpacing.md),
         itemBuilder: (context, index) => _StoryAvatar(item: items[index]),
       ),
     );
@@ -198,6 +198,7 @@ class _StoryAvatar extends StatelessWidget {
 
     return Semantics(
       label: 'Nouveau trajet publié par ${item.travelerName}',
+      button: true,
       child: GestureDetector(
         onTap: () => context.push('/travelers/${item.travelerId}'),
         child: SizedBox(
@@ -215,7 +216,7 @@ class _StoryAvatar extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: DonyAvatar(name: item.travelerName, size: DonyAvatarSize.md),
+                child: DonyAvatar(name: item.travelerName),
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
