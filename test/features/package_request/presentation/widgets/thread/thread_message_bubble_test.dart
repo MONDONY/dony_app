@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,11 @@ NegotiationMessage _msg({
     );
 
 void main() {
+  // Épingle le taux de commission : ces tests assertent des montants
+  // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
+  setUpAll(() => setDonyCommissionRate(0.12));
+  tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
   Widget wrap(Widget child) => MaterialApp(
         theme: AppTheme.light,
         home: Scaffold(body: child),

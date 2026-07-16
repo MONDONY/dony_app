@@ -48,7 +48,8 @@ class PaymentScreen extends StatelessWidget {
           builder: (context, configState) {
             final commissionRate = configState is ConfigLoaded
                 ? configState.commissionRate
-                : 0.12; // Fallback to 12% while loading or on error
+                // Repli sur le taux par défaut pendant le chargement / en erreur.
+                : donyCommissionRate;
             return _PaymentSummaryView(
               bid: bid,
               state: state,
@@ -100,7 +101,7 @@ class _PaymentSummaryView extends StatelessWidget {
 
   // _amount = NET du voyageur (totalNetAmountEur côté backend). L'expéditeur paie
   // ce net + la commission Dony : _total = net × (1 + taux), aligné sur le montant
-  // réellement facturé par le backend (PaymentService : amount = net × 1,12).
+  // réellement facturé par le backend (PaymentService : amount = net × (1 + taux)).
   double get _amount => bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
   double get _commission => _amount * commissionRate;
   // Total payé par l'expéditeur = BRUT fourni par le backend (qui ne renvoie

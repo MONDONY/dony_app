@@ -6,27 +6,38 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 /// Modèle métier (vérifié backend, `PaymentService` / `PriceGridService`) :
 /// - `pricePerKg` (mode KG) et `unitPriceNet` (mode MIXED) = **NET** = ce que
 ///   le voyageur touche réellement.
-/// - L'expéditeur paie ce net **+ 12 %** : `display = net × 1,12`. Le backend
+/// - L'expéditeur paie ce net **+ la commission** : `display = net × (1 + taux)`. Le backend
 ///   expose déjà ce prix via `unitPriceDisplay` (MIXED) et `pricePerKgDisplay`
 ///   (KG). Ce helper centralise le multiplicateur pour les rares cas sans champ
 ///   display fourni (ex. suggestions de re-match, montant dérivé d'un bid).
 ///
 /// SOURCE UNIQUE du taux : `dony.commission.rate` côté backend. Le front le
 /// charge une fois au démarrage (`GET /config/commission-rate` → [setDonyCommissionRate])
-/// et retombe sur 12 % tant qu'il n'est pas chargé / en cas d'erreur. Changer la
-/// valeur backend suffit donc à ajuster la commission partout.
-const double kDonyCommissionRateDefault = 0.12;
+/// et retombe sur [kDonyCommissionRateDefault] tant qu'il n'est pas chargé /
+/// en cas d'erreur. Changer la valeur backend suffit donc à ajuster la
+/// commission partout.
+const double kDonyCommissionRateDefault = 0.05;
 
 double _donyCommissionRate = kDonyCommissionRateDefault;
 
-/// Taux de commission Dony courant (ex. 0,12 = 12 %).
+/// Taux de commission Dony courant (ex. 0,05 = 5 %).
 double get donyCommissionRate => _donyCommissionRate;
+
+/// Libellé du taux courant en pourcentage, virgule française si décimal
+/// (ex. « 5 », « 12,5 »). À interpoler dans les textes UI :
+/// `'$donyCommissionPercentLabel %'`.
+String get donyCommissionPercentLabel {
+  final pct = _donyCommissionRate * 100;
+  return pct % 1 == 0
+      ? pct.toStringAsFixed(0)
+      : pct.toStringAsFixed(1).replaceFirst('.', ',');
+}
 
 /// Multiplicateur net → prix affiché à l'expéditeur (= 1 + commission).
 double get donyCommissionMultiplier => 1 + _donyCommissionRate;
 
 /// Met à jour le taux au démarrage avec la valeur backend. Ignore les valeurs
-/// aberrantes (hors ]0,1[) pour rester sur le repli 12 %.
+/// aberrantes (hors ]0,1[) pour rester sur le repli [kDonyCommissionRateDefault].
 void setDonyCommissionRate(double rate) {
   if (rate > 0 && rate < 1) _donyCommissionRate = rate;
 }
@@ -38,7 +49,7 @@ double netToSenderPrice(double net) => net * donyCommissionMultiplier;
 
 /// Formate un prix au kilo : entier si rond, 2 décimales sinon
 /// (ex. 6 → « 6 », 5,6 → « 5.60 »). Aligné sur l'affichage du mode MIXED.
-/// Pratique car le prix expéditeur (net × 1,12) est rarement entier.
+/// Pratique car le prix expéditeur (net × multiplicateur) est rarement entier.
 String formatKgPrice(double value) =>
     value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
 

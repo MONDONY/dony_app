@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -19,6 +20,11 @@ PackageRequestFormBloc makeBloc(_MockRepo repo) => PackageRequestFormBloc(
 );
 
 void main() {
+  // Épingle le taux de commission : ces tests assertent des montants
+  // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
+  setUpAll(() => setDonyCommissionRate(0.12));
+  tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
   late _MockRepo repo;
 
   setUpAll(() {

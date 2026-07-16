@@ -2,6 +2,7 @@
 //
 // Placed in test/features/package_request/presentation/
 // per the task specification.
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -18,6 +19,11 @@ import '../../../helpers/mock_analytics_backend.dart';
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
 void main() {
+  // Épingle le taux de commission : ces tests assertent des montants
+  // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
+  setUpAll(() => setDonyCommissionRate(0.12));
+  tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
   late _MockPackageRepo packageRepo;
 
   setUp(() {

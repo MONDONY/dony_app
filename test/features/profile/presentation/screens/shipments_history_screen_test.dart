@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -56,6 +57,11 @@ Widget _wrap(BidBloc bloc) => BlocProvider<BidBloc>.value(
 );
 
 void main() {
+  // Épingle le taux de commission : ces tests assertent des montants
+  // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
+  setUpAll(() => setDonyCommissionRate(0.12));
+  tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
   late MockBidBloc bloc;
 
   setUpAll(() => registerFallbackValue(FakeBidEvent()));

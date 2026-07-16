@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -101,7 +102,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                 ),
                 const SizedBox(height: DonySpacing.base),
                 Text(
-                  'Cette carte sera débitée de la commission (12 %, min. 1 €) à chaque bid cash accepté.',
+                  'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %, min. 1 €) à chaque bid cash accepté.',
                   style: Theme.of(ctx).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: DonySpacing.xl),

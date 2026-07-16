@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
@@ -155,7 +156,7 @@ class _LoadedView extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
-                  'Dony ajoute 12 % sur chaque prix. '
+                  'Dony ajoute $donyCommissionPercentLabel % sur chaque prix. '
                   'Vous recevez exactement le montant saisi.',
                   style: tt.bodySmall?.copyWith(color: cs.info),
                 ),
