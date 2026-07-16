@@ -57,9 +57,9 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
                   surfaceTintColor: Colors.transparent,
                   elevation: 0,
                   scrolledUnderElevation: 0,
-                  leading: IconButton(
-                    icon: const DonyIcon('chevron-left', size: 20),
-                    onPressed: () => context.pop(),
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: DonySpacing.base),
+                    child: DonyBackCircle(onTap: () => context.pop()),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
                     collapseMode: CollapseMode.pin,
