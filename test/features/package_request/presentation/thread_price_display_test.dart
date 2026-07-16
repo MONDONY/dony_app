@@ -1,3 +1,4 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
@@ -7,6 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 // ─── Unit tests for PriceDisplay.threadPriceLabel ────────────────────────────
 
 void main() {
+  // Épingle le taux de commission : ces tests assertent des montants
+  // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
+  setUpAll(() => setDonyCommissionRate(0.12));
+  tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
   group('PriceDisplay.threadPriceLabel', () {
     test('traveler sees net amount formatted correctly', () {
       expect(

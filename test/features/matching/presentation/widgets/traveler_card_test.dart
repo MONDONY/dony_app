@@ -1,4 +1,5 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
@@ -52,6 +53,11 @@ Widget _wrap(Widget child) => MaterialApp(
     );
 
 void main() {
+  // Épingle le taux de commission : ces tests assertent des montants
+  // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
+  setUpAll(() => setDonyCommissionRate(0.12));
+  tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
   setUpAll(() => initializeDateFormatting('fr'));
 
   group('TravelerCard', () {

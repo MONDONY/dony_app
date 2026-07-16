@@ -368,7 +368,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               ),
               const SizedBox(height: DonySpacing.sm),
               Text(
-                'Vous touchez ${formatKgPrice(_priceOptions[_priceIdx])}€/kg · l\'expéditeur paie ${formatKgPrice(netToSenderPrice(_priceOptions[_priceIdx]))}€/kg (commission Dony 12% incluse)',
+                'Vous touchez ${formatKgPrice(_priceOptions[_priceIdx])}€/kg · l\'expéditeur paie ${formatKgPrice(netToSenderPrice(_priceOptions[_priceIdx]))}€/kg (commission Dony $donyCommissionPercentLabel% incluse)',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.xxl),

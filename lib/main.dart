@@ -138,7 +138,7 @@ Future<void> _loadDonyCommissionRate() async {
   try {
     setDonyCommissionRate(await getIt<IConfigRepository>().getCommissionRate());
   } catch (_) {
-    // Repli 12 % conservé — non bloquant.
+    // Repli sur kDonyCommissionRateDefault conservé — non bloquant.
   }
 }
 

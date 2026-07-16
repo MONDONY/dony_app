@@ -463,7 +463,7 @@ class PrixConditionsStep extends StatelessWidget {
                         BorderRadius.circular(DonyRadius.sm),
                   ),
                   child: Text(
-                    'Dony ajoute 12 % sur chaque article et sur le prix au kilo',
+                    'Dony ajoute $donyCommissionPercentLabel % sur chaque article et sur le prix au kilo',
                     style: tt.bodySmall
                         ?.copyWith(color: cs.primary),
                   ),

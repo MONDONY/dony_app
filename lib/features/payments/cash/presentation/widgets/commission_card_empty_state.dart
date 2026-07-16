@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:flutter/material.dart';
 
 class CommissionCardEmptyState extends StatelessWidget {
@@ -25,7 +26,7 @@ class CommissionCardEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission (12 %) à chaque bid accepté.',
+            'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ($donyCommissionPercentLabel %) à chaque bid accepté.',
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),

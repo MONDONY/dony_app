@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 class FaqScreen extends StatelessWidget {
   const FaqScreen({super.key});
 
-  static const _sections = <_FaqSectionData>[
-    _FaqSectionData(
+  // `final` (pas `const`) : la question sur la commission interpole le taux
+  // courant chargé depuis le backend (donyCommissionPercentLabel).
+  static final _sections = <_FaqSectionData>[
+    const _FaqSectionData(
       title: 'Compte & KYC',
       iconAsset: 'shield-check',
       items: [
@@ -30,7 +33,7 @@ class FaqScreen extends StatelessWidget {
         ),
       ],
     ),
-    _FaqSectionData(
+    const _FaqSectionData(
       title: 'Annonces & demandes',
       iconAsset: 'package',
       items: [
@@ -56,25 +59,25 @@ class FaqScreen extends StatelessWidget {
       title: 'Paiements & remboursements',
       iconAsset: 'banknote',
       items: [
-        _FaqItem(
+        const _FaqItem(
           q: 'Quand suis-je débité ?',
           a: 'Tu es débité à l\'acceptation du voyageur. Les fonds sont placés en séquestre (escrow) et ne sont transférés au voyageur qu\'à la confirmation de livraison.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Comment se passe le remboursement en cas d\'annulation ?',
           a: 'En cas d\'annulation avant la remise du colis, tu es intégralement remboursé sous 3 à 5 jours ouvrés sur ta carte bancaire.',
         ),
         _FaqItem(
-          q: 'Pourquoi une commission de 12 % ?',
+          q: 'Pourquoi une commission de $donyCommissionPercentLabel % ?',
           a: 'La commission couvre les frais de paiement sécurisé (Stripe), l\'assurance de la transaction, le support et le développement de la plateforme.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Les paiements sont-ils sécurisés ?',
           a: 'Oui. Tous les paiements transitent par Stripe, certifié PCI DSS niveau 1. Tes données bancaires ne sont jamais stockées sur nos serveurs.',
         ),
       ],
     ),
-    _FaqSectionData(
+    const _FaqSectionData(
       title: 'Suivi & livraison',
       iconAsset: 'package',
       items: [
@@ -92,7 +95,7 @@ class FaqScreen extends StatelessWidget {
         ),
       ],
     ),
-    _FaqSectionData(
+    const _FaqSectionData(
       title: 'Sécurité & données',
       iconAsset: 'shield-check',
       items: [

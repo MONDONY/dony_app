@@ -24,9 +24,25 @@ void main() {
   tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
   group('dony_pricing — défaut', () {
-    test('taux et multiplicateur par défaut alignés sur le backend (12 %)', () {
-      expect(donyCommissionRate, 0.12);
-      expect(donyCommissionMultiplier, closeTo(1.12, 1e-9));
+    test('taux et multiplicateur par défaut alignés sur le backend (5 %)', () {
+      expect(donyCommissionRate, 0.05);
+      expect(donyCommissionMultiplier, closeTo(1.05, 1e-9));
+    });
+  });
+
+  group('donyCommissionPercentLabel', () {
+    test('taux par défaut → entier sans décimale', () {
+      expect(donyCommissionPercentLabel, '5');
+    });
+
+    test('taux entier → entier sans décimale', () {
+      setDonyCommissionRate(0.12);
+      expect(donyCommissionPercentLabel, '12');
+    });
+
+    test('taux décimal → 1 décimale avec virgule française', () {
+      setDonyCommissionRate(0.125);
+      expect(donyCommissionPercentLabel, '12,5');
     });
   });
 
@@ -47,9 +63,9 @@ void main() {
   });
 
   group('netToSenderPrice', () {
-    test('applique +12 % au net', () {
-      expect(netToSenderPrice(10), closeTo(11.20, 1e-9));
-      expect(netToSenderPrice(5), closeTo(5.60, 1e-9));
+    test('applique +5 % au net', () {
+      expect(netToSenderPrice(10), closeTo(10.50, 1e-9));
+      expect(netToSenderPrice(5), closeTo(5.25, 1e-9));
       expect(netToSenderPrice(0), 0);
     });
   });
@@ -65,14 +81,14 @@ void main() {
 
   group('AnnouncementSenderPricing.senderPricePerKg', () {
     test('utilise le champ backend pricePerKgDisplay quand présent', () {
-      // Source de vérité backend : on n\'applique pas un second × 1,12.
+      // Source de vérité backend : on n\'applique pas un second multiplicateur.
       final a = _ann(pricePerKg: 10, pricePerKgDisplay: 11.5);
       expect(a.senderPricePerKg, 11.5);
     });
 
-    test('retombe sur net × 1,12 quand le champ backend est absent', () {
+    test('retombe sur net × 1,05 quand le champ backend est absent', () {
       final a = _ann(pricePerKg: 10);
-      expect(a.senderPricePerKg, closeTo(11.20, 1e-9));
+      expect(a.senderPricePerKg, closeTo(10.50, 1e-9));
     });
   });
 }

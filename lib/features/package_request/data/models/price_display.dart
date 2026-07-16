@@ -1,5 +1,9 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
+
 class PriceDisplay {
-  static const double previewRate = 0.12;
+  /// Taux d'aperçu aligné sur la source unique [donyCommissionRate]
+  /// (chargée du backend au démarrage, repli [kDonyCommissionRateDefault]).
+  static double get previewRate => donyCommissionRate;
 
   static double grossFromNet(double net) => net * (1 + previewRate);
   static double netFromGross(double gross) => gross / (1 + previewRate);
