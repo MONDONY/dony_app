@@ -270,6 +270,21 @@ class _BidDetailViewState extends State<_BidDetailView> {
               type: DonySnackbarType.info,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is DeliveryNoShowReported) {
+            DonySnackbar.show(
+              context,
+              message: "Absence signalée. L'autre partie a 24 h pour contester.",
+              type: DonySnackbarType.info,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is DeliveryNoShowContested) {
+            DonySnackbar.show(
+              context,
+              message:
+                  'Contestation envoyée. Notre équipe va examiner votre demande.',
+              type: DonySnackbarType.success,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is NoShowContested) {
             DonySnackbar.show(
               context,

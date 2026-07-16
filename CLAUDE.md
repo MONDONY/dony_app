@@ -334,6 +334,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `rematch_accepted` | *(à implémenter)* |
 | `no_show_reported_by_sender` | CancellationBloc._onTravelerNoShowReport() — expéditeur signale le voyageur absent |
 | `no_show_reported_by_traveler` | CancellationBloc._onNoShowReport() — voyageur signale l'expéditeur absent |
+| `delivery_no_show_reported_by_traveler` | CancellationBloc._onDeliveryNoShowReport — voyageur signale l'absence du destinataire à la livraison |
+| `delivery_no_show_reported_by_sender` | CancellationBloc._onTravelerDeliveryNoShowReport — expéditeur signale que le voyageur ne livre pas |
+| `delivery_no_show_contested` | CancellationBloc._onDeliveryNoShowContest — contestation d'un signalement d'absence à la livraison |
 | `cancel_after_handover_initiated` | CancellationBloc._onCancelAfterHandover() — annulation après remise (propriété `actor`: sender/traveler, D5/D6) |
 | `return_code_viewed` | CancellationBloc._onReturnCodeRequested() — expéditeur consulte son code de retour (D7) |
 | `return_code_entry_opened` | ReturnEntrySheet.show() — voyageur ouvre la saisie du code de retour (propriété `status`) |

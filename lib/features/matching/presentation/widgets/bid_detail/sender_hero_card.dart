@@ -37,6 +37,26 @@ class SenderHeroCard extends StatelessWidget {
       );
     }
 
+    // ── Priorité 1b : absence à la livraison déjà signalée ────────────────
+    // bid.deliveryNoShowReportedByTraveler distingue qui a signalé : le
+    // voyageur (true, l'adversaire côté expéditeur) ou l'expéditeur (false,
+    // lui-même) — sans ce champ, deliveryNoShowStatus seul ne suffit pas à
+    // savoir qui doit voir "Absence signalée" (auteur) vs "Une absence est
+    // signalée" (adversaire).
+    final deliveryStatus = bid.deliveryNoShowStatus;
+    if (deliveryStatus == 'PENDING_CONFIRMATION' || deliveryStatus == 'CONTESTED') {
+      final iAmReporter = bid.deliveryNoShowReportedByTraveler == false;
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: _DeliveryNoShowHero(
+          bid: bid,
+          iAmReporter: iAmReporter,
+          contested: deliveryStatus == 'CONTESTED',
+          key: ValueKey('SENDER_DELIVERY_NOSHOW_$deliveryStatus${bid.id}'),
+        ),
+      );
+    }
+
     // ── Priorité 2 : fenêtre dépassée ─────────────────────────────────────
     final windowEnd = bid.handoverWindowEnd;
     if (bid.status == 'ACCEPTED' &&
@@ -608,5 +628,58 @@ class _ContestationHeroState extends State<_ContestationHero> {
       return;
     }
     context.read<CancellationBloc>().add(NoShowConfirmRequested(widget.bid.id));
+  }
+}
+
+// ── Hero : absence à la livraison signalée ────────────────────────────────────
+
+class _DeliveryNoShowHero extends StatelessWidget {
+  const _DeliveryNoShowHero({
+    super.key,
+    required this.bid,
+    required this.iAmReporter,
+    required this.contested,
+  });
+
+  final BidModel bid;
+  final bool iAmReporter;
+  final bool contested;
+
+  @override
+  Widget build(BuildContext context) {
+    if (iAmReporter) {
+      return _HeroShell(
+        variant: SenderHeroVariant.wait,
+        title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
+        subtitle: contested
+            ? "L'autre partie conteste votre signalement. Notre équipe examine "
+                'la demande et vous tiendra informé.'
+            : "Signalement envoyé. L'autre partie a 24 h pour contester. "
+                'Notre équipe tranche ensuite.',
+      );
+    }
+    return BlocBuilder<CancellationBloc, CancellationState>(
+      builder: (context, state) {
+        final isLoading = state is CancellationLoading;
+        return _HeroShell(
+          variant: SenderHeroVariant.alert,
+          title: contested ? '⚖ Contestation envoyée' : '⚠ Une absence est signalée',
+          subtitle: contested
+              ? 'Votre contestation a été transmise. Notre équipe examine '
+                  'la demande et vous tiendra informé.'
+              : 'Une absence à la livraison a été signalée sur cet envoi. '
+                  'Vous pouvez contester si ce signalement est erroné.',
+          footer: contested
+              ? null
+              : _HeroButton(
+                  label: 'Contester ce signalement',
+                  isLoading: isLoading,
+                  onPressed: () => context
+                      .read<CancellationBloc>()
+                      .add(DeliveryNoShowContestRequested(bid.id)),
+                ),
+        );
+      },
+    );
   }
 }

@@ -289,6 +289,105 @@ void main() {
     );
   });
 
+  // ── DeliveryNoShowReportRequested (arrivée) ─────────────────────────────────
+
+  group('DeliveryNoShowReportRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'émet Loading puis DeliveryNoShowReported au succès',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportDeliveryNoShow('bid-1'))
+            .thenAnswer((_) async {});
+      },
+      act: (b) => b.add(DeliveryNoShowReportRequested('bid-1')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<DeliveryNoShowReported>(),
+      ],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'émet CancellationError sur DioException',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportDeliveryNoShow(any()))
+            .thenThrow(DioException(requestOptions: RequestOptions()));
+      },
+      act: (b) => b.add(DeliveryNoShowReportRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+  });
+
+  // ── TravelerDeliveryNoShowReportRequested (arrivée) ─────────────────────────
+
+  group('TravelerDeliveryNoShowReportRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'émet Loading puis DeliveryNoShowReported au succès et appelle reportTravelerDeliveryNoShow',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportTravelerDeliveryNoShow('bid-1'))
+            .thenAnswer((_) async {});
+      },
+      act: (b) => b.add(TravelerDeliveryNoShowReportRequested('bid-1')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<DeliveryNoShowReported>(),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.reportTravelerDeliveryNoShow('bid-1')).called(1);
+      },
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'émet CancellationError sur DioException',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportTravelerDeliveryNoShow(any()))
+            .thenThrow(DioException(requestOptions: RequestOptions()));
+      },
+      act: (b) => b.add(TravelerDeliveryNoShowReportRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+  });
+
+  // ── DeliveryNoShowContestRequested (arrivée) ────────────────────────────────
+
+  group('DeliveryNoShowContestRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'émet Loading puis DeliveryNoShowContested au succès',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.contestDeliveryNoShow('bid-1'))
+            .thenAnswer((_) async {});
+      },
+      act: (b) => b.add(DeliveryNoShowContestRequested('bid-1')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<DeliveryNoShowContested>(),
+      ],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'émet CancellationError sur DioException',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.contestDeliveryNoShow(any()))
+            .thenThrow(DioException(requestOptions: RequestOptions()));
+      },
+      act: (b) => b.add(DeliveryNoShowContestRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+  });
+
   // ── NoShowConfirmRequested ─────────────────────────────────────────────────
 
   group('NoShowConfirmRequested', () {

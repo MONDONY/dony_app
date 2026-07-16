@@ -35,6 +35,8 @@ BidModel _bid({
   String? confirmationCode,
   double? totalAmountEur,
   DateTime? departureDate,
+  String? deliveryNoShowStatus,
+  bool? deliveryNoShowReportedByTraveler,
 }) =>
     BidModel(
       id: 'bid-001',
@@ -55,6 +57,8 @@ BidModel _bid({
       confirmationCode: confirmationCode,
       totalAmountEur: totalAmountEur,
       departureDate: departureDate,
+      deliveryNoShowStatus: deliveryNoShowStatus,
+      deliveryNoShowReportedByTraveler: deliveryNoShowReportedByTraveler,
     );
 
 // ── Host widget ───────────────────────────────────────────────────────────────
@@ -78,6 +82,7 @@ void main() {
     await initializeDateFormatting('fr');
     registerFallbackValue(TravelerNoShowReportRequested('bid-001'));
     registerFallbackValue(NoShowContestRequested('bid-001'));
+    registerFallbackValue(DeliveryNoShowContestRequested('bid-001'));
   });
 
   late _MockCancellationBloc cancellationBloc;
@@ -441,6 +446,96 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     },
   );
+
+  // ── Test 17b: bannière absence livraison — je suis l'auteur (sender) ───────
+
+  testWidgets(
+      'bannière "Absence signalée" si deliveryNoShowReportedByTraveler=false (je suis l\'auteur, expéditeur)',
+      (tester) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+      deliveryNoShowReportedByTraveler: false,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Absence signalée'), findsOneWidget);
+  });
+
+  // ── Test 17c: bannière absence livraison — je suis l'adversaire (sender) ───
+
+  testWidgets(
+      'bannière "Une absence est signalée" + Contester si deliveryNoShowReportedByTraveler=true (je suis l\'adversaire, expéditeur)',
+      (tester) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+      deliveryNoShowReportedByTraveler: true,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Une absence est signalée'), findsOneWidget);
+    expect(find.text('Contester ce signalement'), findsOneWidget);
+  });
+
+  // ── Test 17d: bannière absence livraison contestée (sender, auteur) ────────
+
+  testWidgets(
+      'bannière deliveryNoShowStatus=CONTESTED (auteur, expéditeur) → "Absence contestée"',
+      (tester) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      deliveryNoShowStatus: 'CONTESTED',
+      deliveryNoShowReportedByTraveler: false,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Absence contestée'), findsOneWidget);
+  });
+
+  // ── Test 17f: bannière absence livraison contestée (sender, adversaire) ────
+
+  testWidgets(
+      'bannière deliveryNoShowStatus=CONTESTED (adversaire, expéditeur, je viens de contester) → "Contestation envoyée", pas de bouton',
+      (tester) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      deliveryNoShowStatus: 'CONTESTED',
+      deliveryNoShowReportedByTraveler: true,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    expect(find.textContaining('Contestation envoyée'), findsOneWidget);
+    expect(find.textContaining('Une absence est signalée'), findsNothing);
+    expect(find.text('Contester ce signalement'), findsNothing);
+  });
+
+  // ── Test 17e: tap "Contester ce signalement" (sender) → dispatch ───────────
+
+  testWidgets(
+      'tap "Contester ce signalement" (expéditeur) → DeliveryNoShowContestRequested émis',
+      (tester) async {
+    final bid = _bid(
+      status: 'IN_TRANSIT',
+      deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+      deliveryNoShowReportedByTraveler: true,
+    );
+    await tester.pumpWidget(_host(bid, cancellationBloc));
+    await tester.pump();
+
+    await tester.tap(find.text('Contester ce signalement'));
+    await tester.pump();
+
+    verify(
+      () => cancellationBloc.add(
+        any(that: isA<DeliveryNoShowContestRequested>()),
+      ),
+    ).called(1);
+  });
 
   // ── Test 18: tap "Je conteste" → sheet → annuler (no dispatch) ───────────────
 

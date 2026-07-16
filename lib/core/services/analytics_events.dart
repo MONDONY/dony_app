@@ -75,6 +75,9 @@ abstract final class AnalyticsEvents {
   static const rematchAccepted         = 'rematch_accepted';
   static const noShowReportedBySender  = 'no_show_reported_by_sender';
   static const noShowReportedByTraveler = 'no_show_reported_by_traveler';
+  static const deliveryNoShowReportedByTraveler = 'delivery_no_show_reported_by_traveler';
+  static const deliveryNoShowReportedBySender   = 'delivery_no_show_reported_by_sender';
+  static const deliveryNoShowContested          = 'delivery_no_show_contested';
   // Annulation après remise (D5/D6/D7)
   static const cancelAfterHandoverInitiated = 'cancel_after_handover_initiated';
   static const returnCodeViewed            = 'return_code_viewed';

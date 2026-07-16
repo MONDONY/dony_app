@@ -18,6 +18,9 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     on<NoShowReportRequested>(_onNoShowReport);
     on<TravelerNoShowReportRequested>(_onTravelerNoShowReport);
     on<NoShowContestRequested>(_onNoShowContest);
+    on<DeliveryNoShowReportRequested>(_onDeliveryNoShowReport);
+    on<TravelerDeliveryNoShowReportRequested>(_onTravelerDeliveryNoShowReport);
+    on<DeliveryNoShowContestRequested>(_onDeliveryNoShowContest);
     on<NoShowConfirmRequested>(_onNoShowConfirm);
     on<CancelAfterHandoverRequested>(_onCancelAfterHandover);
     on<ReturnConfirmRequested>(_onReturnConfirm);
@@ -93,6 +96,48 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.contestNoShow(event.bidId);
       emit(NoShowContested());
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onDeliveryNoShowReport(
+    DeliveryNoShowReportRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      await _repository.reportDeliveryNoShow(event.bidId);
+      emit(DeliveryNoShowReported());
+      unawaited(_analytics.logEvent(AnalyticsEvents.deliveryNoShowReportedByTraveler));
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onTravelerDeliveryNoShowReport(
+    TravelerDeliveryNoShowReportRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      await _repository.reportTravelerDeliveryNoShow(event.bidId);
+      emit(DeliveryNoShowReported());
+      unawaited(_analytics.logEvent(AnalyticsEvents.deliveryNoShowReportedBySender));
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onDeliveryNoShowContest(
+    DeliveryNoShowContestRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      await _repository.contestDeliveryNoShow(event.bidId);
+      emit(DeliveryNoShowContested());
+      unawaited(_analytics.logEvent(AnalyticsEvents.deliveryNoShowContested));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }
