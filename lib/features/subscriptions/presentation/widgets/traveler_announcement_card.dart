@@ -194,7 +194,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
                               ),
                             ),
                             FilledButton(
-                              onPressed: onReserve,
+                              onPressed: isFull ? null : onReserve,
                               style: FilledButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: DonySpacing.base,
