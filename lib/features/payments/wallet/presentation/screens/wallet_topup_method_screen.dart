@@ -50,11 +50,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
-        leading: IconButton(
-          icon: const DonyIcon('arrow-left', size: 20),
-          tooltip: 'Retour',
-          onPressed: () => context.pop(),
-        ),
+        leading: DonyBackCircle(onTap: () => context.pop()),
         title: Text(
           'Recharger · Étape 1/2',
           style: tt.headlineLarge?.copyWith(

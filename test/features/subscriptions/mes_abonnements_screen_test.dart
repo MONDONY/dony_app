@@ -179,7 +179,7 @@ void main() {
   // ─── hasNew section ───────────────────────────────────────────────────────────
 
   testWidgets(
-    'item hasNew:true + lastAnnouncement → section "ONT PUBLIÉ RÉCEMMENT" + badge Nouveau',
+    'item hasNew:true + lastAnnouncement → section "ONT PUBLIÉ RÉCEMMENT" + story avatar accessible',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(400, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -198,8 +198,17 @@ void main() {
         find.textContaining('ONT PUBLIÉ RÉCEMMENT', findRichText: true),
         findsOneWidget,
       );
-      // DonyBadge calls label.toUpperCase() internally, so the text is 'NOUVEAU'
-      expect(find.text('NOUVEAU'), findsOneWidget);
+      // La story-row remplace le badge texte "NOUVEAU" par un Semantics
+      // label sur l'avatar (a11y — cf. lib/core/design/CLAUDE.md règle
+      // "Semantics sur icônes sans label").
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Semantics &&
+              w.properties.label == 'Nouveau trajet publié par Ibou',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Ibou'), findsOneWidget);
     },
   );
 }

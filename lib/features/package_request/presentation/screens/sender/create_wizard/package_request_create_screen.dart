@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -161,9 +160,8 @@ class _PackageRequestCreateScreenState
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
-          leading: IconButton(
-            tooltip: 'Retour',
-            onPressed: () {
+          leading: DonyBackCircle(
+            onTap: () {
               if (state.currentStep > 0) {
                 context
                     .read<PackageRequestFormBloc>()
@@ -172,15 +170,6 @@ class _PackageRequestCreateScreenState
                 context.pop();
               }
             },
-            icon: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-              ),
-              child: DonyIcon('chevron-left', size: 20, color: cs.primary),
-            ),
           ),
           title: Text(
             title,

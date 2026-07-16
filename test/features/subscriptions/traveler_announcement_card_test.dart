@@ -84,6 +84,30 @@ void main() {
     expect(tapped, isTrue);
   });
 
+  testWidgets('availableKg=0 → affiche "Complet" au lieu de "X kg dispo"', (tester) async {
+    await tester.pumpWidget(_wrap(TravelerAnnouncementCard(
+      announcement: _announcement(availableKg: 0),
+      onReserve: () {},
+    )));
+    expect(find.text('Complet'), findsOneWidget);
+    expect(find.textContaining('kg dispo'), findsNothing);
+  });
+
+  testWidgets('availableKg=0 → bouton Réserver désactivé', (tester) async {
+    var tapped = false;
+    await tester.pumpWidget(_wrap(TravelerAnnouncementCard(
+      announcement: _announcement(availableKg: 0),
+      onReserve: () => tapped = true,
+    )));
+
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNull);
+
+    await tester.tap(find.text('Réserver'), warnIfMissed: false);
+    await tester.pump();
+    expect(tapped, isFalse);
+  });
+
   testWidgets('pas de débordement sur 320px de large', (tester) async {
     tester.view.physicalSize = const Size(320, 800);
     tester.view.devicePixelRatio = 1.0;

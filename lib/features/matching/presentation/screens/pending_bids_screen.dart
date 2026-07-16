@@ -5,7 +5,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
@@ -367,24 +366,14 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
               elevation: 0,
               scrolledUnderElevation: 0,
               centerTitle: false,
-              leading: IconButton(
-                tooltip: 'Retour',
-                onPressed: () {
+              leading: DonyBackCircle(
+                onTap: () {
                   if (context.canPop()) {
                     context.pop();
                   } else {
                     context.go('/home');
                   }
                 },
-                icon: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                  ),
-                  child: DonyIcon('chevron-left', size: 20, color: cs.primary),
-                ),
               ),
               title: Text(
                 count > 0 ? 'À traiter ($count)' : 'À traiter',

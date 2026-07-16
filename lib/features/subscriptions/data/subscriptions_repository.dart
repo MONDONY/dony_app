@@ -64,6 +64,7 @@ class LastAnnouncement {
 class SubscriptionItem {
   final String travelerId;
   final String travelerName;
+  final String? avatarUrl;
   final bool isProAccount;
   final double? averageRating;
   final int ongoingTripsCount;
@@ -73,6 +74,7 @@ class SubscriptionItem {
   const SubscriptionItem({
     required this.travelerId,
     required this.travelerName,
+    this.avatarUrl,
     required this.isProAccount,
     required this.averageRating,
     required this.ongoingTripsCount,
@@ -84,6 +86,7 @@ class SubscriptionItem {
   SubscriptionItem copyWith({bool? pushEnabled}) => SubscriptionItem(
         travelerId: travelerId,
         travelerName: travelerName,
+        avatarUrl: avatarUrl,
         isProAccount: isProAccount,
         averageRating: averageRating,
         ongoingTripsCount: ongoingTripsCount,
@@ -95,6 +98,7 @@ class SubscriptionItem {
   factory SubscriptionItem.fromJson(Map<String, dynamic> json) => SubscriptionItem(
         travelerId: json['travelerId'] as String,
         travelerName: json['travelerName'] as String? ?? 'Voyageur',
+        avatarUrl: json['avatarUrl'] as String?,
         isProAccount: json['isProAccount'] as bool? ?? false,
         averageRating: (json['averageRating'] as num?)?.toDouble(),
         ongoingTripsCount: (json['ongoingTripsCount'] as num?)?.toInt() ?? 0,

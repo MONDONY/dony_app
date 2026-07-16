@@ -32,6 +32,7 @@ void main() {
         {
           'travelerId': 't1',
           'travelerName': 'Ibrahima D',
+          'avatarUrl': 'https://cdn.dony.app/signed/ibrahima.jpg',
           'isProAccount': true,
           'averageRating': 4.8,
           'ongoingTripsCount': 2,
@@ -51,6 +52,7 @@ void main() {
     final list = await ds.getMySubscriptions();
     expect(list, hasLength(1));
     expect(list.first.travelerName, 'Ibrahima D');
+    expect(list.first.avatarUrl, 'https://cdn.dony.app/signed/ibrahima.jpg');
     expect(list.first.lastAnnouncement!.arrivalCity, 'Dakar');
   });
 
@@ -74,6 +76,7 @@ void main() {
     final list = await ds.getMySubscriptions();
     expect(list, hasLength(1));
     expect(list.first.travelerName, 'Voyageur');
+    expect(list.first.avatarUrl, isNull);
   });
 
   test('getStatus parse subscribed/pushEnabled', () async {

@@ -452,20 +452,9 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (showBackButton)
-                          IconButton(
+                          DonyBackCircle(
                             key: const Key('activites-back'),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                              minWidth: 40,
-                              minHeight: 40,
-                            ),
-                            icon: DonyIcon(
-                              'chevron-left',
-                              size: 20,
-                              color: cs.primary,
-                            ),
-                            tooltip: 'Retour',
-                            onPressed: () => context.pop(),
+                            onTap: () => context.pop(),
                           ),
                         Text(
                           'Mes trajets',

@@ -85,7 +85,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
                   children: [
                     if (recent.isNotEmpty) ...[
                       const _SectionLabel('🆕 Ont publié récemment'),
-                      ...recent.map((i) => _slidable(context, i)),
+                      _SubscriptionStoryRow(items: recent),
                     ],
                     if (others.isNotEmpty) ...[
                       const _SectionLabel('Tous mes abonnements'),
@@ -116,7 +116,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const DonyIcon('trash-2', color: Colors.white, size: 24),
+                const DonyIcon('trash-2', color: Colors.white),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Désabonner',
@@ -161,6 +161,73 @@ class _SectionLabel extends StatelessWidget {
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w800,
             ),
+      ),
+    );
+  }
+}
+
+class _SubscriptionStoryRow extends StatelessWidget {
+  const _SubscriptionStoryRow({required this.items});
+
+  final List<SubscriptionItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 88,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(width: DonySpacing.md),
+        itemBuilder: (context, index) => _StoryAvatar(item: items[index]),
+      ),
+    );
+  }
+}
+
+class _StoryAvatar extends StatelessWidget {
+  const _StoryAvatar({required this.item});
+
+  final SubscriptionItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Semantics(
+      label: 'Nouveau trajet publié par ${item.travelerName}',
+      button: true,
+      child: GestureDetector(
+        onTap: () => context.push('/travelers/${item.travelerId}'),
+        child: SizedBox(
+          width: 64,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [cs.primary, DonyColors.accent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: DonyAvatar(name: item.travelerName, imageUrl: item.avatarUrl),
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                item.travelerName,
+                style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

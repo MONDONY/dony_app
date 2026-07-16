@@ -178,24 +178,14 @@ class _BidListView extends StatelessWidget {
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
-            leading: IconButton(
-              tooltip: 'Retour',
-              onPressed: () {
+            leading: DonyBackCircle(
+              onTap: () {
                 if (context.canPop()) {
                   context.pop();
                 } else {
                   context.go('/home');
                 }
               },
-              icon: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                ),
-                child: DonyIcon('chevron-left', size: 20, color: cs.primary),
-              ),
             ),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
