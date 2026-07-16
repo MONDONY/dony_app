@@ -55,9 +55,7 @@ Dégradé radial nuit fixe (choix de marque assumé, identique en light/dark mod
 
 ### 5. CTA sticky bottom (`_SubscriptionBar` / `_SubscribedRow`)
 
-- `DonyButton` existant conservé tel quel dans son API (`label`, `onPressed`, `variant`) et son comportement (confirmation de désabonnement via `DonyDialog`, toggle push inchangés).
-- Seul changement visuel : état "S'abonner" (non abonné) reçoit un fond dégradé bleu→marine assorti au hero, via un nouveau variant optionnel sur `DonyButton` (ou un wrapper local si le composant partagé ne doit pas gagner un variant à usage unique — trancher au moment du plan selon si ce dégradé a vocation à être réutilisé ailleurs ; pour l'instant, un seul call site, donc wrapper local par défaut, pas de nouveau variant DS).
-- État "Abonné ✓" : bouton contour (`DonyButtonVariant.secondary` actuel, inchangé) + cloche dans une pastille carrée (`cs.primaryContainer`/`cs.primary` selon `pushEnabled`), radius aligné sur `DonyRadius.lg`.
+- **Aucun changement.** Vérifié dans `dony_button.dart` : `DonyButtonVariant.primary` (le variant déjà utilisé par défaut pour "S'abonner") rend déjà un `_GlowButton` — dégradé diagonal bleu + ombre colorée (glow). C'est exactement le traitement visuel que la direction D visait pour ce bouton ; introduire un dégradé navy custom romprait la cohérence avec tous les autres CTA `primary` de l'app (paiement, réservation, etc.) pour un gain visuel marginal. Le bouton "S'abonner" et l'état "Abonné ✓" (`DonyButtonVariant.secondary`, contour) restent tels quels, avec leur `IconButton` cloche existant.
 
 ## Dark mode
 
@@ -77,4 +75,3 @@ Aucun changement de flux : les branches `ProfilePublicError`, `TravelerHubStatus
 
 1. Le hero fixe (non theme-aware) contredit la règle générale "toujours `cs.*`" du design system — c'est un choix assumé et documenté ici, à rappeler explicitement dans le plan pour qu'un futur reviewer ne le signale pas comme un bug.
 2. Le positionnement des stat-pills qui chevauchent le hero doit composer avec le `SliverAppBar` + `FlexibleSpaceBar` + `PreferredSizeWidget` (`_StatsAndTabBar`) existants — l'implémentation exacte (Transform vs Stack vs marge négative) est un détail d'implémentation à trancher pendant le plan, pas une question de design.
-3. Le variant CTA dégradé : décider au moment du plan s'il mérite de devenir un vrai variant `DonyButtonVariant` partagé (si un 2e call site apparaît un jour) ou de rester un wrapper local (cas actuel, un seul call site).
