@@ -133,89 +133,124 @@ class _LoadedProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Align(
-      alignment: Alignment.bottomLeft,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.base,
-          0,
-          DonySpacing.base,
-          _StatsAndTabBar.height + DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            // Avatar avec bordure blanche et ombre verte
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: cs.surface, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: cs.success.withValues(alpha: 0.30),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
+    return Stack(
+      children: [
+        // Fond nuit fixe (choix de marque assumé, non theme-aware — voir spec
+        // section "Dark mode" : ce hero reste identique en light/dark mode).
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(-0.6, -0.9),
+                radius: 1.4,
+                colors: [
+                  DonyColors.proBg3,
+                  DonyColors.proBg1,
+                  DonyColors.proBg2,
                 ],
               ),
-              child: DonyAvatar(
-                name: profile.displayName,
-                imageUrl: profile.avatarUrl,
-                size: DonyAvatarSize.lg,
-                verified: profile.kycVerified,
-                pro: profile.isProAccount,
+            ),
+          ),
+        ),
+        // Halo diffus terracotta, haut-droit
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0.8, -0.7),
+                radius: 0.9,
+                colors: [
+                  DonyColors.accent.withValues(alpha: 0.30),
+                  DonyColors.accent.withValues(alpha: 0.0),
+                ],
               ),
             ),
-            const SizedBox(width: DonySpacing.md),
-            // Infos à droite
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    profile.displayName,
-                    style: tt.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
-                      letterSpacing: -0.4,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: DonySpacing.xs),
-                  Wrap(
-                    spacing: DonySpacing.xs,
-                    runSpacing: DonySpacing.xs,
-                    children: [
-                      if (profile.isProAccount)
-                        _ProfileBadge(
-                          lucideIcon: 'star',
-                          label: 'Compte PRO',
-                          iconColor: cs.warning,
-                        ),
-                      if (profile.isKiloPro)
-                        _ProfileBadge(
-                          iconAsset: 'package',
-                          label: 'Kilo Pro',
-                          iconColor: cs.warning,
-                        ),
-                      if (profile.kycVerified)
-                        _ProfileBadge(
-                          lucideIcon: 'badge-check',
-                          label: 'Identité vérifiée',
-                          iconColor: cs.primary,
-                        ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              0,
+              DonySpacing.base,
+              _StatsAndTabBar.height + DonySpacing.md,
+            ),
+            child: Row(
+              children: [
+                // Avatar avec bordure blanche et ombre accent
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: DonyColors.accent.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
-                ],
-              ),
+                  child: DonyAvatar(
+                    name: profile.displayName,
+                    imageUrl: profile.avatarUrl,
+                    size: DonyAvatarSize.lg,
+                    verified: profile.kycVerified,
+                    pro: profile.isProAccount,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.md),
+                // Infos à droite
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        profile.displayName,
+                        style: tt.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.4,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: DonySpacing.xs),
+                      Wrap(
+                        spacing: DonySpacing.xs,
+                        runSpacing: DonySpacing.xs,
+                        children: [
+                          if (profile.isProAccount)
+                            _ProfileBadge(
+                              lucideIcon: 'star',
+                              label: 'Compte PRO',
+                              iconColor: DonyColors.kycBadgeGold,
+                            ),
+                          if (profile.isKiloPro)
+                            _ProfileBadge(
+                              iconAsset: 'package',
+                              label: 'Kilo Pro',
+                              iconColor: DonyColors.kycBadgeGold,
+                            ),
+                          if (profile.kycVerified)
+                            _ProfileBadge(
+                              lucideIcon: 'badge-check',
+                              label: 'Identité vérifiée',
+                              iconColor: DonyColors.kycBadgeBlue,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -235,15 +270,14 @@ class _ProfileBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 3),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: cs.outline),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -291,6 +325,13 @@ class _StatCard extends StatelessWidget {
         color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         border: Border.all(color: cs.outline),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -322,7 +363,8 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
 
   final TabController controller;
 
-  static const double height = 144; // stats (96px) + TabBar (48px)
+  // 96px (stats) + 18px (marge pour l'effet "flottant") + 48px (TabBar) = 162px
+  static const double height = 162;
 
   @override
   Size get preferredSize => const Size.fromHeight(height);
@@ -335,7 +377,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Stats row (96px) ──────────────────────────────────────────────
+          // ── Stats row (114px = 96 + 18 de marge pour le Transform) ────────
           BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
             buildWhen: (p, c) =>
                 c is ProfilePublicLoaded ||
@@ -344,7 +386,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
             builder: (context, state) {
               if (state is! ProfilePublicLoaded) {
                 return SizedBox(
-                  height: 96,
+                  height: 114,
                   child: Center(
                     child: SizedBox(
                       width: 20,
@@ -359,48 +401,52 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
               }
               final profile = state.profile;
               return SizedBox(
-                height: 96,
+                height: 114,
                 child: Container(
                   color: Theme.of(context).scaffoldBackgroundColor,
                   padding: const EdgeInsets.fromLTRB(
                     DonySpacing.base,
-                    DonySpacing.sm,
+                    DonySpacing.sm + 18,
                     DonySpacing.base,
                     DonySpacing.sm,
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          lucideIcon: 'star',
-                          iconColor: cs.warning,
-                          value: profile.averageRating > 0
-                              ? profile.averageRating.toStringAsFixed(1)
-                              : '–',
-                          label: 'Note',
+                  child: Transform.translate(
+                    // Fait "flotter" les pills sur le bas du hero immersif.
+                    offset: const Offset(0, -18),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            lucideIcon: 'star',
+                            iconColor: cs.warning,
+                            value: profile.averageRating > 0
+                                ? profile.averageRating.toStringAsFixed(1)
+                                : '–',
+                            label: 'Note',
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: _StatCard(
-                          iconAsset: 'package',
-                          iconColor: cs.primary,
-                          value: '${profile.completedBidsCount}',
-                          label: 'Livraisons',
+                        const SizedBox(width: DonySpacing.sm),
+                        Expanded(
+                          child: _StatCard(
+                            iconAsset: 'package',
+                            iconColor: cs.primary,
+                            value: '${profile.completedBidsCount}',
+                            label: 'Livraisons',
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: _StatCard(
-                          lucideIcon: 'timer',
-                          iconColor: cs.success,
-                          value: profile.responseDelayHours != null
-                              ? '<${profile.responseDelayHours}h'
-                              : '–',
-                          label: 'Réponse',
+                        const SizedBox(width: DonySpacing.sm),
+                        Expanded(
+                          child: _StatCard(
+                            lucideIcon: 'timer',
+                            iconColor: cs.success,
+                            value: profile.responseDelayHours != null
+                                ? '<${profile.responseDelayHours}h'
+                                : '–',
+                            label: 'Réponse',
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
