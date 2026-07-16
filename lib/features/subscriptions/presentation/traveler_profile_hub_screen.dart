@@ -363,8 +363,8 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
 
   final TabController controller;
 
-  // 96px (stats) + 18px (marge pour l'effet "flottant") + 48px (TabBar) = 162px
-  static const double height = 162;
+  // 96px (stats) + 48px (TabBar) = 144px
+  static const double height = 144;
 
   @override
   Size get preferredSize => const Size.fromHeight(height);
@@ -377,7 +377,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Stats row (114px = 96 + 18 de marge pour le Transform) ────────
+          // ── Stats row ───────────────────────────────────────────────────
           BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
             buildWhen: (p, c) =>
                 c is ProfilePublicLoaded ||
@@ -386,7 +386,7 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
             builder: (context, state) {
               if (state is! ProfilePublicLoaded) {
                 return SizedBox(
-                  height: 114,
+                  height: 96,
                   child: Center(
                     child: SizedBox(
                       width: 20,
@@ -401,52 +401,48 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
               }
               final profile = state.profile;
               return SizedBox(
-                height: 114,
+                height: 96,
                 child: Container(
                   color: Theme.of(context).scaffoldBackgroundColor,
                   padding: const EdgeInsets.fromLTRB(
                     DonySpacing.base,
-                    DonySpacing.sm + 18,
+                    DonySpacing.sm,
                     DonySpacing.base,
                     DonySpacing.sm,
                   ),
-                  child: Transform.translate(
-                    // Fait "flotter" les pills sur le bas du hero immersif.
-                    offset: const Offset(0, -18),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _StatCard(
-                            lucideIcon: 'star',
-                            iconColor: cs.warning,
-                            value: profile.averageRating > 0
-                                ? profile.averageRating.toStringAsFixed(1)
-                                : '–',
-                            label: 'Note',
-                          ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          lucideIcon: 'star',
+                          iconColor: cs.warning,
+                          value: profile.averageRating > 0
+                              ? profile.averageRating.toStringAsFixed(1)
+                              : '–',
+                          label: 'Note',
                         ),
-                        const SizedBox(width: DonySpacing.sm),
-                        Expanded(
-                          child: _StatCard(
-                            iconAsset: 'package',
-                            iconColor: cs.primary,
-                            value: '${profile.completedBidsCount}',
-                            label: 'Livraisons',
-                          ),
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: _StatCard(
+                          iconAsset: 'package',
+                          iconColor: cs.primary,
+                          value: '${profile.completedBidsCount}',
+                          label: 'Livraisons',
                         ),
-                        const SizedBox(width: DonySpacing.sm),
-                        Expanded(
-                          child: _StatCard(
-                            lucideIcon: 'timer',
-                            iconColor: cs.success,
-                            value: profile.responseDelayHours != null
-                                ? '<${profile.responseDelayHours}h'
-                                : '–',
-                            label: 'Réponse',
-                          ),
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: _StatCard(
+                          lucideIcon: 'timer',
+                          iconColor: cs.success,
+                          value: profile.responseDelayHours != null
+                              ? '<${profile.responseDelayHours}h'
+                              : '–',
+                          label: 'Réponse',
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );
