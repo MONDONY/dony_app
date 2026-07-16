@@ -397,12 +397,13 @@ class _HeroAvatar extends StatelessWidget {
     Widget avatar;
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       avatar = ClipOval(
-        child: Image.network(
-          imageUrl!,
+        child: DonyImage(
+          url: imageUrl!,
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => _initialsCircle(initials, size),
+          placeholder: (_) => _initialsCircle(initials, size),
+          errorWidget: (_) => _initialsCircle(initials, size),
         ),
       );
     } else {
@@ -1081,12 +1082,14 @@ class _ReviewAvatar extends StatelessWidget {
 
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return ClipOval(
-        child: Image.network(
-          imageUrl!,
+        child: DonyImage(
+          url: imageUrl!,
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) =>
+          placeholder: (_) =>
+              _InitialsCircle(initials: initials, size: size, cs: cs),
+          errorWidget: (_) =>
               _InitialsCircle(initials: initials, size: size, cs: cs),
         ),
       );

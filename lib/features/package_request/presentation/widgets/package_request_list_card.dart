@@ -324,6 +324,7 @@ class _Thumbnail extends StatelessWidget {
               child: url != null && url.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: url,
+                      cacheKey: DonyImage.stableCacheKey(url),
                       fit: BoxFit.cover,
                       placeholder: (_, _) =>
                           _PlaceholderBox(item: item, cs: cs),
@@ -712,6 +713,7 @@ class _MatchThumbnail extends StatelessWidget {
         child: url != null && url.isNotEmpty
             ? CachedNetworkImage(
                 imageUrl: url,
+                cacheKey: DonyImage.stableCacheKey(url),
                 fit: BoxFit.cover,
                 placeholder: (_, _) => _matchPlaceholder(cs),
                 errorWidget: (_, _, _) => _matchPlaceholder(cs),

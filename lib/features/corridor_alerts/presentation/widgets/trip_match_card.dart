@@ -269,6 +269,7 @@ class _TripThumbnail extends StatelessWidget {
         child: url != null && url.isNotEmpty
             ? CachedNetworkImage(
                 imageUrl: url,
+                cacheKey: DonyImage.stableCacheKey(url),
                 fit: BoxFit.cover,
                 placeholder: (_, _) => _placeholder(cs),
                 errorWidget: (_, _, _) => _placeholder(cs),

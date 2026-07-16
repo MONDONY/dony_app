@@ -295,12 +295,17 @@ class _AuthorAvatar extends StatelessWidget {
 
     if (avatarUrl != null && avatarUrl!.isNotEmpty) {
       return ClipOval(
-        child: Image.network(
-          avatarUrl!,
+        child: DonyImage(
+          url: avatarUrl!,
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _InitialsCircle(
+          placeholder: (_) => _InitialsCircle(
+            initials: initials,
+            size: size,
+            cs: cs,
+          ),
+          errorWidget: (_) => _InitialsCircle(
             initials: initials,
             size: size,
             cs: cs,

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dony/core/design/widgets/dony_image.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -132,6 +133,7 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
                         onPageChanged: (i) => _index.value = i,
                         itemBuilder: (_, i) => CachedNetworkImage(
                           imageUrl: widget.photos[i].url,
+                          cacheKey: DonyImage.stableCacheKey(widget.photos[i].url),
                           fit: BoxFit.cover,
                           placeholder: (_, _) => Center(
                             child: CircularProgressIndicator(

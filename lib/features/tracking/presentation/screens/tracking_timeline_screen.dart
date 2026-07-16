@@ -325,24 +325,21 @@ class _TimelineItem extends StatelessWidget {
                     ClipRRect(
                       borderRadius:
                           BorderRadius.circular(DonyRadius.sm),
-                      child: Image.network(
-                        event.photoUrl!,
+                      child: DonyImage(
+                        url: event.photoUrl!,
                         height: 120,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        loadingBuilder: (_, child, progress) {
-                          if (progress == null) return child;
-                          return Container(
-                            height: 120,
-                            color: cs.primaryContainer,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                  color: cs.primary,
-                                  strokeWidth: 2),
-                            ),
-                          );
-                        },
-                        errorBuilder: (_, __, ___) => Container(
+                        placeholder: (_) => Container(
+                          height: 120,
+                          color: cs.primaryContainer,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                                color: cs.primary,
+                                strokeWidth: 2),
+                          ),
+                        ),
+                        errorWidget: (_) => Container(
                           height: 60,
                           color: cs.surfaceContainerHighest,
                           child: Center(

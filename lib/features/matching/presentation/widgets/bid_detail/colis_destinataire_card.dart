@@ -84,6 +84,7 @@ class _PhotoGallery extends StatelessWidget {
                     children: [
                       CachedNetworkImage(
                         imageUrl: shown[i].url,
+                        cacheKey: DonyImage.stableCacheKey(shown[i].url),
                         fit: BoxFit.cover,
                         placeholder: (_, _) =>
                             ColoredBox(color: cs.surfaceContainerHighest),

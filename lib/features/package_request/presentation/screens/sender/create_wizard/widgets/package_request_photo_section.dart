@@ -176,6 +176,7 @@ class _PhotoThumb extends StatelessWidget {
             child: upload.isRemote
                 ? CachedNetworkImage(
                     imageUrl: upload.remoteUrl!,
+                    cacheKey: DonyImage.stableCacheKey(upload.remoteUrl!),
                     width: 64,
                     height: 64,
                     fit: BoxFit.cover,

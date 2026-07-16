@@ -1,4 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dony/core/design/tokens/animation_tokens.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/design/widgets/dony_image.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
@@ -63,26 +66,34 @@ class DonyAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final dim = _dimension;
+    final initials = _InitialsText(initials: _initials, fontSize: _fontSize);
     return Stack(
       children: [
         Container(
           width: dim,
           height: dim,
           decoration: BoxDecoration(
-            color: imageUrl != null ? cs.surfaceContainerHighest : _bgColor,
+            color: _bgColor,
             shape: BoxShape.circle,
           ),
           child: imageUrl != null
               ? ClipOval(
-                  child: Image.network(
-                    imageUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl!,
+                    cacheKey: DonyImage.stableCacheKey(imageUrl!),
+                    width: dim,
+                    height: dim,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => _InitialsText(initials: _initials, fontSize: _fontSize),
+                    fadeInDuration: DonyDuration.micro,
+                    fadeInCurve: DonyCurve.enter,
+                    fadeOutDuration: DonyDuration.micro,
+                    fadeOutCurve: DonyCurve.exit,
+                    placeholder: (_, __) => initials,
+                    errorWidget: (_, __, ___) => initials,
                   ),
                 )
-              : _InitialsText(initials: _initials, fontSize: _fontSize),
+              : initials,
         ),
         if (verified)
           Positioned(

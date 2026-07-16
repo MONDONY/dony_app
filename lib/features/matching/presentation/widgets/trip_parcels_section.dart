@@ -217,6 +217,7 @@ class _ColisRow extends StatelessWidget {
                     height: 44,
                     child: CachedNetworkImage(
                       imageUrl: bid.photos.first.url,
+                      cacheKey: DonyImage.stableCacheKey(bid.photos.first.url),
                       fit: BoxFit.cover,
                       placeholder: (_, _) =>
                           ColoredBox(color: cs.surfaceContainerHighest),
