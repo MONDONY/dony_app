@@ -387,24 +387,7 @@ class _DarkHeader extends StatelessWidget {
             child: Row(
               children: [
                 if (canGoBack)
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                      ),
-                      child: const DonyIcon(
-                        'chevron-left',
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    onPressed: () => context.pop(),
-                  )
+                  DonyBackCircle(onTap: () => context.pop())
                 else
                   const SizedBox(width: DonySpacing.base),
                 const SizedBox(width: DonySpacing.xs),

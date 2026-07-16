@@ -101,26 +101,13 @@ class _ThreadView extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(DonySpacing.base, 0, DonySpacing.sm, 0),
         child: Row(
           children: [
-            Builder(builder: (ctx) {
-              final cs = Theme.of(ctx).colorScheme;
-              return IconButton(
-                tooltip: 'Retour',
-                // Arrivée possible via go() (écran de succès post-acceptation) :
-                // la pile est alors vide, pop() lèverait "nothing to pop".
-                onPressed: () => context.canPop()
-                    ? context.pop()
-                    : context.go('/negotiations'),
-                icon: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                  ),
-                  child: DonyIcon('chevron-left', size: 20, color: cs.primary),
-                ),
-              );
-            }),
+            DonyBackCircle(
+              // Arrivée possible via go() (écran de succès post-acceptation) :
+              // la pile est alors vide, pop() lèverait "nothing to pop".
+              onTap: () => context.canPop()
+                  ? context.pop()
+                  : context.go('/negotiations'),
+            ),
             const SizedBox(width: DonySpacing.sm + 2),
             if (thread != null) ...[
               _PartnerTitle(thread: thread, viewerUserId: viewerUserId),

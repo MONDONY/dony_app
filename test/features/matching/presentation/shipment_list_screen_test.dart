@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -617,11 +618,6 @@ void main() {
 
     expect(find.text('Mes envois'), findsOneWidget);
     // Back button appears because canPop is true (pushed route)
-    expect(
-      find.byWidgetPredicate(
-        (w) => w is DonyIcon && w.name == 'chevron-left',
-      ),
-      findsOneWidget,
-    );
+    expect(find.byType(DonyBackCircle), findsOneWidget);
   });
 }

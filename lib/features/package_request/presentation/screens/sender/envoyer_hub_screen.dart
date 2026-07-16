@@ -4,7 +4,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
@@ -424,17 +423,9 @@ class _EnvoyerHeader extends StatelessWidget {
       child: Row(
         children: [
           if (showBackButton)
-            IconButton(
+            DonyBackCircle(
               key: const Key('envoyer-back'),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              icon: DonyIcon(
-                'chevron-left',
-                size: 20,
-                color: cs.primary,
-              ),
-              tooltip: 'Retour',
-              onPressed: () => context.pop(),
+              onTap: () => context.pop(),
             ),
           Text(
             'Envoyer',

@@ -182,19 +182,7 @@ class _ChatScreenState extends State<ChatScreen> {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-        leading: IconButton(
-          tooltip: 'Retour',
-          onPressed: () => context.pop(),
-          icon: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-            ),
-            child: DonyIcon('chevron-left', size: 20, color: cs.primary),
-          ),
-        ),
+        leading: DonyBackCircle(onTap: () => context.pop()),
         title: Row(
           children: [
             DonyAvatar(
