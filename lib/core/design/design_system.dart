@@ -14,6 +14,7 @@ export 'package:dony/core/design/widgets/dony_app_bar.dart';
 export 'package:dony/core/design/widgets/dony_hero_avatar.dart';
 export 'package:dony/core/design/widgets/dony_step_pill.dart';
 export 'package:dony/core/design/widgets/dony_back_circle.dart';
+export 'package:dony/core/design/widgets/dony_urgent_badge.dart';
 // Foundation components
 export 'package:dony/core/design/widgets/dony_logo.dart';
 export 'package:dony/core/design/widgets/dony_avatar.dart';

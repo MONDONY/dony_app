@@ -22,6 +22,7 @@ AnnouncementModel _makeAnn({
   bool kiloPro = false,
   bool isProAccount = false,
   bool kycVerified = false,
+  DateTime? departureDate,
 }) =>
     AnnouncementModel(
       id: 'a1',
@@ -30,7 +31,7 @@ AnnouncementModel _makeAnn({
       arrivalCity: arrivalCity,
       departureFlag: departureFlag,
       arrivalFlag: arrivalFlag,
-      departureDate: DateTime(2026, 6, 15),
+      departureDate: departureDate ?? DateTime(2026, 6, 15),
       availableKg: 8,
       totalKg: 8,
       pricePerKg: 12,
@@ -498,6 +499,36 @@ void main() {
 
       // Card renders the heart — owner guard is caller's responsibility
       expect(find.byType(FavoriteHeartButton), findsOneWidget);
+    });
+  });
+
+  // ── Badge urgent ─────────────────────────────────────────────────────────
+
+  group('TravelerCard – badge urgent', () {
+    testWidgets('affiche le badge Urgent quand annonce.isUrgent', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(
+          departureDate: DateTime.now().add(const Duration(days: 1)),
+        ),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('🔥 Urgent'), findsOneWidget);
+    });
+
+    testWidgets('pas de badge Urgent si départ lointain', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(
+          departureDate: DateTime.now().add(const Duration(days: 20)),
+        ),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('🔥 Urgent'), findsNothing);
     });
   });
 }

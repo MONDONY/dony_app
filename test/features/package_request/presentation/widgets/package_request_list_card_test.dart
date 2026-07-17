@@ -17,11 +17,13 @@ PackageRequestSearchItem _item({
   bool kycVerified = true,
   double rating = 4.9,
   int totalRatings = 12,
+  DateTime? desiredDate,
+  bool? urgent,
 }) => PackageRequestSearchItem(
   id: 'pr1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 6, 15),
+  desiredDate: desiredDate ?? DateTime(2026, 6, 15),
   dateToleranceDays: 2,
   weightKg: 5,
   parcelSize: size,
@@ -29,6 +31,7 @@ PackageRequestSearchItem _item({
   targetPriceEur: targetPrice,
   photoUrl: photoUrl,
   photoUrls: photoUrls,
+  urgent: urgent,
   sender: SenderPublicProfile(
     id: 's1',
     displayName: 'Marie Diop',
@@ -172,6 +175,24 @@ void main() {
       await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
       await tester.pumpAndSettle();
       expect(find.text('Faire une offre'), findsNothing);
+    });
+  });
+
+  group('PackageRequestListCard – badge urgent', () {
+    testWidgets('affiche le badge Urgent quand item.isUrgent', (tester) async {
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(urgent: true))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('🔥 Urgent'), findsOneWidget);
+    });
+
+    testWidgets('pas de badge Urgent si item.isUrgent est faux', (tester) async {
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(urgent: false))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('🔥 Urgent'), findsNothing);
     });
   });
 }

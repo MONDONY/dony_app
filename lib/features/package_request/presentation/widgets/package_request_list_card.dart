@@ -149,6 +149,10 @@ class PackageRequestListCard extends StatelessWidget {
                                   _OwnRequestChip(cs: cs, tt: tt)
                                 else
                                   packageStatusChip(context, status),
+                                if (item.isUrgent) ...[
+                                  const SizedBox(width: DonySpacing.xs),
+                                  const DonyUrgentBadge(),
+                                ],
                                 if (showFavorite) ...[
                                   const SizedBox(width: DonySpacing.xs),
                                   _buildRequestFavoriteHeart(context),

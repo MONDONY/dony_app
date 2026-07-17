@@ -225,6 +225,7 @@ class TravelerCard extends StatelessWidget {
                           ),
                           if (isKiloPro) const _KycBadge(),
                           if (isProAccount) const _ProBadge(),
+                          if (announcement.isUrgent) const DonyUrgentBadge(),
                         ],
                       ),
                     ],
