@@ -799,7 +799,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _lastBuiltRequests = items;
 
     final markers = <Marker>{};
+    // On ne se voit jamais soi-même dans la recherche : les demandes dont
+    // l'utilisateur est l'expéditeur sont exclues de la carte.
+    final uid = context.read<AuthBloc>().state.currentUserId;
     for (final item in items) {
+      if (uid != null && item.sender.id == uid) continue;
       if (item.departureLat == null || item.departureLng == null) continue;
       final price = item.targetPriceEur ?? 0;
       final icon = await MarkerBitmapFactory.pricePill(
@@ -827,6 +831,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
     }
   }
 
+  /// Exclut les demandes de l'utilisateur courant : on ne se voit jamais
+  /// soi-même dans la recherche (les demandes restent accessibles via
+  /// « Mes colis »).
+  List<PackageRequestSearchItem> _visibleRequests(
+    List<PackageRequestSearchItem> items,
+  ) {
+    final uid = context.read<AuthBloc>().state.currentUserId;
+    if (uid == null) return items;
+    return items.where((it) => it.sender.id != uid).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isTraveler = _isTraveler;
@@ -843,9 +858,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
           final raw = state is AnnouncementSearchLoaded
               ? state.results
               : <AnnouncementModel>[];
-          final announcements = _urgencyFilter == null
+          // On ne se voit jamais soi-même dans la recherche : les trajets dont
+          // l'utilisateur est le voyageur sont exclus du feed ET de la carte
+          // (ils restent accessibles via « Mes trajets » / Activités).
+          final ownFiltered = currentUserId == null
               ? raw
-              : raw
+              : raw.where((a) => a.travelerId != currentUserId).toList();
+          final announcements = _urgencyFilter == null
+              ? ownFiltered
+              : ownFiltered
                     .where((a) => _urgencyFilter!.matches(a.departureDate))
                     .toList();
 
@@ -1000,7 +1021,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                             tabs: [
                                               Tab(
                                                 text:
-                                                    '📦 ${prState.results.length} colis',
+                                                    '📦 ${_visibleRequests(prState.results).length} colis',
                                               ),
                                               Tab(
                                                 text:
@@ -1012,7 +1033,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                             child: TabBarView(
                                               children: [
                                                 NearMePackageRequestCarousel(
-                                                  items: prState.results,
+                                                  items: _visibleRequests(prState.results),
                                                   userPosition:
                                                       _userPosition != null
                                                       ? (
@@ -1090,7 +1111,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     )
                               : showParcelControls
                               ? NearMePackageRequestCarousel(
-                                      items: prState.results,
+                                      items: _visibleRequests(prState.results),
                                       userPosition: _userPosition != null
                                           ? (
                                               lat: _userPosition!.latitude,
@@ -1626,7 +1647,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         builder: (ctx, bidState) {
                           final myActiveBids = bidState
                               .activeBidsByAnnouncement();
-                          final parcels = prState.results;
+                          final parcels = _visibleRequests(prState.results);
                           final totalCount = count + parcels.length;
 
                           if (totalCount == 0 &&
@@ -1792,7 +1813,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           ),
                         );
                       }
-                      if (prState.results.isEmpty) {
+                      final visibleResults = _visibleRequests(prState.results);
+                      if (visibleResults.isEmpty) {
                         final hasFilters = _prActiveFilterCount > 0;
                         return SliverFillRemaining(
                           hasScrollBody: false,
@@ -1823,11 +1845,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   _kFloatingNavClearance,
                             ),
                             sliver: SliverList.separated(
-                              itemCount: prState.results.length,
+                              itemCount: visibleResults.length,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: DonySpacing.md),
                               itemBuilder: (_, i) {
-                                final pr = prState.results[i];
+                                final pr = visibleResults[i];
                                 final isOwn =
                                     currentUserId != null &&
                                     pr.sender.id == currentUserId;
