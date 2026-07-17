@@ -125,5 +125,100 @@ void main() {
         expect(find.text('Bamako'), findsOneWidget);
       },
     );
+
+    // -------------------------------------------------------------------
+    // Task 5 — Feedback informatif « sera signalée urgente » sous la date
+    // souhaitée.
+    // -------------------------------------------------------------------
+    testWidgets(
+      'date proche (demain) → le hint urgent est affiché',
+      (tester) async {
+        final req = PackageRequest(
+          id: 'r-urgent',
+          senderId: 's-1',
+          departureCity: 'Lyon',
+          arrivalCity: 'Bamako',
+          desiredDate: DateTime.now().add(const Duration(days: 1)),
+          dateToleranceDays: 2,
+          weightKg: 8,
+          parcelSize: ParcelSize.medium,
+          transportMode: TransportMode.plane,
+          categories: const ['Vêtements'],
+          status: PackageRequestStatus.open,
+          createdAt: DateTime.now(),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light,
+            home: BlocProvider(
+              create: (_) => PackageRequestFormBloc(
+                packageRepo,
+                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+                editing: req,
+              ),
+              child: const Scaffold(body: Step1TrajetColis()),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('🔥 Date proche — cette demande sera signalée urgente'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'date lointaine → le hint urgent reste absent',
+      (tester) async {
+        final req = PackageRequest(
+          id: 'r-far',
+          senderId: 's-1',
+          departureCity: 'Lyon',
+          arrivalCity: 'Bamako',
+          desiredDate: DateTime.now().add(const Duration(days: 60)),
+          dateToleranceDays: 2,
+          weightKg: 8,
+          parcelSize: ParcelSize.medium,
+          transportMode: TransportMode.plane,
+          categories: const ['Vêtements'],
+          status: PackageRequestStatus.open,
+          createdAt: DateTime.now(),
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light,
+            home: BlocProvider(
+              create: (_) => PackageRequestFormBloc(
+                packageRepo,
+                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+                editing: req,
+              ),
+              child: const Scaffold(body: Step1TrajetColis()),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('🔥 Date proche — cette demande sera signalée urgente'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'pas de date sélectionnée → le hint urgent est absent',
+      (tester) async {
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('🔥 Date proche — cette demande sera signalée urgente'),
+          findsNothing,
+        );
+      },
+    );
   });
 }

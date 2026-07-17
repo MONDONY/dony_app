@@ -4,6 +4,7 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -324,6 +325,25 @@ class TrajetStep extends StatelessWidget {
                 ),
                 requiredLabel: true,
                 onTap: lockDate ? () {} : () => onSelectDate(),
+              ),
+              // ── Feedback informatif « sera signalé urgent » ────────────
+              // Non-bloquant : n'affecte jamais la soumission du formulaire.
+              ValueListenableBuilder<DateTime?>(
+                valueListenable: departureDateNotifier,
+                builder: (context, date, _) {
+                  if (date == null || !isUrgentDate(date)) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: DonySpacing.xs),
+                    child: Text(
+                      '🔥 Départ proche — ce trajet sera signalé urgent',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: DonyColors.urgencyRed,
+                          ),
+                    ),
+                  );
+                },
               ),
             ],
           ).animate().fadeIn(delay: 60.ms);

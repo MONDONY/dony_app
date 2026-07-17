@@ -20,6 +20,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
@@ -77,6 +78,8 @@ Widget _buildSubject({
 void main() {
   late MockCitySearchBloc departureCityBloc;
   late MockCitySearchBloc arrivalCityBloc;
+
+  setUpAll(() => initializeDateFormatting('fr'));
 
   setUp(() {
     departureCityBloc = MockCitySearchBloc();
@@ -498,6 +501,105 @@ void main() {
           tester.element(find.byKey(const Key('departureTimeField'))),
         ).colorScheme;
         expect(departureTimeField.prefixIconColor, equals(cs.primary));
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // Task 5 — Feedback informatif « sera signalé urgent » sous le date picker.
+  // ---------------------------------------------------------------------------
+  group('Feedback urgent sous le date picker trajet', () {
+    testWidgets(
+      'date proche (demain) → le hint urgent est affiché',
+      (tester) async {
+        final departureCityNotifier = ValueNotifier<String?>(null);
+        final arrivalCityNotifier = ValueNotifier<String?>(null);
+        final departureDateNotifier = ValueNotifier<DateTime?>(null);
+        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: TrajetStep(
+                  departureCityNotifier: departureCityNotifier,
+                  arrivalCityNotifier: arrivalCityNotifier,
+                  departureDateNotifier: departureDateNotifier,
+                  departureTimeNotifier: departureTimeNotifier,
+                  arrivalTimeNotifier: arrivalTimeNotifier,
+                  transportModeNotifier: transportModeNotifier,
+                  departureCityBloc: departureCityBloc,
+                  arrivalCityBloc: arrivalCityBloc,
+                  onSelectDepartureTime: () async {},
+                  onSelectArrivalTime: () async {},
+                  onSelectDate: () async {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Absent tant qu'aucune date n'est sélectionnée.
+        expect(
+          find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+          findsNothing,
+        );
+
+        departureDateNotifier.value =
+            DateTime.now().add(const Duration(days: 1));
+        await tester.pump();
+
+        expect(
+          find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'date lointaine → le hint urgent reste absent (SizedBox.shrink)',
+      (tester) async {
+        final departureCityNotifier = ValueNotifier<String?>(null);
+        final arrivalCityNotifier = ValueNotifier<String?>(null);
+        final departureDateNotifier = ValueNotifier<DateTime?>(null);
+        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: TrajetStep(
+                  departureCityNotifier: departureCityNotifier,
+                  arrivalCityNotifier: arrivalCityNotifier,
+                  departureDateNotifier: departureDateNotifier,
+                  departureTimeNotifier: departureTimeNotifier,
+                  arrivalTimeNotifier: arrivalTimeNotifier,
+                  transportModeNotifier: transportModeNotifier,
+                  departureCityBloc: departureCityBloc,
+                  arrivalCityBloc: arrivalCityBloc,
+                  onSelectDepartureTime: () async {},
+                  onSelectArrivalTime: () async {},
+                  onSelectDate: () async {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+
+        departureDateNotifier.value =
+            DateTime.now().add(const Duration(days: 60));
+        await tester.pump();
+
+        expect(
+          find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+          findsNothing,
+        );
       },
     );
   });
