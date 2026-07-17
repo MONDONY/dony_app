@@ -758,6 +758,7 @@ void main() {
               radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
             )).thenAnswer((_) async => [buildAnnouncement()]);
         return buildBloc();
       },
@@ -786,6 +787,7 @@ void main() {
               radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
             )).thenAnswer((_) async => []);
         return buildBloc();
       },
@@ -811,6 +813,7 @@ void main() {
               radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
             )).thenThrow(Exception('Network error'));
         return buildBloc();
       },
@@ -835,6 +838,7 @@ void main() {
               radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
             )).thenAnswer((_) async => [buildAnnouncement(id: 'new')]);
         return buildBloc();
       },
@@ -872,6 +876,7 @@ void main() {
               radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
             )).thenThrow(Exception('network down'));
         return buildBloc();
       },
@@ -906,6 +911,7 @@ void main() {
               radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
             )).thenAnswer((_) async => const []);
         return buildBloc();
       },
@@ -928,6 +934,79 @@ void main() {
               radiusKm: 25,
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
+            )).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'AnnouncementSearchRequested(urgent: true) → repo appelé avec urgent: true',
+      build: () {
+        when(() => mockRepo.searchAnnouncements(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
+            )).thenAnswer((_) async => const []);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSearchRequested(urgent: true)),
+      verify: (_) {
+        verify(() => mockRepo.searchAnnouncements(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+              urgent: true,
+            )).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'AnnouncementSearchRequested sans urgent → repo appelé avec urgent: null (jamais false)',
+      build: () {
+        when(() => mockRepo.searchAnnouncements(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+              urgent: any(named: 'urgent'),
+            )).thenAnswer((_) async => const []);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSearchRequested()),
+      verify: (_) {
+        verify(() => mockRepo.searchAnnouncements(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+              urgent: null,
             )).called(1);
       },
     );

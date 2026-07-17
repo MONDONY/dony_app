@@ -49,6 +49,7 @@ void main() {
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
           page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
         ),
       ).thenAnswer(
         (_) async => PackageRequestSearchPage(
@@ -91,6 +92,7 @@ void main() {
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
           page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
         ),
       ).thenAnswer(
         (_) async => PackageRequestSearchPage(
@@ -132,6 +134,7 @@ void main() {
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
           page: 1,
+          urgent: any(named: 'urgent'),
         ),
       ).called(1);
     },
@@ -151,6 +154,7 @@ void main() {
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
           page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
         ),
       ).thenThrow(Exception('network error'));
       return PackageRequestSearchBloc(repo);
@@ -195,6 +199,7 @@ void main() {
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
           page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
         ),
       ).thenAnswer(
         (_) async => PackageRequestSearchPage(
@@ -232,6 +237,93 @@ void main() {
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
           page: 0,
+          urgent: any(named: 'urgent'),
+        ),
+      ).called(1);
+    },
+  );
+
+  // ─── SearchFiltersChanged(urgent: true) propagates to repo.search ────────────
+
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchFiltersChanged(urgent: true) → repo appelé avec urgent: true',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 20,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) => bloc.add(const SearchFiltersChanged(urgent: true)),
+    verify: (_) {
+      verify(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: true,
+        ),
+      ).called(1);
+    },
+  );
+
+  // ─── SearchFiltersChanged sans urgent → jamais false explicite ───────────────
+
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchFiltersChanged sans urgent → repo appelé avec urgent: null',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 20,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) => bloc.add(const SearchFiltersChanged(departure: 'Paris')),
+    verify: (_) {
+      verify(
+        () => repo.search(
+          departure: 'Paris',
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: null,
         ),
       ).called(1);
     },

@@ -50,6 +50,8 @@ class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _FakeBidEvent extends Fake implements BidEvent {}
 
+class _FakeAnnouncementEvent extends Fake implements AnnouncementEvent {}
+
 class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
 
@@ -270,7 +272,10 @@ Widget _buildHomeRouter({
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
-  setUpAll(() => registerFallbackValue(_FakeBidEvent()));
+  setUpAll(() {
+    registerFallbackValue(_FakeBidEvent());
+    registerFallbackValue(_FakeAnnouncementEvent());
+  });
 
   setUp(() {
     final hive = MockHiveService();
@@ -330,6 +335,82 @@ void main() {
       // Sa présence confirme que le rôle sender affiche les bons filtres.
       expect(find.text('Note'), findsOneWidget);
     });
+
+    testWidgets(
+      'le chip Urgent déclenche une recherche avec urgent=true',
+      (tester) async {
+        final announcementBloc = MockAnnouncementBloc();
+        final authBloc = MockAuthBloc();
+        final roleCubit = MockActiveRoleCubit();
+        final notifBloc = MockNotificationBloc();
+        final bidBloc = MockBidBloc();
+
+        when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+        when(() => announcementBloc.stream)
+            .thenAnswer((_) => const Stream.empty());
+        when(() => authBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
+        when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+        when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+        when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+        when(() => notifBloc.state).thenReturn(const NotificationInitial());
+        when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+        when(() => bidBloc.state).thenReturn(BidInitial());
+        when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+              BlocProvider<NotificationBloc>.value(value: notifBloc),
+              BlocProvider<BidBloc>.value(value: bidBloc),
+              BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light,
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('fr'), Locale('en')],
+              locale: const Locale('fr'),
+              home: const HomeScreen(),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        // L'appel dispatché au montage (initState) ne doit pas porter urgent.
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: isA<AnnouncementSearchRequested>().having(
+                (e) => e.urgent,
+                'urgent',
+                isNull,
+              ),
+            ),
+          ),
+        ).called(1);
+
+        await tester.tap(find.text('🔥 Urgent'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: isA<AnnouncementSearchRequested>().having(
+                (e) => e.urgent,
+                'urgent',
+                true,
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets('shows TravelerCards when announcements loaded', (
       tester,
@@ -535,6 +616,101 @@ void main() {
                 (e) => e.radiusKm,
                 'radiusKm',
                 isNotNull,
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'traveler : le chip Urgent déclenche les deux recherches (annonces + demandes) avec urgent=true',
+      (tester) async {
+        registerFallbackValue(const SearchFiltersChanged());
+
+        late MockPackageRequestSearchBloc prBloc;
+        getIt.unregister<PackageRequestSearchBloc>();
+        getIt.registerFactory<PackageRequestSearchBloc>(() {
+          prBloc = MockPackageRequestSearchBloc();
+          when(
+            () => prBloc.state,
+          ).thenReturn(const PackageRequestSearchState());
+          whenListen(
+            prBloc,
+            Stream<PackageRequestSearchState>.fromIterable(const [
+              PackageRequestSearchState(),
+            ]),
+            initialState: const PackageRequestSearchState(),
+          );
+          return prBloc;
+        });
+
+        final announcementBloc = MockAnnouncementBloc();
+        final authBloc = MockAuthBloc();
+        final roleCubit = MockActiveRoleCubit();
+        final notifBloc = MockNotificationBloc();
+        final bidBloc = MockBidBloc();
+
+        when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+        when(() => announcementBloc.stream)
+            .thenAnswer((_) => const Stream.empty());
+        when(() => authBloc.state).thenReturn(
+          AuthAuthenticated(_makeUser(roles: const ['SENDER', 'TRAVELER'])),
+        );
+        when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+        when(() => roleCubit.state).thenReturn(ActiveRole.traveler);
+        when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+        when(() => notifBloc.state).thenReturn(const NotificationInitial());
+        when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+        when(() => bidBloc.state).thenReturn(BidInitial());
+        when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+              BlocProvider<NotificationBloc>.value(value: notifBloc),
+              BlocProvider<BidBloc>.value(value: bidBloc),
+              BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light,
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('fr'), Locale('en')],
+              locale: const Locale('fr'),
+              home: const HomeScreen(),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        await tester.tap(find.text('🔥 Urgent').first);
+        await tester.pumpAndSettle();
+
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: isA<AnnouncementSearchRequested>().having(
+                (e) => e.urgent,
+                'urgent',
+                true,
+              ),
+            ),
+          ),
+        ).called(1);
+        verify(
+          () => prBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>().having(
+                (e) => e.urgent,
+                'urgent',
+                true,
               ),
             ),
           ),
