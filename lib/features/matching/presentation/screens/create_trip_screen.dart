@@ -146,18 +146,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       providers: providers,
       child: Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
+          leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
           title: Text(
             isLocked
                 ? 'Créer le trajet pour cette demande'
                 : (isEdit ? 'Modifier le trajet' : 'Publier un trajet'),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => context.pop(),
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(DonySpacing.base),

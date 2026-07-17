@@ -28,6 +28,7 @@ class PrivacySettingsScreen extends StatelessWidget {
           ? const Color(0xFFF4F6F8)
           : cs.surface,
       appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,

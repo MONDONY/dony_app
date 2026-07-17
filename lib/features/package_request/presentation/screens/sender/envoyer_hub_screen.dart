@@ -20,7 +20,6 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class EnvoyerHubScreen extends StatefulWidget {
   const EnvoyerHubScreen({
@@ -423,9 +422,8 @@ class _EnvoyerHeader extends StatelessWidget {
       child: Row(
         children: [
           if (showBackButton)
-            DonyBackCircle(
-              key: const Key('envoyer-back'),
-              onTap: () => context.pop(),
+            const DonyAppBarBackButton(
+              key: Key('envoyer-back'),
             ),
           Text(
             'Envoyer',

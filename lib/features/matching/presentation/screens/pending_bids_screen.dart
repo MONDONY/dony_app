@@ -366,15 +366,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
               elevation: 0,
               scrolledUnderElevation: 0,
               centerTitle: false,
-              leading: DonyBackCircle(
-                onTap: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/home');
-                  }
-                },
-              ),
+              leading: const DonyAppBarBackButton(),
               title: Text(
                 count > 0 ? 'À traiter ($count)' : 'À traiter',
                 style: tt.headlineLarge,

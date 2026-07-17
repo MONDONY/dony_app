@@ -610,29 +610,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               scrolledUnderElevation: 0,
-              leading: IconButton(
-                tooltip: 'Retour',
-                onPressed: () {
+              leading: DonyAppBarBackButton(
+                onBack: () {
                   if (step == _FormStep.paymentPicker) {
                     _stepNotifier.value = _FormStep.form;
                   } else {
                     context.pop();
                   }
                 },
-                icon: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius:
-                        BorderRadius.circular(DonyRadius.iconBtn),
-                  ),
-                  child: DonyIcon(
-                    'chevron-left',
-                    size: 20,
-                    color: cs.primary,
-                  ),
-                ),
               ),
               title: Text(
                 step == _FormStep.paymentPicker

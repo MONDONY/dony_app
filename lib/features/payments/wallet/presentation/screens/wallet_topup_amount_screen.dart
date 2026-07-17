@@ -168,7 +168,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           elevation: 0,
           surfaceTintColor: Colors.transparent,
           centerTitle: false,
-          leading: DonyBackCircle(onTap: () => context.pop()),
+          leading: const DonyAppBarBackButton(),
           title: Text(
             'Recharger · Étape 2/2',
             style: tt.headlineLarge?.copyWith(

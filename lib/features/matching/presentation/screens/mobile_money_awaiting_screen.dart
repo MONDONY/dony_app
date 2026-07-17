@@ -70,6 +70,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
       appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
         title: Text('Paiement Mobile Money', style: tt.headlineMedium),
         backgroundColor: cs.surface,
         elevation: 0,

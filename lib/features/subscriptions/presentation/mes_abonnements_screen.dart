@@ -28,7 +28,10 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes abonnements')),
+      appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
+        title: const Text('Mes abonnements'),
+      ),
       body: BlocBuilder<SubscriptionsBloc, SubscriptionsState>(
         builder: (context, state) {
           if (state.status == SubscriptionsStatus.loading &&

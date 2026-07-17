@@ -46,6 +46,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
         title: const Text('Carte commission'),
         centerTitle: false,
         elevation: 0,

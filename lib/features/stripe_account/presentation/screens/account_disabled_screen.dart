@@ -1,6 +1,6 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AccountDisabledScreen extends StatefulWidget {
@@ -23,10 +23,7 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const DonyIcon('x'),
-          onPressed: () => context.pop(),
-        ),
+        leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
         title: const Text('Compte désactivé'),
       ),
       body: ValueListenableBuilder<int>(

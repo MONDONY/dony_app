@@ -387,7 +387,7 @@ class _DarkHeader extends StatelessWidget {
             child: Row(
               children: [
                 if (canGoBack)
-                  DonyBackCircle(onTap: () => context.pop())
+                  const DonyAppBarBackButton()
                 else
                   const SizedBox(width: DonySpacing.base),
                 const SizedBox(width: DonySpacing.xs),

@@ -1,10 +1,10 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AccountRejectedScreen extends StatefulWidget {
@@ -32,10 +32,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const DonyIcon('x'),
-          onPressed: () => context.pop(),
-        ),
+        leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
         title: const Text('Compte rejeté'),
       ),
       body: BlocListener<ConnectOnboardingBloc, ConnectOnboardingState>(

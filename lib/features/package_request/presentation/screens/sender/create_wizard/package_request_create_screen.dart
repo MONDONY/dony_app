@@ -160,8 +160,8 @@ class _PackageRequestCreateScreenState
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
-          leading: DonyBackCircle(
-            onTap: () {
+          leading: DonyAppBarBackButton(
+            onBack: () {
               if (state.currentStep > 0) {
                 context
                     .read<PackageRequestFormBloc>()

@@ -382,7 +382,7 @@ void main() {
     );
 
     testWidgets(
-      'bouton ✕ (Icons.close) présent',
+      'bouton retour (DonyAppBarBackButton) présent',
       (tester) async {
         setupViewport(tester);
 
@@ -391,7 +391,7 @@ void main() {
           _wrapWithRouter(const CreateTripScreen(args: null)),
         );
 
-        expect(find.byIcon(Icons.close), findsOneWidget);
+        expect(find.byType(DonyAppBarBackButton), findsOneWidget);
       },
     );
 
@@ -1143,7 +1143,7 @@ void main() {
 
   group('CreateTripScreen — Navigation', () {
     testWidgets(
-      'tapping ✕ pops the route',
+      'tapping le bouton retour pops the route',
       (tester) async {
         setupViewport(tester);
 
@@ -1190,10 +1190,10 @@ void main() {
         await tester.tap(find.text('open'));
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.close), findsOneWidget);
+        expect(find.byType(DonyAppBarBackButton), findsOneWidget);
 
-        // Tap the close button — should pop.
-        await tester.tap(find.byIcon(Icons.close));
+        // Tap the back button — should pop.
+        await tester.tap(find.byType(DonyAppBarBackButton));
         await tester.pumpAndSettle();
 
         expect(didPop, isTrue);

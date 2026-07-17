@@ -649,19 +649,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             backgroundColor: cs.surface,
             elevation: 0,
             scrolledUnderElevation: 0,
-            leading: IconButton(
-              tooltip: 'Fermer',
-              onPressed: () => context.pop(),
-              icon: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                ),
-                child: DonyIcon('x', size: 20, color: cs.primary),
-              ),
-            ),
+            leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(0.5),
               child: Container(height: 0.5, color: cs.outline),

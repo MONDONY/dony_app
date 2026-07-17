@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dony/core/design/design_system.dart';
+
 import 'package:dony/core/design/tokens/color_tokens.dart'; // DonyStatusColors extension
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -47,7 +49,10 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('Litige')),
+      appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
+        title: const Text('Litige'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         child: Column(

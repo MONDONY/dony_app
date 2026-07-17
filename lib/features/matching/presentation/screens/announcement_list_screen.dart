@@ -452,9 +452,8 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (showBackButton)
-                          DonyBackCircle(
-                            key: const Key('activites-back'),
-                            onTap: () => context.pop(),
+                          const DonyAppBarBackButton(
+                            key: Key('activites-back'),
                           ),
                         Text(
                           'Mes trajets',
