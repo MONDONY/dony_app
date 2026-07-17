@@ -10,4 +10,10 @@ class ConfigDatasource {
     final data = response.data as Map<String, dynamic>;
     return (data['rate'] as num).toDouble();
   }
+
+  Future<int> getUrgencyThresholdDays() async {
+    final response = await _client.dio.get('/config/urgency-threshold');
+    final data = response.data as Map<String, dynamic>;
+    return (data['thresholdDays'] as num).toInt();
+  }
 }

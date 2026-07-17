@@ -4,6 +4,7 @@ import 'package:dony/app/app.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:bloc/bloc.dart';
 import 'package:dony/core/services/analytics_bloc_observer.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -132,6 +133,10 @@ Future<void> _bootstrap() async {
   // chargé une fois pour que les prix calculés côté app (aperçu checkout, repli des
   // surfaces sans champ *Display) suivent automatiquement. Non bloquant.
   unawaited(_loadDonyCommissionRate());
+
+  // Seuil d'urgence Dony (SOURCE UNIQUE : dony.urgency.threshold-days côté backend) :
+  // chargé une fois pour que le badge « urgent » suive automatiquement. Non bloquant.
+  unawaited(_loadUrgencyThreshold());
 }
 
 Future<void> _loadDonyCommissionRate() async {
@@ -139,6 +144,16 @@ Future<void> _loadDonyCommissionRate() async {
     setDonyCommissionRate(await getIt<IConfigRepository>().getCommissionRate());
   } catch (_) {
     // Repli sur kDonyCommissionRateDefault conservé — non bloquant.
+  }
+}
+
+Future<void> _loadUrgencyThreshold() async {
+  try {
+    setUrgencyThresholdDays(
+      await getIt<IConfigRepository>().getUrgencyThresholdDays(),
+    );
+  } catch (_) {
+    // Repli sur kUrgencyThresholdDaysDefault conservé — non bloquant.
   }
 }
 
