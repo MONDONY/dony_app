@@ -117,16 +117,16 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
 
   Widget _buildBanner(BuildContext context) {
     final isSender = widget.role == ActiveRole.sender;
-    final title =
-        isSender ? 'Envoyer ton premier colis' : 'Publier ton premier trajet';
+    final title = isSender
+        ? 'Publier ta première demande'
+        : 'Publier ton premier trajet';
     final emoji = isSender ? '📦' : '🧭';
-    final ctaLabel =
-        isSender ? "Publier ma demande d'envoi" : 'Publier mon trajet';
+    final ctaLabel = isSender ? 'Publier ma demande' : 'Publier mon trajet';
     final steps = isSender
         ? [
             'Compte créé ✓',
-            'Cherche un voyageur sur la carte ou publie une demande',
             'Vérifie ton identité (KYC), requis pour payer',
+            'Publie les détails de ta demande (corridor, poids, contenu)',
           ]
         : [
             'Compte créé ✓',

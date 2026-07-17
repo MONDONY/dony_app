@@ -1574,7 +1574,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
               slivers: [
                 SliverToBoxAdapter(
                   child: RoleGuidanceBanner(
-                    role: showParcelControls
+                    // Le CTA suit l'onglet affiché (cohérence titre ↔ bouton) :
+                    // onglet Trajets → « Publier mon trajet » ; onglet Colis
+                    // (demandes d'envoi), vue « Tout » et expéditeur →
+                    // « Publier ma demande ».
+                    role: (_isTraveler && _mapFocus == HomeMapFocus.trips)
                         ? ActiveRole.traveler
                         : ActiveRole.sender,
                     hiveService: getIt<HiveService>(),
