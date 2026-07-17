@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../../../core/urgency/dony_urgency.dart';
 import 'address_data.dart';
 import 'bid_model.dart';
 import 'transport_mode.dart';
@@ -171,6 +172,11 @@ class AnnouncementModel {
   @JsonKey(defaultValue: false)
   final bool isFavorite;
 
+  /// Urgence calculée côté backend (`dony.urgency.threshold-days`). Source de
+  /// vérité quand présente ; `null` pour les anciens payloads (repli local
+  /// via [isUrgent]).
+  final bool? urgent;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -210,6 +216,7 @@ class AnnouncementModel {
     this.handoverWindowStart,
     this.handoverWindowEnd,
     this.isFavorite = false,
+    this.urgent,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
@@ -227,6 +234,10 @@ class AnnouncementModel {
   /// Trajet vendu au kilo sans capacité fixe totale (mode "kilo libre").
   /// Toujours vrai quand `capacityUnit == 'KG_FREE'`.
   bool get isKgFree => capacityUnit == 'KG_FREE';
+
+  /// Urgence effective : la valeur backend prime ; repli sur le calcul local
+  /// depuis [departureDate] uniquement si absente (ancien backend).
+  bool get isUrgent => urgent ?? isUrgentDate(departureDate);
 }
 
 String? _transportModeToWireOrNull(TransportMode? mode) =>

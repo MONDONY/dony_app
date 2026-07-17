@@ -1,3 +1,4 @@
+import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:equatable/equatable.dart';
 import 'parcel_size.dart';
@@ -29,6 +30,7 @@ class PackageRequestSearchItem extends Equatable {
     this.acceptedPaymentMethods = const {},
     required this.sender,
     this.isFavorite = false,
+    this.urgent,
   });
 
   final String id;
@@ -64,6 +66,15 @@ class PackageRequestSearchItem extends Equatable {
   /// Fourni par le backend sur les endpoints de feed ; `false` par défaut.
   final bool isFavorite;
 
+  /// Urgence calculée côté backend (`dony.urgency.threshold-days`). Source de
+  /// vérité quand présente ; `null` pour les anciens payloads (repli local
+  /// via [isUrgent]).
+  final bool? urgent;
+
+  /// Urgence effective : la valeur backend prime ; repli sur le calcul local
+  /// depuis [desiredDate] uniquement si absente (ancien backend).
+  bool get isUrgent => urgent ?? isUrgentDate(desiredDate);
+
   factory PackageRequestSearchItem.fromJson(Map<String, dynamic> json) =>
       PackageRequestSearchItem(
         id: json['id'] as String,
@@ -97,6 +108,7 @@ class PackageRequestSearchItem extends Equatable {
           json['sender'] as Map<String, dynamic>,
         ),
         isFavorite: json['isFavorite'] as bool? ?? false,
+        urgent: json['urgent'] as bool?,
       );
 
   @override
@@ -122,6 +134,7 @@ class PackageRequestSearchItem extends Equatable {
     acceptedPaymentMethods,
     sender,
     isFavorite,
+    urgent,
   ];
 }
 

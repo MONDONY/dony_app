@@ -1,3 +1,4 @@
+import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -365,6 +366,66 @@ void main() {
       final json = model.toJson();
       expect(json['priceGridItems'], isNotNull);
       expect((json['priceGridItems'] as List), hasLength(1));
+    });
+  });
+
+  group('AnnouncementModel urgent', () {
+    test('urgent depuis le JSON prime sur le calcul local (true)', () {
+      final json = baseAnnouncementJson()
+        ..['departureDate'] = DateTime.now()
+            .add(const Duration(days: 30))
+            .toIso8601String()
+        ..['urgent'] = true;
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.isUrgent, isTrue);
+    });
+
+    test('urgent depuis le JSON prime sur le calcul local (false)', () {
+      final json = baseAnnouncementJson()
+        ..['departureDate'] =
+            DateTime.now().add(const Duration(days: 1)).toIso8601String()
+        ..['urgent'] = false;
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.isUrgent, isFalse);
+    });
+
+    test('urgent absent → repli sur la date (proche → urgent)', () {
+      final json = baseAnnouncementJson()
+        ..['departureDate'] =
+            DateTime.now().add(const Duration(days: 1)).toIso8601String();
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.urgent, isNull);
+      expect(model.isUrgent, isTrue);
+    });
+
+    test('urgent absent → repli sur la date (lointaine → pas urgent)', () {
+      final json = baseAnnouncementJson()
+        ..['departureDate'] = DateTime.now()
+            .add(const Duration(days: 30))
+            .toIso8601String();
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.urgent, isNull);
+      expect(model.isUrgent, isFalse);
+    });
+
+    test('isUrgent match isUrgentDate quand urgent absent', () {
+      final departureDate =
+          DateTime.now().add(const Duration(days: 2));
+      final json = baseAnnouncementJson()
+        ..['departureDate'] = departureDate.toIso8601String();
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.isUrgent, isUrgentDate(model.departureDate));
+    });
+
+    test('round-trips urgent through toJson', () {
+      final json = baseAnnouncementJson()..['urgent'] = true;
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['urgent'], true);
+    });
+
+    test('urgent absent dans le JSON de sortie reste null', () {
+      final out = AnnouncementModel.fromJson(baseAnnouncementJson()).toJson();
+      expect(out['urgent'], isNull);
     });
   });
 }
