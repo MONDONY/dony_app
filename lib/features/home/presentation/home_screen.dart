@@ -22,6 +22,8 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
@@ -240,7 +242,35 @@ class _MapSenderViewState extends State<_MapSenderView> {
       // fraîche — BidMyListRequested émettrait BidLoading et écraserait l'état
       // partagé à chaque retour sur l'accueil.
       context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+      // Réaligne la carte d'onboarding « première publication » sur l'état réel
+      // du serveur : si l'utilisateur a déjà un trajet ou une demande, la carte
+      // ne doit plus s'afficher (le flag Hive local pouvait être absent —
+      // trajet créé sur un autre appareil, avant ce mécanisme, ou après
+      // réinstallation).
+      unawaited(_syncGuidanceFlags());
     });
+  }
+
+  /// Synchronise les drapeaux d'onboarding avec l'état serveur. Non bloquant :
+  /// en cas d'échec réseau la carte reste affichée (dégradation silencieuse).
+  Future<void> _syncGuidanceFlags() async {
+    final box = getIt<HiveService>().userPrefs;
+    try {
+      final trips = await getIt<AnnouncementRepository>().getMyAnnouncements();
+      if (trips.totalElements > 0) {
+        await box.put(HiveService.kHasPublishedAsTraveler, true);
+      }
+    } catch (_) {
+      // silencieux
+    }
+    try {
+      final requests = await getIt<PackageRequestRepository>().findMine();
+      if (requests.totalElements > 0) {
+        await box.put(HiveService.kHasPublishedAsSender, true);
+      }
+    } catch (_) {
+      // silencieux
+    }
   }
 
   void _consumePendingSearch() {
