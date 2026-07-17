@@ -348,39 +348,32 @@ void main() {
     });
 
     testWidgets(
-      'tap sur sa propre carte trajet ouvre /announcements/:id/trip',
+      'ses propres trajets sont exclus du feed de recherche',
       (tester) async {
         tester.view.physicalSize = const Size(800, 1600);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
 
-        final visited = <String>[];
         await tester.pumpWidget(
           _buildHomeRouter(
-            // travelerId == id de _makeUser ('uid-1') → carte « Votre trajet ».
+            // travelerId == id de _makeUser ('uid-1') : l'utilisateur ne doit
+            // pas voir ses propres trajets dans la recherche.
             announcementState: AnnouncementSearchLoaded([
               _makeAnn(id: 'a-own', travelerId: 'uid-1'),
             ]),
-            visitedTripIds: visited,
+            visitedTripIds: <String>[],
           ),
         );
         await tester.pump(const Duration(milliseconds: 1000));
 
-        // Déplier le sheet en plein écran pour exposer la carte.
+        // Déplier le sheet en plein écran.
         await tester.tap(find.textContaining('Tirer pour voir'));
         await tester.pumpAndSettle();
 
-        // La carte propriétaire affiche le pill « Votre trajet ».
-        expect(find.byKey(const Key('own-trip-pill')), findsOneWidget);
-
-        await tester.ensureVisible(find.byType(TravelerCard).first);
-        await tester.pumpAndSettle();
-        await tester.tap(find.byType(TravelerCard).first);
-        await tester.pumpAndSettle();
-
-        // Navigation vers l'écran détail trajet pour cette annonce.
-        expect(visited, contains('a-own'));
-        expect(find.text('STUB_TRIP_DETAIL'), findsOneWidget);
+        // Aucune carte trajet ni pill « Votre trajet » : l'annonce propre est
+        // filtrée du feed (elle reste accessible via « Mes trajets »).
+        expect(find.byKey(const Key('own-trip-pill')), findsNothing);
+        expect(find.byType(TravelerCard), findsNothing);
       },
     );
 
