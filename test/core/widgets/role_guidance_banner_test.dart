@@ -52,8 +52,8 @@ void main() {
     await tester.pumpWidget(
       _buildBanner(role: ActiveRole.sender, hasPublished: false, hive: mockHive),
     );
-    expect(find.text('Envoyer ton premier colis'), findsOneWidget);
-    expect(find.text("Publier ma demande d'envoi"), findsOneWidget);
+    expect(find.text('Publier ta première demande'), findsOneWidget);
+    expect(find.text('Publier ma demande'), findsOneWidget);
   });
 
   testWidgets('affiche le banner Voyageur quand pas encore publié', (tester) async {
@@ -68,7 +68,7 @@ void main() {
     await tester.pumpWidget(
       _buildBanner(role: ActiveRole.sender, hasPublished: true, hive: mockHive),
     );
-    expect(find.text('Envoyer ton premier colis'), findsNothing);
+    expect(find.text('Publier ta première demande'), findsNothing);
   });
 
   testWidgets("ne s'affiche pas si déjà publié en mode Voyageur", (tester) async {
@@ -92,7 +92,7 @@ void main() {
           senderFirstSeenMs: expiredMs,
         ),
       );
-      expect(find.text('Envoyer ton premier colis'), findsNothing);
+      expect(find.text('Publier ta première demande'), findsNothing);
     },
   );
 
@@ -110,7 +110,7 @@ void main() {
           senderFirstSeenMs: recentMs,
         ),
       );
-      expect(find.text('Envoyer ton premier colis'), findsOneWidget);
+      expect(find.text('Publier ta première demande'), findsOneWidget);
     },
   );
 
@@ -137,7 +137,7 @@ void main() {
         dismissed: true,
       ),
     );
-    expect(find.text('Envoyer ton premier colis'), findsNothing);
+    expect(find.text('Publier ta première demande'), findsNothing);
   });
 
   testWidgets('le tap sur le X persiste la fermeture dans Hive (Voyageur)',
@@ -173,7 +173,7 @@ void main() {
         senderFirstSeenMs: recentMs,
       ),
     );
-    expect(find.text('Envoyer ton premier colis'), findsOneWidget);
+    expect(find.text('Publier ta première demande'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('role-guidance-banner-dismiss')));
     await tester.pump();
