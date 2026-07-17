@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -59,6 +61,8 @@ class MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
     implements FavoriteIdsCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
+
+class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockPackageRequestSearchBloc
     extends MockBloc<PackageRequestSearchEvent, PackageRequestSearchState>
@@ -272,6 +276,8 @@ Widget _buildHomeRouter({
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
+  late MockAnalyticsService analytics;
+
   setUpAll(() {
     registerFallbackValue(_FakeBidEvent());
     registerFallbackValue(_FakeAnnouncementEvent());
@@ -285,6 +291,12 @@ void main() {
       () => hive.listenUserPrefs(keys: any(named: 'keys')),
     ).thenReturn(ValueNotifier<Box>(box));
     getIt.registerSingleton<HiveService>(hive);
+
+    analytics = MockAnalyticsService();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    getIt.registerSingleton<AnalyticsService>(analytics);
 
     getIt.registerFactory<PackageRequestSearchBloc>(() {
       final mock = MockPackageRequestSearchBloc();
@@ -397,6 +409,13 @@ void main() {
 
         await tester.tap(find.text('🔥 Urgent'));
         await tester.pumpAndSettle();
+
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.urgentFilterToggled,
+            properties: {'active': true},
+          ),
+        ).called(1);
 
         verify(
           () => announcementBloc.add(
@@ -692,6 +711,13 @@ void main() {
 
         await tester.tap(find.text('🔥 Urgent').first);
         await tester.pumpAndSettle();
+
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.urgentFilterToggled,
+            properties: {'active': true},
+          ),
+        ).called(1);
 
         verify(
           () => announcementBloc.add(

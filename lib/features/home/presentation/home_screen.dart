@@ -469,7 +469,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
   // Chip « 🔥 Urgent » : filtre serveur combiné à l'onglet actif — s'applique
   // aux deux recherches (announcements + package requests), comme near-me.
   void _onUrgentToggle() {
-    setState(() => _urgentOnly = !_urgentOnly);
+    final next = !_urgentOnly;
+    setState(() => _urgentOnly = next);
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.urgentFilterToggled,
+        properties: {'active': next},
+      ),
+    );
     _dispatchForCapability();
   }
 

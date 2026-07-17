@@ -339,7 +339,7 @@ class TrajetStep extends StatelessWidget {
                     child: Text(
                       '🔥 Départ proche — ce trajet sera signalé urgent',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: DonyColors.urgencyRed,
+                            color: cs.error,
                           ),
                     ),
                   );

@@ -161,7 +161,9 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
-                                ?.copyWith(color: DonyColors.urgencyRed),
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
                           ),
                         ),
                     ],

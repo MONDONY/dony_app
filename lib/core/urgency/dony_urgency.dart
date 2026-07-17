@@ -14,10 +14,15 @@ void setUrgencyThresholdDays(int days) {
 }
 
 /// Vrai si [date] tombe entre aujourd'hui et aujourd'hui + seuil (bornes incluses).
+///
+/// [date] est converti en heure locale avant troncature : les dates parsées
+/// depuis un payload `...Z` (UTC) tronquées directement contre `today` (local)
+/// peuvent tomber sur le mauvais jour calendaire près de minuit.
 bool isUrgentDate(DateTime date) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  final d = DateTime(date.year, date.month, date.day);
+  final local = date.toLocal();
+  final d = DateTime(local.year, local.month, local.day);
   final diff = d.difference(today).inDays;
   return diff >= 0 && diff <= _urgencyThresholdDays;
 }

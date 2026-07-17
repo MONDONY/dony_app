@@ -72,6 +72,10 @@ class AnnouncementDetailBody extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (a.isUrgent) ...[
+                    const DonyUrgentBadge(),
+                    const SizedBox(width: DonySpacing.xs),
+                  ],
                   _StatusBadge(status: a.status),
                 ],
               ),
