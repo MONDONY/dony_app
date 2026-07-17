@@ -16,7 +16,10 @@ class DisputeListScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('Mes litiges')),
+      appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
+        title: const Text('Mes litiges'),
+      ),
       body: BlocBuilder<DisputeListBloc, DisputeListState>(
         builder: (context, state) => switch (state) {
           DisputeListInitial() || DisputeListLoading() => Center(

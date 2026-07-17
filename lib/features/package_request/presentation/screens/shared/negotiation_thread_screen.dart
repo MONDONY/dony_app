@@ -101,10 +101,10 @@ class _ThreadView extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(DonySpacing.base, 0, DonySpacing.sm, 0),
         child: Row(
           children: [
-            DonyBackCircle(
+            DonyAppBarBackButton(
               // Arrivée possible via go() (écran de succès post-acceptation) :
               // la pile est alors vide, pop() lèverait "nothing to pop".
-              onTap: () => context.canPop()
+              onBack: () => context.canPop()
                   ? context.pop()
                   : context.go('/negotiations'),
             ),

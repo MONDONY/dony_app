@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
@@ -15,6 +16,7 @@ class BlockedUsersScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,

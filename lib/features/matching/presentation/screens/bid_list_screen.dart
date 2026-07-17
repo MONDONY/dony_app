@@ -178,15 +178,7 @@ class _BidListView extends StatelessWidget {
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
-            leading: DonyBackCircle(
-              onTap: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/home');
-                }
-              },
-            ),
+            leading: const DonyAppBarBackButton(),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,

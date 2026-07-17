@@ -178,7 +178,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
                   child: Row(
                     children: [
-                      DonyBackCircle(onTap: () => context.pop()),
+                      const DonyAppBarBackButton(),
                       const Spacer(),
                       DonyStepPill(
                         current: 2,

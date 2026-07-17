@@ -618,6 +618,6 @@ void main() {
 
     expect(find.text('Mes envois'), findsOneWidget);
     // Back button appears because canPop is true (pushed route)
-    expect(find.byType(DonyBackCircle), findsOneWidget);
+    expect(find.byType(DonyAppBarBackButton), findsOneWidget);
   });
 }

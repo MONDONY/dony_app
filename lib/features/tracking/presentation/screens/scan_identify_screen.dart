@@ -131,6 +131,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
+            leading: const DonyAppBarBackButton(),
             backgroundColor: cs.surface,
             elevation: 0,
             scrolledUnderElevation: 0,

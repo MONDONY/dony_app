@@ -27,6 +27,7 @@ class PriceGridScreen extends StatelessWidget {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
+            leading: const DonyAppBarBackButton(),
             title: const Text('Ma grille de prix'),
             centerTitle: false,
           ),

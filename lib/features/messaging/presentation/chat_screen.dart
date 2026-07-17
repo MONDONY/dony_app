@@ -182,7 +182,7 @@ class _ChatScreenState extends State<ChatScreen> {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-        leading: DonyBackCircle(onTap: () => context.pop()),
+        leading: const DonyAppBarBackButton(),
         title: Row(
           children: [
             DonyAvatar(

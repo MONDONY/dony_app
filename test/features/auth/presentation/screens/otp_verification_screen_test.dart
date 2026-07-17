@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -7,7 +8,6 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -324,8 +324,8 @@ void main() {
       router.push('/auth/otp');
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // The back button icon should be visible (DonyBackCircle uses arrow_back_rounded)
-      final backBtn = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'arrow-left');
+      // The back button should be visible (DonyAppBarBackButton — carré bleu + chevron)
+      final backBtn = find.byType(DonyAppBarBackButton);
       expect(backBtn, findsOneWidget);
       await tester.tap(backBtn);
       await tester.pumpAndSettle();

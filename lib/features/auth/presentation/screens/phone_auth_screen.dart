@@ -146,7 +146,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
                       child: Row(
                         children: [
-                          DonyBackCircle(onTap: () => context.pop()),
+                          const DonyAppBarBackButton(),
                           const Spacer(),
                           const DonyStepPill(
                             current: 1,

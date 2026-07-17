@@ -140,7 +140,7 @@ class _LoadedView extends StatelessWidget {
           pinned: true,
           surfaceTintColor: Colors.transparent,
           backgroundColor: DonyColors.blue700,
-          leading: DonyBackCircle(onTap: () => context.pop()),
+          leading: const DonyAppBarBackButton(),
           title: Text(
             'Mon Wallet',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
