@@ -253,6 +253,18 @@ void main() {
   );
 
   testWidgets(
+    'sender + CANCELLED + tripCancellationId null + rematchStatus SUGGESTED → pas de CTA',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'CANCELLED', tripCancellationRematchStatus: 'SUGGESTED'),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'sender + CANCELLED + tripCancellationRematchStatus != SUGGESTED → pas de CTA',
     (tester) async {
       await _pump(
