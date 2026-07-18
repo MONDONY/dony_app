@@ -1,17 +1,20 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 /// Écran « Alternatives disponibles » après annulation d'un trajet.
 ///
@@ -131,7 +134,7 @@ class _RematchBody extends StatelessWidget {
                 mascotte: DonyMascotteType.assis,
                 title: 'Aucun voyageur disponible',
                 description:
-                    'Aucun voyageur alternatif disponible dans les 72h sur ce corridor — votre remboursement est traité.',
+                    'Aucun voyageur disponible dans les 72h — votre remboursement est traité',
               )
             else ...[
               Text(
@@ -139,9 +142,16 @@ class _RematchBody extends StatelessWidget {
                 style: tt.titleLarge?.copyWith(color: cs.onSurface),
               ),
               const SizedBox(height: DonySpacing.base),
-              ...suggestions.asMap().entries.map((e) => _SuggestionCard(
-                    suggestion: e.value,
+              ...suggestions.asMap().entries.map((e) => TravelerCard(
+                    key: Key('rematch-traveler-card-${e.value.suggestionId}'),
+                    announcement: _toAnnouncementModel(e.value),
                     index: e.key,
+                    isOwnAnnouncement: false,
+                    onTap: () => _acceptSuggestion(
+                      context,
+                      suggestion: e.value,
+                      suggestionsCount: suggestions.length,
+                    ),
                   )),
             ],
             const SizedBox(height: DonySpacing.lg),
@@ -203,122 +213,55 @@ class _ConfirmationBanner extends StatelessWidget {
   }
 }
 
-class _SuggestionCard extends StatelessWidget {
-  final RematchSuggestionModel suggestion;
-  final int index;
-  const _SuggestionCard({required this.suggestion, required this.index});
+/// Mappe une suggestion de rematch vers l'[AnnouncementModel] attendu par
+/// `TravelerCard` / le flux de création de bid (`/search/{id}/bid`). Mêmes
+/// valeurs de repli que l'ancien mapping (id = announcementId, status ACTIVE,
+/// totalKg = availableKg) — étendu avec le profil voyageur désormais exposé
+/// par `RematchSuggestionModel` (nom, note, nombre d'avis).
+AnnouncementModel _toAnnouncementModel(RematchSuggestionModel suggestion) {
+  final hasTravelerInfo = suggestion.travelerFirstName != null ||
+      suggestion.travelerRating != null ||
+      suggestion.travelerRatingCount != null;
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: DonySpacing.md),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              DonyIconContainer(
-                iconAsset: 'plane-takeoff',
-                backgroundColor: cs.primaryContainer,
-                iconColor: cs.primary,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Text(
-                  '${suggestion.departureCity} → ${suggestion.arrivalCity}',
-                  style: tt.titleLarge?.copyWith(color: cs.onSurface),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.md),
-          Divider(color: cs.outline, height: 1),
-          const SizedBox(height: DonySpacing.md),
-          Row(
-            children: [
-              _Chip(
-                iconAsset: 'calendar',
-                label: DateFormat('dd MMM yyyy').format(suggestion.departureDate),
-                cs: cs,
-                tt: tt,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              _Chip(
-                iconAsset: 'scale',
-                label: '${suggestion.availableKg} kg dispo',
-                cs: cs,
-                tt: tt,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              _Chip(
-                iconAsset: 'euro',
-                label: '${formatKgPrice(netToSenderPrice(suggestion.pricePerKg))} €/kg',
-                cs: cs,
-                tt: tt,
-              ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.md),
-          DonyButton(
-            label: 'Envoyer une demande',
-            onPressed: () => context.push(
-              '/search/${suggestion.announcementId}/bid',
-              extra: AnnouncementModel(
-                id: suggestion.announcementId,
-                travelerId: 'temp',
-                departureCity: suggestion.departureCity,
-                arrivalCity: suggestion.arrivalCity,
-                departureDate: suggestion.departureDate,
-                availableKg: suggestion.availableKg,
-                totalKg: suggestion.availableKg,
-                pricePerKg: suggestion.pricePerKg,
-                status: 'ACTIVE',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ).animate(delay: Duration(milliseconds: index * 80))
-        .fadeIn(duration: 300.ms)
-        .slideY(begin: 0.08, end: 0);
-  }
+  return AnnouncementModel(
+    id: suggestion.announcementId,
+    travelerId: 'temp',
+    departureCity: suggestion.departureCity,
+    arrivalCity: suggestion.arrivalCity,
+    departureDate: suggestion.departureDate,
+    availableKg: suggestion.availableKg,
+    totalKg: suggestion.availableKg,
+    pricePerKg: suggestion.pricePerKg,
+    status: 'ACTIVE',
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+    traveler: hasTravelerInfo
+        ? TravelerProfile(
+            id: 'temp',
+            displayName: suggestion.travelerFirstName,
+            averageRating: suggestion.travelerRating,
+            totalTrips: suggestion.travelerRatingCount,
+          )
+        : null,
+  );
 }
 
-class _Chip extends StatelessWidget {
-  final String iconAsset;
-  final String label;
-  final ColorScheme cs;
-  final TextTheme tt;
-  const _Chip({
-    required this.iconAsset,
-    required this.label,
-    required this.cs,
-    required this.tt,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DonyIcon(iconAsset, size: 14, color: cs.onSurfaceVariant),
-        const SizedBox(width: DonySpacing.xs),
-        Text(
-          label,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
-      ],
-    );
-  }
+/// Tap « Envoyer une demande » (carte entière tactile) : tire l'event
+/// analytics widget-level `rematch_accepted` (précédent : `TripParcelsSection`
+/// pour `trip_parcels_filtered`) puis pousse le flux de création de bid
+/// existant, comme le feed de recherche. Aucune PII dans les properties —
+/// uniquement le nombre d'alternatives affichées.
+void _acceptSuggestion(
+  BuildContext context, {
+  required RematchSuggestionModel suggestion,
+  required int suggestionsCount,
+}) {
+  unawaited(getIt<AnalyticsService>().logEvent(
+    AnalyticsEvents.rematchAccepted,
+    properties: {'count': suggestionsCount},
+  ));
+  context.push(
+    '/search/${suggestion.announcementId}/bid',
+    extra: _toAnnouncementModel(suggestion),
+  );
 }
