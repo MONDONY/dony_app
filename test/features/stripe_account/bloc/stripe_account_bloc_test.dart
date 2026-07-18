@@ -128,4 +128,23 @@ void main() {
       expect: () => [isA<StripeAccountLoadError>()],
     );
   });
+
+  group('StripeAccountReset', () {
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'purge un état Ready(complete) vers Initial sans appel réseau',
+      build: buildBloc,
+      seed: () => const StripeAccountReady(_complete),
+      act: (b) => b.add(const StripeAccountReset()),
+      expect: () => [isA<StripeAccountInitial>()],
+      verify: (_) => verifyNever(() => mockRepo.getAccountStatus()),
+    );
+
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'purge aussi un état LoadError vers Initial',
+      build: buildBloc,
+      seed: () => const StripeAccountLoadError(),
+      act: (b) => b.add(const StripeAccountReset()),
+      expect: () => [isA<StripeAccountInitial>()],
+    );
+  });
 }

@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -149,6 +150,43 @@ void main() {
       await tester.ensureVisible(find.text('Connecter mon compte bancaire'));
       await tester.tap(find.text('Connecter mon compte bancaire'));
       verify(() => mockBloc.add(const PaymentConnectAccountRequested())).called(1);
+    });
+
+    testWidgets('resynchronise le statut Stripe à l\'entrée de l\'écran',
+        (tester) async {
+      await tester.pumpWidget(_wrap(mockBloc, stripeBloc: mockStripeBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+      // Régression : le bloc est un singleton dont l'état peut être périmé
+      // (ex. compte précédent) — l'écran doit re-fetch en entrant.
+      verify(() => mockStripeBloc.add(const StripeAccountStatusRefreshed()))
+          .called(1);
+    });
+
+    testWidgets(
+        'un état Ready(complete) périmé se corrige quand le refresh renvoie NOT_CREATED',
+        (tester) async {
+      // Simule le bug : singleton encore sur ONBOARDING_COMPLETE (compte
+      // précédent), puis le refresh déclenché par l'écran renvoie l'état
+      // réel du compte courant (NOT_CREATED).
+      const stale = StripeAccountReady(
+        ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+      );
+      const fresh = StripeAccountReady(
+        ConnectAccountStatus(status: 'NOT_CREATED'),
+      );
+      whenListen<StripeAccountState>(
+        mockStripeBloc,
+        Stream.fromIterable(const [fresh]),
+        initialState: stale,
+      );
+      await tester.pumpWidget(_wrap(mockBloc, stripeBloc: mockStripeBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+      // Après correction, l'écran propose bien la connexion au lieu de la
+      // vue terminale « Compte bancaire connecté ».
+      expect(find.text('Connecter mon compte bancaire'), findsOneWidget);
+      expect(find.text('Compte bancaire connecté'), findsNothing);
+      // Flush des timers flutter_animate de la vue périmée démontée.
+      await tester.pump(const Duration(seconds: 3));
     });
   });
 }

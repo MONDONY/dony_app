@@ -9,8 +9,23 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class PayoutOnboardingScreen extends StatelessWidget {
+class PayoutOnboardingScreen extends StatefulWidget {
   const PayoutOnboardingScreen({super.key});
+
+  @override
+  State<PayoutOnboardingScreen> createState() => _PayoutOnboardingScreenState();
+}
+
+class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Resynchronise le statut Stripe à l'entrée : le bloc est un singleton
+    // dont l'état peut être périmé (même pattern que
+    // ConnectOnboardingIntroScreen). Sans ça, un état Ready(complete)
+    // résiduel afficherait à tort la vue « Compte bancaire connecté ».
+    context.read<StripeAccountBloc>().add(const StripeAccountStatusRefreshed());
+  }
 
   @override
   Widget build(BuildContext context) {

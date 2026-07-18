@@ -197,6 +197,14 @@ class _DonyAppState extends State<DonyApp> {
                     );
                   } else if (state is AuthProfileUpdated) {
                     context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+                  } else if (state is AuthInitial || state is AuthAccountDeleted) {
+                    // Frontière d'identité (logout, changement de compte,
+                    // suppression) : purge le statut Stripe du compte
+                    // précédent — le bloc est un singleton et son état
+                    // survivrait sinon jusqu'à la prochaine refetch.
+                    context
+                        .read<StripeAccountBloc>()
+                        .add(const StripeAccountReset());
                   }
                 },
                 child: AnnotatedRegion<SystemUiOverlayStyle>(

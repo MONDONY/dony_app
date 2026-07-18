@@ -12,6 +12,7 @@ class StripeAccountBloc
   StripeAccountBloc(this._repository) : super(const StripeAccountInitial()) {
     on<StripeAccountStatusLoaded>(_onLoad);
     on<StripeAccountStatusRefreshed>(_onRefresh);
+    on<StripeAccountReset>((event, emit) => emit(const StripeAccountInitial()));
   }
 
   Future<void> _onLoad(
