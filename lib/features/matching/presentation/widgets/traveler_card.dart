@@ -219,10 +219,11 @@ class TravelerCard extends StatelessWidget {
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
-                          Text(
-                            '· ${totalTrips ?? 0} trajet${(totalTrips ?? 0) > 1 ? 's' : ''}',
-                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                          ),
+                          if (totalTrips != null)
+                            Text(
+                              '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
+                              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                            ),
                           if (isKiloPro) const _KycBadge(),
                           if (isProAccount) const _ProBadge(),
                           if (announcement.isUrgent) const DonyUrgentBadge(),

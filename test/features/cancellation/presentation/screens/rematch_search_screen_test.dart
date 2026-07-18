@@ -3,16 +3,22 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -20,6 +26,20 @@ class _MockCancellationBloc extends MockBloc<CancellationEvent, CancellationStat
     implements CancellationBloc {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+UserModel _makeUser() => const UserModel(
+      id: 'uid-1',
+      phoneNumber: '+33600000000',
+      firstName: 'Test',
+      lastName: 'User',
+      roles: ['ROLE_SENDER'],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
 
 final _suggestions = [
   RematchSuggestionModel(
@@ -43,29 +63,29 @@ Widget _wrap(CancellationBloc bloc, {required String cancellationId}) => Materia
       ),
     );
 
-/// Variant avec un vrai [GoRouter] — nécessaire pour les tests qui exercent
-/// `context.push(...)` (tap sur une TravelerCard → flux de création de bid).
-Widget _wrapWithRouter(CancellationBloc bloc, {required String cancellationId}) {
-  final router = GoRouter(
-    initialLocation: '/',
-    routes: [
-      GoRoute(
-        path: '/',
-        builder: (ctx, _) => BlocProvider<CancellationBloc>.value(
-          value: bloc,
-          child: RematchSearchScreen(cancellationId: cancellationId),
-        ),
+/// Variant avec [AuthBloc]/[BidBloc] mockés — nécessaire pour les tests qui
+/// exercent le tap sur une `TravelerCard` : celui-ci ouvre
+/// `showTravelerAnnouncementSheet`, qui lit `context.read<AuthBloc>()` (non
+/// défensif — lève si absent) et tente `context.read<BidBloc>()` (défensif).
+/// Pas de `GoRouter` ici : ouvrir la sheet ne navigue nulle part, seul un
+/// `Navigator` standard (fourni par `MaterialApp`) est nécessaire
+/// (`useRootNavigator: true` dans `DonyBottomSheet.show`).
+Widget _wrapWithBlocs(
+  CancellationBloc bloc, {
+  required String cancellationId,
+  required AuthBloc authBloc,
+  required BidBloc bidBloc,
+}) =>
+    MaterialApp(
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<CancellationBloc>.value(value: bloc),
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<BidBloc>.value(value: bidBloc),
+        ],
+        child: RematchSearchScreen(cancellationId: cancellationId),
       ),
-      GoRoute(
-        path: '/search/:id/bid',
-        builder: (_, state) => Scaffold(
-          body: Text('Bid create ${state.pathParameters['id']}'),
-        ),
-      ),
-    ],
-  );
-  return MaterialApp.router(routerConfig: router);
-}
+    );
 
 void main() {
   setUpAll(() async {
@@ -189,11 +209,27 @@ void main() {
   });
 
   testWidgets(
-      'tap sur la TravelerCard tire rematch_accepted (count) puis pousse le flux de bid',
+      'tap sur la TravelerCard tire rematch_accepted (count) puis ouvre la sheet '
+      'détail trajet (flux de création de bid réel, comme le feed)',
       (tester) async {
     when(() => bloc.state).thenReturn(RematchSuggestionsLoaded(_suggestions));
 
-    await tester.pumpWidget(_wrapWithRouter(bloc, cancellationId: 'canc-1'));
+    final authBloc = _MockAuthBloc();
+    when(() => authBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
+    when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+    addTearDown(authBloc.close);
+
+    final bidBloc = _MockBidBloc();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+    addTearDown(bidBloc.close);
+
+    await tester.pumpWidget(_wrapWithBlocs(
+      bloc,
+      cancellationId: 'canc-1',
+      authBloc: authBloc,
+      bidBloc: bidBloc,
+    ));
     await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.byType(TravelerCard));
@@ -203,6 +239,9 @@ void main() {
           AnalyticsEvents.rematchAccepted,
           properties: {'count': 1},
         )).called(1);
-    expect(find.text('Bid create ann-2'), findsOneWidget);
+    // Le tap ouvre bien un vrai bottom sheet (showTravelerAnnouncementSheet) —
+    // pas une navigation vers une route inexistante.
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.text('Détail du trajet'), findsOneWidget);
   });
 }

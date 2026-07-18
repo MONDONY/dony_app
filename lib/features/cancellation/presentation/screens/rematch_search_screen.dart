@@ -11,6 +11,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -214,14 +215,20 @@ class _ConfirmationBanner extends StatelessWidget {
 }
 
 /// Mappe une suggestion de rematch vers l'[AnnouncementModel] attendu par
-/// `TravelerCard` / le flux de création de bid (`/search/{id}/bid`). Mêmes
-/// valeurs de repli que l'ancien mapping (id = announcementId, status ACTIVE,
-/// totalKg = availableKg) — étendu avec le profil voyageur désormais exposé
-/// par `RematchSuggestionModel` (nom, note, nombre d'avis).
+/// `TravelerCard` / `showTravelerAnnouncementSheet`. Mêmes valeurs de repli
+/// que l'ancien mapping (id = announcementId, status ACTIVE, totalKg =
+/// availableKg) — étendu avec le prénom/note voyageur désormais exposés par
+/// `RematchSuggestionModel`.
+///
+/// `totalTrips` n'est PAS alimenté par `travelerRatingCount` : ce sont deux
+/// notions différentes (nombre d'avis ≠ nombre de trajets effectués) et
+/// `TravelerCard` n'a pas de slot dédié « nombre d'avis » — l'afficher comme
+/// un nombre de trajets induirait l'expéditeur en erreur au moment de choisir
+/// un voyageur de confiance. `travelerRatingCount` reste dans le modèle mais
+/// n'est actuellement rendu nulle part sur cet écran.
 AnnouncementModel _toAnnouncementModel(RematchSuggestionModel suggestion) {
-  final hasTravelerInfo = suggestion.travelerFirstName != null ||
-      suggestion.travelerRating != null ||
-      suggestion.travelerRatingCount != null;
+  final hasTravelerInfo =
+      suggestion.travelerFirstName != null || suggestion.travelerRating != null;
 
   return AnnouncementModel(
     id: suggestion.announcementId,
@@ -240,17 +247,20 @@ AnnouncementModel _toAnnouncementModel(RematchSuggestionModel suggestion) {
             id: 'temp',
             displayName: suggestion.travelerFirstName,
             averageRating: suggestion.travelerRating,
-            totalTrips: suggestion.travelerRatingCount,
           )
         : null,
   );
 }
 
-/// Tap « Envoyer une demande » (carte entière tactile) : tire l'event
+/// Tap sur une `TravelerCard` (carte entière tactile) : tire l'event
 /// analytics widget-level `rematch_accepted` (précédent : `TripParcelsSection`
-/// pour `trip_parcels_filtered`) puis pousse le flux de création de bid
-/// existant, comme le feed de recherche. Aucune PII dans les properties —
-/// uniquement le nombre d'alternatives affichées.
+/// pour `trip_parcels_filtered`) puis ouvre le même overlay que le feed de
+/// recherche (`showTravelerAnnouncementSheet` — cf. `home_screen.dart`
+/// tap non-owned card) qui mène au flux de création de bid réel
+/// (`CreateBidBottomSheet`). Il n'existe PAS de route `/search/{id}/bid` dans
+/// `router.dart` — l'ancien `context.push` vers cette route poussait vers une
+/// page inexistante. Aucune PII dans les properties analytics — uniquement le
+/// nombre d'alternatives affichées.
 void _acceptSuggestion(
   BuildContext context, {
   required RematchSuggestionModel suggestion,
@@ -260,8 +270,8 @@ void _acceptSuggestion(
     AnalyticsEvents.rematchAccepted,
     properties: {'count': suggestionsCount},
   ));
-  context.push(
-    '/search/${suggestion.announcementId}/bid',
-    extra: _toAnnouncementModel(suggestion),
+  showTravelerAnnouncementSheet(
+    context,
+    announcement: _toAnnouncementModel(suggestion),
   );
 }
