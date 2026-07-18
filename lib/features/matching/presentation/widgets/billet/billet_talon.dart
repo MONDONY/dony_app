@@ -116,6 +116,39 @@ class _CancelledBlock extends StatelessWidget {
       return const _ReturnedBlock();
     }
     if (!bid.isAwaitingReturn) {
+      // Annulation classique (pré-remise) : cas terminal simple. Le voyageur a
+      // annulé son trajet (jamais no-show ni après-remise, cf.
+      // BidResponse.tripCancellationId côté backend) et des trajets
+      // alternatifs sont disponibles → propose le rematch à l'expéditeur.
+      if (isSender &&
+          bid.tripCancellationId != null &&
+          bid.tripCancellationRematchStatus == 'SUGGESTED') {
+        final cs = Theme.of(context).colorScheme;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _TerminalBlock(),
+            const SizedBox(height: DonySpacing.sm),
+            OutlinedButton.icon(
+              onPressed: () => context
+                  .push('/cancellations/${bid.tripCancellationId}/rematch'),
+              icon: DonyIcon('route', size: 20, color: cs.primary),
+              label: const Text(
+                'Voir les trajets alternatifs',
+                textAlign: TextAlign.center,
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: cs.primary,
+                side: BorderSide(color: cs.primary),
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
+              ),
+            ),
+          ],
+        );
+      }
       return const _TerminalBlock();
     }
     final cs = Theme.of(context).colorScheme;

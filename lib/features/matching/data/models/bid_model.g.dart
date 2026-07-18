@@ -79,6 +79,9 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   contestationDeadline: json['contestationDeadline'] == null
       ? null
       : DateTime.parse(json['contestationDeadline'] as String),
+  tripCancellationId: json['tripCancellationId'] as String?,
+  tripCancellationRematchStatus:
+      json['tripCancellationRematchStatus'] as String?,
   deliveryNoShowStatus: json['deliveryNoShowStatus'] as String?,
   deliveryNoShowContestationDeadline:
       json['deliveryNoShowContestationDeadline'] == null
@@ -163,6 +166,8 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'commissionStatus': _$CommissionStatusEnumMap[instance.commissionStatus],
   'cancellationNoShowStatus': instance.cancellationNoShowStatus,
   'contestationDeadline': instance.contestationDeadline?.toIso8601String(),
+  'tripCancellationId': instance.tripCancellationId,
+  'tripCancellationRematchStatus': instance.tripCancellationRematchStatus,
   'deliveryNoShowStatus': instance.deliveryNoShowStatus,
   'deliveryNoShowContestationDeadline': instance
       .deliveryNoShowContestationDeadline

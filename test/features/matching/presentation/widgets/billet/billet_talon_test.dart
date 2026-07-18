@@ -29,6 +29,8 @@ BidModel _bid({
   String? returnCode,
   DateTime? returnDeadline,
   DateTime? returnedAt,
+  String? tripCancellationId,
+  String? tripCancellationRematchStatus,
 }) => BidModel(
   id: 'bid-1',
   announcementId: 'a-1',
@@ -44,6 +46,8 @@ BidModel _bid({
   returnCode: returnCode,
   returnDeadline: returnDeadline,
   returnedAt: returnedAt,
+  tripCancellationId: tripCancellationId,
+  tripCancellationRematchStatus: tripCancellationRematchStatus,
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -199,6 +203,108 @@ void main() {
     );
     expect(find.text('Colis restitué'), findsOneWidget);
   });
+
+  // ── CTA rematch (trajet annulé par le voyageur) ─────────────────────────────
+
+  testWidgets(
+    'sender + CANCELLED + tripCancellationId + rematchStatus SUGGESTED → CTA "Voir les trajets alternatifs"',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'SUGGESTED',
+        ),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsOneWidget);
+      // Le message terminal reste affiché en plus du CTA.
+      expect(find.textContaining('Cette demande est terminée'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'voyageur + CANCELLED + tripCancellationId + rematchStatus SUGGESTED → pas de CTA (non-sender)',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'SUGGESTED',
+        ),
+        false,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + CANCELLED + tripCancellationRematchStatus null → pas de CTA',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'CANCELLED', tripCancellationId: 'cancel-001'),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + CANCELLED + tripCancellationRematchStatus != SUGGESTED → pas de CTA',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'EXHAUSTED',
+        ),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + CANCELLED + flux retour en attente (isAwaitingReturn) → pas de CTA même avec SUGGESTED',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'SUGGESTED',
+          returnCode: '123456',
+          returnDeadline: DateTime.now().add(const Duration(days: 2)),
+        ),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+      expect(find.text('Code de retour'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'sender + CANCELLED + colis restitué → pas de CTA même avec SUGGESTED',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'CANCELLED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'SUGGESTED',
+          returnDeadline: DateTime(2026, 5, 3),
+          returnedAt: DateTime(2026, 5, 2),
+        ),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+      expect(find.text('Colis restitué'), findsOneWidget);
+    },
+  );
 
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
