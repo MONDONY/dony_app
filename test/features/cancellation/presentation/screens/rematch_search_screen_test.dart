@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -192,6 +193,20 @@ void main() {
           that: isA<RematchSuggestionsRequested>()
               .having((e) => e.cancellationId, 'cancellationId', 'canc-42'),
         ))).called(1);
+  });
+
+  testWidgets(
+      'tire rematch_alternatives_opened à l\'ouverture (source deep_link en '
+      'self-fetching) et affiche le bouton de signalement de bug', (tester) async {
+    when(() => bloc.state).thenReturn(CancellationInitial());
+
+    await tester.pumpWidget(_wrap(bloc, cancellationId: 'canc-1'));
+
+    verify(() => analytics.logEvent(
+          AnalyticsEvents.rematchAlternativesOpened,
+          properties: {'source': 'deep_link'},
+        )).called(1);
+    expect(find.byType(DonyFeedbackButton), findsOneWidget);
   });
 
   testWidgets('affiche un loader pendant CancellationLoading', (tester) async {

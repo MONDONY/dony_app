@@ -55,9 +55,17 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
   /// l'event analytics `rematch_accepted`, tiré seulement au succès du fetch.
   int _pendingSuggestionsCount = 0;
 
+  /// Clé du [RepaintBoundary] enveloppant l'écran — capture d'écran du
+  /// bouton de signalement de bug ([DonyFeedbackButton]).
+  final GlobalKey _boundaryKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.rematchAlternativesOpened,
+      properties: {'source': widget.cancellation != null ? 'in_app' : 'deep_link'},
+    ));
     if (widget.cancellation == null) {
       context
           .read<CancellationBloc>()
@@ -122,10 +130,13 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
     return BlocListener<AnnouncementBloc, AnnouncementState>(
       listener: _onAnnouncementState,
       child: Scaffold(
-        appBar: const DonyAppBar(
+        appBar: DonyAppBar(
           title: 'Alternatives disponibles',
+          actions: [DonyFeedbackButton(repaintBoundaryKey: _boundaryKey)],
         ),
-        body: cancellation != null
+        body: RepaintBoundary(
+          key: _boundaryKey,
+          child: cancellation != null
             ? _RematchBody(
                 suggestions: cancellation.rematchSuggestions,
                 affectedBidsCount: cancellation.affectedBidsCount,
@@ -164,6 +175,7 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
                   );
                 },
               ),
+        ),
       ),
     );
   }
