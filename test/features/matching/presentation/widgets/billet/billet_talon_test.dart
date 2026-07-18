@@ -318,6 +318,82 @@ void main() {
     },
   );
 
+  // ── CTA rematch (bid refusé par le voyageur, trajet non annulé) ─────────────
+
+  testWidgets(
+    'sender + REJECTED + tripCancellationId + rematchStatus SUGGESTED → CTA "Voir les trajets alternatifs"',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'REJECTED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'SUGGESTED',
+        ),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsOneWidget);
+      // Le message terminal reste affiché en plus du CTA.
+      expect(find.textContaining('Cette demande est terminée'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'voyageur + REJECTED + tripCancellationId + rematchStatus SUGGESTED → pas de CTA (non-sender)',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'REJECTED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'SUGGESTED',
+        ),
+        false,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + REJECTED + tripCancellationId null + rematchStatus SUGGESTED → pas de CTA',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'REJECTED', tripCancellationRematchStatus: 'SUGGESTED'),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + REJECTED + tripCancellationRematchStatus null → pas de CTA',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'REJECTED', tripCancellationId: 'cancel-001'),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'sender + REJECTED + tripCancellationRematchStatus != SUGGESTED → pas de CTA',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'REJECTED',
+          tripCancellationId: 'cancel-001',
+          tripCancellationRematchStatus: 'EXHAUSTED',
+        ),
+        true,
+      );
+      expect(find.text('Voir les trajets alternatifs'), findsNothing);
+    },
+  );
+
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
   testWidgets('voyageur + ACCEPTED → lien "Scanner les étapes" (Suivi)', (

@@ -76,7 +76,7 @@ class BilletTalon extends StatelessWidget {
         'IN_TRANSIT' => _QrTalonButton(bid: bid, compact: true),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
-        'REJECTED' => const _TerminalBlock(),
+        'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
         _ => const SizedBox.shrink(),
       };
     }
@@ -93,7 +93,7 @@ class BilletTalon extends StatelessWidget {
       'IN_TRANSIT' => const _TravelerScanStepsButton(),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
-      'REJECTED' => const _TerminalBlock(),
+      'REJECTED' => _RejectedBlock(bid: bid, isSender: false),
       _ => const SizedBox.shrink(),
     };
   }
@@ -123,29 +123,12 @@ class _CancelledBlock extends StatelessWidget {
       if (isSender &&
           bid.tripCancellationId != null &&
           bid.tripCancellationRematchStatus == 'SUGGESTED') {
-        final cs = Theme.of(context).colorScheme;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _TerminalBlock(),
             const SizedBox(height: DonySpacing.sm),
-            OutlinedButton.icon(
-              onPressed: () => context
-                  .push('/cancellations/${bid.tripCancellationId}/rematch'),
-              icon: DonyIcon('route', size: 20, color: cs.primary),
-              label: const Text(
-                'Voir les trajets alternatifs',
-                textAlign: TextAlign.center,
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: cs.primary,
-                side: BorderSide(color: cs.primary),
-                padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-              ),
-            ),
+            _RematchCta(tripCancellationId: bid.tripCancellationId!),
           ],
         );
       }
@@ -163,6 +146,68 @@ class _CancelledBlock extends StatelessWidget {
       ),
       label: Text(
         isSender ? 'Code de retour' : 'Confirmer le retour',
+        textAlign: TextAlign.center,
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: cs.primary,
+        side: BorderSide(color: cs.primary),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+      ),
+    );
+  }
+}
+
+/// sender / REJECTED — message terminal ; si le bid a été refusé suite à
+/// l'annulation du transport par le voyageur (annonce non annulée,
+/// `bid.tripCancellationId` renseigné côté back) et que le rematch est
+/// encore disponible, propose les trajets alternatifs à l'expéditeur, comme
+/// pour [_CancelledBlock]. Côté voyageur, jamais de CTA.
+class _RejectedBlock extends StatelessWidget {
+  final BidModel bid;
+  final bool isSender;
+
+  const _RejectedBlock({required this.bid, required this.isSender});
+
+  @override
+  Widget build(BuildContext context) {
+    if (isSender &&
+        bid.tripCancellationId != null &&
+        bid.tripCancellationRematchStatus == 'SUGGESTED') {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _TerminalBlock(),
+          const SizedBox(height: DonySpacing.sm),
+          _RematchCta(tripCancellationId: bid.tripCancellationId!),
+        ],
+      );
+    }
+    return const _TerminalBlock();
+  }
+}
+
+/// Bouton partagé « Voir les trajets alternatifs » — CTA rematch proposé à
+/// l'expéditeur quand le voyageur a annulé son transport (bid CANCELLED ou
+/// REJECTED, `tripCancellationRematchStatus == 'SUGGESTED'`). Ouvre l'écran
+/// de recherche d'alternatives pour la [tripCancellationId] concernée.
+/// Utilisé par [_CancelledBlock] et [_RejectedBlock].
+class _RematchCta extends StatelessWidget {
+  final String tripCancellationId;
+
+  const _RematchCta({required this.tripCancellationId});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return OutlinedButton.icon(
+      onPressed: () =>
+          context.push('/cancellations/$tripCancellationId/rematch'),
+      icon: DonyIcon('route', size: 20, color: cs.primary),
+      label: const Text(
+        'Voir les trajets alternatifs',
         textAlign: TextAlign.center,
       ),
       style: OutlinedButton.styleFrom(
