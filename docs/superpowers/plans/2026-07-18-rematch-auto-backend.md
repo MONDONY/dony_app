@@ -277,7 +277,7 @@ Dans `NotificationDispatcherTest` (pattern MockitoExtension existant) :
 void onTripCancelled_withSuggestions_notifiesWithDeepLink() {
     // event avec rematchBySender = {senderId: (cancellationId, 3)}
     // verify notifyUser(senderId, "Trajet annulé",
-    //   "Le voyageur a annulé son trajet — remboursement en cours. 3 voyageurs alternatifs disponibles",
+    //   "Trajet annulé — remboursement en cours. 3 voyageurs alternatifs disponibles",
     //   data contenant type=TRIP_CANCELLED ET cancellationId=<uuid>)
 }
 
@@ -313,7 +313,7 @@ public void onTripCancelled(TripCancelledEvent event) {
         } else if (info.suggestionCount() > 0) {
             int n = info.suggestionCount();
             notifyUser(senderId, "Trajet annulé",
-                    "Le voyageur a annulé son trajet — remboursement en cours. "
+                    "Trajet annulé — remboursement en cours. "
                             + n + " voyageur" + (n > 1 ? "s" : "") + " alternatif"
                             + (n > 1 ? "s" : "") + " disponible" + (n > 1 ? "s" : ""),
                     Map.of("type", "TRIP_CANCELLED",
