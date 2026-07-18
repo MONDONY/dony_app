@@ -247,6 +247,9 @@ class NotificationService {
       'BID_CREATED' when _isUuid(announcementId) => '/announcements/$announcementId/bids',
       // Expéditeur → détail de son offre
       'BID_ACCEPTED' when _isUuid(bidId)         => '/bids/$bidId',
+      // Offre refusée → alternatives rematch si le back en a trouvé
+      'BID_REJECTED' when _isUuid(data['cancellationId'] as String?) =>
+          '/cancellations/${data['cancellationId']}/rematch',
       'BID_REJECTED' when _isUuid(bidId)         => '/bids/$bidId',
       'HANDOVER_DEFINED' when _isUuid(bidId)     => '/bids/$bidId',
       'DELIVERY_CONFIRMED' when _isUuid(bidId)   => '/bids/$bidId',
@@ -267,7 +270,9 @@ class NotificationService {
       'PACKAGE_MATCH' when _isUuid(requestId) => '/package-requests/$requestId/public',
       // Nouveau message → liste des conversations
       'NEW_MESSAGE'                              => '/messages',
-      // Trajet annulé → pas de navigation (le trajet n'existe plus)
+      // Trajet annulé → alternatives rematch si le back en a trouvé
+      'TRIP_CANCELLED' when _isUuid(data['cancellationId'] as String?) =>
+          '/cancellations/${data['cancellationId']}/rematch',
       'TRIP_CANCELLED'                           => null,
       _                                          => null,
     };

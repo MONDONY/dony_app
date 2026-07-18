@@ -105,6 +105,13 @@ class BidModel {
   final String? cancellationNoShowStatus;
   final DateTime? contestationDeadline;
 
+  // Rematch automatique (annulation par le voyageur AVANT remise uniquement —
+  // jamais pour no-show ou après-remise). `tripCancellationId` pointe vers
+  // l'annulation source, `tripCancellationRematchStatus` vaut 'SUGGESTED'
+  // quand des trajets alternatifs sont proposés à l'expéditeur.
+  final String? tripCancellationId;
+  final String? tripCancellationRematchStatus;
+
   // Signalement d'absence à la livraison (no-show réception, distinct de
   // cancellationNoShowStatus qui couvre l'absence à la remise/avant départ).
   final String? deliveryNoShowStatus;
@@ -201,6 +208,8 @@ class BidModel {
     this.commissionStatus,
     this.cancellationNoShowStatus,
     this.contestationDeadline,
+    this.tripCancellationId,
+    this.tripCancellationRematchStatus,
     this.deliveryNoShowStatus,
     this.deliveryNoShowContestationDeadline,
     this.deliveryNoShowReportedByTraveler,

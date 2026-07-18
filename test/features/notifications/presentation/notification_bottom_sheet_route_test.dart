@@ -60,8 +60,62 @@ void main() {
       );
     });
 
+    test('BID_REJECTED without cancellationId routes to bid detail', () {
+      expect(
+        routeForNotification(_notif('BID_REJECTED', data: {'bidId': 'b1'})),
+        '/bids/b1',
+      );
+    });
+
+    test('BID_REJECTED with valid cancellationId routes to rematch screen', () {
+      expect(
+        routeForNotification(
+          _notif('BID_REJECTED', data: {'cancellationId': annId, 'bidId': 'b1'}),
+        ),
+        '/cancellations/$annId/rematch',
+      );
+    });
+
+    test('BID_REJECTED with non-UUID cancellationId falls back to bid detail', () {
+      expect(
+        routeForNotification(
+          _notif('BID_REJECTED', data: {'cancellationId': '../../evil', 'bidId': 'b1'}),
+        ),
+        '/bids/b1',
+      );
+    });
+
+    test('BID_REJECTED with valid cancellationId and no bidId routes to rematch screen', () {
+      expect(
+        routeForNotification(_notif('BID_REJECTED', data: {'cancellationId': annId})),
+        '/cancellations/$annId/rematch',
+      );
+    });
+
     test('unknown type returns null', () {
       expect(routeForNotification(_notif('WHATEVER')), isNull);
+    });
+
+    test('TRIP_CANCELLED with valid cancellationId routes to rematch screen', () {
+      expect(
+        routeForNotification(
+          _notif('TRIP_CANCELLED', data: {'cancellationId': annId}),
+        ),
+        '/cancellations/$annId/rematch',
+      );
+    });
+
+    test('TRIP_CANCELLED without cancellationId returns null', () {
+      expect(routeForNotification(_notif('TRIP_CANCELLED')), isNull);
+    });
+
+    test('TRIP_CANCELLED with non-UUID cancellationId returns null', () {
+      expect(
+        routeForNotification(
+          _notif('TRIP_CANCELLED', data: {'cancellationId': 'not-a-uuid'}),
+        ),
+        isNull,
+      );
     });
   });
 }

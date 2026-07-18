@@ -359,4 +359,23 @@ void main() {
       expect(bid.deliveryNoShowReportedByTraveler, isTrue);
     });
   });
+
+  group('BidModel.tripCancellationId / tripCancellationRematchStatus', () {
+    test('fromJson mappe tripCancellationId et tripCancellationRematchStatus quand présents', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'status': 'CANCELLED',
+        'tripCancellationId': 'cancel-001',
+        'tripCancellationRematchStatus': 'SUGGESTED',
+      });
+      expect(model.tripCancellationId, 'cancel-001');
+      expect(model.tripCancellationRematchStatus, 'SUGGESTED');
+    });
+
+    test('tripCancellationId et tripCancellationRematchStatus null quand absents', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.tripCancellationId, isNull);
+      expect(model.tripCancellationRematchStatus, isNull);
+    });
+  });
 }

@@ -353,10 +353,23 @@ final appRouter = GoRouter(
 
     // ── Cancellation (hors shell) ────────────────────────────────────────
     GoRoute(
-      path: '/cancellations/rematch',
+      path: '/cancellations/:id/rematch',
       builder: (context, state) {
-        final cancellation = state.extra as CancellationModel;
-        return RematchSearchScreen(cancellation: cancellation);
+        final cancellationId = state.pathParameters['id']!;
+        final cancellation = state.extra as CancellationModel?;
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<CancellationBloc>()),
+            // Fetch du vrai AnnouncementModel au tap d'une suggestion
+            // (cf. RematchSearchScreen._onSuggestionTap) — jamais de fetch
+            // au chargement de la route, uniquement à la demande.
+            BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
+          ],
+          child: RematchSearchScreen(
+            cancellationId: cancellationId,
+            cancellation: cancellation,
+          ),
+        );
       },
     ),
 

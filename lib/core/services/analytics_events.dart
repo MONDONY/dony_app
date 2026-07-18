@@ -73,6 +73,7 @@ abstract final class AnalyticsEvents {
   // Cancellations
   static const cancellationInitiated   = 'cancellation_initiated';
   static const rematchAccepted         = 'rematch_accepted';
+  static const rematchAlternativesOpened = 'rematch_alternatives_opened';
   static const noShowReportedBySender  = 'no_show_reported_by_sender';
   static const noShowReportedByTraveler = 'no_show_reported_by_traveler';
   static const deliveryNoShowReportedByTraveler = 'delivery_no_show_reported_by_traveler';
