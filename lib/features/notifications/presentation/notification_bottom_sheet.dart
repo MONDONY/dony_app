@@ -28,6 +28,8 @@ String? routeForNotification(NotificationModel n) {
   return switch (n.type) {
     'BID_CREATED' when announcementId != null => '/announcements/$announcementId/bids',
     'BID_ACCEPTED' when bidId != null         => '/bids/$bidId',
+    // Offre refusée → alternatives rematch si le back en a trouvé
+    'BID_REJECTED' when _isUuid(cancellationId) => '/cancellations/$cancellationId/rematch',
     'BID_REJECTED' when bidId != null         => '/bids/$bidId',
     'HANDOVER_DEFINED' when bidId != null     => '/bids/$bidId',
     'DELIVERY_CONFIRMED' when bidId != null   => '/bids/$bidId',

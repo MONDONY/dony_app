@@ -247,6 +247,9 @@ class NotificationService {
       'BID_CREATED' when _isUuid(announcementId) => '/announcements/$announcementId/bids',
       // Expéditeur → détail de son offre
       'BID_ACCEPTED' when _isUuid(bidId)         => '/bids/$bidId',
+      // Offre refusée → alternatives rematch si le back en a trouvé
+      'BID_REJECTED' when _isUuid(data['cancellationId'] as String?) =>
+          '/cancellations/${data['cancellationId']}/rematch',
       'BID_REJECTED' when _isUuid(bidId)         => '/bids/$bidId',
       'HANDOVER_DEFINED' when _isUuid(bidId)     => '/bids/$bidId',
       'DELIVERY_CONFIRMED' when _isUuid(bidId)   => '/bids/$bidId',

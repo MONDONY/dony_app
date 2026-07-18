@@ -211,6 +211,40 @@ void main() {
       expect(service.testRouteForMessage({'type': 'BID_REJECTED', 'bidId': _bidId}), '/bids/$_bidId');
     });
 
+    test('BID_REJECTED with valid cancellationId routes to rematch screen', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'BID_REJECTED',
+          'bidId': _bidId,
+          'cancellationId': uuid,
+        }),
+        '/cancellations/$uuid/rematch',
+      );
+    });
+
+    test('BID_REJECTED with non-UUID cancellationId falls back to bid detail', () {
+      expect(
+        service.testRouteForMessage({
+          'type': 'BID_REJECTED',
+          'bidId': _bidId,
+          'cancellationId': '../../evil',
+        }),
+        '/bids/$_bidId',
+      );
+    });
+
+    test('BID_REJECTED with valid cancellationId and no bidId routes to rematch screen', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'BID_REJECTED',
+          'cancellationId': uuid,
+        }),
+        '/cancellations/$uuid/rematch',
+      );
+    });
+
     test('HANDOVER_DEFINED routes to bid detail', () {
       expect(service.testRouteForMessage({'type': 'HANDOVER_DEFINED', 'bidId': _bidId}), '/bids/$_bidId');
     });
