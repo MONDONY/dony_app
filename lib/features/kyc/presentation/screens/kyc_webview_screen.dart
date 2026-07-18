@@ -55,8 +55,10 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
             }
           },
           onNavigationRequest: (request) {
-            // Intercept Stripe's return_url (https://dony.app/kyc/complete)
-            if (request.url.startsWith('https://dony.app/kyc/complete')) {
+            // Intercept Stripe's return_url (https://dony.store/kyc/complete —
+            // dony.app kept as legacy fallback for older backend configs).
+            if (request.url.startsWith('https://dony.store/kyc/complete') ||
+                request.url.startsWith('https://dony.app/kyc/complete')) {
               if (mounted) {
                 context.go('/kyc/status');
               }
