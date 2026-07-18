@@ -460,8 +460,13 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
         onPageStarted: (_) => _isLoading.value = true,
         onPageFinished: (_) => _isLoading.value = false,
         onNavigationRequest: (req) {
-          if (req.url.startsWith('https://dony.app/payments/onboarding/return') ||
-              req.url.startsWith('https://dony.app/payments/onboarding/refresh')) {
+          // Return/refresh URL Stripe : matché par le path pour couvrir tous
+          // les hôtes réels (dony.store, api-staging.dony.store/api/v1/…,
+          // legacy dony.app) — un startsWith sur un seul domaine ratait
+          // l'interception et laissait la webview charger une page morte.
+          final path = Uri.tryParse(req.url)?.path ?? '';
+          if (path.endsWith('/payments/onboarding/return') ||
+              path.endsWith('/payments/onboarding/refresh')) {
             Navigator.of(context).pop();
             widget.onReturn();
             return NavigationDecision.prevent;

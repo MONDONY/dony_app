@@ -1130,14 +1130,14 @@ final appRouter = GoRouter(
           path: 'legal/terms',
           builder: (context, state) => const LegalWebViewScreen(
             title: 'CGU',
-            url: 'https://dony.app/legal/terms',
+            url: 'https://dony.store/legal/terms',
           ),
         ),
         GoRoute(
           path: 'legal/privacy',
           builder: (context, state) => const LegalWebViewScreen(
             title: 'Politique de confidentialité',
-            url: 'https://dony.app/legal/privacy',
+            url: 'https://dony.store/legal/privacy',
           ),
         ),
       ],
