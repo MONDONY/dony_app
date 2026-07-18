@@ -63,5 +63,27 @@ void main() {
     test('unknown type returns null', () {
       expect(routeForNotification(_notif('WHATEVER')), isNull);
     });
+
+    test('TRIP_CANCELLED with valid cancellationId routes to rematch screen', () {
+      expect(
+        routeForNotification(
+          _notif('TRIP_CANCELLED', data: {'cancellationId': annId}),
+        ),
+        '/cancellations/$annId/rematch',
+      );
+    });
+
+    test('TRIP_CANCELLED without cancellationId returns null', () {
+      expect(routeForNotification(_notif('TRIP_CANCELLED')), isNull);
+    });
+
+    test('TRIP_CANCELLED with non-UUID cancellationId returns null', () {
+      expect(
+        routeForNotification(
+          _notif('TRIP_CANCELLED', data: {'cancellationId': 'not-a-uuid'}),
+        ),
+        isNull,
+      );
+    });
   });
 }

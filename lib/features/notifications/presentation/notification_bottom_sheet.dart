@@ -11,10 +11,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+// IDs are validated as UUIDs before being embedded in routes to prevent
+// path traversal from crafted notification payloads.
+final RegExp _uuidRegex = RegExp(
+  r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+  caseSensitive: false,
+);
+bool _isUuid(String? v) => v != null && _uuidRegex.hasMatch(v);
+
 String? routeForNotification(NotificationModel n) {
   final bidId = n.data['bidId'] as String?;
   final announcementId = n.data['announcementId'] as String?;
   final requestId = n.data['requestId'] as String?;
+  final cancellationId = n.data['cancellationId'] as String?;
 
   return switch (n.type) {
     'BID_CREATED' when announcementId != null => '/announcements/$announcementId/bids',
@@ -28,6 +37,8 @@ String? routeForNotification(NotificationModel n) {
     'CORRIDOR_ALERT' when announcementId != null => '/traveler/$announcementId',
     // Voyageur → détail du colis qui matche un de ses trajets
     'PACKAGE_MATCH' when requestId != null => '/package-requests/$requestId/public',
+    // Trajet annulé → alternatives rematch si le back en a trouvé
+    'TRIP_CANCELLED' when _isUuid(cancellationId) => '/cancellations/$cancellationId/rematch',
     _ => null,
   };
 }

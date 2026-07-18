@@ -227,8 +227,29 @@ void main() {
       expect(service.testRouteForMessage({'type': 'DISPUTE_OPENED', 'bidId': _bidId}), '/bids/$_bidId');
     });
 
-    test('TRIP_CANCELLED returns null', () {
+    test('TRIP_CANCELLED without cancellationId returns null', () {
       expect(service.testRouteForMessage({'type': 'TRIP_CANCELLED'}), isNull);
+    });
+
+    test('TRIP_CANCELLED with valid cancellationId routes to rematch screen', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'TRIP_CANCELLED',
+          'cancellationId': uuid,
+        }),
+        '/cancellations/$uuid/rematch',
+      );
+    });
+
+    test('TRIP_CANCELLED with non-UUID cancellationId returns null', () {
+      expect(
+        service.testRouteForMessage({
+          'type': 'TRIP_CANCELLED',
+          'cancellationId': 'not-a-uuid',
+        }),
+        isNull,
+      );
     });
 
     test('unknown type returns null', () {
