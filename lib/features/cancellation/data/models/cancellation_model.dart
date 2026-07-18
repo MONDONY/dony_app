@@ -65,6 +65,7 @@ class RematchSuggestionModel {
   final String? travelerFirstName;
   final double? travelerRating;
   final int? travelerRatingCount;
+  final String? travelerAvatarUrl;
 
   const RematchSuggestionModel({
     required this.suggestionId,
@@ -77,6 +78,7 @@ class RematchSuggestionModel {
     this.travelerFirstName,
     this.travelerRating,
     this.travelerRatingCount,
+    this.travelerAvatarUrl,
   });
 
   factory RematchSuggestionModel.fromJson(Map<String, dynamic> json) {
@@ -91,6 +93,7 @@ class RematchSuggestionModel {
       travelerFirstName: json['travelerFirstName'] as String?,
       travelerRating: (json['travelerRating'] as num?)?.toDouble(),
       travelerRatingCount: json['travelerRatingCount'] as int?,
+      travelerAvatarUrl: json['travelerAvatarUrl'] as String?,
     );
   }
 }

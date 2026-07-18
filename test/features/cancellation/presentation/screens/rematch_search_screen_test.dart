@@ -62,6 +62,7 @@ final _suggestions = [
     travelerFirstName: 'Awa',
     travelerRating: 4.8,
     travelerRatingCount: 12,
+    travelerAvatarUrl: 'https://s3.example/avatar-awa.jpg',
   ),
 ];
 
@@ -215,6 +216,11 @@ void main() {
     expect(find.text('1 voyageur disponible'), findsOneWidget);
     // Pas de compteur d'expéditeurs remboursés dans le chemin self-fetching.
     expect(find.text('Votre remboursement est en cours.'), findsOneWidget);
+    // L'avatar du voyageur est propagé au stub d'affichage (photo de profil
+    // sur la carte au lieu de l'initiale).
+    final card = tester.widget<TravelerCard>(find.byType(TravelerCard));
+    expect(card.announcement.traveler?.avatarUrl,
+        'https://s3.example/avatar-awa.jpg');
   });
 
   testWidgets('sans note voyageur, la TravelerCard affiche le repli "-"', (tester) async {

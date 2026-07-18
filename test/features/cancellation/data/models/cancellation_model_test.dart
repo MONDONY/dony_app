@@ -19,6 +19,7 @@ void main() {
         'travelerFirstName': 'Awa',
         'travelerRating': 4.8,
         'travelerRatingCount': 23,
+        'travelerAvatarUrl': 'https://s3.example/presigned-avatar',
       };
 
       final model = RematchSuggestionModel.fromJson(json);
@@ -27,6 +28,7 @@ void main() {
       expect(model.travelerFirstName, 'Awa');
       expect(model.travelerRating, 4.8);
       expect(model.travelerRatingCount, 23);
+      expect(model.travelerAvatarUrl, 'https://s3.example/presigned-avatar');
     });
 
     test('travelerRating tolerates an integer JSON value (num→double)', () {
@@ -48,6 +50,7 @@ void main() {
       expect(model.travelerFirstName, isNull);
       expect(model.travelerRating, isNull);
       expect(model.travelerRatingCount, isNull);
+      expect(model.travelerAvatarUrl, isNull);
       // Existing fields still parse correctly.
       expect(model.departureCity, 'Paris');
       expect(model.availableKg, 5.0);

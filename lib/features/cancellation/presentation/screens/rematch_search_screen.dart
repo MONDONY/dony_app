@@ -350,8 +350,9 @@ class _ConfirmationBanner extends StatelessWidget {
 /// un voyageur de confiance. `travelerRatingCount` reste dans le modèle mais
 /// n'est actuellement rendu nulle part sur cet écran.
 AnnouncementModel _toAnnouncementModel(RematchSuggestionModel suggestion) {
-  final hasTravelerInfo =
-      suggestion.travelerFirstName != null || suggestion.travelerRating != null;
+  final hasTravelerInfo = suggestion.travelerFirstName != null ||
+      suggestion.travelerRating != null ||
+      suggestion.travelerAvatarUrl != null;
 
   return AnnouncementModel(
     id: suggestion.announcementId,
@@ -370,6 +371,7 @@ AnnouncementModel _toAnnouncementModel(RematchSuggestionModel suggestion) {
             id: 'temp',
             displayName: suggestion.travelerFirstName,
             averageRating: suggestion.travelerRating,
+            avatarUrl: suggestion.travelerAvatarUrl,
           )
         : null,
   );
