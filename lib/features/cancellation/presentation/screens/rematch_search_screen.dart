@@ -1,39 +1,127 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-class RematchSearchScreen extends StatelessWidget {
-  final CancellationModel cancellation;
+/// Écran « Alternatives disponibles » après annulation d'un trajet.
+///
+/// Deux modes :
+/// - [cancellation] déjà en main (navigation optimisée depuis un écran qui
+///   l'a déjà chargé) → rendu direct, pas de fetch.
+/// - [cancellation] absent (ex : ouverture depuis la notification FCM
+///   `TRIP_CANCELLED`) → fetch self-contained via [CancellationBloc] avec
+///   [cancellationId].
+class RematchSearchScreen extends StatefulWidget {
+  final String cancellationId;
+  final CancellationModel? cancellation;
 
-  const RematchSearchScreen({super.key, required this.cancellation});
+  const RematchSearchScreen({
+    super.key,
+    required this.cancellationId,
+    this.cancellation,
+  });
+
+  @override
+  State<RematchSearchScreen> createState() => _RematchSearchScreenState();
+}
+
+class _RematchSearchScreenState extends State<RematchSearchScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.cancellation == null) {
+      context
+          .read<CancellationBloc>()
+          .add(RematchSuggestionsRequested(widget.cancellationId));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final suggestions = cancellation.rematchSuggestions;
+    final cancellation = widget.cancellation;
 
     return Scaffold(
       appBar: const DonyAppBar(
         title: 'Alternatives disponibles',
       ),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.lg, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      body: cancellation != null
+          ? _RematchBody(
+              suggestions: cancellation.rematchSuggestions,
+              affectedBidsCount: cancellation.affectedBidsCount,
+            )
+          : BlocBuilder<CancellationBloc, CancellationState>(
+              builder: (context, state) {
+                if (state is RematchSuggestionsLoaded) {
+                  return _RematchBody(
+                    suggestions: state.suggestions,
+                    affectedBidsCount: null,
+                  );
+                }
+                if (state is CancellationError) {
+                  return DonyEmptyState(
+                    type: DonyEmptyStateType.error,
+                    mascotte: DonyMascotteType.assis,
+                    title: 'Erreur de chargement',
+                    description: ErrorPresenter.resolve(state.error).message,
+                    actionLabel: 'Réessayer',
+                    onAction: () => context.read<CancellationBloc>().add(
+                          RematchSuggestionsRequested(widget.cancellationId),
+                        ),
+                  );
+                }
+                // CancellationInitial / CancellationLoading / tout autre état
+                // transitoire du même bloc (registerFactory → instance dédiée
+                // à cette route).
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _RematchBody extends StatelessWidget {
+  final List<RematchSuggestionModel> suggestions;
+
+  /// `null` quand la suggestion vient du fetch self-contained (notification
+  /// FCM) — le back n'expose pas encore ce compteur sur
+  /// `GET /cancellations/{id}/rematch-suggestions`, seulement sur la réponse
+  /// d'annulation elle-même.
+  final int? affectedBidsCount;
+
+  const _RematchBody({
+    required this.suggestions,
+    required this.affectedBidsCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final h = DonyLayout.hPadding(context);
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(h, DonySpacing.lg, h, DonySpacing.huge),
+      child: DonyLayout.constrained(
+        context,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             _ConfirmationBanner(
-              affectedCount: cancellation.affectedBidsCount,
+              affectedCount: affectedBidsCount,
               cs: cs,
               tt: tt,
             ),
@@ -43,7 +131,7 @@ class RematchSearchScreen extends StatelessWidget {
                 mascotte: DonyMascotteType.assis,
                 title: 'Aucun voyageur disponible',
                 description:
-                    'Aucun voyageur alternatif disponible dans les 72h sur ce corridor.',
+                    'Aucun voyageur alternatif disponible dans les 72h sur ce corridor — votre remboursement est traité.',
               )
             else ...[
               Text(
@@ -63,16 +151,14 @@ class RematchSearchScreen extends StatelessWidget {
               variant: DonyButtonVariant.ghost,
             ),
           ],
-            ),
-          ),
-        );
-      }),
+        ),
+      ),
     );
   }
 }
 
 class _ConfirmationBanner extends StatelessWidget {
-  final int affectedCount;
+  final int? affectedCount;
   final ColorScheme cs;
   final TextTheme tt;
   const _ConfirmationBanner({
@@ -83,6 +169,7 @@ class _ConfirmationBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final count = affectedCount;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
@@ -105,7 +192,9 @@ class _ConfirmationBanner extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            '$affectedCount expéditeur${affectedCount > 1 ? 's' : ''} remboursé${affectedCount > 1 ? 's' : ''} automatiquement.',
+            count != null
+                ? '$count expéditeur${count > 1 ? 's' : ''} remboursé${count > 1 ? 's' : ''} automatiquement.'
+                : 'Votre remboursement est en cours.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

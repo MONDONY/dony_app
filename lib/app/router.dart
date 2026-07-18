@@ -353,10 +353,17 @@ final appRouter = GoRouter(
 
     // ── Cancellation (hors shell) ────────────────────────────────────────
     GoRoute(
-      path: '/cancellations/rematch',
+      path: '/cancellations/:id/rematch',
       builder: (context, state) {
-        final cancellation = state.extra as CancellationModel;
-        return RematchSearchScreen(cancellation: cancellation);
+        final cancellationId = state.pathParameters['id']!;
+        final cancellation = state.extra as CancellationModel?;
+        return BlocProvider(
+          create: (_) => getIt<CancellationBloc>(),
+          child: RematchSearchScreen(
+            cancellationId: cancellationId,
+            cancellation: cancellation,
+          ),
+        );
       },
     ),
 

@@ -62,6 +62,9 @@ class RematchSuggestionModel {
   final DateTime departureDate;
   final double availableKg;
   final double pricePerKg;
+  final String? travelerFirstName;
+  final double? travelerRating;
+  final int? travelerRatingCount;
 
   const RematchSuggestionModel({
     required this.suggestionId,
@@ -71,6 +74,9 @@ class RematchSuggestionModel {
     required this.departureDate,
     required this.availableKg,
     required this.pricePerKg,
+    this.travelerFirstName,
+    this.travelerRating,
+    this.travelerRatingCount,
   });
 
   factory RematchSuggestionModel.fromJson(Map<String, dynamic> json) {
@@ -82,6 +88,9 @@ class RematchSuggestionModel {
       departureDate: DateTime.parse(json['departureDate'] as String),
       availableKg: (json['availableKg'] as num).toDouble(),
       pricePerKg: (json['pricePerKg'] as num).toDouble(),
+      travelerFirstName: json['travelerFirstName'] as String?,
+      travelerRating: (json['travelerRating'] as num?)?.toDouble(),
+      travelerRatingCount: json['travelerRatingCount'] as int?,
     );
   }
 }
