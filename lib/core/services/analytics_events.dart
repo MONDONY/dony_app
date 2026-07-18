@@ -117,6 +117,9 @@ abstract final class AnalyticsEvents {
   // Home map focus
   static const homeMapFocusChanged = 'home_map_focus_changed';
 
+  // Filtre urgent (chip 🔥 Urgent — Accueil)
+  static const urgentFilterToggled = 'urgent_filter_toggled';
+
   // Annonces tab navigation (Phase 1 — modèle additif)
   static const annoncesTripsOpened = 'annonces_trips_opened';
   static const annoncesSendOpened  = 'annonces_send_opened';

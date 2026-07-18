@@ -63,6 +63,33 @@ void main() {
         throwsA(isA<DioException>()),
       );
     });
+
+    test('getUrgencyThresholdDays returns threshold from API response', () async {
+      when(() => mockDio.get('/config/urgency-threshold')).thenAnswer(
+        (_) async => Response(
+          data: {'thresholdDays': 3},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/urgency-threshold'),
+        ),
+      );
+
+      final days = await datasource.getUrgencyThresholdDays();
+      expect(days, 3);
+    });
+
+    test('getUrgencyThresholdDays throws on network error', () async {
+      when(() => mockDio.get('/config/urgency-threshold')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/urgency-threshold'),
+          message: 'Network error',
+        ),
+      );
+
+      expect(
+        () => datasource.getUrgencyThresholdDays(),
+        throwsA(isA<DioException>()),
+      );
+    });
   });
 
   group('ConfigRepository', () {
@@ -89,6 +116,33 @@ void main() {
 
       expect(
         () => repository.getCommissionRate(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('getUrgencyThresholdDays delegates to datasource', () async {
+      when(() => mockDio.get('/config/urgency-threshold')).thenAnswer(
+        (_) async => Response(
+          data: {'thresholdDays': 5},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/urgency-threshold'),
+        ),
+      );
+
+      final days = await repository.getUrgencyThresholdDays();
+      expect(days, 5);
+    });
+
+    test('getUrgencyThresholdDays rethrows network exceptions', () async {
+      when(() => mockDio.get('/config/urgency-threshold')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/urgency-threshold'),
+          message: 'Server error',
+        ),
+      );
+
+      expect(
+        () => repository.getUrgencyThresholdDays(),
         throwsA(isA<Exception>()),
       );
     });

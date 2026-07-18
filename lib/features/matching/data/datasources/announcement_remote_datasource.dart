@@ -134,6 +134,7 @@ class AnnouncementRemoteDatasource {
     String sortBy = 'date',
     String sortDir = 'asc',
     int page = 0,
+    bool? urgent,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -158,6 +159,9 @@ class AnnouncementRemoteDatasource {
       if (userLat != null) 'userLat': userLat,
       if (userLng != null) 'userLng': userLng,
       if (radiusKm != null) 'radiusKm': radiusKm,
+      // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
+      // seulement présent quand le chip est actif (cf. PR back #112).
+      if (urgent == true) 'urgent': true,
     };
     final response =
         await _apiClient.dio.get('/announcements', queryParameters: params);

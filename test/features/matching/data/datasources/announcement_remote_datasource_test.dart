@@ -268,6 +268,37 @@ void main() {
 
       expect(results, isEmpty);
     });
+
+    test('sends urgent=true when urgent: true', () async {
+      when(() => mockDio.get('/announcements',
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+
+      await datasource.searchAnnouncements(urgent: true);
+
+      final captured = verify(() => mockDio.get('/announcements',
+              queryParameters: captureAny(named: 'queryParameters')))
+          .captured
+          .single as Map<String, dynamic>;
+      expect(captured['urgent'], true);
+    });
+
+    test('omits urgent param when urgent is false or null (never sends urgent=false)',
+        () async {
+      when(() => mockDio.get('/announcements',
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+
+      await datasource.searchAnnouncements(urgent: false);
+      await datasource.searchAnnouncements();
+
+      final calls = verify(() => mockDio.get('/announcements',
+              queryParameters: captureAny(named: 'queryParameters')))
+          .captured;
+      for (final c in calls) {
+        expect((c as Map<String, dynamic>).containsKey('urgent'), isFalse);
+      }
+    });
   });
 
   // ── deleteAnnouncement ───────────────────────────────────────────────────────

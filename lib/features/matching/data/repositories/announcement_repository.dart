@@ -93,6 +93,7 @@ class AnnouncementRepository {
     double? radiusKm,
     String sortBy = 'date',
     String sortDir = 'asc',
+    bool? urgent,
   }) {
     return _remoteDatasource.searchAnnouncements(
       departureCity: departureCity,
@@ -113,6 +114,7 @@ class AnnouncementRepository {
       radiusKm: radiusKm,
       sortBy: sortBy,
       sortDir: sortDir,
+      urgent: urgent,
     );
   }
 

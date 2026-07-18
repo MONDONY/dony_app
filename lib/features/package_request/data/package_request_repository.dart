@@ -300,6 +300,7 @@ class PackageRequestRepository {
     double? radiusKm,
     int page = 0,
     int size = 20,
+    bool? urgent,
   }) async {
     final query = <String, dynamic>{
       'page': page,
@@ -314,6 +315,9 @@ class PackageRequestRepository {
       if (lat != null) 'lat': lat,
       if (lng != null) 'lng': lng,
       if (radiusKm != null) 'radiusKm': radiusKm,
+      // Filtre serveur « demandes urgentes » — jamais envoyer urgent=false,
+      // seulement présent quand le chip est actif (cf. PR back #112).
+      if (urgent == true) 'urgent': true,
     };
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests',

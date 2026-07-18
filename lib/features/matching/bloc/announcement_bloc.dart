@@ -182,6 +182,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         radiusKm: event.radiusKm,
         sortBy: event.sortBy,
         sortDir: event.sortDir,
+        urgent: event.urgent,
       );
       emit(AnnouncementSearchLoaded(results));
     } catch (e, stacktrace) {

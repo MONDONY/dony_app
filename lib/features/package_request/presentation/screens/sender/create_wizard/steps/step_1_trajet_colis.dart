@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
@@ -150,6 +151,21 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                         date: _date,
                         onChanged: (d) => setState(() => _date = d),
                       ),
+                      // ── Feedback informatif « sera signalée urgente » ──
+                      // Non-bloquant : n'affecte jamais la soumission.
+                      if (_date != null && isUrgentDate(_date!))
+                        Padding(
+                          padding: const EdgeInsets.only(top: DonySpacing.xs),
+                          child: Text(
+                            '🔥 Date proche — cette demande sera signalée urgente',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

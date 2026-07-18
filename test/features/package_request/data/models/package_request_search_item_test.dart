@@ -1,3 +1,4 @@
+import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -117,6 +118,60 @@ void main() {
       final item1 = PackageRequestSearchItem.fromJson(json1);
       final item2 = PackageRequestSearchItem.fromJson(json2);
       expect(item1.sender, isNot(equals(item2.sender)));
+    });
+  });
+
+  group('PackageRequestSearchItem urgent', () {
+    test('urgent depuis le JSON prime sur le calcul local (true)', () {
+      final json = _baseJson()
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 30)).toIso8601String()
+        ..['urgent'] = true;
+      final item = PackageRequestSearchItem.fromJson(json);
+      expect(item.isUrgent, isTrue);
+    });
+
+    test('urgent depuis le JSON prime sur le calcul local (false)', () {
+      final json = _baseJson()
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 1)).toIso8601String()
+        ..['urgent'] = false;
+      final item = PackageRequestSearchItem.fromJson(json);
+      expect(item.isUrgent, isFalse);
+    });
+
+    test('urgent absent → repli sur la date (proche → urgent)', () {
+      final json = _baseJson()
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 1)).toIso8601String();
+      final item = PackageRequestSearchItem.fromJson(json);
+      expect(item.urgent, isNull);
+      expect(item.isUrgent, isTrue);
+    });
+
+    test('urgent absent → repli sur la date (lointaine → pas urgent)', () {
+      final json = _baseJson()
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 30)).toIso8601String();
+      final item = PackageRequestSearchItem.fromJson(json);
+      expect(item.urgent, isNull);
+      expect(item.isUrgent, isFalse);
+    });
+
+    test('isUrgent match isUrgentDate quand urgent absent', () {
+      final desiredDate = DateTime.now().add(const Duration(days: 2));
+      final json = _baseJson()
+        ..['desiredDate'] = desiredDate.toIso8601String();
+      final item = PackageRequestSearchItem.fromJson(json);
+      expect(item.isUrgent, isUrgentDate(item.desiredDate));
+    });
+
+    test('urgent participates in equality (props)', () {
+      final withUrgent = PackageRequestSearchItem.fromJson(
+        _baseJson()..['urgent'] = true,
+      );
+      final withoutUrgent = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(withUrgent, isNot(equals(withoutUrgent)));
     });
   });
 }

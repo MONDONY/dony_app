@@ -301,6 +301,63 @@ void main() {
       expect(page.content.isNotEmpty, true);
       expect(page.content.first.departureLat, 48.85);
     });
+
+    test('sends urgent=true when urgent: true', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': <dynamic>[],
+          'totalElements': 0,
+          'number': 0,
+          'size': 20,
+        }, '/package-requests'),
+      );
+
+      await repo.search(urgent: true);
+
+      final captured = verify(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: captureAny(named: 'queryParameters'),
+        ),
+      ).captured.single as Map<String, dynamic>;
+      expect(captured['urgent'], true);
+    });
+
+    test(
+        'omits urgent param when urgent is false or null (never sends urgent=false)',
+        () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': <dynamic>[],
+          'totalElements': 0,
+          'number': 0,
+          'size': 20,
+        }, '/package-requests'),
+      );
+
+      await repo.search(urgent: false);
+      await repo.search();
+
+      final calls = verify(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: captureAny(named: 'queryParameters'),
+        ),
+      ).captured;
+      for (final c in calls) {
+        expect((c as Map<String, dynamic>).containsKey('urgent'), isFalse);
+      }
+    });
   });
 
   group('photoKeys', () {

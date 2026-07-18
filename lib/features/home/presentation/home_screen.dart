@@ -137,6 +137,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   bool _kycVerifiedOnly = false;
   String? _contentType;
   UrgencyFilter? _urgencyFilter;
+  // Chip serveur « 🔥 Urgent » — combiné à l'onglet actif (Trajets/Colis/Tout),
+  // s'applique aux deux recherches (announcements + package requests).
+  bool _urgentOnly = false;
 
   // Package request filters (traveler role)
   String? _prDeparture;
@@ -170,6 +173,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (_isNearMeActive) n++;
     if (_datePreset != _DatePreset.none) n++;
     if (_urgencyFilter != null) n++;
+    if (_urgentOnly) n++;
     return n;
   }
 
@@ -418,6 +422,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLat: _isNearMeActive ? _userPosition?.latitude : null,
         userLng: _isNearMeActive ? _userPosition?.longitude : null,
         radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
+        urgent: _urgentOnly ? true : null,
       ),
     );
   }
@@ -434,6 +439,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLat: _isNearMeActive ? _userPosition?.latitude : null,
         userLng: _isNearMeActive ? _userPosition?.longitude : null,
         radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
+        urgent: _urgentOnly ? true : null,
       ),
     );
   }
@@ -459,6 +465,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   // Conservé pour la rétrocompatibilité avec l'appel depuis `_changeNearMeRadius`.
   void _dispatchForActiveRole() => _dispatchForCapability();
+
+  // Chip « 🔥 Urgent » : filtre serveur combiné à l'onglet actif — s'applique
+  // aux deux recherches (announcements + package requests), comme near-me.
+  void _onUrgentToggle() {
+    final next = !_urgentOnly;
+    setState(() => _urgentOnly = next);
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.urgentFilterToggled,
+        properties: {'active': next},
+      ),
+    );
+    _dispatchForCapability();
+  }
 
   void _deactivateNearMe() {
     setState(() {
@@ -1328,6 +1348,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
     return !showParcelControls
         ? _HomeFilterChipsRow(
             leadingChildren: [
+              _SmallChip(
+                label: '🔥 Urgent',
+                isActive: _urgentOnly,
+                onTap: _onUrgentToggle,
+              ),
+              const SizedBox(width: DonySpacing.xs),
               if (isTraveler) ...[
                 _SmallChip(
                   label: '📦 Colis',
@@ -1396,6 +1422,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
           )
         : _PackageRequestFilterChipsRow(
             leadingChildren: [
+              _SmallChip(
+                label: '🔥 Urgent',
+                isActive: _urgentOnly,
+                onTap: _onUrgentToggle,
+              ),
+              const SizedBox(width: DonySpacing.xs),
               if (isTraveler) ...[
                 _SmallChip(
                   label: '📦 Colis',

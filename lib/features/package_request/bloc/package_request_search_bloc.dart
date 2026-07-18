@@ -19,6 +19,7 @@ class SearchFiltersChanged extends PackageRequestSearchEvent {
     this.departure, this.arrival, this.dateFrom, this.dateTo,
     this.maxWeight, this.parcelSize,
     this.userLat, this.userLng, this.radiusKm,
+    this.urgent,
   });
   final String? departure;
   final String? arrival;
@@ -29,8 +30,11 @@ class SearchFiltersChanged extends PackageRequestSearchEvent {
   final double? userLat;
   final double? userLng;
   final double? radiusKm;
+  /// Filtre serveur « demandes urgentes » (`urgent=true`) — jamais `false`
+  /// envoyé explicitement, seulement présent ou absent côté requête.
+  final bool? urgent;
   @override
-  List<Object?> get props => [departure, arrival, dateFrom, dateTo, maxWeight, parcelSize, userLat, userLng, radiusKm];
+  List<Object?> get props => [departure, arrival, dateFrom, dateTo, maxWeight, parcelSize, userLat, userLng, radiusKm, urgent];
 }
 
 class SearchLoadMore extends PackageRequestSearchEvent {
@@ -59,6 +63,7 @@ class PackageRequestSearchState extends Equatable {
     this.userLat,
     this.userLng,
     this.radiusKm,
+    this.urgent,
   });
 
   final SearchStatus status;
@@ -75,6 +80,7 @@ class PackageRequestSearchState extends Equatable {
   final double? userLat;
   final double? userLng;
   final double? radiusKm;
+  final bool? urgent;
 
   bool get isNearMeActive => userLat != null && userLng != null;
 
@@ -93,6 +99,7 @@ class PackageRequestSearchState extends Equatable {
     double? userLat,
     double? userLng,
     double? radiusKm,
+    bool? urgent,
   }) =>
       PackageRequestSearchState(
         status: status ?? this.status,
@@ -109,13 +116,14 @@ class PackageRequestSearchState extends Equatable {
         userLat: userLat ?? this.userLat,
         userLng: userLng ?? this.userLng,
         radiusKm: radiusKm ?? this.radiusKm,
+        urgent: urgent ?? this.urgent,
       );
 
   @override
   List<Object?> get props => [
         status, results, page, hasMore, errorMessage,
         departure, arrival, dateFrom, dateTo, maxWeight, parcelSize,
-        userLat, userLng, radiusKm,
+        userLat, userLng, radiusKm, urgent,
       ];
 }
 
@@ -142,6 +150,7 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
       userLat: e.userLat,
       userLng: e.userLng,
       radiusKm: e.radiusKm,
+      urgent: e.urgent,
     ));
     try {
       final page = await _repository.search(
@@ -154,6 +163,7 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
         lat: e.userLat,
         lng: e.userLng,
         radiusKm: e.radiusKm,
+        urgent: e.urgent,
         page: 0,
       );
       emit(state.copyWith(
@@ -189,6 +199,7 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
         lat: state.userLat,
         lng: state.userLng,
         radiusKm: state.radiusKm,
+        urgent: state.urgent,
         page: next,
       );
       emit(state.copyWith(
@@ -208,5 +219,6 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
         dateFrom: state.dateFrom, dateTo: state.dateTo,
         maxWeight: state.maxWeight, parcelSize: state.parcelSize,
         userLat: state.userLat, userLng: state.userLng, radiusKm: state.radiusKm,
+        urgent: state.urgent,
       ), emit);
 }

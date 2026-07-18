@@ -12,12 +12,13 @@ PackageRequest _req({
   PackageRequestStatus status = PackageRequestStatus.open,
   bool negotiable = true,
   String? viewerThreadId,
+  DateTime? desiredDate,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 8, 1),
+  desiredDate: desiredDate ?? DateTime(2026, 8, 1),
   dateToleranceDays: 3,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
@@ -196,5 +197,25 @@ void main() {
     await tester.tap(find.text('Offres reçues'));
     await tester.pumpAndSettle();
     expect(find.text('OWNER pr-1'), findsOneWidget);
+  });
+
+  // ── Badge urgent (repli local — PackageRequest n'expose pas `urgent`) ───────
+
+  testWidgets('date souhaitée proche → badge urgent affiché', (tester) async {
+    await tester.pumpWidget(
+      wrap(_req(desiredDate: DateTime.now().add(const Duration(days: 1)))),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('🔥 Urgent'), findsOneWidget);
+  });
+
+  testWidgets('date souhaitée lointaine → badge urgent absent', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(_req(desiredDate: DateTime.now().add(const Duration(days: 30)))),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('🔥 Urgent'), findsNothing);
   });
 }

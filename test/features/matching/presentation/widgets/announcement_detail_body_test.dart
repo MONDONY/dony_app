@@ -123,4 +123,48 @@ void main() {
     expect(find.text('CE QUE JE REFUSE'), findsNothing);
     expect(find.text('NOTE AUX EXPÉDITEURS'), findsNothing);
   });
+
+  testWidgets('date de départ proche → badge urgent affiché', (tester) async {
+    final urgent = AnnouncementModel(
+      id: 'ann-urgent',
+      travelerId: 'trav-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime.now().add(const Duration(days: 1)),
+      availableKg: 10,
+      totalKg: 10,
+      pricePerKg: 7,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 7),
+      updatedAt: DateTime(2026, 7),
+      acceptedPaymentMethods: const <BidPaymentMethod>{},
+    );
+    await tester.pumpWidget(host(urgent));
+    await tester.pumpAndSettle();
+
+    expect(find.text('🔥 Urgent'), findsOneWidget);
+  });
+
+  testWidgets('date de départ lointaine → badge urgent absent', (
+    tester,
+  ) async {
+    final notUrgent = AnnouncementModel(
+      id: 'ann-not-urgent',
+      travelerId: 'trav-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime.now().add(const Duration(days: 30)),
+      availableKg: 10,
+      totalKg: 10,
+      pricePerKg: 7,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 7),
+      updatedAt: DateTime(2026, 7),
+      acceptedPaymentMethods: const <BidPaymentMethod>{},
+    );
+    await tester.pumpWidget(host(notUrgent));
+    await tester.pumpAndSettle();
+
+    expect(find.text('🔥 Urgent'), findsNothing);
+  });
 }

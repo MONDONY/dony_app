@@ -5,6 +5,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -242,6 +243,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final depFlag = cityFlag(r.departureCity);
     final arrFlag = cityFlag(r.arrivalCity);
+    // Le modèle de détail n'expose pas de champ `urgent` (backend ne l'envoie
+    // pas ici) — repli local sur le seuil d'urgence, comme documenté dans
+    // dony_urgency.dart.
+    final isUrgent = isUrgentDate(r.desiredDate);
     return Stack(
       children: [
         SingleChildScrollView(
@@ -310,6 +315,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                     const SizedBox(width: DonySpacing.xs),
                   ],
                   packageStatusChip(context, r.status),
+                  if (isUrgent) ...[
+                    const SizedBox(width: DonySpacing.xs),
+                    const DonyUrgentBadge(),
+                  ],
                 ],
               ),
               const SizedBox(height: DonySpacing.sm),
