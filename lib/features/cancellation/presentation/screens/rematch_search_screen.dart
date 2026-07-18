@@ -10,9 +10,13 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -40,6 +44,17 @@ class RematchSearchScreen extends StatefulWidget {
 }
 
 class _RematchSearchScreenState extends State<RematchSearchScreen> {
+  /// Suggestion actuellement en cours de résolution (fetch du vrai
+  /// [AnnouncementModel] par `suggestion.announcementId`). Flag UI-only —
+  /// pas d'état métier ici, seulement quelle carte affiche un spinner /
+  /// doit ignorer un nouveau tap pendant que le fetch est en vol. Précédent :
+  /// `ValueNotifier` pour état local (cf. règle bottom sheet du CLAUDE.md).
+  final ValueNotifier<String?> _loadingSuggestionId = ValueNotifier(null);
+
+  /// Nombre de suggestions affichées au moment du tap — capturé pour
+  /// l'event analytics `rematch_accepted`, tiré seulement au succès du fetch.
+  int _pendingSuggestionsCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -51,48 +66,105 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
   }
 
   @override
+  void dispose() {
+    _loadingSuggestionId.dispose();
+    super.dispose();
+  }
+
+  /// Tap sur une `TravelerCard` (carte entière tactile) : fetch le vrai
+  /// [AnnouncementModel] par `suggestion.announcementId` via l'`AnnouncementBloc`
+  /// dédié à cette route (même chemin data que `AnnouncementDetailScreen` /
+  /// `TripOwnerDetailScreen` — `GET /announcements/{id}`, fonctionne aussi
+  /// pour une annonce qui n'appartient pas à l'utilisateur courant, cf.
+  /// `TravelerProfileScreen`). Un stub ne doit jamais atteindre
+  /// `showTravelerAnnouncementSheet` : `travelerId`/`pricingMode`/
+  /// `priceGridItems`/`acceptedPaymentMethods` doivent venir du back.
+  void _onSuggestionTap(RematchSuggestionModel suggestion, int suggestionsCount) {
+    // Ignore un second tap tant qu'un fetch est déjà en vol (évite une
+    // double requête / une race entre deux résolutions concurrentes).
+    if (_loadingSuggestionId.value != null) {
+      return;
+    }
+    _pendingSuggestionsCount = suggestionsCount;
+    _loadingSuggestionId.value = suggestion.suggestionId;
+    context
+        .read<AnnouncementBloc>()
+        .add(AnnouncementDetailRequested(suggestion.announcementId));
+  }
+
+  void _onAnnouncementState(BuildContext context, AnnouncementState state) {
+    if (state is AnnouncementDetailLoaded) {
+      _loadingSuggestionId.value = null;
+      // Analytics tirée juste avant l'ouverture de la sheet — même point
+      // que l'ancien code, désormais gaté par le succès du fetch.
+      unawaited(getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.rematchAccepted,
+        properties: {'count': _pendingSuggestionsCount},
+      ));
+      showTravelerAnnouncementSheet(
+        context,
+        announcement: state.announcement,
+      );
+    } else if (state is AnnouncementNotFound || state is AnnouncementError) {
+      _loadingSuggestionId.value = null;
+      DonySnackbar.show(
+        context,
+        message: 'Cette annonce n\'est plus disponible',
+        type: DonySnackbarType.error,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cancellation = widget.cancellation;
 
-    return Scaffold(
-      appBar: const DonyAppBar(
-        title: 'Alternatives disponibles',
+    return BlocListener<AnnouncementBloc, AnnouncementState>(
+      listener: _onAnnouncementState,
+      child: Scaffold(
+        appBar: const DonyAppBar(
+          title: 'Alternatives disponibles',
+        ),
+        body: cancellation != null
+            ? _RematchBody(
+                suggestions: cancellation.rematchSuggestions,
+                affectedBidsCount: cancellation.affectedBidsCount,
+                loadingSuggestionId: _loadingSuggestionId,
+                onSuggestionTap: _onSuggestionTap,
+              )
+            : BlocBuilder<CancellationBloc, CancellationState>(
+                builder: (context, state) {
+                  if (state is RematchSuggestionsLoaded) {
+                    return _RematchBody(
+                      suggestions: state.suggestions,
+                      affectedBidsCount: null,
+                      loadingSuggestionId: _loadingSuggestionId,
+                      onSuggestionTap: _onSuggestionTap,
+                    );
+                  }
+                  if (state is CancellationError) {
+                    return DonyEmptyState(
+                      type: DonyEmptyStateType.error,
+                      mascotte: DonyMascotteType.assis,
+                      title: 'Erreur de chargement',
+                      description: ErrorPresenter.resolve(state.error).message,
+                      actionLabel: 'Réessayer',
+                      onAction: () => context.read<CancellationBloc>().add(
+                            RematchSuggestionsRequested(widget.cancellationId),
+                          ),
+                    );
+                  }
+                  // CancellationInitial / CancellationLoading / tout autre état
+                  // transitoire du même bloc (registerFactory → instance dédiée
+                  // à cette route).
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  );
+                },
+              ),
       ),
-      body: cancellation != null
-          ? _RematchBody(
-              suggestions: cancellation.rematchSuggestions,
-              affectedBidsCount: cancellation.affectedBidsCount,
-            )
-          : BlocBuilder<CancellationBloc, CancellationState>(
-              builder: (context, state) {
-                if (state is RematchSuggestionsLoaded) {
-                  return _RematchBody(
-                    suggestions: state.suggestions,
-                    affectedBidsCount: null,
-                  );
-                }
-                if (state is CancellationError) {
-                  return DonyEmptyState(
-                    type: DonyEmptyStateType.error,
-                    mascotte: DonyMascotteType.assis,
-                    title: 'Erreur de chargement',
-                    description: ErrorPresenter.resolve(state.error).message,
-                    actionLabel: 'Réessayer',
-                    onAction: () => context.read<CancellationBloc>().add(
-                          RematchSuggestionsRequested(widget.cancellationId),
-                        ),
-                  );
-                }
-                // CancellationInitial / CancellationLoading / tout autre état
-                // transitoire du même bloc (registerFactory → instance dédiée
-                // à cette route).
-                return Center(
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                );
-              },
-            ),
     );
   }
 }
@@ -106,9 +178,19 @@ class _RematchBody extends StatelessWidget {
   /// d'annulation elle-même.
   final int? affectedBidsCount;
 
+  /// `suggestionId` de la carte dont le fetch du vrai `AnnouncementModel`
+  /// est en vol, `null` si aucune. Pilote le spinner léger + désactive les
+  /// autres cartes pendant la résolution (UI-only, cf. `_RematchSearchScreenState`).
+  final ValueListenable<String?> loadingSuggestionId;
+
+  final void Function(RematchSuggestionModel suggestion, int suggestionsCount)
+      onSuggestionTap;
+
   const _RematchBody({
     required this.suggestions,
     required this.affectedBidsCount,
+    required this.loadingSuggestionId,
+    required this.onSuggestionTap,
   });
 
   @override
@@ -143,17 +225,50 @@ class _RematchBody extends StatelessWidget {
                 style: tt.titleLarge?.copyWith(color: cs.onSurface),
               ),
               const SizedBox(height: DonySpacing.base),
-              ...suggestions.asMap().entries.map((e) => TravelerCard(
-                    key: Key('rematch-traveler-card-${e.value.suggestionId}'),
-                    announcement: _toAnnouncementModel(e.value),
-                    index: e.key,
-                    isOwnAnnouncement: false,
-                    onTap: () => _acceptSuggestion(
-                      context,
-                      suggestion: e.value,
-                      suggestionsCount: suggestions.length,
-                    ),
-                  )),
+              ...suggestions.asMap().entries.map((e) {
+                final suggestion = e.value;
+                return ValueListenableBuilder<String?>(
+                  valueListenable: loadingSuggestionId,
+                  builder: (context, loadingId, _) {
+                    final isLoading = loadingId == suggestion.suggestionId;
+                    final isDisabled = loadingId != null && !isLoading;
+                    return Stack(
+                      children: [
+                        Opacity(
+                          opacity: isDisabled ? 0.4 : 1,
+                          child: IgnorePointer(
+                            ignoring: loadingId != null,
+                            child: TravelerCard(
+                              key: Key(
+                                  'rematch-traveler-card-${suggestion.suggestionId}'),
+                              announcement: _toAnnouncementModel(suggestion),
+                              index: e.key,
+                              isOwnAnnouncement: false,
+                              onTap: () => onSuggestionTap(
+                                suggestion,
+                                suggestions.length,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (isLoading)
+                          Positioned.fill(
+                            child: Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: cs.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              }),
             ],
             const SizedBox(height: DonySpacing.lg),
             DonyButton(
@@ -215,10 +330,18 @@ class _ConfirmationBanner extends StatelessWidget {
 }
 
 /// Mappe une suggestion de rematch vers l'[AnnouncementModel] attendu par
-/// `TravelerCard` / `showTravelerAnnouncementSheet`. Mêmes valeurs de repli
-/// que l'ancien mapping (id = announcementId, status ACTIVE, totalKg =
-/// availableKg) — étendu avec le prénom/note voyageur désormais exposés par
-/// `RematchSuggestionModel`.
+/// `TravelerCard` pour le RENDU DE LISTE UNIQUEMENT (nom, note, corridor,
+/// prix indicatif €/kg). C'est un stub incomplet — `travelerId: 'temp'`,
+/// `TravelerProfile(id: 'temp')`, pas de `pricingMode`/`priceGridItems`/
+/// `acceptedPaymentMethods` — donc il NE DOIT JAMAIS être passé à
+/// `showTravelerAnnouncementSheet` : le bloc voyageur y devient tappable et
+/// pousserait `/profile/public` avec l'id 'temp', et une annonce en pricing
+/// MIXED/GRID s'afficherait à tort en €/kg. `TravelerCard` n'utilise
+/// `announcement.traveler` que pour l'affichage (nom/note/avatar/badges) —
+/// son unique callback tactile est `onTap`, jamais une navigation interne
+/// basée sur `traveler.id` — donc ce stub reste sûr pour le rendu de liste.
+/// Le TAP, lui, passe par `_RematchSearchScreenState._onSuggestionTap` qui
+/// fetch le vrai `AnnouncementModel` par `suggestion.announcementId`.
 ///
 /// `totalTrips` n'est PAS alimenté par `travelerRatingCount` : ce sont deux
 /// notions différentes (nombre d'avis ≠ nombre de trajets effectués) et
@@ -249,29 +372,5 @@ AnnouncementModel _toAnnouncementModel(RematchSuggestionModel suggestion) {
             averageRating: suggestion.travelerRating,
           )
         : null,
-  );
-}
-
-/// Tap sur une `TravelerCard` (carte entière tactile) : tire l'event
-/// analytics widget-level `rematch_accepted` (précédent : `TripParcelsSection`
-/// pour `trip_parcels_filtered`) puis ouvre le même overlay que le feed de
-/// recherche (`showTravelerAnnouncementSheet` — cf. `home_screen.dart`
-/// tap non-owned card) qui mène au flux de création de bid réel
-/// (`CreateBidBottomSheet`). Il n'existe PAS de route `/search/{id}/bid` dans
-/// `router.dart` — l'ancien `context.push` vers cette route poussait vers une
-/// page inexistante. Aucune PII dans les properties analytics — uniquement le
-/// nombre d'alternatives affichées.
-void _acceptSuggestion(
-  BuildContext context, {
-  required RematchSuggestionModel suggestion,
-  required int suggestionsCount,
-}) {
-  unawaited(getIt<AnalyticsService>().logEvent(
-    AnalyticsEvents.rematchAccepted,
-    properties: {'count': suggestionsCount},
-  ));
-  showTravelerAnnouncementSheet(
-    context,
-    announcement: _toAnnouncementModel(suggestion),
   );
 }

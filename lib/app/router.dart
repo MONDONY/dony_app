@@ -357,8 +357,14 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final cancellationId = state.pathParameters['id']!;
         final cancellation = state.extra as CancellationModel?;
-        return BlocProvider(
-          create: (_) => getIt<CancellationBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<CancellationBloc>()),
+            // Fetch du vrai AnnouncementModel au tap d'une suggestion
+            // (cf. RematchSearchScreen._onSuggestionTap) — jamais de fetch
+            // au chargement de la route, uniquement à la demande.
+            BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
+          ],
           child: RematchSearchScreen(
             cancellationId: cancellationId,
             cancellation: cancellation,
