@@ -4,7 +4,6 @@ import 'package:dony/features/payments/presentation/widgets/payment_method_names
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
-import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -31,7 +30,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -487,13 +485,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             'en main propre à la remise du colis. En cas d\'annulation après la '
             'remise, dony ne peut pas te rembourser immédiatement mais '
             's\'assurera que le voyageur te restitue ton argent.',
-      BidPaymentMethod.wave =>
-        'Le voyageur va examiner ta demande. Le paiement se fera via Wave '
-            'une fois l\'offre acceptée.',
-      BidPaymentMethod.orangeMoney =>
-        'Le voyageur va examiner ta demande. Le paiement se fera via Orange '
-            'Money une fois l\'offre acceptée.',
-      BidPaymentMethod.stripe => 'Le voyageur va examiner ta demande.',
+      _ => 'Le voyageur va examiner ta demande.',
     };
 
     Navigator.of(context).push(MaterialPageRoute(

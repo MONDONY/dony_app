@@ -27,27 +27,4 @@ class WalletRepository {
     }
   }
 
-  Future<String?> topupWave({required double amount}) async {
-    try {
-      final data = await _datasource.topup(
-        amount: amount,
-        paymentMethod: 'WAVE',
-      );
-      return data['redirectUrl'] as String?;
-    } catch (e) {
-      throw unwrapDioError(e);
-    }
-  }
-
-  Future<String?> topupOrangeMoney({required double amount}) async {
-    try {
-      final data = await _datasource.topup(
-        amount: amount,
-        paymentMethod: 'ORANGE_MONEY',
-      );
-      return data['redirectUrl'] as String?;
-    } catch (e) {
-      throw unwrapDioError(e);
-    }
-  }
 }

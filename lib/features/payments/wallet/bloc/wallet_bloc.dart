@@ -98,29 +98,6 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
           } else {
             emit(WalletError('Réponse vide du serveur'));
           }
-        case 'WAVE':
-          final url = await _repository.topupWave(amount: event.amount);
-          if (url != null) {
-            emit(WalletTopupRedirectReady(url));
-            unawaited(_analytics.logEvent(
-              AnalyticsEvents.walletTopupCompleted,
-              properties: {'amount': event.amount, 'method': event.paymentMethod},
-            ));
-          } else {
-            emit(WalletError('Réponse vide du serveur'));
-          }
-        case 'ORANGE_MONEY':
-          final url2 =
-              await _repository.topupOrangeMoney(amount: event.amount);
-          if (url2 != null) {
-            emit(WalletTopupRedirectReady(url2));
-            unawaited(_analytics.logEvent(
-              AnalyticsEvents.walletTopupCompleted,
-              properties: {'amount': event.amount, 'method': event.paymentMethod},
-            ));
-          } else {
-            emit(WalletError('Réponse vide du serveur'));
-          }
       }
     } catch (e) {
       emit(WalletError(unwrapDioError(e).message));
