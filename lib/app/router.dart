@@ -1,3 +1,4 @@
+import 'package:dony/app/deep_link_paths.dart';
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
@@ -202,6 +203,18 @@ final appRouter = GoRouter(
   // changement de route (no-op tant que le consentement n'est pas accordé).
   observers: [SentryNavigatorObserver(), PosthogObserver()],
   redirect: (context, state) {
+    // Cold start iOS via schéma custom (dony://...) : l'OS/Flutter transmet
+    // l'URI brute directement au système de navigation de GoRouter, AVANT que
+    // app_links.getInitialLink() ne s'exécute côté Dart (_DonyAppState._handleDeepLink).
+    // Sans cette traduction, GoRouter tente de matcher l'URI complète comme un
+    // chemin de route et lève GoException: no routes for location: dony://...
+    // Voir lib/app/deep_link_paths.dart pour le détail de ce conflit connu.
+    final uri = state.uri;
+    if (uri.scheme == 'dony') {
+      final routePath = '/${uri.host}${uri.path}';
+      return allowedDeepLinkPaths.contains(routePath) ? routePath : '/splash';
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     final isAuthenticated = user != null;
     final isPublic = _publicRoutes.any(

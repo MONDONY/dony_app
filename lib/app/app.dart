@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:dony/app/deep_link_paths.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -90,24 +91,12 @@ class _DonyAppState extends State<DonyApp> {
     );
   }
 
-  // Exhaustive allowlist — only these paths can be reached via dony:// URIs.
-  // Prevents crafted deep-links (e.g. dony://admin/…) from routing to
-  // unintended screens.
-  static const _allowedDeepLinkPaths = {
-    '/stripe/onboarding/complete',
-    '/stripe/onboarding/refresh',
-    '/payment/confirm',
-    '/tracking/scan',
-    '/wallet/topup-return/success',
-    '/wallet/topup-return/error',
-  };
-
   void _handleDeepLink(Uri uri) {
     if (uri.scheme != 'dony') {
       return;
     }
     final routePath = '/${uri.host}${uri.path}';
-    if (!_allowedDeepLinkPaths.contains(routePath)) {
+    if (!allowedDeepLinkPaths.contains(routePath)) {
       return;
     }
     try {
