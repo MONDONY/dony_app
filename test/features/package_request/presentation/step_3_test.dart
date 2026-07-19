@@ -93,14 +93,14 @@ void main() {
       expect(find.byKey(const Key('negotiable-toggle')), findsOneWidget);
     });
 
-    // 4. Payment method chips are visible
+    // 4. Payment method chips are visible — mobile money retiré du wizard
     testWidgets('payment method chips are visible', (tester) async {
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
       await tester.pumpAndSettle();
       expect(find.text('Carte'), findsOneWidget);
       expect(find.text('Cash'), findsOneWidget);
-      expect(find.text('Wave'), findsOneWidget);
-      expect(find.text('Orange Money'), findsOneWidget);
+      expect(find.text('Wave'), findsNothing);
+      expect(find.text('Orange Money'), findsNothing);
     });
 
     // 5. Toggling negotiable dispatches the event and updates state
