@@ -69,6 +69,10 @@ class StripePaymentGateway implements PaymentGateway {
                 ? PlatformPayConfirmParams.applePay(
                     applePay: ApplePayParams(
                       merchantCountryCode: 'FR',
+                      // DEVISE (spec devise §6.4) : 'EUR' est correct tant que
+                      // tout PaymentIntent est EUR. Si un PI existe un jour
+                      // dans une autre devise, paramétrer depuis la réponse
+                      // serveur — jamais depuis le profil utilisateur (règle R4).
                       currencyCode: 'EUR',
                       cartItems: [
                         ApplePayCartSummaryItem.immediate(
@@ -81,6 +85,10 @@ class StripePaymentGateway implements PaymentGateway {
                 : const PlatformPayConfirmParams.googlePay(
                     googlePay: GooglePayParams(
                       merchantCountryCode: 'FR',
+                      // DEVISE (spec devise §6.4) : 'EUR' est correct tant que
+                      // tout PaymentIntent est EUR. Si un PI existe un jour
+                      // dans une autre devise, paramétrer depuis la réponse
+                      // serveur — jamais depuis le profil utilisateur (règle R4).
                       currencyCode: 'EUR',
                       merchantName: 'dony',
                     ),

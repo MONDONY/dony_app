@@ -2,6 +2,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/money/currency_registry.dart';
+import 'package:dony/core/money/money_formatter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -85,13 +87,22 @@ Widget _wrap(
 }
 
 /// Creates a [MockBox] that returns [biometricEnabled] for the
-/// [HiveService.kBiometricEnabled] key.
-MockBox _mockUserPrefs({required bool biometricEnabled}) {
+/// [HiveService.kBiometricEnabled] key, and [currencyCode] (défaut 'EUR')
+/// pour [HiveService.kCurrencyCode] (lu par l'écran escrow pour l'affichage
+/// dual, cf. `formatDual`).
+MockBox _mockUserPrefs({
+  required bool biometricEnabled,
+  String currencyCode = 'EUR',
+}) {
   final box = MockBox();
   when(() => box.get(
         HiveService.kBiometricEnabled,
         defaultValue: any(named: 'defaultValue'),
       )).thenReturn(biometricEnabled);
+  when(() => box.get(
+        HiveService.kCurrencyCode,
+        defaultValue: any(named: 'defaultValue'),
+      )).thenReturn(currencyCode);
   return box;
 }
 
@@ -123,6 +134,9 @@ void main() {
     // un cache statique partagé entre les tests — reset pour que chaque test
     // vérifie son propre snackbar.
     DonySnackbar.clearDedup();
+    // Registre des devises : repli constant (EUR/XOF/XAF) — évite toute
+    // pollution par un `sync()` d'un autre test dans le même isolate.
+    CurrencyRegistry.instance.resetToFallbackForTest();
     mockBloc = MockPaymentBloc();
     mockConfigBloc = MockConfigBloc();
     mockLocalAuth = MockLocalAuthService();
@@ -357,6 +371,75 @@ void main() {
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Envoi réservé !'), findsOneWidget);
+    });
+
+    testWidgets(
+        'affiche le montant dual EUR/F CFA quand kCurrencyCode = XOF',
+        (tester) async {
+      whenListen<PaymentState>(
+        mockBloc,
+        Stream.value(const PaymentEscrowPending(50.0)),
+        initialState: const PaymentEscrowPending(50.0),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(
+              biometricEnabled: true,
+              currencyCode: 'XOF',
+            ),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Le texte attendu est recalculé via formatDual (pas de valeur en dur)
+      // pour ne pas dépendre de la représentation exacte des espaces/nbsp.
+      final expectedAmount = formatDual(50.0, localeCurrency: 'XOF');
+      expect(expectedAmount, contains('50'));
+      expect(expectedAmount, contains('CFA'));
+      expect(
+        find.text(
+          '$expectedAmount sont bloqués en escrow et seront libérés après '
+          'confirmation de livraison par le destinataire.',
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'aucun overflow avec un montant à 4 chiffres en affichage dual XOF',
+        (tester) async {
+      whenListen<PaymentState>(
+        mockBloc,
+        Stream.value(const PaymentEscrowPending(1234.0)),
+        initialState: const PaymentEscrowPending(1234.0),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(
+              biometricEnabled: true,
+              currencyCode: 'XOF',
+            ),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

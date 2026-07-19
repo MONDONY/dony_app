@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/money/money_formatter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -42,7 +43,13 @@ class PaymentScreen extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is PaymentEscrowPending) {
-          return _EscrowConfirmedView(amount: state.amount);
+          final box = userPrefs ?? getIt<HiveService>().userPrefs;
+          final currencyCode =
+              box.get(HiveService.kCurrencyCode, defaultValue: 'EUR') as String;
+          return _EscrowConfirmedView(
+            amount: state.amount,
+            currencyCode: currencyCode,
+          );
         }
         return BlocBuilder<ConfigBloc, ConfigState>(
           builder: (context, configState) {
@@ -279,7 +286,11 @@ class _SummaryCard extends StatelessWidget {
 
 class _EscrowConfirmedView extends StatelessWidget {
   final double amount;
-  const _EscrowConfirmedView({required this.amount});
+  // Devise locale d'affichage (Hive `kCurrencyCode`, défaut 'EUR') — INDICATIF
+  // uniquement (formatDual). Ne détermine jamais la devise réelle du
+  // paiement, toujours EUR côté escrow/PaymentIntent (règle R4).
+  final String currencyCode;
+  const _EscrowConfirmedView({required this.amount, required this.currencyCode});
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +298,7 @@ class _EscrowConfirmedView extends StatelessWidget {
       mascotteType: DonyMascotteType.securise,
       title: 'Envoi réservé !',
       subtitle:
-          '${amount.toStringAsFixed(2)} € sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
+          '${formatDual(amount, localeCurrency: currencyCode)} sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
       ctaLabel: 'Voir mes envois',
       onCta: () => context.go('/home'),
       analyticsContext: 'escrow_payment',

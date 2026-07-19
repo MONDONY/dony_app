@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dony/app/app.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
+import 'package:dony/core/money/currency_registry.dart';
+import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:bloc/bloc.dart';
@@ -137,6 +139,12 @@ Future<void> _bootstrap() async {
   // Seuil d'urgence Dony (SOURCE UNIQUE : dony.urgency.threshold-days côté backend) :
   // chargé une fois pour que le badge « urgent » suive automatiquement. Non bloquant.
   unawaited(_loadUrgencyThreshold());
+
+  // Registre des devises (SOURCE UNIQUE : GET /config/currencies côté backend) :
+  // chargé une fois pour que l'affichage dual EUR/devise locale (formatDual)
+  // suive automatiquement. Repli silencieux sur kFallbackCurrencies — non bloquant
+  // (cf. CurrencyRegistry.sync, qui ne lève jamais).
+  unawaited(CurrencyRegistry.instance.sync(getIt<ApiClient>().dio));
 }
 
 Future<void> _loadDonyCommissionRate() async {
