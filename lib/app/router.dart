@@ -607,10 +607,17 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/payments/wallet/topup/amount',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<WalletBloc>(),
-        child: WalletTopupAmountScreen(paymentMethod: state.extra as String),
-      ),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return BlocProvider(
+          create: (_) => getIt<WalletBloc>(),
+          child: WalletTopupAmountScreen(
+            paymentMethod: extra['method'] as String,
+            countryCode: extra['countryCode'] as String?,
+            phoneNumber: extra['phoneNumber'] as String?,
+          ),
+        );
+      },
     ),
 
     GoRoute(

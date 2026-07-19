@@ -4,6 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
+// Pays réellement couverts par GeniusPay pour Wave/Orange Money (backend
+// GeniusPayCoverage — SN/CI/ML/BF uniquement, jamais déduit du profil,
+// saisi à chaque recharge).
+const _mmCountries = {
+  'SN': 'Sénégal',
+  'CI': 'Côte d\'Ivoire',
+  'ML': 'Mali',
+  'BF': 'Burkina Faso',
+};
+
 class WalletTopupMethodScreen extends StatefulWidget {
   const WalletTopupMethodScreen({super.key});
 
@@ -13,8 +23,31 @@ class WalletTopupMethodScreen extends StatefulWidget {
 }
 
 class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
-  // setState toléré ici : état UI local (sélection de méthode uniquement).
+  // setState toléré ici : état UI local (sélection de méthode + saisie
+  // mobile money uniquement).
   String? _selected;
+  final _phoneCtrl = TextEditingController();
+  String? _countryCode = 'SN';
+
+  bool get _isMobileMoney => _selected == 'WAVE' || _selected == 'ORANGE_MONEY';
+
+  bool get _canProceed {
+    if (_selected == null) return false;
+    if (!_isMobileMoney) return true;
+    return _phoneCtrl.text.trim().isNotEmpty && _countryCode != null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneCtrl.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
 
   static const _methods = [
     _MethodDef(
@@ -98,6 +131,44 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                         .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   );
                 }),
+                if (_isMobileMoney) ...[
+                  const SizedBox(height: DonySpacing.xxl),
+                  Text(
+                    'NUMÉRO MOBILE MONEY',
+                    key: const Key('mm-fields-label'),
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                  DonyTextField(
+                    key: const Key('mm-phone-field'),
+                    controller: _phoneCtrl,
+                    label: 'Numéro de téléphone Mobile Money',
+                    hint: 'ex: +221 77 000 00 00',
+                    keyboardType: TextInputType.phone,
+                  ).animate().fadeIn(duration: 200.ms),
+                  const SizedBox(height: DonySpacing.md),
+                  DropdownButtonFormField<String>(
+                    key: const Key('mm-country-field'),
+                    initialValue: _countryCode,
+                    decoration: const InputDecoration(
+                      labelText: 'Pays Mobile Money',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.md,
+                      ),
+                    ),
+                    items: _mmCountries.entries
+                        .map((e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ))
+                        .toList(),
+                    onChanged: (v) => setState(() => _countryCode = v),
+                  ).animate().fadeIn(delay: 40.ms),
+                ],
               ],
             ),
           ),
@@ -111,14 +182,19 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
             ),
             child: DonyButton(
               label: 'Suivant → Montant',
-              onPressed: _selected == null
+              onPressed: !_canProceed
                   ? null
                   : () async {
                       // Propage le succès (true) jusqu'au wallet pour qu'il
                       // recharge son solde une fois la recharge effectuée.
                       final ok = await context.push<bool>(
                         '/payments/wallet/topup/amount',
-                        extra: _selected,
+                        extra: {
+                          'method': _selected,
+                          if (_isMobileMoney) 'countryCode': _countryCode,
+                          if (_isMobileMoney)
+                            'phoneNumber': _phoneCtrl.text.trim(),
+                        },
                       );
                       if (ok == true && context.mounted) {
                         context.pop(true);

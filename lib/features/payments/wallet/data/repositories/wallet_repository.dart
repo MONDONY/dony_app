@@ -27,11 +27,17 @@ class WalletRepository {
     }
   }
 
-  Future<String?> topupWave({required double amount}) async {
+  Future<String?> topupWave({
+    required double amount,
+    String? countryCode,
+    String? phoneNumber,
+  }) async {
     try {
       final data = await _datasource.topup(
         amount: amount,
         paymentMethod: 'WAVE',
+        countryCode: countryCode,
+        phoneNumber: phoneNumber,
       );
       return data['redirectUrl'] as String?;
     } catch (e) {
@@ -39,11 +45,17 @@ class WalletRepository {
     }
   }
 
-  Future<String?> topupOrangeMoney({required double amount}) async {
+  Future<String?> topupOrangeMoney({
+    required double amount,
+    String? countryCode,
+    String? phoneNumber,
+  }) async {
     try {
       final data = await _datasource.topup(
         amount: amount,
         paymentMethod: 'ORANGE_MONEY',
+        countryCode: countryCode,
+        phoneNumber: phoneNumber,
       );
       return data['redirectUrl'] as String?;
     } catch (e) {

@@ -70,6 +70,30 @@ void main() {
       act: (b) => b.add(WalletTopupRequested(amount: 20.0, paymentMethod: 'WAVE')),
       expect: () => [isA<WalletLoading>(), isA<WalletTopupRedirectReady>()],
     );
+
+    blocTest<WalletBloc, WalletState>(
+      'transmet countryCode/phoneNumber au repository (requis par GeniusPay)',
+      build: () {
+        when(() => repo.topupWave(
+              amount: 20.0,
+              countryCode: 'SN',
+              phoneNumber: '+221771234567',
+            )).thenAnswer((_) async => 'https://wave.com/pay?...');
+        return bloc;
+      },
+      act: (b) => b.add(WalletTopupRequested(
+        amount: 20.0,
+        paymentMethod: 'WAVE',
+        countryCode: 'SN',
+        phoneNumber: '+221771234567',
+      )),
+      expect: () => [isA<WalletLoading>(), isA<WalletTopupRedirectReady>()],
+      verify: (_) => verify(() => repo.topupWave(
+            amount: 20.0,
+            countryCode: 'SN',
+            phoneNumber: '+221771234567',
+          )).called(1),
+    );
   });
 
   group('WalletTopupRequested — ORANGE_MONEY', () {
@@ -82,6 +106,30 @@ void main() {
       },
       act: (b) => b.add(WalletTopupRequested(amount: 30.0, paymentMethod: 'ORANGE_MONEY')),
       expect: () => [isA<WalletLoading>(), isA<WalletTopupRedirectReady>()],
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'transmet countryCode/phoneNumber au repository (requis par GeniusPay)',
+      build: () {
+        when(() => repo.topupOrangeMoney(
+              amount: 30.0,
+              countryCode: 'CI',
+              phoneNumber: '+2250701234567',
+            )).thenAnswer((_) async => 'https://orange-money.com/pay?...');
+        return bloc;
+      },
+      act: (b) => b.add(WalletTopupRequested(
+        amount: 30.0,
+        paymentMethod: 'ORANGE_MONEY',
+        countryCode: 'CI',
+        phoneNumber: '+2250701234567',
+      )),
+      expect: () => [isA<WalletLoading>(), isA<WalletTopupRedirectReady>()],
+      verify: (_) => verify(() => repo.topupOrangeMoney(
+            amount: 30.0,
+            countryCode: 'CI',
+            phoneNumber: '+2250701234567',
+          )).called(1),
     );
   });
 

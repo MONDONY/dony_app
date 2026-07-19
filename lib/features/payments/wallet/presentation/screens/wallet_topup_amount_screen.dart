@@ -16,8 +16,16 @@ import 'package:url_launcher/url_launcher.dart';
 
 class WalletTopupAmountScreen extends StatefulWidget {
   final String paymentMethod;
+  // Requis côté serveur uniquement si paymentMethod != STRIPE (GeniusPay).
+  final String? countryCode;
+  final String? phoneNumber;
 
-  const WalletTopupAmountScreen({super.key, required this.paymentMethod});
+  const WalletTopupAmountScreen({
+    super.key,
+    required this.paymentMethod,
+    this.countryCode,
+    this.phoneNumber,
+  });
 
   @override
   State<WalletTopupAmountScreen> createState() =>
@@ -228,6 +236,8 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
               amount: _amount,
               methodLabel: _methodLabel,
               paymentMethod: widget.paymentMethod,
+              countryCode: widget.countryCode,
+              phoneNumber: widget.phoneNumber,
             ),
           ],
         ),
@@ -352,11 +362,15 @@ class _StickyButton extends StatelessWidget {
     required this.amount,
     required this.methodLabel,
     required this.paymentMethod,
+    this.countryCode,
+    this.phoneNumber,
   });
 
   final double amount;
   final String methodLabel;
   final String paymentMethod;
+  final String? countryCode;
+  final String? phoneNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -386,6 +400,8 @@ class _StickyButton extends StatelessWidget {
                       WalletTopupRequested(
                         amount: amount,
                         paymentMethod: paymentMethod,
+                        countryCode: countryCode,
+                        phoneNumber: phoneNumber,
                       ),
                     )
                 : null,

@@ -99,7 +99,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
             emit(WalletError('Réponse vide du serveur'));
           }
         case 'WAVE':
-          final url = await _repository.topupWave(amount: event.amount);
+          final url = await _repository.topupWave(
+            amount: event.amount,
+            countryCode: event.countryCode,
+            phoneNumber: event.phoneNumber,
+          );
           if (url != null) {
             emit(WalletTopupRedirectReady(url));
             unawaited(_analytics.logEvent(
@@ -110,8 +114,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
             emit(WalletError('Réponse vide du serveur'));
           }
         case 'ORANGE_MONEY':
-          final url2 =
-              await _repository.topupOrangeMoney(amount: event.amount);
+          final url2 = await _repository.topupOrangeMoney(
+            amount: event.amount,
+            countryCode: event.countryCode,
+            phoneNumber: event.phoneNumber,
+          );
           if (url2 != null) {
             emit(WalletTopupRedirectReady(url2));
             unawaited(_analytics.logEvent(
