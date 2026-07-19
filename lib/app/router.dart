@@ -55,6 +55,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_screen.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_return_screen.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
@@ -618,6 +619,15 @@ final appRouter = GoRouter(
           ),
         );
       },
+    ),
+    // Deep link dony://wallet/topup-return/{status} — retour depuis le
+    // checkout GeniusPay (Wave/Orange/MTN Money), via la page de rebond
+    // HTTPS GeniusPayReturnController côté backend.
+    GoRoute(
+      path: '/wallet/topup-return/:status',
+      builder: (context, state) => WalletTopupReturnScreen(
+        status: state.pathParameters['status'] ?? 'error',
+      ),
     ),
 
     GoRoute(

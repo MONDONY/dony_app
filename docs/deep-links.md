@@ -13,6 +13,8 @@ les transmet à GoRouter via `_DonyAppState._handleDeepLink`.
 |----------------------------------------|----------------------------------|------------------------------------|
 | `dony://stripe/onboarding/complete`    | `/stripe/onboarding/complete`    | Placeholder (PR 4b implémentera l'écran final) |
 | `dony://stripe/onboarding/refresh`    | `/stripe/onboarding/refresh`     | Placeholder (PR 4b implémentera l'écran final) |
+| `dony://wallet/topup-return/success`  | `/wallet/topup-return/success`  | `WalletTopupReturnScreen` — retour checkout GeniusPay (Wave/Orange/MTN Money) |
+| `dony://wallet/topup-return/error`    | `/wallet/topup-return/error`    | `WalletTopupReturnScreen` — retour checkout GeniusPay (paiement échoué/annulé) |
 
 ### Flux technique
 

@@ -98,6 +98,8 @@ class _DonyAppState extends State<DonyApp> {
     '/stripe/onboarding/refresh',
     '/payment/confirm',
     '/tracking/scan',
+    '/wallet/topup-return/success',
+    '/wallet/topup-return/error',
   };
 
   void _handleDeepLink(Uri uri) {
