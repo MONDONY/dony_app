@@ -479,16 +479,23 @@ class _StatsRow extends StatelessWidget {
             value: _weight(summary?.kgSoldForPeriod ?? 0),
             isLoading: loading,
           ),
+          // Un backend antérieur ne renvoie pas ces deux compteurs. Afficher 0
+          // laisserait croire à une absence d'activité : on montre « — »,
+          // comme les tuiles dont le compteur est indisponible.
           StatTile(
             iconName: 'plane',
             label: 'Trajets',
-            value: '${summary?.tripsPublished ?? 0} publiés',
+            value: summary?.tripsPublished == null
+                ? '—'
+                : '${summary!.tripsPublished} publiés',
             isLoading: loading,
           ),
           StatTile(
             iconName: 'package',
             label: 'Envois',
-            value: '${summary?.parcelsSent ?? 0} envoyés',
+            value: summary?.parcelsSent == null
+                ? '—'
+                : '${summary!.parcelsSent} envoyés',
             isLoading: loading,
           ),
         ];
