@@ -143,6 +143,9 @@ abstract final class AnalyticsEvents {
   static const activitesHubAddressesOpened     = 'activites_hub_addresses_opened';
   static const activitesHubRecipientsOpened    = 'activites_hub_recipients_opened';
 
+  // Accueil — accès direct aux colis compatibles avec mes trajets
+  static const homeColisMatchOpened            = 'home_colis_match_opened';
+
   // Demandes voyageur
   static const pendingRequestsOpened = 'pending_requests_opened';
 

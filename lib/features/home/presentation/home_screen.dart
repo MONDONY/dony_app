@@ -1311,6 +1311,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
     }
   }
 
+  void _openColisMatch() {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(AnalyticsEvents.homeColisMatchOpened),
+    );
+    context.push('/package-requests/match');
+  }
+
   void _resetPrFilters() {
     setState(() {
       _prDeparture = null;
@@ -1447,6 +1454,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         ? HomeMapFocus.all
                         : HomeMapFocus.trips,
                   ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                // Raccourci découverte : colis triés par compatibilité avec
+                // les trajets publiés du voyageur (ex-« Colis sur mes
+                // trajets » du Profil).
+                _SmallChip(
+                  label: '🎯 Pour mes trajets',
+                  isActive: false,
+                  onTap: _openColisMatch,
                 ),
                 const SizedBox(width: DonySpacing.xs),
               ],

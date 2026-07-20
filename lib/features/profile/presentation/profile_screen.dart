@@ -487,27 +487,10 @@ class _ActivityTab extends StatelessWidget {
         ],
 
         // ── EN COURS ────────────────────────────────────────────────────
+        // « Mes trajets et colis » a migré sur le hub Activités (tuiles +
+        // section Outils) ; seule reste la carte expéditeur.
         _SectionLabel(label: 'EN COURS', cs: cs),
-        if (isTraveler)
-          ProfileActivityHubCard(
-                iconAsset: 'plane',
-                title: 'Mes trajets et colis',
-                subtitle: 'Gère tes trajets et colis embarqués',
-                countLabel: activeAnnouncements > 0
-                    ? '$activeAnnouncements actifs'
-                    : null,
-                onTap: () => context.push(
-                  '/trajets-colis',
-                  extra: (
-                    upcomingCount: activeAnnouncements,
-                    isSender: isSender,
-                  ),
-                ),
-              )
-              .animate()
-              .fadeIn(delay: 120.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic)
-        else if (isSender)
+        if (!isTraveler && isSender)
           ProfileActivityHubCard(
                 iconAsset: 'package',
                 title: 'Mes colis',
@@ -517,7 +500,7 @@ class _ActivityTab extends StatelessWidget {
               .animate()
               .fadeIn(delay: 120.ms)
               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        if (isTraveler || isSender) const SizedBox(height: DonySpacing.sm),
+        if (!isTraveler && isSender) const SizedBox(height: DonySpacing.sm),
         DonyListSection(
               tiles: [
                 DonyListTile(

@@ -123,7 +123,6 @@ import 'package:dony/features/recipients/presentation/screens/recipient_edit_scr
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/mes_colis_screen.dart';
-import 'package:dony/features/profile/presentation/screens/mes_trajets_colis_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -783,23 +782,6 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Mes trajets et colis — hub voyageur (hors shell) ─────────────
-    GoRoute(
-      path: '/trajets-colis',
-      builder: (context, state) {
-        final extra = state.extra;
-        final upcomingCount = extra is ({int upcomingCount, bool isSender})
-            ? extra.upcomingCount
-            : (extra as int? ?? 0);
-        final isSender = extra is ({int upcomingCount, bool isSender})
-            ? extra.isSender
-            : false;
-        return MesTrajetsColisScreen(
-          upcomingCount: upcomingCount,
-          isSender: isSender,
-        );
-      },
-    ),
 
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
     GoRoute(path: '/mes-colis', builder: (_, __) => const MesColisScreen()),
