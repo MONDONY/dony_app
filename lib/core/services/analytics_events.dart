@@ -86,7 +86,6 @@ abstract final class AnalyticsEvents {
   static const returnConfirmed             = 'return_confirmed';
 
   // Profile
-  static const becomeTravelerStarted = 'become_traveler_started';
   static const upgradeToProStarted   = 'upgrade_to_pro_started';
   static const profilePhotoUpdated   = 'profile_photo_updated';
   static const profileAboutUpdated   = 'profile_about_updated';

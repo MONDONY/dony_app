@@ -39,10 +39,8 @@ import 'package:dony/features/content_categories/data/content_category_datasourc
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
-import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
-import 'package:dony/features/profile/data/traveler_upgrade_repository.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -453,12 +451,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Profile (upgrade PRO + statistiques PRO)
   getIt.registerLazySingleton<ProfileRepository>(
     () => ProfileRepository(getIt<ApiClient>()),
-  );
-  getIt.registerLazySingleton<TravelerUpgradeRepository>(
-    () => TravelerUpgradeRepository(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<TravelerUpgradeBloc>(
-    () => TravelerUpgradeBloc(getIt<TravelerUpgradeRepository>()),
   );
   getIt.registerLazySingleton<ProStatsRepository>(
     () => ProStatsRepository(getIt<ApiClient>()),

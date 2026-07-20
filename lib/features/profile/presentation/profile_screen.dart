@@ -15,9 +15,9 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/features/profile/presentation/widgets/activate_card_payments_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/activity_hub_card.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
-import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
@@ -597,15 +597,10 @@ class _AccountTab extends StatelessWidget {
         100 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
-        // ── CTA Devenir voyageur (non-voyageur uniquement) ──────────────
-        if (!isTraveler) ...[
-          BecomeTravelerCtaCard(
-            onTap: () => context.push('/profile/become-traveler'),
-            kycStatus: user?.kycStatus,
-            stripeStatus: user?.stripeAccountStatus,
-          ),
+        // ── CTA Activer les paiements par carte (Stripe non finalisé) ───
+        ActivateCardPaymentsCtaCard(stripeStatus: user?.stripeAccountStatus),
+        if (user?.stripeAccountStatus != 'ONBOARDING_COMPLETE')
           const SizedBox(height: DonySpacing.xl),
-        ],
 
         // ── IDENTITÉ & CONTACT ──────────────────────────────────────────
         _SectionLabel(label: 'IDENTITÉ & CONTACT', cs: cs),
