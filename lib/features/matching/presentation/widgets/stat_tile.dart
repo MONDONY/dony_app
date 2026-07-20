@@ -35,7 +35,9 @@ class StatTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIcon(iconName, size: 20, color: cs.onSurface),
+            // 24 plutôt que 20 : à 20 le glyphe euro se lit comme un dollar et
+            // la balance devient illisible.
+            DonyIcon(iconName, size: 24, color: cs.onSurface),
             const SizedBox(height: DonySpacing.lg),
             Text(
               label,

@@ -279,12 +279,24 @@ class _ActionRow extends StatelessWidget {
         ),
         const SizedBox(width: DonySpacing.md),
         Expanded(
+          // Terracotta plein sur fond clair, comme la maquette : le bouton
+          // contouré par défaut du thème porte une bordure grise qui le
+          // rapprochait trop du fond.
           child: OutlinedButton.icon(
             key: const Key('hub-new-request'),
             onPressed: onNewRequest,
-            icon: DonyIcon('package', size: 16, color: cs.tertiary),
-            label: const Text('Demande d\'envoi'),
-            style: OutlinedButton.styleFrom(foregroundColor: cs.tertiary),
+            icon: DonyIcon('package', size: 16, color: cs.secondary),
+            label: const Text('Envoyer un colis'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: cs.secondary,
+              backgroundColor: cs.secondaryContainer,
+              side: BorderSide(color: cs.secondary.withValues(alpha: 0.35)),
+              // Le rembourrage par défaut d'OutlinedButton.icon fait passer le
+              // libellé sur deux lignes une fois la largeur partagée en deux.
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.md,
+              ),
+            ),
           ),
         ),
       ],
@@ -332,8 +344,8 @@ class _ActivityGrid extends StatelessWidget {
         return ActivityTile(
           key: const Key('hub-tile-shipments'),
           iconName: 'package',
-          iconColor: cs.tertiary,
-          iconBackground: cs.tertiaryContainer,
+          iconColor: cs.secondary,
+          iconBackground: cs.secondaryContainer,
           value: count,
           label: 'Envois en cours',
           isLoading: state is BidLoading,
@@ -376,8 +388,10 @@ class _ActivityGrid extends StatelessWidget {
         return ActivityTile(
           key: const Key('hub-tile-negotiations'),
           iconName: 'arrow-left-right',
-          iconColor: cs.secondary,
-          iconBackground: cs.secondaryContainer,
+          // Violet : la seule des quatre tuiles hors palette de marque, pour
+          // séparer la négociation des trois domaines bleu/terracotta/rouge.
+          iconColor: DonyColors.violet,
+          iconBackground: DonyColors.violetLight,
           value: count,
           label: 'Négociations',
           isLoading: state.status == NegotiationListStatus.loading,

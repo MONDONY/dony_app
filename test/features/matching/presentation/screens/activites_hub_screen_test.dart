@@ -257,6 +257,22 @@ void main() {
     });
   });
 
+  group('rangée d\'actions', () {
+    testWidgets('les deux boutons tiennent sur une ligne, à hauteur égale', (
+      tester,
+    ) async {
+      await _pump(tester);
+
+      final publish = tester.getSize(find.byKey(const Key('hub-publish-trip')));
+      final send = tester.getSize(find.byKey(const Key('hub-new-request')));
+
+      // Un libellé qui passe sur deux lignes fait grandir son bouton et casse
+      // la symétrie de la paire — c'est ce que cette assertion attrape.
+      expect(send.height, publish.height);
+      expect(send.height, lessThanOrEqualTo(56));
+    });
+  });
+
   group('statistiques', () {
     testWidgets('les trois périodes sont proposées, 30 jours par défaut', (
       tester,
