@@ -806,25 +806,16 @@ final appRouter = GoRouter(
     GoRoute(path: '/mes-colis', builder: (_, __) => const MesColisScreen()),
 
     // ── Envois et demandes — destinations du hub Activités ────────────
-    // ShipmentListScreen ne fournit que son ShipmentFilterCubit : le BidBloc
-    // vient du parent (jusqu'ici EnvoyerHubScreen).
+    // ShipmentListScreen lit le BidBloc depuis son parent et déclenche
+    // lui-même son chargement — pas d'event à ajouter ici.
     GoRoute(
       path: '/envois',
       builder: (_, __) => BlocProvider(
-        create: (_) =>
-            getIt<BidBloc>()
-              ..add(const BidMyListAutoRefreshRequested(force: true)),
+        create: (_) => getIt<BidBloc>(),
         child: const ShipmentListScreen(),
       ),
     ),
-    GoRoute(
-      path: '/demandes',
-      builder: (_, state) => DemandesScreen(
-        initialTab: state.extra is DemandesTab
-            ? state.extra! as DemandesTab
-            : DemandesTab.recues,
-      ),
-    ),
+    GoRoute(path: '/demandes', builder: (_, __) => const DemandesScreen()),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────
     GoRoute(

@@ -40,9 +40,7 @@ enum DemandesTab {
 /// — ces dernières venaient de l'onglet « Demandes » de l'écran Envoyer,
 /// désormais retiré.
 class DemandesScreen extends StatelessWidget {
-  const DemandesScreen({super.key, this.initialTab = DemandesTab.recues});
-
-  final DemandesTab initialTab;
+  const DemandesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -55,40 +53,36 @@ class DemandesScreen extends StatelessWidget {
         ),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
-        BlocProvider.value(
-          value: getIt<PackageRequestBloc>()..add(const FetchMyRequests()),
-        ),
+        // Singleton partagé : le volet « Envoyées » déclenche son propre
+        // chargement quand il est réellement affiché.
+        BlocProvider.value(value: getIt<PackageRequestBloc>()),
       ],
-      child: _DemandesView(initialTab: initialTab),
+      child: const _DemandesView(),
     );
   }
 }
 
-/// Variante de test : les blocs sont fournis par le contexte parent.
-@visibleForTesting
-class DemandesScreenTesting extends StatelessWidget {
-  const DemandesScreenTesting({
-    super.key,
-    this.initialTab = DemandesTab.recues,
-  });
-
-  final DemandesTab initialTab;
-
-  @override
-  Widget build(BuildContext context) => _DemandesView(initialTab: initialTab);
-}
-
 class _DemandesView extends StatefulWidget {
-  const _DemandesView({required this.initialTab});
-
-  final DemandesTab initialTab;
+  const _DemandesView();
 
   @override
   State<_DemandesView> createState() => _DemandesViewState();
 }
 
 class _DemandesViewState extends State<_DemandesView> {
-  late DemandesTab _tab = widget.initialTab;
+  DemandesTab _tab = DemandesTab.recues;
+
+  /// Le volet « Envoyées » est chargé à sa première ouverture : un utilisateur
+  /// qui reste sur « Reçues » ne paie pas la requête.
+  bool _envoyeesLoaded = false;
+
+  void _selectTab(DemandesTab tab) {
+    if (tab == DemandesTab.envoyees && !_envoyeesLoaded) {
+      _envoyeesLoaded = true;
+      context.read<PackageRequestBloc>().add(const FetchMyRequests());
+    }
+    setState(() => _tab = tab);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +120,7 @@ class _DemandesViewState extends State<_DemandesView> {
                     key: const Key('demandes-tab-recues'),
                     label: 'Reçues',
                     selected: _tab == DemandesTab.recues,
-                    onTap: () => setState(() => _tab = DemandesTab.recues),
+                    onTap: () => _selectTab(DemandesTab.recues),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
@@ -135,7 +129,7 @@ class _DemandesViewState extends State<_DemandesView> {
                     key: const Key('demandes-tab-envoyees'),
                     label: 'Envoyées',
                     selected: _tab == DemandesTab.envoyees,
-                    onTap: () => setState(() => _tab = DemandesTab.envoyees),
+                    onTap: () => _selectTab(DemandesTab.envoyees),
                   ),
                 ),
               ],
@@ -155,6 +149,9 @@ class _DemandesViewState extends State<_DemandesView> {
 
 // ── Segmented ────────────────────────────────────────────────────────────────
 
+/// Volet de l'en-tête, rendu par [DonyChip] pour rester aligné sur les chips de
+/// filtre juste en dessous. `Center` parce que le chip se dimensionne sur son
+/// contenu alors qu'ici il occupe une moitié de la largeur.
 class _TabButton extends StatelessWidget {
   const _TabButton({
     super.key,
@@ -168,36 +165,9 @@ class _TabButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: DonyDuration.micro,
-        curve: DonyCurve.easeOut,
-        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-        decoration: BoxDecoration(
-          color: selected ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: tt.labelLarge?.copyWith(
-              color: selected ? cs.primary : cs.onSurfaceVariant,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Center(
+    child: DonyChip(label: label, selected: selected, onTap: onTap),
+  );
 }
 
 // ── Volet « Reçues » ─────────────────────────────────────────────────────────
@@ -252,19 +222,18 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  void _onAccept(List<BidModel> bids, String bidId) {
-    setState(() => _processingBidIds.add(bidId));
+  void _onAccept(BidModel bid) {
+    setState(() => _processingBidIds.add(bid.id));
     unawaited(
       getIt<AnalyticsService>().logEvent(
         AnalyticsEvents.activitesHubBidAccepted,
       ),
     );
-    final bid = bids.firstWhere((b) => b.id == bidId);
     // Le cash passe par le flux commission ; la carte est déjà en séquestre.
     if (bid.paymentMethod == BidPaymentMethod.cash) {
-      context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bidId));
+      context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bid.id));
     } else {
-      context.read<BidBloc>().add(BidAcceptRequested(bidId));
+      context.read<BidBloc>().add(BidAcceptRequested(bid.id));
     }
   }
 
@@ -342,22 +311,24 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
-      listener: _onAcceptanceStateChange,
-      child: BlocListener<BidBloc, BidState>(
-        listener: _onBidStateChange,
-        child: BlocBuilder<TravelerBidsBloc, TravelerBidsState>(
-          builder: (context, state) => switch (state) {
-            TravelerBidsInitial() || TravelerBidsLoading() => Center(
-              child: CircularProgressIndicator(color: cs.primary),
-            ),
-            final TravelerBidsError s => BidListErrorView(
-              message: ErrorPresenter.resolve(s.error).message,
-              onRetry: _reload,
-            ),
-            final TravelerBidsLoaded s => _buildLoaded(context, s),
-          },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
+          listener: _onAcceptanceStateChange,
         ),
+        BlocListener<BidBloc, BidState>(listener: _onBidStateChange),
+      ],
+      child: BlocBuilder<TravelerBidsBloc, TravelerBidsState>(
+        builder: (context, state) => switch (state) {
+          TravelerBidsInitial() || TravelerBidsLoading() => Center(
+            child: CircularProgressIndicator(color: cs.primary),
+          ),
+          final TravelerBidsError s => BidListErrorView(
+            message: ErrorPresenter.resolve(s.error).message,
+            onRetry: _reload,
+          ),
+          final TravelerBidsLoaded s => _buildLoaded(context, s),
+        },
       ),
     );
   }
@@ -417,7 +388,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
                         bid: bid,
                         isProcessing: _processingBidIds.contains(bid.id),
                         onAccept: canAct
-                            ? () => _onAccept(state.bids, bid.id)
+                            ? () => _onAccept(bid)
                             : null,
                         onReject: canAct ? () => _onReject(bid.id) : null,
                         onTap: () => _openDetail(bid),

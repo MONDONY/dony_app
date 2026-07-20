@@ -60,10 +60,9 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: getIt<PackageRequestBloc>()),
-        BlocProvider(
-          create: (_) => getIt<BidBloc>()
-            ..add(const BidMyListAutoRefreshRequested(force: true)),
-        ),
+        // Pas d'event ici : ShipmentListScreen déclenche son propre
+        // chargement, l'ajouter aussi ferait deux requêtes à l'ouverture.
+        BlocProvider(create: (_) => getIt<BidBloc>()),
       ],
       child: Builder(
         builder: (context) => Scaffold(

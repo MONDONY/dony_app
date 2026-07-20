@@ -75,8 +75,8 @@ Future<void> _pump(
         summary ??
         const TripsSummaryModel(
           activeTrips: 6,
-          kgSoldThisMonth: 0,
-          revenueThisMonth: 0,
+          kgSold: 0,
+          revenue: 0,
         ),
   );
 
@@ -95,7 +95,6 @@ Future<void> _pump(
     travelerBidsState ??
         TravelerBidsLoaded(
           bids: [_bid('r1', 'PENDING'), _bid('r2', 'PAYMENT_ESCROWED')],
-          totalElements: 2,
           page: 0,
           hasMore: false,
           filter: TravelerBidFilter.aTraiter,

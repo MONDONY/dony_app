@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -15,8 +16,8 @@ void main() {
 
   const summary = TripsSummaryModel(
     activeTrips: 3,
-    kgSoldThisMonth: 19,
-    revenueThisMonth: 152.46,
+    kgSold: 19,
+    revenue: 152.46,
   );
 
   blocTest<TripsSummaryCubit, TripsSummaryState>(
@@ -57,7 +58,7 @@ void main() {
       ).thenAnswer((_) async => summary);
       return TripsSummaryCubit(repository);
     },
-    act: (c) => c.load(period: '12m'),
+    act: (c) => c.load(period: StatsPeriod.twelveMonths),
     verify: (_) {
       verify(() => repository.getTripsSummary(period: '12m')).called(1);
     },

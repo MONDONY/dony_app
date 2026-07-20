@@ -51,16 +51,12 @@ class ActivityTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: DonySpacing.icon - 8,
-                height: DonySpacing.icon - 8,
-                decoration: BoxDecoration(
-                  color: iconBackground,
-                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                ),
-                child: Center(
-                  child: DonyIcon(iconName, size: 16, color: iconColor),
-                ),
+              DonyIconContainer(
+                iconAsset: iconName,
+                size: DonyIconContainerSize.sm,
+                backgroundColor: iconBackground,
+                iconColor: iconColor,
+                borderRadius: DonyRadius.iconBtn,
               ),
               const SizedBox(height: DonySpacing.md),
               _ValueText(

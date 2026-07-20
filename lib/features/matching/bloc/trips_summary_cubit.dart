@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -23,8 +24,6 @@ class TripsSummaryState extends Equatable {
   List<Object?> get props => [
     status,
     summary?.activeTrips,
-    summary?.kgSoldThisMonth,
-    summary?.revenueThisMonth,
     summary?.kgSold,
     summary?.revenue,
     summary?.tripsPublished,
@@ -39,11 +38,14 @@ class TripsSummaryCubit extends Cubit<TripsSummaryState> {
 
   final AnnouncementRepository _repository;
 
-  /// [period] : `7d`, `30d` ou `12m`.
-  Future<void> load({String period = '30d'}) async {
+  /// Le défaut vient de [StatsPeriod] : une seule déclaration pour toute
+  /// l'app, alignée sur celle du backend.
+  Future<void> load({StatsPeriod period = StatsPeriod.thirtyDays}) async {
     emit(const TripsSummaryState.loading());
     try {
-      final summary = await _repository.getTripsSummary(period: period);
+      final summary = await _repository.getTripsSummary(
+        period: period.apiValue,
+      );
       emit(TripsSummaryState.loaded(summary));
     } catch (_) {
       emit(const TripsSummaryState.hidden());

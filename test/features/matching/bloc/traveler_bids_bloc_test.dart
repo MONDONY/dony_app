@@ -61,7 +61,6 @@ void main() {
         isA<TravelerBidsLoading>(),
         isA<TravelerBidsLoaded>()
             .having((s) => s.bids.length, 'bids', 2)
-            .having((s) => s.totalElements, 'total', 2)
             .having((s) => s.hasMore, 'hasMore', false)
             .having(
               (s) => s.filter,
@@ -239,7 +238,6 @@ void main() {
           _bid('b3', 'ACCEPTED'),
           _bid('b4', 'COMPLETED'),
         ],
-        totalElements: 4,
         page: 0,
         hasMore: false,
         filter: TravelerBidFilter.aTraiter,
@@ -257,7 +255,6 @@ void main() {
       ];
       final base = TravelerBidsLoaded(
         bids: bids,
-        totalElements: 4,
         page: 0,
         hasMore: false,
         filter: TravelerBidFilter.aTraiter,
@@ -289,7 +286,6 @@ void main() {
             _bid('b2', 'ACCEPTED'),
             _bid('b3', 'CANCELLED'),
           ],
-          totalElements: 3,
           page: 0,
           hasMore: false,
           filter: TravelerBidFilter.aTraiter,

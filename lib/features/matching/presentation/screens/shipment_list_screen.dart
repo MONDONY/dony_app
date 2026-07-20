@@ -22,54 +22,36 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class ShipmentListScreen extends StatelessWidget {
-  const ShipmentListScreen({
-    super.key,
-    this.embedded = false,
-    this.onSwitchToDemandes,
-  });
+  const ShipmentListScreen({super.key, this.embedded = false});
 
   /// Quand `true`, l'écran omet son header sombre — adapté pour servir de
-  /// sous-onglet dans le hub `EnvoyerHubScreen`.
+  /// corps dans `EnvoyerHubScreen`.
   final bool embedded;
 
-  /// Callback optionnel pour basculer vers l'onglet Demandes depuis l'état
-  /// vide (lien secondaire dans l'empty state).
-  final VoidCallback? onSwitchToDemandes;
-
+  /// Le `BidBloc` vient du contexte parent — c'est ce qui permet aux tests
+  /// d'en injecter un mock. L'écran déclenche lui-même son chargement dans
+  /// `initState`, donc l'appelant ne doit pas le faire une seconde fois.
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => getIt<ShipmentFilterCubit>(),
-    child: _ShipmentListContent(
-      embedded: embedded,
-      onSwitchToDemandes: onSwitchToDemandes,
-    ),
+    child: _ShipmentListContent(embedded: embedded),
   );
 }
 
-/// Body extrait pour usage en sous-onglet du hub `EnvoyerHubScreen`.
+/// Body extrait pour usage comme corps du hub `EnvoyerHubScreen`.
 ///
 /// Délègue à [ShipmentListScreen] en mode `embedded: true`.
 class ShipmentListBody extends StatelessWidget {
-  const ShipmentListBody({super.key, this.onSwitchToDemandes});
-
-  /// Callback optionnel pour basculer vers l'onglet Demandes (lien secondaire
-  /// dans l'empty state).
-  final VoidCallback? onSwitchToDemandes;
+  const ShipmentListBody({super.key});
 
   @override
-  Widget build(BuildContext context) => ShipmentListScreen(
-    embedded: true,
-    onSwitchToDemandes: onSwitchToDemandes,
-  );
+  Widget build(BuildContext context) =>
+      const ShipmentListScreen(embedded: true);
 }
 
 class _ShipmentListContent extends StatefulWidget {
-  const _ShipmentListContent({
-    required this.embedded,
-    this.onSwitchToDemandes,
-  });
+  const _ShipmentListContent({required this.embedded});
   final bool embedded;
-  final VoidCallback? onSwitchToDemandes;
   @override
   State<_ShipmentListContent> createState() => _ShipmentListContentState();
 }
@@ -166,7 +148,6 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
                     context.go('/home');
                   }
                 },
-                onSwitchToDemandes: widget.onSwitchToDemandes,
               );
             } else if (filtered.isEmpty) {
               body = _FilteredEmptyView(
@@ -542,22 +523,14 @@ class _DeleteBackground extends StatelessWidget {
 // ── Empty / Loading / Error ───────────────────────────────────────────────────
 
 /// Empty state shown when the RAW (unfiltered) bid list is empty.
-/// Shows mascotte, primary CTA to search a trip, and a secondary text link
-/// to switch to the Demandes tab.
+/// Shows mascotte and a primary CTA to search a trip.
 class _RawEmptyView extends StatelessWidget {
-  const _RawEmptyView({
-    required this.onSearchTrip,
-    this.onSwitchToDemandes,
-  });
+  const _RawEmptyView({required this.onSearchTrip});
 
   final VoidCallback onSearchTrip;
-  final VoidCallback? onSwitchToDemandes;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -566,34 +539,13 @@ class _RawEmptyView extends StatelessWidget {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DonyEmptyState(
-                    title: 'Aucun envoi pour l\'instant',
-                    description:
-                        'Trouvez un voyageur et envoyez votre colis vers l\'Afrique.',
-                    mascotte: DonyMascotteType.assis,
-                    actionLabel: 'Rechercher un trajet',
-                    onAction: onSearchTrip,
-                  ),
-                  if (onSwitchToDemandes != null) ...[
-                    const SizedBox(height: DonySpacing.base),
-                    GestureDetector(
-                      onTap: onSwitchToDemandes,
-                      child: Text(
-                        'ou publie une demande de transport →',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.primary,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                          decorationColor: cs.primary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ],
+              child: DonyEmptyState(
+                title: 'Aucun envoi pour l\'instant',
+                description:
+                    'Trouvez un voyageur et envoyez votre colis vers l\'Afrique.',
+                mascotte: DonyMascotteType.assis,
+                actionLabel: 'Rechercher un trajet',
+                onAction: onSearchTrip,
               )
                   .animate()
                   .fadeIn(duration: 300.ms)

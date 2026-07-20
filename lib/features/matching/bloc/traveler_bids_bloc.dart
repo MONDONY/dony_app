@@ -44,7 +44,6 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
       emit(
         TravelerBidsLoaded(
           bids: result.content,
-          totalElements: result.totalElements,
           page: result.page,
           hasMore: !result.isLast,
           filter: filter,
@@ -80,7 +79,6 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
       emit(
         current.copyWith(
           bids: [...current.bids, ...result.content],
-          totalElements: result.totalElements,
           page: result.page,
           hasMore: !result.isLast,
           isLoadingMore: false,

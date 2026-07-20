@@ -105,9 +105,10 @@ class AnnouncementRemoteDatasource {
     return (announcements: announcements, totalElements: totalElements);
   }
 
-  /// [period] : `7d`, `30d` ou `12m`. Un backend qui ne gère pas encore ce
-  /// paramètre l'ignore et renvoie les chiffres du mois courant.
-  Future<TripsSummaryModel> getTripsSummary({String period = '30d'}) async {
+  /// [period] : la valeur d'API d'un `StatsPeriod` (`7d`, `30d`, `12m`). Sans
+  /// défaut ici : l'enum est la seule source de la période choisie. Un backend
+  /// qui ne gère pas encore ce paramètre l'ignore et renvoie le mois courant.
+  Future<TripsSummaryModel> getTripsSummary({required String period}) async {
     final response = await _apiClient.dio.get(
       '/travelers/me/trips-summary',
       queryParameters: {'period': period},

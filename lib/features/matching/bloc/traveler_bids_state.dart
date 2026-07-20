@@ -50,7 +50,6 @@ class TravelerBidsLoading extends TravelerBidsState {
 
 class TravelerBidsLoaded extends TravelerBidsState {
   final List<BidModel> bids;
-  final int totalElements;
   final int page;
   final bool hasMore;
   final TravelerBidFilter filter;
@@ -59,35 +58,41 @@ class TravelerBidsLoaded extends TravelerBidsState {
   /// courante reste affichée.
   final bool isLoadingMore;
 
-  const TravelerBidsLoaded({
+  /// Répartition des bids par filtre, calculée une fois à la construction.
+  ///
+  /// L'écran lit les trois compteurs et la liste visible à chaque build ;
+  /// les recalculer à la demande ferait quatre passes sur une liste qui
+  /// grandit de 20 à chaque page.
+  final Map<TravelerBidFilter, List<BidModel>> _byFilter;
+
+  TravelerBidsLoaded({
     required this.bids,
-    required this.totalElements,
     required this.page,
     required this.hasMore,
     required this.filter,
     this.isLoadingMore = false,
-  });
+  }) : _byFilter = {
+         for (final f in TravelerBidFilter.values)
+           f: bids.where(f.matches).toList(growable: false),
+       };
 
   /// Nombre de demandes en attente d'une décision — la valeur portée par la
   /// tuile « Demandes » du hub Activités.
-  int get pendingCount => bids.where(isPendingBid).length;
+  int get pendingCount => countFor(TravelerBidFilter.aTraiter);
 
   /// Bids correspondant au filtre courant.
-  List<BidModel> get visibleBids =>
-      bids.where((b) => filter.matches(b)).toList();
+  List<BidModel> get visibleBids => _byFilter[filter]!;
 
-  int countFor(TravelerBidFilter f) => bids.where(f.matches).length;
+  int countFor(TravelerBidFilter f) => _byFilter[f]!.length;
 
   TravelerBidsLoaded copyWith({
     List<BidModel>? bids,
-    int? totalElements,
     int? page,
     bool? hasMore,
     TravelerBidFilter? filter,
     bool? isLoadingMore,
   }) => TravelerBidsLoaded(
     bids: bids ?? this.bids,
-    totalElements: totalElements ?? this.totalElements,
     page: page ?? this.page,
     hasMore: hasMore ?? this.hasMore,
     filter: filter ?? this.filter,
@@ -95,14 +100,7 @@ class TravelerBidsLoaded extends TravelerBidsState {
   );
 
   @override
-  List<Object?> get props => [
-    bids,
-    totalElements,
-    page,
-    hasMore,
-    filter,
-    isLoadingMore,
-  ];
+  List<Object?> get props => [bids, page, hasMore, filter, isLoadingMore];
 }
 
 class TravelerBidsError extends TravelerBidsState {

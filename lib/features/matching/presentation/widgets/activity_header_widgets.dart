@@ -157,7 +157,7 @@ class TripsStatsStrip extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: _StatTile(
-            value: '${_compact(summary.kgSoldThisMonth)} kg',
+            value: '${_compact(summary.kgSold)} kg',
             label: 'Vendus ce mois',
             index: 1,
           ),
@@ -165,7 +165,7 @@ class TripsStatsStrip extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: _StatTile(
-            value: '${_compact(summary.revenueThisMonth)} €',
+            value: '${_compact(summary.revenue)} €',
             label: 'Revenus',
             valueColor: cs.secondary,
             index: 2,

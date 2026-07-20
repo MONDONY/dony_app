@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -22,6 +23,17 @@ import 'package:dony/features/package_request/presentation/package_request_actio
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+void _logEvent(String event) {
+  unawaited(getIt<AnalyticsService>().logEvent(event));
+}
+
+/// Trace l'intention puis ouvre la destination. Partagé par le hub et sa
+/// grille de tuiles, qui poussent tous deux des routes tracées.
+void _openRoute(BuildContext context, String event, String route) {
+  _logEvent(event);
+  context.push(route);
+}
 
 /// Onglet Activités — hub unique, identique pour tous les utilisateurs.
 ///
@@ -86,7 +98,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
 
   void _loadAll() {
     final period = context.read<StatsPeriodCubit>().state;
-    unawaited(context.read<TripsSummaryCubit>().load(period: period.apiValue));
+    unawaited(context.read<TripsSummaryCubit>().load(period: period));
     context.read<TravelerBidsBloc>().add(
       const TravelerBidsRequested(force: true),
     );
@@ -99,17 +111,10 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     await Future<void>.delayed(const Duration(milliseconds: 400));
   }
 
-  void _log(String event) {
-    unawaited(getIt<AnalyticsService>().logEvent(event));
-  }
-
-  void _open(String event, String route) {
-    _log(event);
-    context.push(route);
-  }
+  void _open(String event, String route) => _openRoute(context, event, route);
 
   Future<void> _onNewRequest() async {
-    _log(AnalyticsEvents.activitesHubRequestCreateOpened);
+    _logEvent(AnalyticsEvents.activitesHubRequestCreateOpened);
     await openPackageRequestWizard(context);
   }
 
@@ -123,9 +128,9 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
         bottom: false,
         child: BlocListener<StatsPeriodCubit, StatsPeriod>(
           listener: (context, period) {
-            _log(AnalyticsEvents.activitesHubStatsPeriodChanged);
+            _logEvent(AnalyticsEvents.activitesHubStatsPeriodChanged);
             unawaited(
-              context.read<TripsSummaryCubit>().load(period: period.apiValue),
+              context.read<TripsSummaryCubit>().load(period: period),
             );
           },
           child: RefreshIndicator(
@@ -292,11 +297,6 @@ class _ActionRow extends StatelessWidget {
 class _ActivityGrid extends StatelessWidget {
   const _ActivityGrid();
 
-  void _open(BuildContext context, String event, String route) {
-    unawaited(getIt<AnalyticsService>().logEvent(event));
-    context.push(route);
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -313,7 +313,7 @@ class _ActivityGrid extends StatelessWidget {
         label: 'Trajets actifs',
         isLoading: state.status == TripsSummaryStatus.loading,
         hasError: state.status == TripsSummaryStatus.hidden,
-        onTap: () => _open(
+        onTap: () => _openRoute(
           context,
           AnalyticsEvents.activitesHubTripsOpened,
           '/announcements/trips',
@@ -338,7 +338,7 @@ class _ActivityGrid extends StatelessWidget {
           label: 'Envois en cours',
           isLoading: state is BidLoading,
           hasError: state is BidError,
-          onTap: () => _open(
+          onTap: () => _openRoute(
             context,
             AnalyticsEvents.activitesHubEnvoisOpened,
             '/envois',
@@ -361,7 +361,7 @@ class _ActivityGrid extends StatelessWidget {
           isLoading: state is TravelerBidsLoading,
           hasError: state is TravelerBidsError,
           showNotificationDot: count > 0,
-          onTap: () => _open(
+          onTap: () => _openRoute(
             context,
             AnalyticsEvents.activitesHubDemandesOpened,
             '/demandes',
@@ -383,7 +383,7 @@ class _ActivityGrid extends StatelessWidget {
           isLoading: state.status == NegotiationListStatus.loading,
           hasError: state.status == NegotiationListStatus.error,
           showNotificationDot: count > 0,
-          onTap: () => _open(
+          onTap: () => _openRoute(
             context,
             AnalyticsEvents.activitesHubNegotiationsOpened,
             '/negotiations',
@@ -456,7 +456,7 @@ class _PeriodChips extends StatelessWidget {
 class _StatsRow extends StatelessWidget {
   const _StatsRow();
 
-  String _money(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 2)} €';
+  String _money(double v) => '${formatKgPrice(v)} €';
 
   String _weight(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)} kg';
 
@@ -470,13 +470,13 @@ class _StatsRow extends StatelessWidget {
           StatTile(
             iconName: 'euro',
             label: 'Revenus',
-            value: _money(summary?.revenueForPeriod ?? 0),
+            value: _money(summary?.revenue ?? 0),
             isLoading: loading,
           ),
           StatTile(
             iconName: 'scale',
             label: 'Kg vendus',
-            value: _weight(summary?.kgSoldForPeriod ?? 0),
+            value: _weight(summary?.kgSold ?? 0),
             isLoading: loading,
           ),
           // Un backend antérieur ne renvoie pas ces deux compteurs. Afficher 0

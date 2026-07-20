@@ -66,7 +66,7 @@ class AnnouncementRepository {
     return _remoteDatasource.getMyAnnouncements();
   }
 
-  Future<TripsSummaryModel> getTripsSummary({String period = '30d'}) async {
+  Future<TripsSummaryModel> getTripsSummary({required String period}) async {
     return _remoteDatasource.getTripsSummary(period: period);
   }
 

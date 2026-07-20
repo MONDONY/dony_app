@@ -86,8 +86,8 @@ Future<void> _pump(
   when(() => mockRepo.getTripsSummary(period: any(named: 'period'))).thenAnswer(
     (_) async => const TripsSummaryModel(
       activeTrips: 0,
-      kgSoldThisMonth: 0,
-      revenueThisMonth: 0,
+      kgSold: 0,
+      revenue: 0,
     ),
   );
 

@@ -25,8 +25,8 @@ void main() {
     await tester.pumpWidget(_wrap(const TripsStatsStrip(
       summary: TripsSummaryModel(
         activeTrips: 3,
-        kgSoldThisMonth: 19,
-        revenueThisMonth: 152.46,
+        kgSold: 19,
+        revenue: 152.46,
       ),
     )));
     await tester.pump(const Duration(milliseconds: 600));
