@@ -147,8 +147,12 @@ Future<void> _pump(
       route('/negotiations', 'Négociations'),
       route('/trips/create', 'Créer trajet'),
       route('/tracking/search', 'Recherche'),
-      route('/profile/shipments/history', 'Historique'),
+      route('/profile/shipments/history', 'Écran historique'),
       route('/profile/help/faq', 'FAQ'),
+      route('/corridor-alerts', 'Alertes'),
+      route('/trip-templates', 'Modèles'),
+      route('/profile/addresses', 'Adresses'),
+      route('/profile/recipients', 'Destinataires'),
     ],
   );
 
@@ -261,16 +265,38 @@ void main() {
       await expectNavigation(tester, 'Publier un trajet', '/trips/create');
     });
 
-    testWidgets('Historique complet → historique des envois', (tester) async {
+    testWidgets('Historique → historique des envois', (tester) async {
       await expectNavigation(
         tester,
-        'Historique complet',
+        'Historique',
         '/profile/shipments/history',
       );
     });
 
     testWidgets('Aide & support → FAQ', (tester) async {
       await expectNavigation(tester, 'Aide & support', '/profile/help/faq');
+    });
+
+    testWidgets('Mes alertes → alertes corridor (toutes directions)', (
+      tester,
+    ) async {
+      await expectNavigation(tester, 'Mes alertes', '/corridor-alerts');
+    });
+
+    testWidgets('Modèles de trajet → modèles', (tester) async {
+      await expectNavigation(tester, 'Modèles de trajet', '/trip-templates');
+    });
+
+    testWidgets('Mes adresses → carnet d\'adresses', (tester) async {
+      await expectNavigation(tester, 'Mes adresses', '/profile/addresses');
+    });
+
+    testWidgets('Mes destinataires → destinataires', (tester) async {
+      await expectNavigation(
+        tester,
+        'Mes destinataires',
+        '/profile/recipients',
+      );
     });
   });
 

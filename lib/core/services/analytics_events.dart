@@ -138,6 +138,10 @@ abstract final class AnalyticsEvents {
   static const activitesHubBidAccepted         = 'activites_hub_bid_accepted';
   static const activitesHubBidRejected         = 'activites_hub_bid_rejected';
   static const activitesHubIntroDismissed      = 'activites_hub_intro_dismissed';
+  static const activitesHubAlertsOpened        = 'activites_hub_alerts_opened';
+  static const activitesHubTemplatesOpened     = 'activites_hub_templates_opened';
+  static const activitesHubAddressesOpened     = 'activites_hub_addresses_opened';
+  static const activitesHubRecipientsOpened    = 'activites_hub_recipients_opened';
 
   // Demandes voyageur
   static const pendingRequestsOpened = 'pending_requests_opened';

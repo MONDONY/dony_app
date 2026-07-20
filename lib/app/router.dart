@@ -640,10 +640,11 @@ final appRouter = GoRouter(
     // ── Alertes corridor (hors shell) ────────────────────────────────────
     GoRoute(
       path: '/corridor-alerts',
+      // Sans extra (hub Activités) : toutes les alertes, segment au form.
       builder: (_, state) => CorridorAlertListScreen(
         direction: state.extra is AlertDirection
             ? state.extra as AlertDirection
-            : AlertDirection.travelerWantsPackages,
+            : null,
       ),
     ),
     GoRoute(

@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Écran liste des alertes corridor, mono-direction.
+/// Écran liste des alertes corridor.
 ///
 /// [direction] filtre les alertes affichées et verrouille la direction à la
 /// création :
@@ -17,13 +17,12 @@ import 'package:go_router/go_router.dart';
 ///   Voyageur).
 /// - `senderWantsTrips` → alertes « Trajets » (atteint depuis le bloc/​hub
 ///   Expéditeur).
+/// - `null` → toutes les alertes (hub Activités, modèle double rôle) ; le
+///   formulaire montre alors son segment de direction.
 class CorridorAlertListScreen extends StatelessWidget {
-  const CorridorAlertListScreen({
-    super.key,
-    this.direction = AlertDirection.travelerWantsPackages,
-  });
+  const CorridorAlertListScreen({super.key, this.direction});
 
-  final AlertDirection direction;
+  final AlertDirection? direction;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +37,7 @@ class CorridorAlertListScreen extends StatelessWidget {
 class _CorridorAlertListView extends StatelessWidget {
   const _CorridorAlertListView({required this.direction});
 
-  final AlertDirection direction;
+  final AlertDirection? direction;
 
   bool get _isPackages => direction == AlertDirection.travelerWantsPackages;
 
@@ -46,19 +45,28 @@ class _CorridorAlertListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // La direction de l'écran verrouille la direction à la création : exactement
-    // un rôle est passé au form → segment masqué, direction forcée.
-    final formIsTraveler = _isPackages;
-    final formIsSender = !_isPackages;
+    // Une direction verrouille la création (segment masqué, direction forcée) ;
+    // sans direction, les deux rôles sont passés au form → segment visible.
+    final formIsTraveler = direction == null || _isPackages;
+    final formIsSender = direction == null || !_isPackages;
 
-    final emptyDescription = _isPackages
-        ? 'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.'
-        : 'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.';
+    final emptyDescription = switch (direction) {
+      AlertDirection.travelerWantsPackages =>
+        'Crée une alerte pour être prévenu dès qu\'un colis apparaît sur ton corridor.',
+      AlertDirection.senderWantsTrips =>
+        'Crée une alerte pour être prévenu dès qu\'un trajet apparaît sur ton corridor.',
+      null =>
+        'Crée une alerte pour être prévenu dès qu\'un trajet ou un colis apparaît sur ton corridor.',
+    };
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(
-        title: _isPackages ? 'Mes alertes colis' : 'Mes alertes trajets',
+        title: switch (direction) {
+          AlertDirection.travelerWantsPackages => 'Mes alertes colis',
+          AlertDirection.senderWantsTrips => 'Mes alertes trajets',
+          null => 'Mes alertes',
+        },
       ),
       floatingActionButton: Builder(
         builder: (fabCtx) => FloatingActionButton.extended(
@@ -82,9 +90,10 @@ class _CorridorAlertListView extends StatelessWidget {
       ),
       body: BlocBuilder<CorridorAlertListBloc, CorridorAlertListState>(
         builder: (ctx, state) {
-          // Filtre mono-direction : seules les alertes de cet écran sont visibles.
-          final visible =
-              state.alerts.where((a) => a.direction == direction).toList();
+          // Filtre mono-direction ; sans direction, tout est visible.
+          final visible = direction == null
+              ? state.alerts
+              : state.alerts.where((a) => a.direction == direction).toList();
 
           if (state.status == CorridorAlertListStatus.loading &&
               visible.isEmpty) {

@@ -250,34 +250,68 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                   ),
                   sliver: SliverList.list(
                     children: [
-                      Text('Autres', style: tt.titleMedium),
+                      Text('Outils', style: tt.titleMedium),
                       const SizedBox(height: DonySpacing.md),
-                      IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: _OtherTile(
-                                iconName: 'chart-line',
-                                label: 'Historique complet',
-                                onTap: () => _open(
-                                  AnalyticsEvents.activitesHubHistoryOpened,
-                                  '/profile/shipments/history',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: DonySpacing.md),
-                            Expanded(
-                              child: _OtherTile(
-                                iconName: 'circle-help',
-                                label: 'Aide & support',
-                                onTap: () => _open(
-                                  AnalyticsEvents.activitesHubHelpOpened,
-                                  '/profile/help/faq',
-                                ),
-                              ),
-                            ),
-                          ],
+                      _TileRow(
+                        left: _OtherTile(
+                          iconName: 'bell',
+                          label: 'Mes alertes',
+                          subtitle: 'Nouveaux trajets et colis',
+                          onTap: () => _open(
+                            AnalyticsEvents.activitesHubAlertsOpened,
+                            '/corridor-alerts',
+                          ),
+                        ),
+                        right: _OtherTile(
+                          iconName: 'bookmark',
+                          label: 'Modèles de trajet',
+                          subtitle: 'Republiez vos trajets habituels',
+                          onTap: () => _open(
+                            AnalyticsEvents.activitesHubTemplatesOpened,
+                            '/trip-templates',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.md),
+                      _TileRow(
+                        left: _OtherTile(
+                          iconName: 'map-pin',
+                          label: 'Mes adresses',
+                          subtitle: 'Vos lieux d\'envoi enregistrés',
+                          onTap: () => _open(
+                            AnalyticsEvents.activitesHubAddressesOpened,
+                            '/profile/addresses',
+                          ),
+                        ),
+                        right: _OtherTile(
+                          iconName: 'contact',
+                          label: 'Mes destinataires',
+                          subtitle: 'Les personnes à qui vous envoyez',
+                          onTap: () => _open(
+                            AnalyticsEvents.activitesHubRecipientsOpened,
+                            '/profile/recipients',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.md),
+                      _TileRow(
+                        left: _OtherTile(
+                          iconName: 'chart-line',
+                          label: 'Historique',
+                          subtitle: 'Tout ce qui est terminé',
+                          onTap: () => _open(
+                            AnalyticsEvents.activitesHubHistoryOpened,
+                            '/profile/shipments/history',
+                          ),
+                        ),
+                        right: _OtherTile(
+                          iconName: 'circle-help',
+                          label: 'Aide & support',
+                          subtitle: 'Une question, un souci ?',
+                          onTap: () => _open(
+                            AnalyticsEvents.activitesHubHelpOpened,
+                            '/profile/help/faq',
+                          ),
                         ),
                       ),
                     ],
@@ -671,10 +705,12 @@ class _OtherTile extends StatelessWidget {
     required this.iconName,
     required this.label,
     required this.onTap,
+    this.subtitle,
   });
 
   final String iconName;
   final String label;
+  final String? subtitle;
   final VoidCallback onTap;
 
   @override
@@ -696,6 +732,15 @@ class _OtherTile extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: DonySpacing.xxs),
+            Text(
+              subtitle!,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );
