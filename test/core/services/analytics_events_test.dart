@@ -35,7 +35,6 @@ void main() {
       AnalyticsEvents.ratingSubmitted,
       AnalyticsEvents.cancellationInitiated,
       AnalyticsEvents.rematchAccepted,
-      AnalyticsEvents.becomeTravelerStarted,
       AnalyticsEvents.upgradeToProStarted,
       AnalyticsEvents.referralShared,
       AnalyticsEvents.analyticsConsentChanged,
