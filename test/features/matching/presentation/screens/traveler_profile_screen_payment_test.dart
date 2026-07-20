@@ -1,6 +1,6 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
+import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -26,12 +26,10 @@ AnnouncementModel _announcement({
 }
 
 Widget _wrap(AnnouncementModel a) {
+  // consultOnly: true évite le besoin de fournir un FavoriteIdsCubit (utilisé
+  // uniquement par l'AppBar en mode non-consultation) — hors du scope de ce test.
   return MaterialApp(
-    home: Scaffold(
-      body: SingleChildScrollView(
-        child: AnnouncementDetailBody(a: a),
-      ),
-    ),
+    home: TravelerProfileScreen(announcement: a, consultOnly: true),
   );
 }
 
@@ -40,13 +38,10 @@ void main() {
     await initializeDateFormatting('fr');
   });
 
-  // AnnouncementDetailBody n'est utilisé que par TripOwnerDetailScreen (le
-  // voyageur consultant SON PROPRE trajet) — la bannière « pas de séquestre »
-  // (D5) s'adresse à l'expéditeur et n'a donc pas sa place ici, quel que
-  // soit le mode de paiement. Elle vit sur TravelerProfileScreen (voir
-  // traveler_profile_screen_payment_test.dart).
-  group('AnnouncementDetailBody — pas de bannière séquestre (vue propriétaire)', () {
-    testWidgets('trajet cash-only — aucune bannière séquestre', (tester) async {
+  group('TravelerProfileScreen — bannière pas de séquestre (D5, vue expéditeur)', () {
+    testWidgets(
+        'trajet cash-only — bannière pas de séquestre affichée avec texte exact',
+        (tester) async {
       final a = _announcement(
         acceptedPaymentMethods: {BidPaymentMethod.cash},
       );
@@ -55,7 +50,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-          find.textContaining('ne séquestre pas votre argent'), findsNothing);
+        find.textContaining(
+          'Le paiement se fait en main propre au voyageur — '
+          'dony ne séquestre pas votre argent et ne peut pas le rembourser '
+          'automatiquement en cas de litige.',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('trajet avec carte acceptée — pas de bannière',
@@ -65,6 +66,18 @@ void main() {
           BidPaymentMethod.cash,
           BidPaymentMethod.stripe,
         },
+      );
+
+      await tester.pumpWidget(_wrap(a));
+      await tester.pumpAndSettle();
+
+      expect(
+          find.textContaining('ne séquestre pas votre argent'), findsNothing);
+    });
+
+    testWidgets('trajet carte uniquement — pas de bannière', (tester) async {
+      final a = _announcement(
+        acceptedPaymentMethods: {BidPaymentMethod.stripe},
       );
 
       await tester.pumpWidget(_wrap(a));

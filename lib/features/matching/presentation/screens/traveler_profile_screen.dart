@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
@@ -111,6 +112,30 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                     .animate()
                     .fadeIn(delay: 60.ms),
                 const SizedBox(height: DonySpacing.lg),
+
+                // ── Avertissement paiement en espèces (D5) ───────────────
+                if (_a.acceptedPaymentMethods.length == 1 &&
+                    _a.acceptedPaymentMethods
+                        .contains(BidPaymentMethod.cash)) ...[
+                  DonyStatusBanner(
+                    type: DonyStatusBannerType.warning,
+                    iconAsset: 'triangle-alert',
+                    messageSpan: TextSpan(children: [
+                      TextSpan(
+                        text: 'Trajet en espèces uniquement. ',
+                        style:
+                            tt.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const TextSpan(
+                        text: 'Le paiement se fait en main propre au '
+                            'voyageur — dony ne séquestre pas votre argent '
+                            'et ne peut pas le rembourser automatiquement '
+                            'en cas de litige.',
+                      ),
+                    ]),
+                  ).animate().fadeIn(delay: 70.ms),
+                  const SizedBox(height: DonySpacing.lg),
+                ],
 
                 // ── Ce que j'accepte ─────────────────────────────────────
                 if (acceptedTypes.isNotEmpty) ...[

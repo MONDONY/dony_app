@@ -210,27 +210,6 @@ class AnnouncementDetailBody extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── Bannière « pas de séquestre » (trajet cash-only, D5) ─────────────
-        if (a.acceptedPaymentMethods.length == 1 &&
-            a.acceptedPaymentMethods.contains(BidPaymentMethod.cash)) ...[
-          DonyStatusBanner(
-            type: DonyStatusBannerType.warning,
-            iconAsset: 'triangle-alert',
-            messageSpan: TextSpan(children: [
-              TextSpan(
-                text: 'Trajet en espèces uniquement. ',
-                style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const TextSpan(
-                text: 'Le paiement se fait en main propre au voyageur — '
-                    'dony ne séquestre pas votre argent et ne peut pas le '
-                    'rembourser automatiquement en cas de litige.',
-              ),
-            ]),
-          ).animate().fadeIn(delay: 120.ms),
-          const SizedBox(height: DonySpacing.md),
-        ],
-
         // ── Ce que j'accepte (vert) ──────────────────────────────────────────
         if (a.acceptedContentTypes?.isNotEmpty ?? false) ...[
           _BSectionTitle(label: 'Ce que j\'accepte', color: cs.success),
