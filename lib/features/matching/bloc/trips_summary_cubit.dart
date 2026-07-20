@@ -14,29 +14,36 @@ class TripsSummaryState extends Equatable {
   const TripsSummaryState.initial() : this._(TripsSummaryStatus.initial);
   const TripsSummaryState.loading() : this._(TripsSummaryStatus.loading);
   const TripsSummaryState.loaded(TripsSummaryModel summary)
-      : this._(TripsSummaryStatus.loaded, summary);
+    : this._(TripsSummaryStatus.loaded, summary);
 
   /// Erreur réseau/serveur : le bandeau est simplement masqué (spec).
   const TripsSummaryState.hidden() : this._(TripsSummaryStatus.hidden);
 
   @override
   List<Object?> get props => [
-        status,
-        summary?.activeTrips,
-        summary?.kgSoldThisMonth,
-        summary?.revenueThisMonth,
-      ];
+    status,
+    summary?.activeTrips,
+    summary?.kgSoldThisMonth,
+    summary?.revenueThisMonth,
+    summary?.kgSold,
+    summary?.revenue,
+    summary?.tripsPublished,
+    summary?.parcelsSent,
+    summary?.period,
+  ];
 }
 
 class TripsSummaryCubit extends Cubit<TripsSummaryState> {
-  TripsSummaryCubit(this._repository) : super(const TripsSummaryState.initial());
+  TripsSummaryCubit(this._repository)
+    : super(const TripsSummaryState.initial());
 
   final AnnouncementRepository _repository;
 
-  Future<void> load() async {
+  /// [period] : `7d`, `30d` ou `12m`.
+  Future<void> load({String period = '30d'}) async {
     emit(const TripsSummaryState.loading());
     try {
-      final summary = await _repository.getTripsSummary();
+      final summary = await _repository.getTripsSummary(period: period);
       emit(TripsSummaryState.loaded(summary));
     } catch (_) {
       emit(const TripsSummaryState.hidden());

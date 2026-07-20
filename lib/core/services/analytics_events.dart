@@ -125,6 +125,20 @@ abstract final class AnalyticsEvents {
   static const annoncesTripsOpened = 'annonces_trips_opened';
   static const annoncesSendOpened  = 'annonces_send_opened';
 
+  // Hub Activités (Phase 2 — double rôle permanent)
+  static const activitesHubTripsOpened         = 'activites_hub_trips_opened';
+  static const activitesHubEnvoisOpened        = 'activites_hub_envois_opened';
+  static const activitesHubDemandesOpened      = 'activites_hub_demandes_opened';
+  static const activitesHubNegotiationsOpened  = 'activites_hub_negotiations_opened';
+  static const activitesHubTripCreateOpened    = 'activites_hub_trip_create_opened';
+  static const activitesHubRequestCreateOpened = 'activites_hub_request_create_opened';
+  static const activitesHubStatsPeriodChanged  = 'activites_hub_stats_period_changed';
+  static const activitesHubSearchOpened        = 'activites_hub_search_opened';
+  static const activitesHubHistoryOpened       = 'activites_hub_history_opened';
+  static const activitesHubHelpOpened          = 'activites_hub_help_opened';
+  static const activitesHubBidAccepted         = 'activites_hub_bid_accepted';
+  static const activitesHubBidRejected         = 'activites_hub_bid_rejected';
+
   // Demandes voyageur
   static const pendingRequestsOpened = 'pending_requests_opened';
 

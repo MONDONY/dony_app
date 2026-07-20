@@ -51,7 +51,8 @@ class AnnouncementRemoteDatasource {
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
         'transportMode': transportModeToWire(transportMode),
-        if (description != null && description.isNotEmpty) 'description': description,
+        if (description != null && description.isNotEmpty)
+          'description': description,
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,
         'acceptedPaymentMethods': acceptedPaymentMethods,
@@ -72,7 +73,7 @@ class AnnouncementRemoteDatasource {
   }
 
   Future<({List<AnnouncementModel> announcements, int totalElements})>
-      getMyAnnouncements() async {
+  getMyAnnouncements() async {
     const pageSize = 50;
     // On charge TOUTES les pages : la liste ET les compteurs de filtres
     // (Tous/Actifs/Terminés/Annulés, calculés côté client) doivent refléter
@@ -90,7 +91,7 @@ class AnnouncementRemoteDatasource {
   }
 
   Future<({List<AnnouncementModel> announcements, int totalElements})>
-      _fetchMyAnnouncementsPage(int page, int size) async {
+  _fetchMyAnnouncementsPage(int page, int size) async {
     final response = await _apiClient.dio.get(
       '/announcements/my',
       queryParameters: {'page': page, 'size': size},
@@ -104,8 +105,13 @@ class AnnouncementRemoteDatasource {
     return (announcements: announcements, totalElements: totalElements);
   }
 
-  Future<TripsSummaryModel> getTripsSummary() async {
-    final response = await _apiClient.dio.get('/travelers/me/trips-summary');
+  /// [period] : `7d`, `30d` ou `12m`. Un backend qui ne gère pas encore ce
+  /// paramètre l'ignore et renvoie les chiffres du mois courant.
+  Future<TripsSummaryModel> getTripsSummary({String period = '30d'}) async {
+    final response = await _apiClient.dio.get(
+      '/travelers/me/trips-summary',
+      queryParameters: {'period': period},
+    );
     return TripsSummaryModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -153,7 +159,8 @@ class AnnouncementRemoteDatasource {
       if (kiloProOnly == true) 'kiloProOnly': true,
       if (minRating != null) 'minRating': minRating,
       if (weekendOnly == true) 'weekendOnly': true,
-      if (transportMode != null) 'transportMode': transportModeToWire(transportMode),
+      if (transportMode != null)
+        'transportMode': transportModeToWire(transportMode),
       if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
       if (contentType != null) 'contentType': contentType,
       if (userLat != null) 'userLat': userLat,
@@ -163,8 +170,10 @@ class AnnouncementRemoteDatasource {
       // seulement présent quand le chip est actif (cf. PR back #112).
       if (urgent == true) 'urgent': true,
     };
-    final response =
-        await _apiClient.dio.get('/announcements', queryParameters: params);
+    final response = await _apiClient.dio.get(
+      '/announcements',
+      queryParameters: params,
+    );
     return (response.data['content'] as List)
         .map((json) => AnnouncementModel.fromJson(json))
         .toList();
@@ -231,7 +240,8 @@ class AnnouncementRemoteDatasource {
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
         'transportMode': transportModeToWire(transportMode),
-        if (description != null && description.isNotEmpty) 'description': description,
+        if (description != null && description.isNotEmpty)
+          'description': description,
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,
         'acceptedPaymentMethods': acceptedPaymentMethods,

@@ -139,6 +139,7 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -274,6 +275,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TripFilterCubit>(
     () => TripFilterCubit(getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<TravelerBidsBloc>(
+    () => TravelerBidsBloc(getIt<BidRepository>()),
   );
 
   // Price Grid

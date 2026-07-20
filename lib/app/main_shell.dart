@@ -212,8 +212,8 @@ class _DonyBottomNav extends StatelessWidget {
 
         return BlocBuilder<ActiveRoleCubit, ActiveRole>(
           builder: (context, activeRole) {
-            // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au
-            // profil dans MatchingManagementScreen — Phase 2)
+            // Tab 1 — Activités (hub unique : depuis la Phase 2, le contenu ne
+            // dépend plus du profil — cf. ActivitesHubScreen)
             // 'zap' remplacé par 'layout-grid' : l'éclair se lisait
             // « action rapide/boost », pas « mes trajets » — cf. audit UX bottom nav.
             const tab1Label = 'Activités';

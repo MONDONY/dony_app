@@ -22,8 +22,9 @@ void main() {
   blocTest<TripsSummaryCubit, TripsSummaryState>(
     'load → loading puis loaded avec le résumé',
     build: () {
-      when(() => repository.getTripsSummary())
-          .thenAnswer((_) async => summary);
+      when(
+        () => repository.getTripsSummary(period: any(named: 'period')),
+      ).thenAnswer((_) async => summary);
       return TripsSummaryCubit(repository);
     },
     act: (c) => c.load(),
@@ -36,7 +37,9 @@ void main() {
   blocTest<TripsSummaryCubit, TripsSummaryState>(
     'load → hidden en cas d\'erreur (bandeau masqué, pas de message)',
     build: () {
-      when(() => repository.getTripsSummary()).thenThrow(Exception('network'));
+      when(
+        () => repository.getTripsSummary(period: any(named: 'period')),
+      ).thenThrow(Exception('network'));
       return TripsSummaryCubit(repository);
     },
     act: (c) => c.load(),
@@ -44,5 +47,19 @@ void main() {
       const TripsSummaryState.loading(),
       const TripsSummaryState.hidden(),
     ],
+  );
+
+  blocTest<TripsSummaryCubit, TripsSummaryState>(
+    'load transmet la période demandée au repository',
+    build: () {
+      when(
+        () => repository.getTripsSummary(period: any(named: 'period')),
+      ).thenAnswer((_) async => summary);
+      return TripsSummaryCubit(repository);
+    },
+    act: (c) => c.load(period: '12m'),
+    verify: (_) {
+      verify(() => repository.getTripsSummary(period: '12m')).called(1);
+    },
   );
 }

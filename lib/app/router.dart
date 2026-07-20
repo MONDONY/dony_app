@@ -40,7 +40,9 @@ import 'package:dony/features/matching/presentation/screens/pending_bids_screen.
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
-import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
+import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
+import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
+import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
@@ -803,6 +805,17 @@ final appRouter = GoRouter(
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
     GoRoute(path: '/mes-colis', builder: (_, __) => const MesColisScreen()),
 
+    // ── Envois et demandes — destinations du hub Activités ────────────
+    GoRoute(path: '/envois', builder: (_, __) => const ShipmentListScreen()),
+    GoRoute(
+      path: '/demandes',
+      builder: (_, state) => DemandesScreen(
+        initialTab: state.extra is DemandesTab
+            ? state.extra! as DemandesTab
+            : DemandesTab.recues,
+      ),
+    ),
+
     // ── Profile — quick wins (hors shell) ────────────────────────────
     GoRoute(
       path: '/profile/help/faq',
@@ -1174,12 +1187,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 1 — Envois (annonces voyageur)
+        // Branch 1 — Activités (hub unique, double rôle permanent)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/announcements',
-              builder: (context, state) => const MatchingManagementScreen(),
+              builder: (context, state) => const ActivitesHubScreen(),
             ),
           ],
         ),
