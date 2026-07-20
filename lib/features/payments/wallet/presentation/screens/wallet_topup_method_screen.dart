@@ -23,18 +23,6 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
       subtitle: 'Via Stripe · Visa, Mastercard',
       value: 'STRIPE',
     ),
-    _MethodDef(
-      iconAsset: 'waves',
-      label: 'Wave',
-      subtitle: 'Paiement Mobile Money',
-      value: 'WAVE',
-    ),
-    _MethodDef(
-      iconAsset: 'signal',
-      label: 'Orange Money',
-      subtitle: 'Paiement Mobile Money',
-      value: 'ORANGE_MONEY',
-    ),
   ];
 
   @override

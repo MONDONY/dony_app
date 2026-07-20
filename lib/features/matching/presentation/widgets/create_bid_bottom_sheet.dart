@@ -4,7 +4,6 @@ import 'package:dony/features/payments/presentation/widgets/payment_method_names
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
-import 'package:dony/features/payments/data/stripe_payment_sheet_params.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -31,7 +30,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -75,15 +73,6 @@ class _CollectedFormData {
   final List<String>? photoKeys;
 }
 
-const _mmCountries = {
-  'CI': 'Côte d\'Ivoire',
-  'SN': 'Sénégal',
-  'ML': 'Mali',
-  'GN': 'Guinée',
-  'BF': 'Burkina Faso',
-  'CM': 'Cameroun',
-};
-
 // ── Public API ─────────────────────────────────────────────────────────────────
 
 class CreateBidBottomSheet {
@@ -113,9 +102,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   late final BidPhotosCubit _photosCubit;
 
   // ── Payment method availability ─────────────────────────────────────────────
+  // Mobile money (Wave/Orange Money) n'est plus proposé comme paiement direct
+  // d'un bid — retiré au profit de GeniusPay pour la recharge du wallet
+  // voyageur uniquement (backend : 422 mobile-money-bid-payment-retired).
   late final bool _isCashAvailable;
-  late final bool _isWaveAvailable;
-  late final bool _isOrangeMoneyAvailable;
 
   // ── Form step fields ────────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
@@ -147,8 +137,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // ── Picker step fields ──────────────────────────────────────────────────────
   final _methodNotifier =
       ValueNotifier<BidPaymentMethod>(BidPaymentMethod.stripe);
-  final _mmPhoneCtrl = TextEditingController();
-  final _mmCountryNotifier = ValueNotifier<String?>('CI');
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
@@ -162,8 +150,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   List<String> get _refusedCategories =>
       widget.announcement.refusedTypes ?? const [];
 
-  bool get _hasAlternativePaymentMethods =>
-      _isCashAvailable || _isWaveAvailable || _isOrangeMoneyAvailable;
+  bool get _hasAlternativePaymentMethods => _isCashAvailable;
 
   @override
   void initState() {
@@ -177,10 +164,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     _isCashAvailable = widget.announcement.acceptedPaymentMethods
         .contains(BidPaymentMethod.cash);
-    _isWaveAvailable = widget.announcement.acceptedPaymentMethods
-        .contains(BidPaymentMethod.wave);
-    _isOrangeMoneyAvailable = widget.announcement.acceptedPaymentMethods
-        .contains(BidPaymentMethod.orangeMoney);
 
     final hasKgPricing = widget.announcement.pricePerKg > 0;
     final cap = _maxKg;
@@ -200,8 +183,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     _stepNotifier.addListener(_onStepChanged);
     _methodNotifier.addListener(_syncPickerButtonState);
-    _mmPhoneCtrl.addListener(_syncPickerButtonState);
-    _mmCountryNotifier.addListener(_syncPickerButtonState);
 
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _syncFormButtonState());
@@ -227,7 +208,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
     _customItemCtrl.dispose();
-    _mmPhoneCtrl.dispose();
     _promoCtrl.dispose();
     _weightNotifier.removeListener(_syncFormButtonState);
     _categoriesNotifier.removeListener(_syncFormButtonState);
@@ -237,8 +217,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _gridQuantitiesNotifier.removeListener(_invalidateQuote);
     _stepNotifier.removeListener(_onStepChanged);
     _methodNotifier.removeListener(_syncPickerButtonState);
-    _mmPhoneCtrl.removeListener(_syncPickerButtonState);
-    _mmCountryNotifier.removeListener(_syncPickerButtonState);
     _quoteNotifier.dispose();
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
@@ -247,7 +225,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _gridQuantitiesNotifier.dispose();
     _stepNotifier.dispose();
     _methodNotifier.dispose();
-    _mmCountryNotifier.dispose();
     super.dispose();
   }
 
@@ -282,23 +259,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   void _syncPickerButtonState() {
     if (_stepNotifier.value != _FormStep.paymentPicker) return;
     final method = _methodNotifier.value;
-    final isMM = method == BidPaymentMethod.wave ||
-        method == BidPaymentMethod.orangeMoney;
-    final mmOk = !isMM ||
-        (_mmPhoneCtrl.text.trim().isNotEmpty &&
-            _mmCountryNotifier.value != null);
 
     final String label;
     final String iconAsset;
     if (method == BidPaymentMethod.cash) {
       label = 'Confirmer (paiement en espèces)';
       iconAsset = 'banknote';
-    } else if (method == BidPaymentMethod.wave) {
-      label = 'Payer via Wave';
-      iconAsset = 'waves';
-    } else if (method == BidPaymentMethod.orangeMoney) {
-      label = 'Payer via Orange Money';
-      iconAsset = 'smartphone';
     } else {
       final total = _computeStripeTotal();
       label =
@@ -309,7 +275,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _btnConfigNotifier.value = _BtnConfig(
       label: label,
       iconAsset: iconAsset,
-      onPressed: mmOk ? _confirmPayment : null,
+      onPressed: _confirmPayment,
     );
   }
 
@@ -447,33 +413,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (data == null) return;
     final method = _methodNotifier.value;
 
-    if (method == BidPaymentMethod.wave ||
-        method == BidPaymentMethod.orangeMoney) {
-      final phone = _mmPhoneCtrl.text.trim();
-      if (phone.isEmpty) {
-        _showError('Numéro Mobile Money obligatoire');
-        return;
-      }
-      if (_mmCountryNotifier.value == null) {
-        _showError('Pays obligatoire');
-        return;
-      }
-      _bidBloc.add(BidCreateRequested(
-        announcementId: widget.announcement.id,
-        weightKg: data.weightKg,
-        declaredValueEur: data.declaredValueEur,
-        description: data.description,
-        contentCategory: data.contentCategory,
-        recipientName: data.recipientName,
-        recipientPhone: data.recipientPhone,
-        paymentMethod: method,
-        phoneNumber: phone,
-        countryCode: _mmCountryNotifier.value,
-        promoCode: data.promoCode,
-        gridItems: data.gridItems,
-        photoKeys: data.photoKeys,
-      ));
-    } else if (method == BidPaymentMethod.cash) {
+    if (method == BidPaymentMethod.cash) {
       _bidBloc.add(BidCreateRequested(
         announcementId: widget.announcement.id,
         weightKg: data.weightKg,
@@ -545,13 +485,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             'en main propre à la remise du colis. En cas d\'annulation après la '
             'remise, dony ne peut pas te rembourser immédiatement mais '
             's\'assurera que le voyageur te restitue ton argent.',
-      BidPaymentMethod.wave =>
-        'Le voyageur va examiner ta demande. Le paiement se fera via Wave '
-            'une fois l\'offre acceptée.',
-      BidPaymentMethod.orangeMoney =>
-        'Le voyageur va examiner ta demande. Le paiement se fera via Orange '
-            'Money une fois l\'offre acceptée.',
-      BidPaymentMethod.stripe => 'Le voyageur va examiner ta demande.',
+      _ => 'Le voyageur va examiner ta demande.',
     };
 
     Navigator.of(context).push(MaterialPageRoute(
@@ -1157,51 +1091,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ValueListenableBuilder<BidPaymentMethod>(
           valueListenable: _methodNotifier,
           builder: (context, method, _) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _PaymentMethodSelector(
-                  selectedMethod: method,
-                  onChanged: (m) => _methodNotifier.value = m,
-                  isCashAvailable: _isCashAvailable,
-                  isWaveAvailable: _isWaveAvailable,
-                  isOrangeMoneyAvailable: _isOrangeMoneyAvailable,
-                ),
-                if (method == BidPaymentMethod.wave ||
-                    method == BidPaymentMethod.orangeMoney) ...[
-                  const SizedBox(height: DonySpacing.xxl),
-                  const _SectionLabel(label: 'NUMÉRO MOBILE MONEY'),
-                  const SizedBox(height: DonySpacing.sm),
-                  DonyTextField(
-                    controller: _mmPhoneCtrl,
-                    label: 'Numéro de téléphone Mobile Money',
-                    hint: 'ex: +221 77 000 00 00',
-                    keyboardType: TextInputType.phone,
-                  ).animate().fadeIn(duration: 200.ms),
-                  const SizedBox(height: DonySpacing.md),
-                  ValueListenableBuilder<String?>(
-                    valueListenable: _mmCountryNotifier,
-                    builder: (context, selectedCountry, _) =>
-                        DropdownButtonFormField<String>(
-                      initialValue: selectedCountry,
-                      decoration: const InputDecoration(
-                        labelText: 'Pays Mobile Money',
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: DonySpacing.base,
-                          vertical: DonySpacing.md,
-                        ),
-                      ),
-                      items: _mmCountries.entries
-                          .map((e) => DropdownMenuItem(
-                                value: e.key,
-                                child: Text(e.value),
-                              ))
-                          .toList(),
-                      onChanged: (v) => _mmCountryNotifier.value = v,
-                    ).animate().fadeIn(delay: 40.ms),
-                  ),
-                ],
-              ],
+            return _PaymentMethodSelector(
+              selectedMethod: method,
+              onChanged: (m) => _methodNotifier.value = m,
+              isCashAvailable: _isCashAvailable,
             );
           },
         ),
@@ -1821,15 +1714,11 @@ class _PaymentMethodSelector extends StatelessWidget {
     required this.selectedMethod,
     required this.onChanged,
     this.isCashAvailable = false,
-    this.isWaveAvailable = false,
-    this.isOrangeMoneyAvailable = false,
   });
 
   final BidPaymentMethod selectedMethod;
   final ValueChanged<BidPaymentMethod> onChanged;
   final bool isCashAvailable;
-  final bool isWaveAvailable;
-  final bool isOrangeMoneyAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -1851,24 +1740,6 @@ class _PaymentMethodSelector extends StatelessWidget {
           sublabel: 'Remise directe',
           selected: selectedMethod == BidPaymentMethod.cash,
           onTap: () => onChanged(BidPaymentMethod.cash),
-        ),
-      if (isWaveAvailable)
-        _MethodTile(
-          key: const Key('payment-method-wave'),
-          iconAsset: 'waves',
-          label: 'Wave',
-          sublabel: 'Mobile Money',
-          selected: selectedMethod == BidPaymentMethod.wave,
-          onTap: () => onChanged(BidPaymentMethod.wave),
-        ),
-      if (isOrangeMoneyAvailable)
-        _MethodTile(
-          key: const Key('payment-method-orange-money'),
-          iconAsset: 'smartphone',
-          label: 'Orange Money',
-          sublabel: 'Mobile Money',
-          selected: selectedMethod == BidPaymentMethod.orangeMoney,
-          onTap: () => onChanged(BidPaymentMethod.orangeMoney),
         ),
     ];
 

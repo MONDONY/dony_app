@@ -23,6 +23,14 @@ enum PaymentMethod {
     PaymentMethod.orangeMoney,
   ];
 
+  /// Méthodes proposables sur une nouvelle demande. Le mobile money est
+  /// retiré (backend : request/mobile-money-payment-retired) mais reste dans
+  /// l'enum pour désérialiser et afficher les demandes existantes.
+  static const List<PaymentMethod> selectable = [
+    PaymentMethod.stripe,
+    PaymentMethod.cash,
+  ];
+
   String get displayLabel {
     switch (this) {
       case PaymentMethod.stripe:

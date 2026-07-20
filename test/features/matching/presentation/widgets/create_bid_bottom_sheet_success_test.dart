@@ -360,7 +360,8 @@ void main() {
     expect(find.textContaining('from=payment'), findsOneWidget);
   });
 
-  testWidgets('BidCreated (WAVE) → subtitle explique le paiement via Wave',
+  testWidgets(
+      'BidCreated (WAVE legacy) → subtitle générique (mobile money retiré)',
       (tester) async {
     final bidStates = StreamController<BidState>.broadcast();
     addTearDown(bidStates.close);
@@ -373,11 +374,12 @@ void main() {
 
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Offre envoyée !'), findsOneWidget);
-    expect(find.textContaining('via Wave'), findsOneWidget);
+    expect(
+        find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
   });
 
   testWidgets(
-      'BidCreated (ORANGE_MONEY) → subtitle explique le paiement via Orange Money',
+      'BidCreated (ORANGE_MONEY legacy) → subtitle générique (mobile money retiré)',
       (tester) async {
     final bidStates = StreamController<BidState>.broadcast();
     addTearDown(bidStates.close);
@@ -391,6 +393,7 @@ void main() {
 
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Offre envoyée !'), findsOneWidget);
-    expect(find.textContaining('via Orange Money'), findsOneWidget);
+    expect(
+        find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
   });
 }

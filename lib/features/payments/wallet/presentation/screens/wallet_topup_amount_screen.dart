@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class WalletTopupAmountScreen extends StatefulWidget {
   final String paymentMethod;
@@ -46,8 +45,6 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
 
   String get _methodLabel => switch (widget.paymentMethod) {
         'STRIPE' => 'Carte bancaire',
-        'WAVE' => 'Wave',
-        'ORANGE_MONEY' => 'Orange Money',
         _ => widget.paymentMethod,
       };
 
@@ -144,11 +141,6 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       listener: (context, state) {
         if (state is WalletTopupStripeReady) {
           _presentStripePaymentSheet(context, state.clientSecret);
-        } else if (state is WalletTopupRedirectReady) {
-          launchUrl(
-            Uri.parse(state.redirectUrl),
-            mode: LaunchMode.externalApplication,
-          );
         } else if (state is WalletError) {
           DonySnackbar.show(
             context,

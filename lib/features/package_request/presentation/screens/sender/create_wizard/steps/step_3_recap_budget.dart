@@ -363,10 +363,16 @@ class _PaymentMethodChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    // Mobile money retiré des nouvelles demandes ; on garde toutefois les
+    // méthodes legacy déjà cochées (édition) pour pouvoir les décocher.
+    final methods = [
+      ...PaymentMethod.selectable,
+      ...selected.where((m) => !PaymentMethod.selectable.contains(m)),
+    ];
     return Wrap(
       spacing: DonySpacing.sm,
       runSpacing: DonySpacing.sm,
-      children: PaymentMethod.values.map((method) {
+      children: methods.map((method) {
         final isSelected = selected.contains(method);
         final label = method.displayLabel;
         return GestureDetector(

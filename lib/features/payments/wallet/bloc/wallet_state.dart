@@ -18,12 +18,6 @@ class WalletTopupStripeReady extends WalletState {
   WalletTopupStripeReady(this.clientSecret);
 }
 
-class WalletTopupRedirectReady extends WalletState {
-  final String redirectUrl;
-
-  WalletTopupRedirectReady(this.redirectUrl);
-}
-
 class WalletError extends WalletState {
   final String message;
 
