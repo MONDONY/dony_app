@@ -3,6 +3,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -20,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -38,6 +40,13 @@ class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+// Le vrai Hive est inutilisable sous testWidgets : ses écritures passent par
+// un verrou asynchrone qui ne se résout jamais dans la zone FakeAsync et
+// bloque tous les accès suivants. On mocke la box, le contrat suffit.
+class _MockHiveService extends Mock implements HiveService {}
+
+class _MockBox extends Mock implements Box {}
 
 class _FakeBidEvent extends Fake implements BidEvent {}
 
@@ -185,15 +194,17 @@ void main() {
       await _pump(tester);
 
       expect(find.text('Trajets actifs'), findsOneWidget);
-      expect(find.text('Envois en cours'), findsOneWidget);
-      expect(find.text('Demandes'), findsOneWidget);
-      expect(find.text('Négociations'), findsOneWidget);
+      expect(find.text('Colis en route'), findsOneWidget);
+      expect(find.text('Demandes reçues'), findsOneWidget);
+      expect(find.text('Discussions de prix'), findsOneWidget);
 
       // 6 trajets actifs (summary), 2 envois en cours (IN_TRANSIT + ACCEPTED,
-      // le COMPLETED est exclu), 2 demandes à traiter, 0 négociation.
+      // le COMPLETED est exclu), 2 demandes à traiter. La négociation à zéro
+      // n'affiche pas « 0 » mais son invite.
       expect(find.text('6'), findsOneWidget);
       expect(find.text('2'), findsNWidgets(2));
-      expect(find.text('0'), findsOneWidget);
+      expect(find.text('0'), findsNothing);
+      expect(find.text('Aucune en cours'), findsOneWidget);
     });
 
     testWidgets('une erreur de résumé n\'affecte que sa propre tuile', (
@@ -206,8 +217,8 @@ void main() {
 
       await _pump(tester);
       // Les autres tuiles gardent leurs compteurs même si le résumé échoue.
-      expect(find.text('Envois en cours'), findsOneWidget);
-      expect(find.text('Demandes'), findsOneWidget);
+      expect(find.text('Colis en route'), findsOneWidget);
+      expect(find.text('Demandes reçues'), findsOneWidget);
     });
   });
 
@@ -228,16 +239,22 @@ void main() {
       await expectNavigation(tester, 'Trajets actifs', '/announcements/trips');
     });
 
-    testWidgets('Envois en cours → liste des envois', (tester) async {
-      await expectNavigation(tester, 'Envois en cours', '/envois');
+    testWidgets('Colis en route → liste des envois', (tester) async {
+      await expectNavigation(tester, 'Colis en route', '/envois');
     });
 
-    testWidgets('Demandes → écran Demandes', (tester) async {
-      await expectNavigation(tester, 'Demandes', '/demandes');
+    testWidgets('Demandes reçues → écran Demandes', (tester) async {
+      await expectNavigation(tester, 'Demandes reçues', '/demandes');
     });
 
-    testWidgets('Négociations → liste des négociations', (tester) async {
-      await expectNavigation(tester, 'Négociations', '/negotiations');
+    testWidgets('Discussions de prix → liste des négociations', (
+      tester,
+    ) async {
+      await expectNavigation(tester, 'Discussions de prix', '/negotiations');
+    });
+
+    testWidgets('Suivre un colis → recherche de suivi', (tester) async {
+      await expectNavigation(tester, 'Suivre un colis', '/tracking/search');
     });
 
     testWidgets('Publier un trajet → formulaire de création', (tester) async {
@@ -306,6 +323,73 @@ void main() {
       expect(find.text('Kg vendus'), findsOneWidget);
       expect(find.text('Trajets'), findsOneWidget);
       expect(find.text('Envois'), findsOneWidget);
+    });
+
+    testWidgets('la section est masquée tant que tout est à zéro', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        summary: const TripsSummaryModel(activeTrips: 0, kgSold: 0, revenue: 0),
+        bidState: BidListLoaded(const []),
+        travelerBidsState: TravelerBidsLoaded(
+          bids: const [],
+          page: 0,
+          hasMore: false,
+          filter: TravelerBidFilter.aTraiter,
+        ),
+      );
+
+      // « Revenus 0 € » n'apprend rien à un nouvel utilisateur : la section
+      // n'apparaît qu'à la première activité.
+      expect(find.text('Statistiques'), findsNothing);
+      expect(find.text('Revenus'), findsNothing);
+      // Les tuiles à zéro deviennent des invites à agir.
+      expect(find.text('Publiez un trajet'), findsOneWidget);
+      expect(find.text('Envoyez un colis'), findsOneWidget);
+    });
+  });
+
+  group('carte d\'introduction', () {
+    late _MockBox box;
+
+    setUp(() {
+      box = _MockBox();
+      when(() => box.put(any<String>(), any<bool>())).thenAnswer((_) async {});
+      final hive = _MockHiveService();
+      when(() => hive.userPrefs).thenReturn(box);
+      getIt.registerLazySingleton<HiveService>(() => hive);
+    });
+
+    void introDismissed({required bool value}) => when(
+      () => box.get(
+        HiveService.kHubIntroDismissed,
+        defaultValue: any<Object?>(named: 'defaultValue'),
+      ),
+    ).thenReturn(value);
+
+    testWidgets('visible au premier lancement, le X la ferme et persiste', (
+      tester,
+    ) async {
+      introDismissed(value: false);
+
+      await _pump(tester);
+
+      expect(find.textContaining('voyageurs de confiance'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('hub-intro-dismiss')));
+      await tester.pump();
+
+      expect(find.textContaining('voyageurs de confiance'), findsNothing);
+      verify(() => box.put(HiveService.kHubIntroDismissed, true)).called(1);
+    });
+
+    testWidgets('absente une fois fermée', (tester) async {
+      introDismissed(value: true);
+
+      await _pump(tester);
+
+      expect(find.textContaining('voyageurs de confiance'), findsNothing);
     });
   });
 }

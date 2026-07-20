@@ -7,6 +7,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -77,6 +78,7 @@ class _ActivitesHubView extends StatefulWidget {
 
 class _ActivitesHubViewState extends State<_ActivitesHubView> {
   late final EnvoisRefreshNotifier _refreshNotifier;
+  late bool _showIntro;
 
   @override
   void initState() {
@@ -84,7 +86,32 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     // Le shell notifie ce singleton au retour sur l'onglet (main_shell.dart:49).
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
+    _showIntro = !_introDismissed();
     _loadAll();
+  }
+
+  /// Hive indisponible (tests, init en échec) → carte masquée : elle est un
+  /// bonus d'accueil, jamais un bloqueur.
+  bool _introDismissed() {
+    if (!getIt.isRegistered<HiveService>()) {
+      return true;
+    }
+    try {
+      return getIt<HiveService>().userPrefs.get(
+            HiveService.kHubIntroDismissed,
+            defaultValue: false,
+          ) as bool;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  void _dismissIntro() {
+    _logEvent(AnalyticsEvents.activitesHubIntroDismissed);
+    unawaited(
+      getIt<HiveService>().userPrefs.put(HiveService.kHubIntroDismissed, true),
+    );
+    setState(() => _showIntro = false);
   }
 
   @override
@@ -119,10 +146,36 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     await openPackageRequestWizard(context);
   }
 
+  /// Vrai dès qu'un compteur ou une statistique est non nul. Tant que tout est
+  /// à zéro, la section Statistiques est masquée : « Revenus 0 € » n'apprend
+  /// rien à un nouvel utilisateur et fait tableau de bord mort.
+  bool _hasAnyActivity(BuildContext context) {
+    final summary = context.watch<TripsSummaryCubit>().state.summary;
+    final bidState = context.watch<BidBloc>().state;
+    final travelerState = context.watch<TravelerBidsBloc>().state;
+    final negoState = context.watch<NegotiationListBloc>().state;
+
+    final envoisEnCours = bidState is BidListLoaded
+        ? bidState.bids.where((b) => kEnvoisEnCours.contains(b.status)).length
+        : 0;
+    final demandes = travelerState is TravelerBidsLoaded
+        ? travelerState.pendingCount
+        : 0;
+
+    return (summary?.activeTrips ?? 0) > 0 ||
+        envoisEnCours > 0 ||
+        demandes > 0 ||
+        negoState.activeCount > 0 ||
+        (summary?.revenue ?? 0) > 0 ||
+        (summary?.kgSold ?? 0) > 0 ||
+        (summary?.tripsPublished ?? 0) > 0 ||
+        (summary?.parcelsSent ?? 0) > 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
+    final showStats = _hasAnyActivity(context);
 
     return Scaffold(
       body: SafeArea(
@@ -151,11 +204,15 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                   sliver: SliverList.list(
                     children: [
                       _Header(
-                        onSearch: () => _open(
+                        onTrack: () => _open(
                           AnalyticsEvents.activitesHubSearchOpened,
                           '/tracking/search',
                         ),
                       ),
+                      if (_showIntro) ...[
+                        const SizedBox(height: DonySpacing.md),
+                        _IntroCard(onDismiss: _dismissIntro),
+                      ],
                       const SizedBox(height: DonySpacing.base),
                       _ActionRow(
                         onPublishTrip: () => _open(
@@ -165,18 +222,20 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         onNewRequest: _onNewRequest,
                       ),
                       const SizedBox(height: DonySpacing.xl),
-                      Text('Activités', style: tt.titleMedium),
+                      Text('En ce moment', style: tt.titleMedium),
                       const SizedBox(height: DonySpacing.md),
                       const _ActivityGrid(),
-                      const SizedBox(height: DonySpacing.xl),
-                      Text('Statistiques', style: tt.titleMedium),
-                      const SizedBox(height: DonySpacing.md),
-                      const _PeriodChips(),
-                      const SizedBox(height: DonySpacing.md),
+                      if (showStats) ...[
+                        const SizedBox(height: DonySpacing.xl),
+                        Text('Statistiques', style: tt.titleMedium),
+                        const SizedBox(height: DonySpacing.md),
+                        const _PeriodChips(),
+                        const SizedBox(height: DonySpacing.md),
+                      ],
                     ],
                   ),
                 ),
-                const SliverToBoxAdapter(child: _StatsRow()),
+                if (showStats) const SliverToBoxAdapter(child: _StatsRow()),
                 SliverPadding(
                   // Le shell monte cet écran avec extendBody: true — sans
                   // cette réserve, les tuiles « Autres » passent sous la
@@ -221,14 +280,6 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: DonySpacing.base),
-                      Text(
-                        'Retrouvez ici tout ce que vous envoyez et tout ce que '
-                        'vous transportez.',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -244,9 +295,9 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
 // ── Header ───────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onSearch});
+  const _Header({required this.onTrack});
 
-  final VoidCallback onSearch;
+  final VoidCallback onTrack;
 
   @override
   Widget build(BuildContext context) {
@@ -256,12 +307,75 @@ class _Header extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: Text('Activités', style: tt.headlineLarge)),
-        IconButton(
-          onPressed: onSearch,
-          tooltip: 'Rechercher',
-          icon: DonyIcon('search', size: 20, color: cs.onSurface),
+        // Libellé explicite plutôt qu'une loupe seule : la destination est la
+        // recherche de suivi, pas une recherche globale — l'icône promettait
+        // plus que la route ne tient.
+        TextButton.icon(
+          key: const Key('hub-track-parcel'),
+          onPressed: onTrack,
+          icon: DonyIcon('search', size: 16, color: cs.primary),
+          label: const Text('Suivre un colis'),
         ),
       ],
+    );
+  }
+}
+
+// ── Carte d'introduction ─────────────────────────────────────────────────────
+
+/// Explique le modèle double rôle une bonne fois, au premier lancement.
+/// Fermée d'un X, elle ne revient jamais (flag Hive).
+class _IntroCard extends StatelessWidget {
+  const _IntroCard({required this.onDismiss});
+
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.base,
+        DonySpacing.sm,
+        DonySpacing.base,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Envoyez ou transportez, c\'est vous qui choisissez',
+                  style: tt.titleSmall?.copyWith(color: cs.onPrimaryContainer),
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  'Envoyez vos colis avec des voyageurs de confiance, ou '
+                  'transportez des colis pendant vos trajets pour gagner de '
+                  'l\'argent. Tout se suit depuis cet écran.',
+                  style: tt.bodySmall?.copyWith(color: cs.onPrimaryContainer),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            key: const Key('hub-intro-dismiss'),
+            onPressed: onDismiss,
+            tooltip: 'Fermer',
+            visualDensity: VisualDensity.compact,
+            icon: DonyIcon('x', size: 16, color: cs.onPrimaryContainer),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -334,6 +448,8 @@ class _ActivityGrid extends StatelessWidget {
         iconBackground: cs.primaryContainer,
         value: state.summary?.activeTrips ?? 0,
         label: 'Trajets actifs',
+        subtitle: 'Vos voyages à venir',
+        emptyHint: 'Publiez un trajet',
         isLoading: state.status == TripsSummaryStatus.loading,
         hasError: state.status == TripsSummaryStatus.hidden,
         onTap: () => _openRoute(
@@ -358,7 +474,9 @@ class _ActivityGrid extends StatelessWidget {
           iconColor: cs.secondary,
           iconBackground: cs.secondaryContainer,
           value: count,
-          label: 'Envois en cours',
+          label: 'Colis en route',
+          subtitle: 'Les colis que vous envoyez',
+          emptyHint: 'Envoyez un colis',
           isLoading: state is BidLoading,
           hasError: state is BidError,
           onTap: () => _openRoute(
@@ -377,10 +495,14 @@ class _ActivityGrid extends StatelessWidget {
         return ActivityTile(
           key: const Key('hub-tile-requests'),
           iconName: 'bell',
-          iconColor: cs.error,
-          iconBackground: cs.errorContainer,
+          // Ambre, pas rouge : une demande reçue est une opportunité qui
+          // attend une réponse, pas une erreur — cs.error criait au problème.
+          iconColor: DonyColors.amberDark,
+          iconBackground: DonyColors.amberLight,
           value: count,
-          label: 'Demandes',
+          label: 'Demandes reçues',
+          subtitle: 'Des colis à transporter pour vous',
+          emptyHint: 'Aucune pour l\'instant',
           isLoading: state is TravelerBidsLoading,
           hasError: state is TravelerBidsError,
           showNotificationDot: count > 0,
@@ -404,7 +526,9 @@ class _ActivityGrid extends StatelessWidget {
           iconColor: DonyColors.violet,
           iconBackground: DonyColors.violetLight,
           value: count,
-          label: 'Négociations',
+          label: 'Discussions de prix',
+          subtitle: 'Proposez ou acceptez un tarif',
+          emptyHint: 'Aucune en cours',
           isLoading: state.status == NegotiationListStatus.loading,
           hasError: state.status == NegotiationListStatus.error,
           showNotificationDot: count > 0,

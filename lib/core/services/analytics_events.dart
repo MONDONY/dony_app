@@ -137,6 +137,7 @@ abstract final class AnalyticsEvents {
   static const activitesHubHelpOpened          = 'activites_hub_help_opened';
   static const activitesHubBidAccepted         = 'activites_hub_bid_accepted';
   static const activitesHubBidRejected         = 'activites_hub_bid_rejected';
+  static const activitesHubIntroDismissed      = 'activites_hub_intro_dismissed';
 
   // Demandes voyageur
   static const pendingRequestsOpened = 'pending_requests_opened';
