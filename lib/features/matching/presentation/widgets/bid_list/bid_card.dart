@@ -96,7 +96,7 @@ class BidCard extends StatelessWidget {
                             text: 'N° ${bid.trackingNumber}',
                             query: query,
                             style: tt.labelSmall?.copyWith(
-                              color: cs.outlineVariant,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -110,7 +110,7 @@ class BidCard extends StatelessWidget {
                       Text(
                         'MONTANT',
                         style: tt.labelSmall?.copyWith(
-                          color: cs.outlineVariant,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: DonySpacing.xxs),
@@ -230,7 +230,7 @@ class _MetaPill extends StatelessWidget {
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(DonyRadius.sm),
       ),
       child: Row(
