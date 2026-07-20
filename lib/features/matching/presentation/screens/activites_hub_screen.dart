@@ -193,30 +193,33 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                     children: [
                       Text('Autres', style: tt.titleMedium),
                       const SizedBox(height: DonySpacing.md),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _OtherTile(
-                              iconName: 'chart-line',
-                              label: 'Historique complet',
-                              onTap: () => _open(
-                                AnalyticsEvents.activitesHubHistoryOpened,
-                                '/profile/shipments/history',
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: _OtherTile(
+                                iconName: 'chart-line',
+                                label: 'Historique complet',
+                                onTap: () => _open(
+                                  AnalyticsEvents.activitesHubHistoryOpened,
+                                  '/profile/shipments/history',
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: DonySpacing.md),
-                          Expanded(
-                            child: _OtherTile(
-                              iconName: 'circle-help',
-                              label: 'Aide & support',
-                              onTap: () => _open(
-                                AnalyticsEvents.activitesHubHelpOpened,
-                                '/profile/help/faq',
+                            const SizedBox(width: DonySpacing.md),
+                            Expanded(
+                              child: _OtherTile(
+                                iconName: 'circle-help',
+                                label: 'Aide & support',
+                                onTap: () => _open(
+                                  AnalyticsEvents.activitesHubHelpOpened,
+                                  '/profile/help/faq',
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       const SizedBox(height: DonySpacing.base),
                       Text(
