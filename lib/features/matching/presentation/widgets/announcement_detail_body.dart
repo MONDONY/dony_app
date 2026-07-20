@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 /// Corps de détail d'un trajet (hero, capacité/prix, colis, lieux de remise,
@@ -207,6 +208,24 @@ class AnnouncementDetailBody extends StatelessWidget {
               );
             }).toList(),
           ),
+          const SizedBox(height: DonySpacing.md),
+        ],
+
+        // ── Nudge cash-only (voyageur) — active la carte pour plus de colis ──
+        if (a.acceptedPaymentMethods.length == 1 &&
+            a.acceptedPaymentMethods.contains(BidPaymentMethod.cash)) ...[
+          DonyStatusBanner(
+            type: DonyStatusBannerType.warning,
+            iconAsset: 'triangle-alert',
+            message: 'Trajet en espèces uniquement. Beaucoup d\'expéditeurs '
+                'préfèrent payer par carte — activez cette option pour '
+                'augmenter vos chances de recevoir des colis.',
+            action: TextButton(
+              key: const Key('activate-card-payments-cta'),
+              onPressed: () => context.push('/connect/onboarding/intro'),
+              child: const Text('Activer les paiements par carte'),
+            ),
+          ).animate().fadeIn(delay: 120.ms),
           const SizedBox(height: DonySpacing.md),
         ],
 
