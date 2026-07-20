@@ -106,6 +106,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   // d'un bid — retiré au profit de GeniusPay pour la recharge du wallet
   // voyageur uniquement (backend : 422 mobile-money-bid-payment-retired).
   late final bool _isCashAvailable;
+  // Trajets cash-only (publiés sans Stripe Connect) : la chip Stripe doit
+  // disparaître et le mode par défaut doit basculer sur cash.
+  late final bool _isStripeAvailable;
 
   // ── Form step fields ────────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
@@ -135,8 +138,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _quoteNotifier = ValueNotifier<Object?>(null);
 
   // ── Picker step fields ──────────────────────────────────────────────────────
-  final _methodNotifier =
-      ValueNotifier<BidPaymentMethod>(BidPaymentMethod.stripe);
+  // Initialisé dans initState : le défaut dépend de widget.announcement
+  // (cash si le trajet n'accepte pas Stripe).
+  late final ValueNotifier<BidPaymentMethod> _methodNotifier;
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
@@ -164,6 +168,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     _isCashAvailable = widget.announcement.acceptedPaymentMethods
         .contains(BidPaymentMethod.cash);
+    _isStripeAvailable = widget.announcement.acceptedPaymentMethods
+        .contains(BidPaymentMethod.stripe);
+    _methodNotifier = ValueNotifier<BidPaymentMethod>(
+      _isStripeAvailable ? BidPaymentMethod.stripe : BidPaymentMethod.cash,
+    );
 
     final hasKgPricing = widget.announcement.pricePerKg > 0;
     final cap = _maxKg;
@@ -1091,10 +1100,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ValueListenableBuilder<BidPaymentMethod>(
           valueListenable: _methodNotifier,
           builder: (context, method, _) {
-            return _PaymentMethodSelector(
-              selectedMethod: method,
-              onChanged: (m) => _methodNotifier.value = m,
-              isCashAvailable: _isCashAvailable,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _PaymentMethodSelector(
+                  selectedMethod: method,
+                  onChanged: (m) => _methodNotifier.value = m,
+                  isCashAvailable: _isCashAvailable,
+                  isStripeAvailable: _isStripeAvailable,
+                ),
+                if (method == BidPaymentMethod.cash) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  const _CashEscrowWarning(),
+                ],
+              ],
             );
           },
         ),
@@ -1714,24 +1733,27 @@ class _PaymentMethodSelector extends StatelessWidget {
     required this.selectedMethod,
     required this.onChanged,
     this.isCashAvailable = false,
+    this.isStripeAvailable = true,
   });
 
   final BidPaymentMethod selectedMethod;
   final ValueChanged<BidPaymentMethod> onChanged;
   final bool isCashAvailable;
+  final bool isStripeAvailable;
 
   @override
   Widget build(BuildContext context) {
     final tiles = <Widget>[
-      _MethodTile(
-        key: const Key('payment-method-stripe'),
-        iconAsset: 'lock',
-        label: 'Paiement sécurisé',
-        marks: const PaymentMethodNames(),
-        sublabel: 'Via Stripe',
-        selected: selectedMethod == BidPaymentMethod.stripe,
-        onTap: () => onChanged(BidPaymentMethod.stripe),
-      ),
+      if (isStripeAvailable)
+        _MethodTile(
+          key: const Key('payment-method-stripe'),
+          iconAsset: 'lock',
+          label: 'Paiement sécurisé',
+          marks: const PaymentMethodNames(),
+          sublabel: 'Via Stripe',
+          selected: selectedMethod == BidPaymentMethod.stripe,
+          onTap: () => onChanged(BidPaymentMethod.stripe),
+        ),
       if (isCashAvailable)
         _MethodTile(
           key: const Key('payment-method-cash'),
@@ -1750,6 +1772,34 @@ class _PaymentMethodSelector extends StatelessWidget {
           if (i > 0) const SizedBox(height: DonySpacing.sm),
           tiles[i],
         ],
+      ],
+    );
+  }
+}
+
+// ── Cash escrow warning (D5) ────────────────────────────────────────────────────
+//
+// Contenu informatif uniquement (jamais de DonyButton ici) — reste dans le
+// `child` scrollable du picker, jamais dans le _StickyBottom.
+class _CashEscrowWarning extends StatelessWidget {
+  const _CashEscrowWarning();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DonyIcon('triangle-alert', size: 16, color: cs.warning),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            'Paiement en espèces : pas de séquestre — vous payez le voyageur '
+            'directement, sans garantie de remboursement par dony.',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
       ],
     );
   }

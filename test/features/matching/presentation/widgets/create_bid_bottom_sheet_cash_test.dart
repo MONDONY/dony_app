@@ -84,6 +84,26 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
   );
 }
 
+// Trajet cash-only (publié sans Stripe Connect — Task 5) : acceptedPaymentMethods
+// ne contient que `cash`. La chip Stripe doit disparaître et le mode par
+// défaut doit basculer sur cash (D5).
+AnnouncementModel _cashOnlyAnnouncement() {
+  return AnnouncementModel(
+    id: 'ann-cash-only',
+    travelerId: 'trav-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: DateTime(2026, 8, 15),
+    availableKg: 10,
+    totalKg: 10,
+    pricePerKg: 8,
+    status: 'ACTIVE',
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+    acceptedPaymentMethods: const {BidPaymentMethod.cash},
+  );
+}
+
 AnnouncementModel _kgFreeAnnouncement() {
   // KG_FREE: availableKg=1 but capacityUnit=KG_FREE → must NOT block
   return AnnouncementModel(
@@ -401,6 +421,92 @@ void main() {
 
       expect(find.textContaining('Bloquer'), findsWidgets);
       expect(find.text('Confirmer (paiement en espèces)'), findsNothing);
+    });
+  });
+
+  // ── 2b. Trajet cash-only + avertissement séquestre (D5) ───────────────────
+
+  group('Trajet cash-only — Stripe indisponible', () {
+    testWidgets(
+        'chip Stripe absente, cash sélectionné par défaut, note séquestre visible',
+        (tester) async {
+      await _openSheet(tester, _cashOnlyAnnouncement());
+      await _goToPaymentPicker(tester);
+
+      expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+      expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+
+      // Cash est le mode par défaut (Stripe indisponible) → le bouton sticky
+      // affiche directement le libellé « espèces », jamais « Bloquer ».
+      expect(find.text('Confirmer (paiement en espèces)'), findsOneWidget);
+      expect(find.textContaining('Bloquer'), findsNothing);
+
+      // Note D5 : absence de séquestre en paiement cash.
+      expect(
+        find.textContaining(
+          'Paiement en espèces : pas de séquestre — vous payez le voyageur '
+          'directement, sans garantie de remboursement par dony.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('soumission cash-only → BidCreateRequested paymentMethod=cash',
+        (tester) async {
+      await _openSheet(tester, _cashOnlyAnnouncement());
+      await _goToPaymentPicker(tester);
+
+      await tester.tap(find.text('Confirmer (paiement en espèces)'));
+      await tester.pump();
+
+      verify(
+        () => _currentBidBloc.add(
+          any(
+            that: predicate<BidEvent>(
+              (e) =>
+                  e is BidCreateRequested &&
+                  e.paymentMethod == BidPaymentMethod.cash,
+            ),
+          ),
+        ),
+      ).called(1);
+      verifyNever(
+          () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())));
+    });
+  });
+
+  group('Trajet mixte (Stripe + cash) — note séquestre selon sélection', () {
+    testWidgets(
+        'Stripe sélectionné par défaut → pas de note séquestre',
+        (tester) async {
+      await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
+
+      expect(find.textContaining('pas de séquestre'), findsNothing);
+    });
+
+    testWidgets('tap sur CASH → note séquestre apparaît', (tester) async {
+      await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
+
+      await tester.tap(find.byKey(const Key('payment-method-cash')));
+      await tester.pump();
+
+      expect(find.textContaining('pas de séquestre'), findsOneWidget);
+    });
+
+    testWidgets('retour à STRIPE après CASH → note séquestre disparaît',
+        (tester) async {
+      await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
+
+      await tester.tap(find.byKey(const Key('payment-method-cash')));
+      await tester.pump();
+      expect(find.textContaining('pas de séquestre'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('payment-method-stripe')));
+      await tester.pump();
+      expect(find.textContaining('pas de séquestre'), findsNothing);
     });
   });
 
