@@ -33,6 +33,14 @@ import 'package:go_router/go_router.dart';
 class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.navigationShell});
 
+  /// Hauteur du contenu de la barre d'onglets, hors safe area.
+  ///
+  /// Le shell monte ses écrans avec `extendBody: true` : leur contenu passe
+  /// donc *sous* la barre. Un écran scrollable doit réserver
+  /// `navBarContentHeight + MediaQuery.paddingOf(context).bottom` en bas,
+  /// sinon ses derniers éléments sont masqués par la barre.
+  static const double navBarContentHeight = 66;
+
   final StatefulNavigationShell navigationShell;
 
   @override
@@ -183,7 +191,9 @@ class _DonyBottomNav extends StatelessWidget {
   final ValueChanged<int> onTap;
 
   /// Hauteur de la zone de contenu (icônes+libellés), hors safe area.
-  static const double _barContentHeight = 66;
+  /// Exposée par [MainShell.navBarContentHeight] pour les écrans du shell,
+  /// qui doivent réserver cette hauteur sous leur contenu scrollable.
+  static const double _barContentHeight = MainShell.navBarContentHeight;
 
   /// Diamètre de l'orb inline — plus petit que [DonyNavOrb.defaultSize]
   /// pour tenir au même niveau que les icônes des autres items dans

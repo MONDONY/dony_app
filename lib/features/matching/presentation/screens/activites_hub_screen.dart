@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
@@ -139,11 +140,13 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverPadding(
+                  // Aucune marge basse : la rangée de statistiques suit
+                  // immédiatement, à la distance donnée par le SizedBox final.
                   padding: const EdgeInsets.fromLTRB(
                     DonySpacing.lg,
                     DonySpacing.md,
                     DonySpacing.lg,
-                    DonySpacing.tab,
+                    0,
                   ),
                   sliver: SliverList.list(
                     children: [
@@ -175,11 +178,16 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                 ),
                 const SliverToBoxAdapter(child: _StatsRow()),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
+                  // Le shell monte cet écran avec extendBody: true — sans
+                  // cette réserve, les tuiles « Autres » passent sous la
+                  // barre d'onglets.
+                  padding: EdgeInsets.fromLTRB(
                     DonySpacing.lg,
                     DonySpacing.xl,
                     DonySpacing.lg,
-                    DonySpacing.huge,
+                    MainShell.navBarContentHeight +
+                        MediaQuery.paddingOf(context).bottom +
+                        DonySpacing.lg,
                   ),
                   sliver: SliverList.list(
                     children: [
