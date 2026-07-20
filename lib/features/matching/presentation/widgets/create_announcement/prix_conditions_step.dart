@@ -490,6 +490,13 @@ class PrixConditionsStep extends StatelessWidget {
                 stripeState.accountStatus.isComplete;
 
             if (!isStripeConfigured) {
+              // Sans Stripe configuré, les espèces sont la seule méthode
+              // disponible : on force le notifier à ON (au moins une méthode
+              // de paiement est requise pour publier). Post-frame pour éviter
+              // toute mutation d'état pendant la phase de build.
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                cashEnabledNotifier.value = true;
+              });
               return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);
             }
 
@@ -739,7 +746,9 @@ class PrixConditionsStep extends StatelessWidget {
     );
   }
 
-  // Private method — unchanged
+  // Cash libre et forcé ON ; carte verrouillée OFF avec CTA d'activation
+  // Stripe. Publier sans Stripe est autorisé (D3/D4) — seul le paiement par
+  // carte requiert l'onboarding Stripe complet.
   Widget _buildStripeNotConfiguredPaymentSection(
     TextTheme tt,
     ColorScheme cs,
@@ -748,7 +757,7 @@ class PrixConditionsStep extends StatelessWidget {
     return CaSectionCard(
       child: Column(
         children: [
-          // ── Bannière warning ──────────────────────────────────────────────
+          // ── Bannière info ─────────────────────────────────────────────────
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
@@ -764,16 +773,18 @@ class PrixConditionsStep extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                DonyIcon('triangle-alert', color: cs.warning, size: 18),
+                DonyIcon('circle-check', color: cs.success, size: 18),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
-                    'Connectez Stripe pour recevoir des paiements et publier votre trajet.',
+                    'Publiez en espèces dès maintenant. Connectez Stripe '
+                    'pour accepter aussi la carte.',
                     style: tt.bodySmall?.copyWith(color: cs.onSurface),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 GestureDetector(
+                  key: const Key('activate-card-payments-cta'),
                   onTap: () => ctx.push('/connect/onboarding/intro'),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -788,7 +799,7 @@ class PrixConditionsStep extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Configurer',
+                          'Activer les paiements par carte',
                           style: tt.labelSmall?.copyWith(
                             color: cs.onPrimary,
                             fontWeight: FontWeight.w600,
@@ -807,8 +818,9 @@ class PrixConditionsStep extends StatelessWidget {
               ],
             ),
           ),
-          // ── Ligne Carte bancaire (désactivée) ─────────────────────────────
+          // ── Ligne Carte bancaire (verrouillée OFF) ────────────────────────
           SwitchListTile(
+            key: const Key('payment-method-stripe'),
             value: false,
             onChanged: null,
             title: Row(
@@ -823,10 +835,12 @@ class PrixConditionsStep extends StatelessWidget {
                     color: cs.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(width: DonySpacing.xs),
+                DonyIcon('lock', size: 14, color: cs.onSurfaceVariant),
               ],
             ),
             subtitle: Text(
-              'Non configuré',
+              'Non configuré, activez pour proposer le paiement sécurisé',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             contentPadding: const EdgeInsets.symmetric(
@@ -835,32 +849,44 @@ class PrixConditionsStep extends StatelessWidget {
             ),
           ),
           const CaRowDivider(),
-          // ── Ligne Espèces (désactivée) ────────────────────────────────────
+          // ── Ligne Espèces (forcée ON, non désactivable) ───────────────────
           SwitchListTile(
-            value: false,
+            key: const Key('payment-method-cash'),
+            value: true,
             onChanged: null,
+            activeThumbColor: cs.primary,
             title: Row(
               children: [
-                DonyIcon('banknote',
-                    size: 18, color: cs.onSurfaceVariant),
+                const DonyIcon('banknote', size: 18),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
                   'Espèces',
                   style: tt.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: cs.onSurfaceVariant,
+                    color: cs.onSurface,
                   ),
                 ),
               ],
             ),
             subtitle: Text(
-              'Disponible après Stripe',
+              'Commission prélevée au voyageur à la remise',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: DonySpacing.base,
               vertical: DonySpacing.xs,
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              0,
+              DonySpacing.base,
+              DonySpacing.md,
+            ),
+            child: const CashCommissionNotice().animate().fadeIn(
+                  duration: 200.ms,
+                ),
           ),
         ],
       ),

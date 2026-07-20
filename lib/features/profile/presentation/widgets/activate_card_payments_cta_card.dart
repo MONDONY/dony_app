@@ -2,40 +2,28 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
-/// Prominent gradient CTA card inviting non-travelers to become travelers.
+/// CTA profil : active la capacité « paiements par carte » (Stripe Connect).
 ///
-/// Placement: top of _AccountTab (before CONTACT & SÉCURITÉ), shown only
-/// when `isTraveler == false`.
-class BecomeTravelerCtaCard extends StatelessWidget {
-  const BecomeTravelerCtaCard({
-    super.key,
-    required this.onTap,
-    this.kycStatus,
-    this.stripeStatus,
-  });
+/// Remplace l'ancien `BecomeTravelerCtaCard` — le rôle voyageur est
+/// désormais universel, seule la capacité carte reste à activer.
+///
+/// Visible uniquement tant que [stripeStatus] n'est pas
+/// `'ONBOARDING_COMPLETE'`. Placement : haut de `_AccountTab` (avant
+/// IDENTITÉ & CONTACT), comme l'ancienne carte.
+class ActivateCardPaymentsCtaCard extends StatelessWidget {
+  const ActivateCardPaymentsCtaCard({super.key, required this.stripeStatus});
 
-  final VoidCallback onTap;
-  final String? kycStatus;
   final String? stripeStatus;
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    final kycOk = kycStatus == 'VERIFIED';
-    final stripeOk = stripeStatus == 'ONBOARDING_COMPLETE';
-    final allDone = kycOk && stripeOk;
-    final done = (kycOk ? 1 : 0) + (stripeOk ? 1 : 0);
-
-    final String statusText;
-    if (allDone) {
-      statusText = 'Dossier complet : prêt à voyager';
-    } else if (done == 0) {
-      statusText = '2 étapes pour commencer';
-    } else {
-      statusText = '$done/2 étapes complétées';
+    if (stripeStatus == 'ONBOARDING_COMPLETE') {
+      return const SizedBox.shrink();
     }
+
+    final tt = Theme.of(context).textTheme;
 
     return Material(
       color: Colors.transparent,
@@ -56,7 +44,7 @@ class BecomeTravelerCtaCard extends StatelessWidget {
           ],
         ),
         child: InkWell(
-          onTap: onTap,
+          onTap: () => context.push('/payments/onboarding'),
           borderRadius: BorderRadius.circular(DonyRadius.card),
           splashColor: Colors.white.withValues(alpha: 0.12),
           highlightColor: Colors.white.withValues(alpha: 0.06),
@@ -76,7 +64,7 @@ class BecomeTravelerCtaCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(DonyRadius.xl),
                   ),
                   child: const DonyIcon(
-                    'plane-takeoff',
+                    'credit-card',
                     color: Colors.white,
                     size: 22,
                   ),
@@ -89,7 +77,7 @@ class BecomeTravelerCtaCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Devenir voyageur',
+                        'Activer les paiements par carte',
                         style: tt.titleMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -98,35 +86,12 @@ class BecomeTravelerCtaCard extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.xxs),
                       Text(
-                        'Transporte des colis, gagne de l\'argent',
+                        'Recevez des paiements sécurisés avec séquestre, '
+                        'en plus des espèces',
                         style: tt.bodySmall?.copyWith(
                           color: Colors.white.withValues(alpha: 0.80),
                           fontWeight: FontWeight.w400,
                         ),
-                      ),
-                      const SizedBox(height: DonySpacing.xs),
-                      // Status sub-line
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          DonyIcon(
-                            allDone ? 'circle-check' : 'circle',
-                            size: 12,
-                            color: allDone
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.65),
-                          ),
-                          const SizedBox(width: DonySpacing.xs),
-                          Text(
-                            statusText,
-                            style: tt.labelSmall?.copyWith(
-                              color: allDone
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.70),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),

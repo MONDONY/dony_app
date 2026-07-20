@@ -15,7 +15,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
-import 'package:dony/features/profile/presentation/widgets/become_traveler_cta_card.dart';
+import 'package:dony/features/profile/presentation/widgets/activate_card_payments_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -200,10 +200,6 @@ Widget _buildTestHarness({
     GoRoute(
       path: '/payments/wallet',
       builder: (_, _) => const Scaffold(body: Text('Wallet')),
-    ),
-    GoRoute(
-      path: '/profile/become-traveler',
-      builder: (_, _) => const Scaffold(body: Text('BecomeTraveler')),
     ),
     GoRoute(
       path: '/profile/edit',
@@ -806,7 +802,8 @@ void main() {
     );
 
     testWidgets(
-      'voyageur : DEVENIR VOYAGEUR absent en onglet Compte (additive, isTraveler=true)',
+      'voyageur : plus de CTA "Devenir voyageur" (rôle universel), carte '
+      'activation carte visible tant que Stripe est incomplet',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -820,16 +817,23 @@ void main() {
         await tester.pump(const Duration(milliseconds: 600));
 
         await _goToCompteTab(tester);
-        // Un voyageur ne doit pas voir la CTA Devenir voyageur.
+        // Le rôle voyageur est universel — plus de wording "Devenir voyageur".
         expect(
           find.text('DEVENIR VOYAGEUR'),
           findsNothing,
-          reason: 'un voyageur ne doit pas voir la section DEVENIR VOYAGEUR',
+          reason: 'le rôle voyageur est universel, plus de CTA "devenir"',
         );
         expect(
-          find.byType(BecomeTravelerCtaCard),
+          find.text('Devenir voyageur'),
           findsNothing,
-          reason: 'un voyageur ne doit pas voir BecomeTravelerCtaCard',
+          reason: 'ancien titre CTA retiré',
+        );
+        // _travelerUser a stripeAccountStatus par défaut ('NOT_CREATED') :
+        // la carte d'activation des paiements par carte reste donc visible.
+        expect(
+          find.byType(ActivateCardPaymentsCtaCard),
+          findsOneWidget,
+          reason: 'Stripe non finalisé : la carte activation carte reste visible',
         );
         await tester.pumpAndSettle(const Duration(seconds: 5));
       },
@@ -1153,7 +1157,8 @@ void main() {
     });
 
     testWidgets(
-      'tab Compte sender affiche la CTA Devenir voyageur (PAIEMENTS & FACTURES supprimé)',
+      'tab Compte sender affiche la CTA Activer les paiements par carte '
+      '(PAIEMENTS & FACTURES supprimé)',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -1173,15 +1178,15 @@ void main() {
         expect(find.text('Factures'), findsNothing);
         expect(find.text('Crédits & codes promo'), findsNothing);
 
-        // Le label DEVENIR VOYAGEUR a été remplacé par la carte CTA.
+        // Le label DEVENIR VOYAGEUR a été remplacé par la carte CTA carte.
         expect(find.text('DEVENIR VOYAGEUR'), findsNothing);
         expect(
-          find.byType(BecomeTravelerCtaCard),
+          find.byType(ActivateCardPaymentsCtaCard),
           findsOneWidget,
-          reason: 'BecomeTravelerCtaCard manquante pour un sender',
+          reason: 'ActivateCardPaymentsCtaCard manquante pour un sender',
         );
         expect(
-          find.text('Devenir voyageur'),
+          find.text('Activer les paiements par carte'),
           findsOneWidget,
           reason: 'Titre CTA manquant',
         );
@@ -1607,66 +1612,80 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
-  // ── E3 — CTA Devenir voyageur en tête de Compte ──────────────────────────────
+  // ── E3 — CTA Activer les paiements par carte en tête de Compte ───────────────
 
-  testWidgets('CTA Devenir voyageur en tête de Compte (non-voyageur)', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(_activeUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
+  testWidgets(
+    'CTA Activer les paiements par carte en tête de Compte (Stripe non finalisé)',
+    (tester) async {
+      whenListen<AuthState>(
+        authBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_activeUser),
+      );
+      whenListen<AccountDeletionState>(
+        deletionBloc,
+        const Stream.empty(),
+        initialState: const AccountDeletionInitial(),
+      );
 
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpWidget(
+        _buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          referralBloc: referralBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-    await _goToCompteTab(tester);
-    expect(find.byType(BecomeTravelerCtaCard), findsOneWidget);
-    expect(find.text('Devenir voyageur'), findsOneWidget);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-  });
+      await _goToCompteTab(tester);
+      expect(find.byType(ActivateCardPaymentsCtaCard), findsOneWidget);
+      expect(find.text('Activer les paiements par carte'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    },
+  );
 
-  testWidgets('Pas de CTA Devenir voyageur pour un voyageur', (tester) async {
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(_travelerUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
+  testWidgets(
+    'Pas de CTA Activer les paiements par carte quand Stripe onboarding complet',
+    (tester) async {
+      whenListen<AuthState>(
+        authBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(
+          _activeUser.copyWith(stripeAccountStatus: 'ONBOARDING_COMPLETE'),
+        ),
+      );
+      whenListen<AccountDeletionState>(
+        deletionBloc,
+        const Stream.empty(),
+        initialState: const AccountDeletionInitial(),
+      );
 
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpWidget(
+        _buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          referralBloc: referralBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-    await _goToCompteTab(tester);
-    expect(find.byType(BecomeTravelerCtaCard), findsNothing);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-  });
+      await _goToCompteTab(tester);
+      // Le widget reste dans l'arbre mais se réduit à SizedBox.shrink()
+      // (hauteur nulle — la largeur suit la contrainte du ListView) —
+      // skipOffstage: false car un item de hauteur 0 en tête de sliver est
+      // considéré "offstage" par debugVisitOnstageChildren.
+      expect(find.text('Activer les paiements par carte'), findsNothing);
+      final size = tester.getSize(
+        find.byType(ActivateCardPaymentsCtaCard, skipOffstage: false),
+      );
+      expect(size.height, 0);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    },
+  );
 
   group('onglet Compte réorganisé', () {
     Future<void> openCompte(WidgetTester tester, UserModel user) async {
