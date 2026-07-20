@@ -133,6 +133,13 @@ Le travail est donc du **câblage client**, pas du backend :
 
 **Effet de bord positif.** `scan_hub_cubit.dart` peut abandonner sa boucle N+1 au profit d'un seul appel. Hors périmètre de cette spec, mais à noter.
 
+**Écran à deux volets.** Le mot « demandes » recouvre deux réalités opposées, et le modèle double rôle impose de montrer les deux :
+
+- **Reçues** — les bids d'expéditeurs sur mes trajets. C'est le manque décrit ci-dessus.
+- **Envoyées** — les demandes d'envoi que j'ai publiées. C'est exactement le contenu du tab « Demandes » retiré de l'écran Envoyer (§6), qui aurait sinon disparu de l'app.
+
+`DemandesScreen` porte donc un segmented « Reçues / Envoyées ». Le volet Reçues a ses propres filtres (À traiter / Acceptées / Terminées) ; le volet Envoyées réutilise `MyPackageRequestsBody` tel quel.
+
 ### 5.2 Statistiques par période
 
 **Le problème.** `GET /travelers/me/trips-summary` renvoie `{activeTrips, kgSoldThisMonth, revenueThisMonth}` — le mois courant est **codé en dur côté serveur** (`TripsSummaryService.java:39-63`, `YearMonth.now()`), sans paramètre de période.
@@ -164,9 +171,11 @@ GET /travelers/me/trips-summary?period=7d|30d|12m     (défaut : 30d)
 |---|---|
 | `MatchingManagementScreen` + son test | Remplacé par `ActivitesHubScreen` — le dispatch par rôle disparaît |
 | `annonces_layout.dart` (`AnnoncesLayout`, `annoncesLayoutFor`) + son test | La logique de layout par rôle est exactement ce que le refacto élimine |
-| Tab interne **« Demandes »** de `EnvoyerHubScreen` | Les demandes remontent au niveau du hub. `EnvoyerHubScreen` devient une liste d'envois simple, sans segmented control — conformément à la maquette validée |
+| Tab interne **« Demandes »** de `EnvoyerHubScreen` | Son contenu migre vers le volet « Envoyées » de `DemandesScreen` (§5.1). `EnvoyerHubScreen` devient une liste d'envois simple, sans segmented control — conformément à la maquette validée |
 
-**Conséquences sur `EnvoyerHubScreen`.** Suppression de `_EnvoyerTabsView`, `_EnvoyerSegmented`, `_SlidingSegmented`, `_SegLabel`, du `TabController` et de la logique de badges associée (`envoyer_hub_screen.dart:73-250, 458-620`). Le header et le bouton « + Nouveau » sont conservés. `MyPackageRequestsBody` reste accessible via sa route `/package-requests/me`.
+**Conséquences sur `EnvoyerHubScreen`.** Suppression de `_EnvoyerTabsView`, `_EnvoyerSegmented`, `_SlidingSegmented`, `_SegLabel`, du `TabController` et de la logique de badges associée (`envoyer_hub_screen.dart:73-250, 458-620`). Le header et le bouton « + Nouveau » sont conservés. `MyPackageRequestsBody` reste accessible par le volet « Envoyées » et par sa route `/package-requests/me`.
+
+Les notifications in-app de négociation (`_onNegoStateChanged`) disparaissent avec cette machinerie : elles annonçaient de nouvelles offres sur un écran qui ne montre plus les négociations. La tuile Négociations du hub, avec sa pastille, joue désormais ce rôle.
 
 ---
 
@@ -176,7 +185,7 @@ GET /travelers/me/trips-summary?period=7d|30d|12m     (défaut : 30d)
 
 ```
 lib/features/matching/presentation/screens/activites_hub_screen.dart
-lib/features/matching/presentation/screens/demandes_recues_screen.dart
+lib/features/matching/presentation/screens/demandes_screen.dart
 lib/features/matching/presentation/widgets/activity_tile.dart      # tuile 2×2
 lib/features/matching/presentation/widgets/stat_tile.dart          # carte stat scrollable
 lib/features/matching/bloc/traveler_bids_bloc.dart
@@ -253,4 +262,4 @@ Les tests miroir de l'arborescence `lib/` dans `test/`, conformément aux conven
 
 ## 11. Décisions ouvertes
 
-**Statistiques et backend.** Le paramètre `period` demande une modification de `dony-back`, livrée en **PR séparée** sur ce repo. Tant qu'elle n'est pas déployée, les trois chips renvoient les chiffres du mois courant (dégradation gracieuse décrite en §5.2). Si cette dépendance backend n'est pas souhaitée, l'alternative est de réduire la section Statistiques aux seules métriques disponibles sans période — mais le filtre perdrait alors sa raison d'être.
+**Statistiques et backend.** Le paramètre `period` demande une modification de `dony-back`, livrée en **PR séparée** sur ce repo (branche `feature/trips-summary-period`). Tant qu'elle n'est pas déployée, les trois chips renvoient les chiffres du mois courant (dégradation gracieuse décrite en §5.2). Si cette dépendance backend n'est pas souhaitée, l'alternative est de réduire la section Statistiques aux seules métriques disponibles sans période — mais le filtre perdrait alors sa raison d'être.
