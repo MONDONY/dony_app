@@ -146,6 +146,9 @@ abstract final class AnalyticsEvents {
   // Accueil — accès direct aux colis compatibles avec mes trajets
   static const homeColisMatchOpened            = 'home_colis_match_opened';
 
+  // Écran Demandes — filtre appliqué (tiré dans TravelerBidsBloc)
+  static const travelerBidsFilterApplied       = 'traveler_bids_filter_applied';
+
   // Demandes voyageur
   static const pendingRequestsOpened = 'pending_requests_opened';
 

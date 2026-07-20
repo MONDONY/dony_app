@@ -18,7 +18,6 @@ void main() {
       expect(model.revenue, 152.46);
       expect(model.tripsPublished, 2);
       expect(model.parcelsSent, 5);
-      expect(model.period, '7d');
     });
 
     test('backend antérieur : repli sur les champs « ThisMonth »', () {
@@ -75,7 +74,6 @@ void main() {
       expect(empty.activeTrips, 0);
       expect(empty.kgSold, 0);
       expect(empty.revenue, 0);
-      expect(empty.period, isNull);
     });
   });
 }

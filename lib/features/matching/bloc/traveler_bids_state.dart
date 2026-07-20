@@ -77,7 +77,7 @@ class TravelerBidsLoaded extends TravelerBidsState {
        };
 
   /// Nombre de demandes en attente d'une décision — la valeur portée par la
-  /// tuile « Demandes » du hub Activités.
+  /// tuile « Demandes reçues » du hub Activités.
   int get pendingCount => countFor(TravelerBidFilter.aTraiter);
 
   /// Bids correspondant au filtre courant.

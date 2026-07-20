@@ -190,14 +190,9 @@ class _DonyBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  /// Hauteur de la zone de contenu (icônes+libellés), hors safe area.
-  /// Exposée par [MainShell.navBarContentHeight] pour les écrans du shell,
-  /// qui doivent réserver cette hauteur sous leur contenu scrollable.
-  static const double _barContentHeight = MainShell.navBarContentHeight;
-
   /// Diamètre de l'orb inline — plus petit que [DonyNavOrb.defaultSize]
   /// pour tenir au même niveau que les icônes des autres items dans
-  /// [_barContentHeight].
+  /// [MainShell.navBarContentHeight].
   static const double _orbInlineSize = 40;
 
   @override
@@ -248,7 +243,7 @@ class _DonyBottomNav extends StatelessWidget {
                 // une tab bar iOS/Android native.
                 padding: EdgeInsets.only(bottom: bottomPadding),
                 child: SizedBox(
-                  height: _barContentHeight,
+                  height: MainShell.navBarContentHeight,
                   child: LayoutBuilder(
                     builder: (context, constraints) => Stack(
                       children: [

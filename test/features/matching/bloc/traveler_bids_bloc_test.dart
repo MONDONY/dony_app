@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
@@ -9,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockBidRepository extends Mock implements BidRepository {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 BidModel _bid(String id, String status) => BidModel(
   id: id,
@@ -24,37 +27,44 @@ TravelerBidsPage _page(
   List<BidModel> bids, {
   int page = 0,
   bool isLast = true,
-  int? total,
-}) => TravelerBidsPage(
-  content: bids,
-  totalElements: total ?? bids.length,
-  page: page,
-  isLast: isLast,
-);
+}) => TravelerBidsPage(content: bids, page: page, isLast: isLast);
 
 void main() {
   late _MockBidRepository repository;
+  late _MockAnalyticsService analytics;
 
-  setUp(() => repository = _MockBidRepository());
+  setUp(() {
+    repository = _MockBidRepository();
+    analytics = _MockAnalyticsService();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+  });
 
-  void stub(TravelerBidsPage result) {
+  TravelerBidsBloc bloc() => TravelerBidsBloc(repository, analytics);
+
+  /// Stub par numéro de page : le chargement initial parcourt toutes les
+  /// pages jusqu'à `isLast`, le stub doit donc répondre page par page.
+  void stubPages(Map<int, TravelerBidsPage> pages) {
     when(
       () => repository.getTravelerBids(
-        status: any(named: 'status'),
-        tripId: any(named: 'tripId'),
-        q: any(named: 'q'),
         page: any(named: 'page'),
         size: any(named: 'size'),
       ),
-    ).thenAnswer((_) async => result);
+    ).thenAnswer((inv) async {
+      final p = inv.namedArguments[#page] as int? ?? 0;
+      return pages[p]!;
+    });
   }
+
+  void stub(TravelerBidsPage result) => stubPages({result.page: result});
 
   group('chargement', () {
     blocTest<TravelerBidsBloc, TravelerBidsState>(
       'émet loading puis loaded avec les bids reçus',
       build: () {
         stub(_page([_bid('b1', 'PENDING'), _bid('b2', 'ACCEPTED')]));
-        return TravelerBidsBloc(repository);
+        return bloc();
       },
       act: (b) => b.add(const TravelerBidsRequested()),
       expect: () => [
@@ -71,18 +81,42 @@ void main() {
     );
 
     blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'cumule toutes les pages au chargement initial (compteurs justes)',
+      build: () {
+        stubPages({
+          0: _page([_bid('b1', 'PENDING')], isLast: false),
+          1: _page([_bid('b2', 'ACCEPTED')], page: 1, isLast: true),
+        });
+        return bloc();
+      },
+      act: (b) => b.add(const TravelerBidsRequested()),
+      expect: () => [
+        isA<TravelerBidsLoading>(),
+        isA<TravelerBidsLoaded>()
+            .having((s) => s.bids.length, 'bids cumulés', 2)
+            .having((s) => s.hasMore, 'hasMore', false)
+            .having((s) => s.pendingCount, 'pendingCount', 1),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).called(2);
+      },
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
       'émet error si le réseau échoue',
       build: () {
         when(
           () => repository.getTravelerBids(
-            status: any(named: 'status'),
-            tripId: any(named: 'tripId'),
-            q: any(named: 'q'),
             page: any(named: 'page'),
             size: any(named: 'size'),
           ),
         ).thenThrow(Exception('network'));
-        return TravelerBidsBloc(repository);
+        return bloc();
       },
       act: (b) => b.add(const TravelerBidsRequested()),
       expect: () => [isA<TravelerBidsLoading>(), isA<TravelerBidsError>()],
@@ -92,7 +126,7 @@ void main() {
       'ne recharge pas si déjà chargé et force absent',
       build: () {
         stub(_page([_bid('b1', 'PENDING')]));
-        return TravelerBidsBloc(repository);
+        return bloc();
       },
       act: (b) async {
         b.add(const TravelerBidsRequested());
@@ -102,9 +136,6 @@ void main() {
       verify: (_) {
         verify(
           () => repository.getTravelerBids(
-            status: any(named: 'status'),
-            tripId: any(named: 'tripId'),
-            q: any(named: 'q'),
             page: any(named: 'page'),
             size: any(named: 'size'),
           ),
@@ -114,16 +145,13 @@ void main() {
 
     blocTest<TravelerBidsBloc, TravelerBidsState>(
       'un refresh raté conserve la liste déjà affichée',
-      build: () => TravelerBidsBloc(repository),
+      build: bloc,
       act: (b) async {
         stub(_page([_bid('b1', 'PENDING')]));
         b.add(const TravelerBidsRequested());
         await Future<void>.delayed(Duration.zero);
         when(
           () => repository.getTravelerBids(
-            status: any(named: 'status'),
-            tripId: any(named: 'tripId'),
-            q: any(named: 'q'),
             page: any(named: 'page'),
             size: any(named: 'size'),
           ),
@@ -146,27 +174,35 @@ void main() {
 
   group('pagination', () {
     blocTest<TravelerBidsBloc, TravelerBidsState>(
-      'la page suivante est ajoutée à la liste courante',
-      build: () => TravelerBidsBloc(repository),
+      'au-delà du garde-fou initial, le scroll charge la page suivante',
+      build: () {
+        // 12 pages d'une demande : le chargement initial s'arrête au
+        // garde-fou (10 pages) avec hasMore, le scroll prend le relais.
+        stubPages({
+          for (var p = 0; p < 12; p++)
+            p: _page([_bid('b$p', 'PENDING')], page: p, isLast: p == 11),
+        });
+        return bloc();
+      },
       act: (b) async {
-        stub(_page([_bid('b1', 'PENDING')], isLast: false, total: 2));
         b.add(const TravelerBidsRequested());
         await Future<void>.delayed(Duration.zero);
-        stub(_page([_bid('b2', 'ACCEPTED')], page: 1, total: 2));
         b.add(const TravelerBidsNextPageRequested());
       },
       expect: () => [
         isA<TravelerBidsLoading>(),
-        isA<TravelerBidsLoaded>().having((s) => s.hasMore, 'hasMore', true),
+        isA<TravelerBidsLoaded>()
+            .having((s) => s.bids.length, 'bids au garde-fou', 10)
+            .having((s) => s.hasMore, 'hasMore', true),
         isA<TravelerBidsLoaded>().having(
           (s) => s.isLoadingMore,
           'en cours',
           true,
         ),
         isA<TravelerBidsLoaded>()
-            .having((s) => s.bids.length, 'bids cumulés', 2)
-            .having((s) => s.page, 'page', 1)
-            .having((s) => s.hasMore, 'hasMore', false)
+            .having((s) => s.bids.length, 'bids cumulés', 11)
+            .having((s) => s.page, 'page', 10)
+            .having((s) => s.hasMore, 'hasMore', true)
             .having((s) => s.isLoadingMore, 'terminé', false),
       ],
     );
@@ -175,7 +211,7 @@ void main() {
       'aucune requête si hasMore est faux',
       build: () {
         stub(_page([_bid('b1', 'PENDING')]));
-        return TravelerBidsBloc(repository);
+        return bloc();
       },
       act: (b) async {
         b.add(const TravelerBidsRequested());
@@ -185,9 +221,6 @@ void main() {
       verify: (_) {
         verify(
           () => repository.getTravelerBids(
-            status: any(named: 'status'),
-            tripId: any(named: 'tripId'),
-            q: any(named: 'q'),
             page: any(named: 'page'),
             size: any(named: 'size'),
           ),
@@ -198,10 +231,10 @@ void main() {
 
   group('filtres et compteurs', () {
     blocTest<TravelerBidsBloc, TravelerBidsState>(
-      'le changement de filtre ne relance aucun appel réseau',
+      'le changement de filtre ne relance aucun appel réseau et est tracé',
       build: () {
         stub(_page([_bid('b1', 'PENDING')]));
-        return TravelerBidsBloc(repository);
+        return bloc();
       },
       act: (b) async {
         b.add(const TravelerBidsRequested());
@@ -220,11 +253,14 @@ void main() {
       verify: (_) {
         verify(
           () => repository.getTravelerBids(
-            status: any(named: 'status'),
-            tripId: any(named: 'tripId'),
-            q: any(named: 'q'),
             page: any(named: 'page'),
             size: any(named: 'size'),
+          ),
+        ).called(1);
+        verify(
+          () => analytics.logEvent(
+            'traveler_bids_filter_applied',
+            properties: {'filter': 'acceptees'},
           ),
         ).called(1);
       },

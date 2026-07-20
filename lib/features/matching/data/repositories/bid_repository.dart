@@ -84,19 +84,8 @@ class BidRepository {
 
   Future<List<BidModel>> getMyBids() => _datasource.getMyBids();
 
-  Future<TravelerBidsPage> getTravelerBids({
-    String? status,
-    String? tripId,
-    String? q,
-    int page = 0,
-    int size = 20,
-  }) => _datasource.getTravelerBids(
-    status: status,
-    tripId: tripId,
-    q: q,
-    page: page,
-    size: size,
-  );
+  Future<TravelerBidsPage> getTravelerBids({int page = 0, int size = 20}) =>
+      _datasource.getTravelerBids(page: page, size: size);
 
   Future<BidModel> acceptBid(String bidId) => _datasource.acceptBid(bidId);
 

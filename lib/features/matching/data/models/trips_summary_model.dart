@@ -15,16 +15,12 @@ class TripsSummaryModel {
   final int? tripsPublished;
   final int? parcelsSent;
 
-  /// Période effectivement appliquée par le serveur (`7d`, `30d`, `12m`).
-  final String? period;
-
   const TripsSummaryModel({
     required this.activeTrips,
     required this.kgSold,
     required this.revenue,
     this.tripsPublished,
     this.parcelsSent,
-    this.period,
   });
 
   factory TripsSummaryModel.fromJson(Map<String, dynamic> json) =>
@@ -40,6 +36,5 @@ class TripsSummaryModel {
             0,
         tripsPublished: (json['tripsPublished'] as num?)?.toInt(),
         parcelsSent: (json['parcelsSent'] as num?)?.toInt(),
-        period: json['period'] as String?,
       );
 }

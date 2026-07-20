@@ -144,21 +144,14 @@ class BidRemoteDatasource {
   /// `/bids/me` ne renvoie que les bids créés en tant qu'expéditeur ; cet
   /// endpoint couvre le sens inverse.
   Future<TravelerBidsPage> getTravelerBids({
-    String? status,
-    String? tripId,
-    String? q,
     int page = 0,
     int size = 20,
   }) async {
+    // Filtrage et recherche restent côté client (TravelerBidsBloc charge
+    // tout) : pas de paramètres serveur tant qu'aucun appelant n'en a besoin.
     final response = await _apiClient.dio.get(
       '/travelers/me/bids',
-      queryParameters: {
-        if (status != null && status.isNotEmpty) 'status': status,
-        if (tripId != null && tripId.isNotEmpty) 'tripId': tripId,
-        if (q != null && q.isNotEmpty) 'q': q,
-        'page': page,
-        'size': size,
-      },
+      queryParameters: {'page': page, 'size': size},
     );
     return TravelerBidsPage.fromJson(response.data as Map<String, dynamic>);
   }

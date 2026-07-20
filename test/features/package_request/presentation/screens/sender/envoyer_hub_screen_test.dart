@@ -12,13 +12,11 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
-import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
@@ -56,21 +54,6 @@ void _unregisterIfPresent<T extends Object>() {
     getIt.unregister<T>();
   }
 }
-
-NegotiationThread _stubThread(NegotiationThreadStatus status) =>
-    NegotiationThread(
-      id: 't-${status.name}',
-      packageRequestId: 'pr-1',
-      travelerId: 'traveler-001',
-      currentPriceEur: 15,
-      roundsCount: 1,
-      travelerAvailableKg: 10,
-      travelerTravelDate: DateTime(2026, 8, 1),
-      lastActivityAt: DateTime(2026, 6, 1),
-      createdAt: DateTime(2026, 6, 1),
-      status: status,
-      messages: const [],
-    );
 
 PackageRequest _sampleRequest() => PackageRequest(
   id: 'pr-test',
@@ -218,7 +201,7 @@ void main() {
         await tester.pumpWidget(wrap());
         await tester.pump(const Duration(milliseconds: 400));
 
-        // Le corps est ShipmentListBody : sur une liste vide, son état vide.
+        // Le corps est ShipmentListScreen embedded : sur une liste vide, son état vide.
         expect(find.textContaining('Aucun envoi'), findsOneWidget);
         // Le hint de MyPackageRequestsBody n'est plus atteignable ici : les
         // demandes d'envoi ont migré vers l'écran Demandes du hub Activités.
@@ -246,86 +229,6 @@ void main() {
       expect(find.text('+ Nouveau'), findsOneWidget);
     });
 
-    testWidgets('HeaderPill "Mes trajets" absent quand onShowTrips == null', (
-      tester,
-    ) async {
-      await tester.pumpWidget(wrap());
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(find.byKey(const Key('show-trips-pill')), findsNothing);
-    });
-
-    testWidgets('HeaderPill "Mes trajets" présent quand onShowTrips != null', (
-      tester,
-    ) async {
-      final authBloc = _MockAuthBloc();
-      when(() => authBloc.state).thenReturn(
-        AuthAuthenticated(
-          UserModel(
-            id: 'u1',
-            roles: const ['SENDER'],
-            kycStatus: 'VERIFIED',
-            status: 'ACTIVE',
-          ),
-        ),
-      );
-      when(
-        () => authBloc.stream,
-      ).thenAnswer((_) => const Stream<AuthState>.empty());
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: authBloc),
-              BlocProvider<PaymentBloc>.value(value: paymentBloc),
-            ],
-            child: EnvoyerHubScreen(onShowTrips: () {}),
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(find.byKey(const Key('show-trips-pill')), findsOneWidget);
-    });
-
-    testWidgets('tap sur "Mes trajets" pill appelle onShowTrips', (
-      tester,
-    ) async {
-      var called = false;
-      final authBloc = _MockAuthBloc();
-      when(() => authBloc.state).thenReturn(
-        AuthAuthenticated(
-          UserModel(
-            id: 'u1',
-            roles: const ['SENDER'],
-            kycStatus: 'VERIFIED',
-            status: 'ACTIVE',
-          ),
-        ),
-      );
-      when(
-        () => authBloc.stream,
-      ).thenAnswer((_) => const Stream<AuthState>.empty());
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: authBloc),
-              BlocProvider<PaymentBloc>.value(value: paymentBloc),
-            ],
-            child: EnvoyerHubScreen(onShowTrips: () => called = true),
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 400));
-
-      await tester.tap(find.byKey(const Key('show-trips-pill')));
-      await tester.pump();
-
-      expect(called, isTrue);
-    });
   });
 
   // ── Back button regression tests ─────────────────────────────────────────────

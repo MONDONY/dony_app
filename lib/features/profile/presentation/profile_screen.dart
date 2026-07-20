@@ -7,13 +7,6 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
-import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/bloc/announcement_event.dart';
-import 'package:dony/features/matching/bloc/announcement_state.dart';
-import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_event.dart';
-import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/activate_card_payments_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/activity_hub_card.dart';
@@ -55,8 +48,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
-    context.read<BidBloc>().add(BidMyListRequested());
-    context.read<AnnouncementBloc>().add(AnnouncementListRequested());
     context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
   }
 
@@ -107,268 +98,244 @@ class _ProfileScreenState extends State<ProfileScreen>
             final isProAccount = user?.isProAccount ?? false;
             final displayName = user?.displayName ?? 'Utilisateur';
 
-            return BlocBuilder<BidBloc, BidState>(
-              builder: (context, bidState) {
-                return BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                  builder: (context, announcementState) {
-                    final announcements =
-                        announcementState is AnnouncementListLoaded
-                        ? announcementState.announcements
-                        : <AnnouncementModel>[];
-                    final activeAnnouncements = announcements
-                        .where(
-                          (a) =>
-                              a.status == 'ACTIVE' ||
-                              a.status == 'FULL' ||
-                              a.status == 'IN_PROGRESS',
-                        )
-                        .length;
+            return Builder(
+              builder: (context) {
+                final cs = Theme.of(context).colorScheme;
+                final topPad = MediaQuery.of(context).padding.top;
+                final contentHeight = (isTraveler && isSender)
+                    ? _kContentHeightDual
+                    : _kContentHeightSingle;
+                final offset = _scroll.hasClients
+                    ? _scroll.offset.clamp(0.0, double.infinity)
+                    : 0.0;
+                final progress = (offset / contentHeight).clamp(0.0, 1.0);
 
-                    final cs = Theme.of(context).colorScheme;
-                    final topPad = MediaQuery.of(context).padding.top;
-                    final contentHeight = (isTraveler && isSender)
-                        ? _kContentHeightDual
-                        : _kContentHeightSingle;
-                    final offset = _scroll.hasClients
-                        ? _scroll.offset.clamp(0.0, double.infinity)
-                        : 0.0;
-                    final progress = (offset / contentHeight).clamp(0.0, 1.0);
+                int completionSteps = user?.profileCompletionSteps ?? 0;
+                if (user?.phoneNumber?.isNotEmpty == true) {
+                  completionSteps++;
+                }
+                if (user?.email?.isNotEmpty == true) completionSteps++;
+                if (user?.isKycVerified == true) completionSteps++;
+                const totalCompletionSteps = UserModel.profileTotalSteps + 3;
+                final profileCompletionPercent = user != null
+                    ? completionSteps / totalCompletionSteps
+                    : 0.0;
+                final isProfileComplete = profileCompletionPercent >= 1.0;
+                final fallbackHeight =
+                    topPad +
+                    56.0 +
+                    contentHeight -
+                    (isProfileComplete ? _kProgressBarSectionHeight : 0.0);
+                // La hauteur mesurée inclut topPad (ProfileHeader le pose
+                // en padding). Or SliverAppBar ré-ajoute topPad par-dessus
+                // expandedHeight → l'extent vaudrait header+topPad et
+                // laisserait ~topPad de vide entre le header et les tabs.
+                // On retranche donc topPad ici.
+                final rawHeaderHeight = _measuredHeaderHeight ?? fallbackHeight;
+                final expandedHeight = (rawHeaderHeight - topPad).clamp(
+                  kToolbarHeight,
+                  double.infinity,
+                );
 
-                    int completionSteps = user?.profileCompletionSteps ?? 0;
-                    if (user?.phoneNumber?.isNotEmpty == true) {
-                      completionSteps++;
-                    }
-                    if (user?.email?.isNotEmpty == true) completionSteps++;
-                    if (user?.isKycVerified == true) completionSteps++;
-                    const totalCompletionSteps =
-                        UserModel.profileTotalSteps + 3;
-                    final profileCompletionPercent = user != null
-                        ? completionSteps / totalCompletionSteps
-                        : 0.0;
-                    final isProfileComplete = profileCompletionPercent >= 1.0;
-                    final fallbackHeight =
-                        topPad +
-                        56.0 +
-                        contentHeight -
-                        (isProfileComplete ? _kProgressBarSectionHeight : 0.0);
-                    // La hauteur mesurée inclut topPad (ProfileHeader le pose
-                    // en padding). Or SliverAppBar ré-ajoute topPad par-dessus
-                    // expandedHeight → l'extent vaudrait header+topPad et
-                    // laisserait ~topPad de vide entre le header et les tabs.
-                    // On retranche donc topPad ici.
-                    final rawHeaderHeight =
-                        _measuredHeaderHeight ?? fallbackHeight;
-                    final expandedHeight = (rawHeaderHeight - topPad).clamp(
-                      kToolbarHeight,
-                      double.infinity,
-                    );
+                final profileHeader = ProfileHeader(
+                  displayName: displayName,
+                  isTraveler: isTraveler,
+                  isSender: isSender,
+                  isKycVerified: isKycVerified,
+                  isProAccount: isProAccount,
+                  avatarUrl: user?.avatarUrl,
+                  phoneNumber: user?.phoneNumber,
+                  email: user?.email,
+                  city: user?.city,
+                  profileCompletionPercent: profileCompletionPercent,
+                  onEditProfile: () => context.push('/profile/edit'),
+                  topPadding: topPad,
+                );
 
-                    final profileHeader = ProfileHeader(
-                      displayName: displayName,
-                      isTraveler: isTraveler,
-                      isSender: isSender,
-                      isKycVerified: isKycVerified,
-                      isProAccount: isProAccount,
-                      avatarUrl: user?.avatarUrl,
-                      phoneNumber: user?.phoneNumber,
-                      email: user?.email,
-                      city: user?.city,
-                      profileCompletionPercent: profileCompletionPercent,
-                      onEditProfile: () => context.push('/profile/edit'),
-                      topPadding: topPad,
-                    );
+                // Mesure la hauteur réelle du header (sonde hors-écran) pour
+                // dimensionner l'AppBar exactement : zéro overflow, zéro gap,
+                // quel que soit le wrap des chips / le rôle / la barre.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  final box =
+                      _headerKey.currentContext?.findRenderObject()
+                          as RenderBox?;
+                  final h = box?.size.height;
+                  if (h != null &&
+                      (_measuredHeaderHeight == null ||
+                          (_measuredHeaderHeight! - h).abs() > 0.5)) {
+                    setState(() => _measuredHeaderHeight = h);
+                  }
+                });
 
-                    // Mesure la hauteur réelle du header (sonde hors-écran) pour
-                    // dimensionner l'AppBar exactement : zéro overflow, zéro gap,
-                    // quel que soit le wrap des chips / le rôle / la barre.
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      final box =
-                          _headerKey.currentContext?.findRenderObject()
-                              as RenderBox?;
-                      final h = box?.size.height;
-                      if (h != null &&
-                          (_measuredHeaderHeight == null ||
-                              (_measuredHeaderHeight! - h).abs() > 0.5)) {
-                        setState(() => _measuredHeaderHeight = h);
-                      }
-                    });
-
-                    return Stack(
-                      children: [
-                        // Sonde de mesure invisible (même config que l'en-tête
-                        // visible) — ne peint rien, ne prend pas de place.
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: Offstage(
-                            child: KeyedSubtree(
-                              key: _headerKey,
-                              child: profileHeader,
-                            ),
-                          ),
+                return Stack(
+                  children: [
+                    // Sonde de mesure invisible (même config que l'en-tête
+                    // visible) — ne peint rien, ne prend pas de place.
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Offstage(
+                        child: KeyedSubtree(
+                          key: _headerKey,
+                          child: profileHeader,
                         ),
-                        RefreshIndicator(
-                          color: cs.primary,
-                          onRefresh: () async {
-                            context.read<BidBloc>().add(BidMyListRequested());
-                            context.read<AnnouncementBloc>().add(
-                              AnnouncementListRequested(),
-                            );
-                          },
-                          child: NestedScrollView(
-                            controller: _scroll,
-                            headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                              // ── AppBar avec ProfileHeader existant ────
-                              SliverAppBar(
-                                expandedHeight: expandedHeight,
-                                pinned: true,
-                                elevation: 0,
-                                scrolledUnderElevation: 0,
-                                automaticallyImplyLeading: false,
-                                centerTitle: false,
-                                forceElevated: innerBoxIsScrolled,
-                                backgroundColor: cs.surface,
-                                surfaceTintColor: Colors.transparent,
-                                title: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Opacity(
-                                      opacity: progress,
-                                      child: DonyAvatar(
-                                        name: displayName,
-                                        imageUrl: user?.avatarUrl,
-                                        size: DonyAvatarSize.xs,
-                                        verified: isKycVerified,
-                                        pro: isProAccount,
-                                      ),
-                                    ),
-                                    const SizedBox(width: DonySpacing.sm),
-                                    Flexible(
-                                      child: Opacity(
-                                        opacity: progress,
-                                        child: Text(
-                                          displayName,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall!
-                                              .copyWith(
-                                                color: cs.onSurface,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                    if (isKycVerified) ...[
-                                      const SizedBox(width: DonySpacing.xs),
-                                      Opacity(
-                                        opacity: progress,
-                                        child: DonyIcon(
-                                          'badge-check',
-                                          size: 13,
-                                          color: isProAccount
-                                              ? DonyColors.kycBadgeGold
-                                              : DonyColors.kycBadgeBlue,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                actions: const [],
-                                flexibleSpace: FlexibleSpaceBar(
-                                  // none : pas de parallax/étirement du
-                                  // background (sinon il est agrandi puis
-                                  // décalé → vide entre header et tabs).
-                                  collapseMode: CollapseMode.none,
-                                  // Le background est forcé à la taille de
-                                  // l'extent du sliver. Au 1er frame (avant
-                                  // mesure de la sonde) `expandedHeight` peut
-                                  // sous-estimer la hauteur réelle du header
-                                  // (nom 2 lignes, chips qui wrap…) → la
-                                  // Column déborderait. Le ScrollView non
-                                  // scrollable laisse le header prendre sa
-                                  // hauteur naturelle : box trop courte =
-                                  // clip silencieux (zéro overflow), box
-                                  // correcte = rendu identique (top-aligné).
-                                  background: SingleChildScrollView(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    child: profileHeader,
-                                  ),
-                                ),
-                              ),
-                              // ── Tab bar sticky ────────────────────────
-                              SliverPersistentHeader(
-                                pinned: true,
-                                delegate: _ProfileTabBarDelegate(
-                                  tabBar: TabBar(
-                                    controller: _tabController,
-                                    labelColor: cs.primary,
-                                    unselectedLabelColor: cs.onSurfaceVariant,
-                                    indicatorColor: cs.primary,
-                                    indicatorSize: TabBarIndicatorSize.tab,
-                                    labelStyle: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                    unselectedLabelStyle: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(fontWeight: FontWeight.w500),
-                                    dividerColor: cs.outline.withValues(
-                                      alpha: 0.4,
-                                    ),
-                                    tabs: const [
-                                      Tab(
-                                        child: _TabItem(
-                                          // 'zap' → 'layout-grid' : cohérence avec le
-                                          // fix bottom nav (audit UX, main_shell.dart).
-                                          iconAsset: 'layout-grid',
-                                          label: 'Activité',
-                                        ),
-                                      ),
-                                      Tab(
-                                        child: _TabItem(
-                                          iconAsset: 'user-cog',
-                                          label: 'Compte',
-                                        ),
-                                      ),
-                                      Tab(
-                                        child: _TabItem(
-                                          iconAsset: 'sliders-horizontal',
-                                          label: 'Réglages',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  backgroundColor: cs.surface,
-                                ),
-                              ),
-                            ],
-                            body: TabBarView(
-                              controller: _tabController,
+                      ),
+                    ),
+                    RefreshIndicator(
+                      color: cs.primary,
+                      onRefresh: () async {
+                        context.read<AuthBloc>().add(
+                          const AuthProfileRefreshRequested(),
+                        );
+                      },
+                      child: NestedScrollView(
+                        controller: _scroll,
+                        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                          // ── AppBar avec ProfileHeader existant ────
+                          SliverAppBar(
+                            expandedHeight: expandedHeight,
+                            pinned: true,
+                            elevation: 0,
+                            scrolledUnderElevation: 0,
+                            automaticallyImplyLeading: false,
+                            centerTitle: false,
+                            forceElevated: innerBoxIsScrolled,
+                            backgroundColor: cs.surface,
+                            surfaceTintColor: Colors.transparent,
+                            title: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                _ActivityTab(
-                                  user: user,
-                                  isTraveler: isTraveler,
-                                  isSender: isSender,
-                                  activeAnnouncements: activeAnnouncements,
+                                Opacity(
+                                  opacity: progress,
+                                  child: DonyAvatar(
+                                    name: displayName,
+                                    imageUrl: user?.avatarUrl,
+                                    size: DonyAvatarSize.xs,
+                                    verified: isKycVerified,
+                                    pro: isProAccount,
+                                  ),
                                 ),
-                                _AccountTab(
-                                  user: user,
-                                  isTraveler: isTraveler,
-                                  isProAccount: isProAccount,
+                                const SizedBox(width: DonySpacing.sm),
+                                Flexible(
+                                  child: Opacity(
+                                    opacity: progress,
+                                    child: Text(
+                                      displayName,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                            color: cs.onSurface,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ),
-                                const _SettingsTab(),
+                                if (isKycVerified) ...[
+                                  const SizedBox(width: DonySpacing.xs),
+                                  Opacity(
+                                    opacity: progress,
+                                    child: DonyIcon(
+                                      'badge-check',
+                                      size: 13,
+                                      color: isProAccount
+                                          ? DonyColors.kycBadgeGold
+                                          : DonyColors.kycBadgeBlue,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
+                            actions: const [],
+                            flexibleSpace: FlexibleSpaceBar(
+                              // none : pas de parallax/étirement du
+                              // background (sinon il est agrandi puis
+                              // décalé → vide entre header et tabs).
+                              collapseMode: CollapseMode.none,
+                              // Le background est forcé à la taille de
+                              // l'extent du sliver. Au 1er frame (avant
+                              // mesure de la sonde) `expandedHeight` peut
+                              // sous-estimer la hauteur réelle du header
+                              // (nom 2 lignes, chips qui wrap…) → la
+                              // Column déborderait. Le ScrollView non
+                              // scrollable laisse le header prendre sa
+                              // hauteur naturelle : box trop courte =
+                              // clip silencieux (zéro overflow), box
+                              // correcte = rendu identique (top-aligné).
+                              background: SingleChildScrollView(
+                                physics: const NeverScrollableScrollPhysics(),
+                                child: profileHeader,
+                              ),
+                            ),
                           ),
+                          // ── Tab bar sticky ────────────────────────
+                          SliverPersistentHeader(
+                            pinned: true,
+                            delegate: _ProfileTabBarDelegate(
+                              tabBar: TabBar(
+                                controller: _tabController,
+                                labelColor: cs.primary,
+                                unselectedLabelColor: cs.onSurfaceVariant,
+                                indicatorColor: cs.primary,
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                labelStyle: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                                unselectedLabelStyle: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(fontWeight: FontWeight.w500),
+                                dividerColor: cs.outline.withValues(alpha: 0.4),
+                                tabs: const [
+                                  Tab(
+                                    child: _TabItem(
+                                      // 'zap' → 'layout-grid' : cohérence avec le
+                                      // fix bottom nav (audit UX, main_shell.dart).
+                                      iconAsset: 'layout-grid',
+                                      label: 'Activité',
+                                    ),
+                                  ),
+                                  Tab(
+                                    child: _TabItem(
+                                      iconAsset: 'user-cog',
+                                      label: 'Compte',
+                                    ),
+                                  ),
+                                  Tab(
+                                    child: _TabItem(
+                                      iconAsset: 'sliders-horizontal',
+                                      label: 'Réglages',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: cs.surface,
+                            ),
+                          ),
+                        ],
+                        body: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _ActivityTab(
+                              user: user,
+                              isTraveler: isTraveler,
+                              isSender: isSender,
+                            ),
+                            _AccountTab(
+                              user: user,
+                              isTraveler: isTraveler,
+                              isProAccount: isProAccount,
+                            ),
+                            const _SettingsTab(),
+                          ],
                         ),
-                      ],
-                    );
-                  },
+                      ),
+                    ),
+                  ],
                 );
               },
             );
@@ -440,13 +407,11 @@ class _ActivityTab extends StatelessWidget {
     required this.user,
     required this.isTraveler,
     required this.isSender,
-    required this.activeAnnouncements,
   });
 
   final UserModel? user;
   final bool isTraveler;
   final bool isSender;
-  final int activeAnnouncements;
 
   @override
   Widget build(BuildContext context) {

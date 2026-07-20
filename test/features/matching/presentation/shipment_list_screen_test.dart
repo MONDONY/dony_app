@@ -84,7 +84,7 @@ void main() {
         BlocProvider<BidBloc>.value(value: bidBloc),
         BlocProvider<PaymentBloc>.value(value: paymentBloc),
       ],
-      child: const ShipmentListBody(),
+      child: const ShipmentListScreen(embedded: true),
     ),
   );
 
@@ -143,7 +143,7 @@ void main() {
     expect(find.text('Réinitialiser'), findsOneWidget);
   });
 
-  testWidgets('mode standalone (embedded:false) affiche le header sombre « Mes envois »',
+  testWidgets('mode standalone (embedded:false) affiche le header sombre « Colis en route »',
       (tester) async {
     whenListen(
       bidBloc,
@@ -170,7 +170,7 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
-    expect(find.text('Mes envois'), findsOneWidget);
+    expect(find.text('Colis en route'), findsOneWidget);
   });
 
   testWidgets('état BidLoading affiche un spinner', (tester) async {
@@ -616,7 +616,7 @@ void main() {
     await tester.tap(find.text('go'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Mes envois'), findsOneWidget);
+    expect(find.text('Colis en route'), findsOneWidget);
     // Back button appears because canPop is true (pushed route)
     expect(find.byType(DonyAppBarBackButton), findsOneWidget);
   });

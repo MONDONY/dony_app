@@ -323,14 +323,14 @@ void main() {
 
   // ── Titre ─────────────────────────────────────────────────────────────────
 
-  testWidgets('titre "Mes envois" visible dans le header', (tester) async {
+  testWidgets('titre "Colis en route" visible dans le header', (tester) async {
     await _pump(
       tester,
       bidBloc: bidBloc,
       paymentBloc: paymentBloc,
       authBloc: authBloc,
     );
-    expect(find.text('Mes envois'), findsOneWidget);
+    expect(find.text('Colis en route'), findsOneWidget);
   });
 
   // ── Stepper ───────────────────────────────────────────────────────────────
@@ -688,9 +688,9 @@ void main() {
     expect(find.text('Envoi supprimé'), findsOneWidget);
   });
 
-  // ── Mode embedded (ShipmentListBody) ─────────────────────────────────────
+  // ── Mode embedded ─────────────────────────────────────
 
-  testWidgets('ShipmentListBody : rendu sans GoRouter, filter chips visibles',
+  testWidgets('Mode embedded : rendu sans GoRouter, filter chips visibles',
       (tester) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
@@ -708,7 +708,7 @@ void main() {
             BlocProvider<PaymentBloc>.value(value: paymentBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: const Scaffold(body: ShipmentListBody()),
+          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
         ),
       ),
     );
@@ -720,7 +720,7 @@ void main() {
   });
 
   testWidgets(
-    'ShipmentListBody : pas de header "Mes envois" en mode embedded',
+    'Mode embedded : pas de header "Colis en route" en mode embedded',
     (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
@@ -735,18 +735,18 @@ void main() {
               BlocProvider<PaymentBloc>.value(value: paymentBloc),
               BlocProvider<AuthBloc>.value(value: authBloc),
             ],
-            child: const Scaffold(body: ShipmentListBody()),
+            child: const Scaffold(body: ShipmentListScreen(embedded: true)),
           ),
         ),
       );
       await tester.pump(_kSettle);
 
-      // En mode embedded le header sombre (titre "Mes envois") n'est pas rendu.
-      expect(find.text('Mes envois'), findsNothing);
+      // En mode embedded le header sombre (titre "Colis en route") n'est pas rendu.
+      expect(find.text('Colis en route'), findsNothing);
     },
   );
 
-  testWidgets('ShipmentListBody : changement de puce fonctionne', (
+  testWidgets('Mode embedded : changement de puce fonctionne', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1400);
@@ -766,7 +766,7 @@ void main() {
             BlocProvider<PaymentBloc>.value(value: paymentBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: const Scaffold(body: ShipmentListBody()),
+          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
         ),
       ),
     );
@@ -1067,7 +1067,7 @@ void main() {
 
   // ── Embedded : puces En attente et En cours ─────────────────────────────
 
-  testWidgets('ShipmentListBody : puce "En attente" embedded fonctionne', (
+  testWidgets('Mode embedded : puce "En attente" embedded fonctionne', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1400);
@@ -1087,7 +1087,7 @@ void main() {
             BlocProvider<PaymentBloc>.value(value: paymentBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: const Scaffold(body: ShipmentListBody()),
+          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
         ),
       ),
     );

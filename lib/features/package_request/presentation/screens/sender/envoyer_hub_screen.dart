@@ -5,7 +5,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -20,14 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// « Envoyées » de l'écran Demandes (`/demandes`). Cet écran ne montre donc
 /// plus qu'une seule liste.
 class EnvoyerHubScreen extends StatefulWidget {
-  const EnvoyerHubScreen({
-    super.key,
-    this.onShowTrips,
-    this.showBackButton = false,
-  });
-
-  /// Si non nul, un bouton « Mes trajets » apparaît dans le header.
-  final VoidCallback? onShowTrips;
+  const EnvoyerHubScreen({super.key, this.showBackButton = false});
 
   /// Affiche un bouton retour quand l'écran est ouvert via `context.push`.
   final bool showBackButton;
@@ -43,7 +35,9 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
     getIt<PackageRequestBloc>().add(const FetchMyRequests());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(
-        getIt<AnalyticsService>().logScreen(AnalyticsEvents.envoyerEnvoisScreen),
+        getIt<AnalyticsService>().logScreen(
+          AnalyticsEvents.envoyerEnvoisScreen,
+        ),
       );
     });
   }
@@ -51,7 +45,9 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
   Future<void> _onNew() async {
     final created = await openPackageRequestWizard(context);
     if (created && mounted) {
-      context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+      // Singleton DI : le lookup par context échouerait ici, le State est
+      // au-dessus du MultiBlocProvider posé dans build().
+      getIt<PackageRequestBloc>().add(const RefreshMyRequests());
     }
   }
 
@@ -66,17 +62,16 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
       ],
       child: Builder(
         builder: (context) => Scaffold(
-          backgroundColor: const Color(0xFFF0F2F6),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SafeArea(
             bottom: false,
             child: Column(
               children: [
                 _EnvoyerHeader(
                   onNew: _onNew,
-                  onShowTrips: widget.onShowTrips,
                   showBackButton: widget.showBackButton,
                 ),
-                const Expanded(child: ShipmentListBody()),
+                const Expanded(child: ShipmentListScreen(embedded: true)),
               ],
             ),
           ),
@@ -89,16 +84,9 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
 // ── Header ───────────────────────────────────────────────────────────────────
 
 class _EnvoyerHeader extends StatelessWidget {
-  const _EnvoyerHeader({
-    required this.onNew,
-    this.onShowTrips,
-    this.showBackButton = false,
-  });
+  const _EnvoyerHeader({required this.onNew, this.showBackButton = false});
 
   final VoidCallback onNew;
-
-  /// Si non nul, affiche la pill « Mes trajets ».
-  final VoidCallback? onShowTrips;
 
   /// Affiche un bouton retour quand le hub est ouvert via `context.push`.
   final bool showBackButton;
@@ -120,21 +108,11 @@ class _EnvoyerHeader extends StatelessWidget {
           Text(
             'Envoyer',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: cs.onSurface,
-                  height: 1.1,
-                ),
+              color: cs.onSurface,
+              height: 1.1,
+            ),
           ),
           const Spacer(),
-          if (onShowTrips != null) ...[
-            HeaderPill(
-              key: const Key('show-trips-pill'),
-              label: 'Mes trajets',
-              iconAsset: 'plane-takeoff',
-              style: HeaderPillStyle.soft,
-              onTap: onShowTrips!,
-            ),
-            const SizedBox(width: DonySpacing.xs),
-          ],
           HeaderPill(label: '+ Nouveau', onTap: onNew),
         ],
       ),

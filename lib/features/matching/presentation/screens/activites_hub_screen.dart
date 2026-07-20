@@ -37,6 +37,12 @@ void _openRoute(BuildContext context, String event, String route) {
   context.push(route);
 }
 
+/// Compteur « Colis en route » — partagé entre la tuile et la détection
+/// d'activité, pour que les deux restent alignés sur [kEnvoisEnCours].
+int envoisEnCours(BidState state) => state is BidListLoaded
+    ? state.bids.where((b) => kEnvoisEnCours.contains(b.status)).length
+    : 0;
+
 /// Onglet Activités — hub unique, identique pour tous les utilisateurs.
 ///
 /// Remplace le dispatch par rôle de l'ancien `MatchingManagementScreen` : dans
@@ -52,7 +58,7 @@ class ActivitesHubScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
         BlocProvider(create: (_) => getIt<TravelerBidsBloc>()),
         BlocProvider(create: (_) => getIt<BidBloc>()),
-        BlocProvider(create: (_) => StatsPeriodCubit()),
+        BlocProvider(create: (_) => getIt<StatsPeriodCubit>()),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
       child: const _ActivitesHubView(),
@@ -83,7 +89,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   @override
   void initState() {
     super.initState();
-    // Le shell notifie ce singleton au retour sur l'onglet (main_shell.dart:49).
+    // Le shell notifie ce singleton au retour sur l'onglet (main_shell._onTap).
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
     _showIntro = !_introDismissed();
@@ -100,7 +106,8 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
       return getIt<HiveService>().userPrefs.get(
             HiveService.kHubIntroDismissed,
             defaultValue: false,
-          ) as bool;
+          )
+          as bool;
     } catch (_) {
       return true;
     }
@@ -155,15 +162,12 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     final travelerState = context.watch<TravelerBidsBloc>().state;
     final negoState = context.watch<NegotiationListBloc>().state;
 
-    final envoisEnCours = bidState is BidListLoaded
-        ? bidState.bids.where((b) => kEnvoisEnCours.contains(b.status)).length
-        : 0;
     final demandes = travelerState is TravelerBidsLoaded
         ? travelerState.pendingCount
         : 0;
 
     return (summary?.activeTrips ?? 0) > 0 ||
-        envoisEnCours > 0 ||
+        envoisEnCours(bidState) > 0 ||
         demandes > 0 ||
         negoState.activeCount > 0 ||
         (summary?.revenue ?? 0) > 0 ||
@@ -175,7 +179,16 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final showStats = _hasAnyActivity(context);
+    final summaryState = context.watch<TripsSummaryCubit>().state;
+    final period = context.watch<StatsPeriodCubit>().state;
+    // Trois portes gardent la section visible en plus de l'activité détectée :
+    // le chargement (pas de flash pendant un reload), et une période non par
+    // défaut — sinon sélectionner « 7 jours » à zéro ferait disparaître les
+    // chips, seul moyen de revenir à « 30 jours » (cul-de-sac).
+    final showStats =
+        _hasAnyActivity(context) ||
+        summaryState.status == TripsSummaryStatus.loading ||
+        period != StatsPeriod.thirtyDays;
 
     return Scaffold(
       body: SafeArea(
@@ -183,9 +196,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
         child: BlocListener<StatsPeriodCubit, StatsPeriod>(
           listener: (context, period) {
             _logEvent(AnalyticsEvents.activitesHubStatsPeriodChanged);
-            unawaited(
-              context.read<TripsSummaryCubit>().load(period: period),
-            );
+            unawaited(context.read<TripsSummaryCubit>().load(period: period));
           },
           child: RefreshIndicator(
             onRefresh: _onRefresh,
@@ -238,7 +249,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                 if (showStats) const SliverToBoxAdapter(child: _StatsRow()),
                 SliverPadding(
                   // Le shell monte cet écran avec extendBody: true — sans
-                  // cette réserve, les tuiles « Autres » passent sous la
+                  // cette réserve, les tuiles « Outils » passent sous la
                   // barre d'onglets.
                   padding: EdgeInsets.fromLTRB(
                     DonySpacing.lg,
@@ -432,7 +443,7 @@ class _ActionRow extends StatelessWidget {
           child: FilledButton.icon(
             key: const Key('hub-publish-trip'),
             onPressed: onPublishTrip,
-            icon: const DonyIcon('send', size: 16, color: Colors.white),
+            icon: DonyIcon('send', size: 16, color: cs.onPrimary),
             label: const Text('Publier un trajet'),
           ),
         ),
@@ -452,9 +463,7 @@ class _ActionRow extends StatelessWidget {
               side: BorderSide(color: cs.secondary.withValues(alpha: 0.35)),
               // Le rembourrage par défaut d'OutlinedButton.icon fait passer le
               // libellé sur deux lignes une fois la largeur partagée en deux.
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
             ),
           ),
         ),
@@ -496,12 +505,7 @@ class _ActivityGrid extends StatelessWidget {
 
     final shipments = BlocBuilder<BidBloc, BidState>(
       builder: (context, state) {
-        final loaded = state is BidListLoaded ? state : null;
-        final count = loaded == null
-            ? 0
-            : loaded.bids
-                  .where((b) => kEnvoisEnCours.contains(b.status))
-                  .length;
+        final count = envoisEnCours(state);
         return ActivityTile(
           key: const Key('hub-tile-shipments'),
           iconName: 'package',
@@ -698,7 +702,7 @@ class _StatsRow extends StatelessWidget {
   }
 }
 
-// ── Autres ───────────────────────────────────────────────────────────────────
+// ── Outils ───────────────────────────────────────────────────────────────────
 
 class _OtherTile extends StatelessWidget {
   const _OtherTile({

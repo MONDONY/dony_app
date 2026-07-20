@@ -38,17 +38,6 @@ class ShipmentListScreen extends StatelessWidget {
   );
 }
 
-/// Body extrait pour usage comme corps du hub `EnvoyerHubScreen`.
-///
-/// Délègue à [ShipmentListScreen] en mode `embedded: true`.
-class ShipmentListBody extends StatelessWidget {
-  const ShipmentListBody({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      const ShipmentListScreen(embedded: true);
-}
-
 class _ShipmentListContent extends StatefulWidget {
   const _ShipmentListContent({required this.embedded});
   final bool embedded;
@@ -374,7 +363,7 @@ class _DarkHeader extends StatelessWidget {
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
-                    'Mes envois',
+                    'Colis en route',
                     style: tt.titleLarge?.copyWith(
                       color: Colors.white,
                       fontSize: 18,
