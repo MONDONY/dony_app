@@ -62,6 +62,15 @@ class DemandesScreen extends StatelessWidget {
   }
 }
 
+/// Variante de test : les blocs sont fournis par le contexte parent.
+@visibleForTesting
+class DemandesScreenTesting extends StatelessWidget {
+  const DemandesScreenTesting({super.key});
+
+  @override
+  Widget build(BuildContext context) => const _DemandesView();
+}
+
 class _DemandesView extends StatefulWidget {
   const _DemandesView();
 
@@ -107,32 +116,20 @@ class _DemandesViewState extends State<_DemandesView> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(
-              hp,
-              DonySpacing.md,
-              hp,
-              DonySpacing.sm,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _TabButton(
-                    key: const Key('demandes-tab-recues'),
-                    label: 'Reçues',
-                    selected: _tab == DemandesTab.recues,
-                    onTap: () => _selectTab(DemandesTab.recues),
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                Expanded(
-                  child: _TabButton(
-                    key: const Key('demandes-tab-envoyees'),
-                    label: 'Envoyées',
-                    selected: _tab == DemandesTab.envoyees,
-                    onTap: () => _selectTab(DemandesTab.envoyees),
-                  ),
-                ),
-              ],
+            padding: EdgeInsets.fromLTRB(hp, DonySpacing.md, hp, DonySpacing.sm),
+            // Le badge « à traiter » du volet Reçues vit sur le toggle : c'est
+            // l'information qui décide où l'utilisateur doit aller en premier.
+            child: BlocBuilder<TravelerBidsBloc, TravelerBidsState>(
+              builder: (context, state) {
+                final pending = state is TravelerBidsLoaded
+                    ? state.pendingCount
+                    : 0;
+                return _RoleSegmented(
+                  selected: _tab,
+                  recuesBadge: pending,
+                  onSelect: _selectTab,
+                );
+              },
             ),
           ),
           Expanded(
@@ -147,27 +144,141 @@ class _DemandesViewState extends State<_DemandesView> {
   }
 }
 
-// ── Segmented ────────────────────────────────────────────────────────────────
+// ── Segmented control de rôle ─────────────────────────────────────────────────
 
-/// Volet de l'en-tête, rendu par [DonyChip] pour rester aligné sur les chips de
-/// filtre juste en dessous. `Center` parce que le chip se dimensionne sur son
-/// contenu alors qu'ici il occupe une moitié de la largeur.
-class _TabButton extends StatelessWidget {
-  const _TabButton({
+/// Bascule Reçues / Envoyées : une seule surface connectée avec une capsule
+/// qui glisse, plutôt que deux pastilles séparées. Le rôle est le choix le plus
+/// structurant de l'écran, il doit se lire comme un vrai contrôle unique.
+class _RoleSegmented extends StatelessWidget {
+  const _RoleSegmented({
+    required this.selected,
+    required this.recuesBadge,
+    required this.onSelect,
+  });
+
+  final DemandesTab selected;
+  final int recuesBadge;
+  final ValueChanged<DemandesTab> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.all(DonySpacing.xs),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DonyRadius.lg),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final segWidth = constraints.maxWidth / 2;
+          return Stack(
+            children: [
+              AnimatedAlign(
+                duration: DonyDuration.base,
+                curve: DonyCurve.easeOut,
+                alignment: selected == DemandesTab.recues
+                    ? Alignment.centerLeft
+                    : Alignment.centerRight,
+                child: Container(
+                  width: segWidth,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    boxShadow: DonyShadows.card,
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _RoleSegLabel(
+                      key: const Key('demandes-tab-recues'),
+                      label: 'Reçues',
+                      badge: recuesBadge,
+                      selected: selected == DemandesTab.recues,
+                      onTap: () => onSelect(DemandesTab.recues),
+                    ),
+                  ),
+                  Expanded(
+                    child: _RoleSegLabel(
+                      key: const Key('demandes-tab-envoyees'),
+                      label: 'Envoyées',
+                      badge: 0,
+                      selected: selected == DemandesTab.envoyees,
+                      onTap: () => onSelect(DemandesTab.envoyees),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RoleSegLabel extends StatelessWidget {
+  const _RoleSegLabel({
     super.key,
     required this.label,
+    required this.badge,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
+  final int badge;
   final bool selected;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: DonyChip(label: label, selected: selected, onTap: onTap),
-  );
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: tt.labelLarge?.copyWith(
+              color: selected ? cs.onSurface : cs.onSurfaceVariant,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+          if (badge > 0) ...[
+            const SizedBox(width: DonySpacing.xs),
+            Container(
+              constraints: const BoxConstraints(minWidth: 18),
+              height: 18,
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: cs.error,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Text(
+                badge > 99 ? '99+' : '$badge',
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onError,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 // ── Volet « Reçues » ─────────────────────────────────────────────────────────
@@ -424,6 +535,10 @@ class _EmptyForFilter extends StatelessWidget {
       ),
     };
 
+    // Sur « À traiter », l'écran vide invite à agir plutôt que de rester une
+    // impasse ; les autres filtres sont des archives, sans action.
+    final showAction = filter == TravelerBidFilter.aTraiter;
+
     // ListView pour que le pull-to-refresh reste possible sur un écran vide.
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -433,6 +548,17 @@ class _EmptyForFilter extends StatelessWidget {
           mascotte: DonyMascotteType.assis,
           title: title,
           description: description,
+          actionLabel: showAction ? 'Publier un trajet' : null,
+          onAction: showAction
+              ? () {
+                  unawaited(
+                    getIt<AnalyticsService>().logEvent(
+                      AnalyticsEvents.activitesHubTripCreateOpened,
+                    ),
+                  );
+                  context.push('/trips/create');
+                }
+              : null,
         ),
       ],
     );
