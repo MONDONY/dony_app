@@ -51,7 +51,7 @@ void main() {
 
       expect(
         find.textContaining(
-          'Le paiement se fait en main propre au voyageur — '
+          'Le paiement se fait en main propre au voyageur, '
           'dony ne séquestre pas votre argent et ne peut pas le rembourser '
           'automatiquement en cas de litige.',
         ),

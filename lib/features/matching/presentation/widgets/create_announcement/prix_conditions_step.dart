@@ -840,7 +840,7 @@ class PrixConditionsStep extends StatelessWidget {
               ],
             ),
             subtitle: Text(
-              'Non configuré — activez pour proposer le paiement sécurisé',
+              'Non configuré, activez pour proposer le paiement sécurisé',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             contentPadding: const EdgeInsets.symmetric(

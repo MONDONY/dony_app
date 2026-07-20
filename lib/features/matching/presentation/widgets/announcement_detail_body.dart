@@ -218,7 +218,7 @@ class AnnouncementDetailBody extends StatelessWidget {
             type: DonyStatusBannerType.warning,
             iconAsset: 'triangle-alert',
             message: 'Trajet en espèces uniquement. Beaucoup d\'expéditeurs '
-                'préfèrent payer par carte — activez cette option pour '
+                'préfèrent payer par carte, activez cette option pour '
                 'augmenter vos chances de recevoir des colis.',
             action: TextButton(
               key: const Key('activate-card-payments-cta'),

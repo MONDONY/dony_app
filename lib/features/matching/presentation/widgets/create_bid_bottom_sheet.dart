@@ -1795,7 +1795,7 @@ class _CashEscrowWarning extends StatelessWidget {
         const SizedBox(width: DonySpacing.xs),
         Expanded(
           child: Text(
-            'Paiement en espèces : pas de séquestre — vous payez le voyageur '
+            'Paiement en espèces : pas de séquestre, vous payez le voyageur '
             'directement, sans garantie de remboursement par dony.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),

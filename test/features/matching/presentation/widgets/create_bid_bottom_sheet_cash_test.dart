@@ -444,7 +444,7 @@ void main() {
       // Note D5 : absence de séquestre en paiement cash.
       expect(
         find.textContaining(
-          'Paiement en espèces : pas de séquestre — vous payez le voyageur '
+          'Paiement en espèces : pas de séquestre, vous payez le voyageur '
           'directement, sans garantie de remboursement par dony.',
         ),
         findsOneWidget,
