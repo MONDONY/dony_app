@@ -7,10 +7,17 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -65,6 +72,11 @@ class _MockNegotiationBloc
     extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
+class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
+
 // ── Mock Services / Repos ─────────────────────────────────────────────────────
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
@@ -92,16 +104,51 @@ _MockStripeAccountBloc _makeStripeBloc() {
   return b;
 }
 
-/// Wraps [child] in a GoRouter + MaterialApp with a `StripeAccountBloc`
-/// provided at the app level (the screen reads it but does not create it).
-Widget _wrapWithRouter(Widget child) {
+/// Returns a `UserModel` with a KYC-verified status by default — the
+/// baseline for every existing test in this file (publishing must not be
+/// blocked unless a test explicitly opts into a non-verified user).
+UserModel _makeUser({String kycStatus = 'VERIFIED'}) => UserModel(
+      id: 'user-test-1',
+      roles: const ['TRAVELER'],
+      kycStatus: kycStatus,
+      status: 'ACTIVE',
+    );
+
+/// Creates a `MockAuthBloc`. Defaults to a KYC-verified authenticated user so
+/// the publish gate added in Task 5 doesn't intercept pre-existing tests.
+_MockAuthBloc _makeAuthBloc([AuthState? state]) {
+  final b = _MockAuthBloc();
+  when(() => b.state).thenReturn(state ?? AuthAuthenticated(_makeUser()));
+  when(() => b.stream).thenAnswer((_) => const Stream.empty());
+  return b;
+}
+
+/// Creates a `MockKycBloc` with an idle initial state — only exercised by
+/// tests where the KYC gate actually opens `KycOnboardingBottomSheet`.
+_MockKycBloc _makeKycBloc() {
+  final b = _MockKycBloc();
+  when(() => b.state).thenReturn(const KycInitial());
+  when(() => b.stream).thenAnswer((_) => const Stream.empty());
+  return b;
+}
+
+/// Wraps [child] in a GoRouter + MaterialApp with a `StripeAccountBloc` and
+/// an `AuthBloc` provided at the app level (the screen reads them but does
+/// not create its own `AuthBloc` — mirrors production, where `AuthBloc` is
+/// provided ambient at the app root). [authState] lets tests opt into a
+/// non-verified user to exercise the KYC publish gate (Task 5).
+Widget _wrapWithRouter(Widget child, {AuthState? authState}) {
   final router = GoRouter(
     initialLocation: '/trips/create',
     routes: [
       GoRoute(
         path: '/trips/create',
-        builder: (_, __) => BlocProvider<StripeAccountBloc>.value(
-          value: _makeStripeBloc(),
+        builder: (_, __) => MultiBlocProvider(
+          providers: [
+            BlocProvider<StripeAccountBloc>.value(value: _makeStripeBloc()),
+            BlocProvider<AuthBloc>.value(value: _makeAuthBloc(authState)),
+            BlocProvider<KycBloc>.value(value: _makeKycBloc()),
+          ],
           child: child,
         ),
       ),
@@ -109,6 +156,12 @@ Widget _wrapWithRouter(Widget child) {
       GoRoute(
         path: '/',
         builder: (_, __) => const Scaffold(body: SizedBox()),
+      ),
+      // Destination of the "Activer les paiements par carte" CTA.
+      GoRoute(
+        path: '/connect/onboarding/intro',
+        builder: (_, __) =>
+            const Scaffold(body: Text('stripe-onboarding-intro')),
       ),
     ],
   );
@@ -885,6 +938,115 @@ void main() {
 
         // Screen still present (mock bloc doesn't emit AnnouncementUpdated)
         expect(find.byType(CreateTripScreen), findsOneWidget);
+      },
+    );
+  });
+
+  // ── Group: Task 5 — publication sans Stripe + gate KYC ───────────────────────
+  // Ce groupe capture l'instance `AnnouncementBloc` créée par l'écran (au lieu
+  // du factory générique de setUpAll) pour pouvoir `verify()` les events
+  // dispatchés par _submit().
+
+  group('CreateTripScreen — Task 5 : publication sans Stripe + gate KYC', () {
+    late _MockAnnouncementBloc announcementBloc;
+
+    setUp(() {
+      announcementBloc = _MockAnnouncementBloc();
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(() => announcementBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() {
+        final b = _MockAnnouncementBloc();
+        when(() => b.state).thenReturn(AnnouncementInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+    });
+
+    /// Navigue jusqu'à l'étape 2 (mode édition, "Enregistrer") avec un
+    /// `AnnouncementModel` complet. `_wrapWithRouter`'s `_makeStripeBloc()`
+    /// reste sur `StripeAccountInitial()` (Stripe non configuré) — le
+    /// comportement par défaut de tout ce fichier de tests.
+    Future<void> navigateToStep2(WidgetTester tester, {AuthState? authState}) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args), authState: authState),
+      );
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Enregistrer'), findsOneWidget);
+    }
+
+    testWidgets(
+      'paymentMethods sans Stripe configuré : CASH inclus, STRIPE absent (jamais vide)',
+      (tester) async {
+        await navigateToStep2(tester);
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        verify(() => announcementBloc.add(any(
+              that: predicate<AnnouncementEvent>(
+                (e) =>
+                    e is AnnouncementUpdateRequested &&
+                    e.acceptedPaymentMethods.contains('CASH') &&
+                    !e.acceptedPaymentMethods.contains('STRIPE'),
+                'AnnouncementUpdateRequested sans STRIPE, avec CASH forcé',
+              ),
+            ))).called(1);
+      },
+    );
+
+    testWidgets(
+      'gate KYC — utilisateur non vérifié : bloque le dispatch et ouvre KycOnboardingBottomSheet',
+      (tester) async {
+        await navigateToStep2(
+          tester,
+          authState: AuthAuthenticated(_makeUser(kycStatus: 'PENDING')),
+        );
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pumpAndSettle();
+
+        verifyNever(() => announcementBloc.add(any()));
+        expect(find.text('Vérifiez votre identité'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'gate KYC — utilisateur vérifié : ne bloque pas, dispatch normalement',
+      (tester) async {
+        await navigateToStep2(
+          tester,
+          authState: AuthAuthenticated(_makeUser()),
+        );
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        verify(() => announcementBloc.add(any(
+              that: predicate<AnnouncementEvent>(
+                (e) => e is AnnouncementUpdateRequested,
+                'AnnouncementUpdateRequested dispatché',
+              ),
+            ))).called(1);
       },
     );
   });

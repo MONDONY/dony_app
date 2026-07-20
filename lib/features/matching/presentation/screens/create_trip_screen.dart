@@ -6,8 +6,11 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -291,96 +294,64 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 }
 
                 // ── Étape 2 — Mode création : Aperçu ──
+                // Publiable sans Stripe configuré (cash-only) — Stripe n'est
+                // plus une condition bloquante ici, seule la section paiement
+                // (PrixConditionsStep) reflète le verrouillage de la carte.
                 return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                   builder: (ctx, annState) {
                     final isLoading = annState is AnnouncementLoading;
-                    return BlocBuilder<StripeAccountBloc, StripeAccountState>(
-                      builder: (ctx3, stripeState) {
-                        final isStripeConfigured =
-                            stripeState is StripeAccountReady &&
-                                stripeState.accountStatus.isComplete;
-
-                        if (!isStripeConfigured) {
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: DonyButton(
-                                  label: 'Retour',
-                                  variant: DonyButtonVariant.secondary,
-                                  icon: DonyIcons.back,
-                                  onPressed: () =>
-                                      _currentStepNotifier.value = step - 1,
-                                ),
+                    return BlocBuilder<AnnouncementFormBloc,
+                        AnnouncementFormState>(
+                      builder: (ctx2, formState) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: DonyButton(
+                                label: 'Retour',
+                                variant: DonyButtonVariant.secondary,
+                                icon: DonyIcons.back,
+                                onPressed: () =>
+                                    _currentStepNotifier.value = step - 1,
                               ),
-                              const SizedBox(width: DonySpacing.sm),
-                              Expanded(
-                                child: DonyButton(
-                                  key: const Key('configure-stripe-btn'),
-                                  label: 'Configurer Stripe',
-                                  onPressed: () =>
-                                      ctx3.push('/connect/onboarding/intro'),
-                                ),
+                            ),
+                            const SizedBox(width: DonySpacing.sm),
+                            Expanded(
+                              child: DonyButton(
+                                key: const Key('create-announcement-preview'),
+                                label: 'Aperçu',
+                                iconRight: DonyIcons.arrowRight,
+                                isLoading: isLoading,
+                                onPressed: (canSubmit && !isLoading)
+                                    ? () {
+                                        AnnouncementPreviewSheet.show(
+                                          ctx2,
+                                          formState: ctx2
+                                              .read<AnnouncementFormBloc>()
+                                              .state,
+                                          onConfirm: () {
+                                            // Intentional: closes the preview sheet,
+                                            // not the CreateTripScreen.
+                                            Navigator.of(ctx2,
+                                                    rootNavigator: true)
+                                                .pop();
+                                            _submit?.call();
+                                          },
+                                          onSaveDraft: () {
+                                            // Même fermeture du sheet que onConfirm.
+                                            Navigator.of(ctx2,
+                                                    rootNavigator: true)
+                                                .pop();
+                                            _submit?.call(saveAsDraft: true);
+                                          },
+                                          isSubmitting: isLoading,
+                                          departureTime:
+                                              _departureTimeNotifier.value,
+                                        );
+                                      }
+                                    : null,
                               ),
-                            ],
-                          );
-                        }
-
-                        return BlocBuilder<AnnouncementFormBloc,
-                            AnnouncementFormState>(
-                          builder: (ctx2, formState) {
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: DonyButton(
-                                    label: 'Retour',
-                                    variant: DonyButtonVariant.secondary,
-                                    icon: DonyIcons.back,
-                                    onPressed: () =>
-                                        _currentStepNotifier.value = step - 1,
-                                  ),
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: DonyButton(
-                                    key:
-                                        const Key('create-announcement-preview'),
-                                    label: 'Aperçu',
-                                    iconRight: DonyIcons.arrowRight,
-                                    isLoading: isLoading,
-                                    onPressed: (canSubmit && !isLoading)
-                                        ? () {
-                                            AnnouncementPreviewSheet.show(
-                                              ctx2,
-                                              formState: ctx2
-                                                  .read<AnnouncementFormBloc>()
-                                                  .state,
-                                              onConfirm: () {
-                                                // Intentional: closes the preview sheet,
-                                                // not the CreateTripScreen.
-                                                Navigator.of(ctx2,
-                                                        rootNavigator: true)
-                                                    .pop();
-                                                _submit?.call();
-                                              },
-                                              onSaveDraft: () {
-                                                // Même fermeture du sheet que onConfirm.
-                                                Navigator.of(ctx2,
-                                                        rootNavigator: true)
-                                                    .pop();
-                                                _submit
-                                                    ?.call(saveAsDraft: true);
-                                              },
-                                              isSubmitting: isLoading,
-                                              departureTime:
-                                                  _departureTimeNotifier.value,
-                                            );
-                                          }
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                            ),
+                          ],
                         );
                       },
                     );
@@ -877,7 +848,24 @@ class _TripFormContentState extends State<_TripFormContent> {
     return '$h:$m';
   }
 
+  /// Onboarding Stripe complet ? Lu depuis le `StripeAccountBloc` fourni par
+  /// l'écran parent. Utilisé pour ne jamais soumettre une liste de méthodes
+  /// de paiement vide (cash forcé quand Stripe n'est pas configuré).
+  bool _isStripeConfigured() {
+    final state = context.read<StripeAccountBloc>().state;
+    return state is StripeAccountReady && state.accountStatus.isComplete;
+  }
+
   void _submit({bool saveAsDraft = false}) {
+    // Gate KYC — inchangé pour le reste du flux, nouveau uniquement ici :
+    // publier/modifier un trajet nécessite une identité vérifiée. Si ce n'est
+    // pas le cas, on ouvre l'onboarding KYC au lieu d'appeler l'API.
+    final user = context.read<AuthBloc>().state.currentUser;
+    if (user != null && !user.isKycVerified) {
+      unawaited(KycOnboardingBottomSheet.show(context));
+      return;
+    }
+
     final departureCity = _departureCityNotifier.value;
     final arrivalCity = _arrivalCityNotifier.value;
     final departureDate = _departureDateNotifier.value;
@@ -961,7 +949,14 @@ class _TripFormContentState extends State<_TripFormContent> {
       return;
     }
 
-    final paymentMethods = ['STRIPE', if (_cashEnabledNotifier.value) 'CASH'];
+    // Publiable sans Stripe (cash-only) : STRIPE n'est inclus que si
+    // configuré, et CASH est forcé quand Stripe ne l'est pas — la liste ne
+    // peut jamais être vide (au moins une méthode de paiement est requise).
+    final stripeConfigured = _isStripeConfigured();
+    final paymentMethods = [
+      if (stripeConfigured) 'STRIPE',
+      if (_cashEnabledNotifier.value || !stripeConfigured) 'CASH',
+    ];
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();

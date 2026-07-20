@@ -28,6 +28,7 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -269,6 +270,97 @@ void main() {
       );
       // La bannière contient "Connectez Stripe"
       expect(find.textContaining('Connectez Stripe'), findsOneWidget);
+    });
+
+    // ── Task 5 — section paiement inversée (cash libre, carte verrouillée) ──
+
+    testWidgets(
+        'Stripe non configuré — cash actif et forcé, carte verrouillée avec CTA',
+        (tester) async {
+      await _pump(tester, stripeState: _stripeNotConfiguredState);
+
+      expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+      final cashSwitch = tester.widget<SwitchListTile>(
+          find.byKey(const Key('payment-method-cash')));
+      expect(cashSwitch.value, isTrue, reason: 'CASH forcé ON sans Stripe');
+      expect(cashSwitch.onChanged, isNull,
+          reason: 'CASH non désactivable (≥1 méthode requise)');
+
+      final stripeSwitch = tester.widget<SwitchListTile>(
+          find.byKey(const Key('payment-method-stripe')));
+      expect(stripeSwitch.value, isFalse);
+      expect(stripeSwitch.onChanged, isNull,
+          reason: 'Carte verrouillée sans Stripe configuré');
+
+      expect(find.text('Activer les paiements par carte'), findsOneWidget);
+    });
+
+    testWidgets(
+        'CTA "Activer les paiements par carte" pousse /connect/onboarding/intro',
+        (tester) async {
+      final mockStripeBloc = _MockStripeAccountBloc();
+      when(() => mockStripeBloc.state).thenReturn(_stripeNotConfiguredState);
+      when(() => mockStripeBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
+      final mockCommissionBloc = _MockCommissionMethodBloc();
+      when(() => mockCommissionBloc.state)
+          .thenReturn(CommissionMethodNotConfigured());
+      when(() => mockCommissionBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => Scaffold(
+              body: MultiBlocProvider(
+                providers: [
+                  BlocProvider<AnnouncementFormBloc>(
+                    create: (_) => AnnouncementFormBloc(),
+                  ),
+                  BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
+                  BlocProvider<CommissionMethodBloc>.value(
+                      value: mockCommissionBloc),
+                ],
+                child: SingleChildScrollView(
+                  child: PrixConditionsStep(
+                    priceOptionNotifier: ValueNotifier<int>(0),
+                    customPriceNotifier: ValueNotifier<double>(0),
+                    availableKgNotifier: ValueNotifier<double>(10),
+                    cashEnabledNotifier: ValueNotifier<bool>(false),
+                    kgPriceEnabledNotifier: ValueNotifier<bool>(true),
+                    selectedContentNotifier: ValueNotifier<Set<String>>({}),
+                    customAcceptedNotifier: ValueNotifier<Set<String>>({}),
+                    refusedTypesNotifier: ValueNotifier<Set<String>>({}),
+                    catalogLabelsNotifier: ValueNotifier<List<String>>(
+                      fallbackCatalog.map((c) => c.label).toList(),
+                    ),
+                    descriptionCtrl: TextEditingController(),
+                    customAcceptedCtrl: TextEditingController(),
+                    refusedCtrl: TextEditingController(),
+                    customPriceCtrl: TextEditingController(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/connect/onboarding/intro',
+            builder: (context, state) =>
+                const Scaffold(body: Text('stripe-onboarding-intro')),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('activate-card-payments-cta')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('stripe-onboarding-intro'), findsOneWidget);
     });
 
     // ── Section CE QUE J'ACCEPTE ──────────────────────────────────────────────
