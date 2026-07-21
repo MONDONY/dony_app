@@ -199,13 +199,13 @@ void main() {
       expect(find.text('Envoyer'), findsOneWidget);
     });
 
-    testWidgets('rend les 2 onglets Envois / Demandes (Négos fusionné)',
+    testWidgets('rend une seule liste, sans onglets internes',
         (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.textContaining('Demandes'), findsWidgets);
-      expect(find.textContaining('Envois'), findsWidgets);
-      // L'onglet Négos a été fusionné dans Demandes.
+      // Les demandes d'envoi ont migré vers l'écran Demandes du hub Activités ;
+      // l'écran Envoyer ne montre plus que les envois.
+      expect(find.text('Demandes'), findsNothing);
       expect(find.textContaining('Négos'), findsNothing);
     });
 

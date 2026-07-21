@@ -62,12 +62,12 @@ class AnnouncementRepository {
       _remoteDatasource.publishAnnouncement(id);
 
   Future<({List<AnnouncementModel> announcements, int totalElements})>
-      getMyAnnouncements() async {
+  getMyAnnouncements() async {
     return _remoteDatasource.getMyAnnouncements();
   }
 
-  Future<TripsSummaryModel> getTripsSummary() async {
-    return _remoteDatasource.getTripsSummary();
+  Future<TripsSummaryModel> getTripsSummary({required String period}) async {
+    return _remoteDatasource.getTripsSummary(period: period);
   }
 
   Future<AnnouncementModel> getAnnouncementDetail(String id) async {

@@ -1,0 +1,173 @@
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:flutter/material.dart';
+
+/// Tuile d'activité du hub — icône, compteur, libellé.
+///
+/// Le compteur peut être en chargement ou indisponible, mais la tuile reste
+/// toujours cliquable : c'est l'écran de destination qui gère son propre état
+/// d'erreur, pas le hub.
+class ActivityTile extends StatelessWidget {
+  const ActivityTile({
+    super.key,
+    required this.iconName,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.value,
+    required this.label,
+    required this.onTap,
+    this.subtitle,
+    this.emptyHint,
+    this.isLoading = false,
+    this.hasError = false,
+    this.showNotificationDot = false,
+  });
+
+  /// Nom du SVG dans `assets/icons/`, sans extension.
+  final String iconName;
+  final Color iconColor;
+  final Color iconBackground;
+
+  /// Valeur affichée. Ignorée si [isLoading] ou [hasError].
+  final int value;
+  final String label;
+
+  /// Une ligne qui explique le domaine à un nouvel utilisateur
+  /// (« Des colis à transporter pour vous »).
+  final String? subtitle;
+
+  /// Remplace le compteur quand il vaut zéro : un « 0 » nu ne dit rien à un
+  /// novice, une invite (« Publiez un trajet ») fait de la tuile un tutoriel.
+  final String? emptyHint;
+
+  final VoidCallback onTap;
+  final bool isLoading;
+  final bool hasError;
+
+  /// Affiche une pastille colorée au lieu du chevron — pour les domaines qui
+  /// appellent une action de l'utilisateur.
+  final bool showNotificationDot;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return DonyCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(DonySpacing.base),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DonyIconContainer(
+                iconAsset: iconName,
+                size: DonyIconContainerSize.sm,
+                backgroundColor: iconBackground,
+                iconColor: iconColor,
+                borderRadius: DonyRadius.iconBtn,
+              ),
+              const SizedBox(height: DonySpacing.md),
+              _ValueText(
+                value: value,
+                isLoading: isLoading,
+                hasError: hasError,
+                emptyHint: emptyHint,
+                accentColor: iconColor,
+              ),
+              const SizedBox(height: DonySpacing.xxs),
+              Text(
+                label,
+                style: tt.titleSmall,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: DonySpacing.xxs),
+                Text(
+                  subtitle!,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: showNotificationDot
+                ? Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: iconColor,
+                      shape: BoxShape.circle,
+                    ),
+                  )
+                : DonyIcon(
+                    'chevron-right',
+                    size: 16,
+                    color: cs.onSurfaceVariant,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ValueText extends StatelessWidget {
+  const _ValueText({
+    required this.value,
+    required this.isLoading,
+    required this.hasError,
+    required this.emptyHint,
+    required this.accentColor,
+  });
+
+  final int value;
+  final bool isLoading;
+  final bool hasError;
+  final String? emptyHint;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    if (isLoading) {
+      return Container(
+        width: 32,
+        height: 22,
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.xs),
+        ),
+      );
+    }
+
+    if (!hasError && value == 0 && emptyHint != null) {
+      return Text(
+        emptyHint!,
+        style: tt.bodySmall?.copyWith(
+          color: accentColor,
+          fontWeight: FontWeight.w600,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    return Text(
+      hasError ? '—' : '$value',
+      style: tt.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w800,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+  }
+}

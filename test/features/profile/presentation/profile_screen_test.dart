@@ -210,10 +210,6 @@ Widget _buildTestHarness({
       builder: (_, _) => const Scaffold(body: Text('PriceGrid')),
     ),
     GoRoute(
-      path: '/trajets-colis',
-      builder: (_, _) => const Scaffold(body: Text('TrajetsCoils')),
-    ),
-    GoRoute(
       path: '/mes-colis',
       builder: (_, _) => const Scaffold(body: Text('MesColis')),
     ),
@@ -589,7 +585,7 @@ void main() {
     );
 
     testWidgets(
-      'affiche "Mes trajets et colis" (hub) et pas les 4 anciennes tuiles ni "Demandes d\'envoi à transporter"',
+      'ni hub "Mes trajets et colis" ni anciennes tuiles : tout a migré sur Activités',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -602,13 +598,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 600));
 
-        await tester.scrollUntilVisible(
-          find.text('Mes trajets et colis'),
-          300,
-          scrollable: _activityScrollable,
-        );
-        expect(find.text('Mes trajets et colis'), findsOneWidget);
-        // Les 4 anciennes tuiles ne sont plus directement dans le profil.
+        expect(find.text('Mes trajets et colis'), findsNothing);
         expect(find.text('Colis sur mes trajets'), findsNothing);
         expect(find.text("Demandes d'envoi à transporter"), findsNothing);
         await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -773,7 +763,7 @@ void main() {
     });
 
     testWidgets(
-      'voyageur : base commune visible + tuile hub "Mes trajets et colis" ajoutée (modèle additif)',
+      'voyageur : base commune visible, sans tuile hub (migrée sur Activités)',
       (tester) async {
         await tester.pumpWidget(
           _buildTestHarness(
@@ -786,17 +776,18 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 600));
 
-        // Modèle additif : les sections de base sont visibles pour TOUS les utilisateurs,
-        // y compris les voyageurs. La tuile hub est ajoutée en plus pour les voyageurs.
+        // Modèle additif : les sections de base restent visibles pour tous ;
+        // le hub voyageur, lui, vit désormais sur l'onglet Activités.
         await tester.scrollUntilVisible(
-          find.text('Mes trajets et colis'),
+          find.text('Mes négociations'),
           300,
           scrollable: _activityScrollable,
         );
+        expect(find.text('Mes négociations'), findsOneWidget);
         expect(
           find.text('Mes trajets et colis'),
-          findsOneWidget,
-          reason: 'voyageur voit en plus la tuile hub "Mes trajets et colis"',
+          findsNothing,
+          reason: 'la tuile hub a migré sur l\'onglet Activités',
         );
       },
     );
@@ -839,8 +830,9 @@ void main() {
       },
     );
 
-    // Navigation depuis onglet Activité — le hub "Mes trajets et colis" remplace les 4 tuiles.
-    testWidgets('tapping "Mes trajets et colis" navigates to /trajets-colis', (
+    // « Mes trajets et colis » a migré sur le hub Activités : le Profil
+    // voyageur n'affiche plus de carte hub.
+    testWidgets('la carte "Mes trajets et colis" n\'existe plus', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -854,18 +846,7 @@ void main() {
       );
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      await tester.scrollUntilVisible(
-        find.text('Mes trajets et colis'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-      await tester.ensureVisible(find.text('Mes trajets et colis'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Mes trajets et colis'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('TrajetsCoils'), findsOneWidget);
+      expect(find.text('Mes trajets et colis'), findsNothing);
     });
 
     testWidgets('tapping "Mes négociations" navigates to /negotiations', (
@@ -1597,18 +1578,15 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Le pill Expéditeur/Voyageur n'existe plus dans le header.
-    // La tuile hub est visible car _dualRoleUser.isTraveler == true.
+    // Le pill Expéditeur/Voyageur n'existe plus dans le header, et la tuile
+    // hub a migré sur l'onglet Activités : la section commune reste seule.
     await tester.scrollUntilVisible(
-      find.text('Mes trajets et colis'),
+      find.text('Mes négociations'),
       300,
       scrollable: _activityScrollable,
     );
-    expect(
-      find.text('Mes trajets et colis'),
-      findsOneWidget,
-      reason: 'dual-role user (isTraveler=true) doit voir la tuile hub',
-    );
+    expect(find.text('Mes négociations'), findsOneWidget);
+    expect(find.text('Mes trajets et colis'), findsNothing);
     await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
@@ -1767,7 +1745,7 @@ void main() {
   });
 
   group('onglet Activité réorganisé', () {
-    testWidgets('voyageur : hub "Mes trajets et colis" en section EN COURS', (
+    testWidgets('voyageur : section EN COURS sans carte hub (migrée)', (
       tester,
     ) async {
       whenListen<AuthState>(
@@ -1792,7 +1770,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text('EN COURS'), findsOneWidget);
-      expect(find.text('Mes trajets et colis'), findsOneWidget);
+      // La carte hub voyageur vit désormais sur l'onglet Activités.
+      expect(find.text('Mes trajets et colis'), findsNothing);
       await tester.scrollUntilVisible(
         find.text('SUIVI'),
         300,

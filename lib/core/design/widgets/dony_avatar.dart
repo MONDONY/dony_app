@@ -42,12 +42,31 @@ class DonyAvatar extends StatelessWidget {
     DonyAvatarSize.xl => 26,
   };
 
+  static final _letterPattern = RegExp(r'[A-Za-zÀ-ÿ]');
+
+  /// Première lettre de [s], en ignorant les caractères non alphabétiques
+  /// (ex: le `+` d'un numéro de téléphone utilisé en repli de nom).
+  static String? _firstLetter(String s) {
+    for (final rune in s.runes) {
+      final char = String.fromCharCode(rune);
+      if (_letterPattern.hasMatch(char)) {
+        return char;
+      }
+    }
+    return null;
+  }
+
   String get _initials {
     final parts = name.trim().split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      final first = _firstLetter(parts[0]);
+      final second = _firstLetter(parts[1]);
+      if (first != null && second != null) {
+        return '$first$second'.toUpperCase();
+      }
     }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final single = parts.isNotEmpty ? _firstLetter(parts.first) : null;
+    return single?.toUpperCase() ?? '?';
   }
 
   static const _avatarColors = [

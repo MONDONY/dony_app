@@ -17,6 +17,9 @@ class HiveService {
   static const String kTravelerBannerDismissed = 'traveler_banner_dismissed';
   static const String kSenderBannerDismissed = 'sender_banner_dismissed';
 
+  // Carte d'introduction du hub Activités, fermée manuellement (X).
+  static const String kHubIntroDismissed = 'hub_intro_dismissed';
+
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode         = 'theme_mode';       // 'system' | 'light' | 'dark'
   static const String kLanguageCode      = 'language_code';    // 'fr' | 'en'

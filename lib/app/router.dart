@@ -40,7 +40,9 @@ import 'package:dony/features/matching/presentation/screens/pending_bids_screen.
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
-import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
+import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
+import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
+import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
@@ -121,7 +123,6 @@ import 'package:dony/features/recipients/presentation/screens/recipient_edit_scr
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/mes_colis_screen.dart';
-import 'package:dony/features/profile/presentation/screens/mes_trajets_colis_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -638,10 +639,11 @@ final appRouter = GoRouter(
     // ── Alertes corridor (hors shell) ────────────────────────────────────
     GoRoute(
       path: '/corridor-alerts',
+      // Sans extra (hub Activités) : toutes les alertes, segment au form.
       builder: (_, state) => CorridorAlertListScreen(
         direction: state.extra is AlertDirection
             ? state.extra as AlertDirection
-            : AlertDirection.travelerWantsPackages,
+            : null,
       ),
     ),
     GoRoute(
@@ -780,26 +782,21 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Mes trajets et colis — hub voyageur (hors shell) ─────────────
-    GoRoute(
-      path: '/trajets-colis',
-      builder: (context, state) {
-        final extra = state.extra;
-        final upcomingCount = extra is ({int upcomingCount, bool isSender})
-            ? extra.upcomingCount
-            : (extra as int? ?? 0);
-        final isSender = extra is ({int upcomingCount, bool isSender})
-            ? extra.isSender
-            : false;
-        return MesTrajetsColisScreen(
-          upcomingCount: upcomingCount,
-          isSender: isSender,
-        );
-      },
-    ),
 
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
     GoRoute(path: '/mes-colis', builder: (_, __) => const MesColisScreen()),
+
+    // ── Envois et demandes — destinations du hub Activités ────────────
+    // ShipmentListScreen lit le BidBloc depuis son parent et déclenche
+    // lui-même son chargement — pas d'event à ajouter ici.
+    GoRoute(
+      path: '/envois',
+      builder: (_, __) => BlocProvider(
+        create: (_) => getIt<BidBloc>(),
+        child: const ShipmentListScreen(),
+      ),
+    ),
+    GoRoute(path: '/demandes', builder: (_, __) => const DemandesScreen()),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────
     GoRoute(
@@ -1163,12 +1160,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 1 — Envois (annonces voyageur)
+        // Branch 1 — Activités (hub unique, double rôle permanent)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/announcements',
-              builder: (context, state) => const MatchingManagementScreen(),
+              builder: (context, state) => const ActivitesHubScreen(),
             ),
           ],
         ),

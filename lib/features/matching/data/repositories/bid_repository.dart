@@ -3,7 +3,7 @@ import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
-
+import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 class BidRepository {
   final BidRemoteDatasource _datasource;
@@ -23,31 +23,29 @@ class BidRepository {
     required String recipientPhone,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
-  }) =>
-      _datasource.checkoutBid(
-        announcementId: announcementId,
-        weightKg: weightKg,
-        declaredValueEur: declaredValueEur,
-        description: description,
-        contentCategory: contentCategory,
-        recipientName: recipientName,
-        recipientPhone: recipientPhone,
-        photoKeys: photoKeys,
-        gridItems: gridItems,
-      );
+  }) => _datasource.checkoutBid(
+    announcementId: announcementId,
+    weightKg: weightKg,
+    declaredValueEur: declaredValueEur,
+    description: description,
+    contentCategory: contentCategory,
+    recipientName: recipientName,
+    recipientPhone: recipientPhone,
+    photoKeys: photoKeys,
+    gridItems: gridItems,
+  );
 
   Future<BidQuoteResponse> quoteBid({
     required String announcementId,
     double? weightKg,
     String? promoCode,
     List<Map<String, dynamic>>? gridItems,
-  }) =>
-      _datasource.quoteBid(
-        announcementId: announcementId,
-        weightKg: weightKg,
-        promoCode: promoCode,
-        gridItems: gridItems,
-      );
+  }) => _datasource.quoteBid(
+    announcementId: announcementId,
+    weightKg: weightKg,
+    promoCode: promoCode,
+    gridItems: gridItems,
+  );
 
   Future<BidModel> createBid({
     required String announcementId,
@@ -63,34 +61,33 @@ class BidRepository {
     String? promoCode,
     List<String>? photoKeys,
     List<Map<String, dynamic>>? gridItems,
-  }) =>
-      _datasource.createBid(
-        announcementId: announcementId,
-        weightKg: weightKg,
-        declaredValueEur: declaredValueEur,
-        description: description,
-        contentCategory: contentCategory,
-        recipientName: recipientName,
-        recipientPhone: recipientPhone,
-        paymentMethod: paymentMethod,
-        phoneNumber: phoneNumber,
-        countryCode: countryCode,
-        promoCode: promoCode,
-        photoKeys: photoKeys,
-        gridItems: gridItems,
-      );
+  }) => _datasource.createBid(
+    announcementId: announcementId,
+    weightKg: weightKg,
+    declaredValueEur: declaredValueEur,
+    description: description,
+    contentCategory: contentCategory,
+    recipientName: recipientName,
+    recipientPhone: recipientPhone,
+    paymentMethod: paymentMethod,
+    phoneNumber: phoneNumber,
+    countryCode: countryCode,
+    promoCode: promoCode,
+    photoKeys: photoKeys,
+    gridItems: gridItems,
+  );
 
   Future<List<BidModel>> getBidsForAnnouncement(String announcementId) =>
       _datasource.getBidsForAnnouncement(announcementId);
 
-  Future<BidModel> getBidById(String bidId) =>
-      _datasource.getBidById(bidId);
+  Future<BidModel> getBidById(String bidId) => _datasource.getBidById(bidId);
 
-  Future<List<BidModel>> getMyBids() =>
-      _datasource.getMyBids();
+  Future<List<BidModel>> getMyBids() => _datasource.getMyBids();
 
-  Future<BidModel> acceptBid(String bidId) =>
-      _datasource.acceptBid(bidId);
+  Future<TravelerBidsPage> getTravelerBids({int page = 0, int size = 20}) =>
+      _datasource.getTravelerBids(page: page, size: size);
+
+  Future<BidModel> acceptBid(String bidId) => _datasource.acceptBid(bidId);
 
   Future<BidModel> rejectBid(String bidId, {String? reason}) =>
       _datasource.rejectBid(bidId, reason: reason);
@@ -98,8 +95,7 @@ class BidRepository {
   Future<BidModel> cancelBid(String bidId, {String? reason}) =>
       _datasource.cancelBid(bidId, reason: reason);
 
-  Future<void> hideBid(String bidId) =>
-      _datasource.hideBid(bidId);
+  Future<void> hideBid(String bidId) => _datasource.hideBid(bidId);
 
   Future<void> dismissBidAsTraveler(String bidId) =>
       _datasource.dismissBidAsTraveler(bidId);
@@ -113,8 +109,10 @@ class BidRepository {
   Future<AcceptanceResponse> acceptBidWithCommission(
     String bidId, {
     String commissionSource = 'WALLET_FIRST',
-  }) =>
-      _datasource.acceptBidWithCommission(bidId, commissionSource: commissionSource);
+  }) => _datasource.acceptBidWithCommission(
+    bidId,
+    commissionSource: commissionSource,
+  );
 
   Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) =>
       _datasource.confirmCommissionAcceptance(bidId);

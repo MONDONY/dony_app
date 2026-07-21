@@ -33,6 +33,14 @@ import 'package:go_router/go_router.dart';
 class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.navigationShell});
 
+  /// Hauteur du contenu de la barre d'onglets, hors safe area.
+  ///
+  /// Le shell monte ses écrans avec `extendBody: true` : leur contenu passe
+  /// donc *sous* la barre. Un écran scrollable doit réserver
+  /// `navBarContentHeight + MediaQuery.paddingOf(context).bottom` en bas,
+  /// sinon ses derniers éléments sont masqués par la barre.
+  static const double navBarContentHeight = 66;
+
   final StatefulNavigationShell navigationShell;
 
   @override
@@ -182,12 +190,9 @@ class _DonyBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  /// Hauteur de la zone de contenu (icônes+libellés), hors safe area.
-  static const double _barContentHeight = 66;
-
   /// Diamètre de l'orb inline — plus petit que [DonyNavOrb.defaultSize]
   /// pour tenir au même niveau que les icônes des autres items dans
-  /// [_barContentHeight].
+  /// [MainShell.navBarContentHeight].
   static const double _orbInlineSize = 40;
 
   @override
@@ -212,8 +217,8 @@ class _DonyBottomNav extends StatelessWidget {
 
         return BlocBuilder<ActiveRoleCubit, ActiveRole>(
           builder: (context, activeRole) {
-            // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au
-            // profil dans MatchingManagementScreen — Phase 2)
+            // Tab 1 — Activités (hub unique : depuis la Phase 2, le contenu ne
+            // dépend plus du profil — cf. ActivitesHubScreen)
             // 'zap' remplacé par 'layout-grid' : l'éclair se lisait
             // « action rapide/boost », pas « mes trajets » — cf. audit UX bottom nav.
             const tab1Label = 'Activités';
@@ -238,7 +243,7 @@ class _DonyBottomNav extends StatelessWidget {
                 // une tab bar iOS/Android native.
                 padding: EdgeInsets.only(bottom: bottomPadding),
                 child: SizedBox(
-                  height: _barContentHeight,
+                  height: MainShell.navBarContentHeight,
                   child: LayoutBuilder(
                     builder: (context, constraints) => Stack(
                       children: [

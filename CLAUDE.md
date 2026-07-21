@@ -377,6 +377,15 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `recipient_selected` | RecipientBloc._onPicked — destinataire confirmé dans la sheet (propriété `source`: saved/phone_contact/new) |
 | `recipient_created` | RecipientBloc._onCreated — destinataire ajouté au carnet |
 | `recipient_default_set` | RecipientBloc._onDefaultSet — destinataire marqué par défaut |
+| `activites_hub_trips_opened` / `activites_hub_envois_opened` / `activites_hub_demandes_opened` / `activites_hub_negotiations_opened` | ActivitesHubScreen — tap sur une tuile d'activité du hub |
+| `activites_hub_trip_create_opened` / `activites_hub_request_create_opened` | ActivitesHubScreen — CTA « Publier un trajet » / « Envoyer un colis » |
+| `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |
+| `activites_hub_search_opened` | ActivitesHubScreen — bouton « Suivre un colis » du header |
+| `activites_hub_history_opened` / `activites_hub_help_opened` / `activites_hub_alerts_opened` / `activites_hub_templates_opened` / `activites_hub_addresses_opened` / `activites_hub_recipients_opened` | ActivitesHubScreen — tuiles de la section Outils |
+| `activites_hub_intro_dismissed` | ActivitesHubScreen — fermeture (X) de la carte d'introduction |
+| `activites_hub_bid_accepted` / `activites_hub_bid_rejected` | DemandesScreen — accepter/refuser une demande reçue |
+| `traveler_bids_filter_applied` | TravelerBidsBloc._onFilterChanged — chips « À traiter / Acceptées / Terminées » de l'écran Demandes (propriété `filter`) |
+| `home_colis_match_opened` | HomeScreen._openColisMatch — chip 🎯 « Pour mes trajets » (mode Colis) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

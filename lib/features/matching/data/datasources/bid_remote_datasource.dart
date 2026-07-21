@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/data/models/traveler_bids_page.dart';
 
 class BidRemoteDatasource {
   final ApiClient _apiClient;
@@ -48,7 +49,9 @@ class BidRemoteDatasource {
       body['gridItems'] = gridItems;
     }
     final response = await _apiClient.dio.post('/bids/checkout', data: body);
-    return BidCheckoutResponseModel.fromJson(response.data as Map<String, dynamic>);
+    return BidCheckoutResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   /// Devis : calcule net/commission/total avec promo éventuel.
@@ -59,15 +62,14 @@ class BidRemoteDatasource {
     String? promoCode,
     List<Map<String, dynamic>>? gridItems,
   }) async {
-    final body = <String, dynamic>{
-      'announcementId': announcementId,
-    };
+    final body = <String, dynamic>{'announcementId': announcementId};
     // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
     if (weightKg != null && weightKg > 0) body['weightKg'] = weightKg;
     if (promoCode != null && promoCode.isNotEmpty) {
       body['promoCode'] = promoCode.trim().toUpperCase();
     }
-    if (gridItems != null && gridItems.isNotEmpty) body['gridItems'] = gridItems;
+    if (gridItems != null && gridItems.isNotEmpty)
+      body['gridItems'] = gridItems;
     final response = await _apiClient.dio.post('/bids/quote', data: body);
     return BidQuoteResponse.fromJson(response.data as Map<String, dynamic>);
   }
@@ -117,7 +119,9 @@ class BidRemoteDatasource {
   }
 
   Future<List<BidModel>> getBidsForAnnouncement(String announcementId) async {
-    final response = await _apiClient.dio.get('/announcements/$announcementId/bids');
+    final response = await _apiClient.dio.get(
+      '/announcements/$announcementId/bids',
+    );
     return (response.data as List)
         .map((j) => BidModel.fromJson(j as Map<String, dynamic>))
         .toList();
@@ -133,6 +137,23 @@ class BidRemoteDatasource {
     return (response.data as List)
         .map((j) => BidModel.fromJson(j as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Demandes reçues sur tous les trajets du voyageur, en un seul appel.
+  ///
+  /// `/bids/me` ne renvoie que les bids créés en tant qu'expéditeur ; cet
+  /// endpoint couvre le sens inverse.
+  Future<TravelerBidsPage> getTravelerBids({
+    int page = 0,
+    int size = 20,
+  }) async {
+    // Filtrage et recherche restent côté client (TravelerBidsBloc charge
+    // tout) : pas de paramètres serveur tant qu'aucun appelant n'en a besoin.
+    final response = await _apiClient.dio.get(
+      '/travelers/me/bids',
+      queryParameters: {'page': page, 'size': size},
+    );
+    return TravelerBidsPage.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<BidModel> acceptBid(String bidId) async {
@@ -189,7 +210,9 @@ class BidRemoteDatasource {
       // On parse le body comme AcceptanceResponse pour obtenir les détails (solde dispo, etc.)
       final code = e.response?.statusCode;
       if ((code == 409 || code == 422) && e.response?.data != null) {
-        return AcceptanceResponse.fromJson(e.response!.data as Map<String, dynamic>);
+        return AcceptanceResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+        );
       }
       rethrow;
     }
@@ -197,14 +220,18 @@ class BidRemoteDatasource {
 
   Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) async {
     try {
-      final response = await _apiClient.dio.post('/bids/$bidId/confirm-acceptance');
+      final response = await _apiClient.dio.post(
+        '/bids/$bidId/confirm-acceptance',
+      );
       return ConfirmResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       // Le backend retourne 422 avec ConfirmAcceptanceResponse(accepted:false, error:...)
       // quand la confirmation échoue après 3DS. Sans ce catch Dio lèverait une exception
       // au lieu de retourner le ConfirmResponse, rendant le chemin cardDeclined mort.
       if (e.response?.statusCode == 422 && e.response?.data != null) {
-        return ConfirmResponse.fromJson(e.response!.data as Map<String, dynamic>);
+        return ConfirmResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+        );
       }
       rethrow;
     }

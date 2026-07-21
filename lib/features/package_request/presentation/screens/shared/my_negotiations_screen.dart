@@ -33,7 +33,9 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: DonyColors.sand100,
-      appBar: const DonyAppBar(title: 'Négociations'),
+      // Aligné sur la tuile « Discussions de prix » du hub Activités : le
+      // libellé tapé doit être celui de l'écran qui s'ouvre.
+      appBar: const DonyAppBar(title: 'Discussions de prix'),
       body: BlocProvider<NegotiationListBloc>.value(
         value: getIt<NegotiationListBloc>(),
         child: const MyNegotiationsBody(),
@@ -64,7 +66,9 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
   void _onQuery(String q) {
     _debounce?.cancel();
     _debounce = Timer(
-        const Duration(milliseconds: 250), () => _filterCubit.setQuery(q));
+      const Duration(milliseconds: 250),
+      () => _filterCubit.setQuery(q),
+    );
   }
 
   @override
@@ -82,115 +86,131 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
       child: BlocBuilder<NegotiationFilterCubit, NegotiationFilterState>(
         builder: (context, filter) =>
             BlocBuilder<NegotiationListBloc, NegotiationListState>(
-          builder: (context, state) {
-            if (state.status == NegotiationListStatus.loading &&
-                state.threads.isEmpty) {
-              return const Center(
-                  child: CircularProgressIndicator(color: DonyColors.primary));
-            }
-            if (state.status == NegotiationListStatus.error) {
-              return _ErrorState(
-                message: state.errorMessage ?? 'Erreur',
-                onRetry: () => context
-                    .read<NegotiationListBloc>()
-                    .add(const NegotiationListRefreshRequested()),
-              );
-            }
-            if (state.threads.isEmpty) {
-              return const DonyEmptyState(
-                title: 'Aucune négociation',
-                description:
-                    "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
-                mascotte: DonyMascotteType.assis,
-              );
-            }
+              builder: (context, state) {
+                if (state.status == NegotiationListStatus.loading &&
+                    state.threads.isEmpty) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: DonyColors.primary),
+                  );
+                }
+                if (state.status == NegotiationListStatus.error) {
+                  return _ErrorState(
+                    message: state.errorMessage ?? 'Erreur',
+                    onRetry: () => context.read<NegotiationListBloc>().add(
+                      const NegotiationListRefreshRequested(),
+                    ),
+                  );
+                }
+                if (state.threads.isEmpty) {
+                  return const DonyEmptyState(
+                    title: 'Aucune négociation',
+                    description:
+                        "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
+                    mascotte: DonyMascotteType.assis,
+                  );
+                }
 
-            final all = state.threads;
-            final activeCount = all
-                .where((t) =>
-                    t.status == NegotiationThreadStatus.open ||
-                    t.status == NegotiationThreadStatus.awaitingTrip ||
-                    t.status == NegotiationThreadStatus.awaitingPayment)
-                .length;
-            final terminalCount = all.length - activeCount;
-            final filtered = applyNegotiationFilters(all, filter);
+                final all = state.threads;
+                final activeCount = all
+                    .where(
+                      (t) =>
+                          t.status == NegotiationThreadStatus.open ||
+                          t.status == NegotiationThreadStatus.awaitingTrip ||
+                          t.status == NegotiationThreadStatus.awaitingPayment,
+                    )
+                    .length;
+                final terminalCount = all.length - activeCount;
+                final filtered = applyNegotiationFilters(all, filter);
 
-            return Column(
-              children: [
-                // Search bar
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.base, DonySpacing.sm, DonySpacing.base, 0),
-                  child: DonySearchField(
-                    hint: 'Voyageur, ville…',
-                    controller: _searchController,
-                    onChanged: _onQuery,
-                    onClear: () => _filterCubit.setQuery(''),
-                  ),
-                ),
-                // Filter chips
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.base, DonySpacing.md, DonySpacing.base, DonySpacing.xs),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _FilterChip(
-                          label: 'Toutes (${all.length})',
-                          active: filter.preset == NegoQuickFilter.all,
-                          onTap: () => _filterCubit.setPreset(NegoQuickFilter.all),
-                        ),
+                return Column(
+                  children: [
+                    // Search bar
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.base,
+                        DonySpacing.sm,
+                        DonySpacing.base,
+                        0,
                       ),
-                      const SizedBox(width: DonySpacing.xs + 2),
-                      Expanded(
-                        child: _FilterChip(
-                          label: 'En cours ($activeCount)',
-                          active: filter.preset == NegoQuickFilter.active,
-                          onTap: () => _filterCubit.setPreset(NegoQuickFilter.active),
-                        ),
+                      child: DonySearchField(
+                        hint: 'Voyageur, ville…',
+                        controller: _searchController,
+                        onChanged: _onQuery,
+                        onClear: () => _filterCubit.setQuery(''),
                       ),
-                      const SizedBox(width: DonySpacing.xs + 2),
-                      Expanded(
-                        child: _FilterChip(
-                          label: 'Terminées ($terminalCount)',
-                          active: filter.preset == NegoQuickFilter.terminal,
-                          onTap: () => _filterCubit.setPreset(NegoQuickFilter.terminal),
-                        ),
+                    ),
+                    // Filter chips
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.base,
+                        DonySpacing.md,
+                        DonySpacing.base,
+                        DonySpacing.xs,
                       ),
-                    ],
-                  ),
-                ),
-                // List
-                Expanded(
-                  child: filtered.isEmpty
-                      ? _FilterEmptyState(
-                          preset: filter.preset,
-                          hasQuery: filter.query.isNotEmpty,
-                        )
-                      : RefreshIndicator(
-                          color: DonyColors.primary,
-                          onRefresh: () async => context
-                              .read<NegotiationListBloc>()
-                              .add(const NegotiationListRefreshRequested()),
-                          child: ListView.separated(
-                            padding: EdgeInsets.fromLTRB(
-                              DonySpacing.base,
-                              DonySpacing.sm,
-                              DonySpacing.base,
-                              MediaQuery.of(context).padding.bottom + 100,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _FilterChip(
+                              label: 'Toutes (${all.length})',
+                              active: filter.preset == NegoQuickFilter.all,
+                              onTap: () =>
+                                  _filterCubit.setPreset(NegoQuickFilter.all),
                             ),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, i) =>
-                                const SizedBox(height: DonySpacing.sm),
-                            itemBuilder: (_, i) =>
-                                _NegoCard(thread: filtered[i], index: i),
                           ),
-                        ),
-                ),
-              ],
-            );
-          },
-        ),
+                          const SizedBox(width: DonySpacing.xs + 2),
+                          Expanded(
+                            child: _FilterChip(
+                              label: 'En cours ($activeCount)',
+                              active: filter.preset == NegoQuickFilter.active,
+                              onTap: () => _filterCubit.setPreset(
+                                NegoQuickFilter.active,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: DonySpacing.xs + 2),
+                          Expanded(
+                            child: _FilterChip(
+                              label: 'Terminées ($terminalCount)',
+                              active: filter.preset == NegoQuickFilter.terminal,
+                              onTap: () => _filterCubit.setPreset(
+                                NegoQuickFilter.terminal,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // List
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? _FilterEmptyState(
+                              preset: filter.preset,
+                              hasQuery: filter.query.isNotEmpty,
+                            )
+                          : RefreshIndicator(
+                              color: DonyColors.primary,
+                              onRefresh: () async => context
+                                  .read<NegotiationListBloc>()
+                                  .add(const NegotiationListRefreshRequested()),
+                              child: ListView.separated(
+                                padding: EdgeInsets.fromLTRB(
+                                  DonySpacing.base,
+                                  DonySpacing.sm,
+                                  DonySpacing.base,
+                                  MediaQuery.of(context).padding.bottom + 100,
+                                ),
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, i) =>
+                                    const SizedBox(height: DonySpacing.sm),
+                                itemBuilder: (_, i) =>
+                                    _NegoCard(thread: filtered[i], index: i),
+                              ),
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
       ),
     );
   }
@@ -269,9 +289,9 @@ class _FilterEmptyState extends StatelessWidget {
             Text(
               _msg,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: DonyColors.textMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: DonyColors.textMuted,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -297,21 +317,20 @@ class _NegoCard extends StatelessWidget {
       thread.status == NegotiationThreadStatus.expired;
 
   Color get _stripColor => switch (thread.status) {
-        NegotiationThreadStatus.open => DonyColors.primary,
-        NegotiationThreadStatus.awaitingTrip => DonyColors.threadStatusAmber,
-        NegotiationThreadStatus.awaitingPayment =>
-          DonyColors.threadStatusViolet,
-        NegotiationThreadStatus.accepted => DonyColors.threadStatusGreen,
-        _ => DonyColors.neutral300,
-      };
+    NegotiationThreadStatus.open => DonyColors.primary,
+    NegotiationThreadStatus.awaitingTrip => DonyColors.threadStatusAmber,
+    NegotiationThreadStatus.awaitingPayment => DonyColors.threadStatusViolet,
+    NegotiationThreadStatus.accepted => DonyColors.threadStatusGreen,
+    _ => DonyColors.neutral300,
+  };
 
   String get _priceLabel => switch (thread.status) {
-        NegotiationThreadStatus.open => 'proposition',
-        NegotiationThreadStatus.awaitingTrip => 'accord',
-        NegotiationThreadStatus.awaitingPayment => 'à payer',
-        NegotiationThreadStatus.accepted => 'payé',
-        _ => 'terminé',
-      };
+    NegotiationThreadStatus.open => 'proposition',
+    NegotiationThreadStatus.awaitingTrip => 'accord',
+    NegotiationThreadStatus.awaitingPayment => 'à payer',
+    NegotiationThreadStatus.accepted => 'payé',
+    _ => 'terminé',
+  };
 
   String _buildRoute() {
     final dep = thread.departureCity;
@@ -327,7 +346,8 @@ class _NegoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final name = thread.travelerName ?? 'Voyageur ${thread.travelerId.substring(0, 4)}';
+    final name =
+        thread.travelerName ?? 'Voyageur ${thread.travelerId.substring(0, 4)}';
     final rounds = thread.roundsCount.clamp(0, 5);
 
     // L'expéditeur voit TOUJOURS le prix qu'il paie (net + commission = gross),
@@ -336,180 +356,186 @@ class _NegoCard extends StatelessWidget {
     final currentUserId = authState is AuthAuthenticated
         ? authState.user.id
         : authState is AuthProfileUpdated
-            ? authState.user.id
-            : '';
+        ? authState.user.id
+        : '';
     final isTraveler = currentUserId == thread.travelerId;
     final displayPrice = isTraveler
         ? thread.currentPriceEur
         : (thread.grossPriceEur ??
-            PriceDisplay.grossFromNet(thread.currentPriceEur));
+              PriceDisplay.grossFromNet(thread.currentPriceEur));
 
     return Opacity(
-      opacity: _isTerminal ? 0.65 : 1.0,
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          onTap: () => context.push('/negotiations/${thread.id}'),
-          child: Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: Colors.white,
+          opacity: _isTerminal ? 0.65 : 1.0,
+          child: Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            child: InkWell(
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(
-                color: _isNew
-                    ? DonyColors.primary.withValues(alpha: 0.30)
-                    : DonyColors.neutral200,
-                width: _isNew ? 1.5 : 1.0,
-              ),
-            ),
-            child: Stack(
-              children: [
-                // Bande colorée gauche via Positioned (hauteur automatique)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(width: 4, color: _stripColor),
+              onTap: () => context.push('/negotiations/${thread.id}'),
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(DonyRadius.card),
+                  border: Border.all(
+                    color: _isNew
+                        ? DonyColors.primary.withValues(alpha: 0.30)
+                        : DonyColors.neutral200,
+                    width: _isNew ? 1.5 : 1.0,
+                  ),
                 ),
-                // Contenu — padding gauche 16 = 4 (strip) + 12 (espacement)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                        // Ligne 1 : route + prix
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _buildRoute(),
-                                style: tt.titleLarge?.copyWith(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: _isTerminal
-                                      ? DonyColors.textMuted
-                                      : DonyColors.textPrimary,
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  PriceDisplay.eur(displayPrice),
-                                  style: tt.headlineMedium?.copyWith(
-                                    fontSize: 20,
+                child: Stack(
+                  children: [
+                    // Bande colorée gauche via Positioned (hauteur automatique)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(width: 4, color: _stripColor),
+                    ),
+                    // Contenu — padding gauche 16 = 4 (strip) + 12 (espacement)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Ligne 1 : route + prix
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _buildRoute(),
+                                  style: tt.titleLarge?.copyWith(
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w800,
                                     color: _isTerminal
                                         ? DonyColors.textMuted
                                         : DonyColors.textPrimary,
-                                    letterSpacing: -0.5,
-                                    height: 1.0,
+                                    letterSpacing: -0.3,
                                   ),
-                                ),
-                                Text(
-                                  _priceLabel,
-                                  style: tt.bodySmall?.copyWith(
-                                    fontSize: 10,
-                                    color: DonyColors.textMuted,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        // Ligne 2 : avatar + nom + badge statut
-                        Row(
-                          children: [
-                            DonyAvatar(
-                              name: name,
-                              imageUrl: thread.travelerPhotoUrl,
-                              size: DonyAvatarSize.sm,
-                              verified: (thread.travelerTripsCount ?? 0) > 0,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                name,
-                                overflow: TextOverflow.ellipsis,
-                                style: tt.bodySmall?.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: DonyColors.textMuted,
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                            _StatusPill(status: thread.status),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        // Ligne 3 : round dots + méta + badge NOUVEAU
-                        Row(
-                          children: [
-                            ...List.generate(5, (i) => Container(
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    PriceDisplay.eur(displayPrice),
+                                    style: tt.headlineMedium?.copyWith(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: _isTerminal
+                                          ? DonyColors.textMuted
+                                          : DonyColors.textPrimary,
+                                      letterSpacing: -0.5,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  Text(
+                                    _priceLabel,
+                                    style: tt.bodySmall?.copyWith(
+                                      fontSize: 10,
+                                      color: DonyColors.textMuted,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          // Ligne 2 : avatar + nom + badge statut
+                          Row(
+                            children: [
+                              DonyAvatar(
+                                name: name,
+                                imageUrl: thread.travelerPhotoUrl,
+                                size: DonyAvatarSize.sm,
+                                verified: (thread.travelerTripsCount ?? 0) > 0,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.bodySmall?.copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: DonyColors.textMuted,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              _StatusPill(status: thread.status),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          // Ligne 3 : round dots + méta + badge NOUVEAU
+                          Row(
+                            children: [
+                              ...List.generate(
+                                5,
+                                (i) => Container(
                                   width: 16,
                                   height: 3,
                                   margin: const EdgeInsets.only(right: 4),
                                   decoration: BoxDecoration(
                                     color: i < rounds
                                         ? (_isTerminal
-                                            ? DonyColors.neutral300
-                                            : DonyColors.textPrimary)
+                                              ? DonyColors.neutral300
+                                              : DonyColors.textPrimary)
                                         : DonyColors.neutral200,
                                     borderRadius: BorderRadius.circular(2),
                                   ),
-                                )),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: Text(
-                                'R.${thread.roundsCount}/5 · ${_timeAgo(thread.lastActivityAt)}',
-                                overflow: TextOverflow.ellipsis,
-                                style: tt.bodySmall?.copyWith(
-                                  fontSize: 11,
-                                  color: DonyColors.textSubtle,
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                            if (_isNew)
-                              Container(
-                                margin: const EdgeInsets.only(left: 4),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: DonyColors.primary,
-                                  borderRadius:
-                                      BorderRadius.circular(DonyRadius.full),
-                                ),
+                              const SizedBox(width: 2),
+                              Expanded(
                                 child: Text(
-                                  'NOUVEAU',
+                                  'R.${thread.roundsCount}/5 · ${_timeAgo(thread.lastActivityAt)}',
+                                  overflow: TextOverflow.ellipsis,
                                   style: tt.bodySmall?.copyWith(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
+                                    fontSize: 11,
+                                    color: DonyColors.textSubtle,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                    ],
-                  ),
+                              if (_isNew)
+                                Container(
+                                  margin: const EdgeInsets.only(left: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: DonyColors.primary,
+                                    borderRadius: BorderRadius.circular(
+                                      DonyRadius.full,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'NOUVEAU',
+                                    style: tt.bodySmall?.copyWith(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(duration: 220.ms, delay: (50 * index).ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
@@ -526,30 +552,26 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, fg, bg) = switch (status) {
       NegotiationThreadStatus.open => (
-          'EN COURS',
-          DonyColors.primary,
-          const Color(0xFFEEF3FF),
-        ),
+        'EN COURS',
+        DonyColors.primary,
+        const Color(0xFFEEF3FF),
+      ),
       NegotiationThreadStatus.awaitingTrip => (
-          'ATT. TRAJET',
-          DonyColors.threadStatusAmber,
-          const Color(0xFFFEF3C7),
-        ),
+        'ATT. TRAJET',
+        DonyColors.threadStatusAmber,
+        const Color(0xFFFEF3C7),
+      ),
       NegotiationThreadStatus.awaitingPayment => (
-          'PAIEMENT',
-          DonyColors.threadStatusViolet,
-          const Color(0xFFF5F3FF),
-        ),
+        'PAIEMENT',
+        DonyColors.threadStatusViolet,
+        const Color(0xFFF5F3FF),
+      ),
       NegotiationThreadStatus.accepted => (
-          'ACCEPTÉE',
-          DonyColors.threadStatusGreen,
-          const Color(0xFFDCFCE7),
-        ),
-      _ => (
-          'TERMINÉ',
-          const Color(0xFF6B7280),
-          const Color(0xFFF3F4F6),
-        ),
+        'ACCEPTÉE',
+        DonyColors.threadStatusGreen,
+        const Color(0xFFDCFCE7),
+      ),
+      _ => ('TERMINÉ', const Color(0xFF6B7280), const Color(0xFFF3F4F6)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -585,14 +607,18 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const DonyIcon('circle-alert',
-                size: 48, color: DonyColors.danger500),
+            const DonyIcon(
+              'circle-alert',
+              size: 48,
+              color: DonyColors.danger500,
+            ),
             const SizedBox(height: DonySpacing.sm + 4),
             Text(
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: DonySpacing.base),
             TextButton(onPressed: onRetry, child: const Text('Réessayer')),

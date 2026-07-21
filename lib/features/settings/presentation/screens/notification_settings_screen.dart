@@ -71,7 +71,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                     onToggle: (key) => _toggle(context, key),
                   ),
                   _buildTile(context,
-                    label: 'Négociations',
+                    label: 'Discussions de prix',
                     subtitle: 'Propositions, contre-offres, paiements…',
                     key: 'push_activity_negotiations',
                     prefs: state.prefs,

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -15,15 +16,16 @@ void main() {
 
   const summary = TripsSummaryModel(
     activeTrips: 3,
-    kgSoldThisMonth: 19,
-    revenueThisMonth: 152.46,
+    kgSold: 19,
+    revenue: 152.46,
   );
 
   blocTest<TripsSummaryCubit, TripsSummaryState>(
     'load → loading puis loaded avec le résumé',
     build: () {
-      when(() => repository.getTripsSummary())
-          .thenAnswer((_) async => summary);
+      when(
+        () => repository.getTripsSummary(period: any(named: 'period')),
+      ).thenAnswer((_) async => summary);
       return TripsSummaryCubit(repository);
     },
     act: (c) => c.load(),
@@ -36,7 +38,9 @@ void main() {
   blocTest<TripsSummaryCubit, TripsSummaryState>(
     'load → hidden en cas d\'erreur (bandeau masqué, pas de message)',
     build: () {
-      when(() => repository.getTripsSummary()).thenThrow(Exception('network'));
+      when(
+        () => repository.getTripsSummary(period: any(named: 'period')),
+      ).thenThrow(Exception('network'));
       return TripsSummaryCubit(repository);
     },
     act: (c) => c.load(),
@@ -44,5 +48,19 @@ void main() {
       const TripsSummaryState.loading(),
       const TripsSummaryState.hidden(),
     ],
+  );
+
+  blocTest<TripsSummaryCubit, TripsSummaryState>(
+    'load transmet la période demandée au repository',
+    build: () {
+      when(
+        () => repository.getTripsSummary(period: any(named: 'period')),
+      ).thenAnswer((_) async => summary);
+      return TripsSummaryCubit(repository);
+    },
+    act: (c) => c.load(period: StatsPeriod.twelveMonths),
+    verify: (_) {
+      verify(() => repository.getTripsSummary(period: '12m')).called(1);
+    },
   );
 }

@@ -110,7 +110,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('ACTIVITÉ'), findsOneWidget);
       expect(find.text('Matchs & enchères'), findsOneWidget);
-      expect(find.text('Négociations'), findsOneWidget);
+      expect(find.text('Discussions de prix'), findsOneWidget);
       expect(find.text('Messages'), findsOneWidget);
       expect(find.text('Rappel trajet J-1'), findsOneWidget);
     });
@@ -140,7 +140,7 @@ void main() {
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Négociations'));
+      await tester.tap(find.text('Discussions de prix'));
       await tester.pump();
 
       verify(() => mockBloc.add(

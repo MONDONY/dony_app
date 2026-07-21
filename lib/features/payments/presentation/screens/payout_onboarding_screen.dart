@@ -460,11 +460,19 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
         onPageStarted: (_) => _isLoading.value = true,
         onPageFinished: (_) => _isLoading.value = false,
         onNavigationRequest: (req) {
+          final uri = Uri.tryParse(req.url);
+          // Seul le web chiffré a sa place dans une webview de configuration
+          // des paiements : tout autre schéma (javascript:, intent:, deep link
+          // applicatif) est un vecteur de détournement, jamais une étape de
+          // l'onboarding Stripe.
+          if (uri == null || uri.scheme != 'https') {
+            return NavigationDecision.prevent;
+          }
           // Return/refresh URL Stripe : matché par le path pour couvrir tous
           // les hôtes réels (dony.store, api-staging.dony.store/api/v1/…,
           // legacy dony.app) — un startsWith sur un seul domaine ratait
           // l'interception et laissait la webview charger une page morte.
-          final path = Uri.tryParse(req.url)?.path ?? '';
+          final path = uri.path;
           if (path.endsWith('/payments/onboarding/return') ||
               path.endsWith('/payments/onboarding/refresh')) {
             Navigator.of(context).pop();
