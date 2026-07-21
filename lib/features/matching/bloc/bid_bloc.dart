@@ -94,14 +94,16 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         gridItems: event.gridItems,
       );
       emit(BidCreated(bid));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.bidSubmitted,
-        properties: {
-          'announcement_id': bid.announcementId,
-          'weight_kg': bid.weightKg ?? 0.0,
-          'price_per_kg': bid.pricePerKg ?? 0.0,
-        },
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidSubmitted,
+          properties: {
+            'announcement_id': bid.announcementId,
+            'weight_kg': bid.weightKg ?? 0.0,
+            'price_per_kg': bid.pricePerKg ?? 0.0,
+          },
+        ),
+      );
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }
@@ -113,7 +115,9 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   ) async {
     emit(BidLoading());
     try {
-      final bids = await _repository.getBidsForAnnouncement(event.announcementId);
+      final bids = await _repository.getBidsForAnnouncement(
+        event.announcementId,
+      );
       emit(BidListLoaded(bids));
     } catch (e) {
       final wrapped = unwrapDioError(e);
@@ -150,6 +154,12 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.acceptBid(event.bidId);
       emit(BidAccepted(bid));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidAccepted,
+          properties: {'bid_id': bid.id},
+        ),
+      );
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }
@@ -161,12 +171,17 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   ) async {
     emit(BidLoading());
     try {
-      final bid = await _repository.rejectBid(event.bidId, reason: event.reason);
+      final bid = await _repository.rejectBid(
+        event.bidId,
+        reason: event.reason,
+      );
       emit(BidRejected(bid));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.bidRejected,
-        properties: {'bid_id': bid.id},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidRejected,
+          properties: {'bid_id': bid.id},
+        ),
+      );
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }
@@ -212,8 +227,13 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       }
 
       // Données périmées → refresh silencieux (pas de BidLoading, l'UI reste visible)
-      emit(BidListLoaded(current.bids,
-          fetchedAt: current.fetchedAt, isRefreshing: true));
+      emit(
+        BidListLoaded(
+          current.bids,
+          fetchedAt: current.fetchedAt,
+          isRefreshing: true,
+        ),
+      );
       try {
         final bids = await _repository.getMyBids();
         emit(BidListLoaded(bids));
@@ -241,7 +261,10 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   ) async {
     emit(BidLoading());
     try {
-      final bid = await _repository.cancelBid(event.bidId, reason: event.reason);
+      final bid = await _repository.cancelBid(
+        event.bidId,
+        reason: event.reason,
+      );
       emit(BidCancelled(bid));
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
@@ -305,7 +328,12 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     } on DioException catch (e) {
       final wrapped = unwrapDioError(e);
       // Erreurs promo → BidPromoError (ne polluent pas les autres états du BLoC).
-      const promoCodes = {'promo-not-found', 'promo-expired', 'promo-limit-reached', 'promo-not-eligible'};
+      const promoCodes = {
+        'promo-not-found',
+        'promo-expired',
+        'promo-limit-reached',
+        'promo-not-eligible',
+      };
       if (promoCodes.contains(wrapped.code)) {
         emit(BidPromoError(wrapped));
       } else {
@@ -315,5 +343,4 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       emit(BidError(unwrapDioError(e)));
     }
   }
-
 }

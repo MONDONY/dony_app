@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +29,10 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 class _MockBidAcceptanceBloc
     extends MockBloc<ace.BidAcceptanceEvent, acs.BidAcceptanceState>
     implements BidAcceptanceBloc {}
+
+class _MockPackageRequestBloc
+    extends MockBloc<PackageRequestEvent, PackageRequestState>
+    implements PackageRequestBloc {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -59,6 +64,8 @@ Future<void> _pump(
   when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
   final acceptance = _MockBidAcceptanceBloc();
   when(() => acceptance.state).thenReturn(acs.BidAcceptanceInitial());
+  final packageRequests = _MockPackageRequestBloc();
+  when(() => packageRequests.state).thenReturn(PackageRequestState());
 
   final router = GoRouter(
     initialLocation: '/',
@@ -70,6 +77,7 @@ Future<void> _pump(
             BlocProvider<TravelerBidsBloc>.value(value: travelerBids),
             BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<BidAcceptanceBloc>.value(value: acceptance),
+            BlocProvider<PackageRequestBloc>.value(value: packageRequests),
           ],
           child: const DemandesScreenTesting(),
         ),
@@ -138,10 +146,7 @@ void main() {
   });
 
   testWidgets('aucun badge quand rien à traiter', (tester) async {
-    await _pump(
-      tester,
-      travelerBidsState: loaded([_bid('b1', 'ACCEPTED')]),
-    );
+    await _pump(tester, travelerBidsState: loaded([_bid('b1', 'ACCEPTED')]));
 
     expect(find.text('0'), findsNothing);
   });
@@ -159,5 +164,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(visited, contains('/trips/create'));
+  });
+
+  testWidgets('le volet Reçues propose un champ de recherche', (tester) async {
+    await _pump(tester, travelerBidsState: loaded([_bid('b1', 'PENDING')]));
+
+    expect(
+      find.widgetWithText(TextField, 'Expéditeur, n° de suivi…'),
+      findsOneWidget,
+    );
   });
 }
