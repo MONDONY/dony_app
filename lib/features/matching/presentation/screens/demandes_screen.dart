@@ -10,6 +10,8 @@ import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart'
+    show bidMatchesQuery;
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
@@ -18,6 +20,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -116,7 +119,12 @@ class _DemandesViewState extends State<_DemandesView> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(hp, DonySpacing.md, hp, DonySpacing.sm),
+            padding: EdgeInsets.fromLTRB(
+              hp,
+              DonySpacing.md,
+              hp,
+              DonySpacing.sm,
+            ),
             // Le badge « à traiter » du volet Reçues vit sur le toggle : c'est
             // l'information qui décide où l'utilisateur doit aller en premier.
             child: BlocBuilder<TravelerBidsBloc, TravelerBidsState>(
@@ -124,10 +132,22 @@ class _DemandesViewState extends State<_DemandesView> {
                 final pending = state is TravelerBidsLoaded
                     ? state.pendingCount
                     : 0;
-                return _RoleSegmented(
-                  selected: _tab,
-                  recuesBadge: pending,
-                  onSelect: _selectTab,
+                // Côté Envoyées, l'équivalent « à traiter » est une demande en
+                // négociation : une discussion de prix attend l'expéditeur.
+                return BlocBuilder<PackageRequestBloc, PackageRequestState>(
+                  builder: (context, prState) {
+                    final negotiating = prState.requests
+                        .where(
+                          (r) => r.status == PackageRequestStatus.negotiating,
+                        )
+                        .length;
+                    return _RoleSegmented(
+                      selected: _tab,
+                      recuesBadge: pending,
+                      envoyeesBadge: negotiating,
+                      onSelect: _selectTab,
+                    );
+                  },
                 );
               },
             ),
@@ -153,11 +173,13 @@ class _RoleSegmented extends StatelessWidget {
   const _RoleSegmented({
     required this.selected,
     required this.recuesBadge,
+    required this.envoyeesBadge,
     required this.onSelect,
   });
 
   final DemandesTab selected;
   final int recuesBadge;
+  final int envoyeesBadge;
   final ValueChanged<DemandesTab> onSelect;
 
   @override
@@ -192,27 +214,31 @@ class _RoleSegmented extends StatelessWidget {
                   ),
                 ),
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _RoleSegLabel(
-                      key: const Key('demandes-tab-recues'),
-                      label: 'Reçues',
-                      badge: recuesBadge,
-                      selected: selected == DemandesTab.recues,
-                      onTap: () => onSelect(DemandesTab.recues),
+              // Positioned.fill : sans ça la rangée de labels se cale en haut
+              // à gauche du Stack et le texte n'est pas centré verticalement.
+              Positioned.fill(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _RoleSegLabel(
+                        key: const Key('demandes-tab-recues'),
+                        label: 'Reçues',
+                        badge: recuesBadge,
+                        selected: selected == DemandesTab.recues,
+                        onTap: () => onSelect(DemandesTab.recues),
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: _RoleSegLabel(
-                      key: const Key('demandes-tab-envoyees'),
-                      label: 'Envoyées',
-                      badge: 0,
-                      selected: selected == DemandesTab.envoyees,
-                      onTap: () => onSelect(DemandesTab.envoyees),
+                    Expanded(
+                      child: _RoleSegLabel(
+                        key: const Key('demandes-tab-envoyees'),
+                        label: 'Envoyées',
+                        badge: envoyeesBadge,
+                        selected: selected == DemandesTab.envoyees,
+                        onTap: () => onSelect(DemandesTab.envoyees),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           );
@@ -296,6 +322,11 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   final _scrollController = ScrollController();
 
+  /// Recherche par nom d'expéditeur ou numéro de suivi. Filtrage client sur la
+  /// liste déjà chargée (toutes les demandes tiennent en mémoire).
+  String _query = '';
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
@@ -304,10 +335,20 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        setState(() => _query = value);
+      }
+    });
   }
 
   void _onScroll() {
@@ -335,11 +376,8 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   void _onAccept(BidModel bid) {
     setState(() => _processingBidIds.add(bid.id));
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.activitesHubBidAccepted,
-      ),
-    );
+    // Pas d'event analytics ici : bid_accepted est tracé dans les blocs au
+    // succès réel, pas au tap (un échec réseau ne doit pas compter).
     // Le cash passe par le flux commission ; la carte est déjà en séquestre.
     if (bid.paymentMethod == BidPaymentMethod.cash) {
       context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bid.id));
@@ -358,11 +396,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
       iconAsset: 'circle-x',
     );
     if (confirmed == true && mounted) {
-      unawaited(
-        getIt<AnalyticsService>().logEvent(
-          AnalyticsEvents.activitesHubBidRejected,
-        ),
-      );
+      // bid_rejected est tracé dans BidBloc au succès.
       context.read<BidBloc>().add(BidRejectRequested(bidId));
     }
   }
@@ -406,6 +440,9 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         type: DonySnackbarType.success,
       );
       _reload();
+    } else if (state is acs.BidWalletInsufficient) {
+      setState(_processingBidIds.clear);
+      _showWalletInsufficientSheet(context, state);
     } else if (state is acs.BidFailed) {
       setState(_processingBidIds.clear);
       DonySnackbar.show(
@@ -414,6 +451,81 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         type: DonySnackbarType.error,
       );
     }
+  }
+
+  /// Solde wallet insuffisant pour la commission d'un accept cash : même
+  /// parcours de sortie que sur PendingBidsScreen — recharger, ou payer par
+  /// carte si une carte existe, sinon en ajouter une.
+  void _showWalletInsufficientSheet(
+    BuildContext context,
+    acs.BidWalletInsufficient state,
+  ) {
+    final tt = Theme.of(context).textTheme;
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Solde insuffisant',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Commission requise : ${state.requiredCommission.toStringAsFixed(2)} €',
+            style: tt.bodyMedium?.copyWith(color: DonyColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
+            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Rechargez votre wallet ou payez la commission directement par carte.',
+            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+          ),
+        ],
+      ),
+      stickyBottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Recharger mon wallet',
+            onPressed: () async {
+              context.pop();
+              final recharged = await context.push<bool>(
+                '/payments/wallet/topup/method',
+              );
+              if ((recharged ?? false) && context.mounted) {
+                context.read<BidAcceptanceBloc>().add(
+                  ace.BidAcceptRequested(state.bidId),
+                );
+              }
+            },
+          ),
+          if (state.hasCard) ...[
+            const SizedBox(height: 8),
+            DonyButton(
+              label: 'Payer par carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () {
+                context.pop();
+                context.read<BidAcceptanceBloc>().add(
+                  ace.BidAcceptWithCardRequested(state.bidId),
+                );
+              },
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            DonyButton(
+              label: 'Ajouter une carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () async {
+                context.pop();
+                await context.push('/payments/commission-method');
+              },
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -445,13 +557,26 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
   }
 
   Widget _buildLoaded(BuildContext context, TravelerBidsLoaded state) {
-    final visible = state.visibleBids;
     final hp = DonyLayout.hPadding(context);
+    final searching = _query.trim().isNotEmpty;
+    final visible = searching
+        ? state.visibleBids
+              .where((b) => bidMatchesQuery(b, _query))
+              .toList(growable: false)
+        : state.visibleBids;
 
     return Column(
       children: [
         Padding(
           padding: EdgeInsets.fromLTRB(hp, DonySpacing.sm, hp, DonySpacing.sm),
+          child: DonySearchField(
+            hint: 'Expéditeur, n° de suivi…',
+            onChanged: _onQueryChanged,
+            onClear: () => setState(() => _query = ''),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(hp, 0, hp, DonySpacing.sm),
           child: Row(
             children: [
               for (final f in TravelerBidFilter.values) ...[
@@ -473,7 +598,9 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
           child: RefreshIndicator(
             onRefresh: _onRefresh,
             child: visible.isEmpty
-                ? _EmptyForFilter(filter: state.filter)
+                ? (searching
+                      ? const _NoSearchResult()
+                      : _EmptyForFilter(filter: state.filter))
                 : ListView.separated(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -498,15 +625,33 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
                       return BidCard(
                         bid: bid,
                         isProcessing: _processingBidIds.contains(bid.id),
-                        onAccept: canAct
-                            ? () => _onAccept(bid)
-                            : null,
+                        onAccept: canAct ? () => _onAccept(bid) : null,
                         onReject: canAct ? () => _onReject(bid.id) : null,
                         onTap: () => _openDetail(bid),
                       );
                     },
                   ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NoSearchResult extends StatelessWidget {
+  const _NoSearchResult();
+
+  @override
+  Widget build(BuildContext context) {
+    // ListView pour garder le pull-to-refresh sur un écran sans résultat.
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: const [
+        SizedBox(height: DonySpacing.huge),
+        DonyEmptyState(
+          mascotte: DonyMascotteType.assis,
+          title: 'Aucun résultat',
+          description: 'Aucune demande ne correspond à votre recherche.',
         ),
       ],
     );
