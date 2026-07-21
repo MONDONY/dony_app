@@ -208,6 +208,38 @@ void main() {
     );
 
     blocTest<TravelerBidsBloc, TravelerBidsState>(
+      'un serveur qui renvoie toujours la même page ne boucle pas à l\'infini',
+      build: () {
+        // `number` figé à 0 avec `last: false` : si la boucle initiale se
+        // fiait au numéro renvoyé par l'API, elle ne progresserait jamais.
+        when(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).thenAnswer(
+          (_) async => _page([_bid('b1', 'PENDING')], isLast: false),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const TravelerBidsRequested()),
+      expect: () => [
+        isA<TravelerBidsLoading>(),
+        isA<TravelerBidsLoaded>()
+            .having((s) => s.bids.length, 'bids au garde-fou', 10)
+            .having((s) => s.hasMore, 'hasMore', true),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.getTravelerBids(
+            page: any(named: 'page'),
+            size: any(named: 'size'),
+          ),
+        ).called(10);
+      },
+    );
+
+    blocTest<TravelerBidsBloc, TravelerBidsState>(
       'aucune requête si hasMore est faux',
       build: () {
         stub(_page([_bid('b1', 'PENDING')]));

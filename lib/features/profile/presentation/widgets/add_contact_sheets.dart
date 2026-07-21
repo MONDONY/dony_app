@@ -409,8 +409,6 @@ class _AddEmailContentState extends State<_AddEmailContent> {
   void _verifyOtp() {
     final code = _otpCtrl.map((c) => c.text).join();
     if (code.length != 6) return;
-    // ignore: avoid_print
-    print('[AddEmail] verifyOtp: _pendingEmail="$_pendingEmail" code="$code"');
     context.read<AuthBloc>().add(
       AuthAddEmailFromProfileRequested(email: _pendingEmail, code: code),
     );

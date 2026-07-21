@@ -63,7 +63,10 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
         );
         bids.addAll(result.content);
         isLast = result.isLast;
-        page = result.page + 1;
+        // Compteur local, jamais `result.page` : un serveur qui renverrait
+        // toujours le même numéro de page bloquerait le garde-fou et la
+        // boucle tournerait à l'infini.
+        page++;
       }
       emit(
         TravelerBidsLoaded(
