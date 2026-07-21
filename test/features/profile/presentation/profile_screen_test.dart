@@ -1,7 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -12,10 +11,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
-import 'package:dony/features/profile/presentation/widgets/activate_card_payments_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -56,7 +52,20 @@ class FakeReferralEvent extends Fake implements ReferralEvent {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-const _activeUser = UserModel(
+/// Modèle double rôle : depuis l'inscription unifiée, tout compte porte les
+/// deux rôles. C'est l'utilisateur de référence des tests.
+const _dualRoleUser = UserModel(
+  id: 'user-4',
+  firstName: 'Dual',
+  lastName: 'Role',
+  roles: ['TRAVELER', 'SENDER'],
+  kycStatus: 'NOT_STARTED',
+  status: 'ACTIVE',
+);
+
+/// Compte encore mono-rôle (données antérieures au modèle double rôle) : la
+/// page doit lui proposer exactement les mêmes sections.
+const _senderOnlyUser = UserModel(
   id: 'user-1',
   firstName: 'Alice',
   lastName: 'Dupont',
@@ -65,33 +74,24 @@ const _activeUser = UserModel(
   status: 'ACTIVE',
 );
 
-final _pendingDeletionUser = UserModel(
-  id: 'user-2',
-  firstName: 'Bob',
-  lastName: 'Martin',
-  roles: const ['SENDER'],
-  kycStatus: 'NOT_STARTED',
-  status: 'PENDING_DELETION',
-  deletionRequestedAt: DateTime(2026, 5),
-);
-
-const _travelerUser = UserModel(
+const _verifiedUser = UserModel(
   id: 'user-3',
   firstName: 'Amadou',
   lastName: 'Diallo',
-  roles: ['TRAVELER'],
+  roles: ['TRAVELER', 'SENDER'],
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
   totalTrips: 3,
 );
 
-const _dualRoleUser = UserModel(
-  id: 'user-4',
-  firstName: 'Dual',
-  lastName: 'Role',
-  roles: ['TRAVELER', 'SENDER'],
+final _pendingDeletionUser = UserModel(
+  id: 'user-2',
+  firstName: 'Bob',
+  lastName: 'Martin',
+  roles: const ['SENDER', 'TRAVELER'],
   kycStatus: 'NOT_STARTED',
-  status: 'ACTIVE',
+  status: 'PENDING_DELETION',
+  deletionRequestedAt: DateTime(2026, 5),
 );
 
 // ── Test harness ──────────────────────────────────────────────────────────────
@@ -103,6 +103,8 @@ Widget _buildTestHarness({
   required MockAnnouncementBloc announcementBloc,
   required MockReferralBloc referralBloc,
 }) {
+  Widget stub(String label) => Scaffold(body: Text(label));
+
   final routes = <RouteBase>[
     GoRoute(
       path: '/',
@@ -117,110 +119,39 @@ Widget _buildTestHarness({
         child: const ProfileScreen(),
       ),
     ),
-    GoRoute(
-      path: '/auth/phone',
-      builder: (_, _) => const Scaffold(body: Text('AuthPhone')),
-    ),
-    GoRoute(
-      path: '/settings',
-      builder: (_, _) => const Scaffold(body: Text('Settings')),
-    ),
-    GoRoute(
-      path: '/home',
-      builder: (_, _) => const Scaffold(body: Text('Home')),
-    ),
-    GoRoute(
-      path: '/announcements',
-      builder: (_, _) => const Scaffold(body: Text('Announcements')),
-    ),
-    GoRoute(
-      path: '/package-requests/match',
-      builder: (_, _) => const Scaffold(body: Text('ColisMatch')),
-    ),
-    GoRoute(
-      path: '/package-requests/search',
-      builder: (_, _) => const Scaffold(body: Text('PackageRequestsSearch')),
-    ),
-    GoRoute(
-      path: '/negotiations',
-      builder: (_, _) => const Scaffold(body: Text('Negotiations')),
-    ),
-    GoRoute(
-      path: '/profile/public',
-      builder: (_, _) => const Scaffold(body: Text('PublicProfile')),
-    ),
-    GoRoute(
-      path: '/profile/reviews',
-      builder: (_, _) => const Scaffold(body: Text('Reviews')),
-    ),
-    GoRoute(
-      path: '/disputes',
-      builder: (_, _) => const Scaffold(body: Text('Disputes')),
-    ),
-    GoRoute(
-      path: '/profile/help/contact',
-      builder: (_, _) => const Scaffold(body: Text('Contact')),
-    ),
-    GoRoute(
-      path: '/profile/help/faq',
-      builder: (_, _) => const Scaffold(body: Text('FAQ')),
-    ),
+    GoRoute(path: '/auth/phone', builder: (_, _) => stub('AuthPhone')),
+    GoRoute(path: '/settings', builder: (_, _) => stub('Settings')),
+    GoRoute(path: '/profile/public', builder: (_, _) => stub('PublicProfile')),
+    GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
+    GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
+    GoRoute(path: '/profile/help/contact', builder: (_, _) => stub('Contact')),
     GoRoute(
       path: '/payments/onboarding',
-      builder: (_, _) => const Scaffold(body: Text('PaymentsOnboarding')),
+      builder: (_, _) => stub('PaymentsOnboarding'),
     ),
     GoRoute(
       path: '/payments/commission-method',
-      builder: (_, _) => const Scaffold(body: Text('CommissionMethod')),
+      builder: (_, _) => stub('CommissionMethod'),
     ),
+    GoRoute(path: '/payments/wallet', builder: (_, _) => stub('Wallet')),
+    GoRoute(path: '/profile/referral', builder: (_, _) => stub('Referral')),
     GoRoute(
-      path: '/profile/referral',
-      builder: (_, _) => const Scaffold(body: Text('Referral')),
+      path: '/profile/upgrade-to-pro',
+      builder: (_, _) => stub('UpgradeToPro'),
     ),
-    GoRoute(
-      path: '/profile/shipments/history',
-      builder: (_, _) => const Scaffold(body: Text('ShipmentsHistory')),
-    ),
-    GoRoute(
-      path: '/profile/addresses',
-      builder: (_, _) => const Scaffold(body: Text('Addresses')),
-    ),
-    GoRoute(
-      path: '/profile/recipients',
-      builder: (_, _) => const Scaffold(body: Text('Recipients')),
-    ),
-    GoRoute(
-      path: '/trip-templates',
-      builder: (_, _) => const Scaffold(body: Text('TripTemplates')),
-    ),
+    GoRoute(path: '/profile/price-grid', builder: (_, _) => stub('PriceGrid')),
     GoRoute(
       path: '/profile/subscriptions',
-      builder: (_, _) => const Scaffold(body: Text('Subscriptions')),
+      builder: (_, _) => stub('Subscriptions'),
     ),
-    GoRoute(
-      path: '/payments/wallet',
-      builder: (_, _) => const Scaffold(body: Text('Wallet')),
-    ),
-    GoRoute(
-      path: '/profile/edit',
-      builder: (_, _) => const Scaffold(body: Text('EditProfile')),
-    ),
-    GoRoute(
-      path: '/profile/price-grid',
-      builder: (_, _) => const Scaffold(body: Text('PriceGrid')),
-    ),
-    GoRoute(
-      path: '/mes-colis',
-      builder: (_, _) => const Scaffold(body: Text('MesColis')),
-    ),
+    GoRoute(path: '/profile/edit', builder: (_, _) => stub('EditProfile')),
   ];
 
   return MaterialApp.router(
     routerConfig: GoRouter(initialLocation: '/', routes: routes),
     // Simule la safe-area (barre de statut) présente sur tout device réel.
     // Sans elle, MediaQuery.padding.top vaut 0 en widget test et le header
-    // collapsible (expandedHeight = topPad + 56 + contentHeight) perd ~44px
-    // de marge, ce qui fait déborder ProfileHeader de 11px.
+    // collapsible perd ~44px de marge, ce qui le fait déborder.
     builder: (context, child) => MediaQuery(
       data: MediaQuery.of(
         context,
@@ -230,41 +161,33 @@ Widget _buildTestHarness({
   );
 }
 
-// ── Helpers pour naviguer entre onglets ───────────────────────────────────────
-
-// Finders stables basés sur les Key des ListViews de chaque onglet.
-Finder get _activityScrollable => find.descendant(
-  of: find.byKey(const Key('profile_activity_tab')),
-  matching: find.byType(Scrollable),
-);
-
-Finder get _accountScrollable => find.descendant(
-  of: find.byKey(const Key('profile_account_tab')),
-  matching: find.byType(Scrollable),
-);
-
-Finder get _settingsScrollable => find.descendant(
-  of: find.byKey(const Key('profile_settings_tab')),
-  matching: find.byType(Scrollable),
-);
-
-Future<void> _goToCompteTab(WidgetTester tester) async {
-  await tester.tap(find.text('Compte'));
-  await tester.pump(); // démarre l'animation
-  await tester.pump(
-    const Duration(milliseconds: 350),
-  ); // avance jusqu'à la fin (kTabScrollDuration=300ms)
-  await tester.pump(); // settle layout
+/// La page est un scroll unique : la plupart des lignes sont hors écran au
+/// premier rendu. `scrollUntilVisible` sur le seul Scrollable de la page.
+Future<void> _scrollTo(
+  WidgetTester tester,
+  Finder target, {
+  bool settle = true,
+}) async {
+  await tester.scrollUntilVisible(
+    target,
+    240,
+    // Le header replié contient un SingleChildScrollView (non scrollable) :
+    // on vise explicitement celui de la page.
+    scrollable: find
+        .descendant(
+          of: find.byType(CustomScrollView),
+          matching: find.byType(Scrollable),
+        )
+        .last,
+  );
+  // `settle: false` pour les écrans portant une animation infinie (le spinner
+  // du KYC en cours) : pumpAndSettle ne rendrait jamais la main.
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump(const Duration(seconds: 1));
+  }
 }
-
-Future<void> _goToReglagesTab(WidgetTester tester) async {
-  await tester.tap(find.text('Réglages'));
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 350));
-  await tester.pump();
-}
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 void main() {
   setUpAll(() {
@@ -305,49 +228,20 @@ void main() {
     );
   });
 
-  // ── Bannières ────────────────────────────────────────────────────────────────
-
-  testWidgets(
-    'PendingDeletionBanner renders when user status is PENDING_DELETION',
-    (tester) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: AuthAuthenticated(_pendingDeletionUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.byType(PendingDeletionBanner), findsOneWidget);
-    },
-  );
-
-  testWidgets('PendingDeletionBanner is absent when user status is ACTIVE', (
-    tester,
-  ) async {
+  Future<void> pumpWith(
+    WidgetTester tester,
+    UserModel user, {
+    bool settle = true,
+  }) async {
     whenListen<AuthState>(
       authBloc,
       const Stream.empty(),
-      initialState: const AuthAuthenticated(_activeUser),
+      initialState: AuthAuthenticated(user),
     );
     whenListen<AccountDeletionState>(
       deletionBloc,
       const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
+      initialState: AccountDeletionInitial(),
     );
 
     await tester.pumpWidget(
@@ -359,1556 +253,337 @@ void main() {
         referralBloc: referralBloc,
       ),
     );
-    await tester.pump(const Duration(milliseconds: 600));
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      await tester.pump(const Duration(seconds: 1));
+    }
+  }
 
-    expect(find.byType(PendingDeletionBanner), findsNothing);
-  });
+  // ── Page unique ─────────────────────────────────────────────────────────────
 
-  testWidgets(
-    'AccountReactivated state causes AuthCheckRequested to be dispatched',
-    (tester) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: AuthAuthenticated(_pendingDeletionUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        Stream.fromIterable([const AccountReactivated(_activeUser)]),
-        initialState: const AccountDeletionInitial(),
-      );
+  group('Page unique — plus d\'onglets', () {
+    testWidgets('aucune TabBar ni TabBarView', (tester) async {
+      await pumpWith(tester, _dualRoleUser);
 
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pump();
-
-      verify(() => authBloc.add(const AuthCheckRequested())).called(1);
-    },
-  );
-
-  testWidgets('AccountDeletionError state shows a SnackBar', (tester) async {
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: AuthAuthenticated(_pendingDeletionUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      Stream.fromIterable([
-        const AccountDeletionError(
-          error: NetworkException('La réactivation a échoué.'),
-        ),
-      ]),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.pump();
-
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text('Erreur réseau'), findsOneWidget);
-  });
-
-  // ── Onglet Réglages — Paramètres ─────────────────────────────────────────────
-
-  testWidgets('tapping "Paramètres" (onglet Réglages) navigates to /settings', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(_activeUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    await _goToReglagesTab(tester);
-
-    await tester.scrollUntilVisible(
-      find.text('Paramètres'),
-      200,
-      scrollable: _settingsScrollable,
-    );
-    await tester.tap(find.text('Paramètres'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Settings'), findsOneWidget);
-  });
-
-  // ── Groupe voyageur ───────────────────────────────────────────────────────────
-
-  group('Section voyageur', () {
-    setUp(() {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_travelerUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
+      expect(find.byType(TabBar), findsNothing);
+      expect(find.byType(TabBarView), findsNothing);
+      expect(find.text('Activité'), findsNothing);
+      expect(find.text('Compte'), findsNothing);
+      expect(find.text('Réglages'), findsNothing);
     });
 
-    testWidgets('onglet Activité affiche les sections EN COURS et SUIVI', (
+    testWidgets('un seul Scrollable porte toute la page', (tester) async {
+      await pumpWith(tester, _dualRoleUser);
+
+      // Le header (sonde de mesure) n'est pas scrollable : seule la page l'est.
+      expect(find.byType(CustomScrollView), findsOneWidget);
+    });
+
+    testWidgets('les six libellés de section sont sur la même page', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
+      await pumpWith(tester, _dualRoleUser);
 
-      for (final label in ['EN COURS', 'SUIVI']) {
-        await tester.scrollUntilVisible(
-          find.text(label),
-          300,
-          scrollable: _activityScrollable,
-        );
-        expect(
-          find.text(label),
-          findsOneWidget,
-          reason: 'Section "$label" manquante dans Activité',
-        );
+      for (final label in [
+        'MON COMPTE',
+        'ARGENT',
+        'MA RÉPUTATION',
+        'MES AVANTAGES',
+        'SUIVI',
+        'AIDE & RÉGLAGES',
+      ]) {
+        await _scrollTo(tester, find.text(label));
+        expect(find.text(label), findsOneWidget, reason: 'section $label');
       }
-      await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
-    testWidgets(
-      'onglet Compte affiche IDENTITÉ & CONTACT, RÉPUTATION, PAIEMENTS, AVANTAGES',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToCompteTab(tester);
-
-        // Order matches the widget-tree order in _AccountTab (top → bottom):
-        // IDENTITÉ & CONTACT → RÉPUTATION → PAIEMENTS → AVANTAGES
-        for (final label in [
-          'IDENTITÉ & CONTACT',
-          'RÉPUTATION',
-          'PAIEMENTS',
-          'AVANTAGES',
-        ]) {
-          await tester.scrollUntilVisible(
-            find.text(label),
-            300,
-            scrollable: _accountScrollable,
-          );
-          await tester.pump(const Duration(milliseconds: 100));
-          expect(
-            find.text(label),
-            findsOneWidget,
-            reason: 'Section "$label" manquante dans Compte',
-          );
-        }
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    testWidgets(
-      'onglet Réglages affiche SUPPORT avec Contacter le support et FAQ',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToReglagesTab(tester);
-
-        for (final tile in ['Contacter le support', 'FAQ & aide']) {
-          await tester.scrollUntilVisible(
-            find.text(tile),
-            300,
-            scrollable: _settingsScrollable,
-          );
-          await tester.pump(const Duration(milliseconds: 100));
-          expect(
-            find.text(tile),
-            findsOneWidget,
-            reason: '$tile manquant dans Réglages',
-          );
-        }
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    testWidgets(
-      'ni hub "Mes trajets et colis" ni anciennes tuiles : tout a migré sur Activités',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        expect(find.text('Mes trajets et colis'), findsNothing);
-        expect(find.text('Colis sur mes trajets'), findsNothing);
-        expect(find.text("Demandes d'envoi à transporter"), findsNothing);
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    testWidgets('affiche "Mon profil public" dans onglet Compte', (
+    testWidgets('les entrées migrées vers le hub Activités ont disparu', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
+      await pumpWith(tester, _dualRoleUser);
+      await _scrollTo(tester, find.text('AIDE & RÉGLAGES'));
 
-      await _goToCompteTab(tester);
-      await tester.scrollUntilVisible(
-        find.text('Mon profil public'),
-        300,
-        scrollable: _accountScrollable,
-      );
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('Mon profil public'), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
+      expect(find.text('Mes négociations'), findsNothing);
+      expect(find.text('FAQ & aide'), findsNothing);
+      expect(find.text('Mes colis'), findsNothing);
+      expect(find.text('Mes trajets et colis'), findsNothing);
     });
+  });
 
-    testWidgets('affiche "Mes avis reçus" dans onglet Compte', (tester) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
+  // ── Modèle double rôle ──────────────────────────────────────────────────────
 
-      await _goToCompteTab(tester);
-      await tester.scrollUntilVisible(
-        find.text('Mes avis reçus'),
-        300,
-        scrollable: _accountScrollable,
-      );
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('Mes avis reçus'), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
+  group('Modèle double rôle — aucune section conditionnée au rôle', () {
+    for (final entry in {
+      'double rôle': _dualRoleUser,
+      'compte encore mono-rôle': _senderOnlyUser,
+    }.entries) {
+      testWidgets('${entry.key} : section ARGENT complète', (tester) async {
+        await pumpWith(tester, entry.value);
 
-    testWidgets(
-      'hub "Mes trajets et colis" visible sans badge matchs (count retiré)',
-      (tester) async {
-        final now = DateTime(2026, 6);
-        whenListen<AnnouncementState>(
-          announcementBloc,
-          const Stream.empty(),
-          initialState: AnnouncementListLoaded(
-            List.generate(
-              2,
-              (i) => AnnouncementModel(
-                id: 'ann-$i',
-                travelerId: 'user-3',
-                departureCity: 'Paris',
-                arrivalCity: 'Dakar',
-                departureDate: now,
-                availableKg: 10,
-                totalKg: 10,
-                pricePerKg: 5,
-                status: 'ACTIVE',
-                createdAt: now,
-                updatedAt: now,
-              ),
-            ),
-          ),
-        );
-
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        // Le badge "N matchs" n'a jamais été affiché sur le hub.
-        // La tuile "Mes trajets et colis" n'a pas de trailing count matchs.
-        expect(find.textContaining('matchs'), findsNothing);
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    testWidgets('pas de badge matchs quand 0 annonces ACTIVE', (tester) async {
-      whenListen<AnnouncementState>(
-        announcementBloc,
-        const Stream.empty(),
-        initialState: AnnouncementListLoaded(const []),
-      );
-
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.textContaining('matchs'), findsNothing);
-    });
-
-    group('Collapsed AppBar title', () {
-      testWidgets('AppBar title contient DonyAvatar quand voyageur', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        expect(find.byType(DonyAvatar), findsWidgets);
+        for (final label in [
+          'Mon portefeuille',
+          'Recevoir mes paiements',
+          'Carte commission cash',
+          'Ma grille de prix',
+        ]) {
+          await _scrollTo(tester, find.text(label));
+          expect(find.text(label), findsOneWidget, reason: label);
+        }
       });
 
-      testWidgets(
-        'AppBar title affiche icône verified pour un utilisateur KYC vérifié',
-        (tester) async {
-          await tester.pumpWidget(
-            _buildTestHarness(
-              authBloc: authBloc,
-              deletionBloc: deletionBloc,
-              bidBloc: bidBloc,
-              announcementBloc: announcementBloc,
-              referralBloc: referralBloc,
+      testWidgets('${entry.key} : peut passer en compte PRO', (tester) async {
+        await pumpWith(tester, entry.value);
+        await _scrollTo(tester, find.text('Passer en compte PRO'));
+
+        expect(find.text('Passer en compte PRO'), findsOneWidget);
+      });
+    }
+
+    testWidgets('compte déjà PRO : la ligne devient « Mon profil PRO »', (
+      tester,
+    ) async {
+      await pumpWith(
+        tester,
+        const UserModel(
+          id: 'pro-1',
+          firstName: 'Pro',
+          lastName: 'User',
+          roles: ['TRAVELER', 'SENDER'],
+          kycStatus: 'VERIFIED',
+          status: 'ACTIVE',
+          isProAccount: true,
+        ),
+      );
+      await _scrollTo(tester, find.text('Mon profil PRO'));
+
+      expect(find.text('Mon profil PRO'), findsOneWidget);
+      expect(find.text('Passer en compte PRO'), findsNothing);
+    });
+  });
+
+  // ── Navigation ──────────────────────────────────────────────────────────────
+
+  group('Navigation', () {
+    for (final nav in [
+      ('Paramètres', 'Settings'),
+      ('Contacter le support', 'Contact'),
+      ('Mes litiges', 'Disputes'),
+      ('Mes abonnements', 'Subscriptions'),
+      ('Mon portefeuille', 'Wallet'),
+      ('Recevoir mes paiements', 'PaymentsOnboarding'),
+      ('Ma grille de prix', 'PriceGrid'),
+      ('Mon profil public', 'PublicProfile'),
+      ('Mes avis reçus', 'Reviews'),
+      ('Parrainages', 'Referral'),
+    ]) {
+      testWidgets('« ${nav.$1} » ouvre ${nav.$2}', (tester) async {
+        await pumpWith(tester, _dualRoleUser);
+        await _scrollTo(tester, find.text(nav.$1));
+
+        await tester.tap(find.text(nav.$1));
+        await tester.pumpAndSettle();
+
+        expect(find.text(nav.$2), findsOneWidget);
+      });
+    }
+  });
+
+  // ── KYC ─────────────────────────────────────────────────────────────────────
+
+  group('Statut KYC dans la section MON COMPTE', () {
+    for (final kyc in [
+      ('VERIFIED', 'Vérifié'),
+      ('REJECTED', 'Réessayer'),
+      ('PENDING', 'En cours'),
+      ('NOT_STARTED', 'Vérifier'),
+    ]) {
+      testWidgets('${kyc.$1} affiche « ${kyc.$2} »', (tester) async {
+        // Le statut PENDING affiche un spinner : animation infinie, donc
+        // pas de pumpAndSettle sur ce cas.
+        final settle = kyc.$1 != 'PENDING';
+        await pumpWith(
+          tester,
+          UserModel(
+            id: 'kyc-user',
+            firstName: 'Kyc',
+            lastName: 'User',
+            roles: const ['TRAVELER', 'SENDER'],
+            kycStatus: kyc.$1,
+            status: 'ACTIVE',
+          ),
+          settle: settle,
+        );
+        // « Documents KYC » ouvre la première section : visible sans scroll.
+        // On l'exploite pour ce cas, le scroll créant des animations d'entrée
+        // dont les timers survivraient à la fin du test.
+
+        expect(find.text(kyc.$2), findsWidgets);
+      });
+    }
+  });
+
+  // ── Bannières et suppression de compte ──────────────────────────────────────
+
+  group('Bannières', () {
+    testWidgets('PendingDeletionBanner affiché si suppression demandée', (
+      tester,
+    ) async {
+      await pumpWith(tester, _pendingDeletionUser);
+
+      expect(find.byType(PendingDeletionBanner), findsOneWidget);
+    });
+
+    testWidgets('PendingDeletionBanner absent si le compte est actif', (
+      tester,
+    ) async {
+      await pumpWith(tester, _dualRoleUser);
+
+      expect(find.byType(PendingDeletionBanner), findsNothing);
+    });
+
+    testWidgets('« Annuler la suppression » déclenche ReactivateAccount', (
+      tester,
+    ) async {
+      await pumpWith(tester, _pendingDeletionUser);
+
+      await tester.tap(find.text('Annuler la suppression'));
+      await tester.pump();
+
+      verify(() => deletionBloc.add(const ReactivateAccount())).called(1);
+    });
+
+    testWidgets('AccountDeletionError affiche une SnackBar', (tester) async {
+      whenListen<AuthState>(
+        authBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_dualRoleUser),
+      );
+      whenListen<AccountDeletionState>(
+        deletionBloc,
+        Stream.value(
+          const AccountDeletionError(error: NetworkException('Erreur test')),
+        ),
+        initialState: AccountDeletionInitial(),
+      );
+
+      await tester.pumpWidget(
+        _buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          referralBloc: referralBloc,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
+  });
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+
+  group('Header', () {
+    testWidgets('le titre replié porte l\'avatar', (tester) async {
+      await pumpWith(tester, _verifiedUser);
+
+      // Deux avatars vivent sous l'AppBar : celui du header déplié
+      // (flexibleSpace) et celui du titre replié.
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byType(DonyAvatar),
+        ),
+        findsNWidgets(2),
+      );
+    });
+
+    testWidgets('aucune pastille de rôle (modèle additif)', (tester) async {
+      await pumpWith(tester, _dualRoleUser);
+
+      expect(find.text('Voyageur'), findsNothing);
+      expect(find.text('Expéditeur'), findsNothing);
+    });
+  });
+
+  // ── Cycle de vie de la session ──────────────────────────────────────────────
+
+  group('Session', () {
+    testWidgets('AuthInitial renvoie vers /auth/phone', (tester) async {
+      whenListen<AuthState>(
+        authBloc,
+        Stream.value(const AuthInitial()),
+        initialState: const AuthAuthenticated(_dualRoleUser),
+      );
+      whenListen<AccountDeletionState>(
+        deletionBloc,
+        const Stream.empty(),
+        initialState: AccountDeletionInitial(),
+      );
+
+      await tester.pumpWidget(
+        _buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          referralBloc: referralBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('AuthPhone'), findsOneWidget);
+    });
+
+    testWidgets('AuthProfileUpdated rafraîchit le nom affiché', (tester) async {
+      whenListen<AuthState>(
+        authBloc,
+        Stream.value(
+          const AuthProfileUpdated(
+            UserModel(
+              id: 'user-4',
+              firstName: 'Nouveau',
+              lastName: 'Nom',
+              roles: ['TRAVELER', 'SENDER'],
+              kycStatus: 'NOT_STARTED',
+              status: 'ACTIVE',
             ),
-          );
-          await tester.pump(const Duration(milliseconds: 600));
-
-          expect(
-            find.byWidgetPredicate(
-              (w) => w is DonyIcon && w.name == 'badge-check',
-            ),
-            findsWidgets,
-          );
-          await tester.pumpAndSettle(const Duration(seconds: 5));
-        },
-      );
-    });
-
-    testWidgets(
-      'voyageur : base commune visible, sans tuile hub (migrée sur Activités)',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
           ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        // Modèle additif : les sections de base restent visibles pour tous ;
-        // le hub voyageur, lui, vit désormais sur l'onglet Activités.
-        await tester.scrollUntilVisible(
-          find.text('Mes négociations'),
-          300,
-          scrollable: _activityScrollable,
-        );
-        expect(find.text('Mes négociations'), findsOneWidget);
-        expect(
-          find.text('Mes trajets et colis'),
-          findsNothing,
-          reason: 'la tuile hub a migré sur l\'onglet Activités',
-        );
-      },
-    );
-
-    testWidgets(
-      'voyageur : plus de CTA "Devenir voyageur" (rôle universel), carte '
-      'activation carte visible tant que Stripe est incomplet',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToCompteTab(tester);
-        // Le rôle voyageur est universel — plus de wording "Devenir voyageur".
-        expect(
-          find.text('DEVENIR VOYAGEUR'),
-          findsNothing,
-          reason: 'le rôle voyageur est universel, plus de CTA "devenir"',
-        );
-        expect(
-          find.text('Devenir voyageur'),
-          findsNothing,
-          reason: 'ancien titre CTA retiré',
-        );
-        // _travelerUser a stripeAccountStatus par défaut ('NOT_CREATED') :
-        // la carte d'activation des paiements par carte reste donc visible.
-        expect(
-          find.byType(ActivateCardPaymentsCtaCard),
-          findsOneWidget,
-          reason: 'Stripe non finalisé : la carte activation carte reste visible',
-        );
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    // « Mes trajets et colis » a migré sur le hub Activités : le Profil
-    // voyageur n'affiche plus de carte hub.
-    testWidgets('la carte "Mes trajets et colis" n\'existe plus', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
         ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-
-      expect(find.text('Mes trajets et colis'), findsNothing);
-    });
-
-    testWidgets('tapping "Mes négociations" navigates to /negotiations', (
-      tester,
-    ) async {
-      // "Mes négociations" est toujours visible (commun aux deux rôles).
-      final now = DateTime(2026, 6);
-      whenListen<BidState>(
-        bidBloc,
-        const Stream.empty(),
-        initialState: BidListLoaded([
-          BidModel(
-            id: 'bid-neg-1',
-            announcementId: 'ann-1',
-            senderId: 'user-3',
-            weightKg: 5,
-            status: 'ACCEPTED',
-            createdAt: now,
-            updatedAt: now,
-          ),
-        ]),
-      );
-
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-
-      await tester.scrollUntilVisible(
-        find.text('Mes négociations'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      await tester.ensureVisible(find.text('Mes négociations'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Mes négociations'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Negotiations'), findsOneWidget);
-    });
-
-    testWidgets('tapping "Mes litiges" navigates to /disputes', (tester) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-
-      await tester.scrollUntilVisible(
-        find.text('Mes litiges'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      await tester.tap(find.text('Mes litiges'), warnIfMissed: false);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Disputes'), findsOneWidget);
-    });
-
-    // Navigation depuis onglet Compte
-    testWidgets(
-      'tapping "Mon profil public" (onglet Compte) navigates to /profile/public',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToCompteTab(tester);
-        await tester.scrollUntilVisible(
-          find.text('Mon profil public'),
-          300,
-          scrollable: _accountScrollable,
-        );
-        await tester.pump(); // stabilise avant le tap
-        // ensureVisible assure que l'item est dans la zone visible (pas seulement buildé)
-        await tester.ensureVisible(find.text('Mon profil public'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Mon profil public'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('PublicProfile'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'tapping "Recevoir mes paiements" (onglet Compte) navigates to /payments/onboarding',
-      (tester) async {
-        // Viewport de test agrandi : tout l'onglet Compte tient sans scroll
-        // précaire, ce qui rend le tap déterministe quelle que soit la hauteur.
-        tester.view.devicePixelRatio = 1.0;
-        tester.view.physicalSize = const Size(1080, 2600);
-        addTearDown(tester.view.reset);
-
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pumpAndSettle(const Duration(seconds: 2));
-
-        await _goToCompteTab(tester);
-        await tester.scrollUntilVisible(
-          find.text('Recevoir mes paiements'),
-          300,
-          scrollable: _accountScrollable,
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Recevoir mes paiements'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('PaymentsOnboarding'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'onglet Compte affiche la section PAIEMENTS (ex-MON PORTEFEUILLE)',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToCompteTab(tester);
-        await tester.scrollUntilVisible(
-          find.text('PAIEMENTS'),
-          300,
-          scrollable: _accountScrollable,
-        );
-        await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text('PAIEMENTS'), findsOneWidget);
-        expect(find.text('Mon portefeuille'), findsOneWidget);
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    testWidgets(
-      'tapping "Mon portefeuille" (onglet Compte) navigates to /payments/wallet',
-      (tester) async {
-        // Viewport agrandi : tout l'onglet Compte tient, tap déterministe.
-        tester.view.devicePixelRatio = 1.0;
-        tester.view.physicalSize = const Size(1080, 2600);
-        addTearDown(tester.view.reset);
-
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pumpAndSettle(const Duration(seconds: 2));
-
-        await _goToCompteTab(tester);
-        await tester.scrollUntilVisible(
-          find.text('Mon portefeuille'),
-          300,
-          scrollable: _accountScrollable,
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Mon portefeuille'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Wallet'), findsOneWidget);
-      },
-    );
-  });
-
-  // ── Groupe expéditeur ─────────────────────────────────────────────────────────
-
-  group('Section expéditeur', () {
-    setUp(() {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_activeUser),
+        initialState: const AuthAuthenticated(_dualRoleUser),
       );
       whenListen<AccountDeletionState>(
         deletionBloc,
         const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
+        initialState: AccountDeletionInitial(),
       );
+
+      await tester.pumpWidget(
+        _buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          referralBloc: referralBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.textContaining('Nouveau'), findsWidgets);
     });
 
-    testWidgets('sections voyageur absentes du tab Activité quand sender', (
+    testWidgets('« Se déconnecter » déclenche AuthLogoutRequested', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
+      await pumpWith(tester, _dualRoleUser);
+      await _scrollTo(tester, find.text('Se déconnecter'));
 
-      // Ces labels voyageur ne doivent pas apparaître quand sender.
-      expect(find.text('Colis sur mes trajets'), findsNothing);
-      // « Mes négociations » est commun aux deux rôles (section EN COURS)
-      // → présent même côté expéditeur.
-      await tester.scrollUntilVisible(
-        find.text('Mes négociations'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      expect(find.text('Mes négociations'), findsOneWidget);
-    });
+      await tester.tap(find.text('Se déconnecter'));
+      await tester.pump();
 
-    testWidgets('tab Activité sender affiche EN COURS et SUIVI', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      // Vérifie les entrées des sections sender (plus fiable que les headers
-      // dans un NestedScrollView où scrollUntilVisible peut ne pas fonctionner).
-      await tester.scrollUntilVisible(
-        find.text('Mes négociations'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      expect(
-        find.text('Mes négociations'),
-        findsOneWidget,
-        reason: 'section EN COURS sender absente',
-      );
-      await tester.scrollUntilVisible(
-        find.text('Mes abonnements'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      expect(
-        find.text('Mes abonnements'),
-        findsOneWidget,
-        reason: 'section SUIVI sender absente (abonnements)',
-      );
-      await tester.scrollUntilVisible(
-        find.text('Mes litiges'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      expect(
-        find.text('Mes litiges'),
-        findsOneWidget,
-        reason: 'section SUIVI sender absente (litiges)',
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
-
-    testWidgets(
-      'tab Compte sender affiche la CTA Activer les paiements par carte '
-      '(PAIEMENTS & FACTURES supprimé)',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToCompteTab(tester);
-        // 'PAIEMENTS & FACTURES' a été supprimé — ses tuiles sont toutes Bientôt.
-        expect(find.text('PAIEMENTS & FACTURES'), findsNothing);
-        expect(find.text('Moyens de paiement'), findsNothing);
-        expect(find.text('Factures'), findsNothing);
-        expect(find.text('Crédits & codes promo'), findsNothing);
-
-        // Le label DEVENIR VOYAGEUR a été remplacé par la carte CTA carte.
-        expect(find.text('DEVENIR VOYAGEUR'), findsNothing);
-        expect(
-          find.byType(ActivateCardPaymentsCtaCard),
-          findsOneWidget,
-          reason: 'ActivateCardPaymentsCtaCard manquante pour un sender',
-        );
-        expect(
-          find.text('Activer les paiements par carte'),
-          findsOneWidget,
-          reason: 'Titre CTA manquant',
-        );
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    testWidgets(
-      'tab Compte sender affiche aussi section PAIEMENTS (ex-MON PORTEFEUILLE)',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToCompteTab(tester);
-        await tester.scrollUntilVisible(
-          find.text('PAIEMENTS'),
-          300,
-          scrollable: _accountScrollable,
-        );
-        expect(
-          find.text('PAIEMENTS'),
-          findsOneWidget,
-          reason: 'section PAIEMENTS manquante (sender Compte)',
-        );
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-
-    // ── Phase 4 : modèle additif ─────────────────────────────────────────────────
-
-    testWidgets(
-      'pur expéditeur : hub "Mes trajets et colis" absent (isTraveler=false)',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        expect(
-          find.text('Mes trajets et colis'),
-          findsNothing,
-          reason: 'sender ne doit pas voir le hub "Mes trajets et colis"',
-        );
-      },
-    );
-
-    testWidgets(
-      'Mes adresses retiré du profil (déplacé vers le hub colis/trajets)',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        // « Mes adresses » et « Mes destinataires » ont quitté MON CARNET :
-        // ils vivent désormais dans les hubs « Mes trajets et colis » / « Mes
-        // colis », plus sur l'onglet Activité du profil.
-        expect(find.text('Mes adresses'), findsNothing);
-        expect(find.text('Mes destinataires'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'pur expéditeur : section AVANTAGES présente en onglet Compte',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestHarness(
-            authBloc: authBloc,
-            deletionBloc: deletionBloc,
-            bidBloc: bidBloc,
-            announcementBloc: announcementBloc,
-            referralBloc: referralBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 600));
-
-        await _goToCompteTab(tester);
-        await tester.scrollUntilVisible(
-          find.text('AVANTAGES'),
-          300,
-          scrollable: _accountScrollable,
-        );
-        expect(
-          find.text('AVANTAGES'),
-          findsOneWidget,
-          reason:
-              'section AVANTAGES doit être visible pour tous les utilisateurs',
-        );
-        await tester.pumpAndSettle(const Duration(seconds: 5));
-      },
-    );
-  });
-
-  // ── KYC status (onglet Compte) ────────────────────────────────────────────────
-
-  testWidgets('KYC REJECTED shows "Réessayer" dans onglet Compte', (
-    tester,
-  ) async {
-    const rejectedKycUser = UserModel(
-      id: 'user-rej',
-      firstName: 'Rejected',
-      lastName: 'User',
-      roles: ['SENDER'],
-      kycStatus: 'REJECTED',
-      status: 'ACTIVE',
-    );
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(rejectedKycUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    await _goToCompteTab(tester);
-    await tester.scrollUntilVisible(
-      find.text('Réessayer'),
-      300,
-      scrollable: _accountScrollable,
-    );
-    expect(find.text('Réessayer'), findsOneWidget);
-    for (var i = 0; i < 5; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-  });
-
-  testWidgets('KYC PENDING shows "En cours" dans onglet Compte', (
-    tester,
-  ) async {
-    const pendingKycUser = UserModel(
-      id: 'user-pend',
-      firstName: 'Pending',
-      lastName: 'User',
-      roles: ['SENDER'],
-      kycStatus: 'PENDING',
-      status: 'ACTIVE',
-    );
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(pendingKycUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    await _goToCompteTab(tester);
-    await tester.scrollUntilVisible(
-      find.text('En cours'),
-      300,
-      scrollable: _accountScrollable,
-    );
-    expect(find.text('En cours'), findsOneWidget);
-    for (var i = 0; i < 5; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-  });
-
-  // ── Auth navigation ───────────────────────────────────────────────────────────
-
-  testWidgets('AuthInitial state triggers navigation to /auth/phone', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      authBloc,
-      Stream.fromIterable([const AuthInitial()]),
-      initialState: const AuthAuthenticated(_activeUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-
-    expect(find.text('AuthPhone'), findsOneWidget);
-  });
-
-  testWidgets('AuthAccountDeleted state triggers navigation to /auth/phone', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      authBloc,
-      Stream.fromIterable([const AuthAccountDeleted()]),
-      initialState: const AuthAuthenticated(_activeUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-
-    expect(find.text('AuthPhone'), findsOneWidget);
-  });
-
-  testWidgets('AuthProfileUpdated state renders updated user display name', (
-    tester,
-  ) async {
-    const updatedUser = UserModel(
-      id: 'user-1',
-      firstName: 'Updated',
-      lastName: 'Name',
-      roles: ['SENDER'],
-      kycStatus: 'NOT_STARTED',
-      status: 'ACTIVE',
-    );
-    whenListen<AuthState>(
-      authBloc,
-      Stream.fromIterable([const AuthProfileUpdated(updatedUser)]),
-      initialState: const AuthAuthenticated(_activeUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-
-    expect(find.text('Updated Name'), findsWidgets);
-  });
-
-  // ── Bannière suppression ──────────────────────────────────────────────────────
-
-  testWidgets('tapping "Annuler la suppression" dispatches ReactivateAccount', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: AuthAuthenticated(_pendingDeletionUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    await tester.tap(find.text('Annuler la suppression'));
-    await tester.pump();
-
-    verify(() => deletionBloc.add(const ReactivateAccount())).called(1);
-  });
-
-  // ── E2 — Tuiles Bientôt masquées + renommage PAIEMENTS ──────────────────────
-
-  testWidgets('Tuiles Bientôt masquées + section PAIEMENTS', (tester) async {
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(_activeUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    await _goToCompteTab(tester);
-
-    // Tuiles ComingSoon supprimées.
-    expect(find.text('Moyens de paiement'), findsNothing);
-    expect(find.text('Factures'), findsNothing);
-    expect(find.text('Crédits & codes promo'), findsNothing);
-
-    // Section renommée PAIEMENTS (anciennement MON PORTEFEUILLE).
-    await tester.scrollUntilVisible(
-      find.text('PAIEMENTS'),
-      300,
-      scrollable: _accountScrollable,
-    );
-    expect(find.text('PAIEMENTS'), findsOneWidget);
-    expect(find.text('Mon portefeuille'), findsOneWidget);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-  });
-
-  // ── Modèle additif (Phase 4) ─────────────────────────────────────────────────
-
-  testWidgets('dual-role: no role pill shown in header (additive model)', (
-    tester,
-  ) async {
-    // _dualRoleUser a TRAVELER + SENDER : le modèle additif n'affiche plus de pill
-    // dans le header. La gestion de rôle se fait par isTraveler, pas par activeRole.
-    whenListen<AuthState>(
-      authBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(_dualRoleUser),
-    );
-    whenListen<AccountDeletionState>(
-      deletionBloc,
-      const Stream.empty(),
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(
-      _buildTestHarness(
-        authBloc: authBloc,
-        deletionBloc: deletionBloc,
-        bidBloc: bidBloc,
-        announcementBloc: announcementBloc,
-        referralBloc: referralBloc,
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
-
-    // Le pill Expéditeur/Voyageur n'existe plus dans le header, et la tuile
-    // hub a migré sur l'onglet Activités : la section commune reste seule.
-    await tester.scrollUntilVisible(
-      find.text('Mes négociations'),
-      300,
-      scrollable: _activityScrollable,
-    );
-    expect(find.text('Mes négociations'), findsOneWidget);
-    expect(find.text('Mes trajets et colis'), findsNothing);
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-  });
-
-  // ── E3 — CTA Activer les paiements par carte en tête de Compte ───────────────
-
-  testWidgets(
-    'CTA Activer les paiements par carte en tête de Compte (Stripe non finalisé)',
-    (tester) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_activeUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      await _goToCompteTab(tester);
-      expect(find.byType(ActivateCardPaymentsCtaCard), findsOneWidget);
-      expect(find.text('Activer les paiements par carte'), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    },
-  );
-
-  testWidgets(
-    'Pas de CTA Activer les paiements par carte quand Stripe onboarding complet',
-    (tester) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: AuthAuthenticated(
-          _activeUser.copyWith(stripeAccountStatus: 'ONBOARDING_COMPLETE'),
-        ),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      await _goToCompteTab(tester);
-      // Le widget reste dans l'arbre mais se réduit à SizedBox.shrink()
-      // (hauteur nulle — la largeur suit la contrainte du ListView) —
-      // skipOffstage: false car un item de hauteur 0 en tête de sliver est
-      // considéré "offstage" par debugVisitOnstageChildren.
-      expect(find.text('Activer les paiements par carte'), findsNothing);
-      final size = tester.getSize(
-        find.byType(ActivateCardPaymentsCtaCard, skipOffstage: false),
-      );
-      expect(size.height, 0);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    },
-  );
-
-  group('onglet Compte réorganisé', () {
-    Future<void> openCompte(WidgetTester tester, UserModel user) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: AuthAuthenticated(user),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-      await _goToCompteTab(tester);
-      await tester.pump(const Duration(milliseconds: 600));
-    }
-
-    testWidgets('sections regroupées présentes (voyageur)', (tester) async {
-      await openCompte(tester, _travelerUser);
-      await tester.pump(const Duration(milliseconds: 100));
-      for (final label in [
-        'IDENTITÉ & CONTACT',
-        'RÉPUTATION',
-        'PAIEMENTS',
-        'AVANTAGES',
-      ]) {
-        await tester.scrollUntilVisible(
-          find.text(label),
-          300,
-          scrollable: _accountScrollable,
-        );
-        await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text(label), findsOneWidget);
-      }
-      expect(find.text('REVENUS & PAIEMENTS'), findsNothing);
-      expect(find.text('FIDÉLITÉ'), findsNothing);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
-
-    testWidgets('PAIEMENTS unifié : voyageur voit portefeuille + revenus', (
-      tester,
-    ) async {
-      await openCompte(tester, _travelerUser);
-      await tester.scrollUntilVisible(
-        find.text('Ma grille de prix'),
-        300,
-        scrollable: _accountScrollable,
-      );
-      expect(find.text('Mon portefeuille'), findsOneWidget);
-      expect(find.text('Recevoir mes paiements'), findsOneWidget);
-      expect(find.text('Ma grille de prix'), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
-
-    testWidgets('PAIEMENTS : expéditeur ne voit que le portefeuille', (
-      tester,
-    ) async {
-      await openCompte(tester, _activeUser);
-      await tester.scrollUntilVisible(
-        find.text('Mon portefeuille'),
-        300,
-        scrollable: _accountScrollable,
-      );
-      expect(find.text('Mon portefeuille'), findsOneWidget);
-      expect(find.text('Recevoir mes paiements'), findsNothing);
-      expect(find.text('Ma grille de prix'), findsNothing);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
-  });
-
-  group('onglet Activité réorganisé', () {
-    testWidgets('voyageur : section EN COURS sans carte hub (migrée)', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_travelerUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.text('EN COURS'), findsOneWidget);
-      // La carte hub voyageur vit désormais sur l'onglet Activités.
-      expect(find.text('Mes trajets et colis'), findsNothing);
-      await tester.scrollUntilVisible(
-        find.text('SUIVI'),
-        300,
-        scrollable: _activityScrollable,
-      );
-      expect(find.text('SUIVI'), findsOneWidget);
-      expect(find.text('Mes colis'), findsNothing);
-      expect(find.text('MON CARNET'), findsNothing);
-    });
-
-    testWidgets('expéditeur : hub "Mes colis" en section EN COURS', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_activeUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.text('Mes colis'), findsOneWidget);
-      expect(find.text('Mes trajets et colis'), findsNothing);
-    });
-
-    testWidgets('section SUIVI contient litiges et abonnements', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_travelerUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      final scrollable = find.descendant(
-        of: find.byKey(const Key('profile_activity_tab')),
-        matching: find.byType(Scrollable),
-      );
-      await tester.scrollUntilVisible(
-        find.text('Mes litiges'),
-        300,
-        scrollable: scrollable,
-      );
-      expect(find.text('Mes litiges'), findsOneWidget);
-      expect(find.text('Mes abonnements'), findsOneWidget);
-    });
-  });
-
-  group('onglet Réglages dédupliqué', () {
-    Future<void> openReglages(WidgetTester tester) async {
-      whenListen<AuthState>(
-        authBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_activeUser),
-      );
-      whenListen<AccountDeletionState>(
-        deletionBloc,
-        const Stream.empty(),
-        initialState: const AccountDeletionInitial(),
-      );
-      await tester.pumpWidget(
-        _buildTestHarness(
-          authBloc: authBloc,
-          deletionBloc: deletionBloc,
-          bidBloc: bidBloc,
-          announcementBloc: announcementBloc,
-          referralBloc: referralBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-      await _goToReglagesTab(tester);
-    }
-
-    testWidgets('doublons /settings retirés', (tester) async {
-      await openReglages(tester);
-      expect(find.text('Notifications'), findsNothing);
-      expect(find.text('Langue'), findsNothing);
-      expect(find.text('Sécurité & confidentialité'), findsNothing);
-      expect(find.text('SÉCURITÉ'), findsNothing);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    });
-
-    testWidgets('garde Paramètres, Support et Déconnexion', (tester) async {
-      await openReglages(tester);
-      await tester.scrollUntilVisible(
-        find.text('Paramètres'),
-        300,
-        scrollable: _settingsScrollable,
-      );
-      expect(find.text('Paramètres'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Contacter le support'),
-        300,
-        scrollable: _settingsScrollable,
-      );
-      expect(find.text('Contacter le support'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('FAQ & aide'),
-        300,
-        scrollable: _settingsScrollable,
-      );
-      expect(find.text('FAQ & aide'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Se déconnecter'),
-        300,
-        scrollable: _settingsScrollable,
-      );
-      expect(find.text('Se déconnecter'), findsOneWidget);
-      await tester.pumpAndSettle(const Duration(seconds: 5));
+      verify(() => authBloc.add(const AuthLogoutRequested())).called(1);
     });
   });
 }

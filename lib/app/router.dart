@@ -122,7 +122,6 @@ import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
-import 'package:dony/features/profile/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -784,7 +783,6 @@ final appRouter = GoRouter(
 
 
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
-    GoRoute(path: '/mes-colis', builder: (_, __) => const MesColisScreen()),
 
     // ── Envois et demandes — destinations du hub Activités ────────────
     // ShipmentListScreen lit le BidBloc depuis son parent et déclenche

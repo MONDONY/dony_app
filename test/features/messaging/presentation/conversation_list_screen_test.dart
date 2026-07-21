@@ -27,7 +27,10 @@ final _conv = ConversationModel(
   firestoreConversationId: 'conv_bid-1',
   otherParticipant: _participant,
   lastMessagePreview: 'Bonjour !',
-  lastMessageAt: DateTime.now().subtract(const Duration(minutes: 5)),
+  // `now()` exactement, et non `now() - 5 min` : entre 00 h 00 et 00 h 05 ce
+  // décalage bascule le message sur la veille et le fait sortir de la section
+  // « AUJOURD'HUI » — le test échouait cinq minutes par jour.
+  lastMessageAt: DateTime.now(),
   hasUnread: true,
   unreadCount: 2,
 );
@@ -87,8 +90,11 @@ Future<void> _pump(WidgetTester tester, ConversationListBloc bloc) async {
 }
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     registerFallbackValue(_FakeConversationListEvent());
+    // ConversationTile formate l'heure du dernier message en français : sans
+    // cette initialisation, toute tuile rendue lève LocaleDataException.
+    await initializeDateFormatting('fr');
   });
 
   late MockConversationListBloc bloc;
