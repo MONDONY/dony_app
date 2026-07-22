@@ -190,6 +190,14 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
           if (e.arrival != null) 'arrival': e.arrival!,
         },
       ));
+      // Liste scorée « colis sur mes trajets » : c'est désormais une recherche
+      // filtrée, l'event suit le filtre plutôt que l'écran dédié supprimé.
+      if (e.matchingMyTrips == true) {
+        unawaited(_analytics?.logEvent(
+          AnalyticsEvents.tripMatchingViewed,
+          properties: {'count': page.content.length},
+        ));
+      }
     } catch (err) {
       emit(state.copyWith(status: SearchStatus.error, errorMessage: err.toString()));
     }

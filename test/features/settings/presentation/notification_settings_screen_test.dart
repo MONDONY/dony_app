@@ -46,7 +46,10 @@ Widget _wrapWithBloc(MockNotificationPrefsBloc mockBloc) {
   );
 }
 
-MockNotificationPrefsBloc _buildMockBloc([Map<String, bool>? customPrefs]) {
+MockNotificationPrefsBloc _buildMockBloc([
+  Map<String, bool>? customPrefs,
+  bool? packageMatchAlert,
+]) {
   final mockBloc = MockNotificationPrefsBloc();
   final prefs = customPrefs ?? {
     'push_activity_bids': true,
@@ -56,7 +59,10 @@ MockNotificationPrefsBloc _buildMockBloc([Map<String, bool>? customPrefs]) {
     'push_promo': false,
     'email_promo': false,
   };
-  final state = NotificationPrefsState(prefs: prefs);
+  final state = NotificationPrefsState(
+    prefs: prefs,
+    packageMatchAlert: packageMatchAlert,
+  );
   when(() => mockBloc.state).thenReturn(state);
   whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
       initialState: state);
@@ -102,7 +108,12 @@ void main() {
       await tester.tap(find.text('Livraison confirmée'));
       await tester.pump();
 
-      verifyNever(() => mockBloc.add(any()));
+      // L'ouverture de l'écran dispatche la lecture de la cloche serveur :
+      // c'est le tap sur une tuile verrouillée qui ne doit rien bousculer.
+      verifyNever(() => mockBloc.add(any(that: isA<NotifPrefToggled>())));
+      verifyNever(
+        () => mockBloc.add(any(that: isA<NotifPackageMatchAlertToggled>())),
+      );
     });
 
     testWidgets('affiche la section ACTIVITÉ avec 4 tiles', (tester) async {
@@ -138,6 +149,13 @@ void main() {
       addTearDown(mockBloc.close);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Discussions de prix'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Discussions de prix'));
@@ -187,6 +205,119 @@ void main() {
       expect(find.text('ACTUS & PROMOTIONS'), findsOneWidget);
       expect(find.text('Actus dony (Push)'), findsOneWidget);
       expect(find.text('Actus dony (E-mail)'), findsOneWidget);
+    });
+  });
+
+  // ─── Cloche « colis compatibles », rapatriée depuis l'écran supprimé ────────
+  group('NotificationSettingsScreen — colis compatibles', () {
+    const label = 'Nouveaux colis compatibles';
+
+    testWidgets('la ligne vit dans la section ACTIVITÉ, sous Matchs & enchères',
+        (tester) async {
+      final mockBloc = _buildMockBloc(null, true);
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text(label), findsOneWidget);
+      // Juste sous « Matchs & enchères » : c'est la section qu'elle complète.
+      final matchs = tester.getTopLeft(find.text('Matchs & enchères')).dy;
+      final compat = tester.getTopLeft(find.text(label)).dy;
+      final autre = tester.getTopLeft(find.text('Discussions de prix')).dy;
+      expect(compat, greaterThan(matchs));
+      expect(compat, lessThan(autre));
+    });
+
+    testWidgets('l\'écran demande la valeur serveur à l\'ouverture',
+        (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockBloc.add(
+          any(that: isA<NotifPackageMatchAlertLoadRequested>()),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('tap → bascule vers l\'état inverse', (tester) async {
+      final mockBloc = _buildMockBloc(null, true);
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(label));
+      await tester.pump();
+
+      verify(
+        () => mockBloc.add(
+          any(
+            that: isA<NotifPackageMatchAlertToggled>().having(
+              (e) => e.enabled,
+              'enabled',
+              isFalse,
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('coupée → tap la rallume', (tester) async {
+      final mockBloc = _buildMockBloc(null, false);
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(label));
+      await tester.pump();
+
+      verify(
+        () => mockBloc.add(
+          any(
+            that: isA<NotifPackageMatchAlertToggled>().having(
+              (e) => e.enabled,
+              'enabled',
+              isTrue,
+            ),
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('valeur inconnue → le tap ne bascule rien', (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(label));
+      await tester.pump();
+
+      verifyNever(
+        () => mockBloc.add(any(that: isA<NotifPackageMatchAlertToggled>())),
+      );
+    });
+
+    testWidgets('la cible tactile fait au moins 44 points de haut',
+        (tester) async {
+      final mockBloc = _buildMockBloc(null, true);
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      final tuile = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(InkWell),
+      );
+      expect(tester.getSize(tuile.first).height, greaterThanOrEqualTo(44));
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:ui' show FontFeature;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -159,6 +161,13 @@ class PackageRequestListCard extends StatelessWidget {
                                 ],
                               ],
                             ),
+                            // ── Score de compatibilité (filtre « Pour mes
+                            //    trajets ») : présent uniquement quand le
+                            //    serveur a renvoyé un score.
+                            if (item.hasMatchScore) ...[
+                              const SizedBox(height: DonySpacing.xs),
+                              _MatchScoreRow(item: item, cs: cs, tt: tt),
+                            ],
                             const SizedBox(height: DonySpacing.sm),
 
                             // ── Photo colis + infos colis ─────────────────────
@@ -213,6 +222,72 @@ class PackageRequestListCard extends StatelessWidget {
           duration: 280.ms,
         )
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+// ── Score de compatibilité avec les trajets de l'utilisateur ─────────────────
+
+/// Ligne « 94 % · Ton trajet du 12 juil. » affichée sur les résultats d'une
+/// recherche filtrée « Pour mes trajets ». Le score vient du serveur, la carte
+/// ne le recalcule jamais. Absente dès que [PackageRequestSearchItem.matchScore]
+/// est nul : les autres feeds de demandes gardent leur rendu d'origine.
+class _MatchScoreRow extends StatelessWidget {
+  const _MatchScoreRow({
+    required this.item,
+    required this.cs,
+    required this.tt,
+  });
+
+  final PackageRequestSearchItem item;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  @override
+  Widget build(BuildContext context) {
+    final depart = item.matchedTripDepartureDate;
+    return Row(
+      children: [
+        Container(
+          key: const Key('match-score-badge'),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.sm,
+            vertical: DonySpacing.xxs,
+          ),
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DonyIcon('sparkles', size: 12, color: cs.primary),
+              const SizedBox(width: DonySpacing.xs),
+              Text(
+                '${item.matchScore} %',
+                style: tt.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.primary,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (depart != null) ...[
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              'Ton trajet du ${DateFormat('d MMM', 'fr').format(depart)}',
+              overflow: TextOverflow.ellipsis,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
 

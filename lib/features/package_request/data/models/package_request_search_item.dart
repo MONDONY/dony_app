@@ -31,6 +31,9 @@ class PackageRequestSearchItem extends Equatable {
     required this.sender,
     this.isFavorite = false,
     this.urgent,
+    this.matchScore,
+    this.matchedTripId,
+    this.matchedTripDepartureDate,
   });
 
   final String id;
@@ -75,6 +78,23 @@ class PackageRequestSearchItem extends Equatable {
   /// depuis [desiredDate] uniquement si absente (ancien backend).
   bool get isUrgent => urgent ?? isUrgentDate(desiredDate);
 
+  /// Score de compatibilité (0 à 100) entre cette demande et le trajet retenu.
+  /// Renvoyé par le serveur uniquement quand la recherche porte le filtre
+  /// `matchingMyTrips=true` ; `null` partout ailleurs.
+  final int? matchScore;
+
+  /// Identifiant du trajet de l'utilisateur retenu pour ce score. Voir
+  /// [matchScore] pour les conditions de présence.
+  final String? matchedTripId;
+
+  /// Date de départ du trajet retenu ([matchedTripId]), pour situer le match
+  /// dans le temps sur la carte de résultat. Voir [matchScore].
+  final DateTime? matchedTripDepartureDate;
+
+  /// Vrai quand le serveur a renvoyé un score : la carte peut alors afficher
+  /// son badge de compatibilité.
+  bool get hasMatchScore => matchScore != null;
+
   factory PackageRequestSearchItem.fromJson(Map<String, dynamic> json) =>
       PackageRequestSearchItem(
         id: json['id'] as String,
@@ -109,6 +129,12 @@ class PackageRequestSearchItem extends Equatable {
         ),
         isFavorite: json['isFavorite'] as bool? ?? false,
         urgent: json['urgent'] as bool?,
+        matchScore: (json['matchScore'] as num?)?.toInt(),
+        matchedTripId: json['matchedTripId'] as String?,
+        matchedTripDepartureDate: switch (json['matchedTripDepartureDate']) {
+          final String d => DateTime.parse(d),
+          _ => null,
+        },
       );
 
   @override
@@ -135,6 +161,9 @@ class PackageRequestSearchItem extends Equatable {
     sender,
     isFavorite,
     urgent,
+    matchScore,
+    matchedTripId,
+    matchedTripDepartureDate,
   ];
 }
 

@@ -174,4 +174,52 @@ void main() {
       expect(withUrgent, isNot(equals(withoutUrgent)));
     });
   });
+
+  // ─── Champs de match (filtre « Pour mes trajets ») ─────────────────────────
+  group('matchingMyTrips', () {
+    test('fromJson lit les trois champs de match', () {
+      final item = PackageRequestSearchItem.fromJson({
+        ..._baseJson(),
+        'matchScore': 94,
+        'matchedTripId': 'b1f0-trip',
+        'matchedTripDepartureDate': '2026-08-12',
+      });
+
+      expect(item.matchScore, 94);
+      expect(item.matchedTripId, 'b1f0-trip');
+      expect(item.matchedTripDepartureDate, DateTime(2026, 8, 12));
+    });
+
+    test('les trois champs sont nuls quand le serveur ne les renvoie pas', () {
+      final item = PackageRequestSearchItem.fromJson(_baseJson());
+
+      expect(item.matchScore, isNull);
+      expect(item.matchedTripId, isNull);
+      expect(item.matchedTripDepartureDate, isNull);
+    });
+
+    test('matchScore participe à l\'égalité (props)', () {
+      final avec = PackageRequestSearchItem.fromJson(
+        _baseJson()..['matchScore'] = 94,
+      );
+      final sans = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(avec, isNot(equals(sans)));
+    });
+
+    test('matchedTripId participe à l\'égalité (props)', () {
+      final avec = PackageRequestSearchItem.fromJson(
+        _baseJson()..['matchedTripId'] = 'trip-9',
+      );
+      final sans = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(avec, isNot(equals(sans)));
+    });
+
+    test('matchedTripDepartureDate participe à l\'égalité (props)', () {
+      final avec = PackageRequestSearchItem.fromJson(
+        _baseJson()..['matchedTripDepartureDate'] = '2026-08-12',
+      );
+      final sans = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(avec, isNot(equals(sans)));
+    });
+  });
 }
