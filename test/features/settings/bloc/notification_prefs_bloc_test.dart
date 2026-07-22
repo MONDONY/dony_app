@@ -16,6 +16,11 @@ class MockAnalytics extends Mock implements AnalyticsService {}
 
 void main() {
   late MockBox mockBox;
+  // Les deux dépendances serveur sont REQUISES par le bloc : un câblage
+  // d'injection incomplet ne compile plus. Elles sont donc montées pour tous
+  // les tests, y compris ceux qui ne s'intéressent qu'aux préférences Hive.
+  late MockPackageRequestRepository repo;
+  late MockAnalytics analytics;
 
   setUp(() {
     mockBox = MockBox();
@@ -23,11 +28,19 @@ void main() {
     when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
         .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+
+    repo = MockPackageRequestRepository();
+    analytics = MockAnalytics();
+    when(() => repo.getPackageMatchAlert()).thenAnswer((_) async => true);
+    when(() => repo.setPackageMatchAlert(any())).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   group('NotificationPrefsBloc', () {
     test('état initial utilise les 6 nouvelles defaults', () {
-      final bloc = NotificationPrefsBloc(mockBox);
+      final bloc = NotificationPrefsBloc(mockBox, repo, analytics);
       expect(bloc.state.prefs['push_activity_bids'], isTrue);
       expect(bloc.state.prefs['push_activity_negotiations'], isTrue);
       expect(bloc.state.prefs['push_messages'], isTrue);
@@ -54,14 +67,14 @@ void main() {
         ),
       ).thenReturn(false);
 
-      final bloc = NotificationPrefsBloc(mockBox);
+      final bloc = NotificationPrefsBloc(mockBox, repo, analytics);
       expect(bloc.state.prefs['push_activity_bids'], isFalse);
       bloc.close();
     });
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'NotifPrefToggled inverse push_activity_bids (true → false)',
-      build: () => NotificationPrefsBloc(mockBox),
+      build: () => NotificationPrefsBloc(mockBox, repo, analytics),
       act: (bloc) => bloc.add(const NotifPrefToggled('push_activity_bids')),
       expect: () => [
         isA<NotificationPrefsState>().having(
@@ -77,7 +90,7 @@ void main() {
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'NotifPrefToggled inverse push_activity_negotiations (true → false)',
-      build: () => NotificationPrefsBloc(mockBox),
+      build: () => NotificationPrefsBloc(mockBox, repo, analytics),
       act: (bloc) =>
           bloc.add(const NotifPrefToggled('push_activity_negotiations')),
       expect: () => [
@@ -91,7 +104,7 @@ void main() {
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'NotifPrefToggled inverse push_messages (true → false)',
-      build: () => NotificationPrefsBloc(mockBox),
+      build: () => NotificationPrefsBloc(mockBox, repo, analytics),
       act: (bloc) => bloc.add(const NotifPrefToggled('push_messages')),
       expect: () => [
         isA<NotificationPrefsState>().having(
@@ -104,7 +117,7 @@ void main() {
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'NotifPrefToggled écrit la nouvelle valeur dans Hive',
-      build: () => NotificationPrefsBloc(mockBox),
+      build: () => NotificationPrefsBloc(mockBox, repo, analytics),
       act: (bloc) => bloc.add(const NotifPrefToggled('push_promo')),
       verify: (_) =>
           verify(() => mockBox.put('notif_push_promo', true)).called(1),
@@ -112,7 +125,7 @@ void main() {
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'Deux toggles successifs restituent la valeur initiale',
-      build: () => NotificationPrefsBloc(mockBox),
+      build: () => NotificationPrefsBloc(mockBox, repo, analytics),
       act: (bloc) => bloc
         ..add(const NotifPrefToggled('push_promo'))
         ..add(const NotifPrefToggled('push_promo')),
@@ -126,7 +139,7 @@ void main() {
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'Toggler une clé ne modifie pas les autres clés',
-      build: () => NotificationPrefsBloc(mockBox),
+      build: () => NotificationPrefsBloc(mockBox, repo, analytics),
       act: (bloc) => bloc.add(const NotifPrefToggled('push_promo')),
       expect: () => [
         isA<NotificationPrefsState>()
@@ -144,7 +157,7 @@ void main() {
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'NotifPrefToggled ignore une clé inconnue',
-      build: () => NotificationPrefsBloc(mockBox),
+      build: () => NotificationPrefsBloc(mockBox, repo, analytics),
       act: (bloc) => bloc.add(const NotifPrefToggled('cle_inexistante')),
       expect: () => [],
       verify: (_) =>
@@ -157,21 +170,8 @@ void main() {
   // Le réglage vit côté serveur, pas dans Hive : c'est une préférence de
   // notification du voyageur, pas un choix d'affichage local.
   group('NotificationPrefsBloc — alerte colis compatibles', () {
-    late MockPackageRequestRepository repo;
-    late MockAnalytics analytics;
-
     NotificationPrefsBloc build() =>
         NotificationPrefsBloc(mockBox, repo, analytics);
-
-    setUp(() {
-      repo = MockPackageRequestRepository();
-      analytics = MockAnalytics();
-      when(() => repo.getPackageMatchAlert()).thenAnswer((_) async => true);
-      when(() => repo.setPackageMatchAlert(any())).thenAnswer((_) async {});
-      when(
-        () => analytics.logEvent(any(), properties: any(named: 'properties')),
-      ).thenAnswer((_) async {});
-    });
 
     test('état initial : la valeur est inconnue tant qu\'elle n\'est pas lue',
         () {
@@ -259,11 +259,20 @@ void main() {
           verifyNever(() => mockBox.put(any(that: contains('match')), any())),
     );
 
+    // L'ancien test « sans dépôt injecté, le chargement est un non-événement »
+    // verrouillait un comportement dégradé devenu impossible : les deux
+    // dépendances sont maintenant requises, un câblage incomplet ne compile
+    // plus. À sa place, on vérifie la conséquence observable du câblage : après
+    // chargement, la valeur n'est plus inconnue, donc la ligne des réglages
+    // devient utilisable au lieu de rester grisée à vie.
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'sans dépôt injecté, le chargement est un non-événement',
-      build: () => NotificationPrefsBloc(mockBox),
+      'câblage : après chargement, la valeur n\'est plus inconnue',
+      build: build,
       act: (bloc) => bloc.add(const NotifPackageMatchAlertLoadRequested()),
-      expect: () => [],
+      verify: (bloc) {
+        expect(bloc.state.packageMatchAlert, isNotNull);
+        verify(() => repo.getPackageMatchAlert()).called(1);
+      },
     );
 
     test('les events portent leurs props', () {

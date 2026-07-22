@@ -15,11 +15,15 @@ class NotificationPrefsBloc
   final Box _box;
 
   /// Dépôt des demandes : porte l'unique réglage de cet écran qui vit côté
-  /// serveur (« me prévenir des nouveaux colis compatibles »). Optionnel pour
-  /// que les tests qui ne s'intéressent qu'aux préférences Hive n'aient rien à
-  /// injecter.
-  final PackageRequestRepository? _packageRequests;
-  final AnalyticsService? _analytics;
+  /// serveur (« me prévenir des nouveaux colis compatibles »).
+  ///
+  /// Requis, et non plus optionnel : en optionnel, un câblage d'injection
+  /// oublié ne cassait ni la compilation ni un test, et la cloche devenait
+  /// silencieusement inerte en production (chargement sans effet, ligne
+  /// définitivement désactivée, tap sans suite). En le rendant requis, l'oubli
+  /// devient une erreur de compilation.
+  final PackageRequestRepository _packageRequests;
+  final AnalyticsService _analytics;
 
   static const Map<String, bool> _defaults = {
     'push_activity_bids': true,
@@ -30,7 +34,7 @@ class NotificationPrefsBloc
     'email_promo': false,
   };
 
-  NotificationPrefsBloc(this._box, [this._packageRequests, this._analytics])
+  NotificationPrefsBloc(this._box, this._packageRequests, this._analytics)
       : super(NotificationPrefsState(
           prefs: {
             for (final e in _defaults.entries)
@@ -65,12 +69,8 @@ class NotificationPrefsBloc
     NotifPackageMatchAlertLoadRequested event,
     Emitter<NotificationPrefsState> emit,
   ) async {
-    final repository = _packageRequests;
-    if (repository == null) {
-      return;
-    }
     try {
-      final enabled = await repository.getPackageMatchAlert();
+      final enabled = await _packageRequests.getPackageMatchAlert();
       emit(state.copyWith(packageMatchAlert: enabled));
     } catch (_) {
       // Valeur inconnue conservée.
@@ -83,15 +83,11 @@ class NotificationPrefsBloc
     NotifPackageMatchAlertToggled event,
     Emitter<NotificationPrefsState> emit,
   ) async {
-    final repository = _packageRequests;
-    if (repository == null) {
-      return;
-    }
     final previous = state.packageMatchAlert;
     emit(state.copyWith(packageMatchAlert: event.enabled));
     try {
-      await repository.setPackageMatchAlert(event.enabled);
-      unawaited(_analytics?.logEvent(
+      await _packageRequests.setPackageMatchAlert(event.enabled);
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.packageMatchAlertToggled,
         properties: {'enabled': event.enabled},
       ));
