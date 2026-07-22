@@ -420,11 +420,11 @@ void main() {
         matching: find.byType(Icon),
       );
       final icon = tester.widget<Icon>(icons.first);
-      expect(icon.icon, Icons.favorite_border);
+      expect(icon.icon, Icons.bookmark_border);
     });
 
     testWidgets(
-        'showFavorite=true avec cubit seeded favori : cœur rempli',
+        'showFavorite=true avec cubit seeded favori : signet rempli',
         (tester) async {
       final repo = _MockFavoriteRepository();
       // 'a1' is the id used in _makeAnn()
@@ -451,8 +451,8 @@ void main() {
         matching: find.byType(Icon),
       );
       final icon = tester.widget<Icon>(icons.first);
-      expect(icon.icon, Icons.favorite);
-      expect(icon.color, DonyColors.favorite);
+      expect(icon.icon, Icons.bookmark);
+      expect(icon.color, DonyColors.primary);
     });
 
     testWidgets(

@@ -45,7 +45,7 @@ void main() {
 
       // favorite_border icon should be present
       final icon = tester.widget<Icon>(find.byType(Icon));
-      expect(icon.icon, Icons.favorite_border);
+      expect(icon.icon, Icons.bookmark_border);
     });
 
     testWidgets('couleur icône = onSurfaceVariant quand isFavorite=false',
@@ -73,10 +73,10 @@ void main() {
       await tester.pump();
 
       final icon = tester.widget<Icon>(find.byType(Icon));
-      expect(icon.icon, Icons.favorite);
+      expect(icon.icon, Icons.bookmark);
     });
 
-    testWidgets('couleur icône = DonyColors.favorite quand isFavorite=true',
+    testWidgets('couleur icône = DonyColors.primary quand isFavorite=true',
         (tester) async {
       await tester.pumpWidget(_wrap(FavoriteHeartButton(
         isFavorite: true,
@@ -85,7 +85,7 @@ void main() {
       await tester.pump();
 
       final icon = tester.widget<Icon>(find.byType(Icon));
-      expect(icon.color, DonyColors.favorite);
+      expect(icon.color, DonyColors.primary);
     });
   });
 
@@ -221,7 +221,7 @@ void main() {
       expect(find.byType(FavoriteHeartButton), findsOneWidget);
       final icon = tester.widget<Icon>(find.byType(Icon).first);
       // The heart must NOT be filled (trip-1 is not in favorites)
-      expect(icon.icon, Icons.favorite_border);
+      expect(icon.icon, Icons.bookmark_border);
     });
 
     testWidgets(
@@ -284,8 +284,8 @@ void main() {
         matching: find.byType(Icon),
       );
       final icon = tester.widget<Icon>(icons.first);
-      expect(icon.icon, Icons.favorite);
-      expect(icon.color, DonyColors.favorite);
+      expect(icon.icon, Icons.bookmark);
+      expect(icon.color, DonyColors.primary);
     });
   });
 }

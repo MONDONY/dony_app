@@ -240,7 +240,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.favorite_border_rounded,
+              Icons.bookmark_border_rounded,
               size: 64,
               color: cs.onSurfaceVariant.withValues(alpha: 0.4),
             ),

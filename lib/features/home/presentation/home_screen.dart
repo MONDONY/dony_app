@@ -2709,7 +2709,8 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
 /// Bouton cœur en haut à gauche de l'overlay accueil (à gauche de la barre de
 /// recherche). Même style que [_NotificationBell] : cercle 48×48, fond
 /// [ColorScheme.surface], shadow `Colors.black @10% blur 12 offset(0,3)`.
-/// Badge rouge [DonyColors.favorite] affiché si le nombre de favoris > 0.
+/// Icône signet, remplie [DonyColors.primary] si des favoris existent.
+/// Pastille de comptage rouge conservée (convention de badge).
 /// Navigue vers `/favoris` au tap via GoRouter.
 class _FavoritesButton extends StatelessWidget {
   const _FavoritesButton();
@@ -2743,9 +2744,9 @@ class _FavoritesButton extends StatelessWidget {
                   ],
                 ),
                 child: Icon(
-                  count > 0 ? Icons.favorite : Icons.favorite_border,
+                  count > 0 ? Icons.bookmark : Icons.bookmark_border,
                   size: 22,
-                  color: count > 0 ? DonyColors.favorite : cs.onSurfaceVariant,
+                  color: count > 0 ? DonyColors.primary : cs.onSurfaceVariant,
                 ),
               ),
               if (count > 0)
