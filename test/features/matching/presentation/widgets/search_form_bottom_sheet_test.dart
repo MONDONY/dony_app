@@ -113,4 +113,48 @@ void main() {
       expect(result.value?.contentType, 'Poissons');
     },
   );
+
+  // ── Défaut 2 : effacer une ville vide bien le filtre correspondant ────────
+
+  testWidgets(
+    'vider la ville de départ efface son filtre sans perdre l\'arrivée',
+    (tester) async {
+      final result = ValueNotifier<SearchParams?>(null);
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                result.value = await SearchFormBottomSheet.show(
+                  context,
+                  initialParams: const SearchParams(
+                    departureCity: 'Paris',
+                    arrivalCity: 'Dakar',
+                  ),
+                );
+              },
+              child: const Text('Ouvrir filtres'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('Ouvrir filtres'));
+      await tester.pumpAndSettle();
+
+      final croixDepart = find.descendant(
+        of: find.byKey(const Key('search-form-departure-city')),
+        matching: find.byType(IconButton),
+      );
+      await tester.ensureVisible(croixDepart);
+      await tester.pumpAndSettle();
+      await tester.tap(croixDepart);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rechercher'));
+      await tester.pumpAndSettle();
+
+      expect(result.value?.departureCity, isNull);
+      expect(result.value?.arrivalCity, 'Dakar');
+    },
+  );
 }

@@ -20,6 +20,7 @@ class SearchFiltersChanged extends PackageRequestSearchEvent {
     this.maxWeight, this.parcelSize,
     this.userLat, this.userLng, this.radiusKm,
     this.urgent,
+    this.matchingMyTrips,
   });
   final String? departure;
   final String? arrival;
@@ -33,8 +34,12 @@ class SearchFiltersChanged extends PackageRequestSearchEvent {
   /// Filtre serveur « demandes urgentes » (`urgent=true`) — jamais `false`
   /// envoyé explicitement, seulement présent ou absent côté requête.
   final bool? urgent;
+  /// Filtre serveur « demandes compatibles avec mes trajets actifs »
+  /// (`matchingMyTrips=true`) — jamais `false` envoyé explicitement, même
+  /// convention que [urgent].
+  final bool? matchingMyTrips;
   @override
-  List<Object?> get props => [departure, arrival, dateFrom, dateTo, maxWeight, parcelSize, userLat, userLng, radiusKm, urgent];
+  List<Object?> get props => [departure, arrival, dateFrom, dateTo, maxWeight, parcelSize, userLat, userLng, radiusKm, urgent, matchingMyTrips];
 }
 
 class SearchLoadMore extends PackageRequestSearchEvent {
@@ -64,6 +69,7 @@ class PackageRequestSearchState extends Equatable {
     this.userLng,
     this.radiusKm,
     this.urgent,
+    this.matchingMyTrips,
   });
 
   final SearchStatus status;
@@ -81,6 +87,7 @@ class PackageRequestSearchState extends Equatable {
   final double? userLng;
   final double? radiusKm;
   final bool? urgent;
+  final bool? matchingMyTrips;
 
   bool get isNearMeActive => userLat != null && userLng != null;
 
@@ -100,6 +107,7 @@ class PackageRequestSearchState extends Equatable {
     double? userLng,
     double? radiusKm,
     bool? urgent,
+    bool? matchingMyTrips,
   }) =>
       PackageRequestSearchState(
         status: status ?? this.status,
@@ -117,13 +125,14 @@ class PackageRequestSearchState extends Equatable {
         userLng: userLng ?? this.userLng,
         radiusKm: radiusKm ?? this.radiusKm,
         urgent: urgent ?? this.urgent,
+        matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,
       );
 
   @override
   List<Object?> get props => [
         status, results, page, hasMore, errorMessage,
         departure, arrival, dateFrom, dateTo, maxWeight, parcelSize,
-        userLat, userLng, radiusKm, urgent,
+        userLat, userLng, radiusKm, urgent, matchingMyTrips,
       ];
 }
 
@@ -151,6 +160,7 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
       userLng: e.userLng,
       radiusKm: e.radiusKm,
       urgent: e.urgent,
+      matchingMyTrips: e.matchingMyTrips,
     ));
     try {
       final page = await _repository.search(
@@ -164,6 +174,7 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
         lng: e.userLng,
         radiusKm: e.radiusKm,
         urgent: e.urgent,
+        matchingMyTrips: e.matchingMyTrips,
         page: 0,
       );
       emit(state.copyWith(
@@ -179,6 +190,14 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
           if (e.arrival != null) 'arrival': e.arrival!,
         },
       ));
+      // Liste scorée « colis sur mes trajets » : c'est désormais une recherche
+      // filtrée, l'event suit le filtre plutôt que l'écran dédié supprimé.
+      if (e.matchingMyTrips == true) {
+        unawaited(_analytics?.logEvent(
+          AnalyticsEvents.tripMatchingViewed,
+          properties: {'count': page.content.length},
+        ));
+      }
     } catch (err) {
       emit(state.copyWith(status: SearchStatus.error, errorMessage: err.toString()));
     }
@@ -200,6 +219,7 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
         lng: state.userLng,
         radiusKm: state.radiusKm,
         urgent: state.urgent,
+        matchingMyTrips: state.matchingMyTrips,
         page: next,
       );
       emit(state.copyWith(
@@ -219,6 +239,6 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
         dateFrom: state.dateFrom, dateTo: state.dateTo,
         maxWeight: state.maxWeight, parcelSize: state.parcelSize,
         userLat: state.userLat, userLng: state.userLng, radiusKm: state.radiusKm,
-        urgent: state.urgent,
+        urgent: state.urgent, matchingMyTrips: state.matchingMyTrips,
       ), emit);
 }

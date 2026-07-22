@@ -116,8 +116,16 @@ abstract final class AnalyticsEvents {
   static const envoyerEnvoisScreen = 'envoyer_envois';
   static const envoyerDemandesScreen = 'envoyer_demandes';
 
-  // Home map focus
-  static const homeMapFocusChanged = 'home_map_focus_changed';
+  /// Bascule du sélecteur de mode de la recherche. Propriété `mode` : trips / parcels.
+  static const homeSearchModeChanged = 'home_search_mode_changed';
+
+  /// Tap sur la ligne de bascule de l'état vide. Propriétés `from_mode`, `count`.
+  static const homeCrossDiscoveryTapped = 'home_cross_discovery_tapped';
+
+  /// Bascule de la pastille « Pour mes trajets » de la feuille de filtres colis.
+  /// Propriétés `active` (bool) et `active_trips` (nombre de trajets actifs).
+  static const homeMatchingTripsFilterToggled =
+      'home_matching_trips_filter_toggled';
 
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
@@ -146,9 +154,6 @@ abstract final class AnalyticsEvents {
   static const activitesHubTemplatesOpened = 'activites_hub_templates_opened';
   static const activitesHubAddressesOpened = 'activites_hub_addresses_opened';
   static const activitesHubRecipientsOpened = 'activites_hub_recipients_opened';
-
-  // Accueil — accès direct aux colis compatibles avec mes trajets
-  static const homeColisMatchOpened = 'home_colis_match_opened';
 
   // Écran Demandes — filtre appliqué (tiré dans TravelerBidsBloc)
   static const travelerBidsFilterApplied = 'traveler_bids_filter_applied';

@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -7,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
 
 PackageRequestSearchItem _fakeRequest(String id) => PackageRequestSearchItem(
   id: id,
@@ -328,4 +332,245 @@ void main() {
       ).called(1);
     },
   );
+
+  // ─── matchingMyTrips : plomberie event → repo ────────────────────────────────
+
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchFiltersChanged(matchingMyTrips: true) → repo appelé avec true',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 20,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+    verify: (_) {
+      verify(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: true,
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchFiltersChanged sans matchingMyTrips → repo appelé avec null',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 20,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) => bloc.add(const SearchFiltersChanged(departure: 'Paris')),
+    verify: (_) {
+      final captured = verify(
+        () => repo.search(
+          departure: 'Paris',
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: captureAny(named: 'matchingMyTrips'),
+        ),
+      ).captured;
+      // Absent, pas `false` : c'est la convention serveur du filtre.
+      expect(captured.single, isNull);
+    },
+  );
+
+  // L'état porte le filtre : « charger plus » et « rafraîchir » repartent de
+  // `state`, pas de l'event, et le perdraient sinon.
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchLoadMore conserve matchingMyTrips depuis l\'état',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 0,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) async {
+      bloc.add(const SearchFiltersChanged(matchingMyTrips: true));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const SearchLoadMore());
+    },
+    verify: (_) {
+      verify(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: 1,
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: true,
+        ),
+      ).called(1);
+    },
+  );
+
+  // ─── Analytics : trip_matching_viewed sur recherche filtrée ─────────────────
+  //
+  // L'event vivait sur `TripMatchingBloc`, supprimé avec l'écran dédié. Son
+  // point d'appel est désormais ici : la liste scorée n'est plus qu'une
+  // recherche de demandes filtrée.
+  group('analytics trip_matching_viewed', () {
+    late _MockAnalytics analytics;
+
+    void stubSearch(List<PackageRequestSearchItem> content) {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+        ),
+      ).thenAnswer(
+        (_) async => PackageRequestSearchPage(
+          content: content,
+          totalElements: content.length,
+          page: 0,
+          size: 20,
+        ),
+      );
+    }
+
+    setUp(() {
+      analytics = _MockAnalytics();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+    });
+
+    blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+      'recherche filtrée → trip_matching_viewed avec le nombre de résultats',
+      build: () {
+        stubSearch([_fakeRequest('r-1'), _fakeRequest('r-2')]);
+        return PackageRequestSearchBloc(repo, analytics);
+      },
+      act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.tripMatchingViewed,
+            properties: {'count': 2},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+      'recherche non filtrée → aucun trip_matching_viewed',
+      build: () {
+        stubSearch([_fakeRequest('r-1')]);
+        return PackageRequestSearchBloc(repo, analytics);
+      },
+      act: (bloc) => bloc.add(const SearchFiltersChanged(departure: 'Paris')),
+      verify: (_) {
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.tripMatchingViewed,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+      'échec de la recherche filtrée → aucun trip_matching_viewed',
+      build: () {
+        when(
+          () => repo.search(
+            departure: any(named: 'departure'),
+            arrival: any(named: 'arrival'),
+            dateFrom: any(named: 'dateFrom'),
+            dateTo: any(named: 'dateTo'),
+            maxWeight: any(named: 'maxWeight'),
+            parcelSize: any(named: 'parcelSize'),
+            page: any(named: 'page'),
+            urgent: any(named: 'urgent'),
+            matchingMyTrips: any(named: 'matchingMyTrips'),
+          ),
+        ).thenThrow(Exception('réseau'));
+        return PackageRequestSearchBloc(repo, analytics);
+      },
+      act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+      verify: (_) {
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.tripMatchingViewed,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+  });
 }

@@ -200,6 +200,60 @@ void main() {
     expect(result, hasLength(1));
   });
 
+  test('countAnnouncements délègue corridor, dates, position et rayon',
+      () async {
+    when(() => mockDs.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          kiloProOnly: any(named: 'kiloProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: any(named: 'transportMode'),
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+        )).thenAnswer((_) async => 7);
+
+    final total = await repo.countAnnouncements(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDateFrom: DateTime(2026, 1, 5),
+      userLat: 48.85,
+      userLng: 2.35,
+      radiusKm: 25,
+      urgent: true,
+    );
+
+    expect(total, 7);
+    verify(() => mockDs.countAnnouncements(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDateFrom: DateTime(2026, 1, 5),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          kiloProOnly: any(named: 'kiloProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: any(named: 'transportMode'),
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: 48.85,
+          userLng: 2.35,
+          radiusKm: 25,
+          urgent: true,
+        )).called(1);
+  });
+
   test('openSurplus delegates correctly to datasource', () async {
     when(() => mockDs.openSurplus(
           announcementId: any(named: 'announcementId'),

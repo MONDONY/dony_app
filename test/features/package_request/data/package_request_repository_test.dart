@@ -358,6 +358,66 @@ void main() {
         expect((c as Map<String, dynamic>).containsKey('urgent'), isFalse);
       }
     });
+
+    test('envoie matchingMyTrips=true quand la pastille est active', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': <dynamic>[],
+          'totalElements': 0,
+          'number': 0,
+          'size': 20,
+        }, '/package-requests'),
+      );
+
+      await repo.search(matchingMyTrips: true);
+
+      final captured = verify(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: captureAny(named: 'queryParameters'),
+        ),
+      ).captured.single as Map<String, dynamic>;
+      expect(captured['matchingMyTrips'], true);
+    });
+
+    test(
+        'n\'envoie jamais matchingMyTrips=false : le paramètre est absent quand '
+        'la pastille est inactive', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': <dynamic>[],
+          'totalElements': 0,
+          'number': 0,
+          'size': 20,
+        }, '/package-requests'),
+      );
+
+      await repo.search(matchingMyTrips: false);
+      await repo.search();
+
+      final calls = verify(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: captureAny(named: 'queryParameters'),
+        ),
+      ).captured;
+      for (final c in calls) {
+        expect(
+          (c as Map<String, dynamic>).containsKey('matchingMyTrips'),
+          isFalse,
+        );
+      }
+    });
   });
 
   group('photoKeys', () {

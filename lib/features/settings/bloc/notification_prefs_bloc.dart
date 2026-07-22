@@ -1,3 +1,8 @@
+import 'dart:async';
+
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -9,6 +14,17 @@ class NotificationPrefsBloc
     extends Bloc<NotificationPrefsEvent, NotificationPrefsState> {
   final Box _box;
 
+  /// Dépôt des demandes : porte l'unique réglage de cet écran qui vit côté
+  /// serveur (« me prévenir des nouveaux colis compatibles »).
+  ///
+  /// Requis, et non plus optionnel : en optionnel, un câblage d'injection
+  /// oublié ne cassait ni la compilation ni un test, et la cloche devenait
+  /// silencieusement inerte en production (chargement sans effet, ligne
+  /// définitivement désactivée, tap sans suite). En le rendant requis, l'oubli
+  /// devient une erreur de compilation.
+  final PackageRequestRepository _packageRequests;
+  final AnalyticsService _analytics;
+
   static const Map<String, bool> _defaults = {
     'push_activity_bids': true,
     'push_activity_negotiations': true,
@@ -18,7 +34,7 @@ class NotificationPrefsBloc
     'email_promo': false,
   };
 
-  NotificationPrefsBloc(this._box)
+  NotificationPrefsBloc(this._box, this._packageRequests, this._analytics)
       : super(NotificationPrefsState(
           prefs: {
             for (final e in _defaults.entries)
@@ -29,6 +45,8 @@ class NotificationPrefsBloc
           },
         )) {
     on<NotifPrefToggled>(_onToggled);
+    on<NotifPackageMatchAlertLoadRequested>(_onPackageMatchAlertLoad);
+    on<NotifPackageMatchAlertToggled>(_onPackageMatchAlertToggled);
   }
 
   void _onToggled(
@@ -41,6 +59,46 @@ class NotificationPrefsBloc
     final updated = Map<String, bool>.from(state.prefs);
     updated[event.key] = !state.prefs[event.key]!;
     _box.put('notif_${event.key}', updated[event.key]);
-    emit(NotificationPrefsState(prefs: updated));
+    emit(state.copyWith(prefs: updated));
+  }
+
+  /// Lit l'état serveur de la cloche. Un échec laisse la valeur inconnue : la
+  /// ligne reste alors désactivée plutôt que d'afficher un état inventé que
+  /// l'utilisateur croirait avoir choisi.
+  Future<void> _onPackageMatchAlertLoad(
+    NotifPackageMatchAlertLoadRequested event,
+    Emitter<NotificationPrefsState> emit,
+  ) async {
+    try {
+      final enabled = await _packageRequests.getPackageMatchAlert();
+      emit(state.copyWith(packageMatchAlert: enabled));
+    } catch (_) {
+      // Valeur inconnue conservée.
+    }
+  }
+
+  /// Bascule optimiste : l'interrupteur suit le doigt, et revient en arrière
+  /// si le serveur refuse.
+  Future<void> _onPackageMatchAlertToggled(
+    NotifPackageMatchAlertToggled event,
+    Emitter<NotificationPrefsState> emit,
+  ) async {
+    final previous = state.packageMatchAlert;
+    emit(state.copyWith(packageMatchAlert: event.enabled));
+    try {
+      await _packageRequests.setPackageMatchAlert(event.enabled);
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.packageMatchAlertToggled,
+        properties: {'enabled': event.enabled},
+      ));
+    } catch (_) {
+      // Construction explicite plutôt que `copyWith` : le retour en arrière
+      // doit pouvoir restaurer la valeur inconnue (`null`), qu'un paramètre
+      // optionnel ne sait pas exprimer.
+      emit(NotificationPrefsState(
+        prefs: state.prefs,
+        packageMatchAlert: previous,
+      ));
+    }
   }
 }

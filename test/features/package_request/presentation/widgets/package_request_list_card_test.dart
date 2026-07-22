@@ -19,6 +19,9 @@ PackageRequestSearchItem _item({
   int totalRatings = 12,
   DateTime? desiredDate,
   bool? urgent,
+  int? matchScore,
+  String? matchedTripId,
+  DateTime? matchedTripDepartureDate,
 }) => PackageRequestSearchItem(
   id: 'pr1',
   departureCity: 'Paris',
@@ -32,6 +35,9 @@ PackageRequestSearchItem _item({
   photoUrl: photoUrl,
   photoUrls: photoUrls,
   urgent: urgent,
+  matchScore: matchScore,
+  matchedTripId: matchedTripId,
+  matchedTripDepartureDate: matchedTripDepartureDate,
   sender: SenderPublicProfile(
     id: 's1',
     displayName: 'Marie Diop',
@@ -193,6 +199,72 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('🔥 Urgent'), findsNothing);
+    });
+  });
+
+  // ─── Score de compatibilité (filtre « Pour mes trajets ») ──────────────────
+  group('PackageRequestListCard – score de match', () {
+    testWidgets('affiche le score et le trajet retenu', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(
+              matchScore: 94,
+              matchedTripId: 'trip-1',
+              matchedTripDepartureDate: DateTime(2026, 7, 12),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('match-score-badge')), findsOneWidget);
+      expect(find.text('94 %'), findsOneWidget);
+      expect(find.textContaining('12 juil.'), findsOneWidget);
+    });
+
+    testWidgets('sans matchScore : aucun badge, la carte reste intacte', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('match-score-badge')), findsNothing);
+      // Le rendu nominal n'est pas dégradé par l'absence des champs de match.
+      expect(find.text('5 kg · Vêtements & tissus · M'), findsOneWidget);
+    });
+
+    testWidgets('score sans date de trajet : le badge s\'affiche seul', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(PackageRequestListCard(item: _item(matchScore: 61))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('61 %'), findsOneWidget);
+      expect(find.textContaining('Ton trajet du'), findsNothing);
+    });
+
+    testWidgets('le libellé du trajet ne contient jamais de tiret cadratin', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          PackageRequestListCard(
+            item: _item(
+              matchScore: 80,
+              matchedTripDepartureDate: DateTime(2026, 7, 12),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final libelle = tester
+          .widget<Text>(find.textContaining('12 juil.'))
+          .data!;
+      expect(libelle, isNot(contains('—')));
     });
   });
 }

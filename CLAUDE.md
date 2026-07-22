@@ -366,8 +366,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
 | `public_reviews_opened` | UserReviewsCubit — ouverture de la bottom sheet « tous les avis » (propriété `rating_count`) |
 | `reviews_filtered` | MyReviewsBloc._onStarFilterToggled — tap sur une ligne de distribution dans « Mes avis reçus » (propriété `stars`: note 1–5 ou `all` si filtre retiré) |
-| `trip_matching_viewed` | TripMatchingBloc._onLoad — chargement de la liste scorée « Colis sur mes trajets » (propriété `count`) |
-| `package_match_alert_toggled` | TripMatchingBloc._onToggleAlert — cloche « notifier quand un colis matche mes trajets » dans « Colis sur mes trajets » (propriété `enabled`) |
+| `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
+| `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
 | `corridor_alert_toggled` | CorridorAlertListBloc._onToggle — actif/pause d'une alerte corridor (propriété `active`) |
 | `corridor_alert_deleted` | CorridorAlertListBloc._onDelete — suppression d'une alerte corridor |
 | `corridor_alert_created` | CorridorAlertFormCubit.submit() — création d'une alerte corridor |
@@ -384,7 +384,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `activites_hub_history_opened` / `activites_hub_help_opened` / `activites_hub_alerts_opened` / `activites_hub_templates_opened` / `activites_hub_addresses_opened` / `activites_hub_recipients_opened` | ActivitesHubScreen — tuiles de la section Outils |
 | `activites_hub_intro_dismissed` | ActivitesHubScreen — fermeture (X) de la carte d'introduction |
 | `traveler_bids_filter_applied` | TravelerBidsBloc._onFilterChanged — chips « À traiter / Acceptées / Terminées » de l'écran Demandes (propriété `filter`) |
-| `home_colis_match_opened` | HomeScreen._openColisMatch — chip 🎯 « Pour mes trajets » (mode Colis) |
+| `home_search_mode_changed` | HomeScreen._onModeChanged — bascule du sélecteur de mode Trajets/Colis (propriété `mode`) |
+| `home_cross_discovery_tapped` | HomeScreen._onCrossDiscoveryTap — bascule proposée depuis l'état vide (propriétés `from_mode`, `count`) |
+| `home_matching_trips_filter_toggled` | HomeScreen._showFilterSheet — pastille « Pour mes trajets » de la feuille de filtres colis (propriétés `active`, `active_trips`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

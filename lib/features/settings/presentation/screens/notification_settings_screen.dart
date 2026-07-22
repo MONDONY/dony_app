@@ -7,8 +7,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class NotificationSettingsScreen extends StatelessWidget {
+class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
+
+  @override
+  State<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
+}
+
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // La cloche « nouveaux colis compatibles » vit côté serveur : son état
+    // n'est connu qu'après lecture, contrairement aux préférences Hive dont le
+    // BLoC dispose dès sa construction.
+    context
+        .read<NotificationPrefsBloc>()
+        .add(const NotifPackageMatchAlertLoadRequested());
+  }
 
   void _toggle(BuildContext context, String key) {
     context.read<NotificationPrefsBloc>().add(NotifPrefToggled(key));
@@ -70,6 +88,9 @@ class NotificationSettingsScreen extends StatelessWidget {
                     prefs: state.prefs,
                     onToggle: (key) => _toggle(context, key),
                   ),
+                  // Cloche rapatriée de l'écran « Colis sur mes trajets »,
+                  // supprimé avec sa route : le réglage reste, son écran non.
+                  _buildPackageMatchTile(context, state.packageMatchAlert),
                   _buildTile(context,
                     label: 'Discussions de prix',
                     subtitle: 'Propositions, contre-offres, paiements…',
@@ -177,6 +198,32 @@ class NotificationSettingsScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Ligne « Nouveaux colis compatibles » : réglage serveur, donc pas de clé
+  /// dans la map Hive. Tant que la valeur est inconnue ([enabled] null), la
+  /// ligne est désactivée plutôt que d'afficher un état inventé.
+  DonyListTile _buildPackageMatchTile(BuildContext context, bool? enabled) {
+    final cs = Theme.of(context).colorScheme;
+    final isOn = enabled ?? false;
+    final isKnown = enabled != null;
+
+    return DonyListTile(
+      iconAsset: isOn ? 'bell' : 'bell-off',
+      iconColor: isOn ? cs.primary : cs.onSurfaceVariant,
+      iconBgColor: isOn
+          ? cs.primaryContainer
+          : cs.onSurfaceVariant.withValues(alpha: 0.12),
+      label: 'Nouveaux colis compatibles',
+      subtitle: 'Quand un colis correspond à un de tes trajets',
+      enabled: isKnown,
+      trailing: IgnorePointer(
+        child: Switch(value: isOn, onChanged: isKnown ? (_) {} : null),
+      ),
+      onTap: () => context
+          .read<NotificationPrefsBloc>()
+          .add(NotifPackageMatchAlertToggled(!isOn)),
     );
   }
 

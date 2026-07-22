@@ -118,6 +118,48 @@ class AnnouncementRepository {
     );
   }
 
+  /// Nombre de trajets correspondant aux critères, sans charger les résultats.
+  /// Alimente le compteur du segment inactif du sélecteur de mode.
+  Future<int> countAnnouncements({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+    double? minAvailableKg,
+    double? maxAvailableKg,
+    double? maxPricePerKg,
+    bool? kiloProOnly,
+    double? minRating,
+    bool? weekendOnly,
+    TransportMode? transportMode,
+    bool? kycVerifiedOnly,
+    String? contentType,
+    double? userLat,
+    double? userLng,
+    double? radiusKm,
+    bool? urgent,
+  }) {
+    return _remoteDatasource.countAnnouncements(
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      departureDateFrom: departureDateFrom,
+      departureDateTo: departureDateTo,
+      minAvailableKg: minAvailableKg,
+      maxAvailableKg: maxAvailableKg,
+      maxPricePerKg: maxPricePerKg,
+      kiloProOnly: kiloProOnly,
+      minRating: minRating,
+      weekendOnly: weekendOnly,
+      transportMode: transportMode,
+      kycVerifiedOnly: kycVerifiedOnly,
+      contentType: contentType,
+      userLat: userLat,
+      userLng: userLng,
+      radiusKm: radiusKm,
+      urgent: urgent,
+    );
+  }
+
   Future<void> deleteAnnouncement(String id) async {
     return _remoteDatasource.deleteAnnouncement(id);
   }

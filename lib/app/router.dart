@@ -85,7 +85,6 @@ import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
 import 'package:dony/features/corridor_alerts/presentation/corridor_alert_matches_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/traveler/colis_match_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -1222,10 +1221,6 @@ final appRouter = GoRouter(
         value: getIt<PackageRequestBloc>(),
         child: const MyPackageRequestsScreen(),
       ),
-    ),
-    GoRoute(
-      path: '/package-requests/match',
-      builder: (_, __) => const ColisMatchScreen(),
     ),
     GoRoute(
       path: '/package-requests/search',

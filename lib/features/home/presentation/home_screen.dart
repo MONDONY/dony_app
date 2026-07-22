@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -12,25 +11,26 @@ import 'package:dony/core/widgets/role_guidance_banner.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/city/data/city_repository.dart';
-import 'package:dony/features/home/presentation/home_map_focus.dart';
+import 'package:dony/features/home/domain/home_search_filters.dart';
+import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
+import 'package:dony/features/home/presentation/widgets/search_filter_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
-import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -51,22 +51,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
-// ── Home-screen specific constants ────────────────────────────────────────────
-
-enum _DatePreset { today, thisWeek, thisMonth, custom, none }
-
-typedef _CorridorOpt = ({String label, String departure, String arrival});
-
-// Fallback statique utilisé jusqu'à ce que l'API réponde
-const _defaultCorridorOptions = <_CorridorOpt>[
-  (label: 'Paris → Dakar', departure: 'Paris', arrival: 'Dakar'),
-  (label: 'Paris → Abidjan', departure: 'Paris', arrival: 'Abidjan'),
-  (label: 'Lyon → Abidjan', departure: 'Lyon', arrival: 'Abidjan'),
-  (label: 'Paris → Bamako', departure: 'Paris', arrival: 'Bamako'),
-  (label: 'Paris → Douala', departure: 'Paris', arrival: 'Douala'),
-  (label: 'Marseille → Bamako', departure: 'Marseille', arrival: 'Bamako'),
-];
-
 // ── HomeScreen ───────────────────────────────────────────────────────────────
 
 class HomeScreen extends StatelessWidget {
@@ -74,8 +58,17 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<PackageRequestSearchBloc>(
-      create: (_) => getIt<PackageRequestSearchBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<PackageRequestSearchBloc>(
+          create: (_) => getIt<PackageRequestSearchBloc>(),
+        ),
+        // Résumé d'activité : seul son `activeTrips` sert ici, il pilote le
+        // filtre « Pour mes trajets » (pastille et en-tête de liste).
+        BlocProvider<TripsSummaryCubit>(
+          create: (_) => getIt<TripsSummaryCubit>()..load(),
+        ),
+      ],
       child: const _MapSenderView(),
     );
   }
@@ -107,116 +100,53 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   PendingSearchNotifier? _pendingSearchNotifier;
 
-  // Liste mutable — initialisée avec le fallback statique, remplacée par l'API
-  List<_CorridorOpt> _corridorOptions = List.of(_defaultCorridorOptions);
-  _CorridorOpt _corridor = _defaultCorridorOptions.first;
-
-  _DatePreset _datePreset = _DatePreset.none;
-  DateTime? _customDate;
-  bool _kiloProOnly = false;
-  bool _allCorridors = true;
-
-  bool _isNearMeActive = false;
   bool _nearMeShowList = false;
-  double? _nearMeRadiusKm;
-  LatLng? _userPosition;
   // True between the FAB tap and the position being acquired (FAB spinner).
   bool _isLocatingNearMe = false;
 
   String? _selectedAnnouncementId;
 
-  // Focus de la carte additive — voyage uniquement (ignoré pour les expéditeurs purs)
-  HomeMapFocus _mapFocus = HomeMapFocus.all;
+  /// Mode de recherche courant. Deux valeurs exclusives : il n'existe plus de
+  /// vue mixte. Le mode pilote la liste, les marqueurs de carte, les chips
+  /// spécifiques et la feuille de filtres.
+  SearchMode _mode = SearchMode.trips;
 
-  double? _minRating;
-  double? _weightMin;
-  double? _weightMax;
-  double? _maxPricePerKg;
-  bool _weekendOnly = false;
-  TransportMode? _transportMode;
-  bool _kycVerifiedOnly = false;
-  String? _contentType;
-  UrgencyFilter? _urgencyFilter;
-  // Chip serveur « 🔥 Urgent » — combiné à l'onglet actif (Trajets/Colis/Tout),
-  // s'applique aux deux recherches (announcements + package requests).
-  bool _urgentOnly = false;
+  /// Filtres de recherche, communs et spécifiques réunis. Un seul porteur pour
+  /// les deux modes : c'est ce qui fait survivre le corridor et la date à la
+  /// bascule, là où deux jeux de champs parallèles les perdaient.
+  HomeSearchFilters _filters = const HomeSearchFilters();
 
-  // Package request filters (traveler role)
-  String? _prDeparture;
-  String? _prArrival;
-  DateTime? _prDateFrom;
-  DateTime? _prDateTo;
-  double? _prMaxWeight;
-  ParcelSize? _prParcelSize;
+  /// Nombre de résultats de l'autre mode, pour le compteur du segment inactif.
+  /// Null tant qu'aucun filtre commun n'est posé, le total serait alors un
+  /// nombre plateforme sans valeur informative.
+  int? _otherModeCount;
 
-  int get _prActiveFilterCount {
-    int n = 0;
-    if (_prDeparture != null) n++;
-    if (_prDateFrom != null) n++;
-    if (_prMaxWeight != null) n++;
-    if (_prParcelSize != null) n++;
-    if (_isNearMeActive) n++;
-    return n;
-  }
+  // « Près de moi » vit dans [_filters] (il neutralise le corridor et fournit
+  // lat/lng/rayon aux deux recherches). Ces accesseurs évitent de disperser
+  // `_filters.` dans tout le rendu de la carte.
+  bool get _isNearMeActive => _filters.nearMeActive;
+  double? get _nearMeRadiusKm => _filters.nearMeRadiusKm;
+  LatLng? get _userPosition =>
+      (_filters.userLat != null && _filters.userLng != null)
+      ? LatLng(_filters.userLat!, _filters.userLng!)
+      : null;
 
-  int get _activeFilterCount {
-    int n = 0;
-    if (_kiloProOnly) n++;
-    if (!_allCorridors) n++;
-    if (_minRating != null) n++;
-    if (_weightMin != null || _weightMax != null) n++;
-    if (_maxPricePerKg != null) n++;
-    if (_weekendOnly) n++;
-    if (_transportMode != null) n++;
-    if (_kycVerifiedOnly) n++;
-    if (_contentType != null) n++;
-    if (_isNearMeActive) n++;
-    if (_datePreset != _DatePreset.none) n++;
-    if (_urgencyFilter != null) n++;
-    if (_urgentOnly) n++;
-    return n;
-  }
+  int get _activeFilterCount => _filters.activeCountFor(_mode);
 
-  DateTime? get _dateFrom {
-    final now = DateTime.now();
-    switch (_datePreset) {
-      case _DatePreset.today:
-        return DateTime(now.year, now.month, now.day);
-      case _DatePreset.thisWeek:
-        final monday = now.subtract(Duration(days: now.weekday - 1));
-        return DateTime(monday.year, monday.month, monday.day);
-      case _DatePreset.thisMonth:
-        return DateTime(now.year, now.month, 1);
-      case _DatePreset.custom:
-        return _customDate;
-      case _DatePreset.none:
-        return null;
+  /// Libellé de la barre corridor : le corridor posé, ou son absence.
+  String get _corridorLabel {
+    final dep = _filters.departureCity;
+    final arr = _filters.arrivalCity;
+    if (dep != null && arr != null) {
+      return '$dep → $arr';
     }
-  }
-
-  DateTime? get _dateTo {
-    final now = DateTime.now();
-    switch (_datePreset) {
-      case _DatePreset.today:
-        return DateTime(now.year, now.month, now.day, 23, 59, 59);
-      case _DatePreset.thisWeek:
-        final monday = now.subtract(Duration(days: now.weekday - 1));
-        final nextMonday = monday.add(const Duration(days: 7));
-        return DateTime(
-          nextMonday.year,
-          nextMonday.month,
-          nextMonday.day,
-        ).subtract(const Duration(seconds: 1));
-      case _DatePreset.thisMonth:
-        final m = now.month == 12
-            ? DateTime(now.year + 1, 1, 1)
-            : DateTime(now.year, now.month + 1, 1);
-        return m.subtract(const Duration(seconds: 1));
-      case _DatePreset.custom:
-        return null;
-      case _DatePreset.none:
-        return null;
+    if (dep != null) {
+      return 'Départ de $dep';
     }
+    if (arr != null) {
+      return 'Vers $arr';
+    }
+    return 'Tous les corridors';
   }
 
   @override
@@ -233,13 +163,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
       if (_pendingSearchNotifier?.params != null) {
         _consumePendingSearch();
       } else {
-        _dispatchSearch();
+        _dispatchForMode();
       }
-      // Charger aussi les demandes de colis si l'utilisateur est voyageur.
-      if (_isTraveler) {
-        _dispatchPackageRequestSearch();
-      }
-      _loadPopularCorridors();
       // Charger la liste des bids de l'expéditeur pour pouvoir indiquer sur
       // chaque carte de trajet s'il a déjà une demande active dessus.
       // AutoRefresh (non forcé) : silencieux si la liste est déjà en cache et
@@ -284,30 +209,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _applySearchParams(pending);
   }
 
-  Future<void> _loadPopularCorridors() async {
-    try {
-      final corridors = await getIt<CityRepository>().getPopularCorridors();
-      if (!mounted || corridors.isEmpty) return;
-      setState(() {
-        _corridorOptions = corridors
-            .map(
-              (c) => (
-                label: '${c.departureCity} → ${c.arrivalCity}',
-                departure: c.departureCity,
-                arrival: c.arrivalCity,
-              ),
-            )
-            .toList();
-        // Mettre à jour le corridor sélectionné si possible
-        if (_corridorOptions.isNotEmpty) {
-          _corridor = _corridorOptions.first;
-        }
-      });
-    } catch (_) {
-      // Échec silencieux — l'UI reste fonctionnelle avec le fallback statique
-    }
-  }
-
   void _onSheetSizeChanged() {
     if (!_sheetController.isAttached) return;
     final newSize = _sheetController.size;
@@ -340,6 +241,25 @@ class _MapSenderViewState extends State<_MapSenderView> {
       best,
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// Variante de [_pullHint] qui compte les résultats du mode courant.
+  ///
+  /// Le compteur des trajets vient de la liste déjà construite, celui des colis
+  /// de l'état du bloc de recherche des demandes : sans ce branchement, le mode
+  /// Colis afficherait le nombre de trajets, ce qui a été constaté à l'écran.
+  Widget _pullHintForMode(
+    ColorScheme cs, {
+    required bool down,
+    required int tripCount,
+  }) {
+    if (!_mode.isParcels) {
+      return _pullHint(cs, down: down, count: tripCount);
+    }
+    return BlocBuilder<PackageRequestSearchBloc, PackageRequestSearchState>(
+      builder: (ctx, prState) =>
+          _pullHint(cs, down: down, count: prState.results.length),
     );
   }
 
@@ -400,47 +320,289 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
-    // Near-me bypasses corridor: we want ALL travelers near the user
-    final ignoreCorridor = _allCorridors || _isNearMeActive;
+    // `toAnnouncementQuery` (et non `toSearchParams`) : c'est elle qui porte le
+    // vrai payload serveur — corridor neutralisé par « près de moi », booléens
+    // jamais envoyés à false.
+    final q = _filters.toAnnouncementQuery();
     context.read<AnnouncementBloc>().add(
       AnnouncementSearchRequested(
-        departureCity: ignoreCorridor
-            ? null
-            : _corridor.departure.split(' ').first,
-        arrivalCity: ignoreCorridor ? null : _corridor.arrival.split(' ').first,
-        departureDateFrom: _dateFrom,
-        departureDateTo: _dateTo,
-        kiloProOnly: _kiloProOnly ? true : null,
-        minRating: _minRating,
-        weekendOnly: _weekendOnly ? true : null,
-        minAvailableKg: _weightMin,
-        maxAvailableKg: _weightMax,
-        maxPricePerKg: _maxPricePerKg,
-        transportMode: _transportMode,
-        kycVerifiedOnly: _kycVerifiedOnly ? true : null,
-        contentType: _contentType,
-        userLat: _isNearMeActive ? _userPosition?.latitude : null,
-        userLng: _isNearMeActive ? _userPosition?.longitude : null,
-        radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
-        urgent: _urgentOnly ? true : null,
+        departureCity: q.departureCity,
+        arrivalCity: q.arrivalCity,
+        departureDateFrom: q.departureDateFrom,
+        departureDateTo: q.departureDateTo,
+        minAvailableKg: q.minAvailableKg,
+        maxAvailableKg: q.maxAvailableKg,
+        maxPricePerKg: q.maxPricePerKg,
+        kiloProOnly: q.kiloProOnly,
+        minRating: q.minRating,
+        weekendOnly: q.weekendOnly,
+        transportMode: q.transportMode,
+        kycVerifiedOnly: q.kycVerifiedOnly,
+        contentType: q.contentType,
+        userLat: q.userLat,
+        userLng: q.userLng,
+        radiusKm: q.radiusKm,
+        urgent: q.urgent,
       ),
     );
   }
 
   void _dispatchPackageRequestSearch() {
+    if (!mounted) return;
+    final q = _filters.toPackageRequestQuery();
     context.read<PackageRequestSearchBloc>().add(
       SearchFiltersChanged(
-        departure: _prDeparture,
-        arrival: _prArrival,
-        dateFrom: _prDateFrom,
-        dateTo: _prDateTo,
-        maxWeight: _prMaxWeight,
-        parcelSize: _prParcelSize,
-        userLat: _isNearMeActive ? _userPosition?.latitude : null,
-        userLng: _isNearMeActive ? _userPosition?.longitude : null,
-        radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
-        urgent: _urgentOnly ? true : null,
+        departure: q.departure,
+        arrival: q.arrival,
+        dateFrom: q.dateFrom,
+        dateTo: q.dateTo,
+        maxWeight: q.maxWeight,
+        parcelSize: q.parcelSize,
+        userLat: q.userLat,
+        userLng: q.userLng,
+        radiusKm: q.radiusKm,
+        urgent: q.urgent,
+        matchingMyTrips: q.matchingMyTrips,
       ),
+    );
+  }
+
+  /// Une recherche par mode : la liste affichée est celle du mode courant,
+  /// dispatcher l'autre chargerait des résultats que personne ne regarde.
+  void _dispatchForMode() {
+    if (_mode.isTrips) {
+      _dispatchSearch();
+    } else {
+      _dispatchPackageRequestSearch();
+    }
+  }
+
+  /// Compteur de l'autre mode, sans charger les résultats : on ne lit que le
+  /// total de la page. Une requête légère, pas une seconde recherche.
+  ///
+  /// Appel direct au repository plutôt qu'au BLoC de recherche : l'état de ce
+  /// dernier porte les résultats affichés, et y injecter une page de taille 1
+  /// écraserait la liste à l'écran.
+  ///
+  /// Les deux branches passent par les mêmes `toXxxQuery()` que les dispatchs
+  /// réels : c'est la seule façon que le nombre annoncé soit celui que la
+  /// bascule produira. Lire `_filters` directement laisserait tomber la
+  /// neutralisation du corridor par « près de moi », la position et le rayon.
+  Future<void> _dispatchOtherModeCount() async {
+    // Sans rôle voyageur, la bascule vers Colis est refusée par le garde-fou :
+    // compter les colis n'a plus aucune valeur, et la requête partirait pour
+    // rien (403 avalé par le `catch` plus bas). On ne l'envoie pas du tout.
+    if (_mode.isTrips && !_isTraveler) {
+      if (mounted) {
+        setState(() => _otherModeCount = null);
+      }
+      return;
+    }
+    if (!_filters.otherModeCountIsMeaningful) {
+      if (mounted) {
+        setState(() => _otherModeCount = null);
+      }
+      return;
+    }
+    try {
+      final int total;
+      if (_mode.isTrips) {
+        // Mode courant trajets : on compte les colis.
+        final q = _filters.toPackageRequestQuery();
+        final page = await getIt<PackageRequestRepository>().search(
+          departure: q.departure,
+          arrival: q.arrival,
+          dateFrom: q.dateFrom,
+          dateTo: q.dateTo,
+          maxWeight: q.maxWeight,
+          parcelSize: q.parcelSize,
+          lat: q.userLat,
+          lng: q.userLng,
+          radiusKm: q.radiusKm,
+          urgent: q.urgent,
+          matchingMyTrips: q.matchingMyTrips,
+          page: 0,
+          size: 1,
+        );
+        total = page.totalElements;
+      } else {
+        // Mode courant colis : on compte les trajets.
+        final q = _filters.toAnnouncementQuery();
+        total = await getIt<AnnouncementRepository>().countAnnouncements(
+          departureCity: q.departureCity,
+          arrivalCity: q.arrivalCity,
+          departureDateFrom: q.departureDateFrom,
+          departureDateTo: q.departureDateTo,
+          minAvailableKg: q.minAvailableKg,
+          maxAvailableKg: q.maxAvailableKg,
+          maxPricePerKg: q.maxPricePerKg,
+          kiloProOnly: q.kiloProOnly,
+          minRating: q.minRating,
+          weekendOnly: q.weekendOnly,
+          transportMode: q.transportMode,
+          kycVerifiedOnly: q.kycVerifiedOnly,
+          contentType: q.contentType,
+          userLat: q.userLat,
+          userLng: q.userLng,
+          radiusKm: q.radiusKm,
+          urgent: q.urgent,
+        );
+      }
+      if (mounted) {
+        setState(() => _otherModeCount = total);
+      }
+    } catch (_) {
+      // Le compteur est une aide à la découverte, jamais un bloquant :
+      // en cas d'échec on le masque au lieu de remonter une erreur.
+      if (mounted) {
+        setState(() => _otherModeCount = null);
+      }
+    }
+  }
+
+  /// Applique un changement de filtres : relance la recherche du mode courant
+  /// et rafraîchit le compteur de l'autre mode.
+  void _onFiltersChanged(HomeSearchFilters next) {
+    setState(() => _filters = next);
+    _dispatchForMode();
+    unawaited(_dispatchOtherModeCount());
+  }
+
+  /// Nombre de trajets actifs, source unique du filtre « Pour mes trajets ».
+  ///
+  /// `null` = inconnu (résumé pas encore chargé, ou échec réseau), et ce n'est
+  /// PAS zéro : sur un échec, prétendre « Aucun trajet actif » à un voyageur
+  /// qui en a cinq serait un mensonge durable (le résumé n'est rechargé qu'à la
+  /// création de l'écran). Inconnu laisse donc la pastille utilisable et confie
+  /// l'arbitrage au serveur, qui connaît la vérité.
+  int? get _activeTrips =>
+      context.read<TripsSummaryCubit>().state.knownActiveTrips;
+
+  void _onModeChanged(SearchMode mode) {
+    if (mode == _mode) {
+      return;
+    }
+    // Rôle voyageur retiré : le serveur refuserait la recherche de colis. On
+    // explique au lieu de laisser partir une requête qui répondra 403.
+    if (mode.isParcels && !_isTraveler) {
+      unawaited(_showTravelerRoleDisabledSheet());
+      return;
+    }
+    setState(() {
+      _mode = mode;
+      // Le compteur affiché portait sur l'ancien « autre mode » : il devient
+      // faux à l'instant de la bascule, on l'efface avant de le recalculer.
+      _otherModeCount = null;
+      _selectedAnnouncementId = null;
+    });
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeSearchModeChanged,
+        properties: {'mode': mode.name},
+      ),
+    );
+    _dispatchForMode();
+    unawaited(_dispatchOtherModeCount());
+  }
+
+  /// L'état vide propose la bascule plutôt qu'un effacement de filtres quand
+  /// l'autre mode, lui, a des résultats sur les mêmes critères.
+  bool get _showCrossDiscovery => (_otherModeCount ?? 0) > 0;
+
+  /// Suffixe corridor du libellé de découverte croisée.
+  ///
+  /// Le compteur peut être significatif sans corridor (date seule, ou « près de
+  /// moi ») : dans ce cas le libellé se passe simplement de suffixe. Décision
+  /// assumée, plutôt que d'afficher une flèche orpheline ou un « Tous les
+  /// corridors » qui ne veut rien dire dans cette phrase.
+  String get _crossDiscoveryCorridorSuffix {
+    final dep = _filters.departureCity;
+    final arr = _filters.arrivalCity;
+    if (dep != null && arr != null) {
+      return ' sur $dep → $arr';
+    }
+    if (dep != null) {
+      return ' au départ de $dep';
+    }
+    if (arr != null) {
+      return ' vers $arr';
+    }
+    return '';
+  }
+
+  /// Nomme le corridor courant : « 5 colis cherchent un voyageur sur Lyon →
+  /// Bamako » en mode trajets, son symétrique « 12 voyageurs passent sur Lyon →
+  /// Bamako » en mode colis. Jamais de tiret cadratin ici, c'est un texte
+  /// affiché.
+  String get _crossDiscoveryLabel {
+    final n = _otherModeCount ?? 0;
+    final corridor = _crossDiscoveryCorridorSuffix;
+    return _mode.isTrips
+        ? '$n colis ${n > 1 ? 'cherchent' : 'cherche'} un voyageur$corridor'
+        : '$n voyageur${n > 1 ? 's' : ''} ${n > 1 ? 'passent' : 'passe'}$corridor';
+  }
+
+  /// Empile l'état vide et, quand l'autre mode a des résultats sur les mêmes
+  /// critères, la tuile de bascule. Zéro résultat sur un corridor est le moment
+  /// où l'autre mode a le plus de valeur.
+  Widget _emptyWithCrossDiscovery(Widget emptyState) {
+    if (!_showCrossDiscovery) {
+      return emptyState;
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        emptyState,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            0,
+            DonySpacing.lg,
+            DonySpacing.lg,
+          ),
+          child: _CrossDiscoveryTile(
+            key: const Key('cross-discovery'),
+            label: _crossDiscoveryLabel,
+            onTap: _onCrossDiscoveryTap,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Bascule proposée depuis l'état vide : l'autre mode a des résultats là où
+  /// le mode courant n'en a aucun.
+  void _onCrossDiscoveryTap() {
+    final count = _otherModeCount ?? 0;
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeCrossDiscoveryTapped,
+        properties: {'from_mode': _mode.name, 'count': count},
+      ),
+    );
+    _onModeChanged(_mode.other);
+  }
+
+  /// Explique le refus du mode Colis à un utilisateur qui a désactivé son rôle
+  /// voyageur, et l'emmène là où il peut le réactiver. Bouton en position
+  /// collée en bas, jamais dans le contenu défilant.
+  Future<void> _showTravelerRoleDisabledSheet() {
+    // Capturé avant l'ouverture : après le pop, le contexte de la feuille est
+    // mort. `maybeOf` couvre les montages hors routeur (tests de rendu isolé).
+    final router = GoRouter.maybeOf(context);
+    return DonyBottomSheet.show<void>(
+      context,
+      title: 'Rôle voyageur désactivé',
+      subtitle: 'Les demandes de colis sont réservées aux voyageurs. '
+          'Réactive ton rôle voyageur pour les consulter.',
+      stickyBottom: DonyButton(
+        label: 'Ouvrir les réglages',
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true).pop();
+          router?.push('/settings');
+        },
+      ),
+      child: const SizedBox.shrink(),
     );
   }
 
@@ -454,53 +616,25 @@ class _MapSenderViewState extends State<_MapSenderView> {
     };
   }
 
-  // Near-me touche les deux jeux de résultats si l'utilisateur est voyageur,
-  // ou seulement les annonces s'il est expéditeur pur.
-  void _dispatchForCapability() {
-    _dispatchSearch();
-    if (_isTraveler) {
-      _dispatchPackageRequestSearch();
-    }
-  }
-
-  // Conservé pour la rétrocompatibilité avec l'appel depuis `_changeNearMeRadius`.
-  void _dispatchForActiveRole() => _dispatchForCapability();
-
-  // Chip « 🔥 Urgent » : filtre serveur combiné à l'onglet actif — s'applique
-  // aux deux recherches (announcements + package requests), comme near-me.
+  // Chip « 🔥 Urgent » : filtre serveur commun aux deux modes, appliqué à la
+  // recherche du mode courant.
   void _onUrgentToggle() {
-    final next = !_urgentOnly;
-    setState(() => _urgentOnly = next);
+    final next = !_filters.urgentOnly;
     unawaited(
       getIt<AnalyticsService>().logEvent(
         AnalyticsEvents.urgentFilterToggled,
         properties: {'active': next},
       ),
     );
-    _dispatchForCapability();
+    _onFiltersChanged(_filters.copyWith(urgentOnly: next));
   }
 
   void _deactivateNearMe() {
     setState(() {
-      _isNearMeActive = false;
       _nearMeShowList = false;
-      _nearMeRadiusKm = null;
-      _userPosition = null;
       _selectedAnnouncementId = null;
     });
-    _dispatchForActiveRole();
-  }
-
-  void _openNearMeList() {
-    setState(() => _nearMeShowList = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_sheetController.isAttached) return;
-      _sheetController.animateTo(
-        1.0,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
-    });
+    _onFiltersChanged(_filters.copyWith(clearNearMe: true));
   }
 
   // Ajuste le rayon SANS couper le filtre : rouvre le slider pré-rempli au rayon
@@ -513,8 +647,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       confirmLabel: 'Appliquer',
     );
     if (radiusKm == null || !mounted) return;
-    setState(() => _nearMeRadiusKm = radiusKm);
-    _dispatchForActiveRole();
+    _onFiltersChanged(_filters.copyWith(nearMeRadiusKm: radiusKm));
   }
 
   Future<void> _activateNearMe() async {
@@ -553,35 +686,43 @@ class _MapSenderViewState extends State<_MapSenderView> {
     }
     if (!mounted) return;
 
-    setState(() {
-      _isLocatingNearMe = false;
-      _isNearMeActive = true;
-      _nearMeRadiusKm = _nearMeRadiusKm ?? 25;
-      _userPosition = LatLng(pos.latitude, pos.longitude);
-    });
-    _dispatchForActiveRole();
+    setState(() => _isLocatingNearMe = false);
+    _onFiltersChanged(
+      _filters.copyWith(
+        nearMeActive: true,
+        nearMeRadiusKm: _filters.nearMeRadiusKm ?? 25,
+        userLat: pos.latitude,
+        userLng: pos.longitude,
+      ),
+    );
   }
 
   Future<void> _showDatePresetSheet() async {
     final result =
         await showModalBottomSheet<
-          ({_DatePreset preset, DateTime? customDate})
+          ({DonyDatePreset preset, DateTime? customDate})
         >(
           context: context,
           useRootNavigator: true,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
           builder: (_) => _DatePresetSheet(
-            currentPreset: _datePreset,
-            customDate: _customDate,
+            currentPreset: _filters.datePreset,
+            customDate: _filters.customDate,
           ),
         );
     if (result != null && mounted) {
-      setState(() {
-        _datePreset = result.preset;
-        _customDate = result.customDate;
-      });
-      _dispatchSearch();
+      _onFiltersChanged(
+        result.customDate == null
+            ? _filters.copyWith(
+                datePreset: result.preset,
+                clearCustomDate: true,
+              )
+            : _filters.copyWith(
+                datePreset: result.preset,
+                customDate: result.customDate,
+              ),
+      );
     }
   }
 
@@ -591,11 +732,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
       useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _RatingFilterSheet(currentRating: _minRating),
+      builder: (_) => _RatingFilterSheet(currentRating: _filters.minRating),
     );
     if (result == null || !mounted) return;
-    setState(() => _minRating = result < 0 ? null : result);
-    _dispatchSearch();
+    _onFiltersChanged(
+      result < 0
+          ? _filters.copyWith(clearMinRating: true)
+          : _filters.copyWith(minRating: result),
+    );
   }
 
   Future<void> _showWeightSheet() async {
@@ -604,15 +748,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
       useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-          _WeightRangeSheet(currentMin: _weightMin, currentMax: _weightMax),
+      builder: (_) => _WeightRangeSheet(
+        currentMin: _filters.weightMin,
+        currentMax: _filters.weightMax,
+      ),
     );
     if (result == null || !mounted) return;
-    setState(() {
-      _weightMin = result.min <= 0 ? null : result.min;
-      _weightMax = result.max <= 0 ? null : result.max;
-    });
-    _dispatchSearch();
+    final cleared = _filters.copyWith(clearWeight: true);
+    _onFiltersChanged(
+      cleared.copyWith(
+        weightMin: result.min <= 0 ? null : result.min,
+        weightMax: result.max <= 0 ? null : result.max,
+      ),
+    );
   }
 
   Future<void> _showPriceSheet() async {
@@ -621,11 +769,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
       useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PriceFilterSheet(currentMaxPrice: _maxPricePerKg),
+      builder: (_) =>
+          _PriceFilterSheet(currentMaxPrice: _filters.maxPricePerKg),
     );
     if (result == null || !mounted) return;
-    setState(() => _maxPricePerKg = result < 0 ? null : result);
-    _dispatchSearch();
+    _onFiltersChanged(
+      result < 0
+          ? _filters.copyWith(clearMaxPricePerKg: true)
+          : _filters.copyWith(maxPricePerKg: result),
+    );
   }
 
   void _exitNearMeAndShowList() {
@@ -673,143 +825,108 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// Une seule feuille dans les deux modes : c'est elle qui porte le bloc
+  /// corridor + date partagé.
   Future<void> _showFilterSheet(BuildContext ctx) async {
-    final initialParams = SearchParams(
-      departureCity: _corridor.departure,
-      arrivalCity: _corridor.arrival,
-      date: _customDate,
-      kiloProOnly: _kiloProOnly,
-      ratingFilter: _minRating != null,
-      priceFilter: _maxPricePerKg != null,
-      maxPricePerKg: _maxPricePerKg ?? 25,
-      transportMode: _transportMode,
-      kycVerifiedOnly: _kycVerifiedOnly,
-      contentType: _contentType,
-      urgencyFilter: _urgencyFilter,
-    );
-
-    final result = await SearchFormBottomSheet.show(
+    final activeTrips = _activeTrips;
+    final result = await SearchFilterSheet.show(
       ctx,
-      initialParams: initialParams,
-      heightFraction: 0.80,
+      mode: _mode,
+      initial: _filters,
+      activeTrips: activeTrips,
+      onPublishTrip: _onPublishTripRequested,
     );
-
     if (result == null || !mounted) return;
-    _applySearchParams(result);
+    // La pastille « Pour mes trajets » vit dans la feuille : sa bascule ne se
+    // constate qu'au retour, en comparant l'avant et l'après.
+    if (result.matchingMyTrips != _filters.matchingMyTrips) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {
+            'active': result.matchingMyTrips,
+            // Nombre inconnu : la propriété est absente plutôt que remplie
+            // d'un zéro qui fausserait l'analyse.
+            'active_trips': ?activeTrips,
+          },
+        ),
+      );
+    }
+    _onFiltersChanged(result);
   }
 
-  Future<void> _showPrFilterSheet(BuildContext ctx) async {
-    final depCtrl = TextEditingController(text: _prDeparture ?? '');
-    final arrCtrl = TextEditingController(text: _prArrival ?? '');
-    await DonyBottomSheet.show(
-      ctx,
-      title: 'Filtrer les demandes',
-      stickyBottom: DonyButton(
-        label: 'Appliquer',
-        onPressed: () {
-          final dep = depCtrl.text.trim().isEmpty ? null : depCtrl.text.trim();
-          final arr = arrCtrl.text.trim().isEmpty ? null : arrCtrl.text.trim();
-          setState(() {
-            _prDeparture = dep;
-            _prArrival = arr;
-          });
-          _dispatchPackageRequestSearch();
-          Navigator.of(ctx, rootNavigator: true).pop();
-        },
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          DonySpacing.sm,
-          DonySpacing.lg,
-          DonySpacing.xl,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: depCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Ville de départ',
-                prefixIcon: DonyEmoji.planeTakeoff(size: 18),
-              ),
-            ),
-            const SizedBox(height: DonySpacing.md),
-            TextField(
-              controller: arrCtrl,
-              decoration: const InputDecoration(
-                labelText: "Ville d'arrivée",
-                prefixIcon: DonyEmoji.planeLanding(size: 18),
-              ),
-            ),
-            const SizedBox(height: DonySpacing.lg),
-            if (_prDeparture != null ||
-                _prDateFrom != null ||
-                _prMaxWeight != null ||
-                _prParcelSize != null)
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _prDeparture = null;
-                    _prArrival = null;
-                    _prDateFrom = null;
-                    _prDateTo = null;
-                    _prMaxWeight = null;
-                    _prParcelSize = null;
-                  });
-                  _dispatchPackageRequestSearch();
-                  Navigator.of(ctx, rootNavigator: true).pop();
-                },
-                icon: DonyIcon(
-                  'x',
-                  size: 16,
-                  color: Theme.of(ctx).colorScheme.primary,
-                ),
-                label: const Text('Effacer tous les filtres'),
-              ),
-          ],
-        ),
-      ),
-    );
+  /// « Publier un trajet » depuis le garde-fou de la pastille « Pour mes
+  /// trajets ». La feuille de filtres est déjà fermée quand on arrive ici :
+  /// c'est l'écran, qui lui survit, qui attend le retour de la création puis
+  /// recharge le résumé. Sans ce rechargement, l'utilisateur publierait son
+  /// trajet et retrouverait la pastille grisée avec « Aucun trajet actif »,
+  /// c'est-à-dire le scénario nominal du garde-fou pris en défaut.
+  Future<void> _onPublishTripRequested() async {
+    // `maybeOf` : hors routeur (tests de rendu isolé) il n'y a rien à ouvrir.
+    final router = GoRouter.maybeOf(context);
+    if (router == null) {
+      return;
+    }
+    final summary = context.read<TripsSummaryCubit>();
+    await router.push<void>('/announcements/create');
+    if (!mounted) {
+      return;
+    }
+    await summary.load();
   }
 
+  /// Applique une recherche préparée ailleurs (onglet Envoyer via
+  /// [PendingSearchNotifier]), qui parle encore en [SearchParams]. Seule
+  /// passerelle restante entre ce porteur historique et [HomeSearchFilters] :
+  /// une recherche venue d'ailleurs porte sur des trajets, on force le mode.
   void _applySearchParams(SearchParams result) {
     if (!mounted) return;
+    var next = _filters;
     final dep = result.departureCity;
     final arr = result.arrivalCity;
+    if (dep != null && arr != null) {
+      next = next.copyWith(departureCity: dep, arrivalCity: arr);
+    }
+    // Les deux villes nulles = l'utilisateur les a vidées : on garde le corridor.
+    if (result.date != null) {
+      next = next.copyWith(
+        datePreset: DonyDatePreset.custom,
+        customDate: result.date,
+      );
+    }
+    next = next.copyWith(
+      kiloProOnly: result.kiloProOnly,
+      weekendOnly: result.weekendFilter,
+      kycVerifiedOnly: result.kycVerifiedOnly,
+    );
+    next = result.ratingFilter
+        ? next.copyWith(minRating: 4.5)
+        : next.copyWith(clearMinRating: true);
+    next = result.priceFilter
+        ? next.copyWith(maxPricePerKg: result.maxPricePerKg)
+        : next.copyWith(clearMaxPricePerKg: true);
+    next = result.transportMode != null
+        ? next.copyWith(transportMode: result.transportMode)
+        : next.copyWith(clearTransportMode: true);
+    next = result.contentType != null
+        ? next.copyWith(contentType: result.contentType)
+        : next.copyWith(clearContentType: true);
+    next = result.urgencyFilter != null
+        ? next.copyWith(urgencyFilter: result.urgencyFilter)
+        : next.copyWith(clearUrgencyFilter: true);
+    if (result.weightKg > 0) {
+      next = next.copyWith(clearWeight: true).copyWith(
+        weightMin: result.weightKg,
+      );
+    }
 
     setState(() {
-      if (dep != null && arr != null) {
-        final matchedCorridor = _corridorOptions.firstWhere(
-          (c) => c.departure == dep && c.arrival == arr,
-          orElse: () => (
-            label: '${dep.split(' ').first} → ${arr.split(' ').first}',
-            departure: dep,
-            arrival: arr,
-          ),
-        );
-        _corridor = matchedCorridor;
-        _allCorridors = false;
-      }
-      // If both cities are null (user cleared them), keep the current corridor.
-      if (result.date != null) {
-        _datePreset = _DatePreset.custom;
-        _customDate = result.date;
-      }
-      _kiloProOnly = result.kiloProOnly;
-      _minRating = result.ratingFilter ? 4.5 : null;
-      _weekendOnly = result.weekendFilter;
-      _maxPricePerKg = result.priceFilter ? result.maxPricePerKg : null;
-      _transportMode = result.transportMode;
-      _kycVerifiedOnly = result.kycVerifiedOnly;
-      _contentType = result.contentType;
-      _urgencyFilter = result.urgencyFilter;
-      if (result.weightKg > 0) {
-        _weightMin = result.weightKg;
-        _weightMax = null;
-      }
+      _mode = SearchMode.trips;
+      _filters = next;
+      _otherModeCount = null;
     });
     _dispatchSearch();
+    unawaited(_dispatchOtherModeCount());
   }
 
   Future<void> _rebuildPackageRequestMarkers(
@@ -864,11 +981,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   @override
   Widget build(BuildContext context) {
-    final isTraveler = _isTraveler;
-    final vis = homeMapVisibility(isTraveler: isTraveler, focus: _mapFocus);
-    final showParcelControls = isTraveler && _mapFocus == HomeMapFocus.parcels;
-    final showBothTypes =
-        !showParcelControls && isTraveler && _mapFocus == HomeMapFocus.all;
     final authState = context.watch<AuthBloc>().state;
     final currentUserId = authState.currentUserId;
     return Scaffold(
@@ -884,10 +996,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
           final ownFiltered = currentUserId == null
               ? raw
               : raw.where((a) => a.travelerId != currentUserId).toList();
-          final announcements = _urgencyFilter == null
+          final urgencyFilter = _filters.urgencyFilter;
+          final announcements = urgencyFilter == null
               ? ownFiltered
               : ownFiltered
-                    .where((a) => _urgencyFilter!.matches(a.departureDate))
+                    .where((a) => urgencyFilter.matches(a.departureDate))
                     .toList();
 
           return BlocConsumer<
@@ -904,8 +1017,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 children: [
                   Positioned.fill(
                     child: AnnouncementMapView(
-                      announcements: vis.showTrips ? announcements : const [],
-                      extraMarkers: vis.showParcels
+                      announcements: _mode.isTrips ? announcements : const [],
+                      extraMarkers: _mode.isParcels
                           ? _packageRequestMarkers
                           : const {},
                       isNearMeActive: _isNearMeActive,
@@ -953,19 +1066,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 Expanded(
                                   child: _CorridorBar(
                                     key: const Key('corridor-bar'),
-                                    label: showParcelControls
-                                        ? (_prDeparture != null
-                                              ? '$_prDeparture → $_prArrival'
-                                              : 'Tous les corridors')
-                                        : (_allCorridors
-                                              ? 'Tous les corridors'
-                                              : _corridor.label),
-                                    activeFilterCount: showParcelControls
-                                        ? _prActiveFilterCount
-                                        : _activeFilterCount,
-                                    onTap: () => showParcelControls
-                                        ? _showPrFilterSheet(context)
-                                        : _showFilterSheet(context),
+                                    label: _corridorLabel,
+                                    activeFilterCount: _activeFilterCount,
+                                    onTap: () => _showFilterSheet(context),
                                   ),
                                 ),
                                 const SizedBox(width: DonySpacing.sm),
@@ -973,10 +1076,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               ],
                             ),
                             const SizedBox(height: DonySpacing.xs),
-                            _filterChipsRow(
-                              isTraveler: isTraveler,
-                              showParcelControls: showParcelControls,
-                            ),
+                            _filterChipsRow(),
                           ],
                         ),
                       ),
@@ -1019,7 +1119,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         scrollCtrl,
                         announcements,
                         MediaQuery.of(context).padding.bottom,
-                        showParcelControls,
                         currentUserId: currentUserId,
                       ),
                     )
@@ -1032,104 +1131,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         child: SizedBox(
                           height: (MediaQuery.of(context).size.height * 0.40)
                               .clamp(384.0, 470.0),
-                          child: showBothTypes
-                              ? DefaultTabController(
-                                      length: 2,
-                                      child: Column(
-                                        children: [
-                                          TabBar(
-                                            tabs: [
-                                              Tab(
-                                                text:
-                                                    '📦 ${_visibleRequests(prState.results).length} colis',
-                                              ),
-                                              Tab(
-                                                text:
-                                                    '✈️ ${announcements.length} trajets',
-                                              ),
-                                            ],
-                                          ),
-                                          Expanded(
-                                            child: TabBarView(
-                                              children: [
-                                                NearMePackageRequestCarousel(
-                                                  items: _visibleRequests(prState.results),
-                                                  userPosition:
-                                                      _userPosition != null
-                                                      ? (
-                                                          lat: _userPosition!
-                                                              .latitude,
-                                                          lng: _userPosition!
-                                                              .longitude,
-                                                        )
-                                                      : null,
-                                                  currentUserId: currentUserId,
-                                                  selectedRequestId:
-                                                      _selectedAnnouncementId,
-                                                  onCardChanged: (id) => setState(
-                                                    () =>
-                                                        _selectedAnnouncementId =
-                                                            id,
-                                                  ),
-                                                  onSeeAll: _openNearMeList,
-                                                  onTapCard: (it) =>
-                                                      PackageRequestPreviewBottomSheet.show(
-                                                        context,
-                                                        item: it,
-                                                        isOwnRequest:
-                                                            currentUserId !=
-                                                                null &&
-                                                            it.sender.id ==
-                                                                currentUserId,
-                                                      ),
-                                                  onMakeOffer: (it) =>
-                                                      currentUserId == null ||
-                                                          it.sender.id !=
-                                                              currentUserId
-                                                      ? PackageRequestPreviewBottomSheet.show(
-                                                          context,
-                                                          item: it,
-                                                        )
-                                                      : null,
-                                                ),
-                                                NearMeCarousel(
-                                                  announcements: announcements,
-                                                  userPosition:
-                                                      _userPosition != null
-                                                      ? (
-                                                          lat: _userPosition!
-                                                              .latitude,
-                                                          lng: _userPosition!
-                                                              .longitude,
-                                                        )
-                                                      : null,
-                                                  selectedAnnouncementId:
-                                                      _selectedAnnouncementId,
-                                                  onCardChanged: (id) => setState(
-                                                    () =>
-                                                        _selectedAnnouncementId =
-                                                            id,
-                                                  ),
-                                                  onSeeAll: _openNearMeList,
-                                                  onTapCard: (a) =>
-                                                      _onTravelerCardTap(
-                                                        context,
-                                                        a,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                    .animate()
-                                    .fadeIn(duration: 250.ms)
-                                    .slideY(
-                                      begin: 0.1,
-                                      curve: Curves.easeOutCubic,
-                                    )
-                              : showParcelControls
+                          // Un seul carousel : celui du mode courant. La vue
+                          // mixte à deux onglets a disparu avec le mode « Tout ».
+                          child: _mode.isParcels
                               ? NearMePackageRequestCarousel(
                                       items: _visibleRequests(prState.results),
                                       userPosition: _userPosition != null
@@ -1216,7 +1220,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   Future<double?> _showMaxWeightSheet(BuildContext ctx) async {
-    double? selected = _prMaxWeight;
+    double? selected = _filters.maxWeight;
     return await showModalBottomSheet<double>(
       context: ctx,
       useRootNavigator: true,
@@ -1296,248 +1300,156 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
-  void _onFocusChanged(HomeMapFocus focus) {
-    if (focus == _mapFocus) return;
-    setState(() => _mapFocus = focus);
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.homeMapFocusChanged,
-        properties: {'focus': focus.name},
+  /// Efface les filtres communs et ceux du mode courant. Ceux de l'autre mode
+  /// sont préservés : ils ne sont pas comptés par `activeCountFor(_mode)`, les
+  /// effacer serait une surprise invisible. Même règle que « Tout effacer »
+  /// dans la feuille de filtres.
+  void _resetFilters() {
+    final common = _filters.copyWith(
+      clearCorridor: true,
+      datePreset: DonyDatePreset.none,
+      clearCustomDate: true,
+      urgentOnly: false,
+      clearNearMe: true,
+    );
+    _onFiltersChanged(
+      _mode.isTrips
+          ? common.copyWith(
+              clearMaxPricePerKg: true,
+              clearWeight: true,
+              kiloProOnly: false,
+              clearMinRating: true,
+              weekendOnly: false,
+              clearTransportMode: true,
+              kycVerifiedOnly: false,
+              clearContentType: true,
+              clearUrgencyFilter: true,
+            )
+          : common.copyWith(
+              clearMaxWeight: true,
+              clearParcelSize: true,
+              matchingMyTrips: false,
+            ),
+    );
+  }
+
+  /// Une seule rangée de chips, pilotée par le mode. Le sélecteur de mode en
+  /// est le premier enfant : il défile avec elle plutôt que d'occuper une
+  /// bande propre au-dessus de la carte.
+  Widget _filterChipsRow() {
+    return HomeFilterChipsRow(
+      mode: _mode,
+      filters: _filters,
+      otherModeCount: _otherModeCount,
+      onModeChanged: _onModeChanged,
+      onUrgentToggle: _onUrgentToggle,
+      onDateTap: _showDatePresetSheet,
+      onDateClear: () => _onFiltersChanged(
+        _filters.copyWith(
+          datePreset: DonyDatePreset.none,
+          clearCustomDate: true,
+        ),
+      ),
+      onRatingTap: _showRatingSheet,
+      onRatingClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearMinRating: true)),
+      onCapacityTap: _showWeightSheet,
+      onCapacityClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearWeight: true)),
+      onPriceTap: _showPriceSheet,
+      onPriceClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearMaxPricePerKg: true)),
+      onKiloProToggle: () => _onFiltersChanged(
+        _filters.copyWith(kiloProOnly: !_filters.kiloProOnly),
+      ),
+      onMaxWeightTap: () async {
+        final result = await _showMaxWeightSheet(context);
+        if (result == null || !mounted) return;
+        _onFiltersChanged(_filters.copyWith(maxWeight: result));
+      },
+      onMaxWeightClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearMaxWeight: true)),
+      onParcelSizeTap: () async {
+        final result = await _showParcelSizeSheet(context);
+        if (result == null || !mounted) return;
+        _onFiltersChanged(
+          result == _filters.parcelSize
+              ? _filters.copyWith(clearParcelSize: true)
+              : _filters.copyWith(parcelSize: result),
+        );
+      },
+      onParcelSizeClear: () =>
+          _onFiltersChanged(_filters.copyWith(clearParcelSize: true)),
+      activeTrips: _activeTrips,
+      onMatchingMyTripsToggle: () =>
+          _onMatchingMyTripsChanged(!_filters.matchingMyTrips, _activeTrips),
+      // Une seule feuille ouverte ici, contrairement au même garde-fou déclenché
+      // depuis la feuille de filtres, qui en a deux empilées.
+      onMatchingMyTripsBlocked: () => unawaited(
+        showNoActiveTripSheet(
+          context,
+          sheetsToPop: 1,
+          onPublishTrip: _onPublishTripRequested,
+        ),
       ),
     );
-    // Redéclencher la recherche de colis si on bascule en mode colis ou tout.
-    if (focus == HomeMapFocus.parcels || focus == HomeMapFocus.all) {
-      _dispatchPackageRequestSearch();
-    }
   }
 
-  void _openColisMatch() {
+  /// Bascule du filtre « Pour mes trajets » depuis la rangée de chips.
+  ///
+  /// La feuille de filtres a son propre chemin : elle renvoie un état complet
+  /// dont la bascule se constate au retour. Ici l'action est immédiate, donc
+  /// l'événement analytique est tiré sur place, avec les mêmes propriétés.
+  void _onMatchingMyTripsChanged(bool active, int? trips) {
     unawaited(
-      getIt<AnalyticsService>().logEvent(AnalyticsEvents.homeColisMatchOpened),
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeMatchingTripsFilterToggled,
+        properties: {
+          'active': active,
+          // Nombre inconnu : propriété absente plutôt que remplie d'un zéro
+          // que rien ne prouve.
+          if (trips != null) 'active_trips': trips,
+        },
+      ),
     );
-    context.push('/package-requests/match');
+    _onFiltersChanged(_filters.copyWith(matchingMyTrips: active));
   }
 
-  void _resetPrFilters() {
-    setState(() {
-      _prDeparture = null;
-      _prArrival = null;
-      _prDateFrom = null;
-      _prDateTo = null;
-      _prMaxWeight = null;
-      _prParcelSize = null;
-    });
-    _dispatchPackageRequestSearch();
-  }
-
-  void _resetSenderFilters() {
-    setState(() {
-      _kiloProOnly = false;
-      _allCorridors = true;
-      _minRating = null;
-      _weightMin = null;
-      _weightMax = null;
-      _maxPricePerKg = null;
-      _weekendOnly = false;
-      _transportMode = null;
-      _kycVerifiedOnly = false;
-      _contentType = null;
-      _urgencyFilter = null;
-      _datePreset = _DatePreset.none;
-    });
-    _dispatchSearch();
-  }
-
-  Widget _filterChipsRow({
-    required bool isTraveler,
-    required bool showParcelControls,
-  }) {
-    return !showParcelControls
-        ? _HomeFilterChipsRow(
-            leadingChildren: [
-              _SmallChip(
-                label: '🔥 Urgent',
-                isActive: _urgentOnly,
-                onTap: _onUrgentToggle,
-              ),
-              const SizedBox(width: DonySpacing.xs),
-              if (isTraveler) ...[
-                _SmallChip(
-                  label: '📦 Colis',
-                  isActive: _mapFocus == HomeMapFocus.parcels,
-                  onTap: () => _onFocusChanged(
-                    _mapFocus == HomeMapFocus.parcels
-                        ? HomeMapFocus.all
-                        : HomeMapFocus.parcels,
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-                _SmallChip(
-                  label: '✈️ Trajets',
-                  isActive: _mapFocus == HomeMapFocus.trips,
-                  onTap: () => _onFocusChanged(
-                    _mapFocus == HomeMapFocus.trips
-                        ? HomeMapFocus.all
-                        : HomeMapFocus.trips,
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-              ],
-            ],
-            datePreset: _datePreset,
-            customDate: _customDate,
-            kiloProOnly: _kiloProOnly,
-            allCorridors: _allCorridors,
-            minRating: _minRating,
-            weightMin: _weightMin,
-            weightMax: _weightMax,
-            maxPricePerKg: _maxPricePerKg,
-            onDateTap: _showDatePresetSheet,
-            onRatingTap: _showRatingSheet,
-            onWeightTap: _showWeightSheet,
-            onPriceTap: _showPriceSheet,
-            onDateClear: () {
-              setState(() {
-                _datePreset = _DatePreset.none;
-                _customDate = null;
-              });
-              _dispatchSearch();
-            },
-            onRatingClear: () {
-              setState(() => _minRating = null);
-              _dispatchSearch();
-            },
-            onWeightClear: () {
-              setState(() {
-                _weightMin = null;
-                _weightMax = null;
-              });
-              _dispatchSearch();
-            },
-            onPriceClear: () {
-              setState(() => _maxPricePerKg = null);
-              _dispatchSearch();
-            },
-            onKiloProToggle: () {
-              setState(() => _kiloProOnly = !_kiloProOnly);
-              _dispatchSearch();
-            },
-            onAllCorridorsToggle: () {
-              setState(() => _allCorridors = !_allCorridors);
-              _dispatchSearch();
-            },
-          )
-        : _PackageRequestFilterChipsRow(
-            leadingChildren: [
-              _SmallChip(
-                label: '🔥 Urgent',
-                isActive: _urgentOnly,
-                onTap: _onUrgentToggle,
-              ),
-              const SizedBox(width: DonySpacing.xs),
-              if (isTraveler) ...[
-                _SmallChip(
-                  label: '📦 Colis',
-                  isActive: _mapFocus == HomeMapFocus.parcels,
-                  onTap: () => _onFocusChanged(
-                    _mapFocus == HomeMapFocus.parcels
-                        ? HomeMapFocus.all
-                        : HomeMapFocus.parcels,
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-                _SmallChip(
-                  label: '✈️ Trajets',
-                  isActive: _mapFocus == HomeMapFocus.trips,
-                  onTap: () => _onFocusChanged(
-                    _mapFocus == HomeMapFocus.trips
-                        ? HomeMapFocus.all
-                        : HomeMapFocus.trips,
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-                // Raccourci découverte : colis triés par compatibilité avec
-                // les trajets publiés du voyageur (ex-« Colis sur mes
-                // trajets » du Profil).
-                _SmallChip(
-                  label: '🎯 Pour mes trajets',
-                  isActive: false,
-                  onTap: _openColisMatch,
-                ),
-                const SizedBox(width: DonySpacing.xs),
-              ],
-            ],
-            dateFrom: _prDateFrom,
-            dateTo: _prDateTo,
-            maxWeight: _prMaxWeight,
-            parcelSize: _prParcelSize,
-            onDateTap: () async {
-              final picked = await showDateRangePicker(
-                context: context,
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 365)),
-                initialDateRange: _prDateFrom != null && _prDateTo != null
-                    ? DateTimeRange(start: _prDateFrom!, end: _prDateTo!)
-                    : null,
-                locale: const Locale('fr'),
-                builder: (ctx, child) =>
-                    Theme(data: Theme.of(ctx), child: child!),
-              );
-              if (picked != null) {
-                setState(() {
-                  _prDateFrom = picked.start;
-                  _prDateTo = picked.end;
-                });
-                _dispatchPackageRequestSearch();
-              }
-            },
-            onWeightTap: () async {
-              final result = await _showMaxWeightSheet(context);
-              if (result != null) {
-                setState(() => _prMaxWeight = result);
-                _dispatchPackageRequestSearch();
-              }
-            },
-            onSizeTap: () async {
-              final result = await _showParcelSizeSheet(context);
-              if (result != null) {
-                setState(
-                  () => _prParcelSize = result == _prParcelSize ? null : result,
-                );
-                _dispatchPackageRequestSearch();
-              }
-            },
-            onDateClear: () {
-              setState(() {
-                _prDateFrom = null;
-                _prDateTo = null;
-              });
-              _dispatchPackageRequestSearch();
-            },
-            onWeightClear: () {
-              setState(() => _prMaxWeight = null);
-              _dispatchPackageRequestSearch();
-            },
-            onSizeClear: () {
-              setState(() => _prParcelSize = null);
-              _dispatchPackageRequestSearch();
-            },
-          );
+  /// Sous-titre de l'en-tête quand la recherche colis est filtrée sur les
+  /// trajets de l'utilisateur : ce qu'on a trouvé, et sur combien de trajets.
+  ///
+  /// Le mot « compatibles » est essentiel : ce filtre liste les demandes encore
+  /// libres qu'on POURRAIT prendre, pas les colis déjà embarqués sur ses
+  /// trajets, qui se consultent depuis le détail du trajet. Un titre du genre
+  /// « colis sur tes trajets » se lit à l'envers et fait chercher un colis
+  /// accepté qui n'a rien à faire ici.
+  ///
+  /// [trips] à `null` = nombre de trajets actifs inconnu : on annonce les
+  /// résultats sans inventer un « 0 trajet actif » que rien ne prouve.
+  String _matchingSubtitle(PackageRequestSearchState prState, int? trips) {
+    final n = _visibleRequests(prState.results).length;
+    final resultats = '$n résultat${n > 1 ? 's' : ''}';
+    if (trips == null) {
+      return resultats;
+    }
+    // « compatible » s'accorde avec le nombre de résultats, « trajet » avec le
+    // nombre de trajets : les deux varient indépendamment.
+    final compatible = 'compatible${n > 1 ? 's' : ''}';
+    final avecTrajets =
+        trips > 1 ? 'tes $trips trajets' : 'ton trajet';
+    return '$resultats, $compatible avec $avecTrajets';
   }
 
   Widget _buildSheet(
     BuildContext ctx,
     ScrollController scrollCtrl,
     List<AnnouncementModel> announcements,
-    double bottomPad,
-    bool showParcelControls, {
+    double bottomPad, {
     String? currentUserId,
   }) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
     final count = announcements.length;
-    final showBothTypes =
-        !showParcelControls && _isTraveler && _mapFocus == HomeMapFocus.all;
 
     final statusBarHeight = MediaQuery.of(ctx).padding.top;
 
@@ -1572,7 +1484,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           if (_isMapHidden) ...[
-            _pullHint(cs, down: true, count: count),
+            _pullHintForMode(cs, down: true, tripCount: count),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -1582,17 +1494,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ),
               child: _CorridorBar(
                 key: const Key('corridor-bar-sheet'),
-                label: showParcelControls
-                    ? (_prDeparture != null
-                          ? '$_prDeparture → $_prArrival'
-                          : 'Tous les corridors')
-                    : (_allCorridors ? 'Tous les corridors' : _corridor.label),
-                activeFilterCount: showParcelControls
-                    ? _prActiveFilterCount
-                    : _activeFilterCount,
-                onTap: () => showParcelControls
-                    ? _showPrFilterSheet(ctx)
-                    : _showFilterSheet(ctx),
+                label: _corridorLabel,
+                activeFilterCount: _activeFilterCount,
+                onTap: () => _showFilterSheet(ctx),
               ),
             ),
             Padding(
@@ -1601,10 +1505,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 right: DonySpacing.lg,
                 bottom: DonySpacing.sm,
               ),
-              child: _filterChipsRow(
-                isTraveler: _isTraveler,
-                showParcelControls: showParcelControls,
-              ),
+              child: _filterChipsRow(),
             ),
           ],
           Padding(
@@ -1617,41 +1518,53 @@ class _MapSenderViewState extends State<_MapSenderView> {
             child: Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        showBothTypes
-                            ? 'TRAJETS & COLIS'
-                            : showParcelControls
-                            ? 'DEMANDES D\'ENVOI'
-                            : 'VOYAGEURS DISPONIBLES',
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        showBothTypes
-                            ? 'Voyageurs & demandes d\'envoi'
-                            : showParcelControls
-                            ? (_prDeparture != null
-                                  ? '$_prDeparture → $_prArrival'
-                                  : 'Toutes les demandes')
-                            : _isNearMeActive
-                            ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
-                            : _allCorridors
-                            ? '$count résultat${count > 1 ? 's' : ''} · Tous les corridors'
-                            : '$count résultat${count > 1 ? 's' : ''} · ${_corridor.label}',
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                  // L'en-tête colis suit ce qui a RÉELLEMENT été demandé au
+                  // serveur (l'état du bloc), pas les filtres en cours
+                  // d'édition : sinon il annoncerait « sur tes trajets » avant
+                  // que la recherche filtrée soit partie.
+                  child: BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
+                    builder: (summaryCtx, summaryState) => BlocBuilder<
+                      PackageRequestSearchBloc,
+                      PackageRequestSearchState
+                    >(
+                      builder: (headerCtx, prState) {
+                        final matching = prState.matchingMyTrips == true;
+                        // Inconnu reste inconnu : voir `knownActiveTrips`.
+                        final trips = summaryState.knownActiveTrips;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              !_mode.isParcels
+                                  ? 'VOYAGEURS DISPONIBLES'
+                                  : matching
+                                  ? 'COLIS COMPATIBLES'
+                                  : 'DEMANDES D\'ENVOI',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              !_mode.isParcels
+                                  ? (_isNearMeActive
+                                        ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
+                                        : '$count résultat${count > 1 ? 's' : ''} · $_corridorLabel')
+                                  : matching
+                                  ? _matchingSubtitle(prState, trips)
+                                  : 'Demandes · $_corridorLabel',
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
-                if (!showParcelControls && !showBothTypes && count > 0)
+                if (_mode.isTrips && count > 0)
                   GestureDetector(
                     onTap: () => _showFilterSheet(ctx),
                     child: Text(
@@ -1665,7 +1578,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ],
             ),
           ),
-          if (!_isMapHidden) _pullHint(cs, down: false, count: count),
+          if (!_isMapHidden)
+            _pullHintForMode(cs, down: false, tripCount: count),
           Divider(height: 1, color: cs.outline),
           Expanded(
             child: CustomScrollView(
@@ -1673,181 +1587,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
               slivers: [
                 SliverToBoxAdapter(
                   child: RoleGuidanceBanner(
-                    // Le CTA suit l'onglet affiché (cohérence titre ↔ bouton) :
-                    // onglet Trajets → « Publier mon trajet » ; onglet Colis
-                    // (demandes d'envoi), vue « Tout » et expéditeur →
-                    // « Publier ma demande ».
-                    role: (_isTraveler && _mapFocus == HomeMapFocus.trips)
+                    // Le CTA suit le mode affiché (cohérence titre ↔ bouton) :
+                    // mode Trajets → « Publier mon trajet » ; mode Colis
+                    // (demandes d'envoi) et expéditeur → « Publier ma demande ».
+                    role: (_isTraveler && _mode.isTrips)
                         ? ActiveRole.traveler
                         : ActiveRole.sender,
                     hiveService: getIt<HiveService>(),
                   ),
                 ),
-                if (showBothTypes)
-                  BlocBuilder<
-                    PackageRequestSearchBloc,
-                    PackageRequestSearchState
-                  >(
-                    builder: (ctx, prState) {
-                      return BlocBuilder<BidBloc, BidState>(
-                        buildWhen: (prev, curr) =>
-                            curr is BidListLoaded || prev is BidListLoaded,
-                        builder: (ctx, bidState) {
-                          final myActiveBids = bidState
-                              .activeBidsByAnnouncement();
-                          final parcels = _visibleRequests(prState.results);
-                          final totalCount = count + parcels.length;
-
-                          if (totalCount == 0 &&
-                              prState.status != SearchStatus.loading) {
-                            return const SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: DonyEmptyState(
-                                title: 'Aucun résultat',
-                                description:
-                                    'Aucun voyageur ni demande disponible.',
-                                mascotte: DonyMascotteType.assis,
-                              ),
-                            );
-                          }
-
-                          // Interleave 1:1 — paires trip/parcel puis reste
-                          final minLen = count < parcels.length
-                              ? count
-                              : parcels.length;
-                          final pairedCount = minLen * 2;
-                          final tripsLonger = count >= parcels.length;
-
-                          return SliverMainAxisGroup(
-                            slivers: [
-                              SliverPadding(
-                                padding: EdgeInsets.fromLTRB(
-                                  DonySpacing.base,
-                                  DonySpacing.sm,
-                                  DonySpacing.base,
-                                  bottomPad +
-                                      DonySpacing.huge +
-                                      _kFloatingNavClearance,
-                                ),
-                                sliver: SliverList.separated(
-                                  itemCount: totalCount,
-                                  separatorBuilder: (_, _) =>
-                                      const SizedBox(height: DonySpacing.md),
-                                  itemBuilder: (ctx, i) {
-                                    final bool isTrip;
-                                    final int itemIndex;
-
-                                    if (i < pairedCount) {
-                                      isTrip = i.isEven;
-                                      itemIndex = i ~/ 2;
-                                    } else {
-                                      isTrip = tripsLonger;
-                                      itemIndex = minLen + (i - pairedCount);
-                                    }
-
-                                    if (isTrip) {
-                                      final a = announcements[itemIndex];
-                                      final authState = context
-                                          .read<AuthBloc>()
-                                          .state;
-                                      final uid = authState.currentUserId;
-                                      final isOwn =
-                                          uid != null && a.travelerId == uid;
-                                      final existingBid = myActiveBids[a.id];
-                                      return TravelerCard(
-                                        announcement: a,
-                                        index: itemIndex,
-                                        isOwnAnnouncement: isOwn,
-                                        showFavorite: !isOwn,
-                                        existingBidStatus: existingBid?.status,
-                                        onTap: isOwn
-                                            ? () async {
-                                                final changed = await context
-                                                    .push<bool>(
-                                                      '/announcements/${a.id}/trip',
-                                                      extra: a,
-                                                    );
-                                                if ((changed ?? false) &&
-                                                    mounted) {
-                                                  _dispatchSearch();
-                                                }
-                                              }
-                                            : existingBid != null
-                                            ? () async {
-                                                await context.push(
-                                                  '/bids/${existingBid.id}',
-                                                  extra: existingBid,
-                                                );
-                                                if (!mounted) {
-                                                  return;
-                                                }
-                                                context.read<BidBloc>().add(
-                                                  const BidMyListAutoRefreshRequested(
-                                                    force: true,
-                                                  ),
-                                                );
-                                              }
-                                            : () =>
-                                                  showTravelerAnnouncementSheet(
-                                                    context,
-                                                    announcement: a,
-                                                  ),
-                                      );
-                                    } else {
-                                      final pr = parcels[itemIndex];
-                                      final isOwn =
-                                          currentUserId != null &&
-                                          pr.sender.id == currentUserId;
-                                      return PackageRequestListCard(
-                                        item: pr,
-                                        index: itemIndex,
-                                        isOwnRequest: isOwn,
-                                        showFavorite: _isTraveler && !isOwn,
-                                        onTap: () async {
-                                          await PackageRequestPreviewBottomSheet.show(
-                                            ctx,
-                                            item: pr,
-                                          );
-                                          if (ctx.mounted) {
-                                            ctx
-                                                .read<
-                                                  PackageRequestSearchBloc
-                                                >()
-                                                .add(const SearchRefresh());
-                                          }
-                                        },
-                                        onMakeOffer: isOwn
-                                            ? null
-                                            : () =>
-                                                  PackageRequestPreviewBottomSheet.show(
-                                                    ctx,
-                                                    item: pr,
-                                                  ),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                              if (prState.status == SearchStatus.loading)
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: DonySpacing.lg,
-                                    ),
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        color: cs.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  )
-                else if (showParcelControls)
+                if (_mode.isParcels)
                   BlocBuilder<
                     PackageRequestSearchBloc,
                     PackageRequestSearchState
@@ -1863,21 +1612,25 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       }
                       final visibleResults = _visibleRequests(prState.results);
                       if (visibleResults.isEmpty) {
-                        final hasFilters = _prActiveFilterCount > 0;
+                        final hasFilters = _activeFilterCount > 0;
                         return SliverFillRemaining(
                           hasScrollBody: false,
-                          child: DonyEmptyState(
-                            title: hasFilters
-                                ? 'Aucun colis avec ces filtres'
-                                : 'Demandes bientôt disponibles',
-                            description: hasFilters
-                                ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
-                                : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
-                            mascotte: DonyMascotteType.assis,
-                            actionLabel: hasFilters
-                                ? 'Effacer les filtres'
-                                : null,
-                            onAction: hasFilters ? _resetPrFilters : null,
+                          // L'autre mode a des résultats sur les mêmes filtres :
+                          // la bascule est proposée sous le message.
+                          child: _emptyWithCrossDiscovery(
+                            DonyEmptyState(
+                              title: hasFilters
+                                  ? 'Aucun colis avec ces filtres'
+                                  : 'Demandes bientôt disponibles',
+                              description: hasFilters
+                                  ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
+                                  : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
+                              mascotte: DonyMascotteType.assis,
+                              actionLabel: hasFilters
+                                  ? 'Effacer les filtres'
+                                  : null,
+                              onAction: hasFilters ? _resetFilters : null,
+                            ),
                           ),
                         );
                       }
@@ -1935,24 +1688,26 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 else if (count == 0)
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: DonyEmptyState(
-                      title: _isNearMeActive
-                          ? 'Aucun voyageur à proximité'
-                          : _activeFilterCount > 0
-                          ? 'Aucun voyageur avec ces filtres'
-                          : 'Aucun voyageur sur ce corridor',
-                      description: _isNearMeActive
-                          ? 'Élargis ta zone ou désactive "Près de moi"'
-                          : _activeFilterCount > 0
-                          ? 'Modifie tes filtres pour voir plus de voyageurs.'
-                          : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
-                      mascotte: DonyMascotteType.assis,
-                      actionLabel: !_isNearMeActive && _activeFilterCount > 0
-                          ? 'Effacer les filtres'
-                          : null,
-                      onAction: !_isNearMeActive && _activeFilterCount > 0
-                          ? _resetSenderFilters
-                          : null,
+                    child: _emptyWithCrossDiscovery(
+                      DonyEmptyState(
+                        title: _isNearMeActive
+                            ? 'Aucun voyageur à proximité'
+                            : _activeFilterCount > 0
+                            ? 'Aucun voyageur avec ces filtres'
+                            : 'Aucun voyageur sur ce corridor',
+                        description: _isNearMeActive
+                            ? 'Élargis ta zone ou désactive "Près de moi"'
+                            : _activeFilterCount > 0
+                            ? 'Modifie tes filtres pour voir plus de voyageurs.'
+                            : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
+                        mascotte: DonyMascotteType.assis,
+                        actionLabel: !_isNearMeActive && _activeFilterCount > 0
+                            ? 'Effacer les filtres'
+                            : null,
+                        onAction: !_isNearMeActive && _activeFilterCount > 0
+                            ? _resetFilters
+                            : null,
+                      ),
                     ),
                   )
                 else
@@ -2165,6 +1920,74 @@ class _CorridorBar extends StatelessWidget {
   }
 }
 
+// ── _CrossDiscoveryTile ───────────────────────────────────────────────────────
+
+/// Tuile de découverte croisée affichée sous l'état vide : elle nomme ce que
+/// l'autre mode contient sur le corridor courant, et un tap y bascule en
+/// conservant corridor et date.
+///
+/// Reprend le style des cartes de l'écran : bordure `cs.primary`, fond
+/// `cs.primaryContainer`, chevron à droite.
+class _CrossDiscoveryTile extends StatelessWidget {
+  const _CrossDiscoveryTile({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final radius = BorderRadius.circular(DonyRadius.card);
+
+    return Material(
+      color: cs.primaryContainer,
+      borderRadius: radius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(color: cs.primary),
+          ),
+          child: Container(
+            // Cible tactile confortable : jamais sous 44 pt (HIG).
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: cs.primary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── _HomeCarteFab ─────────────────────────────────────────────────────────────
 
 class _HomeCarteFab extends StatelessWidget {
@@ -2276,358 +2099,6 @@ class _NearMeRadiusPill extends StatelessWidget {
   }
 }
 
-// ── _HomeFilterChipsRow ───────────────────────────────────────────────────────
-
-class _HomeFilterChipsRow extends StatelessWidget {
-  const _HomeFilterChipsRow({
-    required this.datePreset,
-    required this.customDate,
-    required this.kiloProOnly,
-    required this.allCorridors,
-    required this.onDateTap,
-    required this.onRatingTap,
-    required this.onWeightTap,
-    required this.onPriceTap,
-    required this.onKiloProToggle,
-    required this.onAllCorridorsToggle,
-    required this.onDateClear,
-    required this.onRatingClear,
-    required this.onWeightClear,
-    required this.onPriceClear,
-    this.minRating,
-    this.weightMin,
-    this.weightMax,
-    this.maxPricePerKg,
-    this.leadingChildren = const [],
-  });
-
-  final _DatePreset datePreset;
-  final DateTime? customDate;
-  final bool kiloProOnly;
-  final bool allCorridors;
-  final double? minRating;
-  final double? weightMin;
-  final double? weightMax;
-  final double? maxPricePerKg;
-  final VoidCallback onDateTap;
-  final VoidCallback onRatingTap;
-  final VoidCallback onWeightTap;
-  final VoidCallback onPriceTap;
-  final VoidCallback onKiloProToggle;
-  final VoidCallback onAllCorridorsToggle;
-  final VoidCallback onDateClear;
-  final VoidCallback onRatingClear;
-  final VoidCallback onWeightClear;
-  final VoidCallback onPriceClear;
-  final List<Widget> leadingChildren;
-
-  String get _dateLabel {
-    switch (datePreset) {
-      case _DatePreset.today:
-        return 'Aujourd\'hui';
-      case _DatePreset.thisWeek:
-        return 'Cette semaine';
-      case _DatePreset.thisMonth:
-        return 'Ce mois-ci';
-      case _DatePreset.custom:
-        return customDate != null
-            ? DateFormat('d MMM', 'fr').format(customDate!)
-            : 'Date';
-      case _DatePreset.none:
-        return 'Toutes dates';
-    }
-  }
-
-  String get _ratingLabel =>
-      minRating != null ? '★ ${minRating!.toStringAsFixed(1)}+' : 'Note';
-
-  String get _weightLabel {
-    if (weightMin != null && weightMax != null) {
-      return '${weightMin!.toInt()}–${weightMax!.toInt()} kg';
-    }
-    if (weightMin != null) return '≥ ${weightMin!.toInt()} kg';
-    if (weightMax != null) return '≤ ${weightMax!.toInt()} kg';
-    return 'Kilos';
-  }
-
-  String get _priceLabel => maxPricePerKg != null
-      ? '≤ ${maxPricePerKg!.toStringAsFixed(0)} €/kg'
-      : 'Prix';
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          ...leadingChildren,
-          _SmallChip(
-            label: _dateLabel,
-            isActive: datePreset != _DatePreset.none,
-            iconAsset: 'calendar',
-            onTap: datePreset != _DatePreset.none ? onDateClear : onDateTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: _ratingLabel,
-            isActive: minRating != null,
-            iconAsset: 'star',
-            onTap: minRating != null ? onRatingClear : onRatingTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: _weightLabel,
-            isActive: weightMin != null || weightMax != null,
-            iconAsset: 'dumbbell',
-            onTap: (weightMin != null || weightMax != null)
-                ? onWeightClear
-                : onWeightTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: _priceLabel,
-            isActive: maxPricePerKg != null,
-            iconAsset: 'euro',
-            onTap: maxPricePerKg != null ? onPriceClear : onPriceTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: 'Kilo Pro',
-            isActive: kiloProOnly,
-            onTap: onKiloProToggle,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: 'Tous corridors',
-            isActive: allCorridors,
-            onTap: onAllCorridorsToggle,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── _SmallChip ────────────────────────────────────────────────────────────────
-
-class _SmallChip extends StatelessWidget {
-  const _SmallChip({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-    this.iconAsset,
-  });
-
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-  final String? iconAsset;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isActive ? cs.primary : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isActive ? 0.20 : 0.08),
-              blurRadius: isActive ? 8 : 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (iconAsset != null) ...[
-              DonyIcon(
-                iconAsset!,
-                size: 15,
-                color: isActive ? Colors.white : cs.onSurfaceVariant,
-              ),
-              const SizedBox(width: DonySpacing.xxs),
-            ],
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: isActive ? Colors.white : cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── _UrgencyChip ──────────────────────────────────────────────────────────────
-
-// ── _HomeCorridorSheet ────────────────────────────────────────────────────────
-
-class _HomeCorridorSheet extends StatefulWidget {
-  const _HomeCorridorSheet({
-    required this.corridor,
-    required this.onApply,
-    required this.corridorOptions,
-  });
-
-  final _CorridorOpt corridor;
-  final void Function(_CorridorOpt corridor) onApply;
-  final List<_CorridorOpt> corridorOptions;
-
-  @override
-  State<_HomeCorridorSheet> createState() => _HomeCorridorSheetState();
-}
-
-class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
-  late _CorridorOpt _corridor;
-
-  @override
-  void initState() {
-    super.initState();
-    _corridor = widget.corridor;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return DraggableScrollableSheet(
-      initialChildSize: 0.70,
-      minChildSize: 0.50,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (sheetCtx, scrollCtrl) => Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(DonyRadius.sheet),
-          ),
-        ),
-        child: Column(
-          children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.outline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                0,
-                DonySpacing.lg,
-                DonySpacing.md,
-              ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Corridor',
-                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-            Divider(height: 1, color: cs.outline),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: scrollCtrl,
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.lg,
-                  DonySpacing.lg,
-                  DonySpacing.xxl,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(widget.corridorOptions.length, (i) {
-                    final opt = widget.corridorOptions[i];
-                    final isSelected = opt.label == _corridor.label;
-                    return GestureDetector(
-                      onTap: () => setState(() => _corridor = opt),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: DonySpacing.xs),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.base,
-                          vertical: DonySpacing.md,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? cs.primaryContainer
-                              : Theme.of(context).scaffoldBackgroundColor,
-                          borderRadius: BorderRadius.circular(DonyRadius.card),
-                          border: Border.all(
-                            color: isSelected ? cs.primary : cs.outline,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                opt.label,
-                                style: tt.bodyMedium?.copyWith(
-                                  color: isSelected ? cs.primary : cs.onSurface,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              DonyIcon(
-                                'circle-check',
-                                size: 18,
-                                color: cs.primary,
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.base,
-                DonySpacing.lg,
-                MediaQuery.of(sheetCtx).padding.bottom + DonySpacing.base,
-              ),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                border: Border(top: BorderSide(color: cs.outline)),
-              ),
-              child: DonyButton(
-                label: 'Appliquer',
-                onPressed: () {
-                  Navigator.of(sheetCtx).pop();
-                  widget.onApply(_corridor);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── _DatePresetSheet ──────────────────────────────────────────────────────────
 
@@ -2637,7 +2108,7 @@ class _DatePresetSheet extends StatefulWidget {
     required this.customDate,
   });
 
-  final _DatePreset currentPreset;
+  final DonyDatePreset currentPreset;
   final DateTime? customDate;
 
   @override
@@ -2645,7 +2116,7 @@ class _DatePresetSheet extends StatefulWidget {
 }
 
 class _DatePresetSheetState extends State<_DatePresetSheet> {
-  late _DatePreset _selected;
+  late DonyDatePreset _selected;
   late DateTime? _customDate;
 
   @override
@@ -2665,7 +2136,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
     );
     if (picked != null && mounted) {
       setState(() {
-        _selected = _DatePreset.custom;
+        _selected = DonyDatePreset.custom;
         _customDate = picked;
       });
     }
@@ -2711,24 +2182,24 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
           const SizedBox(height: DonySpacing.md),
           _PresetOption(
             label: 'Aujourd\'hui',
-            isSelected: _selected == _DatePreset.today,
-            onTap: () => setState(() => _selected = _DatePreset.today),
+            isSelected: _selected == DonyDatePreset.today,
+            onTap: () => setState(() => _selected = DonyDatePreset.today),
           ),
           _PresetOption(
             label: 'Cette semaine',
-            isSelected: _selected == _DatePreset.thisWeek,
-            onTap: () => setState(() => _selected = _DatePreset.thisWeek),
+            isSelected: _selected == DonyDatePreset.thisWeek,
+            onTap: () => setState(() => _selected = DonyDatePreset.thisWeek),
           ),
           _PresetOption(
             label: 'Ce mois-ci',
-            isSelected: _selected == _DatePreset.thisMonth,
-            onTap: () => setState(() => _selected = _DatePreset.thisMonth),
+            isSelected: _selected == DonyDatePreset.thisMonth,
+            onTap: () => setState(() => _selected = DonyDatePreset.thisMonth),
           ),
           _PresetOption(
-            label: _selected == _DatePreset.custom && _customDate != null
+            label: _selected == DonyDatePreset.custom && _customDate != null
                 ? DateFormat('EEE d MMM', 'fr').format(_customDate!)
                 : 'Choisir une date',
-            isSelected: _selected == _DatePreset.custom,
+            isSelected: _selected == DonyDatePreset.custom,
             onTap: _pickCustomDate,
           ),
           const SizedBox(height: DonySpacing.lg),
@@ -2737,7 +2208,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
               Expanded(
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop((
-                    preset: _DatePreset.none,
+                    preset: DonyDatePreset.none,
                     customDate: null as DateTime?,
                   )),
                   child: Container(
@@ -3224,80 +2695,6 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
   }
 }
 
-// ── _PackageRequestFilterChipsRow ─────────────────────────────────────────────
-
-class _PackageRequestFilterChipsRow extends StatelessWidget {
-  const _PackageRequestFilterChipsRow({
-    required this.onDateTap,
-    required this.onWeightTap,
-    required this.onSizeTap,
-    required this.onDateClear,
-    required this.onWeightClear,
-    required this.onSizeClear,
-    this.dateFrom,
-    this.dateTo,
-    this.maxWeight,
-    this.parcelSize,
-    this.leadingChildren = const [],
-  });
-
-  final DateTime? dateFrom;
-  final DateTime? dateTo;
-  final double? maxWeight;
-  final ParcelSize? parcelSize;
-  final VoidCallback onDateTap;
-  final VoidCallback onWeightTap;
-  final VoidCallback onSizeTap;
-  final VoidCallback onDateClear;
-  final VoidCallback onWeightClear;
-  final VoidCallback onSizeClear;
-  final List<Widget> leadingChildren;
-
-  String get _dateLabel {
-    if (dateFrom == null) return 'Toutes dates';
-    if (dateTo != null && dateTo!.difference(dateFrom!).inDays <= 1) {
-      return DateFormat('d MMM', 'fr').format(dateFrom!);
-    }
-    return '${DateFormat('d MMM', 'fr').format(dateFrom!)} – ${DateFormat('d MMM', 'fr').format(dateTo!)}';
-  }
-
-  String get _weightLabel =>
-      maxWeight != null ? '≤ ${maxWeight!.toInt()} kg' : 'Kilos';
-
-  String get _sizeLabel => parcelSize != null ? parcelSize!.wireName : 'Taille';
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          ...leadingChildren,
-          _SmallChip(
-            label: _dateLabel,
-            isActive: dateFrom != null,
-            iconAsset: 'calendar',
-            onTap: dateFrom != null ? onDateClear : onDateTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: _weightLabel,
-            isActive: maxWeight != null,
-            iconAsset: 'dumbbell',
-            onTap: maxWeight != null ? onWeightClear : onWeightTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: _sizeLabel,
-            isActive: parcelSize != null,
-            iconAsset: 'package',
-            onTap: parcelSize != null ? onSizeClear : onSizeTap,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── _FavoritesButton ──────────────────────────────────────────────────────────
 
