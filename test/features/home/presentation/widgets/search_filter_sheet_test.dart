@@ -83,6 +83,17 @@ void main() {
   /// pastille « Pour mes trajets » est utilisable ; à zéro elle est grisée et
   /// n'ouvre qu'une explication ; à `null` le nombre est inconnu et la pastille
   /// reste utilisable.
+  /// L'overlay de suggestions du sélecteur de contenu se place sous le champ :
+  /// dans un viewport de 600 px il tombe hors écran et les taps n'atteignent
+  /// rien.
+  void vueHaute(WidgetTester tester) {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    // `view.reset` et non `resetPhysicalSize` : ce dernier laisse fuiter le
+    // devicePixelRatio sur les tests suivants du fichier.
+    addTearDown(tester.view.reset);
+  }
+
   Future<void> ouvrir(
     WidgetTester tester, {
     required SearchMode mode,
@@ -623,51 +634,73 @@ void main() {
     expect(valeur.kycVerifiedOnly, isTrue);
   });
 
-  testWidgets('section trajets : type de contenu par pastille puis désélection',
+  testWidgets(
+      'section trajets : type de contenu par suggestion puis désélection',
       (tester) async {
+    // Les onze pastilles dépliées sont remplacées par l'autocomplétion : on
+    // tape pour faire apparaître la suggestion, au lieu de scanner la liste.
+    vueHaute(tester);
     await ouvrir(tester, mode: SearchMode.trips);
 
-    await taper(tester, find.text('Chaussures'));
+    final champ = find.byKey(const Key('filter-content-field'));
+    await tester.ensureVisible(champ);
+    await tester.tap(champ);
+    await tester.pumpAndSettle();
+    await tester.enterText(champ, 'Chauss');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-content-item-Chaussures')));
+    await tester.pumpAndSettle();
+    // La liste déroulante reste ouverte et recouvre la barre d'action : on la
+    // referme avant de valider, comme le ferait l'utilisateur.
+    primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     var valeur = await rechercher(tester);
     expect(valeur!.contentType, 'Chaussures');
 
+    // Retaper la même entrée la désélectionne.
     await ouvrir(
       tester,
       mode: SearchMode.trips,
       initial: const HomeSearchFilters(contentType: 'Chaussures'),
     );
-    await taper(tester, find.text('Chaussures'));
+    final champ2 = find.byKey(const Key('filter-content-field'));
+    await tester.ensureVisible(champ2);
+    await tester.tap(champ2);
+    await tester.pumpAndSettle();
+    await tester.enterText(champ2, 'Chauss');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-content-item-Chaussures')));
+    await tester.pumpAndSettle();
+    primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     valeur = await rechercher(tester);
     expect(valeur!.contentType, isNull);
   });
 
   testWidgets('section trajets : saisie libre de type de contenu',
       (tester) async {
+    vueHaute(tester);
     await ouvrir(tester, mode: SearchMode.trips);
 
-    final champ = find.byKey(const Key('filter-content-type-free-text'));
+    // Un type absent du catalogue s'ajoute par la même frappe, sans bouton
+    // « + » séparé.
+    final champ = find.byKey(const Key('filter-content-field'));
     await tester.ensureVisible(champ);
+    await tester.tap(champ);
     await tester.pumpAndSettle();
-
-    // Vide : aucun filtre posé.
-    await taper(
-      tester,
-      find.byKey(const Key('filter-content-type-free-text-add-btn')),
-    );
-    expect(find.text('Tout effacer'), findsNothing);
 
     await tester.enterText(champ, 'Poissons');
     await tester.pumpAndSettle();
-    await taper(
-      tester,
-      find.byKey(const Key('filter-content-type-free-text-add-btn')),
-    );
-
-    // La touche « entrée » du clavier vaut le bouton « + ».
-    await tester.enterText(champ, 'Épices');
-    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.tap(find.byKey(const Key('filter-content-item-add')));
     await tester.pumpAndSettle();
 
+    // Le filtre ne retient qu'un type : le second remplace le premier.
+    await tester.enterText(champ, 'Épices');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('filter-content-item-add')));
+    await tester.pumpAndSettle();
+    primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     final valeur = await rechercher(tester);
     expect(valeur!.contentType, 'Épices');
   });

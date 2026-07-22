@@ -364,17 +364,30 @@ void main() {
     (tester) async {
       await _pumpSheet(tester, isTraveler: true);
 
+      // Le catalogue n'est plus déplié : il alimente les suggestions du
+      // sélecteur, qu'on ouvre en tapant dans le champ.
+      final champ = find.byKey(const Key('alert-content-field'));
+      await tester.ensureVisible(champ);
+      await tester.tap(champ);
+      await tester.pumpAndSettle();
+
       for (final category in fallbackCatalog) {
-        expect(find.text(category.label), findsOneWidget);
+        expect(
+          find.byKey(Key('alert-content-item-${category.label}')),
+          findsOneWidget,
+          reason: 'suggestion manquante : ${category.label}',
+        );
       }
       // Anciennes valeurs figées disparues (migrées par V171).
-      expect(find.text('Électronique'), findsNothing);
-      expect(find.text('Nourriture'), findsNothing);
+      expect(find.byKey(const Key('alert-content-item-Électronique')),
+          findsNothing);
+      expect(find.byKey(const Key('alert-content-item-Nourriture')),
+          findsNothing);
     },
   );
 
   testWidgets(
-    'saisie libre + Ajouter appelle cubit.toggleCategory avec le libellé libre',
+    'saisie libre transmet la sélection complète au cubit',
     (tester) async {
       final cubit = MockFormCubit();
       final cityBloc = MockCitySearchBloc();
@@ -412,16 +425,17 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byKey(const Key('alert-custom-category-input')),
-        'Poissons',
-      );
-      await tester.tap(
-        find.byKey(const Key('alert-add-custom-category-btn')),
-      );
-      await tester.pump();
+      // Un type absent du catalogue s'ajoute par la frappe, sans bouton « + ».
+      final champ = find.byKey(const Key('alert-content-field'));
+      await tester.ensureVisible(champ);
+      await tester.tap(champ);
+      await tester.pumpAndSettle();
+      await tester.enterText(champ, 'Poissons');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('alert-content-item-add')));
+      await tester.pumpAndSettle();
 
-      verify(() => cubit.toggleCategory('Poissons')).called(1);
+      verify(() => cubit.setCategories(['Poissons'])).called(1);
     },
   );
 }

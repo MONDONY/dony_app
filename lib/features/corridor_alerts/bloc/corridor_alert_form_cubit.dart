@@ -200,6 +200,14 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
         centerLabel: null,
       ));
 
+  /// Remplace la sélection complète.
+  ///
+  /// Le sélecteur de contenu émet l'ensemble voulu ; le redécomposer en
+  /// toggles produisait un `emit` par élément, donc autant de reconstructions
+  /// du formulaire pour un seul geste.
+  void setCategories(List<String> categories) =>
+      emit(state.copyWith(contentCategories: List<String>.from(categories)));
+
   void toggleCategory(String category) {
     final next = List<String>.from(state.contentCategories);
     if (next.contains(category)) {

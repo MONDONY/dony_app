@@ -6,8 +6,8 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -38,7 +38,6 @@ class SearchFormBottomSheet {
             children: [
               if (count > 0) ...[
                 Expanded(
-                  flex: 1,
                   child: GestureDetector(
                     onTap: () => resetFn?.call(),
                     child: Container(
@@ -119,25 +118,11 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   late final ValueNotifier<bool> _kycVerifiedOnlyNotifier;
   late final ValueNotifier<String?> _contentTypeNotifier;
   late final ValueNotifier<UrgencyFilter?> _urgencyFilterNotifier;
-  // Catalogue de types de contenu — seedé synchrone avec le catalogue
-  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
-  // repository dès qu'il répond (repli automatique hors ligne intégré).
-  final _catalogLabelsNotifier = ValueNotifier<List<String>>(
-    fallbackCatalog.map((c) => c.label).toList(),
-  );
-  final _customContentCtrl = TextEditingController();
-
-  Future<void> _loadCatalog() async {
-    final categories =
-        await getIt<IContentCategoryRepository>().getCategories();
-    if (!mounted) return;
-    _catalogLabelsNotifier.value = categories.map((c) => c.label).toList();
-  }
+  // Le catalogue est chargé par ContentCategorySelector lui-même.
 
   @override
   void initState() {
     super.initState();
-    unawaited(_loadCatalog());
     final p = widget.initialParams;
     _departureCityNotifier = ValueNotifier<String?>(p?.departureCity);
     _arrivalCityNotifier = ValueNotifier<String?>(p?.arrivalCity);
@@ -199,8 +184,6 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     _kycVerifiedOnlyNotifier.dispose();
     _contentTypeNotifier.dispose();
     _urgencyFilterNotifier.dispose();
-    _catalogLabelsNotifier.dispose();
-    _customContentCtrl.dispose();
     super.dispose();
   }
 
@@ -220,13 +203,6 @@ class _SearchFormContentState extends State<_SearchFormContent> {
       contentType: _contentTypeNotifier.value,
       urgencyFilter: _urgencyFilterNotifier.value,
     ));
-  }
-
-  void _submitCustomContentType() {
-    final value = _customContentCtrl.text.trim();
-    if (value.isEmpty) return;
-    _contentTypeNotifier.value = value;
-    _customContentCtrl.clear();
   }
 
   void _reset() {
@@ -279,7 +255,6 @@ class _SearchFormContentState extends State<_SearchFormContent> {
         _kycVerifiedOnlyNotifier,
         _contentTypeNotifier,
         _urgencyFilterNotifier,
-        _catalogLabelsNotifier,
       ]),
       builder: (context, _) {
         return Column(
@@ -420,43 +395,20 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: _catalogLabelsNotifier.value.map((type) {
-                final isSelected = _contentTypeNotifier.value == type;
-                return ContentTypeChip(
-                  label: type,
-                  emoji: emojiForLabel(type),
-                  selected: isSelected,
-                  onTap: () {
-                    _contentTypeNotifier.value = isSelected ? null : type;
-                  },
-                );
-              }).toList(),
+            // Même autocomplétion que les autres écrans de contenu.
+            // `singleSelection` : le critère de recherche reste une valeur
+            // unique.
+            ContentCategorySelector(
+              repository: getIt<IContentCategoryRepository>(),
+              keyPrefix: 'search-content',
+              singleSelection: true,
+              hint: 'Rechercher un type de contenu…',
+              selected: _contentTypeNotifier.value == null
+                  ? const []
+                  : [_contentTypeNotifier.value!],
+              onChanged: (sel) =>
+                  _contentTypeNotifier.value = sel.isEmpty ? null : sel.last,
             ).animate().fadeIn(delay: 100.ms),
-            const SizedBox(height: DonySpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('content-type-free-text'),
-                    controller: _customContentCtrl,
-                    onSubmitted: (_) => _submitCustomContentType(),
-                    decoration: const InputDecoration(
-                      hintText: 'Ajouter un autre type…',
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  key: const Key('content-type-free-text-add-btn'),
-                  icon: const Icon(Icons.add_rounded),
-                  onPressed: _submitCustomContentType,
-                  tooltip: 'Ajouter',
-                ),
-              ],
-            ),
             const SizedBox(height: DonySpacing.xl),
 
             // ── Urgence du départ ────────────────────────────────────────

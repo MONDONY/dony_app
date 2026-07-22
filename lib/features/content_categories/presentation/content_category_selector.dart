@@ -25,6 +25,7 @@ class ContentCategorySelector extends StatefulWidget {
     required this.onChanged,
     this.hint = 'Ajouter un type de contenu…',
     this.keyPrefix = 'content-combo',
+    this.singleSelection = false,
   });
 
   final IContentCategoryRepository repository;
@@ -35,6 +36,9 @@ class ContentCategorySelector extends StatefulWidget {
   /// Préfixe des [Key] internes — permet de distinguer plusieurs instances
   /// sur un même écran (ex: "accepté" vs "refusé") dans les tests.
   final String keyPrefix;
+
+  /// Voir [ContentCategoryComboBox.singleSelection].
+  final bool singleSelection;
 
   @override
   State<ContentCategorySelector> createState() =>
@@ -67,6 +71,7 @@ class _ContentCategorySelectorState extends State<ContentCategorySelector> {
       onChanged: widget.onChanged,
       hint: widget.hint,
       keyPrefix: widget.keyPrefix,
+      singleSelection: widget.singleSelection,
     );
   }
 }
@@ -95,6 +100,7 @@ class ContentCategoryComboBox extends StatefulWidget {
     required this.onChanged,
     this.hint = 'Ajouter un type de contenu…',
     this.keyPrefix = 'content-combo',
+    this.singleSelection = false,
   });
 
   final List<ContentCategory> catalog;
@@ -102,6 +108,15 @@ class ContentCategoryComboBox extends StatefulWidget {
   final ValueChanged<List<String>> onChanged;
   final String hint;
   final String keyPrefix;
+
+  /// Choix exclusif : une nouvelle sélection remplace la précédente.
+  ///
+  /// Pensé pour les filtres de recherche, dont le critère « contenu » est une
+  /// valeur unique côté requête. Volontairement un booléen et non un plafond
+  /// `int` : le remplacement silencieux n'est acceptable qu'à un seul élément.
+  /// Un vrai plafond à N devrait refuser l'ajout et le dire, comme le fait
+  /// déjà l'étape 2 du wizard avec sa limite de 5.
+  final bool singleSelection;
 
   @override
   State<ContentCategoryComboBox> createState() =>
@@ -201,12 +216,8 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 
   void _emit() => widget.onChanged(_selected.toList());
 
-  void _toggle(String label) {
-    setState(() {
-      if (!_selected.remove(label)) {
-        _selected.add(label);
-      }
-    });
+  /// Suites communes à toute mutation de la sélection.
+  void _afterChange() {
     _emit();
     _controller.clear();
     if (!_focusNode.hasFocus) {
@@ -215,18 +226,36 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     _overlayEntry?.markNeedsBuild();
   }
 
+  /// Ajoute [label], en remplaçant la sélection courante si le composant est
+  /// en choix exclusif.
+  ///
+  /// Le remplacement est préféré au refus : un tap doit toujours produire un
+  /// effet visible.
+  void _select(String label) {
+    setState(() {
+      if (widget.singleSelection) {
+        _selected.clear();
+      }
+      _selected.add(label);
+    });
+    _afterChange();
+  }
+
+  void _toggle(String label) {
+    if (_selected.contains(label)) {
+      setState(() => _selected.remove(label));
+      _afterChange();
+      return;
+    }
+    _select(label);
+  }
+
   void _addCustom() {
     final value = _controller.text.trim();
     if (value.isEmpty) {
       return;
     }
-    setState(() => _selected.add(value));
-    _emit();
-    _controller.clear();
-    if (!_focusNode.hasFocus) {
-      _focusNode.requestFocus();
-    }
-    _overlayEntry?.markNeedsBuild();
+    _select(value);
   }
 
   void _removeTag(String label) {
@@ -281,9 +310,11 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 
   Widget _buildOverlay(BuildContext context) {
     final width = _fieldWidth;
+    // Une seule évaluation : `_showAddRow` reparcourait `_filteredCatalog`,
+    // donc les deux lectures pouvaient diverger.
     final filtered = _filteredCatalog;
-    final showAddRow = _showAddRow;
     final query = _controller.text.trim();
+    final showAddRow = query.isNotEmpty && filtered.isEmpty;
     final maxHeight = _dropdownMaxHeight(context);
 
     return Stack(

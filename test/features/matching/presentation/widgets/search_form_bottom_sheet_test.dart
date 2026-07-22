@@ -82,8 +82,23 @@ void main() {
       final result = ValueNotifier<SearchParams?>(null);
       await _openSheet(tester, result);
 
+      // Le catalogue alimente désormais les suggestions du sélecteur au lieu
+      // d'être déplié en pastilles.
+      final champ = find.byKey(const Key('search-content-field'));
+      await tester.dragUntilVisible(
+        champ,
+        find.byType(SingleChildScrollView),
+        const Offset(0, -200),
+      );
+      await tester.tap(champ);
+      await tester.pumpAndSettle();
+
       for (final category in fallbackCatalog) {
-        expect(find.text(category.label), findsOneWidget);
+        expect(
+          find.byKey(Key('search-content-item-${category.label}')),
+          findsOneWidget,
+          reason: 'suggestion manquante : ${category.label}',
+        );
       }
     },
   );
@@ -94,18 +109,23 @@ void main() {
       final result = ValueNotifier<SearchParams?>(null);
       await _openSheet(tester, result);
 
-      final freeTextField = find.byKey(const Key('content-type-free-text'));
+      // Un type absent du catalogue s'ajoute par la frappe, sans bouton « + ».
+      final champ = find.byKey(const Key('search-content-field'));
       await tester.dragUntilVisible(
-        freeTextField,
+        champ,
         find.byType(SingleChildScrollView),
         const Offset(0, -200),
       );
-      await tester.pump();
-      await tester.enterText(freeTextField, 'Poissons');
-      await tester.tap(
-        find.byKey(const Key('content-type-free-text-add-btn')),
-      );
-      await tester.pump();
+      await tester.tap(champ);
+      await tester.pumpAndSettle();
+      await tester.enterText(champ, 'Poissons');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('search-content-item-add')));
+      await tester.pumpAndSettle();
+      // La liste déroulante recouvre la barre d'action tant qu'elle est
+      // ouverte : on referme avant de valider, comme le ferait l'utilisateur.
+      primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Rechercher · 1 filtre'));
       await tester.pumpAndSettle();

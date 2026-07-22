@@ -14,8 +14,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
@@ -192,38 +192,9 @@ class _SearchFilterContent extends StatefulWidget {
 }
 
 class _SearchFilterContentState extends State<_SearchFilterContent> {
-  // Catalogue seedé synchrone avec le catalogue embarqué, puis remplacé par le
-  // catalogue live dès que le repository répond (repli hors ligne intégré).
-  final _catalogLabels = ValueNotifier<List<String>>(
-    fallbackCatalog.map((c) => c.label).toList(),
-  );
-  final _customContentCtrl = TextEditingController();
+  // Le catalogue est chargé par ContentCategorySelector lui-même.
 
   static const _maxWeightPresets = <double>[5, 10, 20];
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.mode.isTrips) {
-      unawaited(_loadCatalog());
-    }
-  }
-
-  @override
-  void dispose() {
-    _catalogLabels.dispose();
-    _customContentCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCatalog() async {
-    final categories =
-        await getIt<IContentCategoryRepository>().getCategories();
-    if (!mounted) {
-      return;
-    }
-    _catalogLabels.value = categories.map((c) => c.label).toList();
-  }
 
   HomeSearchFilters get _value => widget.notifier.value;
 
@@ -356,48 +327,26 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
 
       _sectionLabel(context, 'MON COLIS CONTIENT'),
       const SizedBox(height: DonySpacing.md),
-      ValueListenableBuilder<List<String>>(
-        valueListenable: _catalogLabels,
-        builder: (ctx, labels, _) => Wrap(
-          spacing: DonySpacing.sm,
-          runSpacing: DonySpacing.sm,
-          children: labels.map((type) {
-            final selected = f.contentType == type;
-            return ContentTypeChip(
-              label: type,
-              emoji: emojiForLabel(type),
-              selected: selected,
-              onTap: () => _update(
-                selected
-                    ? f.copyWith(clearContentType: true)
-                    : f.copyWith(contentType: type),
-              ),
-            );
-          }).toList(),
+      // Autocomplétion plutôt que les onze types dépliés : la liste occupait
+      // la feuille entière et repoussait « Urgence du départ » hors écran.
+      // `singleSelection` conserve la sémantique du filtre, dont le critère
+      // contenu est une valeur unique côté requête.
+      //
+      // Le selector charge lui-même le catalogue et le passe en
+      // `ContentCategory` complets : pas de conversion depuis des libellés,
+      // donc les emojis venus du backend sont conservés.
+      ContentCategorySelector(
+        repository: getIt<IContentCategoryRepository>(),
+        keyPrefix: 'filter-content',
+        singleSelection: true,
+        hint: 'Rechercher un type de contenu…',
+        selected: f.contentType == null ? const [] : [f.contentType!],
+        onChanged: (sel) => _update(
+          sel.isEmpty
+              ? f.copyWith(clearContentType: true)
+              : f.copyWith(contentType: sel.last),
         ),
       ).animate().fadeIn(delay: 100.ms),
-      const SizedBox(height: DonySpacing.sm),
-      Row(
-        children: [
-          Expanded(
-            child: TextField(
-              key: const Key('filter-content-type-free-text'),
-              controller: _customContentCtrl,
-              onSubmitted: (_) => _submitCustomContentType(),
-              decoration: const InputDecoration(
-                hintText: 'Ajouter un autre type…',
-                isDense: true,
-              ),
-            ),
-          ),
-          IconButton(
-            key: const Key('filter-content-type-free-text-add-btn'),
-            icon: const Icon(Icons.add_rounded),
-            onPressed: _submitCustomContentType,
-            tooltip: 'Ajouter',
-          ),
-        ],
-      ),
       const SizedBox(height: DonySpacing.xl),
 
       _sectionLabel(context, 'URGENCE DU DÉPART'),
@@ -416,15 +365,6 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
         ),
       ).animate().fadeIn(delay: 120.ms),
     ];
-  }
-
-  void _submitCustomContentType() {
-    final value = _customContentCtrl.text.trim();
-    if (value.isEmpty) {
-      return;
-    }
-    _update(_value.copyWith(contentType: value));
-    _customContentCtrl.clear();
   }
 
   // ── Colis ──────────────────────────────────────────────────────────────────
