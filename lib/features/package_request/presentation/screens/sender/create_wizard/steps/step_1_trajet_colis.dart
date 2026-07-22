@@ -14,7 +14,10 @@ import 'package:intl/intl.dart';
 
 /// Étape 1 / 3 — Trajet & colis (Proposal B — Sahel Warmth).
 class Step1TrajetColis extends StatefulWidget {
-  const Step1TrajetColis({super.key});
+  const Step1TrajetColis({super.key, this.canContinueNotifier});
+
+  /// Piloté par l'étape, lu par le bouton « Continuer » de la coque.
+  final ValueNotifier<bool>? canContinueNotifier;
 
   @override
   State<Step1TrajetColis> createState() => Step1TrajetColisState();
@@ -27,6 +30,35 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   DateTime? _date;
   int _tolerance = 2;
   final TransportMode _transportMode = TransportMode.plane;
+  final _pickupCtrl = TextEditingController();
+
+  /// Les messages rouges n'apparaissent qu'après une première interaction :
+  /// un formulaire vierge ne doit pas accueillir l'utilisateur par des
+  /// reproches sur des champs qu'il n'a pas encore eu l'occasion de remplir.
+  bool _touched = false;
+
+  String? get _departureError =>
+      _departureCity == null ? 'Ville de départ obligatoire' : null;
+
+  String? get _arrivalError {
+    if (_arrivalCity == null) return "Ville d'arrivée obligatoire";
+    if (_arrivalCity == _departureCity) {
+      return 'Choisis une ville différente du départ';
+    }
+    return null;
+  }
+
+  String? get _dateError => _date == null ? 'Date de départ obligatoire' : null;
+
+  bool get _isComplete =>
+      _departureError == null && _arrivalError == null && _dateError == null;
+
+  /// Recalcule l'état du bouton et, si l'utilisateur a déjà agi, les messages.
+  void _sync({bool markTouched = false}) {
+    if (markTouched) _touched = true;
+    widget.canContinueNotifier?.value = _isComplete;
+    if (mounted) setState(() {});
+  }
 
   @override
   void initState() {
@@ -38,6 +70,17 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     _arrivalCity = s.arrivalCity;
     _date = s.desiredDate;
     if (s.dateToleranceDays != null) _tolerance = s.dateToleranceDays!;
+    _pickupCtrl.text = s.pickupNeighborhood ?? '';
+    // Après la frame : la coque possède le notifier et est en train de builder.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.canContinueNotifier?.value = _isComplete;
+    });
+  }
+
+  @override
+  void dispose() {
+    _pickupCtrl.dispose();
+    super.dispose();
   }
 
   /// Saisie locale non encore remontée au bloc.
@@ -50,35 +93,30 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     return _departureCity != s.departureCity ||
         _arrivalCity != s.arrivalCity ||
         _date != s.desiredDate ||
-        _tolerance != (s.dateToleranceDays ?? 2);
+        _tolerance != (s.dateToleranceDays ?? 2) ||
+        _pickupCtrl.text.trim() != (s.pickupNeighborhood ?? '').trim();
+  }
+
+  /// Formule la tolérance en dates concrètes plutôt qu'en nombre de jours.
+  String _toleranceHint() {
+    if (_tolerance == 0) {
+      return 'Seuls les voyageurs partant exactement ce jour-là pourront répondre.';
+    }
+    if (_date == null) {
+      return '± $_tolerance jours autour de ta date. Plus de souplesse, plus de voyageurs.';
+    }
+    final f = DateFormat('d MMM', 'fr_FR');
+    final from = f.format(_date!.subtract(Duration(days: _tolerance)));
+    final to = f.format(_date!.add(Duration(days: _tolerance)));
+    return 'Les voyageurs partant du $from au $to pourront répondre.';
   }
 
   void submit() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    if (_date == null) {
-      DonySnackbar.show(
-        context,
-        message: 'Choisis une date souhaitée',
-        type: DonySnackbarType.warning,
-      );
-      return;
-    }
-    if (_departureCity == null || _arrivalCity == null) {
-      DonySnackbar.show(
-        context,
-        message: 'Renseigne les deux villes',
-        type: DonySnackbarType.warning,
-      );
-      return;
-    }
-    if (_departureCity == _arrivalCity) {
-      DonySnackbar.show(
-        context,
-        message: 'Les villes doivent être différentes',
-        type: DonySnackbarType.warning,
-      );
+    // Backstop : « Continuer » est déjà grisé tant que l'étape est incomplète.
+    // On révèle quand même les messages, au cas où ce chemin redeviendrait
+    // atteignable.
+    if (!_formKey.currentState!.validate() || !_isComplete) {
+      _sync(markTouched: true);
       return;
     }
     context.read<PackageRequestFormBloc>().add(
@@ -88,6 +126,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             desiredDate: _date!,
             dateToleranceDays: _tolerance,
             transportMode: _transportMode,
+            pickupNeighborhood: _pickupCtrl.text,
           ),
         );
   }
@@ -134,8 +173,11 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                 child: CityAutocompleteField(
                   label: '',
                   initialValue: _departureCity,
-                  onSelected: (city) =>
-                      setState(() => _departureCity = city.name),
+                  onSelected: (city) {
+                    _departureCity = city.name;
+                    _sync(markTouched: true);
+                  },
+                  errorText: _touched ? _departureError : null,
                 ),
               ),
               arrivalField: BlocProvider(
@@ -143,8 +185,11 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                 child: CityAutocompleteField(
                   label: '',
                   initialValue: _arrivalCity,
-                  onSelected: (city) =>
-                      setState(() => _arrivalCity = city.name),
+                  onSelected: (city) {
+                    _arrivalCity = city.name;
+                    _sync(markTouched: true);
+                  },
+                  errorText: _touched ? _arrivalError : null,
                 ),
               ),
             ),
@@ -162,7 +207,11 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                       const SizedBox(height: DonySpacing.xs),
                       _DatePickerField(
                         date: _date,
-                        onChanged: (d) => setState(() => _date = d),
+                        onChanged: (d) {
+                          _date = d;
+                          _sync(markTouched: true);
+                        },
+                        errorText: _touched ? _dateError : null,
                       ),
                       // ── Feedback informatif « sera signalée urgente » ──
                       // Non-bloquant : n'affecte jamais la soumission.
@@ -187,16 +236,47 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _FieldLabel('Tolérance'),
+                      const _FieldLabel('Souplesse'),
                       const SizedBox(height: DonySpacing.xs),
                       _ToleranceField(
                         tolerance: _tolerance,
-                        onChanged: (t) => setState(() => _tolerance = t),
+                        onChanged: (t) {
+                          _tolerance = t;
+                          _sync(markTouched: true);
+                        },
                       ),
                     ],
                   ),
                 ),
               ],
+            ),
+            // La tolérance est un réglage dont l'effet n'est pas devinable :
+            // on dit ce qu'elle change pour l'utilisateur, pas ce qu'elle est.
+            Padding(
+              padding: const EdgeInsets.only(top: DonySpacing.xs),
+              child: Text(
+                _toleranceHint(),
+                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.base),
+
+            // ── Lieu de remise (optionnel) ─────────────────────────────────
+            const _FieldLabel('Où remets-tu le colis ? (optionnel)'),
+            const SizedBox(height: DonySpacing.xs),
+            DonyTextField(
+              key: const Key('pickup-neighborhood-field'),
+              controller: _pickupCtrl,
+              hint: 'Ex. Château Rouge, Créteil, gare de Lyon…',
+              onChanged: (_) => _sync(),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: DonySpacing.xs),
+              child: Text(
+                'Le voyageur saura tout de suite si ça lui convient. '
+                'Tu pourras en discuter ensuite.',
+                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+              ),
             ),
             const SizedBox(height: DonySpacing.base),
 
@@ -409,9 +489,14 @@ class _FieldLabel extends StatelessWidget {
 }
 
 class _DatePickerField extends StatelessWidget {
-  const _DatePickerField({required this.date, required this.onChanged});
+  const _DatePickerField({
+    required this.date,
+    required this.onChanged,
+    this.errorText,
+  });
   final DateTime? date;
   final ValueChanged<DateTime> onChanged;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -420,7 +505,10 @@ class _DatePickerField extends StatelessWidget {
     final dateText = date == null
         ? 'Date'
         : DateFormat('d MMM. y', 'fr_FR').format(date!);
-    return InkWell(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
       borderRadius: BorderRadius.circular(DonyRadius.md),
       onTap: () async {
         final picked = await showDatePicker(
@@ -439,7 +527,9 @@ class _DatePickerField extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: cs.outline),
+          border: Border.all(
+            color: errorText != null ? cs.error : cs.outline,
+          ),
         ),
         child: Row(
           children: [
@@ -460,6 +550,9 @@ class _DatePickerField extends StatelessWidget {
           ],
         ),
       ),
+    ),
+        DonyFieldError(message: errorText, textKey: const Key('date-error')),
+      ],
     );
   }
 }

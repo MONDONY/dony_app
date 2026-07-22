@@ -118,5 +118,59 @@ void main() {
       await tester.pump();
       expect(find.text('Entre 0 et 500€'), findsOneWidget);
     });
+
+    testWidgets(
+      'le choix du prix remplace l\'interrupteur, avec sa conséquence écrite',
+      (tester) async {
+        await tester.pumpWidget(wrap(const Step3RecapBudget()));
+        await tester.pump();
+
+        // « Prix négociable » nommait un réglage ; les deux cartes nomment
+        // chacune ce qui va se passer.
+        expect(find.text('Prix négociable'), findsNothing);
+        expect(find.byKey(const Key('price-mode-open')), findsOneWidget);
+        expect(find.byKey(const Key('price-mode-fixed')), findsOneWidget);
+        expect(
+          find.textContaining('Les voyageurs proposent leur prix'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'prix ferme sans montant : publication bloquée, et annoncée comme telle',
+      (tester) async {
+        // Le budget était annoncé « optionnel » puis refusé au clic sur
+        // « Publier ». La règle est maintenant portée par le choix.
+        final canContinue = ValueNotifier<bool>(true);
+        addTearDown(canContinue.dispose);
+
+        await tester.pumpWidget(
+          wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+        );
+        await tester.pump();
+
+        // Par défaut « J'ouvre aux offres » : rien n'est requis.
+        expect(canContinue.value, isTrue);
+        expect(find.text('Budget indicatif (optionnel)'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('price-mode-fixed')));
+        await tester.pumpAndSettle();
+
+        expect(canContinue.value, isFalse);
+        expect(find.text('Ton prix'), findsOneWidget);
+        expect(find.byKey(const Key('budget-error')), findsOneWidget);
+      },
+    );
+
+    testWidgets('la suite de la publication est annoncée', (tester) async {
+      await tester.pumpWidget(wrap(const Step3RecapBudget()));
+      await tester.pump();
+      expect(
+        find.textContaining('les voyageurs sur ce trajet sont prévenus'),
+        findsOneWidget,
+      );
+    });
+
   });
 }

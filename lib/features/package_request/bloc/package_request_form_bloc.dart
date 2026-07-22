@@ -72,6 +72,11 @@ class PackageRequestFormBloc
     );
   }
 
+  /// Une chaîne vide signifie « champ laissé à blanc » côté formulaire ; le
+  /// backend, lui, attend `null` pour l'absence de valeur.
+  static String? _blankToNull(String? v) =>
+      (v == null || v.trim().isEmpty) ? null : v.trim();
+
   void _onStep1(FormStep1Submitted e, Emitter<PackageRequestFormState> emit) {
     emit(
       state.copyWith(
@@ -81,6 +86,7 @@ class PackageRequestFormBloc
         desiredDate: e.desiredDate,
         dateToleranceDays: e.dateToleranceDays,
         transportMode: e.transportMode,
+        pickupNeighborhood: e.pickupNeighborhood,
       ),
     );
   }
@@ -129,8 +135,8 @@ class PackageRequestFormBloc
           description: state.description,
           // null → conserver les photos existantes ; liste → remplacer l'ensemble.
           photoKeys: e.photoKeys,
-          pickupNeighborhood: state.pickupNeighborhood,
-          deliveryNeighborhood: state.deliveryNeighborhood,
+          pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
+          deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
         );
       } else {
         saved = await _repository.create(
@@ -147,8 +153,12 @@ class PackageRequestFormBloc
           totalBudgetEur: state.totalBudgetEur ?? e.targetPriceEur,
           description: state.description,
           photoKeys: e.photoKeys,
-          pickupNeighborhood: e.pickupNeighborhood,
-          deliveryNeighborhood: e.deliveryNeighborhood,
+          // Lu depuis l'etat, pas depuis l'event : le lieu de remise est saisi
+          // a l'etape 1, or FormStep3Submitted ne le porte jamais. Le chemin
+          // creation lisait l'event et perdait donc la valeur, contrairement
+          // au chemin edition juste au-dessus.
+          pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
+          deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
         );
       }
       emit(

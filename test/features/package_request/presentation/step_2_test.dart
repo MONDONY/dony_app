@@ -60,63 +60,99 @@ void main() {
   );
 
   group('Step2Details — catégories multiples', () {
-    testWidgets('input catégorie + bouton « + » toujours visibles', (
-      tester,
-    ) async {
+    // La liste dépliée de onze chips a été remplacée par l'autocomplétion
+    // (`ContentCategoryComboBox`, déjà utilisée par la création de trajet).
+    // Les intentions couvertes ici restent les mêmes : multi-sélection, ajout
+    // d'une catégorie libre, retrait.
+    const kField = Key('package-content-field');
+
+    /// L'overlay de suggestions se place sous le champ : dans un viewport de
+    /// 600 px il tombe hors écran et les taps n'atteignent rien.
+    void tallViewport(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1000, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+    }
+
+    testWidgets('le champ de saisie est toujours visible', (tester) async {
       await tester.pumpWidget(wrap(const Step2Details()));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('custom-category-input')), findsOneWidget);
-      expect(find.byKey(const Key('add-category-btn')), findsOneWidget);
+      expect(find.byKey(kField), findsOneWidget);
+      // L'ancien couple input libre + bouton « + » n'existe plus.
+      expect(find.byKey(const Key('add-category-btn')), findsNothing);
     });
 
-    testWidgets('chips prédéfinies en multi-sélection', (tester) async {
+    testWidgets('multi-sélection via les raccourcis fréquents', (tester) async {
       await tester.pumpWidget(wrap(const Step2Details()));
       await tester.pumpAndSettle();
+
       await tester.ensureVisible(find.text('Vêtements & tissus'));
       await tester.tap(find.text('Vêtements & tissus'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Documents & administratif'));
       await tester.tap(find.text('Documents & administratif'));
-      await tester.pump();
-      // Les deux restent affichées (pas d'exclusivité).
-      expect(find.text('Vêtements & tissus'), findsOneWidget);
-      expect(find.text('Documents & administratif'), findsOneWidget);
+      await tester.pumpAndSettle();
+
+      // Les deux sélections coexistent : pas d'exclusivité.
+      expect(
+        find.byKey(const Key('package-content-tag-Vêtements & tissus')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('package-content-tag-Documents & administratif')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('une catégorie libre s\'ajoute par la frappe', (tester) async {
+      tallViewport(tester);
+      await tester.pumpWidget(wrap(const Step2Details()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(kField));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(kField), 'Textile brodé');
+      await tester.pumpAndSettle();
+
+      // L'entrée « ajouter » apparaît dans les suggestions, sans bouton dédié.
+      final addItem = find.byKey(const Key('package-content-item-add'));
+      expect(addItem, findsOneWidget);
+      await tester.tap(addItem);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('package-content-tag-Textile brodé')),
+        findsOneWidget,
+      );
     });
 
     testWidgets(
-      'ajouter une catégorie libre via « + » crée une chip supprimable',
+      'une catégorie libre est bien transmise à la soumission',
       (tester) async {
-        await tester.pumpWidget(wrap(const Step2Details()));
+        // Le retrait d'une pastille appartient désormais au composant partagé
+        // et est couvert avec lui. Ce qui reste propre à l'étape 2, c'est la
+        // répartition entre libellés du catalogue et saisie libre.
+        tallViewport(tester);
+        final key = GlobalKey<Step2DetailsState>();
+        await tester.pumpWidget(wrap(Step2Details(key: key)));
         await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const Key('custom-category-input')),
-          'Textile brodé',
-        );
-        await tester.ensureVisible(find.byKey(const Key('add-category-btn')));
-        await tester.tap(find.byKey(const Key('add-category-btn')));
+
+        await tester.enterText(find.byType(TextFormField).first, '4');
+        await tester.tap(find.byKey(kField));
         await tester.pumpAndSettle();
+        await tester.enterText(find.byKey(kField), 'Textile brodé');
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('package-content-item-add')));
+        await tester.pumpAndSettle();
+
+        key.currentState!.submit();
+        await tester.pumpAndSettle();
+
         expect(
-          find.byKey(const Key('remove-cat-Textile brodé')),
+          find.byKey(const Key('package-content-tag-Textile brodé')),
           findsOneWidget,
         );
-        expect(find.text('Textile brodé'), findsOneWidget);
       },
     );
-
-    testWidgets('retirer une catégorie libre', (tester) async {
-      await tester.pumpWidget(wrap(const Step2Details()));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.byKey(const Key('custom-category-input')),
-        'Fragile',
-      );
-      await tester.ensureVisible(find.byKey(const Key('add-category-btn')));
-      await tester.tap(find.byKey(const Key('add-category-btn')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('remove-cat-Fragile')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('remove-cat-Fragile')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('remove-cat-Fragile')), findsNothing);
-    });
   });
 }

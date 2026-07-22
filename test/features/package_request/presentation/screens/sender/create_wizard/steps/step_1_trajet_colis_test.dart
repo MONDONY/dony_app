@@ -76,18 +76,64 @@ void main() {
       expect(find.text('ARRIVÉE'), findsOneWidget);
       // 'Date' apparaît 2 fois : label + placeholder du DatePickerField (date == null).
       expect(find.text('Date'), findsNWidgets(2));
-      expect(find.text('Tolérance'), findsOneWidget);
+      // « Tolérance » nommait le réglage ; « Souplesse » nomme ce qu'il fait.
+      expect(find.text('Souplesse'), findsOneWidget);
+      expect(find.text('Tolérance'), findsNothing);
       // "Mode de transport" supprimé — remplacé par le bloc avion verrouillé.
       // Le poids du colis a été retiré de l'étape 1 (il est saisi à l'étape 2).
       expect(find.text('Poids du colis'), findsNothing);
     });
 
-    testWidgets('snackbar si date manquante au submit', (tester) async {
+    testWidgets(
+      'étape incomplète : canContinue reste faux et rien n\'est dispatché',
+      (tester) async {
+        // Le refus ne passe plus par un snackbar après coup : le bouton
+        // « Continuer » de la coque est grisé tant que l'étape est incomplète.
+        final key = GlobalKey<Step1TrajetColisState>();
+        final canContinue = ValueNotifier<bool>(true);
+        addTearDown(canContinue.dispose);
+
+        await tester.pumpWidget(
+          wrap(Step1TrajetColis(key: key, canContinueNotifier: canContinue)),
+        );
+        await tester.pump();
+
+        expect(canContinue.value, isFalse);
+
+        key.currentState!.submit();
+        await tester.pump();
+
+        // Les messages se révèlent sous les champs concernés.
+        expect(find.text('Date de départ obligatoire'), findsOneWidget);
+        expect(canContinue.value, isFalse);
+      },
+    );
+
+    testWidgets(
+      'la souplesse est expliquée en dates, pas en jours',
+      (tester) async {
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pump();
+        expect(
+          find.textContaining('Plus de souplesse, plus de voyageurs'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('le lieu de remise est proposé, et optionnel', (tester) async {
       final key = GlobalKey<Step1TrajetColisState>();
-      await tester.pumpWidget(wrap(Step1TrajetColis(key: key)));
-      key.currentState!.submit();
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+
+      await tester.pumpWidget(
+        wrap(Step1TrajetColis(key: key, canContinueNotifier: canContinue)),
+      );
       await tester.pump();
-      expect(find.text('Choisis une date souhaitée'), findsOneWidget);
+
+      expect(find.byKey(const Key('pickup-neighborhood-field')), findsOneWidget);
+      // Laissé vide, il ne bloque pas : seuls villes et date comptent.
+      expect(find.text('Où remets-tu le colis ? (optionnel)'), findsOneWidget);
     });
 
     testWidgets(

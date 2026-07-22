@@ -101,12 +101,17 @@ void main() {
     });
 
     // 8. Submit still works with snackbar when date is missing
-    testWidgets('snackbar if date is missing at submit', (tester) async {
+    testWidgets('date manquante : message sous le champ, pas de snackbar', (
+      tester,
+    ) async {
+      // Le refus passe désormais par le grisage du bouton et un message posé
+      // sous le champ concerné, au lieu d'un bandeau après le clic.
       final key = GlobalKey<Step1TrajetColisState>();
       await tester.pumpWidget(wrap(Step1TrajetColis(key: key)));
       key.currentState!.submit();
       await tester.pump();
-      expect(find.text('Choisis une date souhaitée'), findsOneWidget);
+      expect(find.text('Choisis une date souhaitée'), findsNothing);
+      expect(find.text('Date de départ obligatoire'), findsOneWidget);
     });
   });
 }
