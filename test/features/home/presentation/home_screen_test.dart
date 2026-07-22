@@ -1337,7 +1337,7 @@ void main() {
     testWidgets('avec des trajets actifs : la pastille est normale', (
       tester,
     ) async {
-      await pumpHome(tester, activeTrips: 2);
+      await pumpHome(tester, activeTrips: 3);
       await tester.tap(find.text('Colis'));
       await tester.pumpAndSettle();
       await ouvrirPastille(tester);
