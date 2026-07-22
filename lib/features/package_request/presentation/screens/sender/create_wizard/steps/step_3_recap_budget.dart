@@ -17,7 +17,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// budget total · aperçu net voyageur · toggle négociable ·
 /// modes de paiement · mention CGU au-dessus du CTA.
 class Step3RecapBudget extends StatefulWidget {
-  const Step3RecapBudget({super.key});
+  const Step3RecapBudget({super.key, this.canContinueNotifier});
+
+  /// Piloté par l'étape, lu par le bouton « Publier » de la coque.
+  final ValueNotifier<bool>? canContinueNotifier;
 
   @override
   State<Step3RecapBudget> createState() => Step3RecapBudgetState();
@@ -36,6 +39,19 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
       _budgetCtrl.text =
           b == b.roundToDouble() ? b.toInt().toString() : b.toStringAsFixed(2);
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sync();
+    });
+  }
+
+  /// Le budget n'est requis que si l'expéditeur a choisi un prix ferme.
+  /// La règle est portée par le choix lui-même, donc le bouton peut la
+  /// refléter au lieu de la révéler après le clic.
+  void _sync() {
+    if (!mounted) return;
+    final s = context.read<PackageRequestFormBloc>().state;
+    widget.canContinueNotifier?.value =
+        s.negotiable || s.totalBudgetEur != null;
   }
 
   @override
@@ -53,11 +69,8 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     // la vérifie pas, donc on la rejoue ici.
     final state = context.read<PackageRequestFormBloc>().state;
     if (!state.negotiable && state.totalBudgetEur == null) {
-      DonySnackbar.show(
-        context,
-        message: 'Indique un budget pour continuer (prix ferme requis).',
-        type: DonySnackbarType.warning,
-      );
+      // Backstop : le bouton « Publier » est déjà grisé dans ce cas.
+      _sync();
       return;
     }
     final photosCubit = context.read<PackageRequestPhotosCubit>();
@@ -98,7 +111,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Optionnel, accélère les offres.',
+                  'Vérifie ta demande, puis choisis comment fixer le prix.',
                   style: tt.bodyMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.4,
@@ -110,10 +123,48 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 WizardSummaryCard(state: state),
                 const SizedBox(height: DonySpacing.base),
 
-                // ── Budget total ───────────────────────────────────────────
-                const _FieldLabel('Budget total'),
+                // ── Choix du mode de prix ──────────────────────────────────
+                // Deux cartes plutôt qu'un interrupteur : chacune annonce sa
+                // conséquence, et c'est le choix qui porte la règle du budget
+                // obligatoire. Auparavant le champ était annoncé « optionnel »
+                // puis refusé à la publication.
+                const _FieldLabel('Comment fixer le prix ?'),
+                const SizedBox(height: DonySpacing.sm),
+                _PriceModeChoice(
+                  negotiable: state.negotiable,
+                  onChanged: (v) {
+                    context
+                        .read<PackageRequestFormBloc>()
+                        .add(PackageRequestNegotiableToggled(v));
+                    WidgetsBinding.instance
+                        .addPostFrameCallback((_) => _sync());
+                  },
+                ),
+                const SizedBox(height: DonySpacing.base),
+
+                // ── Budget ─────────────────────────────────────────────────
+                _FieldLabel(
+                  state.negotiable
+                      ? 'Budget indicatif (optionnel)'
+                      : 'Ton prix',
+                ),
                 const SizedBox(height: DonySpacing.xs),
                 _BudgetTotalInput(controller: _budgetCtrl),
+                Padding(
+                  padding: const EdgeInsets.only(top: DonySpacing.xs),
+                  child: Text(
+                    state.negotiable
+                        ? 'Donner un ordre d\'idée attire plus d\'offres, sans t\'engager.'
+                        : 'Les voyageurs verront ce montant et pourront l\'accepter tel quel.',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+                DonyFieldError(
+                  message: (!state.negotiable && state.totalBudgetEur == null)
+                      ? 'Indique ton prix pour pouvoir publier'
+                      : null,
+                  textKey: const Key('budget-error'),
+                ),
 
                 // ── Net voyageur preview ───────────────────────────────────
                 if (state.totalBudgetEur != null) ...[
@@ -122,29 +173,40 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ],
                 const SizedBox(height: DonySpacing.base),
 
-                // ── Toggle négociable ──────────────────────────────────────
-                _NegotiableToggle(negotiable: state.negotiable),
-
-                // ── Validation hint when non-négociable without budget ─────
-                if (!state.negotiable && state.totalBudgetEur == null) ...[
-                  const SizedBox(height: DonySpacing.xs),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.xs,
-                    ),
-                    child: Text(
-                      'Indique un budget pour continuer (prix ferme requis).',
-                      style: tt.bodySmall?.copyWith(color: cs.error),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.base),
-
                 // ── Modes de paiement ──────────────────────────────────────
-                const _FieldLabel('Modes de paiement acceptés'),
+                const _FieldLabel('Paiement accepté'),
                 const SizedBox(height: DonySpacing.sm),
                 _PaymentMethodChips(
                   selected: state.acceptedPaymentMethods,
+                ),
+                const SizedBox(height: DonySpacing.base),
+
+                // L'écran s'arrêtait sur la mention CGU, qui répond à une
+                // obligation légale, pas à « et maintenant ? ».
+                Container(
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DonyIcon('send', size: 16, color: cs.primary),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Une fois publiée, les voyageurs sur ce trajet sont '
+                          'prévenus. Tu recevras une notification à la première '
+                          'offre.',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurface,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 // Le CTA « Publier ma demande » + la mention CGU sont portés par
                 // la barre sticky du wizard (_StickyCta) — pas de bouton inline ici.
@@ -290,68 +352,6 @@ class _NetPreview extends StatelessWidget {
 
 // ─── Negotiable toggle ────────────────────────────────────────────────────────
 
-class _NegotiableToggle extends StatelessWidget {
-  const _NegotiableToggle({required this.negotiable});
-  final bool negotiable;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.sm,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Prix négociable',
-                    style: tt.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    negotiable
-                        ? 'Les voyageurs peuvent faire des offres'
-                        : 'Off = prix ferme, les voyageurs prennent ou laissent',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            Switch(
-              key: const Key('negotiable-toggle'),
-              value: negotiable,
-              onChanged: (v) {
-                context.read<PackageRequestFormBloc>().add(
-                      PackageRequestNegotiableToggled(v),
-                    );
-              },
-              activeThumbColor: cs.primary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Payment method chips ─────────────────────────────────────────────────────
 
@@ -407,6 +407,114 @@ class _PaymentMethodChips extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// Choix du mode de prix, en deux cartes plutôt qu'un interrupteur.
+///
+/// Un interrupteur nomme un réglage (« Prix négociable ») ; deux cartes
+/// nomment deux conséquences. Surtout, c'est le choix qui porte la règle du
+/// budget obligatoire, au lieu de la laisser surgir à la publication.
+class _PriceModeChoice extends StatelessWidget {
+  const _PriceModeChoice({required this.negotiable, required this.onChanged});
+
+  final bool negotiable;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _PriceModeCard(
+          key: const Key('price-mode-open'),
+          emoji: '💬',
+          title: "J'ouvre aux offres",
+          subtitle: 'Les voyageurs proposent leur prix, tu choisis.',
+          selected: negotiable,
+          onTap: () => onChanged(true),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        _PriceModeCard(
+          key: const Key('price-mode-fixed'),
+          emoji: '🏷️',
+          title: 'Je fixe mon prix',
+          subtitle: 'Un montant ferme, sans négociation.',
+          selected: !negotiable,
+          onTap: () => onChanged(false),
+        ),
+      ],
+    );
+  }
+}
+
+class _PriceModeCard extends StatelessWidget {
+  const _PriceModeCard({
+    super.key,
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          decoration: BoxDecoration(
+            color: selected ? cs.primaryContainer : cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(
+              color: selected ? cs.primary : cs.outline,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: selected ? cs.primary : cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -12,6 +12,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_step_indicator.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -62,6 +63,14 @@ class _PackageRequestCreateScreenState
   final _step1Key = GlobalKey<Step1TrajetColisState>();
   final _step2Key = GlobalKey<Step2DetailsState>();
   final _step3Key = GlobalKey<Step3RecapBudgetState>();
+
+  /// Vrai quand l'étape courante a tous ses champs obligatoires renseignés.
+  ///
+  /// Porté par l'écran plutôt que par chaque étape : c'est lui qui possède le
+  /// bouton « Continuer », et les étapes sont détruites/reconstruites à chaque
+  /// changement d'index. Chaque étape le met à jour depuis son `initState` puis
+  /// à chaque saisie.
+  final ValueNotifier<bool> _canContinueNotifier = ValueNotifier<bool>(false);
 
   /// Signature du formulaire à l'ouverture, capturée au premier build.
   /// Sert à ne demander confirmation de sortie que si l'utilisateur a
@@ -130,6 +139,12 @@ class _PackageRequestCreateScreenState
     } else {
       context.go('/home');
     }
+  }
+
+  @override
+  void dispose() {
+    _canContinueNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -293,11 +308,15 @@ class _PackageRequestCreateScreenState
           ),
         ),
         body: switch (state.currentStep) {
-          0 => Step1TrajetColis(key: _step1Key),
-          1 => Step2Details(key: _step2Key),
-          _ => Step3RecapBudget(key: _step3Key),
+          0 => Step1TrajetColis(
+              key: _step1Key, canContinueNotifier: _canContinueNotifier),
+          1 => Step2Details(
+              key: _step2Key, canContinueNotifier: _canContinueNotifier),
+          _ => Step3RecapBudget(
+              key: _step3Key, canContinueNotifier: _canContinueNotifier),
         },
         bottomNavigationBar: _StickyCta(
+          canContinueNotifier: _canContinueNotifier,
           currentStep: state.currentStep,
           isSubmitting:
               state.submissionStatus == FormSubmissionStatus.submitting,
@@ -326,11 +345,16 @@ class _StickyCta extends StatelessWidget {
     required this.currentStep,
     required this.isSubmitting,
     required this.onPressed,
+    required this.canContinueNotifier,
   });
 
   final int currentStep;
   final bool isSubmitting;
   final VoidCallback onPressed;
+
+  /// Grise le bouton tant que l'étape courante est incomplète. Un bouton actif
+  /// qui refuse l'action se lit comme une panne, pas comme un champ oublié.
+  final ValueListenable<bool> canContinueNotifier;
 
   @override
   Widget build(BuildContext context) {
@@ -386,25 +410,32 @@ class _StickyCta extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
-                  child: DonyButton(
-                    label: isSubmitting
-                        ? 'Publication…'
-                        : isFinalStep
-                        ? 'Publier ma demande'
-                        : 'Continuer',
-                    iconRightAsset: isFinalStep ? 'send' : 'arrow-right',
-                    onPressed: isSubmitting ? null : onPressed,
-                    isLoading: isSubmitting,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: canContinueNotifier,
+                    builder: (context, canContinue, _) => DonyButton(
+                      label: isSubmitting
+                          ? 'Publication…'
+                          : isFinalStep
+                          ? 'Publier ma demande'
+                          : 'Continuer',
+                      iconRightAsset: isFinalStep ? 'send' : 'arrow-right',
+                      onPressed:
+                          (isSubmitting || !canContinue) ? null : onPressed,
+                      isLoading: isSubmitting,
+                    ),
                   ),
                 ),
               ],
             )
           else
-            DonyButton(
-              label: isSubmitting ? 'Publication…' : 'Continuer',
-              iconRightAsset: 'arrow-right',
-              onPressed: isSubmitting ? null : onPressed,
-              isLoading: isSubmitting,
+            ValueListenableBuilder<bool>(
+              valueListenable: canContinueNotifier,
+              builder: (context, canContinue, _) => DonyButton(
+                label: isSubmitting ? 'Publication…' : 'Continuer',
+                iconRightAsset: 'arrow-right',
+                onPressed: (isSubmitting || !canContinue) ? null : onPressed,
+                isLoading: isSubmitting,
+              ),
             ),
         ],
       ),

@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
     show OptionButton;
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -102,7 +103,9 @@ void main() {
       );
       expect(find.text('Poids approximatif'), findsOneWidget);
       expect(find.text('Taille'), findsOneWidget);
-      expect(find.text('Catégories'), findsOneWidget);
+      // « Catégories » (liste dépliée) est devenu « Contenu » (autocomplétion).
+      expect(find.text('Contenu'), findsOneWidget);
+      expect(find.text('Catégories'), findsNothing);
     });
 
     testWidgets('rend 3 cards de taille (S/M/L)', (tester) async {
@@ -115,15 +118,20 @@ void main() {
       expect(find.text('Valise'), findsOneWidget);
     });
 
-    testWidgets('rend 10 OptionButton de catégorie prédéfinie', (
-      tester,
-    ) async {
-      await tester.pumpWidget(wrap(const Step2Details()));
-      await tester.pump();
-      // 10 prédéfinies (catalogue 11 catégories moins « Autre », qui passe
-      // par l'input libre).
-      expect(find.byType(OptionButton), findsNWidgets(10));
-    });
+    testWidgets(
+      'les catégories passent par l\'autocomplétion, pas par la liste dépliée',
+      (tester) async {
+        // Les onze chips occupaient ~900 px et repoussaient la description
+        // hors écran. Le combo est le même que celui de la création de trajet.
+        await tester.pumpWidget(wrap(const Step2Details()));
+        await tester.pump();
+
+        expect(find.byType(ContentCategoryComboBox), findsOneWidget);
+        // Seuls les raccourcis « Fréquents » restent en chips.
+        expect(find.text('Fréquents'), findsOneWidget);
+        expect(find.byType(OptionButton), findsNWidgets(4));
+      },
+    );
 
     testWidgets('submit sans catégorie → message d'
         "'"

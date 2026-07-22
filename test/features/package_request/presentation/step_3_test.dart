@@ -87,10 +87,17 @@ void main() {
     });
 
     // 3. negotiable-toggle Switch exists
-    testWidgets('negotiable-toggle switch exists', (tester) async {
+    testWidgets('le mode de prix est un choix, plus un interrupteur', (
+      tester,
+    ) async {
+      // L'interrupteur « Prix négociable » nommait un réglage ; les deux
+      // cartes nomment chacune ce qui va se passer, et c'est le choix qui
+      // porte la règle du budget obligatoire.
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('negotiable-toggle')), findsOneWidget);
+      expect(find.byKey(const Key('negotiable-toggle')), findsNothing);
+      expect(find.byKey(const Key('price-mode-open')), findsOneWidget);
+      expect(find.byKey(const Key('price-mode-fixed')), findsOneWidget);
     });
 
     // 4. Payment method chips are visible — mobile money retiré du wizard
@@ -104,7 +111,7 @@ void main() {
     });
 
     // 5. Toggling negotiable dispatches the event and updates state
-    testWidgets('tapping negotiable toggle dispatches PackageRequestNegotiableToggled',
+    testWidgets('choisir un mode de prix dispatche PackageRequestNegotiableToggled',
         (tester) async {
       final bloc = PackageRequestFormBloc(
         packageRepo,
@@ -123,13 +130,21 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Find the switch and tap it
-      final switchFinder = find.byKey(const Key('negotiable-toggle'));
-      await tester.ensureVisible(switchFinder);
-      await tester.tap(switchFinder);
+      // Choisir « Je fixe mon prix » revient à négociable = false.
+      final fixed = find.byKey(const Key('price-mode-fixed'));
+      await tester.ensureVisible(fixed);
+      await tester.tap(fixed);
       await tester.pumpAndSettle();
 
       expect(bloc.state.negotiable, isFalse);
+
+      // Et l'inverse ramène bien à l'ouverture aux offres.
+      final open = find.byKey(const Key('price-mode-open'));
+      await tester.ensureVisible(open);
+      await tester.tap(open);
+      await tester.pumpAndSettle();
+
+      expect(bloc.state.negotiable, isTrue);
     });
 
     // 6. Tapping a payment chip toggles its selected state
