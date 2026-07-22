@@ -20,6 +20,17 @@ class TripsSummaryState extends Equatable {
   /// Erreur réseau/serveur : le bandeau est simplement masqué (spec).
   const TripsSummaryState.hidden() : this._(TripsSummaryStatus.hidden);
 
+  /// Nombre de trajets actifs **quand il est connu**, `null` sinon (résumé pas
+  /// encore chargé, ou échec réseau).
+  ///
+  /// Trois cas, pas deux : connu et nul, connu et positif, inconnu. Confondre
+  /// « inconnu » avec « zéro » ferait affirmer « Aucun trajet actif » à un
+  /// voyageur qui en a cinq, pour toute la session, sur un simple échec réseau.
+  /// Les consommateurs doivent traiter `null` comme « je ne sais pas » et
+  /// laisser le serveur trancher plutôt que d'inventer un chiffre.
+  int? get knownActiveTrips =>
+      status == TripsSummaryStatus.loaded ? summary?.activeTrips : null;
+
   @override
   List<Object?> get props => [
     status,
@@ -47,6 +58,9 @@ class TripsSummaryCubit extends Cubit<TripsSummaryState> {
       );
       emit(TripsSummaryState.loaded(summary));
     } catch (_) {
+      // Le bandeau est masqué, mais l'état ne prétend pas pour autant que
+      // l'utilisateur n'a aucun trajet : `knownActiveTrips` reste `null`, et
+      // c'est ce que lisent les garde-fous qui en dépendent.
       emit(const TripsSummaryState.hidden());
     }
   }

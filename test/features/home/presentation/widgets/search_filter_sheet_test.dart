@@ -81,12 +81,14 @@ void main() {
 
   /// [activeTrips] : trajets actifs de l'utilisateur. Au-dessus de zéro, la
   /// pastille « Pour mes trajets » est utilisable ; à zéro elle est grisée et
-  /// n'ouvre qu'une explication.
+  /// n'ouvre qu'une explication ; à `null` le nombre est inconnu et la pastille
+  /// reste utilisable.
   Future<void> ouvrir(
     WidgetTester tester, {
     required SearchMode mode,
     HomeSearchFilters initial = const HomeSearchFilters(),
-    int activeTrips = 2,
+    int? activeTrips = 2,
+    VoidCallback? onPublishTrip,
   }) async {
     resultat = null;
     ferme = false;
@@ -100,6 +102,7 @@ void main() {
                 mode: mode,
                 initial: initial,
                 activeTrips: activeTrips,
+                onPublishTrip: onPublishTrip,
               );
               ferme = true;
             },
@@ -523,6 +526,62 @@ void main() {
         ))
         .any((o) => o.opacity == 0.4);
     expect(grisee, isFalse);
+  });
+
+  testWidgets(
+      'section colis : nombre de trajets INCONNU, la pastille reste utilisable',
+      (tester) async {
+    // Résumé d'activité en échec réseau : on ne sait pas combien de trajets
+    // l'utilisateur a. Griser reviendrait à affirmer « aucun », ce qui peut
+    // être faux. La pastille reste donc active et le serveur tranchera.
+    await ouvrir(tester, mode: SearchMode.parcels, activeTrips: null);
+
+    await tester.ensureVisible(find.byKey(const Key('chip-matching-my-trips')));
+    await tester.pumpAndSettle();
+
+    final grisee = tester
+        .widgetList<Opacity>(find.ancestor(
+          of: find.byKey(const Key('chip-matching-my-trips')),
+          matching: find.byType(Opacity),
+        ))
+        .any((o) => o.opacity == 0.4);
+    expect(grisee, isFalse);
+
+    await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+    await tester.pumpAndSettle();
+
+    // Pas d'explication mensongère, et le filtre part réellement.
+    expect(find.text('Aucun trajet actif'), findsNothing);
+    final valeur = await rechercher(tester);
+    expect(valeur!.matchingMyTrips, isTrue);
+  });
+
+  testWidgets(
+      'section colis : « Publier un trajet » ferme tout et délègue à l\'appelant',
+      (tester) async {
+    // La feuille ne navigue pas elle-même : elle est fermée à cet instant, et
+    // seul l'appelant survit pour attendre le retour puis recharger le résumé.
+    var appels = 0;
+    await ouvrir(
+      tester,
+      mode: SearchMode.parcels,
+      activeTrips: 0,
+      onPublishTrip: () => appels++,
+    );
+
+    await tester.ensureVisible(find.byKey(const Key('chip-matching-my-trips')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Publier un trajet'));
+    await tester.pumpAndSettle();
+
+    expect(appels, 1);
+    // Les deux feuilles ont bien été fermées.
+    expect(find.text('Aucun trajet actif'), findsNothing);
+    expect(find.text('Filtrer les colis'), findsNothing);
+    expect(ferme, isTrue);
   });
 
   testWidgets('section colis : retaper une pastille active la désactive',

@@ -22,7 +22,6 @@ import 'package:dony/features/home/presentation/widgets/search_filter_fields.dar
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 
 export 'package:dony/features/home/presentation/widgets/search_filter_fields.dart'
     show CommonFilterBlock;
@@ -34,12 +33,20 @@ abstract final class SearchFilterSheet {
   /// sans valider (croix, barrier, retour système).
   /// [activeTrips] : nombre de trajets actifs de l'utilisateur. À zéro, la
   /// pastille « Pour mes trajets » est désactivée, parce que le filtre
-  /// renverrait zéro résultat sans raison visible.
+  /// renverrait zéro résultat sans raison visible. À `null` le nombre est
+  /// **inconnu** (résumé pas encore chargé, ou échec réseau) : la pastille
+  /// reste alors utilisable et c'est le serveur qui tranche, plutôt que
+  /// d'affirmer « Aucun trajet actif » à un voyageur qui en a peut-être cinq.
+  ///
+  /// [onPublishTrip] : appelé quand l'utilisateur choisit « Publier un trajet »
+  /// depuis le garde-fou. La feuille est fermée à cet instant, la navigation et
+  /// le rechargement du résumé appartiennent donc à l'appelant, qui lui survit.
   static Future<HomeSearchFilters?> show(
     BuildContext context, {
     required SearchMode mode,
     required HomeSearchFilters initial,
-    int activeTrips = 0,
+    int? activeTrips,
+    VoidCallback? onPublishTrip,
     double heightFraction = 0.85,
   }) {
     // État d'édition local : la feuille ne touche à rien tant que l'utilisateur
@@ -83,6 +90,7 @@ abstract final class SearchFilterSheet {
         mode: mode,
         notifier: notifier,
         activeTrips: activeTrips,
+        onPublishTrip: onPublishTrip,
       ),
     ).whenComplete(notifier.dispose);
   }
@@ -165,14 +173,19 @@ class _SearchFilterContent extends StatefulWidget {
   const _SearchFilterContent({
     required this.mode,
     required this.notifier,
-    this.activeTrips = 0,
+    this.activeTrips,
+    this.onPublishTrip,
   });
 
   final SearchMode mode;
   final ValueNotifier<HomeSearchFilters> notifier;
 
-  /// Nombre de trajets actifs — voir [SearchFilterSheet.show].
-  final int activeTrips;
+  /// Nombre de trajets actifs, `null` si inconnu — voir [SearchFilterSheet.show].
+  final int? activeTrips;
+
+  /// Publication d'un trajet demandée depuis le garde-fou — voir
+  /// [SearchFilterSheet.show].
+  final VoidCallback? onPublishTrip;
 
   @override
   State<_SearchFilterContent> createState() => _SearchFilterContentState();
@@ -466,15 +479,16 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
         children: [
           // Sans trajet actif le filtre renverrait zéro sans raison visible :
           // la pastille est grisée et son tap explique la situation au lieu de
-          // lancer une recherche vide.
+          // lancer une recherche vide. Nombre INCONNU (résumé en échec) : la
+          // pastille reste utilisable, on ne grise pas sur une supposition.
           Opacity(
-            opacity: _hasActiveTrip ? 1 : 0.4,
+            opacity: _canFilterOnMyTrips ? 1 : 0.4,
             child: QuickChip(
               key: const Key('chip-matching-my-trips'),
               label: 'Pour mes trajets',
               iconAsset: 'plane',
               active: f.matchingMyTrips,
-              onChanged: _hasActiveTrip
+              onChanged: _canFilterOnMyTrips
                   ? (v) => _update(f.copyWith(matchingMyTrips: v))
                   : (_) => _showNoActiveTripSheet(context),
             ),
@@ -492,15 +506,16 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
     ];
   }
 
-  bool get _hasActiveTrip => widget.activeTrips > 0;
+  /// Le filtre n'est bloqué que sur une certitude : zéro trajet actif CONNU.
+  /// Nombre inconnu (`null`) → pastille utilisable, le serveur tranchera.
+  bool get _canFilterOnMyTrips {
+    final trips = widget.activeTrips;
+    return trips == null || trips > 0;
+  }
 
   /// Explique pourquoi le filtre est indisponible et propose l'action qui le
   /// débloque. Le bouton est en position collée en bas de la feuille.
   Future<void> _showNoActiveTripSheet(BuildContext context) {
-    // `maybeOf` : le routeur est capturé AVANT les pops, sinon le contexte
-    // serait mort au moment de naviguer. Nul uniquement hors routeur (tests de
-    // rendu isolé), auquel cas la feuille se contente de se fermer.
-    final router = GoRouter.maybeOf(context);
     final sheetNavigator = Navigator.of(context, rootNavigator: true);
     return DonyBottomSheet.show<void>(
       context,
@@ -516,7 +531,11 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
           sheetNavigator
             ..pop()
             ..pop();
-          router?.push('/announcements/create');
+          // La navigation appartient à l'appelant : lui seul survit à la
+          // fermeture des deux feuilles, donc lui seul peut attendre le retour
+          // de la création de trajet et recharger le résumé des trajets. Faire
+          // le `push` d'ici laisserait la pastille grisée au retour.
+          widget.onPublishTrip?.call();
         },
       ),
       child: const SizedBox.shrink(),

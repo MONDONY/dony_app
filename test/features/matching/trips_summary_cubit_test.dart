@@ -50,6 +50,43 @@ void main() {
     ],
   );
 
+  // ─── « Combien de trajets actifs ? » : trois réponses, pas deux ────────────
+  //
+  // Le filtre « Pour mes trajets » se grise sur cette valeur. La confondre avec
+  // zéro en cas d'échec réseau ferait afficher « Aucun trajet actif » à un
+  // voyageur qui en a trois, et pour toute la session.
+  group('knownActiveTrips', () {
+    test('connu et positif → le nombre réel', () {
+      expect(const TripsSummaryState.loaded(summary).knownActiveTrips, 3);
+    });
+
+    test('connu et nul → zéro, pas inconnu', () {
+      const vide = TripsSummaryModel(activeTrips: 0, kgSold: 0, revenue: 0);
+      expect(const TripsSummaryState.loaded(vide).knownActiveTrips, 0);
+    });
+
+    test('échec réseau → inconnu, jamais zéro', () {
+      expect(const TripsSummaryState.hidden().knownActiveTrips, isNull);
+    });
+
+    test('avant la réponse → inconnu', () {
+      expect(const TripsSummaryState.initial().knownActiveTrips, isNull);
+      expect(const TripsSummaryState.loading().knownActiveTrips, isNull);
+    });
+  });
+
+  blocTest<TripsSummaryCubit, TripsSummaryState>(
+    'load en échec laisse le nombre de trajets INCONNU (et non à zéro)',
+    build: () {
+      when(
+        () => repository.getTripsSummary(period: any(named: 'period')),
+      ).thenThrow(Exception('network'));
+      return TripsSummaryCubit(repository);
+    },
+    act: (c) => c.load(),
+    verify: (c) => expect(c.state.knownActiveTrips, isNull),
+  );
+
   blocTest<TripsSummaryCubit, TripsSummaryState>(
     'load transmet la période demandée au repository',
     build: () {

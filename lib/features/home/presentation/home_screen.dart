@@ -370,6 +370,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// bascule produira. Lire `_filters` directement laisserait tomber la
   /// neutralisation du corridor par « près de moi », la position et le rayon.
   Future<void> _dispatchOtherModeCount() async {
+    // Sans rôle voyageur, la bascule vers Colis est refusée par le garde-fou :
+    // compter les colis n'a plus aucune valeur, et la requête partirait pour
+    // rien (403 avalé par le `catch` plus bas). On ne l'envoie pas du tout.
+    if (_mode.isTrips && !_isTraveler) {
+      if (mounted) {
+        setState(() => _otherModeCount = null);
+      }
+      return;
+    }
     if (!_filters.otherModeCountIsMeaningful) {
       if (mounted) {
         setState(() => _otherModeCount = null);
@@ -441,10 +450,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   /// Nombre de trajets actifs, source unique du filtre « Pour mes trajets ».
-  /// Zéro tant que le résumé n'a pas répondu : le garde-fou est alors le plus
-  /// prudent des deux, il explique au lieu de lancer une recherche vide.
-  int get _activeTrips =>
-      context.read<TripsSummaryCubit>().state.summary?.activeTrips ?? 0;
+  ///
+  /// `null` = inconnu (résumé pas encore chargé, ou échec réseau), et ce n'est
+  /// PAS zéro : sur un échec, prétendre « Aucun trajet actif » à un voyageur
+  /// qui en a cinq serait un mensonge durable (le résumé n'est rechargé qu'à la
+  /// création de l'écran). Inconnu laisse donc la pastille utilisable et confie
+  /// l'arbitrage au serveur, qui connaît la vérité.
+  int? get _activeTrips =>
+      context.read<TripsSummaryCubit>().state.knownActiveTrips;
 
   void _onModeChanged(SearchMode mode) {
     if (mode == _mode) {
@@ -802,6 +815,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       mode: _mode,
       initial: _filters,
       activeTrips: activeTrips,
+      onPublishTrip: _onPublishTripRequested,
     );
     if (result == null || !mounted) return;
     // La pastille « Pour mes trajets » vit dans la feuille : sa bascule ne se
@@ -812,12 +826,34 @@ class _MapSenderViewState extends State<_MapSenderView> {
           AnalyticsEvents.homeMatchingTripsFilterToggled,
           properties: {
             'active': result.matchingMyTrips,
-            'active_trips': activeTrips,
+            // Nombre inconnu : la propriété est absente plutôt que remplie
+            // d'un zéro qui fausserait l'analyse.
+            'active_trips': ?activeTrips,
           },
         ),
       );
     }
     _onFiltersChanged(result);
+  }
+
+  /// « Publier un trajet » depuis le garde-fou de la pastille « Pour mes
+  /// trajets ». La feuille de filtres est déjà fermée quand on arrive ici :
+  /// c'est l'écran, qui lui survit, qui attend le retour de la création puis
+  /// recharge le résumé. Sans ce rechargement, l'utilisateur publierait son
+  /// trajet et retrouverait la pastille grisée avec « Aucun trajet actif »,
+  /// c'est-à-dire le scénario nominal du garde-fou pris en défaut.
+  Future<void> _onPublishTripRequested() async {
+    // `maybeOf` : hors routeur (tests de rendu isolé) il n'y a rien à ouvrir.
+    final router = GoRouter.maybeOf(context);
+    if (router == null) {
+      return;
+    }
+    final summary = context.read<TripsSummaryCubit>();
+    await router.push<void>('/announcements/create');
+    if (!mounted) {
+      return;
+    }
+    await summary.load();
   }
 
   /// Applique une recherche préparée ailleurs (onglet Envoyer via
@@ -1330,9 +1366,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   /// Sous-titre de l'en-tête quand la recherche colis est filtrée « sur mes
   /// trajets » : ce qu'on a trouvé, et sur combien de trajets on a cherché.
-  String _matchingSubtitle(PackageRequestSearchState prState, int trips) {
+  /// [trips] à `null` = nombre de trajets actifs inconnu : on annonce les
+  /// résultats sans inventer un « 0 trajet actif » que rien ne prouve.
+  String _matchingSubtitle(PackageRequestSearchState prState, int? trips) {
     final n = _visibleRequests(prState.results).length;
-    return '$n résultat${n > 1 ? 's' : ''} · '
+    final resultats = '$n résultat${n > 1 ? 's' : ''}';
+    if (trips == null) {
+      return resultats;
+    }
+    return '$resultats · '
         '$trips trajet${trips > 1 ? 's' : ''} actif${trips > 1 ? 's' : ''}';
   }
 
@@ -1425,7 +1467,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     >(
                       builder: (headerCtx, prState) {
                         final matching = prState.matchingMyTrips == true;
-                        final trips = summaryState.summary?.activeTrips ?? 0;
+                        // Inconnu reste inconnu : voir `knownActiveTrips`.
+                        final trips = summaryState.knownActiveTrips;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

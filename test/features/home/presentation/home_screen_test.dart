@@ -176,9 +176,10 @@ AnnouncementModel _makeAnn({String id = 'a1', String travelerId = 'traveler-1'})
 /// (et sa tuile de découverte croisée) ne doit pas apparaître.
 final troisTrajets = [_makeAnn(), _makeAnn(id: 'a2'), _makeAnn(id: 'a3')];
 
-/// (Re)enregistre le résumé d'activité avec [activeTrips] trajets actifs.
-/// `HomeScreen` le résout via `getIt`, comme en production.
-void _registerTripsSummary(int activeTrips) {
+/// (Re)enregistre le résumé d'activité dans l'état [state] et rend le mock,
+/// pour vérifier les rechargements. `HomeScreen` le résout via `getIt`, comme
+/// en production.
+MockTripsSummaryCubit _registerTripsSummaryState(TripsSummaryState state) {
   if (getIt.isRegistered<TripsSummaryCubit>()) {
     getIt.unregister<TripsSummaryCubit>();
   }
@@ -187,15 +188,21 @@ void _registerTripsSummary(int activeTrips) {
   // tomberait au milieu d'une réponse stubée (« Cannot call `when` within a
   // stub response »).
   final cubit = MockTripsSummaryCubit();
-  final state = TripsSummaryState.loaded(
-    TripsSummaryModel(activeTrips: activeTrips, kgSold: 0, revenue: 0),
-  );
   when(() => cubit.state).thenReturn(state);
   whenListen(cubit, const Stream<TripsSummaryState>.empty(),
       initialState: state);
   when(() => cubit.load(period: any(named: 'period'))).thenAnswer((_) async {});
   getIt.registerFactory<TripsSummaryCubit>(() => cubit);
+  return cubit;
 }
+
+/// (Re)enregistre le résumé d'activité avec [activeTrips] trajets actifs.
+MockTripsSummaryCubit _registerTripsSummary(int activeTrips) =>
+    _registerTripsSummaryState(
+      TripsSummaryState.loaded(
+        TripsSummaryModel(activeTrips: activeTrips, kgSold: 0, revenue: 0),
+      ),
+    );
 
 /// Demande d'envoi minimale pour peupler l'état du bloc de recherche colis.
 /// L'expéditeur n'est jamais l'utilisateur courant : sinon `_visibleRequests`
@@ -297,6 +304,9 @@ Widget _buildHome({
 /// [otherModeCount] enregistre un `PackageRequestRepository` qui renvoie ce
 /// total : c'est le nombre que `_dispatchOtherModeCount` annoncera pour l'autre
 /// mode tant que le mode courant est « Trajets ».
+/// [summaryState] remplace l'état du résumé d'activité (par défaut : chargé
+/// avec [activeTrips]). Sert au cas « résumé en échec », où le nombre de
+/// trajets est INCONNU et non nul.
 Future<void> pumpHome(
   WidgetTester tester, {
   bool isTraveler = true,
@@ -304,8 +314,13 @@ Future<void> pumpHome(
   List<AnnouncementModel>? tripResults,
   int? otherModeCount,
   int activeTrips = 2,
+  TripsSummaryState? summaryState,
 }) async {
-  _registerTripsSummary(activeTrips);
+  if (summaryState != null) {
+    _registerTripsSummaryState(summaryState);
+  } else {
+    _registerTripsSummary(activeTrips);
+  }
   if (otherModeCount != null) {
     final prRepo = MockPackageRequestRepository();
     when(
@@ -493,9 +508,18 @@ Widget _buildHomeStubRoutes({
     child: const HomeScreen(),
   );
 
+  // L'écran stub porte un bouton de retour : c'est le retour de navigation qui
+  // doit rafraîchir le résumé des trajets côté écran Rechercher.
   Widget stub(String path) {
     visited.add(path);
-    return Scaffold(body: Text('STUB $path'));
+    return Scaffold(
+      body: Builder(
+        builder: (ctx) => TextButton(
+          onPressed: () => ctx.pop(),
+          child: Text('STUB $path'),
+        ),
+      ),
+    );
   }
 
   final router = GoRouter(
@@ -1381,11 +1405,83 @@ void main() {
       await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
       await tester.pumpAndSettle();
 
+      // Sans ces deux assertions, « aucun texte ne contient de tiret cadratin »
+      // passerait trivialement sur un écran où rien ne s'est ouvert.
+      expect(find.text('Aucun trajet actif'), findsOneWidget);
+      expect(
+        find.textContaining('Publie un trajet pour t\'en servir.'),
+        findsOneWidget,
+      );
+
       final textes = tester
           .widgetList<Text>(find.byType(Text))
           .map((t) => t.data ?? '')
           .toList();
       expect(textes.any((t) => t.contains('—')), isFalse);
+    });
+
+    // ── Résumé d'activité en échec : le nombre de trajets est INCONNU ────────
+    //
+    // Inconnu n'est pas zéro. Le confondre ferait lire « Aucun trajet actif » à
+    // un voyageur qui en a cinq, et pour toute la session (le résumé n'est
+    // chargé qu'à la création de l'écran).
+    testWidgets(
+      'résumé en échec : la pastille reste utilisable, aucune contre-vérité',
+      (tester) async {
+        await pumpHome(tester, summaryState: const TripsSummaryState.hidden());
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+        await ouvrirPastille(tester);
+
+        expect(pastilleGrisee(tester), isFalse);
+
+        await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+        await tester.pumpAndSettle();
+
+        // Aucune explication mensongère.
+        expect(find.text('Aucun trajet actif'), findsNothing);
+
+        await tester.tap(find.text('Rechercher'));
+        await tester.pumpAndSettle();
+
+        // Le filtre part au serveur : c'est lui qui tranche.
+        verify(
+          () => prBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>().having(
+                (e) => e.matchingMyTrips,
+                'matchingMyTrips',
+                isTrue,
+              ),
+            ),
+          ),
+        ).called(greaterThanOrEqualTo(1));
+
+        // Et le tracking n'invente pas de nombre de trajets.
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeMatchingTripsFilterToggled,
+            properties: {'active': true},
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets('résumé en échec : l\'en-tête n\'annonce pas « 0 trajet »', (
+      tester,
+    ) async {
+      prSearchState = PackageRequestSearchState(
+        status: SearchStatus.loaded,
+        results: [_makeRequest('r-1'), _makeRequest('r-2')],
+        matchingMyTrips: true,
+      );
+      await pumpHome(tester, summaryState: const TripsSummaryState.hidden());
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 résultats'), findsOneWidget);
+      expect(find.textContaining('0 trajet'), findsNothing);
     });
 
     testWidgets('activer la pastille trace la bascule et le nombre de trajets', (
@@ -1512,6 +1608,104 @@ void main() {
       expect(find.text('Ouvrir les réglages'), findsNothing);
       expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
     });
+
+    // ── Compteur de l'autre mode ────────────────────────────────────────────
+    //
+    // La bascule vers Colis est bloquée pour cet utilisateur : compter les
+    // colis n'a aucune valeur, et la requête finirait en 403 avalé par le
+    // `catch`. Elle ne doit donc pas partir du tout.
+    MockPackageRequestRepository enregistrerCompteurColis() {
+      final repo = MockPackageRequestRepository();
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          lat: any(named: 'lat'),
+          lng: any(named: 'lng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 7,
+          page: 0,
+          size: 1,
+        ),
+      );
+      getIt.registerSingleton<PackageRequestRepository>(repo);
+      return repo;
+    }
+
+    Future<void> verifierAucunComptage(
+      MockPackageRequestRepository repo,
+    ) async {
+      verifyNever(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          lat: any(named: 'lat'),
+          lng: any(named: 'lng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+        ),
+      );
+    }
+
+    testWidgets('aucun comptage des colis ne part sans rôle voyageur', (
+      tester,
+    ) async {
+      final repo = enregistrerCompteurColis();
+      await pumpHome(tester, isTraveler: false);
+
+      // Un corridor rend pourtant le compteur « significatif » : c'est bien le
+      // rôle, et rien d'autre, qui retient la requête.
+      await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
+
+      await verifierAucunComptage(repo);
+      expect(find.byKey(const Key('mode-other-count')), findsNothing);
+    });
+
+    testWidgets('contrôle : avec le rôle voyageur, le comptage part bien', (
+      tester,
+    ) async {
+      final repo = enregistrerCompteurColis();
+      await pumpHome(tester);
+
+      await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
+
+      verify(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          lat: any(named: 'lat'),
+          lng: any(named: 'lng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+          page: any(named: 'page'),
+          size: any(named: 'size'),
+        ),
+      ).called(greaterThanOrEqualTo(1));
+    });
   });
 
   // ─── Routage des deux garde-fous ────────────────────────────────────────────
@@ -1552,6 +1746,56 @@ void main() {
 
       expect(visited, contains('/announcements/create'));
     });
+
+    testWidgets(
+      'publier un trajet puis revenir recharge le résumé des trajets',
+      (tester) async {
+        // Scénario nominal du garde-fou : aucun trajet actif, l'utilisateur en
+        // publie un. Au retour, le résumé doit être rechargé, sinon la pastille
+        // resterait grisée avec « Aucun trajet actif » alors que c'est faux.
+        final summary = _registerTripsSummary(0);
+        final visited = <String>[];
+        tester.view.physicalSize = const Size(1000, 2000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(
+          _buildHomeStubRoutes(
+            visited: visited,
+            user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('corridor-bar')));
+        await tester.pumpAndSettle();
+        await tester.dragUntilVisible(
+          find.byKey(const Key('chip-matching-my-trips')),
+          find.byType(SingleChildScrollView).last,
+          const Offset(0, -100),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Publier un trajet'));
+        await tester.pumpAndSettle();
+
+        expect(visited, contains('/announcements/create'));
+        // Un seul chargement jusqu'ici : celui de la création de l'écran.
+        // `verify` consomme les appels enregistrés, le suivant ne comptera
+        // donc que ceux d'après le retour.
+        verify(() => summary.load()).called(1);
+
+        // Retour de la création de trajet.
+        await tester.tap(find.text('STUB /announcements/create'));
+        await tester.pumpAndSettle();
+
+        verify(() => summary.load()).called(1);
+      },
+    );
 
     testWidgets('« Ouvrir les réglages » ouvre les réglages', (tester) async {
       _registerTripsSummary(2);
