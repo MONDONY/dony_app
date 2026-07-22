@@ -27,10 +27,20 @@ class CityAutocompleteField extends StatefulWidget {
     this.prefixIcon,
     this.fieldKey,
     this.requiredLabel = false,
+    this.onCleared,
   });
 
   final String label;
   final void Function(CityModel city) onSelected;
+
+  /// Appelé quand l'utilisateur **vide** le champ, que ce soit par le bouton
+  /// « x » interne ou en effaçant le texte à la main.
+  ///
+  /// Optionnel et nul par défaut : sans lui, le widget garde son comportement
+  /// historique (seule une suggestion tapée remonte au parent). Les appelants
+  /// qui ne le fournissent pas ne changent donc pas de comportement.
+  final VoidCallback? onCleared;
+
   final String? initialValue;
   final Widget? prefixIcon;
 
@@ -155,6 +165,9 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
                       context
                           .read<CitySearchBloc>()
                           .add(const CitySearchCleared());
+                      // Le champ visuellement vide DOIT vider le filtre côté
+                      // parent, sinon l'écran ment sur ce qui est appliqué.
+                      widget.onCleared?.call();
                     },
                   )
                 : null,
@@ -164,6 +177,9 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
             context
                 .read<CitySearchBloc>()
                 .add(CitySearchQueryChanged(value));
+            if (value.isEmpty) {
+              widget.onCleared?.call();
+            }
           },
         ),
         // ── Suggestions — dans le flux scrollable (jamais en Overlay) ─────

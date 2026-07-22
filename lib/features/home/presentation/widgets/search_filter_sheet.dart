@@ -14,13 +14,11 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -83,6 +81,15 @@ abstract final class SearchFilterSheet {
   /// Efface les filtres communs et ceux du mode courant. Ceux de l'autre mode
   /// sont préservés : ils ne sont pas comptés par `activeCountFor(mode)`, les
   /// effacer serait une surprise invisible.
+  ///
+  /// `urgentOnly` et `nearMeActive` sont bien effacés alors que la feuille ne
+  /// les expose pas, et c'est volontaire : ce sont des filtres **communs**,
+  /// comptés par `activeCountFor(mode)`, donc c'est notamment eux qui font
+  /// apparaître le bouton « Tout effacer ». Les épargner produirait un « Tout
+  /// effacer » qui n'efface pas tout et qui reste affiché après le tap, avec
+  /// un badge de filtres toujours à 1. Leur disparition n'est pas invisible :
+  /// leurs pastilles (🔥 Urgent, « Près de moi ») vivent sur l'écran
+  /// Rechercher, derrière la feuille, et se désactivent dès la validation.
   static HomeSearchFilters _cleared(HomeSearchFilters value, SearchMode mode) {
     final common = value.copyWith(
       clearCorridor: true,
@@ -247,7 +254,15 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
           Expanded(
             child: PriceField(
               maxPrice: f.maxPricePerKg,
-              onTap: () => unawaited(_showPricePicker(context)),
+              onTap: () => unawaited(showPricePicker(
+                context,
+                maxPrice: _value.maxPricePerKg,
+                onApply: (v) => _update(
+                  v == null
+                      ? _value.copyWith(clearMaxPricePerKg: true)
+                      : _value.copyWith(maxPricePerKg: v),
+                ),
+              )),
             ),
           ),
         ],
@@ -258,7 +273,15 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
           Expanded(
             child: TransportModeField(
               mode: f.transportMode,
-              onTap: () => unawaited(_showTransportPicker(context)),
+              onTap: () => unawaited(showTransportPicker(
+                context,
+                mode: _value.transportMode,
+                onApply: (v) => _update(
+                  v == null
+                      ? _value.copyWith(clearTransportMode: true)
+                      : _value.copyWith(transportMode: v),
+                ),
+              )),
             ),
           ),
           const Spacer(),
@@ -447,159 +470,4 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
         ParcelSize.medium => '📫',
         ParcelSize.large => '🧳',
       };
-
-  // ── Pickers ────────────────────────────────────────────────────────────────
-
-  Future<void> _showPricePicker(BuildContext context) async {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    const double kMin = 3;
-    const double kMax = 25;
-    double local = _value.maxPricePerKg ?? kMax;
-    bool localEnabled = _value.maxPricePerKg != null;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => SimpleSheet(
-          title: 'Prix maximum',
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Text(
-                  localEnabled ? '≤ ${local.toInt()} €/kg' : 'Tous les prix',
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: localEnabled ? cs.primary : cs.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: cs.primary,
-                  thumbColor: cs.primary,
-                  overlayColor: cs.primaryContainer,
-                  inactiveTrackColor: cs.outline,
-                ),
-                child: Slider(
-                  value: local,
-                  min: kMin,
-                  max: kMax,
-                  divisions: (kMax - kMin).toInt(),
-                  onChanged: (v) => setS(() {
-                    local = v;
-                    localEnabled = v < kMax;
-                  }),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('3 €/kg',
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                    Text('25 €/kg',
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: DonySpacing.lg),
-              DonyButton(
-                label: 'Appliquer',
-                onPressed: () {
-                  _update(localEnabled
-                      ? _value.copyWith(maxPricePerKg: local)
-                      : _value.copyWith(clearMaxPricePerKg: true));
-                  Navigator.of(ctx).pop();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showTransportPicker(BuildContext context) async {
-    TransportMode? local = _value.transportMode;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) {
-          final tt = Theme.of(ctx).textTheme;
-          final cs = Theme.of(ctx).colorScheme;
-          return SimpleSheet(
-            title: 'Mode de transport',
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ...TransportMode.values.map((mode) {
-                  final selected = local == mode;
-                  return GestureDetector(
-                    onTap: () => setS(() => local = selected ? null : mode),
-                    child: AnimatedContainer(
-                      duration: 180.ms,
-                      margin: const EdgeInsets.only(bottom: DonySpacing.xs),
-                      constraints: const BoxConstraints(minHeight: 44),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.md,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? cs.primaryContainer
-                            : Theme.of(ctx).scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(DonyRadius.card),
-                        border: Border.all(
-                          color: selected ? cs.primary : cs.outline,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(mode.icon,
-                              size: 18,
-                              color: selected ? cs.primary : cs.onSurfaceVariant),
-                          const SizedBox(width: DonySpacing.md),
-                          Expanded(
-                            child: Text(
-                              mode.label,
-                              style: tt.bodyMedium?.copyWith(
-                                color: selected ? cs.primary : cs.onSurface,
-                                fontWeight:
-                                    selected ? FontWeight.w600 : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          if (selected)
-                            DonyIcon('circle-check', size: 18, color: cs.primary),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: DonySpacing.md),
-                DonyButton(
-                  label: 'Appliquer',
-                  onPressed: () {
-                    _update(local == null
-                        ? _value.copyWith(clearTransportMode: true)
-                        : _value.copyWith(transportMode: local));
-                    Navigator.of(ctx).pop();
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 }

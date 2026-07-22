@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
@@ -16,7 +15,6 @@ import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class SearchFormBottomSheet {
   static Future<SearchParams?> show(
@@ -345,14 +343,29 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                     maxPrice: _priceFilterNotifier.value
                         ? _maxPricePerKgNotifier.value
                         : null,
-                    onTap: () => _showPricePicker(context),
+                    onTap: () => unawaited(showPricePicker(
+                      context,
+                      maxPrice: _priceFilterNotifier.value
+                          ? _maxPricePerKgNotifier.value
+                          : null,
+                      onApply: (v) {
+                        _priceFilterNotifier.value = v != null;
+                        if (v != null) {
+                          _maxPricePerKgNotifier.value = v;
+                        }
+                      },
+                    )),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: TransportModeField(
                     mode: _transportModeNotifier.value,
-                    onTap: () => _showTransportPicker(context),
+                    onTap: () => unawaited(showTransportPicker(
+                      context,
+                      mode: _transportModeNotifier.value,
+                      onApply: (v) => _transportModeNotifier.value = v,
+                    )),
                   ),
                 ),
               ],
@@ -461,151 +474,6 @@ class _SearchFormContentState extends State<_SearchFormContent> {
           ],
         );
       },
-    );
-  }
-
-  Future<void> _showPricePicker(BuildContext context) async {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    const double kMin = 3;
-    const double kMax = 25;
-    double local = _priceFilterNotifier.value ? _maxPricePerKgNotifier.value : kMax;
-    bool localEnabled = _priceFilterNotifier.value;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => SimpleSheet(
-          title: 'Prix maximum',
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Text(
-                  localEnabled ? '≤ ${local.toInt()} €/kg' : 'Tous les prix',
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: localEnabled ? cs.primary : cs.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: cs.primary,
-                  thumbColor: cs.primary,
-                  overlayColor: cs.primaryContainer,
-                  inactiveTrackColor: cs.outline,
-                ),
-                child: Slider(
-                  value: local,
-                  min: kMin,
-                  max: kMax,
-                  divisions: (kMax - kMin).toInt(),
-                  onChanged: (v) => setS(() {
-                    local = v;
-                    localEnabled = v < kMax;
-                  }),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('3 €/kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                    Text('25 €/kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: DonySpacing.lg),
-              DonyButton(
-                label: 'Appliquer',
-                onPressed: () {
-                  _priceFilterNotifier.value = localEnabled;
-                  if (localEnabled) _maxPricePerKgNotifier.value = local;
-                  ctx.pop();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showTransportPicker(BuildContext context) async {
-    TransportMode? local = _transportModeNotifier.value;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) {
-          final tt = Theme.of(ctx).textTheme;
-          final cs = Theme.of(ctx).colorScheme;
-          return SimpleSheet(
-            title: 'Mode de transport',
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ...TransportMode.values.map((mode) {
-                  final selected = local == mode;
-                  return GestureDetector(
-                    onTap: () => setS(() => local = selected ? null : mode),
-                    child: AnimatedContainer(
-                      duration: 180.ms,
-                      margin: const EdgeInsets.only(bottom: DonySpacing.xs),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.md,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected ? cs.primaryContainer : Theme.of(ctx).scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(DonyRadius.card),
-                        border: Border.all(
-                          color: selected ? cs.primary : cs.outline,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(mode.icon,
-                              size: 18,
-                              color: selected ? cs.primary : cs.onSurfaceVariant),
-                          const SizedBox(width: DonySpacing.md),
-                          Expanded(
-                            child: Text(
-                              mode.label,
-                              style: tt.bodyMedium?.copyWith(
-                                color: selected ? cs.primary : cs.onSurface,
-                                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          if (selected)
-                            DonyIcon('circle-check',
-                                size: 18, color: cs.primary),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: DonySpacing.md),
-                DonyButton(
-                  label: 'Appliquer',
-                  onPressed: () {
-                    _transportModeNotifier.value = local;
-                    ctx.pop();
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 }

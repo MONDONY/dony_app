@@ -3,9 +3,9 @@
 // Ces widgets viennent de `search_form_bottom_sheet.dart` (feuille trajets) :
 // ils y étaient privés, ils sont ici publics pour que la feuille unique
 // (`search_filter_sheet.dart`) et l'ancienne feuille trajets s'appuient sur le
-// MÊME code. Le style est inchangé, seul le préfixe `_` a sauté (plus quelques
-// libellés rendus paramétrables, pour servir « poids min » côté trajets et
-// « poids max » côté colis).
+// MÊME code. Le style est inchangé, seul le préfixe `_` a sauté. Les deux
+// sélecteurs modaux (prix, transport) suivent le même chemin : une seule
+// implémentation, consommée par les deux feuilles.
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -20,7 +20,6 @@ import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 // ── Bloc commun aux deux modes ────────────────────────────────────────────────
@@ -54,6 +53,23 @@ class CommonFilterBlock extends StatelessWidget {
       clearCustomDate: true,
     ));
   }
+
+  /// Vider un champ de ville DOIT vider le filtre correspondant : sans ça le
+  /// champ paraît vide alors que la recherche applique toujours l'ancienne
+  /// ville. `copyWith` n'expose qu'un seul drapeau d'effacement pour le
+  /// corridor (`clearCorridor`), qui efface les deux villes d'un coup : on
+  /// l'applique puis on réinjecte celle qu'on garde.
+  void _clearDeparture() => onChanged(
+        value.copyWith(clearCorridor: true).copyWith(
+              arrivalCity: value.arrivalCity,
+            ),
+      );
+
+  void _clearArrival() => onChanged(
+        value.copyWith(clearCorridor: true).copyWith(
+              departureCity: value.departureCity,
+            ),
+      );
 
   void _onCustomDate(DateTime? date) {
     if (date == null) {
@@ -90,6 +106,7 @@ class CommonFilterBlock extends StatelessWidget {
                 prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                 onSelected: (CityModel city) =>
                     onChanged(value.copyWith(departureCity: city.name)),
+                onCleared: _clearDeparture,
               ),
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -102,6 +119,7 @@ class CommonFilterBlock extends StatelessWidget {
                 prefixIcon: const DonyEmoji.planeLanding(size: 20),
                 onSelected: (CityModel city) =>
                     onChanged(value.copyWith(arrivalCity: city.name)),
+                onCleared: _clearArrival,
               ),
             ),
           ],
@@ -549,17 +567,10 @@ class WeightField extends StatelessWidget {
     super.key,
     required this.weightKg,
     required this.onChanged,
-    this.label = 'POIDS MIN',
-    this.sheetTitle = 'Poids minimum du trajet',
   });
 
   final double weightKg;
   final ValueChanged<double> onChanged;
-
-  /// Libellé du champ : « POIDS MIN » côté trajets (capacité attendue du
-  /// voyageur), « POIDS MAX » côté colis (poids de la demande).
-  final String label;
-  final String sheetTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -579,7 +590,8 @@ class WeightField extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text('POIDS MIN',
+                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
@@ -611,7 +623,7 @@ class WeightField extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => SimpleSheet(
-          title: sheetTitle,
+          title: 'Poids minimum du trajet',
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -652,7 +664,10 @@ class WeightField extends StatelessWidget {
                 label: 'Confirmer',
                 onPressed: () {
                   onChanged(local);
-                  ctx.pop();
+                  // Navigator plutôt que `ctx.pop()` (go_router) : la feuille
+                  // est un route modale imperative, et Navigator ne suppose
+                  // aucun GoRouter au-dessus.
+                  Navigator.of(ctx).pop();
                 },
               ),
             ],
@@ -661,4 +676,176 @@ class WeightField extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Sélecteurs modaux partagés ────────────────────────────────────────────────
+//
+// Déplacés à l'identique depuis `search_filter_sheet.dart` et
+// `search_form_bottom_sheet.dart`, où ils existaient en double. Les deux
+// feuilles consomment désormais cette seule implémentation : leurs conventions
+// implicites (un prix égal au maximum vaut « pas de filtre ») ne peuvent plus
+// diverger.
+
+/// Sélecteur de prix maximum par kilo.
+///
+/// [maxPrice] est le prix courant, `null` si aucun filtre. [onApply] reçoit
+/// `null` quand l'utilisateur pousse le curseur au maximum : la convention
+/// « 25 €/kg = tous les prix » est celle des deux feuilles d'origine.
+Future<void> showPricePicker(
+  BuildContext context, {
+  required double? maxPrice,
+  required ValueChanged<double?> onApply,
+}) async {
+  final tt = Theme.of(context).textTheme;
+  final cs = Theme.of(context).colorScheme;
+  const double kMin = 3;
+  const double kMax = 25;
+  double local = maxPrice ?? kMax;
+  bool localEnabled = maxPrice != null;
+
+  await showModalBottomSheet<void>(
+    context: context,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setS) => SimpleSheet(
+        title: 'Prix maximum',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Text(
+                localEnabled ? '≤ ${local.toInt()} €/kg' : 'Tous les prix',
+                style: tt.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: localEnabled ? cs.primary : cs.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: cs.primary,
+                thumbColor: cs.primary,
+                overlayColor: cs.primaryContainer,
+                inactiveTrackColor: cs.outline,
+              ),
+              child: Slider(
+                value: local,
+                min: kMin,
+                max: kMax,
+                divisions: (kMax - kMin).toInt(),
+                onChanged: (v) => setS(() {
+                  local = v;
+                  localEnabled = v < kMax;
+                }),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('3 €/kg',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text('25 €/kg',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                ],
+              ),
+            ),
+            const SizedBox(height: DonySpacing.lg),
+            DonyButton(
+              label: 'Appliquer',
+              onPressed: () {
+                onApply(localEnabled ? local : null);
+                Navigator.of(ctx).pop();
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Sélecteur de mode de transport. [onApply] reçoit `null` quand aucun mode
+/// n'est retenu (tap sur le mode déjà sélectionné = désélection).
+Future<void> showTransportPicker(
+  BuildContext context, {
+  required TransportMode? mode,
+  required ValueChanged<TransportMode?> onApply,
+}) async {
+  TransportMode? local = mode;
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setS) {
+        final tt = Theme.of(ctx).textTheme;
+        final cs = Theme.of(ctx).colorScheme;
+        return SimpleSheet(
+          title: 'Mode de transport',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...TransportMode.values.map((m) {
+                final selected = local == m;
+                return GestureDetector(
+                  onTap: () => setS(() => local = selected ? null : m),
+                  child: AnimatedContainer(
+                    duration: 180.ms,
+                    margin: const EdgeInsets.only(bottom: DonySpacing.xs),
+                    constraints: const BoxConstraints(minHeight: 44),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? cs.primaryContainer
+                          : Theme.of(ctx).scaffoldBackgroundColor,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(
+                        color: selected ? cs.primary : cs.outline,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(m.icon,
+                            size: 18,
+                            color: selected ? cs.primary : cs.onSurfaceVariant),
+                        const SizedBox(width: DonySpacing.md),
+                        Expanded(
+                          child: Text(
+                            m.label,
+                            style: tt.bodyMedium?.copyWith(
+                              color: selected ? cs.primary : cs.onSurface,
+                              fontWeight:
+                                  selected ? FontWeight.w600 : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                        if (selected)
+                          DonyIcon('circle-check', size: 18, color: cs.primary),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: DonySpacing.md),
+              DonyButton(
+                label: 'Appliquer',
+                onPressed: () {
+                  onApply(local);
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
 }
