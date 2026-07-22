@@ -24,6 +24,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -68,6 +69,11 @@ class MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
 class MockHiveService extends Mock implements HiveService {}
 
 class MockCityRepository extends Mock implements CityRepository {}
+
+/// Dépôt de trajets simulé : sert au compteur de l'autre mode, qui appelle
+/// `countAnnouncements` directement via `getIt` (pas via un BLoC).
+class MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
@@ -992,6 +998,76 @@ void main() {
       expect(find.byKey(const Key('search-mode-selector')), findsOneWidget);
       expect(find.byKey(const Key('mode-other-count')), findsNothing);
     });
+
+    testWidgets(
+      'le compteur de l\'autre mode utilise le payload de la vraie recherche : '
+      '« près de moi » neutralise le corridor',
+      (tester) async {
+        // Le compteur ne passe pas par un BLoC : il appelle le dépôt depuis
+        // `getIt`. Sans cet enregistrement, `_dispatchOtherModeCount` lève et
+        // son `catch` avale tout — aucune assertion ne pourrait échouer.
+        GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+        final annRepo = MockAnnouncementRepository();
+        final appels = <Map<Symbol, dynamic>>[];
+        when(
+          () => annRepo.countAnnouncements(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDateFrom: any(named: 'departureDateFrom'),
+            departureDateTo: any(named: 'departureDateTo'),
+            minAvailableKg: any(named: 'minAvailableKg'),
+            maxAvailableKg: any(named: 'maxAvailableKg'),
+            maxPricePerKg: any(named: 'maxPricePerKg'),
+            kiloProOnly: any(named: 'kiloProOnly'),
+            minRating: any(named: 'minRating'),
+            weekendOnly: any(named: 'weekendOnly'),
+            transportMode: any(named: 'transportMode'),
+            kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+            contentType: any(named: 'contentType'),
+            userLat: any(named: 'userLat'),
+            userLng: any(named: 'userLng'),
+            radiusKm: any(named: 'radiusKm'),
+            urgent: any(named: 'urgent'),
+          ),
+        ).thenAnswer((invocation) async {
+          appels.add(invocation.namedArguments);
+          return 8;
+        });
+        getIt.registerSingleton<AnnouncementRepository>(annRepo);
+
+        await pumpHome(tester);
+
+        // Mode courant Colis → le compteur annoncé est celui des trajets.
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+
+        await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
+
+        // Corridor seul : il part tel quel dans le compte.
+        expect(appels, isNotEmpty);
+        expect(appels.last[#departureCity], 'Paris');
+        expect(appels.last[#arrivalCity], 'Dakar');
+
+        final avantNearMe = appels.length;
+        await tester.tap(find.byKey(const Key('near-me-fab')));
+        await tester.pumpAndSettle();
+
+        // « Près de moi » neutralise le corridor dans la vraie recherche : le
+        // compteur doit annoncer ce que la bascule produira, donc compter sans
+        // corridor et avec le rayon. Lire `_filters` en direct au lieu de
+        // `toAnnouncementQuery()` remonterait ici la ville de départ.
+        expect(
+          appels.length,
+          greaterThan(avantNearMe),
+          reason: 'activer « près de moi » doit recompter l\'autre mode',
+        );
+        expect(appels.last[#departureCity], isNull);
+        expect(appels.last[#arrivalCity], isNull);
+        expect(appels.last[#radiusKm], isNotNull);
+        expect(appels.last[#userLat], isNotNull);
+      },
+    );
 
     testWidgets(
       '« Pour mes trajets » part au serveur, et rien quand la pastille est off',
