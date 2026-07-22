@@ -1415,8 +1415,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _onFiltersChanged(_filters.copyWith(matchingMyTrips: active));
   }
 
-  /// Sous-titre de l'en-tête quand la recherche colis est filtrée « sur mes
-  /// trajets » : ce qu'on a trouvé, et sur combien de trajets on a cherché.
+  /// Sous-titre de l'en-tête quand la recherche colis est filtrée sur les
+  /// trajets de l'utilisateur : ce qu'on a trouvé, et sur combien de trajets.
+  ///
+  /// Le mot « compatibles » est essentiel : ce filtre liste les demandes encore
+  /// libres qu'on POURRAIT prendre, pas les colis déjà embarqués sur ses
+  /// trajets, qui se consultent depuis le détail du trajet. Un titre du genre
+  /// « colis sur tes trajets » se lit à l'envers et fait chercher un colis
+  /// accepté qui n'a rien à faire ici.
+  ///
   /// [trips] à `null` = nombre de trajets actifs inconnu : on annonce les
   /// résultats sans inventer un « 0 trajet actif » que rien ne prouve.
   String _matchingSubtitle(PackageRequestSearchState prState, int? trips) {
@@ -1425,8 +1432,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (trips == null) {
       return resultats;
     }
-    return '$resultats · '
-        '$trips trajet${trips > 1 ? 's' : ''} actif${trips > 1 ? 's' : ''}';
+    // « compatible » s'accorde avec le nombre de résultats, « trajet » avec le
+    // nombre de trajets : les deux varient indépendamment.
+    final compatible = 'compatible${n > 1 ? 's' : ''}';
+    final avecTrajets =
+        trips > 1 ? 'tes $trips trajets' : 'ton trajet';
+    return '$resultats, $compatible avec $avecTrajets';
   }
 
   Widget _buildSheet(
@@ -1527,7 +1538,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               !_mode.isParcels
                                   ? 'VOYAGEURS DISPONIBLES'
                                   : matching
-                                  ? 'COLIS SUR TES TRAJETS'
+                                  ? 'COLIS COMPATIBLES'
                                   : 'DEMANDES D\'ENVOI',
                               style: tt.labelSmall?.copyWith(
                                 color: cs.onSurfaceVariant,

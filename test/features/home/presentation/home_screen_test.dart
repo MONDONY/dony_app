@@ -1566,9 +1566,9 @@ void main() {
       await tester.tap(find.text('Colis'));
       await tester.pumpAndSettle();
 
-      expect(find.text('COLIS SUR TES TRAJETS'), findsOneWidget);
+      expect(find.text('COLIS COMPATIBLES'), findsOneWidget);
       expect(find.text("DEMANDES D'ENVOI"), findsNothing);
-      expect(find.text('2 résultats · 3 trajets actifs'), findsOneWidget);
+      expect(find.text('2 résultats, compatibles avec tes 3 trajets'), findsOneWidget);
     });
 
     testWidgets('un seul résultat et un seul trajet : accord au singulier', (
@@ -1584,7 +1584,7 @@ void main() {
       await tester.tap(find.text('Colis'));
       await tester.pumpAndSettle();
 
-      expect(find.text('1 résultat · 1 trajet actif'), findsOneWidget);
+      expect(find.text('1 résultat, compatible avec ton trajet'), findsOneWidget);
     });
 
     testWidgets('filtre inactif : l\'en-tête reste celui des demandes', (
@@ -1600,7 +1600,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
-      expect(find.text('COLIS SUR TES TRAJETS'), findsNothing);
+      expect(find.text('COLIS COMPATIBLES'), findsNothing);
     });
   });
 
