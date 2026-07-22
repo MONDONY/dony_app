@@ -38,7 +38,6 @@ import 'package:dony/features/matching/presentation/screens/bid_detail_screen.da
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
-import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
@@ -207,7 +206,7 @@ final appRouter = GoRouter(
       return '/auth/method';
     }
 
-    const guardedRoutes = {'/announcements/create'};
+    const guardedRoutes = {'/trips/create'};
     if (guardedRoutes.contains(state.matchedLocation)) {
       final accountState = context.read<StripeAccountBloc>().state;
       if (accountState is StripeAccountReady) {
@@ -451,31 +450,6 @@ final appRouter = GoRouter(
         );
       },
     ),
-    // ── Créer / modifier une annonce (plein écran, hors shell) ──────────────
-    GoRoute(
-      path: '/announcements/create',
-      builder: (context, state) {
-        final announcement = state.extra is AnnouncementModel
-            ? state.extra as AnnouncementModel
-            : null;
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
-            BlocProvider(
-              create: (_) =>
-                  getIt<CommissionMethodBloc>()
-                    ..add(CommissionMethodLoadRequested()),
-            ),
-            BlocProvider(
-              create: (_) =>
-                  getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
-            ),
-          ],
-          child: CreateAnnouncementScreen(announcement: announcement),
-        );
-      },
-    ),
-
     // ── Créer / modifier un trajet (plein écran, slide-up) ───────────────────
     GoRoute(
       path: '/trips/create',

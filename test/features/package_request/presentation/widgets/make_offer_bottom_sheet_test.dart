@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
@@ -98,6 +99,116 @@ void main() {
         ),
         theme: AppTheme.light,
       );
+
+  group('MakeOfferBottomSheet — garde-fou de sortie', () {
+    /// Ouvre la feuille et laisse passer les deux post-frames qui figent la
+    /// signature de référence.
+    Future<void> open(WidgetTester tester) async {
+      await tester.pumpWidget(wrap(initialDate: DateTime(2026, 6, 12)));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
+    }
+
+    /// Saisit un message : modification utilisateur incontestable.
+    Future<void> typeSomething(WidgetTester tester) async {
+      await tester.enterText(
+        find.byType(TextFormField).last,
+        'Je peux prendre ce colis',
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// Simule le retour système (Android) / swipe back (iOS).
+    Future<void> systemBack(WidgetTester tester) async {
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'sans saisie, le retour système ferme la feuille sans confirmation',
+      (tester) async {
+        await open(tester);
+        expect(find.text('Faire une offre'), findsOneWidget);
+
+        await systemBack(tester);
+
+        expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+        expect(find.text('Faire une offre'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'après saisie, le retour système demande confirmation',
+      (tester) async {
+        await open(tester);
+        await typeSomething(tester);
+
+        await systemBack(tester);
+
+        expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+        expect(find.textContaining('ne seront pas'), findsOneWidget);
+        // La feuille est toujours là tant qu'on n'a pas confirmé.
+        expect(find.text('Faire une offre'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'après saisie, le glissement vers le bas ne ferme pas la feuille',
+      (tester) async {
+        // `ModalBottomSheetRoute` n'honore PAS `PopScope` pour le glissement
+        // (vérifié sur Flutter 3.44 : la feuille se fermait malgré le garde).
+        // La feuille est donc ouverte avec `enableDrag: false`, et ce test
+        // verrouille cette décision.
+        await open(tester);
+        await typeSomething(tester);
+
+        await tester.drag(
+          find.text('Faire une offre'),
+          const Offset(0, 600),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Faire une offre'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'après saisie, la croix de la feuille demande aussi confirmation',
+      (tester) async {
+        // `Navigator.pop()` ne consulte pas `PopScope` : sans le détour par
+        // `onCloseRequested`, la croix viderait la saisie sans rien demander.
+        await open(tester);
+        await typeSomething(tester);
+
+        final closeBtn = find.ancestor(
+          of: find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+          matching: find.byType(IconButton),
+        );
+        expect(closeBtn, findsOneWidget);
+        await tester.tap(closeBtn);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+        expect(find.text('Faire une offre'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '« Quitter » confirmé ferme bien la feuille',
+      (tester) async {
+        await open(tester);
+        await typeSomething(tester);
+        await systemBack(tester);
+
+        await tester.tap(find.text('Quitter'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Faire une offre'), findsNothing);
+      },
+    );
+  });
 
   group('MakeOfferBottomSheet', () {
     testWidgets(

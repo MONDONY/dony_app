@@ -868,7 +868,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return;
     }
     final summary = context.read<TripsSummaryCubit>();
-    await router.push<void>('/announcements/create');
+    await router.push<void>('/trips/create');
     if (!mounted) {
       return;
     }

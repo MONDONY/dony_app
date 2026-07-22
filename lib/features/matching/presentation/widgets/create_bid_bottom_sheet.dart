@@ -129,6 +129,35 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _disclaimerNotifier = ValueNotifier<bool>(false);
   final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
 
+  // ── Garde-fou de sortie ─────────────────────────────────────────────────────
+  /// Signature du formulaire à l'ouverture. Nulle tant que les post-frames
+  /// d'initialisation n'ont pas été purgés (cf. `_captureInitialSignature`).
+  String? _initialSignature;
+
+  /// Évite d'empiler deux dialogues si le retour système est répété.
+  bool _confirmingExit = false;
+
+  /// État saisissable de l'offre. Exclut la mécanique interne (étape courante,
+  /// devis calculé, catalogue chargé en asynchrone).
+  String get _formSignature => [
+        _descCtrl.text,
+        _valueCtrl.text,
+        _recipientNameCtrl.text,
+        _recipientPhoneCtrl.text,
+        _customItemCtrl.text,
+        _promoCtrl.text,
+        _weightNotifier.value,
+        (_categoriesNotifier.value.toList()..sort()).join(','),
+        _disclaimerNotifier.value,
+        (_gridQuantitiesNotifier.value.entries
+                .map((e) => '${e.key}:${e.value}')
+                .toList()
+              ..sort())
+            .join(','),
+        _methodNotifier.value,
+        _photosCubit.state.length,
+      ].join('|');
+
   // ── Multi-step state ────────────────────────────────────────────────────────
   final _stepNotifier = ValueNotifier<_FormStep>(_FormStep.form);
   _CollectedFormData? _formData;
@@ -197,6 +226,67 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         .addPostFrameCallback((_) => _syncFormButtonState());
 
     unawaited(_loadCatalog());
+    for (final l in _dirtySources) {
+      l.addListener(_recomputeDirty);
+    }
+    _photosSub = _photosCubit.stream.listen((_) => _recomputeDirty());
+    _captureInitialSignature();
+  }
+
+  /// Prend la référence de comparaison une fois les post-frames
+  /// d'initialisation passés (le premier build en enregistre lui-même), pour
+  /// qu'une feuille fraîchement ouverte ne soit jamais considérée comme
+  /// saisie. Aucune saisie utilisateur ne tient en deux frames.
+  void _captureInitialSignature() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _initialSignature = _formSignature;
+        _recomputeDirty();
+      });
+    });
+  }
+
+  /// Saleté observable. `PopScope.canPop` est lu au build : taper dans un
+  /// champ ne provoquant aucun rebuild, sans ce notifier le garde-fou
+  /// resterait figé sur sa valeur d'ouverture.
+  final _isDirtyNotifier = ValueNotifier<bool>(false);
+
+  void _recomputeDirty() {
+    _isDirtyNotifier.value =
+        _initialSignature != null && _formSignature != _initialSignature;
+  }
+
+  /// Tout ce que l'utilisateur peut saisir, pour brancher `_recomputeDirty`.
+  List<Listenable> get _dirtySources => [
+        _descCtrl,
+        _valueCtrl,
+        _recipientNameCtrl,
+        _recipientPhoneCtrl,
+        _customItemCtrl,
+        _promoCtrl,
+        _weightNotifier,
+        _categoriesNotifier,
+        _disclaimerNotifier,
+        _gridQuantitiesNotifier,
+        _methodNotifier,
+      ];
+
+  /// Les photos vivent dans un `Cubit`, pas un `Listenable` : on suit son flux.
+  StreamSubscription<void>? _photosSub;
+
+  /// Sortie demandée depuis l'étape formulaire (croix ou retour système).
+  Future<void> _handleExitRequest() async {
+    if (!_isDirtyNotifier.value) {
+      if (mounted) context.pop();
+      return;
+    }
+    if (_confirmingExit) return;
+    _confirmingExit = true;
+    final confirmed = await DonyDialog.confirmDiscard(context);
+    _confirmingExit = false;
+    if (!mounted || confirmed != true) return;
+    context.pop();
   }
 
   Future<void> _loadCatalog() async {
@@ -208,6 +298,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   @override
   void dispose() {
+    for (final l in _dirtySources) {
+      l.removeListener(_recomputeDirty);
+    }
+    unawaited(_photosSub?.cancel());
+    _isDirtyNotifier.dispose();
     _btnConfigNotifier.dispose();
     _bidBloc.close();
     _paymentBloc.close();
@@ -539,12 +634,25 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
         ),
       ],
-      child: ValueListenableBuilder<_FormStep>(
-        valueListenable: _stepNotifier,
-        builder: (context, step, _) => PopScope(
-          canPop: step == _FormStep.form,
+      // Un seul builder pour les deux signaux : le fichier utilise déjà cet
+      // idiome plus bas, et deux ValueListenableBuilder imbriqués ajoutaient
+      // un niveau d'indentation sans rien apporter.
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_stepNotifier, _isDirtyNotifier]),
+        builder: (context, _) {
+          final step = _stepNotifier.value;
+          return PopScope(
+          // À l'étape paiement, le retour revient au formulaire. À l'étape
+          // formulaire il ferme la feuille : on ne l'autorise directement que
+          // si rien n'a été saisi.
+          canPop: step == _FormStep.form && !_isDirtyNotifier.value,
           onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) _stepNotifier.value = _FormStep.form;
+            if (didPop) return;
+            if (step != _FormStep.form) {
+              _stepNotifier.value = _FormStep.form;
+            } else {
+              unawaited(_handleExitRequest());
+            }
           },
           child: Scaffold(
             backgroundColor: cs.surface,
@@ -558,7 +666,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   if (step == _FormStep.paymentPicker) {
                     _stepNotifier.value = _FormStep.form;
                   } else {
-                    context.pop();
+                    unawaited(_handleExitRequest());
                   }
                 },
               ),
@@ -608,7 +716,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               bidBloc: _bidBloc,
             ),
           ),
-        ),
+        );
+        },
       ),
     );
   }

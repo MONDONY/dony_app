@@ -40,6 +40,19 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     if (s.dateToleranceDays != null) _tolerance = s.dateToleranceDays!;
   }
 
+  /// Saisie locale non encore remontée au bloc.
+  ///
+  /// L'étape ne pousse son contenu qu'à `submit()` : sans cet accesseur, le
+  /// garde-fou de sortie du wizard serait aveugle à une étape 1 en cours de
+  /// remplissage et laisserait perdre la saisie sans rien demander.
+  bool get hasUnsubmittedInput {
+    final s = context.read<PackageRequestFormBloc>().state;
+    return _departureCity != s.departureCity ||
+        _arrivalCity != s.arrivalCity ||
+        _date != s.desiredDate ||
+        _tolerance != (s.dateToleranceDays ?? 2);
+  }
+
   void submit() {
     if (!_formKey.currentState!.validate()) {
       return;

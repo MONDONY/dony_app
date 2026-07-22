@@ -21,6 +21,7 @@ abstract final class DonyBottomSheet {
     String? subtitle,
     Widget? stickyBottom,
     bool isDismissible = true,
+    bool enableDrag = true,
     bool showHandle = true,
     bool isScrollControlled = true,
     bool isDanger = false,
@@ -33,6 +34,7 @@ abstract final class DonyBottomSheet {
       useRootNavigator: true,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
+      enableDrag: enableDrag,
       backgroundColor: Colors.transparent,
       constraints: heightFraction != null
           ? BoxConstraints(
@@ -143,7 +145,10 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    // `maybePop` consulte `PopScope`, contrairement à `pop` :
+                    // une feuille qui protège une saisie en cours ne se fait
+                    // donc plus vider par sa propre croix.
+                    onPressed: () => Navigator.maybePop(context),
                     icon: const DonyIcon('x', size: 20),
                     style: IconButton.styleFrom(
                       foregroundColor: cs.onSurfaceVariant,

@@ -41,6 +41,13 @@ class LieuxCapaciteStep extends StatelessWidget {
   /// un affichage en lecture seule. Les adresses restent éditables.
   final double? lockedCapacityKg;
 
+  /// Messages des adresses obligatoires non renseignées.
+  ///
+  /// Nuls par défaut : le parent ne les publie qu'après une première
+  /// interaction avec l'étape.
+  final String? pickupAddressError;
+  final String? deliveryAddressError;
+
   const LieuxCapaciteStep({
     super.key,
     this.initialPickupAddress,
@@ -50,6 +57,8 @@ class LieuxCapaciteStep extends StatelessWidget {
     required this.onPickupChanged,
     required this.onDeliveryChanged,
     this.lockedCapacityKg,
+    this.pickupAddressError,
+    this.deliveryAddressError,
   });
 
   @override
@@ -84,6 +93,10 @@ class LieuxCapaciteStep extends StatelessWidget {
             }
           },
         ).animate().fadeIn(delay: 80.ms),
+        DonyFieldError(
+          message: pickupAddressError,
+          textKey: const Key('pickup-address-error'),
+        ),
         const SizedBox(height: DonySpacing.base),
         AddressSelectorField(
           type: AddressSelectorType.livraison,
@@ -98,6 +111,10 @@ class LieuxCapaciteStep extends StatelessWidget {
             }
           },
         ).animate().fadeIn(delay: 90.ms),
+        DonyFieldError(
+          message: deliveryAddressError,
+          textKey: const Key('delivery-address-error'),
+        ),
         const SizedBox(height: DonySpacing.xxl),
 
         // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────────────

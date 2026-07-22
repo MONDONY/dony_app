@@ -42,6 +42,27 @@ abstract final class DonyDialog {
       ),
     );
   }
+
+  /// Confirmation d'abandon d'un formulaire en cours de saisie.
+  ///
+  /// Retourne `true` si l'utilisateur confirme vouloir quitter, `false` ou
+  /// `null` s'il préfère rester. Le message annonce explicitement la perte des
+  /// données : rien n'est mis en brouillon derrière.
+  ///
+  /// À n'appeler que si le formulaire est réellement entamé, sinon on impose
+  /// une confirmation pour rien à quelqu'un qui n'a fait qu'ouvrir l'écran.
+  static Future<bool?> confirmDiscard(BuildContext context) {
+    return show(
+      context,
+      title: 'Quitter sans enregistrer ?',
+      message: 'Les informations que vous avez saisies ne seront pas '
+          'conservées. Vous devrez tout ressaisir.',
+      confirmLabel: 'Quitter',
+      cancelLabel: 'Continuer la saisie',
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'circle-alert',
+    );
+  }
 }
 
 class _DonyDialogWidget extends StatelessWidget {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
@@ -50,6 +52,11 @@ class MakeOfferBottomSheet {
     await DonyBottomSheet.show<void>(
       context,
       title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
+      // Le glissement vers le bas appelle `Navigator.pop()` sans consulter
+      // `PopScope` (vérifié sur Flutter 3.44) : il contournerait la
+      // confirmation. La barrière et la croix, elles, passent par
+      // `maybePop` et honorent donc le garde.
+      enableDrag: false,
       wrapper: (child) => BlocProvider(
         create: (_) => getIt<NegotiationBloc>(),
         child: child,
@@ -120,6 +127,47 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   late final TextEditingController _bodyCtrl;
   final _dateNotifier = ValueNotifier<DateTime?>(null);
 
+  /// Signature de la saisie à l'ouverture, pour ne demander confirmation de
+  /// sortie que si l'utilisateur a modifié quelque chose. Les champs sont
+  /// pré-remplis (prix cible, poids), d'où la comparaison plutôt qu'un simple
+  /// test de non-vacuité.
+  String? _initialSignature;
+
+  /// Évite d'empiler deux dialogues sur retours système répétés.
+  bool _confirmingExit = false;
+
+  String get _formSignature => [
+        _priceCtrl.text,
+        _kgCtrl.text,
+        _bodyCtrl.text,
+        _dateNotifier.value,
+      ].join('|');
+
+  /// Saleté observable : `PopScope.canPop` est lu au build, or taper dans un
+  /// `TextFormField` ne provoque aucun rebuild. Sans ce notifier, le garde-fou
+  /// resterait figé sur sa valeur d'ouverture et se contournerait tout seul.
+  final _isDirtyNotifier = ValueNotifier<bool>(false);
+
+  bool get _isDirty => _isDirtyNotifier.value;
+
+  void _recomputeDirty() {
+    _isDirtyNotifier.value =
+        _initialSignature != null && _formSignature != _initialSignature;
+  }
+
+  Future<void> _handleExitRequest() async {
+    if (!_isDirty) {
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+      return;
+    }
+    if (_confirmingExit) return;
+    _confirmingExit = true;
+    final confirmed = await DonyDialog.confirmDiscard(context);
+    _confirmingExit = false;
+    if (!mounted || confirmed != true) return;
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -134,14 +182,34 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(1));
     _bodyCtrl = TextEditingController();
     if (widget.initialDate != null) _dateNotifier.value = widget.initialDate;
+
+    _priceCtrl.addListener(_recomputeDirty);
+    _kgCtrl.addListener(_recomputeDirty);
+    _bodyCtrl.addListener(_recomputeDirty);
+    _dateNotifier.addListener(_recomputeDirty);
+
+    // Après le premier build : les champs pré-remplis font partie de la
+    // référence, pas d'une saisie utilisateur.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _initialSignature = _formSignature;
+        _recomputeDirty();
+      });
+    });
   }
 
   @override
   void dispose() {
+    _priceCtrl.removeListener(_recomputeDirty);
+    _kgCtrl.removeListener(_recomputeDirty);
+    _bodyCtrl.removeListener(_recomputeDirty);
+    _dateNotifier.removeListener(_recomputeDirty);
     _priceCtrl.dispose();
     _kgCtrl.dispose();
     _bodyCtrl.dispose();
     _dateNotifier.dispose();
+    _isDirtyNotifier.dispose();
     super.dispose();
   }
 
@@ -181,7 +249,18 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   @override
   Widget build(BuildContext context) {
     final estimate = widget.estimate;
-    return BlocListener<NegotiationBloc, NegotiationState>(
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isDirtyNotifier,
+      builder: (context, isDirty, child) => PopScope(
+        // Feuille modale : bloque le retour système et le glissement vers le
+        // bas tant qu'il y a de la saisie, pour repasser par la confirmation.
+        canPop: !isDirty,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) unawaited(_handleExitRequest());
+        },
+        child: child!,
+      ),
+      child: BlocListener<NegotiationBloc, NegotiationState>(
       listener: (ctx, state) {
         if (state is NegotiationLoaded) {
           DonySnackbar.show(
@@ -352,6 +431,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

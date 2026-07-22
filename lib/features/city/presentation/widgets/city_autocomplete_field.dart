@@ -28,7 +28,14 @@ class CityAutocompleteField extends StatefulWidget {
     this.fieldKey,
     this.requiredLabel = false,
     this.onCleared,
+    this.errorText,
   });
+
+  /// Message d'erreur affiché sous le champ (bordure rouge incluse).
+  ///
+  /// Optionnel, `null` par défaut : les appelants qui ne le fournissent pas
+  /// gardent exactement le rendu historique.
+  final String? errorText;
 
   final String label;
   final void Function(CityModel city) onSelected;
@@ -151,6 +158,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
             // Si requiredLabel, label widget (RichText) ; sinon labelText.
             label: labelWidget,
             labelText: labelWidget == null ? widget.label : null,
+            errorText: widget.errorText,
             prefixIcon: widget.prefixIcon,
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(

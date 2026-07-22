@@ -33,6 +33,7 @@ export 'package:dony/core/design/widgets/dony_aurora_background.dart';
 export 'package:dony/core/design/widgets/dony_glass.dart';
 // Overlays
 export 'package:dony/core/design/widgets/dony_dialog.dart';
+export 'package:dony/core/design/widgets/dony_field_error.dart';
 export 'package:dony/core/design/widgets/dony_empty_state.dart';
 export 'package:dony/core/design/widgets/dony_icon_container.dart';
 export 'package:dony/core/design/widgets/dony_info_row.dart';

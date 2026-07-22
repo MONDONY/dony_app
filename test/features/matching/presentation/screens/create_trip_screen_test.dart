@@ -26,6 +26,8 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart' show BidPaymentMethod;
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -1361,6 +1363,630 @@ void main() {
         expect(didPop, isTrue);
       },
     );
+  });
+
+  // ── Group: Fenêtre de remise — rendu et validation inline ────────────────────
+  // Migré de create_announcement_handover_test.dart lors de la suppression de
+  // CreateAnnouncementScreen (doublon de CreateTripScreen). Les rows sont
+  // rendues au step 0, à la suite de TrajetStep ; le préfixe `sheet-` des clés
+  // est un reliquat de nommage, ce ne sont pas des bottom sheets.
+
+  group('CreateTripScreen — Fenêtre de remise (rendu)', () {
+    testWidgets(
+      'les deux rows début/fin sont affichées en mode création',
+      (tester) async {
+        setupViewport(tester);
+
+        await _pumpAndDrain(
+          tester,
+          _wrapWithRouter(const CreateTripScreen(args: null)),
+        );
+
+        expect(find.byKey(const Key('sheet-handover-start-row')), findsOneWidget);
+        expect(find.byKey(const Key('sheet-handover-end-row')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'mode création : les deux rows affichent "Choisir" (aucune valeur)',
+      (tester) async {
+        setupViewport(tester);
+
+        await _pumpAndDrain(
+          tester,
+          _wrapWithRouter(const CreateTripScreen(args: null)),
+        );
+
+        expect(find.text('Choisir'), findsNWidgets(2));
+      },
+    );
+
+    testWidgets(
+      'mode édition préremplit les valeurs existantes (plus aucun "Choisir")',
+      (tester) async {
+        setupViewport(tester);
+
+        // _makeFullAnnouncement() porte une fenêtre 16:00 → 18:00.
+        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+        await _pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
+        );
+
+        expect(find.text('Choisir'), findsNothing);
+        expect(find.text('01/08 16:00'), findsOneWidget);
+        expect(find.text('01/08 18:00'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'fenêtre inversée (fin avant début) affiche le message inline',
+      (tester) async {
+        setupViewport(tester);
+
+        final ann = AnnouncementModel(
+          id: 'ann-handover-inverted',
+          travelerId: 'trav-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 8, 20),
+          departureTime: '22:00',
+          availableKg: 10.0,
+          totalKg: 23.0,
+          pricePerKg: 8.0,
+          status: 'ACTIVE',
+          bidsCount: 0,
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+          // Fin AVANT début → fenêtre invalide.
+          handoverWindowStart: DateTime(2026, 8, 20, 18, 0),
+          handoverWindowEnd: DateTime(2026, 8, 20, 16, 0),
+          transportMode: TransportMode.plane,
+          acceptedPaymentMethods: {BidPaymentMethod.stripe},
+          acceptedContentTypes: const ['Vêtements'],
+          refusedTypes: const [],
+        );
+
+        await _pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: CreateTripArgs(announcement: ann))),
+        );
+
+        expect(find.byKey(const Key('sheet-handover-error')), findsOneWidget);
+        expect(
+          find.text('La fin de la fenêtre doit être après le début.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'fenêtre valide : aucun message d\'erreur inline',
+      (tester) async {
+        setupViewport(tester);
+
+        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+        await _pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
+        );
+
+        expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
+      },
+    );
+  });
+
+  // ── Group: Fenêtre de remise — garde au submit ───────────────────────────────
+  // Migré de create_announcement_handover_test.dart. Capture l'instance
+  // AnnouncementBloc créée par l'écran pour pouvoir verify() le dispatch.
+
+  group('CreateTripScreen — Fenêtre de remise (submit)', () {
+    late _MockAnnouncementBloc announcementBloc;
+
+    setUp(() {
+      announcementBloc = _MockAnnouncementBloc();
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(() => announcementBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
+      when(() => announcementBloc.add(any())).thenReturn(null);
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<AnnouncementBloc>()) {
+        getIt.unregister<AnnouncementBloc>();
+      }
+      getIt.registerFactory<AnnouncementBloc>(() {
+        final b = _MockAnnouncementBloc();
+        when(() => b.state).thenReturn(AnnouncementInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+    });
+
+    /// Navigue jusqu'au step 2 ("Enregistrer") avec l'annonce fournie.
+    Future<void> navigateToStep2(
+      WidgetTester tester,
+      AnnouncementModel ann,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(args: CreateTripArgs(announcement: ann)),
+        ),
+      );
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Enregistrer'), findsOneWidget);
+    }
+
+    testWidgets(
+      'fenêtre absente : "Continuer" désactivé au step 0, aucun dispatch possible',
+      (tester) async {
+        // Annonce complète MAIS sans fenêtre de remise. Dans le wizard, la
+        // garde qui mord en premier n'est pas celle de _submit() ("Fenêtre de
+        // remise obligatoire", défense en profondeur inatteignable par l'UI)
+        // mais _updateCanContinue(), qui désactive "Continuer" dès le step 0.
+        final ann = AnnouncementModel(
+          id: 'ann-no-handover',
+          travelerId: 'trav-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 8, 1),
+          departureTime: '22:00',
+          arrivalTime: '10:30',
+          availableKg: 10.0,
+          totalKg: 23.0,
+          pricePerKg: 8.0,
+          status: 'ACTIVE',
+          bidsCount: 0,
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+          pickupAddress:
+              const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
+          deliveryAddress: const AddressData(
+              label: 'Dakar Centre', lat: 14.716, lng: -17.467),
+          transportMode: TransportMode.plane,
+          acceptedPaymentMethods: {BidPaymentMethod.stripe},
+          acceptedContentTypes: const ['Vêtements'],
+          refusedTypes: const [],
+        );
+
+        tester.view.physicalSize = const Size(800, 1024);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await _pumpAndDrain(
+          tester,
+          _wrapWithRouter(
+            CreateTripScreen(args: CreateTripArgs(announcement: ann)),
+          ),
+        );
+
+        // Le bouton "Continuer" existe mais est inerte.
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(continueBtn, findsOneWidget);
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+
+        // Un tap ne fait pas avancer le wizard : on reste au step 0.
+        await tester.tap(continueBtn);
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('Enregistrer'), findsNothing);
+        verifyNever(
+          () => announcementBloc
+              .add(any(that: isA<AnnouncementUpdateRequested>())),
+        );
+      },
+    );
+
+    testWidgets(
+      'submit en édition forwarde la fenêtre de remise au bloc',
+      (tester) async {
+        final ann = _makeFullAnnouncement();
+
+        await navigateToStep2(tester, ann);
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.text('Fenêtre de remise obligatoire'), findsNothing);
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: isA<AnnouncementUpdateRequested>()
+                  .having(
+                    (e) => e.handoverWindowStart,
+                    'handoverWindowStart',
+                    ann.handoverWindowStart,
+                  )
+                  .having(
+                    (e) => e.handoverWindowEnd,
+                    'handoverWindowEnd',
+                    ann.handoverWindowEnd,
+                  ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+  });
+
+  // ── Group: Toggle Espèces et encart commission ───────────────────────────────
+  // Migré de create_announcement_cash_toggle_test.dart. Le switch lui-même est
+  // couvert au niveau widget par prix_conditions_step_test ; ce qui est unique
+  // ici, c'est la révélation de CashCommissionNotice depuis l'écran complet.
+
+  group('CreateTripScreen — Toggle Espèces (encart commission)', () {
+    /// Enregistre dans getIt un StripeAccountBloc au statut voulu.
+    ///
+    /// CreateTripScreen.build() crée son propre `BlocProvider<StripeAccountBloc>`
+    /// depuis getIt, qui masque celui de `_wrapWithRouter` — c'est donc bien
+    /// cette instance-ci que lit `_isStripeConfigured()`.
+    void registerStripeBloc({required bool onboardingComplete}) {
+      final b = _MockStripeAccountBloc();
+      when(() => b.state).thenReturn(
+        StripeAccountReady(
+          ConnectAccountStatus(
+            status: onboardingComplete
+                ? 'ONBOARDING_COMPLETE'
+                : 'PENDING_ONBOARDING',
+          ),
+        ),
+      );
+      when(() => b.stream).thenAnswer((_) => const Stream.empty());
+      if (getIt.isRegistered<StripeAccountBloc>()) {
+        getIt.unregister<StripeAccountBloc>();
+      }
+      getIt.registerFactory<StripeAccountBloc>(() => b);
+    }
+
+    tearDown(() {
+      if (getIt.isRegistered<StripeAccountBloc>()) {
+        getIt.unregister<StripeAccountBloc>();
+      }
+      getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
+    });
+
+    /// Navigue jusqu'au step 2, où vit PrixConditionsStep.
+    Future<void> navigateToStep2(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    testWidgets(
+      'Stripe configuré : le switch Espèces est actionnable sans carte de commission',
+      (tester) async {
+        registerStripeBloc(onboardingComplete: true);
+        await navigateToStep2(tester);
+
+        final cashSwitch = find.byKey(const Key('payment-method-cash'));
+        expect(cashSwitch, findsOneWidget);
+
+        // On assert sur le SwitchListTile : le `Switch` interne construit par
+        // Material n'expose pas le `onChanged` d'origine.
+        final tile = tester.widget<SwitchListTile>(cashSwitch);
+        // La carte de commission n'est plus requise à la création : la
+        // vérification est reportée à l'acceptation de l'offre.
+        expect(tile.onChanged, isNotNull);
+        // L'ancien lien "Ajouter une carte commission" ne doit plus exister.
+        expect(find.byKey(const Key('add-commission-card-link')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Stripe configuré : décocher Espèces masque CashCommissionNotice',
+      (tester) async {
+        registerStripeBloc(onboardingComplete: true);
+        await navigateToStep2(tester);
+
+        // _makeFullAnnouncement() accepte déjà CASH → l'encart est visible.
+        expect(find.byType(CashCommissionNotice), findsOneWidget);
+
+        // Le tile est sous la ligne de flottaison au step 2 : sans
+        // ensureVisible le tap tomberait hors hit-test et le test passerait
+        // à tort.
+        final cashSwitch = find.byKey(const Key('payment-method-cash'));
+        await tester.ensureVisible(cashSwitch);
+        await tester.pump();
+        await tester.tap(cashSwitch);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.byType(CashCommissionNotice), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Stripe non configuré : Espèces est forcé ON et verrouillé',
+      (tester) async {
+        registerStripeBloc(onboardingComplete: false);
+        await navigateToStep2(tester);
+
+        final cashSwitch = find.byKey(const Key('payment-method-cash'));
+        expect(cashSwitch, findsOneWidget);
+
+        // Sans Stripe, CASH est la seule méthode possible : la ligne est
+        // affichée à ON et non désactivable (onChanged == null).
+        final tile = tester.widget<SwitchListTile>(cashSwitch);
+        expect(tile.value, isTrue);
+        expect(tile.onChanged, isNull);
+
+        // L'encart commission reste visible puisque CASH est actif.
+        expect(find.byType(CashCommissionNotice), findsOneWidget);
+      },
+    );
+  });
+
+  // ── Group: gating des champs obligatoires ────────────────────────────────────
+
+  group('CreateTripScreen — Champs obligatoires (gating)', () {
+    /// Annonce complète, moins les champs passés à null.
+    AnnouncementModel makeAnnouncement({
+      String? departureTime = '22:00',
+      AddressData? pickupAddress =
+          const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
+      AddressData? deliveryAddress =
+          const AddressData(label: 'Dakar Centre', lat: 14.716, lng: -17.467),
+      TimeOfDay? arrivalTime,
+    }) =>
+        AnnouncementModel(
+          id: 'ann-gating',
+          travelerId: 'trav-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 8, 1),
+          departureTime: departureTime,
+          arrivalTime: arrivalTime == null
+              ? null
+              : '${arrivalTime.hour.toString().padLeft(2, '0')}:${arrivalTime.minute.toString().padLeft(2, '0')}',
+          availableKg: 10.0,
+          totalKg: 23.0,
+          pricePerKg: 8.0,
+          status: 'ACTIVE',
+          bidsCount: 0,
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+          handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
+          handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+          pickupAddress: pickupAddress,
+          deliveryAddress: deliveryAddress,
+          transportMode: TransportMode.plane,
+          acceptedPaymentMethods: {BidPaymentMethod.stripe},
+          acceptedContentTypes: const ['Vêtements'],
+          refusedTypes: const [],
+        );
+
+    Future<void> pump(WidgetTester tester, AnnouncementModel? ann) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: ann == null ? null : CreateTripArgs(announcement: ann),
+          ),
+        ),
+      );
+    }
+
+    // ── Le bug corrigé : l'heure de départ ne bloquait pas l'étape 0 ──────────
+
+    testWidgets(
+      'sans heure de départ, "Continuer" est désactivé à l\'étape 0',
+      (tester) async {
+        // _submit() refuse une annonce sans heure de départ (D1), mais
+        // _updateCanContinue() omettait ce champ : on pouvait traverser
+        // l'étape 0 puis se retrouver bloqué au submit.
+        await pump(tester, makeAnnouncement(departureTime: null));
+
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(continueBtn, findsOneWidget);
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'avec heure de départ, "Continuer" est actif à l\'étape 0',
+      (tester) async {
+        await pump(tester, makeAnnouncement());
+
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
+      },
+    );
+
+    // ── Un formulaire vierge ne s'ouvre pas en rouge ──────────────────────────
+
+    testWidgets(
+      'création : aucun message d\'erreur à l\'ouverture (formulaire vierge)',
+      (tester) async {
+        await pump(tester, null);
+
+        // Rien n'est rempli, mais l'utilisateur n'a encore rien touché.
+        expect(find.text('Ville de départ obligatoire'), findsNothing);
+        expect(find.text('Heure de départ obligatoire'), findsNothing);
+        expect(find.text('Date de départ obligatoire'), findsNothing);
+        expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
+        // Et « Continuer » est bien inerte.
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+      },
+    );
+
+    // ── Après une interaction, ce qui manque s'affiche ────────────────────────
+
+    testWidgets(
+      'après une interaction, les champs manquants affichent leur message',
+      (tester) async {
+        // Annonce sans heure de départ, avec une heure d'arrivée : effacer
+        // cette dernière est une interaction utilisateur qui arme l'affichage.
+        await pump(
+          tester,
+          makeAnnouncement(
+            departureTime: null,
+            arrivalTime: const TimeOfDay(hour: 10, minute: 30),
+          ),
+        );
+
+        // Avant interaction : rien en rouge.
+        expect(find.text('Heure de départ obligatoire'), findsNothing);
+
+        // Effacer l'heure d'arrivée (bouton « x » du champ optionnel).
+        final clearBtn = find.descendant(
+          of: find.byKey(const Key('arrivalTimeField')),
+          matching: find.byType(IconButton),
+        );
+        expect(clearBtn, findsOneWidget);
+        await tester.tap(clearBtn);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Le seul champ obligatoire manquant est signalé.
+        expect(find.text('Heure de départ obligatoire'), findsOneWidget);
+        // Les champs renseignés ne le sont pas.
+        expect(find.text('Ville de départ obligatoire'), findsNothing);
+        expect(find.text('Date de départ obligatoire'), findsNothing);
+      },
+    );
+
+    // ── Étape 1 : entrer dans l'étape révèle ses attentes ─────────────────────
+
+    testWidgets(
+      'étape 1 : les adresses manquantes sont signalées dès l\'entrée',
+      (tester) async {
+        await pump(
+          tester,
+          makeAnnouncement(pickupAddress: null, deliveryAddress: null),
+        );
+
+        // Étape 0 complète → on peut avancer.
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.byKey(const Key('pickup-address-error')), findsOneWidget);
+        expect(find.byKey(const Key('delivery-address-error')), findsOneWidget);
+
+        // Et « Continuer » de l'étape 1 est inerte.
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'étape 1 : adresses renseignées, aucune erreur et "Continuer" actif',
+      (tester) async {
+        await pump(tester, makeAnnouncement());
+
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.byKey(const Key('pickup-address-error')), findsNothing);
+        expect(find.byKey(const Key('delivery-address-error')), findsNothing);
+
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
+      },
+    );
+
+    // ── Garde-fou de sortie ───────────────────────────────────────────────────
+
+    /// Efface l'heure d'arrivée : une modification utilisateur réelle, sans
+    /// dépendre d'un sélecteur natif.
+    Future<void> editSomething(WidgetTester tester) async {
+      final clearBtn = find.descendant(
+        of: find.byKey(const Key('arrivalTimeField')),
+        matching: find.byType(IconButton),
+      );
+      expect(clearBtn, findsOneWidget);
+      await tester.tap(clearBtn);
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets(
+      'sortie sans saisie : la croix ferme directement, sans confirmation',
+      (tester) async {
+        await pump(tester, null);
+        // Laisse passer les post-frames qui stabilisent la référence.
+        await tester.pump();
+        await tester.pump();
+
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'sortie après saisie : la croix demande confirmation et annonce la perte',
+      (tester) async {
+        await pump(
+          tester,
+          makeAnnouncement(arrivalTime: const TimeOfDay(hour: 10, minute: 30)),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        await editSomething(tester);
+
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+        expect(
+          find.textContaining('ne seront pas'),
+          findsOneWidget,
+          reason: 'la perte des données doit être annoncée explicitement',
+        );
+        expect(find.text('Continuer la saisie'), findsOneWidget);
+        expect(find.text('Quitter'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '« Continuer la saisie » referme le dialogue et garde le formulaire',
+      (tester) async {
+        await pump(
+          tester,
+          makeAnnouncement(arrivalTime: const TimeOfDay(hour: 10, minute: 30)),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        await editSomething(tester);
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Continuer la saisie'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+      },
+    );
+
   });
 }
 
