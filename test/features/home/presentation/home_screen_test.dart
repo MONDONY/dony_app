@@ -1269,6 +1269,45 @@ void main() {
     });
 
     testWidgets(
+      'ville de départ seule : suffixe « au départ de Lyon »',
+      (tester) async {
+        await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+
+        await tester.tap(find.byKey(const Key('corridor-bar')));
+        await tester.pumpAndSettle();
+        await _choisirVille(tester, const Key('filter-departure-city'), 'Lyon');
+        await tester.tap(find.text('Rechercher'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
+        expect(
+          labelTuile(tester),
+          '5 colis cherchent un voyageur au départ de Lyon',
+        );
+        // Jamais de tiret cadratin dans un texte affiché.
+        expect(labelTuile(tester), isNot(contains('—')));
+      },
+    );
+
+    testWidgets(
+      'ville d\'arrivée seule : suffixe « vers Bamako »',
+      (tester) async {
+        await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+
+        await tester.tap(find.byKey(const Key('corridor-bar')));
+        await tester.pumpAndSettle();
+        await _choisirVille(tester, const Key('filter-arrival-city'), 'Bamako');
+        await tester.tap(find.text('Rechercher'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
+        expect(labelTuile(tester), '5 colis cherchent un voyageur vers Bamako');
+        // Jamais de tiret cadratin dans un texte affiché.
+        expect(labelTuile(tester), isNot(contains('—')));
+      },
+    );
+
+    testWidgets(
       'sans corridor, le libellé n\'affiche ni flèche orpheline ni corridor vide',
       (tester) async {
         await pumpHome(tester, tripResults: const [], otherModeCount: 5);
@@ -1324,6 +1363,101 @@ void main() {
 
       expect(labelTuile(tester), '12 voyageurs passent sur Lyon → Bamako');
     });
+
+    testWidgets(
+      'en mode Colis, un seul voyageur de l\'autre côté : accord au singulier',
+      (tester) async {
+        final annRepo = MockAnnouncementRepository();
+        when(
+          () => annRepo.countAnnouncements(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDateFrom: any(named: 'departureDateFrom'),
+            departureDateTo: any(named: 'departureDateTo'),
+            minAvailableKg: any(named: 'minAvailableKg'),
+            maxAvailableKg: any(named: 'maxAvailableKg'),
+            maxPricePerKg: any(named: 'maxPricePerKg'),
+            kiloProOnly: any(named: 'kiloProOnly'),
+            minRating: any(named: 'minRating'),
+            weekendOnly: any(named: 'weekendOnly'),
+            transportMode: any(named: 'transportMode'),
+            kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+            contentType: any(named: 'contentType'),
+            userLat: any(named: 'userLat'),
+            userLng: any(named: 'userLng'),
+            radiusKm: any(named: 'radiusKm'),
+            urgent: any(named: 'urgent'),
+          ),
+        ).thenAnswer((_) async => 1);
+        getIt.registerSingleton<AnnouncementRepository>(annRepo);
+
+        await pumpHome(tester);
+
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+        await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+        expect(labelTuile(tester), '1 voyageur passe sur Lyon → Bamako');
+      },
+    );
+  });
+
+  group('découverte croisée — bouton "Effacer les filtres"', () {
+    testWidgets(
+      'filtres actifs, autre mode vide : le bouton est visible et efface '
+      'les filtres au tap',
+      (tester) async {
+        final annRepo = MockAnnouncementRepository();
+        when(
+          () => annRepo.countAnnouncements(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            departureDateFrom: any(named: 'departureDateFrom'),
+            departureDateTo: any(named: 'departureDateTo'),
+            minAvailableKg: any(named: 'minAvailableKg'),
+            maxAvailableKg: any(named: 'maxAvailableKg'),
+            maxPricePerKg: any(named: 'maxPricePerKg'),
+            kiloProOnly: any(named: 'kiloProOnly'),
+            minRating: any(named: 'minRating'),
+            weekendOnly: any(named: 'weekendOnly'),
+            transportMode: any(named: 'transportMode'),
+            kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+            contentType: any(named: 'contentType'),
+            userLat: any(named: 'userLat'),
+            userLng: any(named: 'userLng'),
+            radiusKm: any(named: 'radiusKm'),
+            urgent: any(named: 'urgent'),
+          ),
+        ).thenAnswer((_) async => 0);
+        getIt.registerSingleton<AnnouncementRepository>(annRepo);
+
+        await pumpHome(tester);
+
+        // Mode Colis : autre mode (Trajets) à 0 via le mock ci-dessus →
+        // aucune tuile de découverte croisée, donc rien ne masque le bouton.
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+        await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+        expect(find.byKey(const Key('cross-discovery')), findsNothing);
+        expect(find.text('Effacer les filtres'), findsOneWidget);
+
+        await tester.tap(find.text('Effacer les filtres'));
+        await tester.pumpAndSettle();
+
+        // L'effet : les filtres retombent (corridor effacé) et une nouvelle
+        // recherche part avec ce payload vidé.
+        verify(
+          () => prBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>()
+                  .having((e) => e.departure, 'departure', null)
+                  .having((e) => e.arrival, 'arrival', null),
+            ),
+          ),
+        ).called(greaterThanOrEqualTo(1));
+      },
+    );
   });
 
   group('HomeScreen — _FavoritesButton', () {
