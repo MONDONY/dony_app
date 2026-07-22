@@ -1,12 +1,13 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:flutter/material.dart';
 
-/// Bouton cœur favori — pur visuel, stateless.
+/// Bouton favori (signet) — pur visuel, stateless.
 ///
-/// Cœur rempli [DonyColors.favorite] quand [isFavorite] est vrai,
-/// contour [cs.onSurfaceVariant] sinon.
+/// Signet rempli [DonyColors.primary] quand [isFavorite] est vrai, contour
+/// [cs.onSurfaceVariant] sinon. Le nom historique du widget est conservé pour
+/// ne pas casser ses appelants ; c'est bien un signet qui est rendu.
 ///
-/// Utilise [Icons.favorite] / [Icons.favorite_border] (Material) car DonyIcon
+/// Utilise [Icons.bookmark] / [Icons.bookmark_border] (Material) car DonyIcon
 /// ne supporte que des SVG mono-tracé sans variante "filled vs outline"
 /// distincte pour la même icône.
 class FavoriteHeartButton extends StatefulWidget {
@@ -14,7 +15,7 @@ class FavoriteHeartButton extends StatefulWidget {
     super.key,
     required this.isFavorite,
     required this.onToggle,
-    this.size = 22,
+    this.size = 26,
   });
 
   final bool isFavorite;
@@ -76,13 +77,13 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
         visualDensity: VisualDensity.compact,
         padding: EdgeInsets.zero,
         constraints: BoxConstraints(
-          minWidth: widget.size + 12,
-          minHeight: widget.size + 12,
+          minWidth: widget.size + 8,
+          minHeight: widget.size + 8,
         ),
         icon: Icon(
-          widget.isFavorite ? Icons.favorite : Icons.favorite_border,
+          widget.isFavorite ? Icons.bookmark : Icons.bookmark_border,
           color: widget.isFavorite
-              ? DonyColors.favorite
+              ? DonyColors.primary
               : cs.onSurfaceVariant,
           size: widget.size,
         ),

@@ -171,10 +171,10 @@ class TravelerCard extends StatelessWidget {
                     showChevron: isOwnAnnouncement,
                   ),
                 ),
-                if (showFavorite) ...[
-                  const SizedBox(width: DonySpacing.xs),
-                  _buildFavoriteHeart(context, announcement.id),
-                ],
+                // Pas de SizedBox : le padding interne du bouton (halo autour
+                // de l'icône) suffit à l'écarter du corridor. En ajouter un
+                // creusait un vide visible entre le signet et le trajet.
+                if (showFavorite) _buildFavoriteHeart(context, announcement.id),
               ],
             ),
             const SizedBox(height: DonySpacing.xs),
