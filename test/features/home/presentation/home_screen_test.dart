@@ -815,6 +815,32 @@ void main() {
       expect(find.textContaining('Tirer pour voir'), findsOneWidget);
     });
 
+    testWidgets(
+      'le compteur de l\'indication peek suit le mode : en Colis il compte les '
+      'demandes, pas les trajets',
+      (tester) async {
+        // Deux jeux de tailles différentes, pour qu'un compteur pris du mauvais
+        // côté soit visible : 1 trajet contre 3 demandes.
+        prSearchState = PackageRequestSearchState(
+          status: SearchStatus.loaded,
+          results: [_makeRequest('r1'), _makeRequest('r2'), _makeRequest('r3')],
+        );
+
+        await pumpHome(tester, tripResults: [_makeAnn()]);
+
+        expect(find.textContaining('Tirer pour voir les 1 résultat'),
+            findsOneWidget);
+
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Tirer pour voir les 3 résultats'),
+            findsOneWidget);
+        expect(find.textContaining('Tirer pour voir les 1 résultat'),
+            findsNothing);
+      },
+    );
+
     testWidgets('tap sur l\'indication peek agrandit le sheet en plein écran', (
       tester,
     ) async {

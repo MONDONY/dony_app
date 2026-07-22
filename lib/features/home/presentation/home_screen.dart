@@ -244,6 +244,25 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// Variante de [_pullHint] qui compte les résultats du mode courant.
+  ///
+  /// Le compteur des trajets vient de la liste déjà construite, celui des colis
+  /// de l'état du bloc de recherche des demandes : sans ce branchement, le mode
+  /// Colis afficherait le nombre de trajets, ce qui a été constaté à l'écran.
+  Widget _pullHintForMode(
+    ColorScheme cs, {
+    required bool down,
+    required int tripCount,
+  }) {
+    if (!_mode.isParcels) {
+      return _pullHint(cs, down: down, count: tripCount);
+    }
+    return BlocBuilder<PackageRequestSearchBloc, PackageRequestSearchState>(
+      builder: (ctx, prState) =>
+          _pullHint(cs, down: down, count: prState.results.length),
+    );
+  }
+
   /// Indication de drag dans le header du sheet selon l'état : peek → « tirer
   /// pour voir les N résultats », plein écran → « tirer pour voir la carte ».
   Widget _pullHint(ColorScheme cs, {required bool down, required int count}) {
@@ -1422,7 +1441,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           if (_isMapHidden) ...[
-            _pullHint(cs, down: true, count: count),
+            _pullHintForMode(cs, down: true, tripCount: count),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -1516,7 +1535,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ],
             ),
           ),
-          if (!_isMapHidden) _pullHint(cs, down: false, count: count),
+          if (!_isMapHidden)
+            _pullHintForMode(cs, down: false, tripCount: count),
           Divider(height: 1, color: cs.outline),
           Expanded(
             child: CustomScrollView(
