@@ -214,10 +214,12 @@ class TravelerCard extends StatelessWidget {
                     children: [
                       Text(_displayName, style: tt.titleLarge, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: DonySpacing.xxs),
+                      // Note et trajets seuls ici ; les badges sont en dessous,
+                      // pleine largeur (voir plus bas). Wrap et non Row : ne
+                      // déborde jamais si l'espace manque.
                       Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: DonySpacing.xxs,
-                        runSpacing: DonySpacing.xxs,
                         children: [
                           DonyIcon('star', size: 13, color: cs.warning),
                           Text(
@@ -229,11 +231,9 @@ class TravelerCard extends StatelessWidget {
                           if (totalTrips != null)
                             Text(
                               '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
-                              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                              style: tt.bodySmall
+                                  ?.copyWith(color: cs.onSurfaceVariant),
                             ),
-                          if (isKiloPro) const _KycBadge(),
-                          if (isProAccount) const _ProBadge(),
-                          if (announcement.isUrgent) const DonyUrgentBadge(),
                         ],
                       ),
                     ],
@@ -252,6 +252,24 @@ class TravelerCard extends StatelessWidget {
                 ),
               ],
             ),
+            // Badges pleine largeur, hors de la colonne du voyageur : sinon ils
+            // partageaient l'espace avec le prix et débordaient différemment
+            // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
+            // ils disposent de toute la largeur de la carte et s'alignent de
+            // façon identique dans les deux vues.
+            if (isKiloPro || isProAccount || announcement.isUrgent) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: DonySpacing.xxs,
+                runSpacing: DonySpacing.xxs,
+                children: [
+                  if (isKiloPro) const _KycBadge(),
+                  if (isProAccount) const _ProBadge(),
+                  if (announcement.isUrgent) const DonyUrgentBadge(),
+                ],
+              ),
+            ],
             const SizedBox(height: DonySpacing.sm),
             Row(
               children: [

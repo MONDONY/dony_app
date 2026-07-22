@@ -55,6 +55,17 @@ Widget _wrap(Widget child) => MaterialApp(
       home: Scaffold(body: child),
     );
 
+/// Rend [child] contraint à [width], pour reproduire l'écart de largeur entre
+/// la liste (large) et le carousel (étroit).
+Widget _wrapAt(double width, Widget child) => MaterialApp(
+      home: Scaffold(
+        body: Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(width: width, child: child),
+        ),
+      ),
+    );
+
 void main() {
   // Épingle le taux de commission : ces tests assertent des montants
   // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
@@ -531,6 +542,39 @@ void main() {
       )));
       await tester.pumpAndSettle();
       expect(find.text('🔥 Urgent'), findsNothing);
+    });
+  });
+
+  group('TravelerCard — badges alignés liste/carousel', () {
+    // Note, trajets et badges vivaient dans un seul Wrap : selon la largeur
+    // (liste large vs carousel étroit), PRO et Urgent débordaient à des
+    // endroits différents, donnant deux hauteurs de carte. Les badges vivent
+    // désormais sur leur propre ligne, donc ils s'alignent quelle que soit la
+    // largeur.
+    Widget card() => TravelerCard(
+          announcement: _makeAnn(
+            isProAccount: true,
+            departureDate: DateTime.now().add(const Duration(days: 2)),
+          ),
+          index: 0,
+          isOwnAnnouncement: false,
+          onTap: () {},
+        );
+
+    Future<void> expectBadgesSameRow(WidgetTester tester, double width) async {
+      await tester.pumpWidget(_wrapAt(width, card()));
+      await tester.pumpAndSettle();
+      final pro = tester.getTopLeft(find.text('PRO')).dy;
+      final urgent = tester.getTopLeft(find.text('🔥 Urgent')).dy;
+      expect(urgent, pro,
+          reason: 'PRO et Urgent doivent être sur la même ligne à '
+              '\${width.toStringAsFixed(0)} px de large');
+    }
+
+    testWidgets('PRO et Urgent sur la même ligne, en large comme en étroit',
+        (tester) async {
+      await expectBadgesSameRow(tester, 430); // liste
+      await expectBadgesSameRow(tester, 330); // carousel
     });
   });
 
