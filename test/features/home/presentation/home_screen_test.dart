@@ -10,6 +10,11 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/data/city_repository.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -61,6 +66,13 @@ class MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
     implements FavoriteIdsCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
+
+class MockCityRepository extends Mock implements CityRepository {}
+
+class _FakeContentCategoryRepository implements IContentCategoryRepository {
+  @override
+  Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
 
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -207,6 +219,67 @@ Widget _buildHome({
   );
 }
 
+/// Monte l'écran Rechercher et laisse passer le premier frame de dispatch.
+///
+/// [isTraveler] ne pilote plus l'affichage du sélecteur de mode (le rôle
+/// voyageur est universel côté serveur), il reste utile pour les branches
+/// dépendantes de la capacité réelle (bannière d'onboarding, favoris).
+Future<void> pumpHome(
+  WidgetTester tester, {
+  bool isTraveler = true,
+  AnnouncementState? announcementState,
+}) async {
+  tester.view.physicalSize = const Size(1000, 2000);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  await tester.pumpWidget(
+    _buildHome(
+      announcementState: announcementState,
+      user: _makeUser(
+        roles: isTraveler
+            ? const ['SENDER', 'TRAVELER']
+            : const ['SENDER'],
+      ),
+    ),
+  );
+  await tester.pump(const Duration(milliseconds: 1000));
+}
+
+/// Sélectionne une ville dans un [CityAutocompleteField] de la feuille de
+/// filtres : saisie, attente du debounce (300 ms) du `CitySearchBloc`, puis tap
+/// sur la suggestion. Le dépôt de villes est mocké pour renvoyer la ville
+/// saisie, ce qui rend la suggestion déterministe.
+Future<void> _choisirVille(
+  WidgetTester tester,
+  Key champ,
+  String nom,
+) async {
+  await tester.enterText(find.byKey(champ), nom);
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(ListTile, nom).last);
+  await tester.pumpAndSettle();
+}
+
+/// Ouvre la feuille de filtres depuis la barre corridor, y pose un corridor,
+/// puis valide. Sert à vérifier que le corridor survit à la bascule de mode.
+Future<void> ouvrirSheetEtSaisirCorridor(
+  WidgetTester tester,
+  String depart,
+  String arrivee,
+) async {
+  await tester.tap(find.byKey(const Key('corridor-bar')));
+  await tester.pumpAndSettle();
+
+  await _choisirVille(tester, const Key('filter-departure-city'), depart);
+  await _choisirVille(tester, const Key('filter-arrival-city'), arrivee);
+
+  await tester.tap(find.text('Rechercher'));
+  await tester.pumpAndSettle();
+}
+
 /// Monte le feed dans un vrai [GoRouter] avec une route stub
 /// `/announcements/:id/trip` qui enregistre l'`id` visité. Permet de vérifier
 /// qu'un tap sur une carte « Votre trajet » (annonce dont le `travelerId`
@@ -297,6 +370,26 @@ void main() {
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
     getIt.registerSingleton<AnalyticsService>(analytics);
+
+    // La feuille de filtres embarque deux champs de ville : le dépôt est mocké
+    // pour renvoyer exactement la ville saisie (suggestion déterministe).
+    final cityRepo = MockCityRepository();
+    when(() => cityRepo.searchCities(any())).thenAnswer(
+      (inv) async => [
+        CityModel(
+          name: inv.positionalArguments.first as String,
+          countryCode: 'FR',
+          countryName: 'France',
+          lat: 48.85,
+          lng: 2.35,
+        ),
+      ],
+    );
+    getIt.registerSingleton<CityRepository>(cityRepo);
+    getIt.registerFactory<CitySearchBloc>(() => CitySearchBloc(cityRepo));
+    getIt.registerFactory<IContentCategoryRepository>(
+      () => _FakeContentCategoryRepository(),
+    );
 
     getIt.registerFactory<PackageRequestSearchBloc>(() {
       final mock = MockPackageRequestSearchBloc();
@@ -590,7 +683,7 @@ void main() {
     });
 
     testWidgets(
-      'traveler near-me dispatches the package-request search with a radius',
+      'en mode Colis, près de moi dispatche la recherche de demandes avec un rayon',
       (tester) async {
         registerFallbackValue(const SearchFiltersChanged());
         GeolocatorPlatform.instance = _MockGeolocatorPlatform();
@@ -614,8 +707,6 @@ void main() {
           return prBloc;
         });
 
-        // Phase 1 : isTraveler est lu depuis le UserModel (capacité réelle),
-        // pas depuis ActiveRoleCubit. Il faut donc un utilisateur avec le rôle TRAVELER.
         await tester.pumpWidget(
           _buildHome(
             role: ActiveRole.traveler,
@@ -624,10 +715,14 @@ void main() {
         );
         await tester.pump();
 
+        // La recherche suit le mode : « près de moi » ne touche les demandes
+        // que si c'est bien la liste affichée.
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+
         await tester.tap(find.byKey(const Key('near-me-fab')));
         await tester.pumpAndSettle();
 
-        // Traveler near-me drives the package-request search (radius applied).
         verify(
           () => prBloc.add(
             any(
@@ -643,7 +738,7 @@ void main() {
     );
 
     testWidgets(
-      'traveler : le chip Urgent déclenche les deux recherches (annonces + demandes) avec urgent=true',
+      'en mode Colis, le chip Urgent ne déclenche que la recherche de demandes',
       (tester) async {
         registerFallbackValue(const SearchFiltersChanged());
 
@@ -709,6 +804,9 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 1000));
 
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+
         await tester.tap(find.text('🔥 Urgent').first);
         await tester.pumpAndSettle();
 
@@ -719,17 +817,8 @@ void main() {
           ),
         ).called(1);
 
-        verify(
-          () => announcementBloc.add(
-            any(
-              that: isA<AnnouncementSearchRequested>().having(
-                (e) => e.urgent,
-                'urgent',
-                true,
-              ),
-            ),
-          ),
-        ).called(1);
+        // Le filtre urgent est commun, mais la recherche suit le mode : en
+        // mode Colis, seules les demandes sont rechargées.
         verify(
           () => prBloc.add(
             any(
@@ -741,8 +830,109 @@ void main() {
             ),
           ),
         ).called(1);
+        verifyNever(
+          () => announcementBloc.add(
+            any(
+              that: isA<AnnouncementSearchRequested>().having(
+                (e) => e.urgent,
+                'urgent',
+                true,
+              ),
+            ),
+          ),
+        );
       },
     );
+  });
+
+  group('modes de recherche', () {
+    testWidgets('ouvre en mode Trajets', (tester) async {
+      await pumpHome(tester);
+
+      expect(find.text('Trajets'), findsOneWidget);
+      expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
+    });
+
+    testWidgets('le mode Colis est proposé à tout utilisateur', (tester) async {
+      // Anciennement conditionné à isTraveler. Le rôle voyageur est universel.
+      await pumpHome(tester, isTraveler: false);
+
+      expect(find.text('Colis'), findsOneWidget);
+    });
+
+    testWidgets('basculer sur Colis change le header de la liste', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
+      expect(find.text('VOYAGEURS DISPONIBLES'), findsNothing);
+    });
+
+    testWidgets('le corridor survit à la bascule de mode', (tester) async {
+      await pumpHome(tester);
+      // Poser Paris → Dakar via la sheet de filtres en mode trajets.
+      await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('la bascule dispatche la recherche du nouveau mode', (
+      tester,
+    ) async {
+      registerFallbackValue(const SearchFiltersChanged());
+      late MockPackageRequestSearchBloc packageRequestSearchBloc;
+      getIt.unregister<PackageRequestSearchBloc>();
+      getIt.registerFactory<PackageRequestSearchBloc>(() {
+        packageRequestSearchBloc = MockPackageRequestSearchBloc();
+        when(
+          () => packageRequestSearchBloc.state,
+        ).thenReturn(const PackageRequestSearchState());
+        whenListen(
+          packageRequestSearchBloc,
+          Stream<PackageRequestSearchState>.fromIterable(const [
+            PackageRequestSearchState(),
+          ]),
+          initialState: const PackageRequestSearchState(),
+        );
+        return packageRequestSearchBloc;
+      });
+
+      await pumpHome(tester);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => packageRequestSearchBloc.add(any(that: isA<SearchFiltersChanged>())),
+      ).called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('les chips spécifiques changent avec le mode', (tester) async {
+      await pumpHome(tester);
+      expect(find.text('Kilo Pro'), findsOneWidget);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kilo Pro'), findsNothing);
+      expect(find.text('Taille'), findsOneWidget);
+    });
+
+    testWidgets('compteur de l\'autre mode absent sans filtre commun', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+
+      // Aucun corridor ni date posé : le nombre serait un total plateforme.
+      expect(find.byKey(const Key('mode-other-count')), findsNothing);
+    });
   });
 
   group('HomeScreen — _FavoritesButton', () {

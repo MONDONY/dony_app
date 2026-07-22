@@ -180,6 +180,36 @@ class AnnouncementRemoteDatasource {
         .toList();
   }
 
+  /// Nombre de trajets correspondant aux critères, sans charger les résultats.
+  /// Lit `totalElements` d'une page de taille 1. Alimente le compteur du
+  /// segment inactif du sélecteur de mode.
+  ///
+  /// [searchAnnouncements] ne peut pas servir ici : elle ne renvoie que le
+  /// `content` d'une page figée à 20 éléments et jette le `totalElements`.
+  Future<int> countAnnouncements({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+  }) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/announcements',
+      queryParameters: <String, dynamic>{
+        'page': 0,
+        'size': 1,
+        if (departureCity != null) 'departureCity': departureCity,
+        if (arrivalCity != null) 'arrivalCity': arrivalCity,
+        if (departureDateFrom != null)
+          'departureDateFrom': DateFormat('yyyy-MM-dd').format(
+            departureDateFrom,
+          ),
+        if (departureDateTo != null)
+          'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
+      },
+    );
+    return (response.data?['totalElements'] as num?)?.toInt() ?? 0;
+  }
+
   Future<void> deleteAnnouncement(String id) async {
     await _apiClient.dio.delete('/announcements/$id');
   }

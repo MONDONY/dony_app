@@ -118,6 +118,22 @@ class AnnouncementRepository {
     );
   }
 
+  /// Nombre de trajets correspondant aux critères, sans charger les résultats.
+  /// Alimente le compteur du segment inactif du sélecteur de mode.
+  Future<int> countAnnouncements({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+  }) {
+    return _remoteDatasource.countAnnouncements(
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      departureDateFrom: departureDateFrom,
+      departureDateTo: departureDateTo,
+    );
+  }
+
   Future<void> deleteAnnouncement(String id) async {
     return _remoteDatasource.deleteAnnouncement(id);
   }
