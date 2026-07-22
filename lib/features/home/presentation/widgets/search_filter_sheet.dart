@@ -22,6 +22,7 @@ import 'package:dony/features/home/presentation/widgets/search_filter_fields.dar
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 export 'package:dony/features/home/presentation/widgets/search_filter_fields.dart'
     show CommonFilterBlock;
@@ -31,10 +32,14 @@ abstract final class SearchFilterSheet {
   ///
   /// Retourne les filtres édités si l'utilisateur valide, `null` s'il ferme
   /// sans valider (croix, barrier, retour système).
+  /// [activeTrips] : nombre de trajets actifs de l'utilisateur. À zéro, la
+  /// pastille « Pour mes trajets » est désactivée, parce que le filtre
+  /// renverrait zéro résultat sans raison visible.
   static Future<HomeSearchFilters?> show(
     BuildContext context, {
     required SearchMode mode,
     required HomeSearchFilters initial,
+    int activeTrips = 0,
     double heightFraction = 0.85,
   }) {
     // État d'édition local : la feuille ne touche à rien tant que l'utilisateur
@@ -74,7 +79,11 @@ abstract final class SearchFilterSheet {
           );
         },
       ),
-      child: _SearchFilterContent(mode: mode, notifier: notifier),
+      child: _SearchFilterContent(
+        mode: mode,
+        notifier: notifier,
+        activeTrips: activeTrips,
+      ),
     ).whenComplete(notifier.dispose);
   }
 
@@ -153,10 +162,17 @@ class _ClearAllButton extends StatelessWidget {
 // ── Contenu défilant ──────────────────────────────────────────────────────────
 
 class _SearchFilterContent extends StatefulWidget {
-  const _SearchFilterContent({required this.mode, required this.notifier});
+  const _SearchFilterContent({
+    required this.mode,
+    required this.notifier,
+    this.activeTrips = 0,
+  });
 
   final SearchMode mode;
   final ValueNotifier<HomeSearchFilters> notifier;
+
+  /// Nombre de trajets actifs — voir [SearchFilterSheet.show].
+  final int activeTrips;
 
   @override
   State<_SearchFilterContent> createState() => _SearchFilterContentState();
@@ -448,15 +464,63 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,
         children: [
-          QuickChip(
-            label: 'Pour mes trajets',
-            iconAsset: 'plane',
-            active: f.matchingMyTrips,
-            onChanged: (v) => _update(f.copyWith(matchingMyTrips: v)),
+          // Sans trajet actif le filtre renverrait zéro sans raison visible :
+          // la pastille est grisée et son tap explique la situation au lieu de
+          // lancer une recherche vide.
+          Opacity(
+            opacity: _hasActiveTrip ? 1 : 0.4,
+            child: QuickChip(
+              key: const Key('chip-matching-my-trips'),
+              label: 'Pour mes trajets',
+              iconAsset: 'plane',
+              active: f.matchingMyTrips,
+              onChanged: _hasActiveTrip
+                  ? (v) => _update(f.copyWith(matchingMyTrips: v))
+                  : (_) => _showNoActiveTripSheet(context),
+            ),
           ),
         ],
       ).animate().fadeIn(delay: 80.ms),
+      const SizedBox(height: DonySpacing.md),
+      Text(
+        'Astuce, tu peux être prévenu des nouveaux colis compatibles depuis '
+        'Réglages, Notifications.',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ).animate().fadeIn(delay: 100.ms),
     ];
+  }
+
+  bool get _hasActiveTrip => widget.activeTrips > 0;
+
+  /// Explique pourquoi le filtre est indisponible et propose l'action qui le
+  /// débloque. Le bouton est en position collée en bas de la feuille.
+  Future<void> _showNoActiveTripSheet(BuildContext context) {
+    // `maybeOf` : le routeur est capturé AVANT les pops, sinon le contexte
+    // serait mort au moment de naviguer. Nul uniquement hors routeur (tests de
+    // rendu isolé), auquel cas la feuille se contente de se fermer.
+    final router = GoRouter.maybeOf(context);
+    final sheetNavigator = Navigator.of(context, rootNavigator: true);
+    return DonyBottomSheet.show<void>(
+      context,
+      title: 'Aucun trajet actif',
+      subtitle: 'Ce filtre ne montre que les colis compatibles avec tes '
+          'trajets à venir. Publie un trajet pour t\'en servir.',
+      stickyBottom: DonyButton(
+        label: 'Publier un trajet',
+        onPressed: () {
+          // Deux feuilles empilées : l'explication, puis la feuille de
+          // filtres. Les deux se ferment avant la navigation, sinon la
+          // création de trajet s'ouvrirait derrière elles.
+          sheetNavigator
+            ..pop()
+            ..pop();
+          router?.push('/announcements/create');
+        },
+      ),
+      child: const SizedBox.shrink(),
+    );
   }
 
   static String _parcelSizeLabel(ParcelSize s) => switch (s) {

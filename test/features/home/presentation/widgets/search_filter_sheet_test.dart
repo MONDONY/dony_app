@@ -79,10 +79,14 @@ void main() {
     }
   });
 
+  /// [activeTrips] : trajets actifs de l'utilisateur. Au-dessus de zéro, la
+  /// pastille « Pour mes trajets » est utilisable ; à zéro elle est grisée et
+  /// n'ouvre qu'une explication.
   Future<void> ouvrir(
     WidgetTester tester, {
     required SearchMode mode,
     HomeSearchFilters initial = const HomeSearchFilters(),
+    int activeTrips = 2,
   }) async {
     resultat = null;
     ferme = false;
@@ -91,8 +95,12 @@ void main() {
         builder: (ctx) => Scaffold(
           body: ElevatedButton(
             onPressed: () async {
-              resultat =
-                  await SearchFilterSheet.show(ctx, mode: mode, initial: initial);
+              resultat = await SearchFilterSheet.show(
+                ctx,
+                mode: mode,
+                initial: initial,
+                activeTrips: activeTrips,
+              );
               ferme = true;
             },
             child: const Text('ouvrir'),
@@ -475,6 +483,46 @@ void main() {
     expect(valeur!.maxWeight, 10);
     expect(valeur.parcelSize, ParcelSize.medium);
     expect(valeur.matchingMyTrips, isTrue);
+  });
+
+  testWidgets(
+      'section colis : sans trajet actif, la pastille est grisée et n\'active '
+      'rien', (tester) async {
+    await ouvrir(tester, mode: SearchMode.parcels, activeTrips: 0);
+
+    await tester.ensureVisible(find.byKey(const Key('chip-matching-my-trips')));
+    await tester.pumpAndSettle();
+
+    final griseee = tester
+        .widgetList<Opacity>(find.ancestor(
+          of: find.byKey(const Key('chip-matching-my-trips')),
+          matching: find.byType(Opacity),
+        ))
+        .any((o) => o.opacity == 0.4);
+    expect(griseee, isTrue);
+
+    await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+    await tester.pumpAndSettle();
+
+    // L'explication remplace l'activation du filtre.
+    expect(find.text('Aucun trajet actif'), findsOneWidget);
+    expect(find.text('Publier un trajet'), findsOneWidget);
+  });
+
+  testWidgets('section colis : avec un trajet actif, la pastille n\'est pas '
+      'grisée', (tester) async {
+    await ouvrir(tester, mode: SearchMode.parcels, activeTrips: 1);
+
+    await tester.ensureVisible(find.byKey(const Key('chip-matching-my-trips')));
+    await tester.pumpAndSettle();
+
+    final grisee = tester
+        .widgetList<Opacity>(find.ancestor(
+          of: find.byKey(const Key('chip-matching-my-trips')),
+          matching: find.byType(Opacity),
+        ))
+        .any((o) => o.opacity == 0.4);
+    expect(grisee, isFalse);
   });
 
   testWidgets('section colis : retaper une pastille active la désactive',

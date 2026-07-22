@@ -4,9 +4,9 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../../../core/services/analytics_events.dart';
-import '../../../core/services/analytics_service.dart';
-import '../../package_request/data/package_request_repository.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 
 part 'notification_prefs_event.dart';
 part 'notification_prefs_state.dart';

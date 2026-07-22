@@ -24,7 +24,12 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
+import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -91,6 +96,11 @@ class MockAnalyticsService extends Mock implements AnalyticsService {}
 class MockPackageRequestSearchBloc
     extends MockBloc<PackageRequestSearchEvent, PackageRequestSearchState>
     implements PackageRequestSearchBloc {}
+
+/// Résumé d'activité simulé : c'est lui qui porte le nombre de trajets actifs,
+/// dont dépendent la pastille « Pour mes trajets » et l'en-tête de la liste.
+class MockTripsSummaryCubit extends MockCubit<TripsSummaryState>
+    implements TripsSummaryCubit {}
 
 class _MockGeolocatorPlatform extends Mock
     with MockPlatformInterfaceMixin
@@ -165,6 +175,48 @@ AnnouncementModel _makeAnn({String id = 'a1', String travelerId = 'traveler-1'})
 /// Trois trajets d'un autre voyageur : le feed n'est pas vide, donc l'état vide
 /// (et sa tuile de découverte croisée) ne doit pas apparaître.
 final troisTrajets = [_makeAnn(), _makeAnn(id: 'a2'), _makeAnn(id: 'a3')];
+
+/// (Re)enregistre le résumé d'activité avec [activeTrips] trajets actifs.
+/// `HomeScreen` le résout via `getIt`, comme en production.
+void _registerTripsSummary(int activeTrips) {
+  if (getIt.isRegistered<TripsSummaryCubit>()) {
+    getIt.unregister<TripsSummaryCubit>();
+  }
+  // Le mock est stubé MAINTENANT, pas dans la fabrique : `HomeScreen` la
+  // résout depuis un `create` de BlocProvider, et appeler `when` là-dedans
+  // tomberait au milieu d'une réponse stubée (« Cannot call `when` within a
+  // stub response »).
+  final cubit = MockTripsSummaryCubit();
+  final state = TripsSummaryState.loaded(
+    TripsSummaryModel(activeTrips: activeTrips, kgSold: 0, revenue: 0),
+  );
+  when(() => cubit.state).thenReturn(state);
+  whenListen(cubit, const Stream<TripsSummaryState>.empty(),
+      initialState: state);
+  when(() => cubit.load(period: any(named: 'period'))).thenAnswer((_) async {});
+  getIt.registerFactory<TripsSummaryCubit>(() => cubit);
+}
+
+/// Demande d'envoi minimale pour peupler l'état du bloc de recherche colis.
+/// L'expéditeur n'est jamais l'utilisateur courant : sinon `_visibleRequests`
+/// la retirerait du feed.
+PackageRequestSearchItem _makeRequest(String id) => PackageRequestSearchItem(
+  id: id,
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 8, 15),
+  dateToleranceDays: 2,
+  weightKg: 5,
+  parcelSize: ParcelSize.medium,
+  categories: const ['Vêtements'],
+  sender: const SenderPublicProfile(
+    id: 'autre-expediteur',
+    displayName: 'Fatou',
+    averageRating: 4.8,
+    totalRatings: 3,
+    kycVerified: true,
+  ),
+);
 
 MockFavoriteIdsCubit _makeFavCubit({int count = 0}) {
   final cubit = MockFavoriteIdsCubit();
@@ -251,7 +303,9 @@ Future<void> pumpHome(
   AnnouncementState? announcementState,
   List<AnnouncementModel>? tripResults,
   int? otherModeCount,
+  int activeTrips = 2,
 }) async {
+  _registerTripsSummary(activeTrips);
   if (otherModeCount != null) {
     final prRepo = MockPackageRequestRepository();
     when(
@@ -403,6 +457,72 @@ Widget _buildHomeRouter({
   );
 }
 
+/// Monte l'écran dans un vrai [GoRouter] avec des routes stub pour la création
+/// de trajet et les réglages : c'est là que mènent les deux garde-fous du
+/// filtre « Pour mes trajets ».
+Widget _buildHomeStubRoutes({
+  required List<String> visited,
+  required UserModel user,
+}) {
+  final announcementBloc = MockAnnouncementBloc();
+  final authBloc = MockAuthBloc();
+  final roleCubit = MockActiveRoleCubit();
+  final notifBloc = MockNotificationBloc();
+  final bidBloc = MockBidBloc();
+
+  when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+  when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => authBloc.state).thenReturn(AuthAuthenticated(user));
+  when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+  when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => notifBloc.state).thenReturn(const NotificationInitial());
+  when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => bidBloc.state).thenReturn(BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+  final providers = MultiBlocProvider(
+    providers: [
+      BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+      BlocProvider<NotificationBloc>.value(value: notifBloc),
+      BlocProvider<BidBloc>.value(value: bidBloc),
+      BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+    ],
+    child: const HomeScreen(),
+  );
+
+  Widget stub(String path) {
+    visited.add(path);
+    return Scaffold(body: Text('STUB $path'));
+  }
+
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(path: '/', builder: (_, _) => providers),
+      GoRoute(
+        path: '/announcements/create',
+        builder: (_, _) => stub('/announcements/create'),
+      ),
+      GoRoute(path: '/settings', builder: (_, _) => stub('/settings')),
+    ],
+  );
+
+  return MaterialApp.router(
+    routerConfig: router,
+    theme: AppTheme.light,
+    localizationsDelegates: const [
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('fr'), Locale('en')],
+    locale: const Locale('fr'),
+  );
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
@@ -414,10 +534,16 @@ void main() {
   /// réenregistrer une factory dans chaque test.
   late MockPackageRequestSearchBloc prBloc;
 
+  /// État servi par le mock de `PackageRequestSearchBloc`. Les tests qui
+  /// vérifient un rendu dépendant des résultats (en-tête de liste) le
+  /// remplacent AVANT de monter l'écran.
+  late PackageRequestSearchState prSearchState;
+
   setUpAll(() {
     registerFallbackValue(_FakeBidEvent());
     registerFallbackValue(_FakeAnnouncementEvent());
     registerFallbackValue(const SearchFiltersChanged());
+    registerFallbackValue(StatsPeriod.thirtyDays);
   });
 
   setUp(() {
@@ -455,15 +581,20 @@ void main() {
       () => _FakeContentCategoryRepository(),
     );
 
+    // Résumé d'activité par défaut : deux trajets actifs. Les tests qui
+    // s'intéressent au cas « aucun trajet » passent `activeTrips: 0` à
+    // `pumpHome`.
+    _registerTripsSummary(2);
+
+    prSearchState = const PackageRequestSearchState();
     getIt.registerFactory<PackageRequestSearchBloc>(() {
       final mock = MockPackageRequestSearchBloc();
-      when(() => mock.state).thenReturn(const PackageRequestSearchState());
+      final etat = prSearchState;
+      when(() => mock.state).thenReturn(etat);
       whenListen(
         mock,
-        Stream<PackageRequestSearchState>.fromIterable(const [
-          PackageRequestSearchState(),
-        ]),
-        initialState: const PackageRequestSearchState(),
+        Stream<PackageRequestSearchState>.fromIterable([etat]),
+        initialState: etat,
       );
       prBloc = mock;
       return mock;
@@ -1168,6 +1299,283 @@ void main() {
         ).called(greaterThanOrEqualTo(1));
       },
     );
+  });
+
+  // ─── Filtre « Pour mes trajets » ────────────────────────────────────────────
+  group('« Pour mes trajets »', () {
+    /// Ouvre la feuille de filtres colis et amène la pastille à l'écran.
+    Future<void> ouvrirPastille(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('corridor-bar')));
+      await tester.pumpAndSettle();
+      await tester.dragUntilVisible(
+        find.byKey(const Key('chip-matching-my-trips')),
+        find.byType(SingleChildScrollView).last,
+        const Offset(0, -100),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// Vrai si la pastille est rendue à 40 % d'opacité (état désactivé du DS).
+    bool pastilleGrisee(WidgetTester tester) => tester
+        .widgetList<Opacity>(
+          find.ancestor(
+            of: find.byKey(const Key('chip-matching-my-trips')),
+            matching: find.byType(Opacity),
+          ),
+        )
+        .any((o) => o.opacity == 0.4);
+
+    testWidgets('sans trajet actif : la pastille est grisée', (tester) async {
+      await pumpHome(tester, activeTrips: 0);
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+      await ouvrirPastille(tester);
+
+      expect(pastilleGrisee(tester), isTrue);
+    });
+
+    testWidgets('avec des trajets actifs : la pastille est normale', (
+      tester,
+    ) async {
+      await pumpHome(tester, activeTrips: 2);
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+      await ouvrirPastille(tester);
+
+      expect(pastilleGrisee(tester), isFalse);
+    });
+
+    testWidgets(
+      'sans trajet actif : le tap explique et ne filtre pas la recherche',
+      (tester) async {
+        await pumpHome(tester, activeTrips: 0);
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+        await ouvrirPastille(tester);
+
+        await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Publier un trajet'), findsOneWidget);
+        verifyNever(
+          () => prBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>().having(
+                (e) => e.matchingMyTrips,
+                'matchingMyTrips',
+                isTrue,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    testWidgets('l\'explication ne contient aucun tiret cadratin', (
+      tester,
+    ) async {
+      await pumpHome(tester, activeTrips: 0);
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+      await ouvrirPastille(tester);
+      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+      await tester.pumpAndSettle();
+
+      final textes = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data ?? '')
+          .toList();
+      expect(textes.any((t) => t.contains('—')), isFalse);
+    });
+
+    testWidgets('activer la pastille trace la bascule et le nombre de trajets', (
+      tester,
+    ) async {
+      await pumpHome(tester, activeTrips: 3);
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+      await ouvrirPastille(tester);
+
+      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rechercher'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {'active': true, 'active_trips': 3},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('valider sans toucher la pastille ne trace rien', (
+      tester,
+    ) async {
+      await pumpHome(tester, activeTrips: 3);
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('corridor-bar')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rechercher'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets('l\'en-tête annonce les colis compatibles et les trajets', (
+      tester,
+    ) async {
+      prSearchState = PackageRequestSearchState(
+        status: SearchStatus.loaded,
+        results: [_makeRequest('r-1'), _makeRequest('r-2')],
+        matchingMyTrips: true,
+      );
+      await pumpHome(tester, activeTrips: 3);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('COLIS SUR TES TRAJETS'), findsOneWidget);
+      expect(find.text("DEMANDES D'ENVOI"), findsNothing);
+      expect(find.text('2 résultats · 3 trajets actifs'), findsOneWidget);
+    });
+
+    testWidgets('un seul résultat et un seul trajet : accord au singulier', (
+      tester,
+    ) async {
+      prSearchState = PackageRequestSearchState(
+        status: SearchStatus.loaded,
+        results: [_makeRequest('r-1')],
+        matchingMyTrips: true,
+      );
+      await pumpHome(tester, activeTrips: 1);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 résultat · 1 trajet actif'), findsOneWidget);
+    });
+
+    testWidgets('filtre inactif : l\'en-tête reste celui des demandes', (
+      tester,
+    ) async {
+      prSearchState = PackageRequestSearchState(
+        status: SearchStatus.loaded,
+        results: [_makeRequest('r-1')],
+      );
+      await pumpHome(tester, activeTrips: 3);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
+      expect(find.text('COLIS SUR TES TRAJETS'), findsNothing);
+    });
+  });
+
+  // ─── Rôle voyageur retiré ───────────────────────────────────────────────────
+  group('segment Colis sans rôle voyageur', () {
+    testWidgets('le tap explique et ne lance aucune recherche de colis', (
+      tester,
+    ) async {
+      await pumpHome(tester, isTraveler: false);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ouvrir les réglages'), findsOneWidget);
+      // La requête partirait en 403 : elle ne doit pas partir du tout.
+      verifyNever(() => prBloc.add(any()));
+      // Et le mode ne bascule pas : la liste reste celle des trajets.
+      expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
+    });
+
+    testWidgets('le segment Colis reste visible', (tester) async {
+      await pumpHome(tester, isTraveler: false);
+
+      expect(find.text('Colis'), findsOneWidget);
+    });
+
+    testWidgets('voyageur : le tap bascule normalement', (tester) async {
+      await pumpHome(tester);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ouvrir les réglages'), findsNothing);
+      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
+    });
+  });
+
+  // ─── Routage des deux garde-fous ────────────────────────────────────────────
+  group('garde-fous : routage', () {
+    testWidgets('« Publier un trajet » ouvre la création de trajet', (
+      tester,
+    ) async {
+      _registerTripsSummary(0);
+      final visited = <String>[];
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _buildHomeStubRoutes(
+          visited: visited,
+          user: _makeUser(roles: const ['SENDER', 'TRAVELER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('corridor-bar')));
+      await tester.pumpAndSettle();
+      await tester.dragUntilVisible(
+        find.byKey(const Key('chip-matching-my-trips')),
+        find.byType(SingleChildScrollView).last,
+        const Offset(0, -100),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Publier un trajet'));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/announcements/create'));
+    });
+
+    testWidgets('« Ouvrir les réglages » ouvre les réglages', (tester) async {
+      _registerTripsSummary(2);
+      final visited = <String>[];
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _buildHomeStubRoutes(
+          visited: visited,
+          user: _makeUser(roles: const ['SENDER']),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ouvrir les réglages'));
+      await tester.pumpAndSettle();
+
+      expect(visited, contains('/settings'));
+    });
   });
 
   group('découverte croisée', () {

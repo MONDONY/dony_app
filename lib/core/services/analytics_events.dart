@@ -122,6 +122,11 @@ abstract final class AnalyticsEvents {
   /// Tap sur la ligne de bascule de l'état vide. Propriétés `from_mode`, `count`.
   static const homeCrossDiscoveryTapped = 'home_cross_discovery_tapped';
 
+  /// Bascule de la pastille « Pour mes trajets » de la feuille de filtres colis.
+  /// Propriétés `active` (bool) et `active_trips` (nombre de trajets actifs).
+  static const homeMatchingTripsFilterToggled =
+      'home_matching_trips_filter_toggled';
+
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 

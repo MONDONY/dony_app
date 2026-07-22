@@ -21,6 +21,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -57,8 +58,17 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<PackageRequestSearchBloc>(
-      create: (_) => getIt<PackageRequestSearchBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<PackageRequestSearchBloc>(
+          create: (_) => getIt<PackageRequestSearchBloc>(),
+        ),
+        // Résumé d'activité : seul son `activeTrips` sert ici, il pilote le
+        // filtre « Pour mes trajets » (pastille et en-tête de liste).
+        BlocProvider<TripsSummaryCubit>(
+          create: (_) => getIt<TripsSummaryCubit>()..load(),
+        ),
+      ],
       child: const _MapSenderView(),
     );
   }
@@ -430,8 +440,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
     unawaited(_dispatchOtherModeCount());
   }
 
+  /// Nombre de trajets actifs, source unique du filtre « Pour mes trajets ».
+  /// Zéro tant que le résumé n'a pas répondu : le garde-fou est alors le plus
+  /// prudent des deux, il explique au lieu de lancer une recherche vide.
+  int get _activeTrips =>
+      context.read<TripsSummaryCubit>().state.summary?.activeTrips ?? 0;
+
   void _onModeChanged(SearchMode mode) {
     if (mode == _mode) {
+      return;
+    }
+    // Rôle voyageur retiré : le serveur refuserait la recherche de colis. On
+    // explique au lieu de laisser partir une requête qui répondra 403.
+    if (mode.isParcels && !_isTraveler) {
+      unawaited(_showTravelerRoleDisabledSheet());
       return;
     }
     setState(() {
@@ -527,6 +549,29 @@ class _MapSenderViewState extends State<_MapSenderView> {
       ),
     );
     _onModeChanged(_mode.other);
+  }
+
+  /// Explique le refus du mode Colis à un utilisateur qui a désactivé son rôle
+  /// voyageur, et l'emmène là où il peut le réactiver. Bouton en position
+  /// collée en bas, jamais dans le contenu défilant.
+  Future<void> _showTravelerRoleDisabledSheet() {
+    // Capturé avant l'ouverture : après le pop, le contexte de la feuille est
+    // mort. `maybeOf` couvre les montages hors routeur (tests de rendu isolé).
+    final router = GoRouter.maybeOf(context);
+    return DonyBottomSheet.show<void>(
+      context,
+      title: 'Rôle voyageur désactivé',
+      subtitle: 'Les demandes de colis sont réservées aux voyageurs. '
+          'Réactive ton rôle voyageur pour les consulter.',
+      stickyBottom: DonyButton(
+        label: 'Ouvrir les réglages',
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true).pop();
+          router?.push('/settings');
+        },
+      ),
+      child: const SizedBox.shrink(),
+    );
   }
 
   /// Capacité réelle de l'utilisateur (pas le rôle actif sélectionné).
@@ -751,12 +796,27 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Une seule feuille dans les deux modes : c'est elle qui porte le bloc
   /// corridor + date partagé.
   Future<void> _showFilterSheet(BuildContext ctx) async {
+    final activeTrips = _activeTrips;
     final result = await SearchFilterSheet.show(
       ctx,
       mode: _mode,
       initial: _filters,
+      activeTrips: activeTrips,
     );
     if (result == null || !mounted) return;
+    // La pastille « Pour mes trajets » vit dans la feuille : sa bascule ne se
+    // constate qu'au retour, en comparant l'avant et l'après.
+    if (result.matchingMyTrips != _filters.matchingMyTrips) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.homeMatchingTripsFilterToggled,
+          properties: {
+            'active': result.matchingMyTrips,
+            'active_trips': activeTrips,
+          },
+        ),
+      );
+    }
     _onFiltersChanged(result);
   }
 
@@ -1268,6 +1328,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// Sous-titre de l'en-tête quand la recherche colis est filtrée « sur mes
+  /// trajets » : ce qu'on a trouvé, et sur combien de trajets on a cherché.
+  String _matchingSubtitle(PackageRequestSearchState prState, int trips) {
+    final n = _visibleRequests(prState.results).length;
+    return '$n résultat${n > 1 ? 's' : ''} · '
+        '$trips trajet${trips > 1 ? 's' : ''} actif${trips > 1 ? 's' : ''}';
+  }
+
   Widget _buildSheet(
     BuildContext ctx,
     ScrollController scrollCtrl,
@@ -1346,30 +1414,49 @@ class _MapSenderViewState extends State<_MapSenderView> {
             child: Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _mode.isParcels
-                            ? 'DEMANDES D\'ENVOI'
-                            : 'VOYAGEURS DISPONIBLES',
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _mode.isParcels
-                            ? 'Demandes · $_corridorLabel'
-                            : _isNearMeActive
-                            ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
-                            : '$count résultat${count > 1 ? 's' : ''} · $_corridorLabel',
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                  // L'en-tête colis suit ce qui a RÉELLEMENT été demandé au
+                  // serveur (l'état du bloc), pas les filtres en cours
+                  // d'édition : sinon il annoncerait « sur tes trajets » avant
+                  // que la recherche filtrée soit partie.
+                  child: BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
+                    builder: (summaryCtx, summaryState) => BlocBuilder<
+                      PackageRequestSearchBloc,
+                      PackageRequestSearchState
+                    >(
+                      builder: (headerCtx, prState) {
+                        final matching = prState.matchingMyTrips == true;
+                        final trips = summaryState.summary?.activeTrips ?? 0;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              !_mode.isParcels
+                                  ? 'VOYAGEURS DISPONIBLES'
+                                  : matching
+                                  ? 'COLIS SUR TES TRAJETS'
+                                  : 'DEMANDES D\'ENVOI',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              !_mode.isParcels
+                                  ? (_isNearMeActive
+                                        ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
+                                        : '$count résultat${count > 1 ? 's' : ''} · $_corridorLabel')
+                                  : matching
+                                  ? _matchingSubtitle(prState, trips)
+                                  : 'Demandes · $_corridorLabel',
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
                 if (_mode.isTrips && count > 0)
