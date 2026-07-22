@@ -527,8 +527,8 @@ Widget _buildHomeStubRoutes({
     routes: [
       GoRoute(path: '/', builder: (_, _) => providers),
       GoRoute(
-        path: '/announcements/create',
-        builder: (_, _) => stub('/announcements/create'),
+        path: '/trips/create',
+        builder: (_, _) => stub('/trips/create'),
       ),
       GoRoute(path: '/settings', builder: (_, _) => stub('/settings')),
     ],
@@ -1772,7 +1772,7 @@ void main() {
       await tester.tap(find.text('Publier un trajet'));
       await tester.pumpAndSettle();
 
-      expect(visited, contains('/announcements/create'));
+      expect(visited, contains('/trips/create'));
     });
 
     testWidgets(
@@ -1811,14 +1811,14 @@ void main() {
         await tester.tap(find.text('Publier un trajet'));
         await tester.pumpAndSettle();
 
-        expect(visited, contains('/announcements/create'));
+        expect(visited, contains('/trips/create'));
         // Un seul chargement jusqu'ici : celui de la création de l'écran.
         // `verify` consomme les appels enregistrés, le suivant ne comptera
         // donc que ceux d'après le retour.
         verify(() => summary.load()).called(1);
 
         // Retour de la création de trajet.
-        await tester.tap(find.text('STUB /announcements/create'));
+        await tester.tap(find.text('STUB /trips/create'));
         await tester.pumpAndSettle();
 
         verify(() => summary.load()).called(1);

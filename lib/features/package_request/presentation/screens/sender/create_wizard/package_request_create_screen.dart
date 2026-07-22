@@ -121,7 +121,7 @@ class _PackageRequestCreateScreenState
           // package_request_public_detail_screen rafraîchissent tous de
           // façon inconditionnelle après l'await) — le comportement par
           // défaut (X → go('/home')) est donc sûr, comme pour
-          // create_trip_screen/create_announcement_screen.
+          // create_trip_screen.
           analyticsContext: 'package_request_published',
         ),
       ));
