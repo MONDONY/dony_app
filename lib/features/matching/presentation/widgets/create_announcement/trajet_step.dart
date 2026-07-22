@@ -57,6 +57,14 @@ class TrajetStep extends StatelessWidget {
   /// dédié la garde éditable (choix dans la fenêtre de tolérance).
   final bool lockDate;
 
+  /// Messages d'erreur des champs obligatoires non renseignés, indexés par nom
+  /// de champ (`departureCity`, `arrivalCity`, `departureDate`,
+  /// `departureTime`, `transportMode`).
+  ///
+  /// Vide par défaut : le parent ne les publie qu'après une première
+  /// interaction, pour ne pas ouvrir un formulaire vierge tout en rouge.
+  final Map<String, String> fieldErrors;
+
   const TrajetStep({
     super.key,
     required this.departureCityNotifier,
@@ -74,6 +82,7 @@ class TrajetStep extends StatelessWidget {
     this.arrivalCityBloc,
     this.lockCorridor = false,
     this.lockDate = false,
+    this.fieldErrors = const <String, String>{},
   });
 
   @override
@@ -222,6 +231,7 @@ class TrajetStep extends StatelessWidget {
                         initialValue: departureCityNotifier.value,
                         prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                         requiredLabel: true,
+                        errorText: fieldErrors['departureCity'],
                         onSelected: (CityModel city) {
                           // Code pays d'abord : le listener du city notifier
                           // (sync vers le form bloc) lit la valeur courante.
@@ -247,6 +257,7 @@ class TrajetStep extends StatelessWidget {
                   size: 18,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+                errorText: fieldErrors['departureTime'],
                 onTap: () => onSelectDepartureTime(),
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -270,6 +281,7 @@ class TrajetStep extends StatelessWidget {
                         initialValue: arrivalCityNotifier.value,
                         prefixIcon: const DonyEmoji.planeLanding(size: 20),
                         requiredLabel: true,
+                        errorText: fieldErrors['arrivalCity'],
                         onSelected: (CityModel city) {
                           arrivalCountryCodeNotifier?.value = city.countryCode;
                           arrivalCityNotifier.value = city.name;
@@ -324,6 +336,7 @@ class TrajetStep extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 requiredLabel: true,
+                errorText: fieldErrors['departureDate'],
                 onTap: lockDate ? () {} : () => onSelectDate(),
               ),
               // ── Feedback informatif « sera signalé urgent » ────────────
@@ -387,6 +400,22 @@ class TrajetStep extends StatelessWidget {
           );
         },
       ).animate().fadeIn(delay: 110.ms),
+      // Les chips ne sont pas un champ de formulaire : le message d'erreur est
+      // rendu à la main, en reprenant le gabarit d'InputDecoration.errorText.
+      if (fieldErrors['transportMode'] != null) ...[
+        const SizedBox(height: DonySpacing.xs),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+          child: Text(
+            fieldErrors['transportMode']!,
+            key: const Key('transport-mode-error'),
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: cs.error),
+          ),
+        ),
+      ],
       const SizedBox(height: DonySpacing.xxl),
     ];
   }

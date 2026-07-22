@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -60,6 +62,75 @@ class _PackageRequestCreateScreenState
   final _step1Key = GlobalKey<Step1TrajetColisState>();
   final _step2Key = GlobalKey<Step2DetailsState>();
   final _step3Key = GlobalKey<Step3RecapBudgetState>();
+
+  /// Signature du formulaire à l'ouverture, capturée au premier build.
+  /// Sert à ne demander confirmation de sortie que si l'utilisateur a
+  /// réellement saisi quelque chose.
+  String? _initialSignature;
+
+  /// Évite d'empiler deux dialogues si le retour système est répété.
+  bool _confirmingExit = false;
+
+  /// État saisissable de la demande, hors mécanique de navigation et de
+  /// soumission (`currentStep`, `submissionStatus`, etc.).
+  ///
+  /// Les photos n'y figurent pas : elles vivent à l'étape 2, qu'on n'atteint
+  /// qu'après avoir renseigné l'étape 1. Le formulaire est donc déjà « sale »
+  /// avant qu'une photo puisse exister.
+  String _signatureOf(PackageRequestFormState s) => [
+        s.departureCity,
+        s.arrivalCity,
+        s.desiredDate,
+        s.dateToleranceDays,
+        s.transportMode,
+        s.weightKg,
+        s.parcelSize,
+        (s.categories.toList()..sort()).join(','),
+        s.description,
+        s.targetPriceEur,
+        s.photoUrl,
+        s.pickupNeighborhood,
+        s.deliveryNeighborhood,
+        s.negotiable,
+        (s.acceptedPaymentMethods.map((e) => e.name).toList()..sort()).join(','),
+        s.totalBudgetEur,
+      ].join('|');
+
+  /// Vrai si quelque chose a été saisi, dans le bloc ou dans l'étape courante.
+  ///
+  /// Les étapes ne poussent leur contenu au bloc qu'à leur validation : se
+  /// fier au seul état du bloc laisserait filer une étape 1 en cours de
+  /// remplissage.
+  bool _isDirty(PackageRequestFormState state) {
+    if (_initialSignature != null &&
+        _signatureOf(state) != _initialSignature) {
+      return true;
+    }
+    return _step1Key.currentState?.hasUnsubmittedInput ?? false;
+  }
+
+  /// Sortie demandée depuis l'étape 0 (croix ou retour système).
+  Future<void> _handleExitRequest(PackageRequestFormState state) async {
+    final dirty = _isDirty(state);
+    if (!dirty) {
+      _leave();
+      return;
+    }
+    if (_confirmingExit) return;
+    _confirmingExit = true;
+    final confirmed = await DonyDialog.confirmDiscard(context);
+    _confirmingExit = false;
+    if (!mounted || confirmed != true) return;
+    _leave();
+  }
+
+  void _leave() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,11 +217,18 @@ class _PackageRequestCreateScreenState
       _ => 'Dernière étape',
     };
 
+    _initialSignature ??= _signatureOf(state);
+
     return PopScope(
-      canPop: state.currentStep == 0,
+      // Aux étapes 1 et 2, le retour recule d'une étape. À l'étape 0 il sort
+      // de l'écran : on n'autorise le pop direct que si rien n'a été saisi.
+      canPop: state.currentStep == 0 && !_isDirty(state),
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
+        if (didPop) return;
+        if (state.currentStep > 0) {
           context.read<PackageRequestFormBloc>().add(const FormStepBack());
+        } else {
+          unawaited(_handleExitRequest(state));
         }
       },
       child: Scaffold(
@@ -167,7 +245,7 @@ class _PackageRequestCreateScreenState
                     .read<PackageRequestFormBloc>()
                     .add(const FormStepBack());
               } else {
-                context.pop();
+                unawaited(_handleExitRequest(state));
               }
             },
           ),

@@ -76,6 +76,18 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   void Function({bool saveAsDraft})? _submit;
   bool Function()? _validateStep0;
 
+  /// Vrai dès que l'utilisateur a modifié un champ depuis l'ouverture.
+  ///
+  /// Piloté par `_TripFormContentState`, qui n'arme ses listeners qu'après le
+  /// pré-remplissage : ouvrir un trajet en modification ne rend donc pas
+  /// l'écran « sale ». Sert uniquement à décider si la sortie doit être
+  /// confirmée.
+  final ValueNotifier<bool> _isDirtyNotifier = ValueNotifier<bool>(false);
+
+  /// Vrai pendant l'affichage du dialogue de confirmation, pour ne pas en
+  /// empiler deux si l'utilisateur insiste sur le retour système.
+  bool _confirmingExit = false;
+
   @override
   void initState() {
     super.initState();
@@ -113,7 +125,35 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _departureTimeNotifier.dispose();
     _canContinueNotifier.dispose();
     _canContinueStep1Notifier.dispose();
+    _isDirtyNotifier.dispose();
     super.dispose();
+  }
+
+  /// Sortie demandée (croix de l'app bar ou retour système).
+  ///
+  /// Sans saisie en cours on sort directement : imposer une confirmation à
+  /// quelqu'un qui n'a fait qu'ouvrir l'écran serait une nuisance.
+  Future<void> _handleExitRequest() async {
+    if (!_isDirtyNotifier.value) {
+      _leave();
+      return;
+    }
+    if (_confirmingExit) return;
+    _confirmingExit = true;
+    final confirmed = await DonyDialog.confirmDiscard(context);
+    _confirmingExit = false;
+    if (!mounted || confirmed != true) return;
+    _leave();
+  }
+
+  /// Quitte l'écran. `pop` quand il y a une page dessous, repli sur l'accueil
+  /// sinon (deep link direct vers /trips/create).
+  void _leave() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
   }
 
   @override
@@ -147,9 +187,23 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
     return MultiBlocProvider(
       providers: providers,
-      child: Scaffold(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _isDirtyNotifier,
+        builder: (context, isDirty, child) => PopScope(
+          // canPop false tant qu'il y a de la saisie : le retour système et le
+          // swipe iOS sont alors interceptés au lieu de fermer l'écran.
+          canPop: !isDirty,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) unawaited(_handleExitRequest());
+          },
+          child: child!,
+        ),
+        child: Scaffold(
         appBar: AppBar(
-          leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
+          leading: DonyAppBarBackButton(
+            leadingIconAsset: 'x',
+            onBack: () => unawaited(_handleExitRequest()),
+          ),
           title: Text(
             isLocked
                 ? 'Créer le trajet pour cette demande'
@@ -169,6 +223,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             departureTimeNotifier: _departureTimeNotifier,
             onSubmitReady: (fn) => _submit = fn,
             onValidateStep0Ready: (fn) => _validateStep0 = fn,
+            dirtyNotifier: _isDirtyNotifier,
           ),
         ),
         bottomNavigationBar: SafeArea(
@@ -361,6 +416,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             ),
           ),
         ),
+        ),
       ),
     );
   }
@@ -379,6 +435,10 @@ class _TripFormContent extends StatefulWidget {
   final ValueNotifier<bool>? canContinueNotifier;
   final ValueNotifier<bool>? canContinueStep1Notifier;
   final ValueNotifier<int>? currentStepNotifier;
+
+  /// Passe à true dès la première modification utilisateur. Le parent s'en
+  /// sert pour décider si quitter l'écran doit être confirmé.
+  final ValueNotifier<bool>? dirtyNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
 
@@ -395,6 +455,7 @@ class _TripFormContent extends StatefulWidget {
     this.canContinueNotifier,
     this.canContinueStep1Notifier,
     this.currentStepNotifier,
+    this.dirtyNotifier,
     this.departureTimeNotifier,
     this.onSubmitReady,
     this.onValidateStep0Ready,
@@ -424,6 +485,17 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _availableKgNotifier = ValueNotifier<double>(15);
   final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
+
+  // ── Erreurs de champs obligatoires ──────────────────────────────────────────
+  // Les champs manquants ne passent en rouge qu'après une première interaction
+  // de l'utilisateur avec l'étape : un formulaire vierge reste neutre.
+  bool _step0Touched = false;
+  bool _step1Touched = false;
+  final _step0ErrorsNotifier =
+      ValueNotifier<Set<_Step0Field>>(const <_Step0Field>{});
+  final _step1ErrorsNotifier =
+      ValueNotifier<Set<_Step1Field>>(const <_Step1Field>{});
+
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
     {'Vêtements & tissus', 'Médicaments traditionnels', 'Documents & administratif'},
   );
@@ -602,9 +674,36 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalCityNotifier.addListener(_updateCanContinue);
     _departureDateNotifier.addListener(_updateCanContinue);
     _departureTimeNotifier.addListener(_updateCanContinue);
+    _transportModeNotifier.addListener(_updateCanContinue);
     _handoverStartNotifier.addListener(_updateCanContinue);
     _handoverEndNotifier.addListener(_updateCanContinue);
     _updateCanContinue(); // état initial (pré-remplissage en mode édition)
+
+    // Armé APRÈS le calcul initial : la pré-sélection automatique du mode
+    // avion et le pré-remplissage en édition ne comptent pas comme une
+    // interaction, donc n'allument aucun message d'erreur à l'ouverture.
+    _departureCityNotifier.addListener(_markStep0Touched);
+    _arrivalCityNotifier.addListener(_markStep0Touched);
+    _departureDateNotifier.addListener(_markStep0Touched);
+    _departureTimeNotifier.addListener(_markStep0Touched);
+    // Facultative, mais y toucher reste une interaction avec l'étape.
+    _arrivalTimeNotifier.addListener(_markStep0Touched);
+    _transportModeNotifier.addListener(_markStep0Touched);
+    _handoverStartNotifier.addListener(_markStep0Touched);
+    _handoverEndNotifier.addListener(_markStep0Touched);
+
+    // L'étape 1 n'a que deux champs, et on n'y arrive qu'en ayant complété
+    // l'étape 0 : y entrer vaut engagement, on annonce donc tout de suite ce
+    // qu'elle attend plutôt que de laisser un bouton gris sans explication.
+    widget.currentStepNotifier?.addListener(_markStep1TouchedOnEntry);
+    _updateCanContinueStep1();
+
+    // Détection de saisie en cours.
+    _initialFormSignature = _formSignature;
+    for (final l in _userEditableListenables) {
+      l.addListener(_markDirty);
+    }
+    _captureInitialSignature();
 
     // Sync form fields to AnnouncementFormBloc for preview and validation
     _departureCityNotifier.addListener(_syncCityToFormBloc);
@@ -622,19 +721,170 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureTimeNotifier.addListener(_syncDepartureTimeToParent);
   }
 
+  /// Champs obligatoires manquants à l'étape 0, dans l'ordre d'affichage.
+  ///
+  /// Source de vérité unique : `_updateCanContinue()` en dérive l'état du
+  /// bouton et les champs en dérivent leur `errorText`. Les deux ne peuvent
+  /// donc pas diverger — c'est exactement ce qui a laissé passer l'heure de
+  /// départ (listener branché, condition oubliée).
+  Set<_Step0Field> get _missingStep0Fields => {
+        if (_departureCityNotifier.value == null) _Step0Field.departureCity,
+        if (_departureTimeNotifier.value == null) _Step0Field.departureTime,
+        if (_arrivalCityNotifier.value == null) _Step0Field.arrivalCity,
+        if (_departureDateNotifier.value == null) _Step0Field.departureDate,
+        if (_transportModeNotifier.value == null) _Step0Field.transportMode,
+        if (_handoverStartNotifier.value == null ||
+            _handoverEndNotifier.value == null)
+          _Step0Field.handoverWindow,
+      };
+
   void _updateCanContinue() {
     widget.canContinueNotifier?.value =
-        _departureCityNotifier.value != null &&
-            _arrivalCityNotifier.value != null &&
-            _departureDateNotifier.value != null &&
-            _handoverStartNotifier.value != null &&
-            _handoverEndNotifier.value != null &&
-            _handoverWindowError() == null;
+        _missingStep0Fields.isEmpty && _handoverWindowError() == null;
+    _refreshStep0Errors();
+  }
+
+  /// Publie les erreurs de l'étape 0 — mais seulement une fois que
+  /// l'utilisateur a touché à quelque chose.
+  ///
+  /// Un formulaire de création vierge ne doit pas s'ouvrir tout en rouge ;
+  /// `_step0Touched` n'est armé qu'après le calcul initial de `initState`
+  /// (cf. `_markStep0Touched`), donc la pré-sélection automatique du mode
+  /// avion ne le déclenche pas.
+  void _refreshStep0Errors() {
+    _step0ErrorsNotifier.value =
+        _step0Touched ? _missingStep0Fields : const <_Step0Field>{};
+  }
+
+  void _markStep0Touched() {
+    _step0Touched = true;
+    _refreshStep0Errors();
+  }
+
+  /// Tout ce que l'utilisateur peut modifier dans le formulaire.
+  ///
+  /// `_catalogLabelsNotifier` en est volontairement absent : il est rempli par
+  /// le chargement asynchrone du catalogue, pas par une action utilisateur.
+  List<Listenable> get _userEditableListenables => [
+        _departureCityNotifier,
+        _arrivalCityNotifier,
+        _departureDateNotifier,
+        _departureTimeNotifier,
+        _arrivalTimeNotifier,
+        _handoverStartNotifier,
+        _handoverEndNotifier,
+        _pickupAddressNotifier,
+        _deliveryAddressNotifier,
+        _availableKgNotifier,
+        _priceOptionNotifier,
+        _customPriceNotifier,
+        _transportModeNotifier,
+        _selectedContentNotifier,
+        _customAcceptedNotifier,
+        _refusedTypesNotifier,
+        _cashEnabledNotifier,
+        _kgPriceEnabledNotifier,
+        _descriptionCtrl,
+        _customAcceptedCtrl,
+        _refusedCtrl,
+        _customPriceCtrl,
+      ];
+
+  /// Signature de l'état saisissable du formulaire.
+  ///
+  /// La saleté se mesure en comparant cette signature à celle prise à
+  /// l'ouverture, et non en écoutant les notifications : plusieurs champs sont
+  /// réécrits avec leur propre valeur au démarrage (le `BlocListener` sur
+  /// `pricingMode` repositionne `_kgPriceEnabledNotifier`, et les notifiers de
+  /// `Set` notifient dès qu'on leur assigne un ensemble égal mais distinct).
+  /// Compter ces échos comme des modifications faisait apparaître la
+  /// confirmation de sortie sur un formulaire auquel personne n'avait touché.
+  ///
+  /// Effet de bord souhaitable : revenir à la saisie d'origine « nettoie » le
+  /// formulaire, et quitter redevient silencieux.
+  String get _formSignature {
+    String set(Set<String> v) => (v.toList()..sort()).join(',');
+    return [
+      _departureCityNotifier.value,
+      _arrivalCityNotifier.value,
+      _departureDateNotifier.value,
+      _departureTimeNotifier.value,
+      _arrivalTimeNotifier.value,
+      _handoverStartNotifier.value,
+      _handoverEndNotifier.value,
+      _pickupAddressNotifier.value?.label,
+      _deliveryAddressNotifier.value?.label,
+      _availableKgNotifier.value,
+      _priceOptionNotifier.value,
+      _customPriceNotifier.value,
+      _transportModeNotifier.value,
+      _cashEnabledNotifier.value,
+      _kgPriceEnabledNotifier.value,
+      set(_selectedContentNotifier.value),
+      set(_customAcceptedNotifier.value),
+      set(_refusedTypesNotifier.value),
+      _descriptionCtrl.text,
+      _customAcceptedCtrl.text,
+      _refusedCtrl.text,
+      _customPriceCtrl.text,
+    ].join('|');
+  }
+
+  /// Référence de comparaison. Nulle tant que la première frame n'a pas été
+  /// rendue : voir `_captureInitialSignature`.
+  String? _initialFormSignature;
+
+  void _markDirty() {
+    if (_initialFormSignature == null) return;
+    final dirty = _formSignature != _initialFormSignature;
+    if (widget.dirtyNotifier != null && widget.dirtyNotifier!.value != dirty) {
+      widget.dirtyNotifier!.value = dirty;
+    }
+  }
+
+  /// Reprend la référence une fois la première frame passée.
+  ///
+  /// Certains champs sont positionnés par l'application elle-même, pas par
+  /// l'utilisateur, et seulement une fois l'arbre construit : `PrixConditionsStep`
+  /// force par exemple les espèces à ON en post-frame quand Stripe n'est pas
+  /// configuré. Pris à la fin de `initState`, l'instantané précède ces
+  /// écritures et l'écran s'ouvrait « sale », réclamant une confirmation de
+  /// sortie à quelqu'un qui n'avait rien touché.
+  ///
+  /// Deux post-frames sont nécessaires : le premier s'exécute avant les
+  /// callbacks enregistrés pendant le build initial (ordre d'inscription),
+  /// donc c'est au second que tout est réellement stabilisé. Aucune saisie
+  /// utilisateur ne peut s'intercaler en deux frames.
+  void _captureInitialSignature() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _initialFormSignature = _formSignature;
+        _markDirty();
+      });
+    });
+  }
+
+  void _markStep1TouchedOnEntry() {
+    if (_step1Touched || widget.currentStepNotifier?.value != 1) return;
+    _step1Touched = true;
+    _updateCanContinueStep1();
   }
 
   void _updateCanContinueStep1() {
     widget.canContinueStep1Notifier?.value =
         _pickupAddress != null && _deliveryAddress != null;
+    // L'étape 1 n'a que deux champs, tous deux renseignés via une feuille de
+    // sélection : toute arrivée de valeur vaut interaction.
+    if (_pickupAddress != null || _deliveryAddress != null) {
+      _step1Touched = true;
+    }
+    _step1ErrorsNotifier.value = _step1Touched
+        ? {
+            if (_pickupAddress == null) _Step1Field.pickupAddress,
+            if (_deliveryAddress == null) _Step1Field.deliveryAddress,
+          }
+        : const <_Step1Field>{};
   }
 
   void _syncCanSubmit() {
@@ -645,21 +895,15 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Valide les champs obligatoires de l'étape 0 (Trajet).
   /// Affiche un snackbar d'erreur si un champ manque et retourne false.
   bool _validateStep0() {
-    if (_departureCityNotifier.value == null) {
-      _showError('Remplis tous les champs obligatoires');
-      return false;
-    }
-    if (_arrivalCityNotifier.value == null) {
-      _showError('Remplis tous les champs obligatoires');
-      return false;
-    }
-    if (_departureDateNotifier.value == null) {
-      _showError('Remplis tous les champs obligatoires');
-      return false;
-    }
-    if (_handoverStartNotifier.value == null ||
-        _handoverEndNotifier.value == null) {
-      _showError('Choisis la fenêtre de remise du colis');
+    // Backstop : « Continuer » est déjà désactivé tant que l'étape est
+    // incomplète, donc ce chemin n'est en principe jamais emprunté. Il dérive
+    // de `_missingStep0Fields` pour ne pas pouvoir diverger du bouton — c'est
+    // précisément cette divergence (liste dupliquée à la main, heure de départ
+    // oubliée) qui laissait passer une étape 0 incomplète.
+    final missing = _missingStep0Fields;
+    if (missing.isNotEmpty) {
+      _showError(missing.first.message);
+      _markStep0Touched();
       return false;
     }
     final handoverErr = _handoverWindowError();
@@ -839,6 +1083,12 @@ class _TripFormContentState extends State<_TripFormContent> {
     _transportModeNotifier.dispose();
     _pickupAddressNotifier.dispose();
     _deliveryAddressNotifier.dispose();
+    widget.currentStepNotifier?.removeListener(_markStep1TouchedOnEntry);
+    for (final l in _userEditableListenables) {
+      l.removeListener(_markDirty);
+    }
+    _step0ErrorsNotifier.dispose();
+    _step1ErrorsNotifier.dispose();
     super.dispose();
   }
 
@@ -1354,23 +1604,30 @@ class _TripFormContentState extends State<_TripFormContent> {
         const SizedBox(height: DonySpacing.lg),
       ],
       if (!_isEdit && !_isLocked) _buildTemplatesSuggestionBar(context, tt, cs),
-      TrajetStep(
-        departureCityNotifier: _departureCityNotifier,
-        arrivalCityNotifier: _arrivalCityNotifier,
-        departureCountryCodeNotifier: _departureCountryCodeNotifier,
-        arrivalCountryCodeNotifier: _arrivalCountryCodeNotifier,
-        departureDateNotifier: _departureDateNotifier,
-        departureTimeNotifier: _departureTimeNotifier,
-        arrivalTimeNotifier: _arrivalTimeNotifier,
-        transportModeNotifier: _transportModeNotifier,
-        onSelectDepartureTime: _selectDepartureTime,
-        onSelectArrivalTime: _selectArrivalTime,
-        onSelectDate: _selectDate,
-        // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
-        // Date verrouillée seulement en modification ; le dédié la garde éditable
-        // dans la fenêtre de tolérance.
-        lockCorridor: widget.lockCorridorAndDate || _isLocked,
-        lockDate: widget.lockCorridorAndDate,
+      ValueListenableBuilder<Set<_Step0Field>>(
+        valueListenable: _step0ErrorsNotifier,
+        builder: (context, missing, _) => TrajetStep(
+          departureCityNotifier: _departureCityNotifier,
+          arrivalCityNotifier: _arrivalCityNotifier,
+          departureCountryCodeNotifier: _departureCountryCodeNotifier,
+          arrivalCountryCodeNotifier: _arrivalCountryCodeNotifier,
+          departureDateNotifier: _departureDateNotifier,
+          departureTimeNotifier: _departureTimeNotifier,
+          arrivalTimeNotifier: _arrivalTimeNotifier,
+          transportModeNotifier: _transportModeNotifier,
+          onSelectDepartureTime: _selectDepartureTime,
+          onSelectArrivalTime: _selectArrivalTime,
+          onSelectDate: _selectDate,
+          fieldErrors: {
+            for (final f in missing)
+              if (f != _Step0Field.handoverWindow) f.name: f.message,
+          },
+          // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
+          // Date verrouillée seulement en modification ; le dédié la garde éditable
+          // dans la fenêtre de tolérance.
+          lockCorridor: widget.lockCorridorAndDate || _isLocked,
+          lockDate: widget.lockCorridorAndDate,
+        ),
       ),
       const SizedBox(height: DonySpacing.lg),
       const CaSectionLabel(label: 'FENÊTRE DE REMISE', iconAsset: 'clock'),
@@ -1418,9 +1675,18 @@ class _TripFormContentState extends State<_TripFormContent> {
                 _handoverEndNotifier,
                 _departureDateNotifier,
                 _departureTimeNotifier,
+                _step0ErrorsNotifier,
               ]),
               builder: (context, _) {
-                final err = _handoverWindowError();
+                // Deux erreurs distinctes sur la même ligne : « fenêtre
+                // incohérente » (dates posées mais invalides) et « fenêtre
+                // absente » (rien de choisi). La seconde n'apparaît qu'après
+                // une première interaction avec l'étape.
+                final err = _handoverWindowError() ??
+                    (_step0ErrorsNotifier.value
+                            .contains(_Step0Field.handoverWindow)
+                        ? _Step0Field.handoverWindow.message
+                        : null);
                 if (err == null) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(
@@ -1460,21 +1726,25 @@ class _TripFormContentState extends State<_TripFormContent> {
   // ── Step 1 — Lieux & Capacité ────────────────────────────────────────────────
   List<Widget> _buildStep1(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
-      LieuxCapaciteStep(
-        initialPickupAddress: _pickupAddressNotifier.value,
-        initialDeliveryAddress: _deliveryAddressNotifier.value,
-        onPickupSaved: (v) => _pickupAddressNotifier.value = v,
-        onPickupChanged: (addr) {
-          _pickupAddressNotifier.value = addr;
-          _updateCanContinueStep1();
-        },
-        onDeliverySaved: (v) => _deliveryAddressNotifier.value = v,
-        onDeliveryChanged: (addr) {
-          _deliveryAddressNotifier.value = addr;
-          _updateCanContinueStep1();
-        },
-        // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
-        lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
+      ValueListenableBuilder<Set<_Step1Field>>(
+        valueListenable: _step1ErrorsNotifier,
+        builder: (context, missing, _) => LieuxCapaciteStep(
+          initialPickupAddress: _pickupAddressNotifier.value,
+          initialDeliveryAddress: _deliveryAddressNotifier.value,
+          onPickupSaved: (v) => _pickupAddressNotifier.value = v,
+          onPickupChanged: (addr) {
+            _pickupAddressNotifier.value = addr;
+            _updateCanContinueStep1();
+          },
+          onDeliverySaved: (v) => _deliveryAddressNotifier.value = v,
+          onDeliveryChanged: (addr) {
+            _deliveryAddressNotifier.value = addr;
+            _updateCanContinueStep1();
+          },
+          fieldErrors: {for (final f in missing) f.name: f.message},
+          // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
+          lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
+        ),
       ),
     ];
   }
@@ -1564,6 +1834,37 @@ class _TripFormContentState extends State<_TripFormContent> {
   }
 
   static const int _totalSteps = 3;
+}
+
+// ─── Champs obligatoires par étape ───────────────────────────────────────────
+
+/// Champs obligatoires de l'étape 0, tels que `_submit()` les exige.
+///
+/// Toute entrée ajoutée ici bloque « Continuer » ET affiche son message sous
+/// le champ concerné : impossible d'ajouter l'un sans l'autre.
+enum _Step0Field {
+  departureCity('Ville de départ obligatoire'),
+  arrivalCity('Ville d\'arrivée obligatoire'),
+  departureDate('Date de départ obligatoire'),
+  departureTime('Heure de départ obligatoire'),
+  transportMode('Mode de transport obligatoire'),
+  handoverWindow('Fenêtre de remise obligatoire');
+
+  const _Step0Field(this.message);
+
+  /// Message affiché sous le champ. Repris mot pour mot des gardes de
+  /// `_submit()` pour que l'utilisateur lise la même chose aux deux endroits.
+  final String message;
+}
+
+/// Champs obligatoires de l'étape 1.
+enum _Step1Field {
+  pickupAddress('Lieu de remise du colis obligatoire'),
+  deliveryAddress('Lieu de récupération obligatoire');
+
+  const _Step1Field(this.message);
+
+  final String message;
 }
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────

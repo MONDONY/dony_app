@@ -1737,6 +1737,257 @@ void main() {
       },
     );
   });
+
+  // ── Group: gating des champs obligatoires ────────────────────────────────────
+
+  group('CreateTripScreen — Champs obligatoires (gating)', () {
+    /// Annonce complète, moins les champs passés à null.
+    AnnouncementModel makeAnnouncement({
+      String? departureTime = '22:00',
+      AddressData? pickupAddress =
+          const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
+      AddressData? deliveryAddress =
+          const AddressData(label: 'Dakar Centre', lat: 14.716, lng: -17.467),
+      TimeOfDay? arrivalTime,
+    }) =>
+        AnnouncementModel(
+          id: 'ann-gating',
+          travelerId: 'trav-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 8, 1),
+          departureTime: departureTime,
+          arrivalTime: arrivalTime == null
+              ? null
+              : '${arrivalTime.hour.toString().padLeft(2, '0')}:${arrivalTime.minute.toString().padLeft(2, '0')}',
+          availableKg: 10.0,
+          totalKg: 23.0,
+          pricePerKg: 8.0,
+          status: 'ACTIVE',
+          bidsCount: 0,
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+          handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
+          handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+          pickupAddress: pickupAddress,
+          deliveryAddress: deliveryAddress,
+          transportMode: TransportMode.plane,
+          acceptedPaymentMethods: {BidPaymentMethod.stripe},
+          acceptedContentTypes: const ['Vêtements'],
+          refusedTypes: const [],
+        );
+
+    Future<void> pump(WidgetTester tester, AnnouncementModel? ann) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: ann == null ? null : CreateTripArgs(announcement: ann),
+          ),
+        ),
+      );
+    }
+
+    // ── Le bug corrigé : l'heure de départ ne bloquait pas l'étape 0 ──────────
+
+    testWidgets(
+      'sans heure de départ, "Continuer" est désactivé à l\'étape 0',
+      (tester) async {
+        // _submit() refuse une annonce sans heure de départ (D1), mais
+        // _updateCanContinue() omettait ce champ : on pouvait traverser
+        // l'étape 0 puis se retrouver bloqué au submit.
+        await pump(tester, makeAnnouncement(departureTime: null));
+
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(continueBtn, findsOneWidget);
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'avec heure de départ, "Continuer" est actif à l\'étape 0',
+      (tester) async {
+        await pump(tester, makeAnnouncement());
+
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
+      },
+    );
+
+    // ── Un formulaire vierge ne s'ouvre pas en rouge ──────────────────────────
+
+    testWidgets(
+      'création : aucun message d\'erreur à l\'ouverture (formulaire vierge)',
+      (tester) async {
+        await pump(tester, null);
+
+        // Rien n'est rempli, mais l'utilisateur n'a encore rien touché.
+        expect(find.text('Ville de départ obligatoire'), findsNothing);
+        expect(find.text('Heure de départ obligatoire'), findsNothing);
+        expect(find.text('Date de départ obligatoire'), findsNothing);
+        expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
+        // Et « Continuer » est bien inerte.
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+      },
+    );
+
+    // ── Après une interaction, ce qui manque s'affiche ────────────────────────
+
+    testWidgets(
+      'après une interaction, les champs manquants affichent leur message',
+      (tester) async {
+        // Annonce sans heure de départ, avec une heure d'arrivée : effacer
+        // cette dernière est une interaction utilisateur qui arme l'affichage.
+        await pump(
+          tester,
+          makeAnnouncement(
+            departureTime: null,
+            arrivalTime: const TimeOfDay(hour: 10, minute: 30),
+          ),
+        );
+
+        // Avant interaction : rien en rouge.
+        expect(find.text('Heure de départ obligatoire'), findsNothing);
+
+        // Effacer l'heure d'arrivée (bouton « x » du champ optionnel).
+        final clearBtn = find.descendant(
+          of: find.byKey(const Key('arrivalTimeField')),
+          matching: find.byType(IconButton),
+        );
+        expect(clearBtn, findsOneWidget);
+        await tester.tap(clearBtn);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Le seul champ obligatoire manquant est signalé.
+        expect(find.text('Heure de départ obligatoire'), findsOneWidget);
+        // Les champs renseignés ne le sont pas.
+        expect(find.text('Ville de départ obligatoire'), findsNothing);
+        expect(find.text('Date de départ obligatoire'), findsNothing);
+      },
+    );
+
+    // ── Étape 1 : entrer dans l'étape révèle ses attentes ─────────────────────
+
+    testWidgets(
+      'étape 1 : les adresses manquantes sont signalées dès l\'entrée',
+      (tester) async {
+        await pump(
+          tester,
+          makeAnnouncement(pickupAddress: null, deliveryAddress: null),
+        );
+
+        // Étape 0 complète → on peut avancer.
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.byKey(const Key('pickup-address-error')), findsOneWidget);
+        expect(find.byKey(const Key('delivery-address-error')), findsOneWidget);
+
+        // Et « Continuer » de l'étape 1 est inerte.
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'étape 1 : adresses renseignées, aucune erreur et "Continuer" actif',
+      (tester) async {
+        await pump(tester, makeAnnouncement());
+
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.byKey(const Key('pickup-address-error')), findsNothing);
+        expect(find.byKey(const Key('delivery-address-error')), findsNothing);
+
+        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
+      },
+    );
+
+    // ── Garde-fou de sortie ───────────────────────────────────────────────────
+
+    /// Efface l'heure d'arrivée : une modification utilisateur réelle, sans
+    /// dépendre d'un sélecteur natif.
+    Future<void> editSomething(WidgetTester tester) async {
+      final clearBtn = find.descendant(
+        of: find.byKey(const Key('arrivalTimeField')),
+        matching: find.byType(IconButton),
+      );
+      expect(clearBtn, findsOneWidget);
+      await tester.tap(clearBtn);
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets(
+      'sortie sans saisie : la croix ferme directement, sans confirmation',
+      (tester) async {
+        await pump(tester, null);
+        // Laisse passer les post-frames qui stabilisent la référence.
+        await tester.pump();
+        await tester.pump();
+
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'sortie après saisie : la croix demande confirmation et annonce la perte',
+      (tester) async {
+        await pump(
+          tester,
+          makeAnnouncement(arrivalTime: const TimeOfDay(hour: 10, minute: 30)),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        await editSomething(tester);
+
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quitter sans enregistrer ?'), findsOneWidget);
+        expect(
+          find.textContaining('ne seront pas'),
+          findsOneWidget,
+          reason: 'la perte des données doit être annoncée explicitement',
+        );
+        expect(find.text('Continuer la saisie'), findsOneWidget);
+        expect(find.text('Quitter'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '« Continuer la saisie » referme le dialogue et garde le formulaire',
+      (tester) async {
+        await pump(
+          tester,
+          makeAnnouncement(arrivalTime: const TimeOfDay(hour: 10, minute: 30)),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        await editSomething(tester);
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Continuer la saisie'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Quitter sans enregistrer ?'), findsNothing);
+        expect(find.byType(CreateTripScreen), findsOneWidget);
+      },
+    );
+
+  });
 }
 
 // ── Route observer for navigation tests ──────────────────────────────────────
