@@ -28,6 +28,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
@@ -127,6 +128,62 @@ void main() {
 
   Finder dansPicker(Finder f) =>
       find.descendant(of: find.byType(SimpleSheet), matching: f);
+
+  /// `RendererBinding.rootPipelineOwner` (non deprecated) est la racine d'un
+  /// ARBRE de `PipelineOwner` (un par vue) et sa recherche du `SemanticsOwner`
+  /// de la vue de test s'est montrée instable d'un test à l'autre dans ce
+  /// binding. `WidgetsBinding.pipelineOwner` (deprecated) reste le seul accès
+  /// fiable et constant à l'owner de la vue de test unique utilisée ici.
+  SemanticsOwner semanticsOwnerActif(WidgetTester tester) =>
+      // ignore: deprecated_member_use
+      tester.binding.pipelineOwner.semanticsOwner!;
+
+  /// Le `Slider` M3 loge son indicateur de valeur dans un `OverlayPortal` :
+  /// le nœud sémantique du `RenderObject` trouvé via `find.byType(Slider)`
+  /// n'est qu'une frontière englobante sans action. Les actions
+  /// `increase`/`decrease` vivent sur un nœud descendant (le vrai rendu du
+  /// slider) qu'il faut retrouver en parcourant l'arbre sémantique.
+  SemanticsNode noeudSliderSemantics(WidgetTester tester) {
+    late SemanticsNode trouve;
+    void chercher(SemanticsNode n) {
+      if (n.getSemanticsData().hasAction(SemanticsAction.decrease)) {
+        trouve = n;
+        return;
+      }
+      n.visitChildren((c) {
+        chercher(c);
+        return true;
+      });
+    }
+
+    chercher(semanticsOwnerActif(tester).rootSemanticsNode!);
+    return trouve;
+  }
+
+  /// Déplace le curseur du sélecteur de poids par pas exacts d'1 kg, via les
+  /// actions sémantiques du `Slider` (incrément/décrément = 1 kg ici,
+  /// `divisions: 29` sur l'intervalle 1-30 kg). Précis au kg près : un
+  /// `tester.drag` en pixels dépendrait de la largeur réelle du widget et ne
+  /// permettrait pas d'atteindre une valeur exacte de façon fiable.
+  Future<void> ajusterPoids(
+    WidgetTester tester, {
+    required bool diminuer,
+    required int pas,
+  }) async {
+    final handle = tester.ensureSemantics();
+    await tester.pump();
+    final owner = semanticsOwnerActif(tester);
+    for (var i = 0; i < pas; i++) {
+      final noeud = noeudSliderSemantics(tester);
+      owner.performAction(
+        noeud.id,
+        diminuer ? SemanticsAction.decrease : SemanticsAction.increase,
+      );
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+    handle.dispose();
+  }
 
   // ── Rendu ──────────────────────────────────────────────────────────────────
 
@@ -527,8 +584,34 @@ void main() {
 
   // ── Sélecteurs partagés ────────────────────────────────────────────────────
 
-  testWidgets('sélecteur de poids : confirmer une valeur ≠ 6 kg pose le filtre',
+  testWidgets(
+      'sélecteur de poids : confirmer une valeur précise pose le filtre exact',
       (tester) async {
+    // État initial (20 kg) volontairement différent de la valeur attendue
+    // après interaction (15 kg) : l'assertion ne peut être satisfaite sans
+    // que le `Slider` ait réellement été bougé puis confirmé.
+    await ouvrir(
+      tester,
+      mode: SearchMode.trips,
+      initial: const HomeSearchFilters(weightMin: 20),
+    );
+
+    await taper(tester, find.text('POIDS MIN'));
+    expect(find.text('Poids minimum du trajet'), findsOneWidget);
+
+    await ajusterPoids(tester, diminuer: true, pas: 5); // 20 kg → 15 kg
+    await tester.tap(find.widgetWithText(DonyButton, 'Confirmer'));
+    await tester.pumpAndSettle();
+
+    final valeur = await rechercher(tester);
+    expect(valeur!.weightMin, 15.0);
+  });
+
+  testWidgets('sélecteur de poids : atteindre 6 kg vaut « pas de filtre »',
+      (tester) async {
+    // État initial (12 kg) différent de null : si le bouton « Confirmer »
+    // ne propageait plus la valeur du slider, le filtre resterait à 12 kg
+    // au lieu de disparaître.
     await ouvrir(
       tester,
       mode: SearchMode.trips,
@@ -536,22 +619,7 @@ void main() {
     );
 
     await taper(tester, find.text('POIDS MIN'));
-    expect(find.text('Poids minimum du trajet'), findsOneWidget);
-
-    await tester.drag(find.byType(Slider), const Offset(-40, 0));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(DonyButton, 'Confirmer'));
-    await tester.pumpAndSettle();
-
-    final valeur = await rechercher(tester);
-    expect(valeur!.weightMin, isNotNull);
-  });
-
-  testWidgets('sélecteur de poids : 6 kg vaut « pas de filtre »',
-      (tester) async {
-    await ouvrir(tester, mode: SearchMode.trips);
-
-    await taper(tester, find.text('POIDS MIN'));
+    await ajusterPoids(tester, diminuer: true, pas: 6); // 12 kg → 6 kg
     await tester.tap(find.widgetWithText(DonyButton, 'Confirmer'));
     await tester.pumpAndSettle();
 

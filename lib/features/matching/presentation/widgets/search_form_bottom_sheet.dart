@@ -291,24 +291,28 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                 BlocProvider(
                   create: (_) => getIt<CitySearchBloc>(),
                   child: CityAutocompleteField(
+                    fieldKey: const Key('search-form-departure-city'),
                     label: 'Ville de départ',
                     initialValue: _departureCityNotifier.value,
                     prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                     onSelected: (CityModel city) {
                       _departureCityNotifier.value = city.name;
                     },
+                    onCleared: () => _departureCityNotifier.value = null,
                   ),
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 BlocProvider(
                   create: (_) => getIt<CitySearchBloc>(),
                   child: CityAutocompleteField(
+                    fieldKey: const Key('search-form-arrival-city'),
                     label: 'Ville d\'arrivée',
                     initialValue: _arrivalCityNotifier.value,
                     prefixIcon: const DonyEmoji.planeLanding(size: 20),
                     onSelected: (CityModel city) {
                       _arrivalCityNotifier.value = city.name;
                     },
+                    onCleared: () => _arrivalCityNotifier.value = null,
                   ),
                 ),
               ],
