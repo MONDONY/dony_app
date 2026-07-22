@@ -39,6 +39,52 @@ class PackageRequestQuery {
   final bool? matchingMyTrips;
 }
 
+/// Paramètres de recherche de trajets envoyés au serveur via
+/// `AnnouncementSearchRequested` (voir
+/// `lib/features/matching/bloc/announcement_event.dart`), produits par
+/// [HomeSearchFilters]. Porte exactement les champs filtres de cet événement
+/// (hors `sortBy`/`sortDir`, qui ne sont pas des filtres) : c'est ce porteur,
+/// et non [SearchParams], qui reflète le vrai payload envoyé au serveur.
+class AnnouncementQuery {
+  const AnnouncementQuery({
+    this.departureCity,
+    this.arrivalCity,
+    this.departureDateFrom,
+    this.departureDateTo,
+    this.minAvailableKg,
+    this.maxAvailableKg,
+    this.maxPricePerKg,
+    this.kiloProOnly,
+    this.minRating,
+    this.weekendOnly,
+    this.transportMode,
+    this.kycVerifiedOnly,
+    this.contentType,
+    this.userLat,
+    this.userLng,
+    this.radiusKm,
+    this.urgent,
+  });
+
+  final String? departureCity;
+  final String? arrivalCity;
+  final DateTime? departureDateFrom;
+  final DateTime? departureDateTo;
+  final double? minAvailableKg;
+  final double? maxAvailableKg;
+  final double? maxPricePerKg;
+  final bool? kiloProOnly;
+  final double? minRating;
+  final bool? weekendOnly;
+  final TransportMode? transportMode;
+  final bool? kycVerifiedOnly;
+  final String? contentType;
+  final double? userLat;
+  final double? userLng;
+  final double? radiusKm;
+  final bool? urgent;
+}
+
 /// État de recherche de l'écran Rechercher, immuable et sans dépendance Flutter.
 ///
 /// Trois familles de champs : les communs, partagés par les deux modes et
@@ -106,13 +152,21 @@ class HomeSearchFilters {
   final ParcelSize? parcelSize;
   final bool matchingMyTrips;
 
-  /// Vrai dès qu'un filtre commun est posé. Conditionne l'affichage du compteur
-  /// sur le segment inactif : sans corridor ni date, le nombre de résultats de
-  /// l'autre mode est un total plateforme sans valeur informative.
-  bool get hasCommonFilter =>
+  /// Vrai si le compteur de résultats de l'autre mode (segment inactif du
+  /// sélecteur) est informatif plutôt qu'un simple total plateforme.
+  ///
+  /// Le critère n'est pas « un filtre commun est posé » mais « ce filtre
+  /// restreint-il le jeu de résultats de façon géographique ou temporelle ? »
+  /// Un corridor, une date ou « près de moi » réduisent effectivement le
+  /// périmètre recherché : le compteur de l'autre mode prend alors du sens.
+  /// `urgentOnly` en est volontairement exclu : il ne restreint ni la zone ni
+  /// la période, afficher un compteur sous son seul effet montrerait un total
+  /// plateforme sans rapport avec le filtre posé.
+  bool get otherModeCountIsMeaningful =>
       departureCity != null ||
       arrivalCity != null ||
-      datePreset != DonyDatePreset.none;
+      datePreset != DonyDatePreset.none ||
+      nearMeActive;
 
   DateTime? get dateFrom {
     final now = DateTime.now();
@@ -149,8 +203,11 @@ class HomeSearchFilters {
     }
   }
 
-  /// Payload de recherche de trajets. « Près de moi » neutralise le corridor :
-  /// on veut tous les voyageurs autour de l'utilisateur, pas ceux d'un corridor.
+  /// Sert uniquement à pré-remplir la sheet de filtres (valeurs par défaut des
+  /// champs affichés) : ce n'est PAS le payload envoyé au serveur pour la
+  /// recherche de trajets, voir [toAnnouncementQuery] pour cela. « Près de
+  /// moi » neutralise le corridor : on veut tous les voyageurs autour de
+  /// l'utilisateur, pas ceux d'un corridor.
   SearchParams toSearchParams() {
     final ignoreCorridor = nearMeActive;
     return SearchParams(
@@ -170,8 +227,9 @@ class HomeSearchFilters {
     );
   }
 
-  /// Payload de recherche de demandes. Les booléens serveur ne partent jamais
-  /// à `false` explicitement, même convention que le back : présent ou absent.
+  /// Payload de recherche de demandes réellement envoyé au serveur. Les
+  /// booléens serveur ne partent jamais à `false` explicitement, même
+  /// convention que le back : présent ou absent.
   PackageRequestQuery toPackageRequestQuery() => PackageRequestQuery(
         departure: departureCity,
         arrival: arrivalCity,
@@ -185,6 +243,35 @@ class HomeSearchFilters {
         urgent: urgentOnly ? true : null,
         matchingMyTrips: matchingMyTrips ? true : null,
       );
+
+  /// Payload de recherche de trajets réellement envoyé au serveur, porté par
+  /// `AnnouncementSearchRequested`. C'est cette méthode, et non
+  /// [toSearchParams], qu'il faut consulter/étendre pour tout filtre trajets
+  /// destiné au serveur. « Près de moi » neutralise le corridor comme pour
+  /// [toSearchParams]. Les booléens serveur ne partent jamais à `false`
+  /// explicitement, même convention que [toPackageRequestQuery].
+  AnnouncementQuery toAnnouncementQuery() {
+    final ignoreCorridor = nearMeActive;
+    return AnnouncementQuery(
+      departureCity: ignoreCorridor ? null : departureCity,
+      arrivalCity: ignoreCorridor ? null : arrivalCity,
+      departureDateFrom: dateFrom,
+      departureDateTo: dateTo,
+      minAvailableKg: weightMin,
+      maxAvailableKg: weightMax,
+      maxPricePerKg: maxPricePerKg,
+      kiloProOnly: kiloProOnly ? true : null,
+      minRating: minRating,
+      weekendOnly: weekendOnly ? true : null,
+      transportMode: transportMode,
+      kycVerifiedOnly: kycVerifiedOnly ? true : null,
+      contentType: contentType,
+      userLat: nearMeActive ? userLat : null,
+      userLng: nearMeActive ? userLng : null,
+      radiusKm: nearMeActive ? nearMeRadiusKm : null,
+      urgent: urgentOnly ? true : null,
+    );
+  }
 
   /// Nombre de filtres actifs pour le badge de la barre corridor : communs
   /// plus ceux du mode courant. Un filtre spécifique à l'autre mode ne compte pas.
