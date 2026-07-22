@@ -455,11 +455,65 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// l'autre mode, lui, a des résultats sur les mêmes critères.
   bool get _showCrossDiscovery => (_otherModeCount ?? 0) > 0;
 
+  /// Suffixe corridor du libellé de découverte croisée.
+  ///
+  /// Le compteur peut être significatif sans corridor (date seule, ou « près de
+  /// moi ») : dans ce cas le libellé se passe simplement de suffixe. Décision
+  /// assumée, plutôt que d'afficher une flèche orpheline ou un « Tous les
+  /// corridors » qui ne veut rien dire dans cette phrase.
+  String get _crossDiscoveryCorridorSuffix {
+    final dep = _filters.departureCity;
+    final arr = _filters.arrivalCity;
+    if (dep != null && arr != null) {
+      return ' sur $dep → $arr';
+    }
+    if (dep != null) {
+      return ' au départ de $dep';
+    }
+    if (arr != null) {
+      return ' vers $arr';
+    }
+    return '';
+  }
+
+  /// Nomme le corridor courant : « 5 colis cherchent un voyageur sur Lyon →
+  /// Bamako » en mode trajets, son symétrique « 12 voyageurs passent sur Lyon →
+  /// Bamako » en mode colis. Jamais de tiret cadratin ici, c'est un texte
+  /// affiché.
   String get _crossDiscoveryLabel {
     final n = _otherModeCount ?? 0;
+    final corridor = _crossDiscoveryCorridorSuffix;
     return _mode.isTrips
-        ? 'Voir $n colis à transporter'
-        : 'Voir $n trajet${n > 1 ? 's' : ''}';
+        ? '$n colis ${n > 1 ? 'cherchent' : 'cherche'} un voyageur$corridor'
+        : '$n voyageur${n > 1 ? 's' : ''} ${n > 1 ? 'passent' : 'passe'}$corridor';
+  }
+
+  /// Empile l'état vide et, quand l'autre mode a des résultats sur les mêmes
+  /// critères, la tuile de bascule. Zéro résultat sur un corridor est le moment
+  /// où l'autre mode a le plus de valeur.
+  Widget _emptyWithCrossDiscovery(Widget emptyState) {
+    if (!_showCrossDiscovery) {
+      return emptyState;
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        emptyState,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            0,
+            DonySpacing.lg,
+            DonySpacing.lg,
+          ),
+          child: _CrossDiscoveryTile(
+            key: const Key('cross-discovery'),
+            label: _crossDiscoveryLabel,
+            onTap: _onCrossDiscoveryTap,
+          ),
+        ),
+      ],
+    );
   }
 
   /// Bascule proposée depuis l'état vide : l'autre mode a des résultats là où
@@ -1368,26 +1422,22 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         final hasFilters = _activeFilterCount > 0;
                         return SliverFillRemaining(
                           hasScrollBody: false,
-                          child: DonyEmptyState(
-                            title: hasFilters
-                                ? 'Aucun colis avec ces filtres'
-                                : 'Demandes bientôt disponibles',
-                            description: hasFilters
-                                ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
-                                : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
-                            mascotte: DonyMascotteType.assis,
-                            // L'autre mode a des résultats sur les mêmes
-                            // filtres : la bascule vaut mieux qu'un effacement.
-                            actionLabel: _showCrossDiscovery
-                                ? _crossDiscoveryLabel
-                                : hasFilters
-                                ? 'Effacer les filtres'
-                                : null,
-                            onAction: _showCrossDiscovery
-                                ? _onCrossDiscoveryTap
-                                : hasFilters
-                                ? _resetFilters
-                                : null,
+                          // L'autre mode a des résultats sur les mêmes filtres :
+                          // la bascule est proposée sous le message.
+                          child: _emptyWithCrossDiscovery(
+                            DonyEmptyState(
+                              title: hasFilters
+                                  ? 'Aucun colis avec ces filtres'
+                                  : 'Demandes bientôt disponibles',
+                              description: hasFilters
+                                  ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
+                                  : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
+                              mascotte: DonyMascotteType.assis,
+                              actionLabel: hasFilters
+                                  ? 'Effacer les filtres'
+                                  : null,
+                              onAction: hasFilters ? _resetFilters : null,
+                            ),
                           ),
                         );
                       }
@@ -1445,28 +1495,26 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 else if (count == 0)
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: DonyEmptyState(
-                      title: _isNearMeActive
-                          ? 'Aucun voyageur à proximité'
-                          : _activeFilterCount > 0
-                          ? 'Aucun voyageur avec ces filtres'
-                          : 'Aucun voyageur sur ce corridor',
-                      description: _isNearMeActive
-                          ? 'Élargis ta zone ou désactive "Près de moi"'
-                          : _activeFilterCount > 0
-                          ? 'Modifie tes filtres pour voir plus de voyageurs.'
-                          : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
-                      mascotte: DonyMascotteType.assis,
-                      actionLabel: _showCrossDiscovery
-                          ? _crossDiscoveryLabel
-                          : !_isNearMeActive && _activeFilterCount > 0
-                          ? 'Effacer les filtres'
-                          : null,
-                      onAction: _showCrossDiscovery
-                          ? _onCrossDiscoveryTap
-                          : !_isNearMeActive && _activeFilterCount > 0
-                          ? _resetFilters
-                          : null,
+                    child: _emptyWithCrossDiscovery(
+                      DonyEmptyState(
+                        title: _isNearMeActive
+                            ? 'Aucun voyageur à proximité'
+                            : _activeFilterCount > 0
+                            ? 'Aucun voyageur avec ces filtres'
+                            : 'Aucun voyageur sur ce corridor',
+                        description: _isNearMeActive
+                            ? 'Élargis ta zone ou désactive "Près de moi"'
+                            : _activeFilterCount > 0
+                            ? 'Modifie tes filtres pour voir plus de voyageurs.'
+                            : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
+                        mascotte: DonyMascotteType.assis,
+                        actionLabel: !_isNearMeActive && _activeFilterCount > 0
+                            ? 'Effacer les filtres'
+                            : null,
+                        onAction: !_isNearMeActive && _activeFilterCount > 0
+                            ? _resetFilters
+                            : null,
+                      ),
                     ),
                   )
                 else
@@ -1673,6 +1721,74 @@ class _CorridorBar extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _CrossDiscoveryTile ───────────────────────────────────────────────────────
+
+/// Tuile de découverte croisée affichée sous l'état vide : elle nomme ce que
+/// l'autre mode contient sur le corridor courant, et un tap y bascule en
+/// conservant corridor et date.
+///
+/// Reprend le style des cartes de l'écran : bordure `cs.primary`, fond
+/// `cs.primaryContainer`, chevron à droite.
+class _CrossDiscoveryTile extends StatelessWidget {
+  const _CrossDiscoveryTile({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final radius = BorderRadius.circular(DonyRadius.card);
+
+    return Material(
+      color: cs.primaryContainer,
+      borderRadius: radius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(color: cs.primary),
+          ),
+          child: Container(
+            // Cible tactile confortable : jamais sous 44 pt (HIG).
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: cs.primary,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

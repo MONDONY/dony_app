@@ -39,6 +39,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:hive/hive.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -74,6 +75,11 @@ class MockCityRepository extends Mock implements CityRepository {}
 /// `countAnnouncements` directement via `getIt` (pas via un BLoC).
 class MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
+
+/// Dépôt de demandes simulé : sert au compteur de l'autre mode quand le mode
+/// courant est « Trajets » (il compte alors les colis via `search(size: 1)`).
+class MockPackageRequestRepository extends Mock
+    implements PackageRequestRepository {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
@@ -156,6 +162,10 @@ AnnouncementModel _makeAnn({String id = 'a1', String travelerId = 'traveler-1'})
       updatedAt: DateTime(2026, 5, 1),
     );
 
+/// Trois trajets d'un autre voyageur : le feed n'est pas vide, donc l'état vide
+/// (et sa tuile de découverte croisée) ne doit pas apparaître.
+final troisTrajets = [_makeAnn(), _makeAnn(id: 'a2'), _makeAnn(id: 'a3')];
+
 MockFavoriteIdsCubit _makeFavCubit({int count = 0}) {
   final cubit = MockFavoriteIdsCubit();
   final trips = count > 0
@@ -230,11 +240,50 @@ Widget _buildHome({
 /// [isTraveler] ne pilote plus l'affichage du sélecteur de mode (le rôle
 /// voyageur est universel côté serveur), il reste utile pour les branches
 /// dépendantes de la capacité réelle (bannière d'onboarding, favoris).
+///
+/// [tripResults] alimente le feed trajets (liste vide = état vide).
+/// [otherModeCount] enregistre un `PackageRequestRepository` qui renvoie ce
+/// total : c'est le nombre que `_dispatchOtherModeCount` annoncera pour l'autre
+/// mode tant que le mode courant est « Trajets ».
 Future<void> pumpHome(
   WidgetTester tester, {
   bool isTraveler = true,
   AnnouncementState? announcementState,
+  List<AnnouncementModel>? tripResults,
+  int? otherModeCount,
 }) async {
+  if (otherModeCount != null) {
+    final prRepo = MockPackageRequestRepository();
+    when(
+      () => prRepo.search(
+        departure: any(named: 'departure'),
+        arrival: any(named: 'arrival'),
+        dateFrom: any(named: 'dateFrom'),
+        dateTo: any(named: 'dateTo'),
+        maxWeight: any(named: 'maxWeight'),
+        parcelSize: any(named: 'parcelSize'),
+        lat: any(named: 'lat'),
+        lng: any(named: 'lng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: any(named: 'urgent'),
+        matchingMyTrips: any(named: 'matchingMyTrips'),
+        // Le compteur ne demande qu'un élément : pagination figée volontairement
+        // pour que le stub ne réponde qu'à ce cas d'appel.
+        // ignore: avoid_redundant_argument_values
+        page: 0,
+        size: 1,
+      ),
+    ).thenAnswer(
+      (_) async => PackageRequestSearchPage(
+        content: const [],
+        totalElements: otherModeCount,
+        page: 0,
+        size: 1,
+      ),
+    );
+    getIt.registerSingleton<PackageRequestRepository>(prRepo);
+  }
+
   tester.view.physicalSize = const Size(1000, 2000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
@@ -242,7 +291,9 @@ Future<void> pumpHome(
 
   await tester.pumpWidget(
     _buildHome(
-      announcementState: announcementState,
+      announcementState:
+          announcementState ??
+          (tripResults == null ? null : AnnouncementSearchLoaded(tripResults)),
       user: _makeUser(
         roles: isTraveler
             ? const ['SENDER', 'TRAVELER']
@@ -1117,6 +1168,162 @@ void main() {
         ).called(greaterThanOrEqualTo(1));
       },
     );
+  });
+
+  group('découverte croisée', () {
+    /// Le texte réellement porté par la tuile. Sert aux assertions sur le
+    /// libellé complet (accord, corridor) sans dépendre de `find.text`.
+    String labelTuile(WidgetTester tester) => tester
+        .widget<Text>(
+          find.descendant(
+            of: find.byKey(const Key('cross-discovery')),
+            matching: find.byType(Text),
+          ),
+        )
+        .data!;
+
+    testWidgets('0 résultat et autre mode non vide : la ligne est proposée', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
+      expect(labelTuile(tester), '5 colis cherchent un voyageur sur Lyon → Bamako');
+      // Jamais de tiret cadratin dans un texte affiché.
+      expect(labelTuile(tester), isNot(contains('—')));
+    });
+
+    testWidgets('la cible tactile fait au moins 44 points de haut', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      expect(
+        tester.getSize(find.byKey(const Key('cross-discovery'))).height,
+        greaterThanOrEqualTo(44),
+      );
+    });
+
+    testWidgets('taper la ligne bascule en conservant le corridor', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      await tester.tap(find.byKey(const Key('cross-discovery')));
+      await tester.pumpAndSettle();
+
+      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
+      expect(find.text('Lyon → Bamako'), findsOneWidget);
+
+      // L'étiquette affichée ne prouve que le rendu. La garantie porte sur le
+      // PAYLOAD : la recherche de demandes doit repartir au serveur avec le
+      // corridor. Sans ce `verify`, une bascule qui perdrait le corridor côté
+      // requête laisserait le test vert.
+      verify(
+        () => prBloc.add(
+          any(
+            that: isA<SearchFiltersChanged>()
+                .having((e) => e.departure, 'departure', 'Lyon')
+                .having((e) => e.arrival, 'arrival', 'Bamako'),
+          ),
+        ),
+      ).called(greaterThanOrEqualTo(1));
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.homeCrossDiscoveryTapped,
+          properties: {'from_mode': 'trips', 'count': 5},
+        ),
+      ).called(1);
+    });
+
+    testWidgets('0 résultat des deux côtés : aucune ligne', (tester) async {
+      await pumpHome(tester, tripResults: const [], otherModeCount: 0);
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      expect(find.byKey(const Key('cross-discovery')), findsNothing);
+      expect(find.textContaining('cherche'), findsNothing);
+    });
+
+    testWidgets('résultats présents : aucune ligne, le compteur suffit', (
+      tester,
+    ) async {
+      // Corridor posé ET autre mode à 5 : seule la présence de résultats dans
+      // le mode courant doit supprimer la tuile.
+      await pumpHome(tester, tripResults: troisTrajets, otherModeCount: 5);
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      expect(find.byKey(const Key('cross-discovery')), findsNothing);
+    });
+
+    testWidgets('un seul résultat de l\'autre côté : accord au singulier', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const [], otherModeCount: 1);
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      expect(labelTuile(tester), '1 colis cherche un voyageur sur Lyon → Bamako');
+    });
+
+    testWidgets(
+      'sans corridor, le libellé n\'affiche ni flèche orpheline ni corridor vide',
+      (tester) async {
+        await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+
+        // Date seule : le compteur devient significatif sans qu'un corridor
+        // soit posé.
+        await tester.tap(find.byKey(const Key('chip-date')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Aujourd\'hui').last);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Appliquer'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
+        expect(labelTuile(tester), '5 colis cherchent un voyageur');
+        expect(labelTuile(tester), isNot(contains('→')));
+        expect(labelTuile(tester), isNot(contains('Tous les corridors')));
+      },
+    );
+
+    testWidgets('en mode Colis, la ligne propose les voyageurs', (
+      tester,
+    ) async {
+      final annRepo = MockAnnouncementRepository();
+      when(
+        () => annRepo.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          maxAvailableKg: any(named: 'maxAvailableKg'),
+          maxPricePerKg: any(named: 'maxPricePerKg'),
+          kiloProOnly: any(named: 'kiloProOnly'),
+          minRating: any(named: 'minRating'),
+          weekendOnly: any(named: 'weekendOnly'),
+          transportMode: any(named: 'transportMode'),
+          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+          contentType: any(named: 'contentType'),
+          userLat: any(named: 'userLat'),
+          userLng: any(named: 'userLng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+        ),
+      ).thenAnswer((_) async => 12);
+      getIt.registerSingleton<AnnouncementRepository>(annRepo);
+
+      await pumpHome(tester);
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      expect(labelTuile(tester), '12 voyageurs passent sur Lyon → Bamako');
+    });
   });
 
   group('HomeScreen — _FavoritesButton', () {
