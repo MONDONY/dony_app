@@ -225,6 +225,26 @@ PackageRequestSearchItem _makeRequest(String id) => PackageRequestSearchItem(
   ),
 );
 
+/// Variante de [_makeRequest] dont l'expéditeur EST l'utilisateur courant
+/// (`uid-1`, cf. `_makeUser`) : `_visibleRequests` doit la retirer du feed.
+PackageRequestSearchItem _makeOwnRequest(String id) => PackageRequestSearchItem(
+  id: id,
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  desiredDate: DateTime(2026, 8, 15),
+  dateToleranceDays: 2,
+  weightKg: 5,
+  parcelSize: ParcelSize.medium,
+  categories: const ['Vêtements'],
+  sender: const SenderPublicProfile(
+    id: 'uid-1',
+    displayName: 'Moi',
+    averageRating: 4.8,
+    totalRatings: 3,
+    kycVerified: true,
+  ),
+);
+
 MockFavoriteIdsCubit _makeFavCubit({int count = 0}) {
   final cubit = MockFavoriteIdsCubit();
   final trips = count > 0
@@ -837,6 +857,32 @@ void main() {
         expect(find.textContaining('Tirer pour voir les 3 résultats'),
             findsOneWidget);
         expect(find.textContaining('Tirer pour voir les 1 résultat'),
+            findsNothing);
+      },
+    );
+
+    testWidgets(
+      'le compteur Colis ignore ses propres demandes, comme le feed',
+      (tester) async {
+        // Le feed masque les demandes de l'utilisateur courant. Le compteur
+        // lisait la liste brute et annonçait donc un résultat de plus que ce
+        // qui était affiché.
+        prSearchState = PackageRequestSearchState(
+          status: SearchStatus.loaded,
+          results: [
+            _makeRequest('r1'),
+            _makeRequest('r2'),
+            _makeOwnRequest('r-moi'),
+          ],
+        );
+
+        await pumpHome(tester, tripResults: [_makeAnn()]);
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Tirer pour voir les 2 résultats'),
+            findsOneWidget);
+        expect(find.textContaining('Tirer pour voir les 3 résultats'),
             findsNothing);
       },
     );

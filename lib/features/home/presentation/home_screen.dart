@@ -258,8 +258,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
       return _pullHint(cs, down: down, count: tripCount);
     }
     return BlocBuilder<PackageRequestSearchBloc, PackageRequestSearchState>(
-      builder: (ctx, prState) =>
-          _pullHint(cs, down: down, count: prState.results.length),
+      // `_visibleRequests` et non `results` : le feed masque les demandes de
+      // l'utilisateur courant, donc compter la liste brute annonçait un
+      // résultat de plus que ce que l'écran affiche. Le compteur du mode
+      // Trajets ne souffrait pas du problème, sa liste étant déjà filtrée en
+      // amont.
+      builder: (ctx, prState) => _pullHint(
+        cs,
+        down: down,
+        count: _visibleRequests(prState.results).length,
+      ),
     );
   }
 
