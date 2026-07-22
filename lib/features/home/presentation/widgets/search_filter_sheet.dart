@@ -14,13 +14,12 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
-import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -193,38 +192,9 @@ class _SearchFilterContent extends StatefulWidget {
 }
 
 class _SearchFilterContentState extends State<_SearchFilterContent> {
-  // Catalogue seedé synchrone avec le catalogue embarqué, puis remplacé par le
-  // catalogue live dès que le repository répond (repli hors ligne intégré).
-  final _catalogLabels = ValueNotifier<List<String>>(
-    fallbackCatalog.map((c) => c.label).toList(),
-  );
-  final _customContentCtrl = TextEditingController();
+  // Le catalogue est chargé par ContentCategorySelector lui-même.
 
   static const _maxWeightPresets = <double>[5, 10, 20];
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.mode.isTrips) {
-      unawaited(_loadCatalog());
-    }
-  }
-
-  @override
-  void dispose() {
-    _catalogLabels.dispose();
-    _customContentCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCatalog() async {
-    final categories =
-        await getIt<IContentCategoryRepository>().getCategories();
-    if (!mounted) {
-      return;
-    }
-    _catalogLabels.value = categories.map((c) => c.label).toList();
-  }
 
   HomeSearchFilters get _value => widget.notifier.value;
 
@@ -359,27 +329,22 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
       const SizedBox(height: DonySpacing.md),
       // Autocomplétion plutôt que les onze types dépliés : la liste occupait
       // la feuille entière et repoussait « Urgence du départ » hors écran.
-      // `maxSelection: 1` conserve la sémantique du filtre, dont le critère
+      // `singleSelection` conserve la sémantique du filtre, dont le critère
       // contenu est une valeur unique côté requête.
-      ValueListenableBuilder<List<String>>(
-        valueListenable: _catalogLabels,
-        builder: (ctx, labels, _) => ContentCategoryComboBox(
-          keyPrefix: 'filter-content',
-          maxSelection: 1,
-          hint: 'Rechercher un type de contenu…',
-          catalog: labels
-              .map((l) => ContentCategory(
-                    code: l,
-                    label: l,
-                    emoji: emojiForLabel(l),
-                  ))
-              .toList(),
-          selected: f.contentType == null ? const [] : [f.contentType!],
-          onChanged: (sel) => _update(
-            sel.isEmpty
-                ? f.copyWith(clearContentType: true)
-                : f.copyWith(contentType: sel.last),
-          ),
+      //
+      // Le selector charge lui-même le catalogue et le passe en
+      // `ContentCategory` complets : pas de conversion depuis des libellés,
+      // donc les emojis venus du backend sont conservés.
+      ContentCategorySelector(
+        repository: getIt<IContentCategoryRepository>(),
+        keyPrefix: 'filter-content',
+        singleSelection: true,
+        hint: 'Rechercher un type de contenu…',
+        selected: f.contentType == null ? const [] : [f.contentType!],
+        onChanged: (sel) => _update(
+          sel.isEmpty
+              ? f.copyWith(clearContentType: true)
+              : f.copyWith(contentType: sel.last),
         ),
       ).animate().fadeIn(delay: 100.ms),
       const SizedBox(height: DonySpacing.xl),
@@ -401,7 +366,6 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
       ).animate().fadeIn(delay: 120.ms),
     ];
   }
-
 
   // ── Colis ──────────────────────────────────────────────────────────────────
 

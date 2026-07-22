@@ -5,13 +5,12 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/zone_picker_field.dart';
-import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -105,34 +104,13 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
   /// car la zone n'est émise qu'après le 1er frame du picker).
   late bool _zoneOn;
 
-  final _customCategoryCtrl = TextEditingController();
-  // Catalogue de types de contenu — seedé synchrone avec le catalogue
-  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
-  // repository dès qu'il répond (repli automatique hors ligne intégré).
-  List<String> _catalogLabels = fallbackCatalog.map((c) => c.label).toList();
+  // Le catalogue est chargé par ContentCategorySelector lui-même.
 
   @override
   void initState() {
     super.initState();
     _zoneOn = context.read<CorridorAlertFormCubit>().state.hasZone;
-    unawaited(_loadCatalog());
   }
-
-  Future<void> _loadCatalog() async {
-    final categories =
-        await getIt<IContentCategoryRepository>().getCategories();
-    if (!mounted) return;
-    setState(() {
-      _catalogLabels = categories.map((c) => c.label).toList();
-    });
-  }
-
-  @override
-  void dispose() {
-    _customCategoryCtrl.dispose();
-    super.dispose();
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -228,30 +206,16 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: DonySpacing.sm),
-          // Multi-sélection ici (contrairement aux filtres de recherche) :
-          // une alerte peut porter sur plusieurs types de contenu, donc pas
-          // de maxSelection.
-          ContentCategoryComboBox(
+          // Multi-sélection ici, contrairement aux filtres de recherche :
+          // une alerte peut porter sur plusieurs types de contenu.
+          ContentCategorySelector(
+            repository: getIt<IContentCategoryRepository>(),
             keyPrefix: 'alert-content',
-            hint: 'Rechercher un type de contenu…',
-            catalog: _catalogLabels
-                .map((l) => ContentCategory(
-                      code: l,
-                      label: l,
-                      emoji: emojiForLabel(l),
-                    ))
-                .toList(),
             selected: state.contentCategories.toList(),
-            onChanged: (sel) {
-              final next = sel.toSet();
-              final current = state.contentCategories.toSet();
-              for (final added in next.difference(current)) {
-                cubit.toggleCategory(added);
-              }
-              for (final removed in current.difference(next)) {
-                cubit.toggleCategory(removed);
-              }
-            },
+            // Le composant émet la sélection complète : on l'affecte
+            // directement plutôt que de la redécomposer en toggles, ce qui
+            // produisait un emit (et un rebuild du formulaire) par élément.
+            onChanged: cubit.setCategories,
           ),
         ],
         const SizedBox(height: DonySpacing.md),

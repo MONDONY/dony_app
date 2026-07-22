@@ -89,7 +89,9 @@ void main() {
   void vueHaute(WidgetTester tester) {
     tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
+    // `view.reset` et non `resetPhysicalSize` : ce dernier laisse fuiter le
+    // devicePixelRatio sur les tests suivants du fichier.
+    addTearDown(tester.view.reset);
   }
 
   Future<void> ouvrir(
@@ -648,11 +650,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('filter-content-item-Chaussures')));
     await tester.pumpAndSettle();
-    // L'overlay de suggestions recouvre la barre d'action tant qu'il est
-    // ouvert : on rend le focus avant de valider.
+    // La liste déroulante reste ouverte et recouvre la barre d'action : on la
+    // referme avant de valider, comme le ferait l'utilisateur.
     primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-
     var valeur = await rechercher(tester);
     expect(valeur!.contentType, 'Chaussures');
 
@@ -672,7 +673,6 @@ void main() {
     await tester.pumpAndSettle();
     primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-
     valeur = await rechercher(tester);
     expect(valeur!.contentType, isNull);
   });
@@ -701,7 +701,6 @@ void main() {
     await tester.pumpAndSettle();
     primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-
     final valeur = await rechercher(tester);
     expect(valeur!.contentType, 'Épices');
   });

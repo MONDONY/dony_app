@@ -387,7 +387,7 @@ void main() {
   );
 
   testWidgets(
-    'saisie libre + Ajouter appelle cubit.toggleCategory avec le libellé libre',
+    'saisie libre transmet la sélection complète au cubit',
     (tester) async {
       final cubit = MockFormCubit();
       final cityBloc = MockCitySearchBloc();
@@ -435,7 +435,7 @@ void main() {
       await tester.tap(find.byKey(const Key('alert-content-item-add')));
       await tester.pumpAndSettle();
 
-      verify(() => cubit.toggleCategory('Poissons')).called(1);
+      verify(() => cubit.setCategories(['Poissons'])).called(1);
     },
   );
 }

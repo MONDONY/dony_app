@@ -122,8 +122,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('search-content-item-add')));
       await tester.pumpAndSettle();
-
-      // L'overlay recouvre la barre d'action tant qu'il est ouvert.
+      // La liste déroulante recouvre la barre d'action tant qu'elle est
+      // ouverte : on referme avant de valider, comme le ferait l'utilisateur.
       primaryFocus?.unfocus();
       await tester.pumpAndSettle();
 
