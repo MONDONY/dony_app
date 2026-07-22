@@ -45,8 +45,10 @@ class SearchModeSelector extends StatelessWidget {
           padding: const EdgeInsets.all(3),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _Segment(
+                key: const Key('search_mode_segment_trips'),
                 label: 'Trajets',
                 emoji: '✈️',
                 isActive: mode.isTrips,
@@ -54,6 +56,7 @@ class SearchModeSelector extends StatelessWidget {
                 onTap: () => mode.isTrips ? null : onChanged(SearchMode.trips),
               ),
               _Segment(
+                key: const Key('search_mode_segment_colis'),
                 label: 'Colis',
                 emoji: '📦',
                 isActive: mode.isParcels,
@@ -71,6 +74,7 @@ class SearchModeSelector extends StatelessWidget {
 
 class _Segment extends StatelessWidget {
   const _Segment({
+    super.key,
     required this.label,
     required this.emoji,
     required this.isActive,
@@ -93,6 +97,7 @@ class _Segment extends StatelessWidget {
       button: true,
       selected: isActive,
       label: '$label${showBadge ? ', $badge résultats' : ''}',
+      excludeSemantics: true,
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
