@@ -20,6 +20,7 @@ import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -356,48 +357,31 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
 
       _sectionLabel(context, 'MON COLIS CONTIENT'),
       const SizedBox(height: DonySpacing.md),
+      // Autocomplétion plutôt que les onze types dépliés : la liste occupait
+      // la feuille entière et repoussait « Urgence du départ » hors écran.
+      // `maxSelection: 1` conserve la sémantique du filtre, dont le critère
+      // contenu est une valeur unique côté requête.
       ValueListenableBuilder<List<String>>(
         valueListenable: _catalogLabels,
-        builder: (ctx, labels, _) => Wrap(
-          spacing: DonySpacing.sm,
-          runSpacing: DonySpacing.sm,
-          children: labels.map((type) {
-            final selected = f.contentType == type;
-            return ContentTypeChip(
-              label: type,
-              emoji: emojiForLabel(type),
-              selected: selected,
-              onTap: () => _update(
-                selected
-                    ? f.copyWith(clearContentType: true)
-                    : f.copyWith(contentType: type),
-              ),
-            );
-          }).toList(),
+        builder: (ctx, labels, _) => ContentCategoryComboBox(
+          keyPrefix: 'filter-content',
+          maxSelection: 1,
+          hint: 'Rechercher un type de contenu…',
+          catalog: labels
+              .map((l) => ContentCategory(
+                    code: l,
+                    label: l,
+                    emoji: emojiForLabel(l),
+                  ))
+              .toList(),
+          selected: f.contentType == null ? const [] : [f.contentType!],
+          onChanged: (sel) => _update(
+            sel.isEmpty
+                ? f.copyWith(clearContentType: true)
+                : f.copyWith(contentType: sel.last),
+          ),
         ),
       ).animate().fadeIn(delay: 100.ms),
-      const SizedBox(height: DonySpacing.sm),
-      Row(
-        children: [
-          Expanded(
-            child: TextField(
-              key: const Key('filter-content-type-free-text'),
-              controller: _customContentCtrl,
-              onSubmitted: (_) => _submitCustomContentType(),
-              decoration: const InputDecoration(
-                hintText: 'Ajouter un autre type…',
-                isDense: true,
-              ),
-            ),
-          ),
-          IconButton(
-            key: const Key('filter-content-type-free-text-add-btn'),
-            icon: const Icon(Icons.add_rounded),
-            onPressed: _submitCustomContentType,
-            tooltip: 'Ajouter',
-          ),
-        ],
-      ),
       const SizedBox(height: DonySpacing.xl),
 
       _sectionLabel(context, 'URGENCE DU DÉPART'),
@@ -418,14 +402,6 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
     ];
   }
 
-  void _submitCustomContentType() {
-    final value = _customContentCtrl.text.trim();
-    if (value.isEmpty) {
-      return;
-    }
-    _update(_value.copyWith(contentType: value));
-    _customContentCtrl.clear();
-  }
 
   // ── Colis ──────────────────────────────────────────────────────────────────
 

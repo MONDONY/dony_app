@@ -11,6 +11,7 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dar
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/zone_picker_field.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -132,14 +133,6 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
     super.dispose();
   }
 
-  void _addCustomCategory(CorridorAlertFormCubit cubit) {
-    final value = _customCategoryCtrl.text.trim();
-    if (value.isEmpty) return;
-    if (!cubit.state.contentCategories.contains(value)) {
-      cubit.toggleCategory(value);
-    }
-    _customCategoryCtrl.clear();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -235,47 +228,30 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: DonySpacing.sm),
-          Wrap(
-            spacing: DonySpacing.xs,
-            runSpacing: DonySpacing.xs,
-            children: [
-              for (final type in _catalogLabels)
-                DonyChip(
-                  label: type,
-                  selected: state.contentCategories.contains(type),
-                  onTap: () => cubit.toggleCategory(type),
-                ),
-              for (final type in state.contentCategories.where(
-                (c) => !_catalogLabels.contains(c),
-              ))
-                DonyChip(
-                  label: type,
-                  selected: true,
-                  onTap: () => cubit.toggleCategory(type),
-                ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const Key('alert-custom-category-input'),
-                  controller: _customCategoryCtrl,
-                  onSubmitted: (_) => _addCustomCategory(cubit),
-                  decoration: const InputDecoration(
-                    hintText: 'Ajouter un autre type…',
-                    isDense: true,
-                  ),
-                ),
-              ),
-              IconButton(
-                key: const Key('alert-add-custom-category-btn'),
-                icon: const Icon(Icons.add_rounded),
-                onPressed: () => _addCustomCategory(cubit),
-                tooltip: 'Ajouter',
-              ),
-            ],
+          // Multi-sélection ici (contrairement aux filtres de recherche) :
+          // une alerte peut porter sur plusieurs types de contenu, donc pas
+          // de maxSelection.
+          ContentCategoryComboBox(
+            keyPrefix: 'alert-content',
+            hint: 'Rechercher un type de contenu…',
+            catalog: _catalogLabels
+                .map((l) => ContentCategory(
+                      code: l,
+                      label: l,
+                      emoji: emojiForLabel(l),
+                    ))
+                .toList(),
+            selected: state.contentCategories.toList(),
+            onChanged: (sel) {
+              final next = sel.toSet();
+              final current = state.contentCategories.toSet();
+              for (final added in next.difference(current)) {
+                cubit.toggleCategory(added);
+              }
+              for (final removed in current.difference(next)) {
+                cubit.toggleCategory(removed);
+              }
+            },
           ),
         ],
         const SizedBox(height: DonySpacing.md),

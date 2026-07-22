@@ -12,6 +12,7 @@ import 'package:dony/features/home/presentation/widgets/search_filter_fields.dar
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -222,12 +223,6 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     ));
   }
 
-  void _submitCustomContentType() {
-    final value = _customContentCtrl.text.trim();
-    if (value.isEmpty) return;
-    _contentTypeNotifier.value = value;
-    _customContentCtrl.clear();
-  }
 
   void _reset() {
     _departureCityNotifier.value = null;
@@ -420,43 +415,26 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: _catalogLabelsNotifier.value.map((type) {
-                final isSelected = _contentTypeNotifier.value == type;
-                return ContentTypeChip(
-                  label: type,
-                  emoji: emojiForLabel(type),
-                  selected: isSelected,
-                  onTap: () {
-                    _contentTypeNotifier.value = isSelected ? null : type;
-                  },
-                );
-              }).toList(),
+            // Même autocomplétion que les autres écrans de contenu.
+            // `maxSelection: 1` : le critère de recherche reste une valeur
+            // unique.
+            ContentCategoryComboBox(
+              keyPrefix: 'search-content',
+              maxSelection: 1,
+              hint: 'Rechercher un type de contenu…',
+              catalog: _catalogLabelsNotifier.value
+                  .map((l) => ContentCategory(
+                        code: l,
+                        label: l,
+                        emoji: emojiForLabel(l),
+                      ))
+                  .toList(),
+              selected: _contentTypeNotifier.value == null
+                  ? const []
+                  : [_contentTypeNotifier.value!],
+              onChanged: (sel) =>
+                  _contentTypeNotifier.value = sel.isEmpty ? null : sel.last,
             ).animate().fadeIn(delay: 100.ms),
-            const SizedBox(height: DonySpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const Key('content-type-free-text'),
-                    controller: _customContentCtrl,
-                    onSubmitted: (_) => _submitCustomContentType(),
-                    decoration: const InputDecoration(
-                      hintText: 'Ajouter un autre type…',
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  key: const Key('content-type-free-text-add-btn'),
-                  icon: const Icon(Icons.add_rounded),
-                  onPressed: _submitCustomContentType,
-                  tooltip: 'Ajouter',
-                ),
-              ],
-            ),
             const SizedBox(height: DonySpacing.xl),
 
             // ── Urgence du départ ────────────────────────────────────────

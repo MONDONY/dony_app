@@ -95,6 +95,7 @@ class ContentCategoryComboBox extends StatefulWidget {
     required this.onChanged,
     this.hint = 'Ajouter un type de contenu…',
     this.keyPrefix = 'content-combo',
+    this.maxSelection,
   });
 
   final List<ContentCategory> catalog;
@@ -102,6 +103,14 @@ class ContentCategoryComboBox extends StatefulWidget {
   final ValueChanged<List<String>> onChanged;
   final String hint;
   final String keyPrefix;
+
+  /// Plafond de sélection. `null` (défaut) = illimité.
+  ///
+  /// À 1, le composant se comporte comme un choix exclusif : sélectionner une
+  /// autre entrée remplace la précédente au lieu de la refuser. C'est ce dont
+  /// ont besoin les filtres de recherche, dont le critère « contenu » est une
+  /// valeur unique côté requête.
+  final int? maxSelection;
 
   @override
   State<ContentCategoryComboBox> createState() =>
@@ -203,9 +212,19 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 
   void _toggle(String label) {
     setState(() {
-      if (!_selected.remove(label)) {
-        _selected.add(label);
+      if (_selected.remove(label)) {
+        return;
       }
+      final max = widget.maxSelection;
+      // Au plafond, la nouvelle entrée chasse la plus ancienne plutôt que
+      // d'être silencieusement ignorée : un tap doit toujours produire un effet
+      // visible.
+      if (max != null && _selected.length >= max) {
+        while (_selected.length >= max && _selected.isNotEmpty) {
+          _selected.remove(_selected.first);
+        }
+      }
+      _selected.add(label);
     });
     _emit();
     _controller.clear();
@@ -220,7 +239,15 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     if (value.isEmpty) {
       return;
     }
-    setState(() => _selected.add(value));
+    setState(() {
+      final max = widget.maxSelection;
+      if (max != null && _selected.length >= max) {
+        while (_selected.length >= max && _selected.isNotEmpty) {
+          _selected.remove(_selected.first);
+        }
+      }
+      _selected.add(value);
+    });
     _emit();
     _controller.clear();
     if (!_focusNode.hasFocus) {
