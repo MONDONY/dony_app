@@ -1380,7 +1380,39 @@ class _MapSenderViewState extends State<_MapSenderView> {
       },
       onParcelSizeClear: () =>
           _onFiltersChanged(_filters.copyWith(clearParcelSize: true)),
+      activeTrips: _activeTrips,
+      onMatchingMyTripsToggle: () =>
+          _onMatchingMyTripsChanged(!_filters.matchingMyTrips, _activeTrips),
+      // Une seule feuille ouverte ici, contrairement au même garde-fou déclenché
+      // depuis la feuille de filtres, qui en a deux empilées.
+      onMatchingMyTripsBlocked: () => unawaited(
+        showNoActiveTripSheet(
+          context,
+          sheetsToPop: 1,
+          onPublishTrip: _onPublishTripRequested,
+        ),
+      ),
     );
+  }
+
+  /// Bascule du filtre « Pour mes trajets » depuis la rangée de chips.
+  ///
+  /// La feuille de filtres a son propre chemin : elle renvoie un état complet
+  /// dont la bascule se constate au retour. Ici l'action est immédiate, donc
+  /// l'événement analytique est tiré sur place, avec les mêmes propriétés.
+  void _onMatchingMyTripsChanged(bool active, int? trips) {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeMatchingTripsFilterToggled,
+        properties: {
+          'active': active,
+          // Nombre inconnu : propriété absente plutôt que remplie d'un zéro
+          // que rien ne prouve.
+          if (trips != null) 'active_trips': trips,
+        },
+      ),
+    );
+    _onFiltersChanged(_filters.copyWith(matchingMyTrips: active));
   }
 
   /// Sous-titre de l'en-tête quand la recherche colis est filtrée « sur mes

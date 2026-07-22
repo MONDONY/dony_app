@@ -1322,16 +1322,18 @@ void main() {
           ),
         ).called(greaterThanOrEqualTo(1));
 
-        // Activer la pastille depuis la feuille de filtres colis.
+        // Activer la pastille depuis la feuille de filtres colis. Le libellé
+        // existe à deux endroits depuis que la pastille est aussi dans la
+        // rangée de chips : on cible celle de la feuille par sa clé.
         await tester.tap(find.byKey(const Key('corridor-bar')));
         await tester.pumpAndSettle();
         await tester.dragUntilVisible(
-          find.text('Pour mes trajets'),
+          find.byKey(const Key('chip-matching-my-trips')),
           find.byType(SingleChildScrollView).last,
           const Offset(0, -100),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Pour mes trajets'));
+        await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Rechercher'));
         await tester.pumpAndSettle();

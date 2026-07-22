@@ -513,34 +513,14 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
     return trips == null || trips > 0;
   }
 
-  /// Explique pourquoi le filtre est indisponible et propose l'action qui le
-  /// débloque. Le bouton est en position collée en bas de la feuille.
-  Future<void> _showNoActiveTripSheet(BuildContext context) {
-    final sheetNavigator = Navigator.of(context, rootNavigator: true);
-    return DonyBottomSheet.show<void>(
-      context,
-      title: 'Aucun trajet actif',
-      subtitle: 'Ce filtre ne montre que les colis compatibles avec tes '
-          'trajets à venir. Publie un trajet pour t\'en servir.',
-      stickyBottom: DonyButton(
-        label: 'Publier un trajet',
-        onPressed: () {
-          // Deux feuilles empilées : l'explication, puis la feuille de
-          // filtres. Les deux se ferment avant la navigation, sinon la
-          // création de trajet s'ouvrirait derrière elles.
-          sheetNavigator
-            ..pop()
-            ..pop();
-          // La navigation appartient à l'appelant : lui seul survit à la
-          // fermeture des deux feuilles, donc lui seul peut attendre le retour
-          // de la création de trajet et recharger le résumé des trajets. Faire
-          // le `push` d'ici laisserait la pastille grisée au retour.
-          widget.onPublishTrip?.call();
-        },
-      ),
-      child: const SizedBox.shrink(),
-    );
-  }
+  /// Depuis la feuille de filtres, deux feuilles sont empilées : l'explication
+  /// et la feuille elle-même.
+  Future<void> _showNoActiveTripSheet(BuildContext context) =>
+      showNoActiveTripSheet(
+        context,
+        sheetsToPop: 2,
+        onPublishTrip: widget.onPublishTrip,
+      );
 
   static String _parcelSizeLabel(ParcelSize s) => switch (s) {
         ParcelSize.small => 'Petit',
@@ -553,4 +533,41 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
         ParcelSize.medium => '📫',
         ParcelSize.large => '🧳',
       };
+}
+
+/// Explique pourquoi « Pour mes trajets » est indisponible et propose l'action
+/// qui le débloque. Source unique de cette formulation : le filtre est offert à
+/// deux endroits, la rangée de chips et la feuille de filtres, et les deux
+/// doivent dire la même chose.
+///
+/// [sheetsToPop] vaut 1 depuis la rangée de chips, où seule l'explication est
+/// ouverte, et 2 depuis la feuille de filtres, qui reste empilée dessous. Les
+/// feuilles se ferment avant la navigation, sinon la création de trajet
+/// s'ouvrirait derrière elles.
+///
+/// La navigation appartient à l'appelant, seul à survivre à la fermeture : lui
+/// seul peut attendre le retour de la création de trajet puis recharger le
+/// résumé, sans quoi la pastille resterait grisée au retour.
+Future<void> showNoActiveTripSheet(
+  BuildContext context, {
+  required int sheetsToPop,
+  VoidCallback? onPublishTrip,
+}) {
+  final sheetNavigator = Navigator.of(context, rootNavigator: true);
+  return DonyBottomSheet.show<void>(
+    context,
+    title: 'Aucun trajet actif',
+    subtitle: 'Ce filtre ne montre que les colis compatibles avec tes '
+        'trajets à venir. Publie un trajet pour t\'en servir.',
+    stickyBottom: DonyButton(
+      label: 'Publier un trajet',
+      onPressed: () {
+        for (var i = 0; i < sheetsToPop; i++) {
+          sheetNavigator.pop();
+        }
+        onPublishTrip?.call();
+      },
+    ),
+    child: const SizedBox.shrink(),
+  );
 }

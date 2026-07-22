@@ -39,7 +39,10 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onMaxWeightClear,
     required this.onParcelSizeTap,
     required this.onParcelSizeClear,
+    required this.onMatchingMyTripsToggle,
+    required this.onMatchingMyTripsBlocked,
     this.otherModeCount,
+    this.activeTrips,
   });
 
   final SearchMode mode;
@@ -70,6 +73,23 @@ class HomeFilterChipsRow extends StatelessWidget {
   final VoidCallback onMaxWeightClear;
   final VoidCallback onParcelSizeTap;
   final VoidCallback onParcelSizeClear;
+
+  /// Bascule du filtre « Pour mes trajets ». Appelée seulement quand le filtre
+  /// est utilisable, voir [_canFilterOnMyTrips].
+  final VoidCallback onMatchingMyTripsToggle;
+
+  /// Tap sur la pastille alors qu'aucun trajet actif n'existe : explique la
+  /// situation au lieu de lancer une recherche qui renverrait zéro.
+  final VoidCallback onMatchingMyTripsBlocked;
+
+  /// Nombre de trajets actifs du voyageur. `null` quand il est inconnu, par
+  /// exemple si le résumé d'activité a échoué : on ne grise pas sur une
+  /// supposition, le serveur tranchera.
+  final int? activeTrips;
+
+  /// Le filtre n'est bloqué que sur une certitude : zéro trajet actif connu.
+  /// Même règle que dans la feuille de filtres, les deux doivent rester alignés.
+  bool get _canFilterOnMyTrips => activeTrips == null || activeTrips! > 0;
 
   String get _dateLabel {
     switch (filters.datePreset) {
@@ -183,6 +203,21 @@ class HomeFilterChipsRow extends StatelessWidget {
               onTap: onKiloProToggle,
             ),
           ] else ...[
+            // Raccourci le plus utile du mode Colis : il vient donc en premier,
+            // avant les filtres de tri fin. Grisé sans trajet actif connu.
+            Opacity(
+              opacity: _canFilterOnMyTrips ? 1 : 0.4,
+              child: HomeSmallChip(
+                key: const Key('chip-row-matching-my-trips'),
+                label: 'Pour mes trajets',
+                isActive: filters.matchingMyTrips,
+                iconAsset: 'plane',
+                onTap: _canFilterOnMyTrips
+                    ? onMatchingMyTripsToggle
+                    : onMatchingMyTripsBlocked,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(
               label: _maxWeightLabel,
               isActive: filters.maxWeight != null,
