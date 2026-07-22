@@ -150,7 +150,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         (_categoriesNotifier.value.toList()..sort()).join(','),
         _disclaimerNotifier.value,
         (_gridQuantitiesNotifier.value.entries
-                .map((e) => '\${e.key}:\${e.value}')
+                .map((e) => '${e.key}:${e.value}')
                 .toList()
               ..sort())
             .join(','),
@@ -252,8 +252,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// resterait figé sur sa valeur d'ouverture.
   final _isDirtyNotifier = ValueNotifier<bool>(false);
 
-  bool get _isDirty => _isDirtyNotifier.value;
-
   void _recomputeDirty() {
     _isDirtyNotifier.value =
         _initialSignature != null && _formSignature != _initialSignature;
@@ -279,7 +277,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Sortie demandée depuis l'étape formulaire (croix ou retour système).
   Future<void> _handleExitRequest() async {
-    if (!_isDirty) {
+    if (!_isDirtyNotifier.value) {
       if (mounted) context.pop();
       return;
     }
@@ -636,15 +634,18 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
         ),
       ],
-      child: ValueListenableBuilder<_FormStep>(
-        valueListenable: _stepNotifier,
-        builder: (context, step, _) => ValueListenableBuilder<bool>(
-          valueListenable: _isDirtyNotifier,
-          builder: (context, isDirty, _) => PopScope(
+      // Un seul builder pour les deux signaux : le fichier utilise déjà cet
+      // idiome plus bas, et deux ValueListenableBuilder imbriqués ajoutaient
+      // un niveau d'indentation sans rien apporter.
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_stepNotifier, _isDirtyNotifier]),
+        builder: (context, _) {
+          final step = _stepNotifier.value;
+          return PopScope(
           // À l'étape paiement, le retour revient au formulaire. À l'étape
           // formulaire il ferme la feuille : on ne l'autorise directement que
           // si rien n'a été saisi.
-          canPop: step == _FormStep.form && !isDirty,
+          canPop: step == _FormStep.form && !_isDirtyNotifier.value,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
             if (step != _FormStep.form) {
@@ -715,8 +716,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               bidBloc: _bidBloc,
             ),
           ),
-        ),
-        ),
+        );
+        },
       ),
     );
   }

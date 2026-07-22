@@ -38,6 +38,7 @@ import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -74,7 +75,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   late final ValueNotifier<bool> _canContinueStep1Notifier;
   late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
   void Function({bool saveAsDraft})? _submit;
-  bool Function()? _validateStep0;
 
   /// Vrai dès que l'utilisateur a modifié un champ depuis l'ouverture.
   ///
@@ -222,7 +222,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             currentStepNotifier: _currentStepNotifier,
             departureTimeNotifier: _departureTimeNotifier,
             onSubmitReady: (fn) => _submit = fn,
-            onValidateStep0Ready: (fn) => _validateStep0 = fn,
             dirtyNotifier: _isDirtyNotifier,
           ),
         ),
@@ -268,13 +267,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                           onPressed: ((step == 0 && !canContinue) ||
                                   (step == 1 && !canContinueStep1))
                               ? null
-                              : () {
-                                  if (step == 0) {
-                                    final ok = _validateStep0?.call() ?? true;
-                                    if (!ok) return;
-                                  }
-                                  _currentStepNotifier.value = step + 1;
-                                },
+                              : () => _currentStepNotifier.value = step + 1,
                         ),
                       ),
                     ],
@@ -442,11 +435,6 @@ class _TripFormContent extends StatefulWidget {
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
 
-  /// Injecte le callback de validation de l'étape 0 dans le parent.
-  /// Le callback retourne true si tous les champs obligatoires de l'étape 0
-  /// (ville départ, ville arrivée, date) sont renseignés.
-  final void Function(bool Function())? onValidateStep0Ready;
-
   const _TripFormContent({
     this.announcement,
     this.lockContext,
@@ -458,7 +446,6 @@ class _TripFormContent extends StatefulWidget {
     this.dirtyNotifier,
     this.departureTimeNotifier,
     this.onSubmitReady,
-    this.onValidateStep0Ready,
   });
 
   @override
@@ -655,7 +642,6 @@ class _TripFormContentState extends State<_TripFormContent> {
       });
     }
     widget.onSubmitReady?.call(_submit);
-    widget.onValidateStep0Ready?.call(_validateStep0);
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
     _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
     _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
@@ -698,8 +684,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     widget.currentStepNotifier?.addListener(_markStep1TouchedOnEntry);
     _updateCanContinueStep1();
 
-    // Détection de saisie en cours.
-    _initialFormSignature = _formSignature;
+    // Détection de saisie en cours. La référence n'est PAS prise ici : elle
+    // l'est après deux post-frames (_captureInitialSignature), et le garde
+    // `_initialFormSignature == null` de _markDirty neutralise l'intervalle.
     for (final l in _userEditableListenables) {
       l.addListener(_markDirty);
     }
@@ -739,9 +726,10 @@ class _TripFormContentState extends State<_TripFormContent> {
       };
 
   void _updateCanContinue() {
+    final missing = _missingStep0Fields;
     widget.canContinueNotifier?.value =
-        _missingStep0Fields.isEmpty && _handoverWindowError() == null;
-    _refreshStep0Errors();
+        missing.isEmpty && _handoverWindowError() == null;
+    _refreshStep0Errors(missing);
   }
 
   /// Publie les erreurs de l'étape 0 — mais seulement une fois que
@@ -751,12 +739,23 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// `_step0Touched` n'est armé qu'après le calcul initial de `initState`
   /// (cf. `_markStep0Touched`), donc la pré-sélection automatique du mode
   /// avion ne le déclenche pas.
-  void _refreshStep0Errors() {
-    _step0ErrorsNotifier.value =
-        _step0Touched ? _missingStep0Fields : const <_Step0Field>{};
+  void _refreshStep0Errors([Set<_Step0Field>? missing]) {
+    final next =
+        _step0Touched ? (missing ?? _missingStep0Fields) : const <_Step0Field>{};
+    // `_missingStep0Fields` renvoie un Set neuf a chaque appel et Set n'a pas
+    // d'operator == : sans cette comparaison de contenu, le notifier previent
+    // ses auditeurs a chaque frappe meme quand rien n'a change, et reconstruit
+    // TrajetStep pour rien.
+    if (setEquals(_step0ErrorsNotifier.value, next)) return;
+    _step0ErrorsNotifier.value = next;
   }
 
+  /// Message du champ [f] s'il fait partie des manquants, sinon null.
+  static String? _msg(Set<_Step0Field> missing, _Step0Field f) =>
+      missing.contains(f) ? f.message : null;
+
   void _markStep0Touched() {
+    if (_step0Touched) return;
     _step0Touched = true;
     _refreshStep0Errors();
   }
@@ -874,17 +873,18 @@ class _TripFormContentState extends State<_TripFormContent> {
   void _updateCanContinueStep1() {
     widget.canContinueStep1Notifier?.value =
         _pickupAddress != null && _deliveryAddress != null;
-    // L'étape 1 n'a que deux champs, tous deux renseignés via une feuille de
-    // sélection : toute arrivée de valeur vaut interaction.
-    if (_pickupAddress != null || _deliveryAddress != null) {
-      _step1Touched = true;
-    }
-    _step1ErrorsNotifier.value = _step1Touched
+    // « Touché » est arme uniquement a l'entree dans l'etape
+    // (_markStep1TouchedOnEntry). L'armer aussi ici faisait s'ouvrir en rouge
+    // une modification d'annonce n'ayant qu'une des deux adresses.
+    final next = _step1Touched
         ? {
             if (_pickupAddress == null) _Step1Field.pickupAddress,
             if (_deliveryAddress == null) _Step1Field.deliveryAddress,
           }
         : const <_Step1Field>{};
+    if (!setEquals(_step1ErrorsNotifier.value, next)) {
+      _step1ErrorsNotifier.value = next;
+    }
   }
 
   void _syncCanSubmit() {
@@ -894,26 +894,6 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   /// Valide les champs obligatoires de l'étape 0 (Trajet).
   /// Affiche un snackbar d'erreur si un champ manque et retourne false.
-  bool _validateStep0() {
-    // Backstop : « Continuer » est déjà désactivé tant que l'étape est
-    // incomplète, donc ce chemin n'est en principe jamais emprunté. Il dérive
-    // de `_missingStep0Fields` pour ne pas pouvoir diverger du bouton — c'est
-    // précisément cette divergence (liste dupliquée à la main, heure de départ
-    // oubliée) qui laissait passer une étape 0 incomplète.
-    final missing = _missingStep0Fields;
-    if (missing.isNotEmpty) {
-      _showError(missing.first.message);
-      _markStep0Touched();
-      return false;
-    }
-    final handoverErr = _handoverWindowError();
-    if (handoverErr != null) {
-      _showError(handoverErr);
-      return false;
-    }
-    return true;
-  }
-
   /// Raison pour laquelle la fenêtre de remise saisie est invalide, ou null si
   /// elle est correcte (ou pas encore renseignée). Affichée en direct sous le
   /// picker, utilisée pour bloquer le passage à l'étape suivante.
@@ -1618,10 +1598,11 @@ class _TripFormContentState extends State<_TripFormContent> {
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
-          fieldErrors: {
-            for (final f in missing)
-              if (f != _Step0Field.handoverWindow) f.name: f.message,
-          },
+          departureCityError: _msg(missing, _Step0Field.departureCity),
+          arrivalCityError: _msg(missing, _Step0Field.arrivalCity),
+          departureDateError: _msg(missing, _Step0Field.departureDate),
+          departureTimeError: _msg(missing, _Step0Field.departureTime),
+          transportModeError: _msg(missing, _Step0Field.transportMode),
           // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
           // Date verrouillée seulement en modification ; le dédié la garde éditable
           // dans la fenêtre de tolérance.
@@ -1687,33 +1668,10 @@ class _TripFormContentState extends State<_TripFormContent> {
                             .contains(_Step0Field.handoverWindow)
                         ? _Step0Field.handoverWindow.message
                         : null);
-                if (err == null) return const SizedBox.shrink();
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.base,
-                    DonySpacing.xs,
-                    DonySpacing.base,
-                    DonySpacing.sm,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DonyIcon('circle-alert',
-                          size: 16,
-                          color: Theme.of(context).colorScheme.error),
-                      const SizedBox(width: DonySpacing.xs),
-                      Expanded(
-                        child: Text(
-                          err,
-                          key: const Key('sheet-handover-error'),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
+                return DonyFieldError(
+                  message: err,
+                  textKey: const Key('sheet-handover-error'),
+                  withIcon: true,
                 );
               },
             ),
@@ -1741,7 +1699,12 @@ class _TripFormContentState extends State<_TripFormContent> {
             _deliveryAddressNotifier.value = addr;
             _updateCanContinueStep1();
           },
-          fieldErrors: {for (final f in missing) f.name: f.message},
+          pickupAddressError: missing.contains(_Step1Field.pickupAddress)
+              ? _Step1Field.pickupAddress.message
+              : null,
+          deliveryAddressError: missing.contains(_Step1Field.deliveryAddress)
+              ? _Step1Field.deliveryAddress.message
+              : null,
           // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
           lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
         ),

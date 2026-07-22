@@ -41,12 +41,12 @@ class LieuxCapaciteStep extends StatelessWidget {
   /// un affichage en lecture seule. Les adresses restent éditables.
   final double? lockedCapacityKg;
 
-  /// Messages d'erreur des adresses obligatoires non renseignées, indexés par
-  /// `pickupAddress` / `deliveryAddress`.
+  /// Messages des adresses obligatoires non renseignées.
   ///
-  /// Vide par défaut : le parent ne les publie qu'après une première
+  /// Nuls par défaut : le parent ne les publie qu'après une première
   /// interaction avec l'étape.
-  final Map<String, String> fieldErrors;
+  final String? pickupAddressError;
+  final String? deliveryAddressError;
 
   const LieuxCapaciteStep({
     super.key,
@@ -57,7 +57,8 @@ class LieuxCapaciteStep extends StatelessWidget {
     required this.onPickupChanged,
     required this.onDeliveryChanged,
     this.lockedCapacityKg,
-    this.fieldErrors = const <String, String>{},
+    this.pickupAddressError,
+    this.deliveryAddressError,
   });
 
   @override
@@ -92,9 +93,9 @@ class LieuxCapaciteStep extends StatelessWidget {
             }
           },
         ).animate().fadeIn(delay: 80.ms),
-        _FieldError(
-          message: fieldErrors['pickupAddress'],
-          fieldKey: const Key('pickup-address-error'),
+        DonyFieldError(
+          message: pickupAddressError,
+          textKey: const Key('pickup-address-error'),
         ),
         const SizedBox(height: DonySpacing.base),
         AddressSelectorField(
@@ -110,9 +111,9 @@ class LieuxCapaciteStep extends StatelessWidget {
             }
           },
         ).animate().fadeIn(delay: 90.ms),
-        _FieldError(
-          message: fieldErrors['deliveryAddress'],
-          fieldKey: const Key('delivery-address-error'),
+        DonyFieldError(
+          message: deliveryAddressError,
+          textKey: const Key('delivery-address-error'),
         ),
         const SizedBox(height: DonySpacing.xxl),
 
@@ -178,32 +179,6 @@ class _LockedCapacityDisplay extends StatelessWidget {
           ),
           DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
         ],
-      ),
-    );
-  }
-}
-
-/// Message d'erreur sous un champ qui n'est pas un champ de formulaire (donc
-/// sans `InputDecoration.errorText`). Rend le même gabarit visuel.
-class _FieldError extends StatelessWidget {
-  const _FieldError({required this.message, required this.fieldKey});
-
-  final String? message;
-  final Key fieldKey;
-
-  @override
-  Widget build(BuildContext context) {
-    if (message == null) return const SizedBox.shrink();
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(
-        top: DonySpacing.xs,
-        left: DonySpacing.base,
-      ),
-      child: Text(
-        message!,
-        key: fieldKey,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.error),
       ),
     );
   }

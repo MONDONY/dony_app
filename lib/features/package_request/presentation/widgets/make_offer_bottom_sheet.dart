@@ -48,20 +48,15 @@ class MakeOfferBottomSheet {
     final rootRouter = GoRouter.of(context);
 
     VoidCallback? submitFn;
-    // Sortie protégée : la croix de la feuille et, faute de mieux, le
-    // glissement, doivent repasser par la confirmation d'abandon.
-    Future<void> Function()? exitFn;
 
     await DonyBottomSheet.show<void>(
       context,
       title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
-      // Le glissement vers le bas et le tap sur le fond appellent
-      // `Navigator.pop()` sans consulter `PopScope` (vérifié sur Flutter
-      // 3.44) : ils contourneraient la confirmation. On les désactive et on
-      // laisse la croix, qui elle passe par `onCloseRequested`.
+      // Le glissement vers le bas appelle `Navigator.pop()` sans consulter
+      // `PopScope` (vérifié sur Flutter 3.44) : il contournerait la
+      // confirmation. La barrière et la croix, elles, passent par
+      // `maybePop` et honorent donc le garde.
       enableDrag: false,
-      isDismissible: false,
-      onCloseRequested: () => exitFn?.call(),
       wrapper: (child) => BlocProvider(
         create: (_) => getIt<NegotiationBloc>(),
         child: child,
@@ -73,7 +68,6 @@ class MakeOfferBottomSheet {
         estimate: estimate,
         rootRouter: rootRouter,
         onSubmitReady: (fn) => submitFn = fn,
-        onExitReady: (fn) => exitFn = fn,
         initialDate: initialDate,
         isFirmPrice: isFirmPrice,
       ),
@@ -109,7 +103,6 @@ class _MakeOfferContent extends StatefulWidget {
     required this.estimate,
     required this.rootRouter,
     required this.onSubmitReady,
-    required this.onExitReady,
     this.initialDate,
     this.isFirmPrice = false,
   });
@@ -120,10 +113,6 @@ class _MakeOfferContent extends StatefulWidget {
   final PriceEstimate? estimate;
   final GoRouter rootRouter;
   final void Function(VoidCallback) onSubmitReady;
-
-  /// Remonte au parent la routine de sortie protégée, pour que la croix de la
-  /// feuille l'emprunte au lieu de popper directement.
-  final void Function(Future<void> Function()) onExitReady;
   final DateTime? initialDate;
   final bool isFirmPrice;
 
@@ -183,7 +172,6 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   void initState() {
     super.initState();
     widget.onSubmitReady(_submit);
-    widget.onExitReady(_handleExitRequest);
     _priceCtrl = TextEditingController(
       text: widget.targetPriceEur != null
           // Prix ferme : valeur EXACTE (pas d'arrondi) — sinon le backend

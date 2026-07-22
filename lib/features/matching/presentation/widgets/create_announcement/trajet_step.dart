@@ -57,13 +57,18 @@ class TrajetStep extends StatelessWidget {
   /// dédié la garde éditable (choix dans la fenêtre de tolérance).
   final bool lockDate;
 
-  /// Messages d'erreur des champs obligatoires non renseignés, indexés par nom
-  /// de champ (`departureCity`, `arrivalCity`, `departureDate`,
-  /// `departureTime`, `transportMode`).
+  /// Messages des champs obligatoires non renseignés.
   ///
-  /// Vide par défaut : le parent ne les publie qu'après une première
+  /// Nuls par défaut : le parent ne les publie qu'après une première
   /// interaction, pour ne pas ouvrir un formulaire vierge tout en rouge.
-  final Map<String, String> fieldErrors;
+  /// Nommés un par un plutôt que rassemblés dans une `Map` indexée par
+  /// chaîne : l'analyseur garantit ainsi la correspondance, là où une clé
+  /// renommée côté parent aurait fait disparaître le message en silence.
+  final String? departureCityError;
+  final String? arrivalCityError;
+  final String? departureDateError;
+  final String? departureTimeError;
+  final String? transportModeError;
 
   const TrajetStep({
     super.key,
@@ -82,7 +87,11 @@ class TrajetStep extends StatelessWidget {
     this.arrivalCityBloc,
     this.lockCorridor = false,
     this.lockDate = false,
-    this.fieldErrors = const <String, String>{},
+    this.departureCityError,
+    this.arrivalCityError,
+    this.departureDateError,
+    this.departureTimeError,
+    this.transportModeError,
   });
 
   @override
@@ -231,7 +240,7 @@ class TrajetStep extends StatelessWidget {
                         initialValue: departureCityNotifier.value,
                         prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
                         requiredLabel: true,
-                        errorText: fieldErrors['departureCity'],
+                        errorText: departureCityError,
                         onSelected: (CityModel city) {
                           // Code pays d'abord : le listener du city notifier
                           // (sync vers le form bloc) lit la valeur courante.
@@ -257,7 +266,7 @@ class TrajetStep extends StatelessWidget {
                   size: 18,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-                errorText: fieldErrors['departureTime'],
+                errorText: departureTimeError,
                 onTap: () => onSelectDepartureTime(),
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -281,7 +290,7 @@ class TrajetStep extends StatelessWidget {
                         initialValue: arrivalCityNotifier.value,
                         prefixIcon: const DonyEmoji.planeLanding(size: 20),
                         requiredLabel: true,
-                        errorText: fieldErrors['arrivalCity'],
+                        errorText: arrivalCityError,
                         onSelected: (CityModel city) {
                           arrivalCountryCodeNotifier?.value = city.countryCode;
                           arrivalCityNotifier.value = city.name;
@@ -336,7 +345,7 @@ class TrajetStep extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 requiredLabel: true,
-                errorText: fieldErrors['departureDate'],
+                errorText: departureDateError,
                 onTap: lockDate ? () {} : () => onSelectDate(),
               ),
               // ── Feedback informatif « sera signalé urgent » ────────────
@@ -400,22 +409,12 @@ class TrajetStep extends StatelessWidget {
           );
         },
       ).animate().fadeIn(delay: 110.ms),
-      // Les chips ne sont pas un champ de formulaire : le message d'erreur est
-      // rendu à la main, en reprenant le gabarit d'InputDecoration.errorText.
-      if (fieldErrors['transportMode'] != null) ...[
-        const SizedBox(height: DonySpacing.xs),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
-          child: Text(
-            fieldErrors['transportMode']!,
-            key: const Key('transport-mode-error'),
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: cs.error),
-          ),
-        ),
-      ],
+      // Les chips ne sont pas un champ de formulaire : pas de décoration, donc
+      // pas d'errorText natif.
+      DonyFieldError(
+        message: transportModeError,
+        textKey: const Key('transport-mode-error'),
+      ),
       const SizedBox(height: DonySpacing.xxl),
     ];
   }

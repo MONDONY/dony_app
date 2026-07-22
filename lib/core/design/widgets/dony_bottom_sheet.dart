@@ -22,7 +22,6 @@ abstract final class DonyBottomSheet {
     Widget? stickyBottom,
     bool isDismissible = true,
     bool enableDrag = true,
-    VoidCallback? onCloseRequested,
     bool showHandle = true,
     bool isScrollControlled = true,
     bool isDanger = false,
@@ -51,7 +50,6 @@ abstract final class DonyBottomSheet {
           isDanger: isDanger,
           expand: heightFraction != null,
           stickyBottom: stickyBottom,
-          onCloseRequested: onCloseRequested,
           child: child,
         );
         return wrapper != null ? wrapper(content) : content;
@@ -69,7 +67,6 @@ class _DonyBottomSheetContent extends StatelessWidget {
     this.showHandle = true,
     this.isDanger = false,
     this.expand = false,
-    this.onCloseRequested,
   });
 
   final Widget child;
@@ -79,14 +76,6 @@ class _DonyBottomSheetContent extends StatelessWidget {
   final bool showHandle;
   final bool isDanger;
   final bool expand;
-
-  /// Substitue la fermeture directe de la croix.
-  ///
-  /// `Navigator.pop()` ne consulte pas `PopScope` : sans ce détour, une
-  /// feuille qui protège une saisie en cours se ferait quand même vider par
-  /// sa propre croix. Null (défaut) = fermeture directe, comportement
-  /// historique de toutes les feuilles existantes.
-  final VoidCallback? onCloseRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -156,8 +145,10 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    onPressed: onCloseRequested ??
-                        () => Navigator.of(context).pop(),
+                    // `maybePop` consulte `PopScope`, contrairement à `pop` :
+                    // une feuille qui protège une saisie en cours ne se fait
+                    // donc plus vider par sa propre croix.
+                    onPressed: () => Navigator.maybePop(context),
                     icon: const DonyIcon('x', size: 20),
                     style: IconButton.styleFrom(
                       foregroundColor: cs.onSurfaceVariant,
