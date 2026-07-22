@@ -43,7 +43,14 @@ class TravelerCard extends StatelessWidget {
   /// own-trip add, but the optimistic UI would flash before the error arrives.
   final bool showFavorite;
 
-  static const int _maxVisibleChips = 3;
+  /// Nombre de catégories affichées avant la pastille « +N ».
+  ///
+  /// Une seule : les libellés du catalogue sont longs (« Documents &
+  /// administratif », « Médicaments traditionnels »), donc chacun occupait sa
+  /// propre ligne et la carte s'étirait sur trois rangées de pastilles pour
+  /// une information secondaire. Un libellé suivi de « +N » tient sur une
+  /// ligne ; le détail complet reste sur l'écran du trajet.
+  static const int _maxVisibleChips = 1;
 
   String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
 

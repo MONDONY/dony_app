@@ -23,6 +23,7 @@ AnnouncementModel _makeAnn({
   bool isProAccount = false,
   bool kycVerified = false,
   DateTime? departureDate,
+  List<String>? acceptedContentTypes,
 }) =>
     AnnouncementModel(
       id: 'a1',
@@ -38,6 +39,7 @@ AnnouncementModel _makeAnn({
       status: 'ACTIVE',
       createdAt: DateTime(2026, 5, 1),
       updatedAt: DateTime(2026, 5, 1),
+      acceptedContentTypes: acceptedContentTypes,
       traveler: TravelerProfile(
         id: 't1',
         displayName: 'Mamadou Diallo',
@@ -529,6 +531,45 @@ void main() {
       )));
       await tester.pumpAndSettle();
       expect(find.text('🔥 Urgent'), findsNothing);
+    });
+  });
+
+  group('TravelerCard — catégories acceptées', () {
+    // Les libellés du catalogue sont longs : au-delà d'un seul, chacun passait
+    // à la ligne et la carte s'étirait sur trois rangées pour une information
+    // secondaire.
+    testWidgets('n\'affiche qu\'une catégorie, le reste dans « +N »',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(acceptedContentTypes: const [
+          'Vêtements & tissus',
+          'Documents & administratif',
+          'Médicaments traditionnels',
+        ]),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vêtements & tissus'), findsOneWidget);
+      expect(find.text('+2'), findsOneWidget);
+      expect(find.text('Documents & administratif'), findsNothing);
+      expect(find.text('Médicaments traditionnels'), findsNothing);
+    });
+
+    testWidgets('une seule catégorie : pas de pastille « +N »', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement:
+            _makeAnn(acceptedContentTypes: const ['Vêtements & tissus']),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vêtements & tissus'), findsOneWidget);
+      expect(find.textContaining('+'), findsNothing);
     });
   });
 }
