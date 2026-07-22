@@ -9,6 +9,7 @@ import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
@@ -16,7 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class SearchFormBottomSheet {
   static Future<SearchParams?> show(
@@ -321,14 +321,14 @@ class _SearchFormContentState extends State<_SearchFormContent> {
             Row(
               children: [
                 Expanded(
-                  child: _DateField(
+                  child: DateField(
                     date: _dateNotifier.value,
                     onChanged: (v) => _dateNotifier.value = v,
                   ),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
-                  child: _WeightField(
+                  child: WeightField(
                     weightKg: _weightKgNotifier.value,
                     onChanged: (v) => _weightKgNotifier.value = v,
                   ),
@@ -341,7 +341,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
             Row(
               children: [
                 Expanded(
-                  child: _PriceField(
+                  child: PriceField(
                     maxPrice: _priceFilterNotifier.value
                         ? _maxPricePerKgNotifier.value
                         : null,
@@ -350,7 +350,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
-                  child: _TransportModeField(
+                  child: TransportModeField(
                     mode: _transportModeNotifier.value,
                     onTap: () => _showTransportPicker(context),
                   ),
@@ -369,25 +369,25 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               spacing: DonySpacing.sm,
               runSpacing: DonySpacing.sm,
               children: [
-                _QuickChip(
+                QuickChip(
                   label: 'Kilo Pro',
                   iconAsset: 'award',
                   active: _kiloProOnlyNotifier.value,
                   onChanged: (v) => _kiloProOnlyNotifier.value = v,
                 ),
-                _QuickChip(
+                QuickChip(
                   label: 'Note ≥ 4.5',
                   iconAsset: 'star',
                   active: _ratingFilterNotifier.value,
                   onChanged: (v) => _ratingFilterNotifier.value = v,
                 ),
-                _QuickChip(
+                QuickChip(
                   label: 'Week-end',
                   iconAsset: 'sofa',
                   active: _weekendFilterNotifier.value,
                   onChanged: (v) => _weekendFilterNotifier.value = v,
                 ),
-                _QuickChip(
+                QuickChip(
                   label: 'KYC vérifié',
                   iconAsset: 'shield-check',
                   active: _kycVerifiedOnlyNotifier.value,
@@ -408,7 +408,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               runSpacing: DonySpacing.sm,
               children: _catalogLabelsNotifier.value.map((type) {
                 final isSelected = _contentTypeNotifier.value == type;
-                return _ContentTypeChip(
+                return ContentTypeChip(
                   label: type,
                   emoji: emojiForLabel(type),
                   selected: isSelected,
@@ -453,58 +453,9 @@ class _SearchFormContentState extends State<_SearchFormContent> {
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: UrgencyFilter.values.map((f) {
-                final isSelected = _urgencyFilterNotifier.value == f;
-                return GestureDetector(
-                  onTap: () {
-                    _urgencyFilterNotifier.value = isSelected ? null : f;
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.base,
-                      vertical: DonySpacing.xs + 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? f.color.withValues(alpha: 0.12)
-                          : Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                      border: Border.all(
-                        color: isSelected ? f.color : cs.outline,
-                        width: isSelected ? 1.5 : 1.0,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 9,
-                          height: 9,
-                          decoration: BoxDecoration(
-                            color: f.color,
-                            shape: BoxShape.circle,
-                            boxShadow: isSelected
-                                ? [BoxShadow(color: f.color.withValues(alpha: 0.45), blurRadius: 4)]
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          f.label,
-                          style: tt.labelSmall?.copyWith(
-                            color: isSelected ? f.color : cs.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+            UrgencyFilterChips(
+              selected: _urgencyFilterNotifier.value,
+              onChanged: (v) => _urgencyFilterNotifier.value = v,
             ).animate().fadeIn(delay: 120.ms),
             const SizedBox(height: DonySpacing.sm),
           ],
@@ -526,7 +477,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => _SimpleSheet(
+        builder: (ctx, setS) => SimpleSheet(
           title: 'Prix maximum',
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -596,7 +547,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
         builder: (ctx, setS) {
           final tt = Theme.of(ctx).textTheme;
           final cs = Theme.of(ctx).colorScheme;
-          return _SimpleSheet(
+          return SimpleSheet(
             title: 'Mode de transport',
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -654,429 +605,6 @@ class _SearchFormContentState extends State<_SearchFormContent> {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-// ── Shared sub-components ─────────────────────────────────────────────────────
-
-class _SimpleSheet extends StatelessWidget {
-  const _SimpleSheet({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          Text(title, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: DonySpacing.base),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _PriceField extends StatelessWidget {
-  const _PriceField({required this.maxPrice, required this.onTap});
-
-  final double? maxPrice;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final active = maxPrice != null;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
-        decoration: BoxDecoration(
-          color: active ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: active ? cs.primary : cs.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('PRIX MAX', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-            const SizedBox(height: DonySpacing.xs),
-            Row(
-              children: [
-                DonyIcon('euro',
-                    size: 14, color: cs.primary),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  active ? '≤ ${maxPrice!.toInt()} €/kg' : 'Tous',
-                  style: tt.titleSmall?.copyWith(
-                    color: active ? cs.primary : cs.onSurfaceVariant,
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TransportModeField extends StatelessWidget {
-  const _TransportModeField({required this.mode, required this.onTap});
-
-  final TransportMode? mode;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final active = mode != null;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
-        decoration: BoxDecoration(
-          color: active ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: active ? cs.primary : cs.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('TRANSPORT', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-            const SizedBox(height: DonySpacing.xs),
-            Row(
-              children: [
-                active
-                    ? Icon(
-                        mode!.icon,
-                        size: 14,
-                        color: cs.primary,
-                      )
-                    : DonyIcon(
-                        'route',
-                        size: 14,
-                        color: cs.onSurfaceVariant,
-                      ),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(
-                  child: Text(
-                    active ? mode!.label : 'Tous',
-                    style: tt.titleSmall?.copyWith(
-                      color: active ? cs.primary : cs.onSurfaceVariant,
-                      fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                DonyIcon('chevron-right',
-                    size: 16, color: cs.onSurfaceVariant),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ContentTypeChip extends StatelessWidget {
-  const _ContentTypeChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    required this.emoji,
-  });
-
-  final String label;
-  final String emoji;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: 180.ms,
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
-        decoration: BoxDecoration(
-          color: selected ? cs.primaryContainer : Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 14)),
-            const SizedBox(width: DonySpacing.xs),
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: selected ? cs.primary : cs.onSurface,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickChip extends StatelessWidget {
-  const _QuickChip({
-    required this.label,
-    required this.active,
-    required this.onChanged,
-    this.iconAsset,
-  });
-
-  final String label;
-  final bool active;
-  final ValueChanged<bool> onChanged;
-  final String? iconAsset;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: () => onChanged(!active),
-      child: AnimatedContainer(
-        duration: 180.ms,
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: active ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: active ? cs.primary : cs.outline,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (iconAsset != null) ...[
-              DonyIcon(iconAsset!,
-                  size: 14, color: active ? cs.primary : cs.onSurfaceVariant),
-              const SizedBox(width: DonySpacing.xs),
-            ],
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: active ? cs.primary : cs.onSurface,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Date field ────────────────────────────────────────────────────────────────
-
-class _DateField extends StatelessWidget {
-  const _DateField({required this.date, required this.onChanged});
-
-  final DateTime? date;
-  final ValueChanged<DateTime?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: () async {
-        final d = await showDatePicker(
-          context: context,
-          initialDate: date ?? DateTime.now(),
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 365)),
-          builder: (c, child) => Theme(
-            data: Theme.of(c).copyWith(
-              colorScheme: ColorScheme.light(primary: cs.primary),
-            ),
-            child: child!,
-          ),
-        );
-        onChanged(d);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
-        decoration: BoxDecoration(
-          color: date != null ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: date != null ? cs.primary : cs.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('DATE', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-            const SizedBox(height: DonySpacing.xs),
-            Row(
-              children: [
-                DonyIcon('calendar',
-                    size: 14, color: cs.primary),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  date != null ? DateFormat('d MMM', 'fr').format(date!) : 'Choisir',
-                  style: tt.titleSmall?.copyWith(
-                    color: date != null ? cs.primary : cs.onSurfaceVariant,
-                    fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Weight field ──────────────────────────────────────────────────────────────
-
-class _WeightField extends StatelessWidget {
-  const _WeightField({required this.weightKg, required this.onChanged});
-
-  final double weightKg;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final active = weightKg != 6;
-    return GestureDetector(
-      onTap: () => _showWeightPicker(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
-        decoration: BoxDecoration(
-          color: active ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: active ? cs.primary : cs.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('POIDS MIN', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-            const SizedBox(height: DonySpacing.xs),
-            Row(
-              children: [
-                DonyIcon('scale',
-                    size: 14, color: cs.primary),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  '${weightKg.toStringAsFixed(0)} kg',
-                  style: tt.titleSmall?.copyWith(
-                    color: active ? cs.primary : cs.onSurface,
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showWeightPicker(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    double local = weightKg;
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => _SimpleSheet(
-          title: 'Poids minimum du trajet',
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      local.toStringAsFixed(0),
-                      style: tt.displayLarge?.copyWith(color: cs.primary),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Padding(
-                      padding: const EdgeInsets.only(top: DonySpacing.md),
-                      child: Text('kg',
-                          style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant)),
-                    ),
-                  ],
-                ),
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: cs.primary,
-                  inactiveTrackColor: cs.outline,
-                  thumbColor: cs.primary,
-                  trackHeight: 4,
-                ),
-                child: Slider(
-                  value: local,
-                  min: 1,
-                  max: 30,
-                  divisions: 29,
-                  onChanged: (v) => setS(() => local = v),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              DonyButton(
-                label: 'Confirmer',
-                onPressed: () {
-                  onChanged(local);
-                  ctx.pop();
-                },
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

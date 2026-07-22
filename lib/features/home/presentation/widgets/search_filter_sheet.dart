@@ -1,0 +1,605 @@
+// Feuille de filtres unique de l'écran Rechercher.
+//
+// Elle remplace les deux feuilles d'avant : `SearchFormBottomSheet` (riche,
+// trajets) et le `_showPrFilterSheet` bricolé dans `home_screen.dart` (deux
+// champs, colis). Le bloc du haut, corridor + date, est le MÊME
+// [CommonFilterBlock] dans les deux branches de mode : c'est ce partage, et non
+// une symétrie de façade, qui empêche le corridor de se perdre à la bascule.
+//
+// Ce que le mode colis n'expose volontairement pas : la note et la
+// vérification d'identité. Le serveur ne filtre pas les demandes là-dessus,
+// les proposer mentirait à l'utilisateur.
+
+import 'dart:async';
+
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/home/domain/home_search_filters.dart';
+import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+export 'package:dony/features/home/presentation/widgets/search_filter_fields.dart'
+    show CommonFilterBlock;
+
+abstract final class SearchFilterSheet {
+  /// Ouvre la feuille pour [mode], pré-remplie avec [initial].
+  ///
+  /// Retourne les filtres édités si l'utilisateur valide, `null` s'il ferme
+  /// sans valider (croix, barrier, retour système).
+  static Future<HomeSearchFilters?> show(
+    BuildContext context, {
+    required SearchMode mode,
+    required HomeSearchFilters initial,
+    double heightFraction = 0.85,
+  }) {
+    // État d'édition local : la feuille ne touche à rien tant que l'utilisateur
+    // n'a pas validé. Le stickyBottom l'écoute pour savoir s'il doit proposer
+    // « Tout effacer ».
+    final notifier = ValueNotifier<HomeSearchFilters>(initial);
+
+    return DonyBottomSheet.show<HomeSearchFilters>(
+      context,
+      title: mode.isTrips ? 'Filtrer les trajets' : 'Filtrer les colis',
+      heightFraction: heightFraction,
+      stickyBottom: ValueListenableBuilder<HomeSearchFilters>(
+        valueListenable: notifier,
+        builder: (ctx, value, _) {
+          final hasActive = value.activeCountFor(mode) > 0;
+          return Row(
+            children: [
+              if (hasActive) ...[
+                Expanded(
+                  child: _ClearAllButton(
+                    onTap: () => notifier.value = _cleared(value, mode),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+              ],
+              Expanded(
+                flex: 2,
+                child: DonyButton(
+                  // Même libellé dans les deux modes : l'ancienne feuille colis
+                  // disait « Appliquer », l'incohérence disparaît.
+                  label: 'Rechercher',
+                  onPressed: () => Navigator.of(ctx, rootNavigator: true)
+                      .pop(notifier.value),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      child: _SearchFilterContent(mode: mode, notifier: notifier),
+    ).whenComplete(notifier.dispose);
+  }
+
+  /// Efface les filtres communs et ceux du mode courant. Ceux de l'autre mode
+  /// sont préservés : ils ne sont pas comptés par `activeCountFor(mode)`, les
+  /// effacer serait une surprise invisible.
+  static HomeSearchFilters _cleared(HomeSearchFilters value, SearchMode mode) {
+    final common = value.copyWith(
+      clearCorridor: true,
+      datePreset: DonyDatePreset.none,
+      clearCustomDate: true,
+      urgentOnly: false,
+      clearNearMe: true,
+    );
+    if (mode.isTrips) {
+      return common.copyWith(
+        clearMaxPricePerKg: true,
+        clearWeight: true,
+        kiloProOnly: false,
+        clearMinRating: true,
+        weekendOnly: false,
+        clearTransportMode: true,
+        kycVerifiedOnly: false,
+        clearContentType: true,
+        clearUrgencyFilter: true,
+      );
+    }
+    return common.copyWith(
+      clearMaxWeight: true,
+      clearParcelSize: true,
+      matchingMyTrips: false,
+    );
+  }
+}
+
+class _ClearAllButton extends StatelessWidget {
+  const _ClearAllButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+          border: Border.all(color: cs.outline),
+        ),
+        child: Center(
+          child: Text(
+            'Tout effacer',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Contenu défilant ──────────────────────────────────────────────────────────
+
+class _SearchFilterContent extends StatefulWidget {
+  const _SearchFilterContent({required this.mode, required this.notifier});
+
+  final SearchMode mode;
+  final ValueNotifier<HomeSearchFilters> notifier;
+
+  @override
+  State<_SearchFilterContent> createState() => _SearchFilterContentState();
+}
+
+class _SearchFilterContentState extends State<_SearchFilterContent> {
+  // Catalogue seedé synchrone avec le catalogue embarqué, puis remplacé par le
+  // catalogue live dès que le repository répond (repli hors ligne intégré).
+  final _catalogLabels = ValueNotifier<List<String>>(
+    fallbackCatalog.map((c) => c.label).toList(),
+  );
+  final _customContentCtrl = TextEditingController();
+
+  static const _maxWeightPresets = <double>[5, 10, 20];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.mode.isTrips) {
+      unawaited(_loadCatalog());
+    }
+  }
+
+  @override
+  void dispose() {
+    _catalogLabels.dispose();
+    _customContentCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadCatalog() async {
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
+    if (!mounted) {
+      return;
+    }
+    _catalogLabels.value = categories.map((c) => c.label).toList();
+  }
+
+  HomeSearchFilters get _value => widget.notifier.value;
+
+  void _update(HomeSearchFilters next) => widget.notifier.value = next;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<HomeSearchFilters>(
+      valueListenable: widget.notifier,
+      builder: (context, f, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Le bloc commun : un seul widget, instancié à l'identique dans
+            // les deux modes.
+            CommonFilterBlock(value: f, onChanged: _update),
+            const SizedBox(height: DonySpacing.xl),
+            if (widget.mode.isTrips)
+              ..._tripsSection(context, f)
+            else
+              ..._parcelsSection(context, f),
+            const SizedBox(height: DonySpacing.sm),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _sectionLabel(BuildContext context, String text) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Text(
+      text,
+      style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+    );
+  }
+
+  // ── Trajets ────────────────────────────────────────────────────────────────
+
+  List<Widget> _tripsSection(BuildContext context, HomeSearchFilters f) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return [
+      Row(
+        children: [
+          Expanded(
+            child: WeightField(
+              weightKg: f.weightMin ?? 6,
+              onChanged: (v) => _update(
+                v == 6
+                    ? f.copyWith(clearWeight: true)
+                    : f.copyWith(weightMin: v),
+              ),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: PriceField(
+              maxPrice: f.maxPricePerKg,
+              onTap: () => unawaited(_showPricePicker(context)),
+            ),
+          ),
+        ],
+      ).animate().fadeIn(delay: 40.ms),
+      const SizedBox(height: DonySpacing.base),
+      Row(
+        children: [
+          Expanded(
+            child: TransportModeField(
+              mode: f.transportMode,
+              onTap: () => unawaited(_showTransportPicker(context)),
+            ),
+          ),
+          const Spacer(),
+        ],
+      ).animate().fadeIn(delay: 60.ms),
+      const SizedBox(height: DonySpacing.xl),
+
+      _sectionLabel(context, 'FILTRES RAPIDES'),
+      const SizedBox(height: DonySpacing.md),
+      Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          QuickChip(
+            label: 'Kilo Pro',
+            iconAsset: 'award',
+            active: f.kiloProOnly,
+            onChanged: (v) => _update(f.copyWith(kiloProOnly: v)),
+          ),
+          QuickChip(
+            label: 'Note ≥ 4.5',
+            iconAsset: 'star',
+            active: f.minRating != null,
+            onChanged: (v) => _update(
+              v ? f.copyWith(minRating: 4.5) : f.copyWith(clearMinRating: true),
+            ),
+          ),
+          QuickChip(
+            label: 'Week-end',
+            iconAsset: 'sofa',
+            active: f.weekendOnly,
+            onChanged: (v) => _update(f.copyWith(weekendOnly: v)),
+          ),
+          QuickChip(
+            label: 'KYC vérifié',
+            iconAsset: 'shield-check',
+            active: f.kycVerifiedOnly,
+            onChanged: (v) => _update(f.copyWith(kycVerifiedOnly: v)),
+          ),
+        ],
+      ).animate().fadeIn(delay: 80.ms),
+      const SizedBox(height: DonySpacing.xl),
+
+      _sectionLabel(context, 'MON COLIS CONTIENT'),
+      const SizedBox(height: DonySpacing.md),
+      ValueListenableBuilder<List<String>>(
+        valueListenable: _catalogLabels,
+        builder: (ctx, labels, _) => Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: labels.map((type) {
+            final selected = f.contentType == type;
+            return ContentTypeChip(
+              label: type,
+              emoji: emojiForLabel(type),
+              selected: selected,
+              onTap: () => _update(
+                selected
+                    ? f.copyWith(clearContentType: true)
+                    : f.copyWith(contentType: type),
+              ),
+            );
+          }).toList(),
+        ),
+      ).animate().fadeIn(delay: 100.ms),
+      const SizedBox(height: DonySpacing.sm),
+      Row(
+        children: [
+          Expanded(
+            child: TextField(
+              key: const Key('filter-content-type-free-text'),
+              controller: _customContentCtrl,
+              onSubmitted: (_) => _submitCustomContentType(),
+              decoration: const InputDecoration(
+                hintText: 'Ajouter un autre type…',
+                isDense: true,
+              ),
+            ),
+          ),
+          IconButton(
+            key: const Key('filter-content-type-free-text-add-btn'),
+            icon: const Icon(Icons.add_rounded),
+            onPressed: _submitCustomContentType,
+            tooltip: 'Ajouter',
+          ),
+        ],
+      ),
+      const SizedBox(height: DonySpacing.xl),
+
+      _sectionLabel(context, 'URGENCE DU DÉPART'),
+      const SizedBox(height: DonySpacing.xs),
+      Text(
+        'Filtrer les trajets selon leur proximité de départ',
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
+      const SizedBox(height: DonySpacing.md),
+      UrgencyFilterChips(
+        selected: f.urgencyFilter,
+        onChanged: (v) => _update(
+          v == null
+              ? f.copyWith(clearUrgencyFilter: true)
+              : f.copyWith(urgencyFilter: v),
+        ),
+      ).animate().fadeIn(delay: 120.ms),
+    ];
+  }
+
+  void _submitCustomContentType() {
+    final value = _customContentCtrl.text.trim();
+    if (value.isEmpty) {
+      return;
+    }
+    _update(_value.copyWith(contentType: value));
+    _customContentCtrl.clear();
+  }
+
+  // ── Colis ──────────────────────────────────────────────────────────────────
+
+  List<Widget> _parcelsSection(BuildContext context, HomeSearchFilters f) {
+    return [
+      _sectionLabel(context, 'POIDS MAXIMAL'),
+      const SizedBox(height: DonySpacing.md),
+      Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          for (final kg in _maxWeightPresets)
+            QuickChip(
+              label: '≤ ${kg.toInt()} kg',
+              iconAsset: 'scale',
+              active: f.maxWeight == kg,
+              onChanged: (v) => _update(
+                v ? f.copyWith(maxWeight: kg) : f.copyWith(clearMaxWeight: true),
+              ),
+            ),
+        ],
+      ).animate().fadeIn(delay: 40.ms),
+      const SizedBox(height: DonySpacing.xl),
+
+      _sectionLabel(context, 'TAILLE DU COLIS'),
+      const SizedBox(height: DonySpacing.md),
+      Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          for (final size in ParcelSize.values)
+            ContentTypeChip(
+              label: _parcelSizeLabel(size),
+              emoji: _parcelSizeEmoji(size),
+              selected: f.parcelSize == size,
+              onTap: () => _update(
+                f.parcelSize == size
+                    ? f.copyWith(clearParcelSize: true)
+                    : f.copyWith(parcelSize: size),
+              ),
+            ),
+        ],
+      ).animate().fadeIn(delay: 60.ms),
+      const SizedBox(height: DonySpacing.xl),
+
+      _sectionLabel(context, 'FILTRES RAPIDES'),
+      const SizedBox(height: DonySpacing.md),
+      Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: [
+          QuickChip(
+            label: 'Pour mes trajets',
+            iconAsset: 'plane',
+            active: f.matchingMyTrips,
+            onChanged: (v) => _update(f.copyWith(matchingMyTrips: v)),
+          ),
+        ],
+      ).animate().fadeIn(delay: 80.ms),
+    ];
+  }
+
+  static String _parcelSizeLabel(ParcelSize s) => switch (s) {
+        ParcelSize.small => 'Petit',
+        ParcelSize.medium => 'Moyen',
+        ParcelSize.large => 'Grand',
+      };
+
+  static String _parcelSizeEmoji(ParcelSize s) => switch (s) {
+        ParcelSize.small => '📦',
+        ParcelSize.medium => '📫',
+        ParcelSize.large => '🧳',
+      };
+
+  // ── Pickers ────────────────────────────────────────────────────────────────
+
+  Future<void> _showPricePicker(BuildContext context) async {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    const double kMin = 3;
+    const double kMax = 25;
+    double local = _value.maxPricePerKg ?? kMax;
+    bool localEnabled = _value.maxPricePerKg != null;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => SimpleSheet(
+          title: 'Prix maximum',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Text(
+                  localEnabled ? '≤ ${local.toInt()} €/kg' : 'Tous les prix',
+                  style: tt.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: localEnabled ? cs.primary : cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: cs.primary,
+                  thumbColor: cs.primary,
+                  overlayColor: cs.primaryContainer,
+                  inactiveTrackColor: cs.outline,
+                ),
+                child: Slider(
+                  value: local,
+                  min: kMin,
+                  max: kMax,
+                  divisions: (kMax - kMin).toInt(),
+                  onChanged: (v) => setS(() {
+                    local = v;
+                    localEnabled = v < kMax;
+                  }),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('3 €/kg',
+                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                    Text('25 €/kg',
+                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: DonySpacing.lg),
+              DonyButton(
+                label: 'Appliquer',
+                onPressed: () {
+                  _update(localEnabled
+                      ? _value.copyWith(maxPricePerKg: local)
+                      : _value.copyWith(clearMaxPricePerKg: true));
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showTransportPicker(BuildContext context) async {
+    TransportMode? local = _value.transportMode;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) {
+          final tt = Theme.of(ctx).textTheme;
+          final cs = Theme.of(ctx).colorScheme;
+          return SimpleSheet(
+            title: 'Mode de transport',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ...TransportMode.values.map((mode) {
+                  final selected = local == mode;
+                  return GestureDetector(
+                    onTap: () => setS(() => local = selected ? null : mode),
+                    child: AnimatedContainer(
+                      duration: 180.ms,
+                      margin: const EdgeInsets.only(bottom: DonySpacing.xs),
+                      constraints: const BoxConstraints(minHeight: 44),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.md,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? cs.primaryContainer
+                            : Theme.of(ctx).scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: Border.all(
+                          color: selected ? cs.primary : cs.outline,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(mode.icon,
+                              size: 18,
+                              color: selected ? cs.primary : cs.onSurfaceVariant),
+                          const SizedBox(width: DonySpacing.md),
+                          Expanded(
+                            child: Text(
+                              mode.label,
+                              style: tt.bodyMedium?.copyWith(
+                                color: selected ? cs.primary : cs.onSurface,
+                                fontWeight:
+                                    selected ? FontWeight.w600 : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          if (selected)
+                            DonyIcon('circle-check', size: 18, color: cs.primary),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: DonySpacing.md),
+                DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () {
+                    _update(local == null
+                        ? _value.copyWith(clearTransportMode: true)
+                        : _value.copyWith(transportMode: local));
+                    Navigator.of(ctx).pop();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

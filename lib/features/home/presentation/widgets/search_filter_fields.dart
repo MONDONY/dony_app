@@ -1,0 +1,664 @@
+// Champs de filtre partagés par les deux modes de l'écran Rechercher.
+//
+// Ces widgets viennent de `search_form_bottom_sheet.dart` (feuille trajets) :
+// ils y étaient privés, ils sont ici publics pour que la feuille unique
+// (`search_filter_sheet.dart`) et l'ancienne feuille trajets s'appuient sur le
+// MÊME code. Le style est inchangé, seul le préfixe `_` a sauté (plus quelques
+// libellés rendus paramétrables, pour servir « poids min » côté trajets et
+// « poids max » côté colis).
+
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/home/domain/home_search_filters.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/urgency_filter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+// ── Bloc commun aux deux modes ────────────────────────────────────────────────
+
+/// Corridor (ville de départ, ville d'arrivée) et date : les seuls filtres que
+/// les deux modes partagent réellement côté serveur.
+///
+/// **Un seul widget, instancié à l'identique dans les deux branches de mode.**
+/// C'est ce partage, et non une duplication symétrique, qui garantit qu'un
+/// corridor saisi en mode trajets survit à la bascule vers le mode colis.
+class CommonFilterBlock extends StatelessWidget {
+  const CommonFilterBlock({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final HomeSearchFilters value;
+  final ValueChanged<HomeSearchFilters> onChanged;
+
+  static const _presets = <(DonyDatePreset, String)>[
+    (DonyDatePreset.today, "Aujourd'hui"),
+    (DonyDatePreset.thisWeek, 'Cette semaine'),
+    (DonyDatePreset.thisMonth, 'Ce mois'),
+  ];
+
+  void _togglePreset(DonyDatePreset preset) {
+    final active = value.datePreset == preset;
+    onChanged(value.copyWith(
+      datePreset: active ? DonyDatePreset.none : preset,
+      clearCustomDate: true,
+    ));
+  }
+
+  void _onCustomDate(DateTime? date) {
+    if (date == null) {
+      onChanged(value.copyWith(
+        datePreset: DonyDatePreset.none,
+        clearCustomDate: true,
+      ));
+      return;
+    }
+    onChanged(value.copyWith(
+      datePreset: DonyDatePreset.custom,
+      customDate: date,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final customDate =
+        value.datePreset == DonyDatePreset.custom ? value.customDate : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            BlocProvider(
+              create: (_) => getIt<CitySearchBloc>(),
+              child: CityAutocompleteField(
+                fieldKey: const Key('filter-departure-city'),
+                label: 'Ville de départ',
+                initialValue: value.departureCity,
+                prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
+                onSelected: (CityModel city) =>
+                    onChanged(value.copyWith(departureCity: city.name)),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            BlocProvider(
+              create: (_) => getIt<CitySearchBloc>(),
+              child: CityAutocompleteField(
+                fieldKey: const Key('filter-arrival-city'),
+                label: "Ville d'arrivée",
+                initialValue: value.arrivalCity,
+                prefixIcon: const DonyEmoji.planeLanding(size: 20),
+                onSelected: (CityModel city) =>
+                    onChanged(value.copyWith(arrivalCity: city.name)),
+              ),
+            ),
+          ],
+        ).animate().fadeIn(duration: 250.ms),
+        const SizedBox(height: DonySpacing.base),
+        Text(
+          'QUAND',
+          style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: [
+            for (final (preset, label) in _presets)
+              QuickChip(
+                label: label,
+                active: value.datePreset == preset,
+                onChanged: (_) => _togglePreset(preset),
+              ),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: DateField(
+                label: 'DATE PRÉCISE',
+                date: customDate,
+                onChanged: _onCustomDate,
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+      ],
+    ).animate().fadeIn(duration: 250.ms);
+  }
+}
+
+// ── Sous-composants partagés ──────────────────────────────────────────────────
+
+class SimpleSheet extends StatelessWidget {
+  const SimpleSheet({super.key, required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text(title, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: DonySpacing.base),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class PriceField extends StatelessWidget {
+  const PriceField({super.key, required this.maxPrice, required this.onTap});
+
+  final double? maxPrice;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final active = maxPrice != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        decoration: BoxDecoration(
+          color: active ? cs.primaryContainer : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: active ? cs.primary : cs.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('PRIX MAX', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              children: [
+                DonyIcon('euro',
+                    size: 14, color: cs.primary),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  active ? '≤ ${maxPrice!.toInt()} €/kg' : 'Tous',
+                  style: tt.titleSmall?.copyWith(
+                    color: active ? cs.primary : cs.onSurfaceVariant,
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TransportModeField extends StatelessWidget {
+  const TransportModeField({super.key, required this.mode, required this.onTap});
+
+  final TransportMode? mode;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final active = mode != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        decoration: BoxDecoration(
+          color: active ? cs.primaryContainer : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: active ? cs.primary : cs.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('TRANSPORT', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              children: [
+                active
+                    ? Icon(
+                        mode!.icon,
+                        size: 14,
+                        color: cs.primary,
+                      )
+                    : DonyIcon(
+                        'route',
+                        size: 14,
+                        color: cs.onSurfaceVariant,
+                      ),
+                const SizedBox(width: DonySpacing.xs),
+                Expanded(
+                  child: Text(
+                    active ? mode!.label : 'Tous',
+                    style: tt.titleSmall?.copyWith(
+                      color: active ? cs.primary : cs.onSurfaceVariant,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                DonyIcon('chevron-right',
+                    size: 16, color: cs.onSurfaceVariant),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ContentTypeChip extends StatelessWidget {
+  const ContentTypeChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.emoji,
+  });
+
+  final String label;
+  final String emoji;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: 180.ms,
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
+        decoration: BoxDecoration(
+          color: selected ? cs.primaryContainer : Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          border: Border.all(
+            color: selected ? cs.primary : cs.outline,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: selected ? cs.primary : cs.onSurface,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class QuickChip extends StatelessWidget {
+  const QuickChip({
+    super.key,
+    required this.label,
+    required this.active,
+    required this.onChanged,
+    this.iconAsset,
+  });
+
+  final String label;
+  final bool active;
+  final ValueChanged<bool> onChanged;
+  final String? iconAsset;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () => onChanged(!active),
+      child: AnimatedContainer(
+        duration: 180.ms,
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: active ? cs.primaryContainer : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          border: Border.all(
+            color: active ? cs.primary : cs.outline,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (iconAsset != null) ...[
+              DonyIcon(iconAsset!,
+                  size: 14, color: active ? cs.primary : cs.onSurfaceVariant),
+              const SizedBox(width: DonySpacing.xs),
+            ],
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: active ? cs.primary : cs.onSurface,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pastilles « urgence du départ » (trajets uniquement).
+class UrgencyFilterChips extends StatelessWidget {
+  const UrgencyFilterChips({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final UrgencyFilter? selected;
+  final ValueChanged<UrgencyFilter?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Wrap(
+      spacing: DonySpacing.sm,
+      runSpacing: DonySpacing.sm,
+      children: UrgencyFilter.values.map((f) {
+        final isSelected = selected == f;
+        return GestureDetector(
+          onTap: () => onChanged(isSelected ? null : f),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            constraints: const BoxConstraints(minHeight: 44),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.xs + 2,
+            ),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? f.color.withValues(alpha: 0.12)
+                  : Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+              border: Border.all(
+                color: isSelected ? f.color : cs.outline,
+                width: isSelected ? 1.5 : 1.0,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: f.color,
+                    shape: BoxShape.circle,
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: f.color.withValues(alpha: 0.45), blurRadius: 4)]
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  f.label,
+                  style: tt.labelSmall?.copyWith(
+                    color: isSelected ? f.color : cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Date field ────────────────────────────────────────────────────────────────
+
+class DateField extends StatelessWidget {
+  const DateField({
+    super.key,
+    required this.date,
+    required this.onChanged,
+    this.label = 'DATE',
+  });
+
+  final DateTime? date;
+  final ValueChanged<DateTime?> onChanged;
+
+  /// Libellé du champ. Le bloc commun affiche « DATE PRÉCISE » pour le
+  /// distinguer des presets qui le précèdent.
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: () async {
+        final d = await showDatePicker(
+          context: context,
+          initialDate: date ?? DateTime.now(),
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+          builder: (c, child) => Theme(
+            data: Theme.of(c).copyWith(
+              colorScheme: ColorScheme.light(primary: cs.primary),
+            ),
+            child: child!,
+          ),
+        );
+        onChanged(d);
+      },
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        decoration: BoxDecoration(
+          color: date != null ? cs.primaryContainer : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: date != null ? cs.primary : cs.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              children: [
+                DonyIcon('calendar',
+                    size: 14, color: cs.primary),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  date != null ? DateFormat('d MMM', 'fr').format(date!) : 'Choisir',
+                  style: tt.titleSmall?.copyWith(
+                    color: date != null ? cs.primary : cs.onSurfaceVariant,
+                    fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Weight field ──────────────────────────────────────────────────────────────
+
+class WeightField extends StatelessWidget {
+  const WeightField({
+    super.key,
+    required this.weightKg,
+    required this.onChanged,
+    this.label = 'POIDS MIN',
+    this.sheetTitle = 'Poids minimum du trajet',
+  });
+
+  final double weightKg;
+  final ValueChanged<double> onChanged;
+
+  /// Libellé du champ : « POIDS MIN » côté trajets (capacité attendue du
+  /// voyageur), « POIDS MAX » côté colis (poids de la demande).
+  final String label;
+  final String sheetTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final active = weightKg != 6;
+    return GestureDetector(
+      onTap: () => _showWeightPicker(context),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        decoration: BoxDecoration(
+          color: active ? cs.primaryContainer : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: active ? cs.primary : cs.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              children: [
+                DonyIcon('scale',
+                    size: 14, color: cs.primary),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  '${weightKg.toStringAsFixed(0)} kg',
+                  style: tt.titleSmall?.copyWith(
+                    color: active ? cs.primary : cs.onSurface,
+                    fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showWeightPicker(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    double local = weightKg;
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => SimpleSheet(
+          title: sheetTitle,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      local.toStringAsFixed(0),
+                      style: tt.displayLarge?.copyWith(color: cs.primary),
+                    ),
+                    const SizedBox(width: DonySpacing.sm),
+                    Padding(
+                      padding: const EdgeInsets.only(top: DonySpacing.md),
+                      child: Text('kg',
+                          style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant)),
+                    ),
+                  ],
+                ),
+              ),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: cs.primary,
+                  inactiveTrackColor: cs.outline,
+                  thumbColor: cs.primary,
+                  trackHeight: 4,
+                ),
+                child: Slider(
+                  value: local,
+                  min: 1,
+                  max: 30,
+                  divisions: 29,
+                  onChanged: (v) => setS(() => local = v),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.md),
+              DonyButton(
+                label: 'Confirmer',
+                onPressed: () {
+                  onChanged(local);
+                  ctx.pop();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
