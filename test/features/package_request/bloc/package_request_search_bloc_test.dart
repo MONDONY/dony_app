@@ -328,4 +328,143 @@ void main() {
       ).called(1);
     },
   );
+
+  // ─── matchingMyTrips : plomberie event → repo ────────────────────────────────
+
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchFiltersChanged(matchingMyTrips: true) → repo appelé avec true',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 20,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+    verify: (_) {
+      verify(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: true,
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchFiltersChanged sans matchingMyTrips → repo appelé avec null',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 20,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) => bloc.add(const SearchFiltersChanged(departure: 'Paris')),
+    verify: (_) {
+      final captured = verify(
+        () => repo.search(
+          departure: 'Paris',
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: captureAny(named: 'matchingMyTrips'),
+        ),
+      ).captured;
+      // Absent, pas `false` : c'est la convention serveur du filtre.
+      expect(captured.single, isNull);
+    },
+  );
+
+  // L'état porte le filtre : « charger plus » et « rafraîchir » repartent de
+  // `state`, pas de l'event, et le perdraient sinon.
+  blocTest<PackageRequestSearchBloc, PackageRequestSearchState>(
+    'SearchLoadMore conserve matchingMyTrips depuis l\'état',
+    build: () {
+      when(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: any(named: 'page'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 0,
+          page: 0,
+          size: 0,
+        ),
+      );
+      return PackageRequestSearchBloc(repo);
+    },
+    act: (bloc) async {
+      bloc.add(const SearchFiltersChanged(matchingMyTrips: true));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const SearchLoadMore());
+    },
+    verify: (_) {
+      verify(
+        () => repo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          page: 1,
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: true,
+        ),
+      ).called(1);
+    },
+  );
 }

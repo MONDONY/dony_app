@@ -333,6 +333,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLng: q.userLng,
         radiusKm: q.radiusKm,
         urgent: q.urgent,
+        matchingMyTrips: q.matchingMyTrips,
       ),
     );
   }
@@ -353,6 +354,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Appel direct au repository plutôt qu'au BLoC de recherche : l'état de ce
   /// dernier porte les résultats affichés, et y injecter une page de taille 1
   /// écraserait la liste à l'écran.
+  ///
+  /// Les deux branches passent par les mêmes `toXxxQuery()` que les dispatchs
+  /// réels : c'est la seule façon que le nombre annoncé soit celui que la
+  /// bascule produira. Lire `_filters` directement laisserait tomber la
+  /// neutralisation du corridor par « près de moi », la position et le rayon.
   Future<void> _dispatchOtherModeCount() async {
     if (!_filters.otherModeCountIsMeaningful) {
       if (mounted) {
@@ -370,20 +376,38 @@ class _MapSenderViewState extends State<_MapSenderView> {
           arrival: q.arrival,
           dateFrom: q.dateFrom,
           dateTo: q.dateTo,
+          maxWeight: q.maxWeight,
+          parcelSize: q.parcelSize,
           lat: q.userLat,
           lng: q.userLng,
           radiusKm: q.radiusKm,
+          urgent: q.urgent,
+          matchingMyTrips: q.matchingMyTrips,
           page: 0,
           size: 1,
         );
         total = page.totalElements;
       } else {
         // Mode courant colis : on compte les trajets.
+        final q = _filters.toAnnouncementQuery();
         total = await getIt<AnnouncementRepository>().countAnnouncements(
-          departureCity: _filters.departureCity,
-          arrivalCity: _filters.arrivalCity,
-          departureDateFrom: _filters.dateFrom,
-          departureDateTo: _filters.dateTo,
+          departureCity: q.departureCity,
+          arrivalCity: q.arrivalCity,
+          departureDateFrom: q.departureDateFrom,
+          departureDateTo: q.departureDateTo,
+          minAvailableKg: q.minAvailableKg,
+          maxAvailableKg: q.maxAvailableKg,
+          maxPricePerKg: q.maxPricePerKg,
+          kiloProOnly: q.kiloProOnly,
+          minRating: q.minRating,
+          weekendOnly: q.weekendOnly,
+          transportMode: q.transportMode,
+          kycVerifiedOnly: q.kycVerifiedOnly,
+          contentType: q.contentType,
+          userLat: q.userLat,
+          userLng: q.userLng,
+          radiusKm: q.radiusKm,
+          urgent: q.urgent,
         );
       }
       if (mounted) {

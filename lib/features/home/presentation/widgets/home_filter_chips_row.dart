@@ -125,17 +125,15 @@ class HomeFilterChipsRow extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          // Le compteur n'est monté que lorsqu'il porte une information : la
-          // clé permet de vérifier son absence, pas seulement sa valeur.
-          KeyedSubtree(
-            key: otherModeCount != null
-                ? const Key('mode-other-count')
-                : const Key('search-mode-selector'),
-            child: SearchModeSelector(
-              mode: mode,
-              onChanged: onModeChanged,
-              otherModeCount: otherModeCount,
-            ),
+          // Clé STABLE : elle ne doit pas encoder la présence du compteur,
+          // sinon l'arrivée du nombre démonte le sélecteur et emporte
+          // l'animation de 200 ms du segment actif. La clé du badge vit dans
+          // `SearchModeSelector`, sur le badge lui-même.
+          SearchModeSelector(
+            key: const Key('search-mode-selector'),
+            mode: mode,
+            onChanged: onModeChanged,
+            otherModeCount: otherModeCount,
           ),
           const SizedBox(width: DonySpacing.sm),
 

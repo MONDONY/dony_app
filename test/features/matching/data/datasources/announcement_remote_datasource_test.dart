@@ -301,6 +301,87 @@ void main() {
     });
   });
 
+  // ── countAnnouncements ───────────────────────────────────────────────────────
+
+  group('countAnnouncements', () {
+    void stubCount(Map<String, dynamic> body) {
+      when(() => mockDio.get<Map<String, dynamic>>('/announcements',
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => Response<Map<String, dynamic>>(
+                data: body,
+                statusCode: 200,
+                requestOptions: RequestOptions(path: '/announcements'),
+              ));
+    }
+
+    Map<String, dynamic> capturedQuery() =>
+        verify(() => mockDio.get<Map<String, dynamic>>('/announcements',
+                queryParameters: captureAny(named: 'queryParameters')))
+            .captured
+            .single as Map<String, dynamic>;
+
+    test('tape GET /announcements avec une page de taille 1', () async {
+      stubCount({'content': <dynamic>[], 'totalElements': 42});
+
+      await datasource.countAnnouncements(departureCity: 'Paris');
+
+      final q = capturedQuery();
+      expect(q['page'], 0);
+      expect(q['size'], 1);
+      expect(q['departureCity'], 'Paris');
+    });
+
+    test('renvoie totalElements et non la taille du content', () async {
+      stubCount({'content': <dynamic>[_announcementJson], 'totalElements': 42});
+
+      final total = await datasource.countAnnouncements();
+
+      expect(total, 42);
+    });
+
+    test('renvoie 0 quand totalElements est absent', () async {
+      stubCount({'content': <dynamic>[]});
+
+      expect(await datasource.countAnnouncements(), 0);
+    });
+
+    test('formate les dates en yyyy-MM-dd', () async {
+      stubCount({'totalElements': 0});
+
+      await datasource.countAnnouncements(
+        departureDateFrom: DateTime(2026, 1, 5),
+        departureDateTo: DateTime(2026, 2, 28),
+      );
+
+      final q = capturedQuery();
+      expect(q['departureDateFrom'], '2026-01-05');
+      expect(q['departureDateTo'], '2026-02-28');
+    });
+
+    test('transmet la position et le rayon de « près de moi »', () async {
+      stubCount({'totalElements': 3});
+
+      await datasource.countAnnouncements(
+        userLat: 48.8566,
+        userLng: 2.3522,
+        radiusKm: 25,
+      );
+
+      final q = capturedQuery();
+      expect(q['userLat'], 48.8566);
+      expect(q['userLng'], 2.3522);
+      expect(q['radiusKm'], 25);
+    });
+
+    test('n\'envoie jamais urgent=false', () async {
+      stubCount({'totalElements': 0});
+
+      await datasource.countAnnouncements(urgent: false);
+
+      expect(capturedQuery().containsKey('urgent'), isFalse);
+    });
+  });
+
   // ── deleteAnnouncement ───────────────────────────────────────────────────────
 
   group('deleteAnnouncement', () {

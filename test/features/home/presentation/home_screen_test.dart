@@ -351,9 +351,16 @@ Widget _buildHomeRouter({
 void main() {
   late MockAnalyticsService analytics;
 
+  /// Dernière instance de `PackageRequestSearchBloc` livrée par `getIt`.
+  /// `HomeScreen` n'en résout qu'une (son `BlocProvider.create`), la capturer
+  /// ici permet de vérifier le PAYLOAD réellement dispatché sans avoir à
+  /// réenregistrer une factory dans chaque test.
+  late MockPackageRequestSearchBloc prBloc;
+
   setUpAll(() {
     registerFallbackValue(_FakeBidEvent());
     registerFallbackValue(_FakeAnnouncementEvent());
+    registerFallbackValue(const SearchFiltersChanged());
   });
 
   setUp(() {
@@ -401,6 +408,7 @@ void main() {
         ]),
         initialState: const PackageRequestSearchState(),
       );
+      prBloc = mock;
       return mock;
     });
   });
@@ -881,6 +889,53 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Paris → Dakar'), findsOneWidget);
+
+      // L'étiquette de la barre corridor ne prouve que l'affichage. La
+      // garantie du chantier porte sur le PAYLOAD : le corridor doit repartir
+      // au serveur dans la recherche de demandes, pas seulement rester à
+      // l'écran. Sans ces deux assertions, mettre `departure`/`arrival` à null
+      // dans `_dispatchPackageRequestSearch` laisserait la suite verte.
+      // Un seul `verify` pour les deux villes : `verify` consomme les appels
+      // qu'il apparie, deux verifies successifs sur le même unique dispatch
+      // échoueraient sur le second.
+      verify(
+        () => prBloc.add(
+          any(
+            that: isA<SearchFiltersChanged>()
+                .having((e) => e.departure, 'departure', 'Paris')
+                .having((e) => e.arrival, 'arrival', 'Dakar'),
+          ),
+        ),
+      ).called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('la date survit à la bascule de mode et part au serveur', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+
+      // Poser « Aujourd'hui » en mode Trajets via le chip de date commun.
+      await tester.tap(find.byKey(const Key('chip-date')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Aujourd\'hui').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Colis'));
+      await tester.pumpAndSettle();
+
+      final now = DateTime.now();
+      final jour = DateTime(now.year, now.month, now.day);
+      verify(
+        () => prBloc.add(
+          any(
+            that: isA<SearchFiltersChanged>()
+                .having((e) => e.dateFrom, 'dateFrom', jour)
+                .having((e) => e.dateTo, 'dateTo', jour),
+          ),
+        ),
+      ).called(greaterThanOrEqualTo(1));
     });
 
     testWidgets('la bascule dispatche la recherche du nouveau mode', (
@@ -930,9 +985,62 @@ void main() {
     ) async {
       await pumpHome(tester);
 
-      // Aucun corridor ni date posé : le nombre serait un total plateforme.
+      // `mode-other-count` est porté par le BADGE lui-même (dans
+      // `SearchModeSelector`), pas par un wrapper du sélecteur : son absence
+      // prouve donc bien l'absence du nombre. Le sélecteur, lui, garde une clé
+      // stable et reste monté.
+      expect(find.byKey(const Key('search-mode-selector')), findsOneWidget);
       expect(find.byKey(const Key('mode-other-count')), findsNothing);
     });
+
+    testWidgets(
+      '« Pour mes trajets » part au serveur, et rien quand la pastille est off',
+      (tester) async {
+        await pumpHome(tester);
+
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+
+        // Pastille inactive : le filtre ne doit pas être envoyé du tout.
+        verify(
+          () => prBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>().having(
+                (e) => e.matchingMyTrips,
+                'matchingMyTrips',
+                isNull,
+              ),
+            ),
+          ),
+        ).called(greaterThanOrEqualTo(1));
+
+        // Activer la pastille depuis la feuille de filtres colis.
+        await tester.tap(find.byKey(const Key('corridor-bar')));
+        await tester.pumpAndSettle();
+        await tester.dragUntilVisible(
+          find.text('Pour mes trajets'),
+          find.byType(SingleChildScrollView).last,
+          const Offset(0, -100),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Pour mes trajets'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Rechercher'));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => prBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>().having(
+                (e) => e.matchingMyTrips,
+                'matchingMyTrips',
+                isTrue,
+              ),
+            ),
+          ),
+        ).called(greaterThanOrEqualTo(1));
+      },
+    );
   });
 
   group('HomeScreen — _FavoritesButton', () {

@@ -301,6 +301,7 @@ class PackageRequestRepository {
     int page = 0,
     int size = 20,
     bool? urgent,
+    bool? matchingMyTrips,
   }) async {
     final query = <String, dynamic>{
       'page': page,
@@ -318,6 +319,11 @@ class PackageRequestRepository {
       // Filtre serveur « demandes urgentes » — jamais envoyer urgent=false,
       // seulement présent quand le chip est actif (cf. PR back #112).
       if (urgent == true) 'urgent': true,
+      // Filtre serveur « demandes compatibles avec mes trajets actifs »
+      // (`GET /package-requests?matchingMyTrips=true`) : restreint aux
+      // demandes matchant un trajet du voyageur et trie par score. Même
+      // convention que `urgent` : jamais envoyé à false, présent ou absent.
+      if (matchingMyTrips == true) 'matchingMyTrips': true,
     };
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests',

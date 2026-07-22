@@ -126,6 +126,10 @@ class _Segment extends StatelessWidget {
               if (showBadge) ...[
                 const SizedBox(width: DonySpacing.xs),
                 Container(
+                  // Le badge, et lui seul, porte cette clé : un seul segment
+                  // (l'inactif) peut l'afficher à la fois. Vérifier son absence
+                  // vérifie bien l'absence du compteur, pas celle du sélecteur.
+                  key: const Key('mode-other-count'),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(

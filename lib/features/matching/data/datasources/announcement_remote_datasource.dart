@@ -148,28 +148,25 @@ class AnnouncementRemoteDatasource {
       'size': 20,
       'sortBy': sortBy,
       'sortDir': sortDir,
-      if (departureCity != null) 'departureCity': departureCity,
-      if (arrivalCity != null) 'arrivalCity': arrivalCity,
-      if (departureDateFrom != null)
-        'departureDateFrom': DateFormat('yyyy-MM-dd').format(departureDateFrom),
-      if (departureDateTo != null)
-        'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
-      if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
-      if (maxAvailableKg != null) 'maxAvailableKg': maxAvailableKg,
-      if (maxPricePerKg != null) 'maxPricePerKg': maxPricePerKg,
-      if (kiloProOnly == true) 'kiloProOnly': true,
-      if (minRating != null) 'minRating': minRating,
-      if (weekendOnly == true) 'weekendOnly': true,
-      if (transportMode != null)
-        'transportMode': transportModeToWire(transportMode),
-      if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
-      if (contentType != null) 'contentType': contentType,
-      if (userLat != null) 'userLat': userLat,
-      if (userLng != null) 'userLng': userLng,
-      if (radiusKm != null) 'radiusKm': radiusKm,
-      // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
-      // seulement présent quand le chip est actif (cf. PR back #112).
-      if (urgent == true) 'urgent': true,
+      ..._announcementFilterParams(
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureDateFrom: departureDateFrom,
+        departureDateTo: departureDateTo,
+        minAvailableKg: minAvailableKg,
+        maxAvailableKg: maxAvailableKg,
+        maxPricePerKg: maxPricePerKg,
+        kiloProOnly: kiloProOnly,
+        minRating: minRating,
+        weekendOnly: weekendOnly,
+        transportMode: transportMode,
+        kycVerifiedOnly: kycVerifiedOnly,
+        contentType: contentType,
+        userLat: userLat,
+        userLng: userLng,
+        radiusKm: radiusKm,
+        urgent: urgent,
+      ),
     };
     final response = await _apiClient.dio.get(
       '/announcements',
@@ -186,29 +183,109 @@ class AnnouncementRemoteDatasource {
   ///
   /// [searchAnnouncements] ne peut pas servir ici : elle ne renvoie que le
   /// `content` d'une page figée à 20 éléments et jette le `totalElements`.
+  ///
+  /// Porte exactement les mêmes filtres que [searchAnnouncements] (hors tri et
+  /// pagination) : un compteur qui n'appliquerait qu'une partie des filtres
+  /// annoncerait un nombre que la bascule de mode ne reproduirait pas.
   Future<int> countAnnouncements({
     String? departureCity,
     String? arrivalCity,
     DateTime? departureDateFrom,
     DateTime? departureDateTo,
+    double? minAvailableKg,
+    double? maxAvailableKg,
+    double? maxPricePerKg,
+    bool? kiloProOnly,
+    double? minRating,
+    bool? weekendOnly,
+    TransportMode? transportMode,
+    bool? kycVerifiedOnly,
+    String? contentType,
+    double? userLat,
+    double? userLng,
+    double? radiusKm,
+    bool? urgent,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/announcements',
       queryParameters: <String, dynamic>{
         'page': 0,
         'size': 1,
-        if (departureCity != null) 'departureCity': departureCity,
-        if (arrivalCity != null) 'arrivalCity': arrivalCity,
-        if (departureDateFrom != null)
-          'departureDateFrom': DateFormat('yyyy-MM-dd').format(
-            departureDateFrom,
-          ),
-        if (departureDateTo != null)
-          'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
+        ..._announcementFilterParams(
+          departureCity: departureCity,
+          arrivalCity: arrivalCity,
+          departureDateFrom: departureDateFrom,
+          departureDateTo: departureDateTo,
+          minAvailableKg: minAvailableKg,
+          maxAvailableKg: maxAvailableKg,
+          maxPricePerKg: maxPricePerKg,
+          kiloProOnly: kiloProOnly,
+          minRating: minRating,
+          weekendOnly: weekendOnly,
+          transportMode: transportMode,
+          kycVerifiedOnly: kycVerifiedOnly,
+          contentType: contentType,
+          userLat: userLat,
+          userLng: userLng,
+          radiusKm: radiusKm,
+          urgent: urgent,
+        ),
       },
     );
     return (response.data?['totalElements'] as num?)?.toInt() ?? 0;
   }
+
+  /// Paramètres de filtre de `GET /announcements`, hors tri et pagination.
+  ///
+  /// Source unique de [searchAnnouncements] et [countAnnouncements] : le
+  /// compteur du sélecteur de mode doit interroger exactement le même jeu de
+  /// filtres que la recherche, sinon il annonce un nombre que la bascule ne
+  /// reproduit pas. Deux listes jumelles auraient divergé au premier filtre
+  /// ajouté d'un seul côté.
+  Map<String, dynamic> _announcementFilterParams({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+    double? minAvailableKg,
+    double? maxAvailableKg,
+    double? maxPricePerKg,
+    bool? kiloProOnly,
+    double? minRating,
+    bool? weekendOnly,
+    TransportMode? transportMode,
+    bool? kycVerifiedOnly,
+    String? contentType,
+    double? userLat,
+    double? userLng,
+    double? radiusKm,
+    bool? urgent,
+  }) => <String, dynamic>{
+        if (departureCity != null) 'departureCity': departureCity,
+        if (arrivalCity != null) 'arrivalCity': arrivalCity,
+        if (departureDateFrom != null)
+          'departureDateFrom': DateFormat(
+            'yyyy-MM-dd',
+          ).format(departureDateFrom),
+        if (departureDateTo != null)
+          'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
+        if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
+        if (maxAvailableKg != null) 'maxAvailableKg': maxAvailableKg,
+        if (maxPricePerKg != null) 'maxPricePerKg': maxPricePerKg,
+        if (kiloProOnly == true) 'kiloProOnly': true,
+        if (minRating != null) 'minRating': minRating,
+        if (weekendOnly == true) 'weekendOnly': true,
+        if (transportMode != null)
+          'transportMode': transportModeToWire(transportMode),
+        if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
+        if (contentType != null) 'contentType': contentType,
+        if (userLat != null) 'userLat': userLat,
+        if (userLng != null) 'userLng': userLng,
+        if (radiusKm != null) 'radiusKm': radiusKm,
+        // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
+        // seulement présent quand le chip est actif (cf. PR back #112).
+        if (urgent == true) 'urgent': true,
+      };
 
   Future<void> deleteAnnouncement(String id) async {
     await _apiClient.dio.delete('/announcements/$id');
