@@ -159,6 +159,8 @@ Future<void> _pump(
       route('/demandes', 'Écran demandes'),
       route('/negotiations', 'Écran négociations'),
       route('/trips/create', 'Créer trajet'),
+      route('/trips/publish-intro', 'Intro trajet'),
+      route('/parcels/send-intro', 'Intro colis'),
       route('/tracking/search', 'Recherche'),
       route('/profile/shipments/history', 'Écran historique'),
       route('/profile/help/faq', 'FAQ'),
@@ -326,8 +328,16 @@ void main() {
       await expectNavigation(tester, 'Suivre un colis', '/tracking/search');
     });
 
-    testWidgets('Publier un trajet → formulaire de création', (tester) async {
-      await expectNavigation(tester, 'Publier un trajet', '/trips/create');
+    testWidgets('Publier un trajet → écran d\'intro trajet', (tester) async {
+      await expectNavigation(
+        tester,
+        'Publier un trajet',
+        '/trips/publish-intro',
+      );
+    });
+
+    testWidgets('Envoyer un colis → écran d\'intro colis', (tester) async {
+      await expectNavigation(tester, 'Envoyer un colis', '/parcels/send-intro');
     });
 
     testWidgets('Historique → historique des envois', (tester) async {

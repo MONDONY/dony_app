@@ -23,7 +23,6 @@ import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
-import 'package:dony/features/package_request/presentation/package_request_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -157,9 +156,11 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
 
   void _open(String event, String route) => _openRoute(context, event, route);
 
-  Future<void> _onNewRequest() async {
+  void _onNewRequest() {
     _logEvent(AnalyticsEvents.activitesHubRequestCreateOpened);
-    await openPackageRequestWizard(context);
+    // Passe d'abord par l'écran d'intro (conditions + responsabilités) ; c'est
+    // lui qui applique le gate KYC et ouvre le wizard une fois vérifié.
+    context.push('/parcels/send-intro');
   }
 
   /// Vrai dès qu'un compteur ou une statistique est non nul. Tant que tout est
@@ -238,7 +239,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                       _ActionRow(
                         onPublishTrip: () => _open(
                           AnalyticsEvents.activitesHubTripCreateOpened,
-                          '/trips/create',
+                          '/trips/publish-intro',
                         ),
                         onNewRequest: _onNewRequest,
                       ),

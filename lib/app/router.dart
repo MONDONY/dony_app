@@ -39,6 +39,7 @@ import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart
 import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
+import 'package:dony/features/matching/presentation/screens/publish_intro_screen.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
@@ -450,6 +451,18 @@ final appRouter = GoRouter(
         );
       },
     ),
+    // ── Écrans d'intro avant publication (conditions + responsabilités) ──────
+    GoRoute(
+      path: '/trips/publish-intro',
+      builder: (context, state) =>
+          const PublishIntroScreen(role: PublishIntroRole.trip),
+    ),
+    GoRoute(
+      path: '/parcels/send-intro',
+      builder: (context, state) =>
+          const PublishIntroScreen(role: PublishIntroRole.parcel),
+    ),
+
     // ── Créer / modifier un trajet (plein écran, slide-up) ───────────────────
     GoRoute(
       path: '/trips/create',
