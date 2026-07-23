@@ -116,6 +116,7 @@ abstract final class AnalyticsEvents {
 
   // Envois
   static const shipmentFilterApplied = 'shipment_filter_applied';
+  static const shipmentNewRequestOpened = 'shipment_new_request_opened';
 
   // Trajets (Mes trajets)
   static const tripFilterApplied = 'trip_filter_applied';

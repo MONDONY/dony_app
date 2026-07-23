@@ -274,7 +274,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<TripFilterCubit>(
     () => TripFilterCubit(getIt<AnalyticsService>()),
   );
-  getIt.registerFactory<TravelerBidsBloc>(
+  // Singleton partagé : le hub Activités, l'écran Demandes ET le point
+  // d'attention de l'onglet Activités (bottom nav) lisent le même décompte de
+  // demandes reçues. Un factory par écran laisserait le badge de l'onglet se
+  // désynchroniser de la carte du hub.
+  getIt.registerLazySingleton<TravelerBidsBloc>(
     () => TravelerBidsBloc(getIt<BidRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<StatsPeriodCubit>(StatsPeriodCubit.new);

@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 BidModel _bid(String status) => BidModel.fromJson({
       'id': 'b1',
@@ -23,6 +24,22 @@ BidModel _bid(String status) => BidModel.fromJson({
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+  });
+
+  testWidgets('affiche la date du trajet (Départ dans 3 jours)', (tester) async {
+    await tester.pumpWidget(_wrap(ShipmentCard(
+      bid: _bid('ACCEPTED'),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // La date du départ, absente auparavant, doit désormais figurer sur la carte.
+    expect(find.textContaining('Départ dans 3 jours'), findsOneWidget);
+  });
+
   testWidgets('IN_TRANSIT : stepper étape 3, badge transit', (tester) async {
     await tester.pumpWidget(_wrap(ShipmentCard(
       bid: _bid('IN_TRANSIT'),

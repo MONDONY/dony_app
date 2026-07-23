@@ -21,6 +21,8 @@ import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/package_request_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,10 +58,16 @@ class ActivitesHubScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
-        BlocProvider(create: (_) => getIt<TravelerBidsBloc>()),
+        // TravelerBidsBloc est désormais un singleton (partagé avec l'onglet) :
+        // `.value` pour ne pas le fermer quand le hub se démonte.
+        BlocProvider.value(value: getIt<TravelerBidsBloc>()),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<StatsPeriodCubit>()),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
+        // Singleton partagé (volet « Envoyées » de l'écran Demandes) : sert à
+        // allumer la pastille de la carte Demandes quand une demande envoyée
+        // est en négociation.
+        BlocProvider.value(value: getIt<PackageRequestBloc>()),
       ],
       child: const _ActivitesHubView(),
     );
@@ -139,6 +147,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     );
     context.read<BidBloc>().add(BidMyListAutoRefreshRequested(force: true));
     context.read<NegotiationListBloc>().add(NegotiationListFetchRequested());
+    context.read<PackageRequestBloc>().add(const FetchMyRequests());
   }
 
   Future<void> _onRefresh() async {
@@ -535,6 +544,15 @@ class _ActivityGrid extends StatelessWidget {
       builder: (context, state) {
         final loaded = state is TravelerBidsLoaded ? state : null;
         final count = loaded?.pendingCount ?? 0;
+        // Une demande ENVOYÉE en négociation (volet « Envoyées » de l'écran
+        // Demandes) attend aussi une action : on la signale sur cette carte,
+        // même sans demande reçue. La carte ouvre l'écran Demandes complet où
+        // le badge « Envoyées » précise le décompte.
+        final sentNegotiating = context.select<PackageRequestBloc, int>(
+          (b) => b.state.requests
+              .where((r) => r.status == PackageRequestStatus.negotiating)
+              .length,
+        );
         return ActivityTile(
           key: const Key('hub-tile-requests'),
           iconName: 'bell',
@@ -544,10 +562,12 @@ class _ActivityGrid extends StatelessWidget {
           value: count,
           label: 'Demandes reçues',
           subtitle: 'Des colis à transporter pour vous',
-          emptyHint: 'Aucune pour l\'instant',
+          emptyHint: sentNegotiating > 0
+              ? 'Négociation en cours'
+              : 'Aucune pour l\'instant',
           isLoading: state is TravelerBidsLoading,
           hasError: state is TravelerBidsError,
-          showNotificationDot: count > 0,
+          showNotificationDot: count > 0 || sentNegotiating > 0,
           onTap: () => _openRoute(
             context,
             AnalyticsEvents.activitesHubDemandesOpened,

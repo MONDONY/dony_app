@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -7,7 +5,6 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
-import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
@@ -98,7 +95,6 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
         mounted &&
         TickerMode.valuesOf(context).enabled) {
       context.read<AnnouncementBloc>().add(AnnouncementListRequested());
-      context.read<TripsSummaryCubit>().load();
     }
   }
 
@@ -108,7 +104,6 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
     final isActive = TickerMode.valuesOf(context).enabled;
     if (isActive && !_tickerWasActive) {
       context.read<AnnouncementBloc>().add(AnnouncementListRequested());
-      context.read<TripsSummaryCubit>().load();
       // Pré-charge les négos pour alimenter le badge du bouton "Envoyer".
       context.read<NegotiationListBloc>().add(const NegotiationListFetchRequested());
     }
@@ -214,7 +209,6 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                 onRefresh: () async {
                   final bloc = context.read<AnnouncementBloc>();
                   bloc.add(AnnouncementListRequested());
-                  unawaited(context.read<TripsSummaryCubit>().load());
                   // Garde le spinner actif jusqu'au rechargement réel de la
                   // liste (sinon il disparaît avant l'arrivée des données).
                   await bloc.stream.firstWhere(
@@ -224,24 +218,6 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                 },
                 child: CustomScrollView(
                   slivers: [
-                    // ── Stats strip ─────────────────────────────────────────
-                    SliverToBoxAdapter(
-                      child: BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
-                        builder: (context, summaryState) {
-                          if (summaryState.status ==
-                              TripsSummaryStatus.loaded) {
-                            return Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                  hPad, DonySpacing.lg, hPad, 0),
-                              child: TripsStatsStrip(
-                                  summary: summaryState.summary!),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-
                     // ── Search + Chips (masked when list is empty) ──────────
                     if (_lastList.isNotEmpty) ...[
                       SliverToBoxAdapter(

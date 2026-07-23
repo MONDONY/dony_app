@@ -3,6 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 
 // ─────────────────────────────────────────────────────────────
 // ShipmentCard — carte colis expéditeur (Mes envois)
@@ -117,6 +118,29 @@ class ShipmentCard extends StatelessWidget {
         _ => false,
       };
 
+  /// Date de départ du trajet, formatée relativement à aujourd'hui — même
+  /// vocabulaire que TripCard. `null` si l'info n'est pas disponible.
+  String? _dateLabel() {
+    final date = bid.resolvedDepartureAt ?? bid.departureDate;
+    if (date == null) {
+      return null;
+    }
+    final today = DateUtils.dateOnly(DateTime.now());
+    final d = DateUtils.dateOnly(date);
+    final diff = d.difference(today).inDays;
+    final dateStr = DateFormat('d MMM', 'fr').format(date);
+    if (diff == 0) {
+      return "Aujourd'hui · $dateStr";
+    }
+    if (diff == 1) {
+      return 'Demain · $dateStr';
+    }
+    if (diff > 1 && diff <= 6) {
+      return 'Départ dans $diff jours · $dateStr';
+    }
+    return DateFormat('EEE d MMM yyyy', 'fr').format(date);
+  }
+
   /// Format weight with comma decimal separator: '4,5 kg' or '5 kg'.
   String _weightLabel() {
     final kg = bid.weightKg;
@@ -178,6 +202,25 @@ class ShipmentCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+
+            // ── Date du trajet ──
+            if (_dateLabel() case final dateLabel?) ...[
+              const SizedBox(height: DonySpacing.xxs + 1),
+              Row(
+                children: [
+                  DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
+                  const SizedBox(width: DonySpacing.xxs + 1),
+                  Flexible(
+                    child: Text(
+                      dateLabel,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             // ── Stepper (post-acceptance only) ──
             if (hasStep) ...[

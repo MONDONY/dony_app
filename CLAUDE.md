@@ -349,6 +349,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
+| `shipment_new_request_opened` | ShipmentListScreen — pill « Envoyer » du header ouvre le wizard de demande d'envoi |
 | `trip_filter_applied` | TripFilterCubit.setFilter() — chips statut « Mes trajets » (Activités), propriété `status` |
 | `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
 | `urgent_filter_toggled` | HomeScreen._onUrgentToggle — chip 🔥 Urgent (propriété `active`) |

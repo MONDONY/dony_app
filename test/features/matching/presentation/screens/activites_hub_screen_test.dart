@@ -16,7 +16,10 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +38,10 @@ class _MockTravelerBidsBloc
 class _MockNegotiationListBloc
     extends MockBloc<NegotiationListEvent, NegotiationListState>
     implements NegotiationListBloc {}
+
+class _MockPackageRequestBloc
+    extends MockBloc<PackageRequestEvent, PackageRequestState>
+    implements PackageRequestBloc {}
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
@@ -71,6 +78,7 @@ Future<void> _pump(
   BidState? bidState,
   TravelerBidsState? travelerBidsState,
   NegotiationListState? negoState,
+  PackageRequestState? packageRequestState,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -113,6 +121,10 @@ Future<void> _pump(
   final nego = _MockNegotiationListBloc();
   when(() => nego.state).thenReturn(negoState ?? NegotiationListState());
 
+  final packageRequests = _MockPackageRequestBloc();
+  when(() => packageRequests.state)
+      .thenReturn(packageRequestState ?? PackageRequestState());
+
   final summaryCubit = TripsSummaryCubit(repo);
 
   Widget stub(String label) => Scaffold(body: Text(label));
@@ -137,6 +149,7 @@ Future<void> _pump(
             BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<StatsPeriodCubit>(create: (_) => StatsPeriodCubit()),
             BlocProvider<NegotiationListBloc>.value(value: nego),
+            BlocProvider<PackageRequestBloc>.value(value: packageRequests),
           ],
           child: const ActivitesHubScreenTesting(),
         ),
@@ -210,6 +223,58 @@ void main() {
       expect(find.text('0'), findsNothing);
       expect(find.text('Aucune en cours'), findsOneWidget);
     });
+
+    testWidgets(
+      'demande envoyée en négo allume la pastille de « Demandes reçues » '
+      '(même sans demande reçue)',
+      (tester) async {
+        final negoReq = PackageRequest.fromJson({
+          'id': 'pr-1',
+          'senderId': 's1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'desiredDate': '2026-08-01',
+          'dateToleranceDays': 2,
+          'weightKg': 3.0,
+          'parcelSize': 'SMALL',
+          'status': 'NEGOTIATING',
+          'createdAt': '2026-07-01T10:00:00Z',
+        });
+
+        await _pump(
+          tester,
+          // Aucune demande reçue à traiter…
+          travelerBidsState: TravelerBidsLoaded(
+            bids: const [],
+            page: 0,
+            hasMore: false,
+            filter: TravelerBidFilter.aTraiter,
+          ),
+          // …mais une demande envoyée est en négociation.
+          packageRequestState: PackageRequestState(requests: [negoReq]),
+        );
+
+        // L'invite bascule sur la négociation en cours plutôt que « Aucune ».
+        expect(find.text('Négociation en cours'), findsOneWidget);
+        expect(find.text('Aucune pour l\'instant'), findsNothing);
+
+        // Un point d'attention (Container 8×8 cercle ambre) est peint sur la
+        // tuile Demandes.
+        final dot = find.descendant(
+          of: find.byKey(const Key('hub-tile-requests')),
+          matching: find.byWidgetPredicate((w) {
+            if (w is! Container) {
+              return false;
+            }
+            final deco = w.decoration;
+            return deco is BoxDecoration &&
+                deco.shape == BoxShape.circle &&
+                deco.color == DonyColors.amberDark;
+          }),
+        );
+        expect(dot, findsOneWidget);
+      },
+    );
 
     testWidgets('une erreur de résumé n\'affecte que sa propre tuile', (
       tester,

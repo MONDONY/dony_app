@@ -49,10 +49,11 @@ class DemandesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) =>
-              getIt<TravelerBidsBloc>()
-                ..add(const TravelerBidsRequested(force: true)),
+        // Singleton partagé avec le hub et l'onglet Activités : `.value` (ne pas
+        // le fermer au pop). On force un chargement à l'ouverture de l'écran.
+        BlocProvider.value(
+          value: getIt<TravelerBidsBloc>()
+            ..add(const TravelerBidsRequested(force: true)),
         ),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),

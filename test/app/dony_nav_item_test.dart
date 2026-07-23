@@ -26,6 +26,7 @@ void main() {
     required int index,
     required int currentIndex,
     int badgeCount = 0,
+    bool showDot = false,
     bool isPro = false,
     String? avatarUrl,
     String? avatarName,
@@ -38,10 +39,24 @@ void main() {
     currentIndex: currentIndex,
     onTap: onTap ?? () {},
     badgeCount: badgeCount,
+    showDot: showDot,
     isPro: isPro,
     avatarUrl: avatarUrl,
     avatarName: avatarName,
   );
+
+  // Le point d'attention : Container 10×10, rempli error, cercle, sans enfant.
+  // Se distingue du badge chiffré (rectangle arrondi + Text) et de l'étoile PRO
+  // (couleur warning).
+  Finder attentionDot() => find.byWidgetPredicate((w) {
+        if (w is! Container || w.child != null) {
+          return false;
+        }
+        final deco = w.decoration;
+        return deco is BoxDecoration &&
+            deco.shape == BoxShape.circle &&
+            deco.color == DonyColors.error;
+      });
 
   // Décoration de l'anneau (AnimatedContainer ancêtre du DonyAvatar).
   BoxDecoration ringDecoration(WidgetTester tester) {
@@ -183,6 +198,32 @@ void main() {
       await tester.pumpWidget(host(buildItem(index: 3, currentIndex: 0)));
 
       expect(find.text('0'), findsNothing);
+    });
+  });
+
+  group('DonyNavItem — point d\'attention (showDot)', () {
+    testWidgets('affiche le point quand showDot = true', (tester) async {
+      await tester.pumpWidget(
+        host(buildItem(index: 1, currentIndex: 0, showDot: true)),
+      );
+
+      expect(attentionDot(), findsOneWidget);
+    });
+
+    testWidgets('pas de point quand showDot = false', (tester) async {
+      await tester.pumpWidget(host(buildItem(index: 1, currentIndex: 0)));
+
+      expect(attentionDot(), findsNothing);
+    });
+
+    testWidgets('le badge chiffré a priorité sur le point', (tester) async {
+      await tester.pumpWidget(
+        host(buildItem(index: 1, currentIndex: 0, showDot: true, badgeCount: 2)),
+      );
+
+      // Un décompte précis existe : on montre le nombre, pas le point nu.
+      expect(find.text('2'), findsOneWidget);
+      expect(attentionDot(), findsNothing);
     });
   });
 

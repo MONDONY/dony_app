@@ -143,7 +143,7 @@ void main() {
     expect(find.text('Réinitialiser'), findsOneWidget);
   });
 
-  testWidgets('mode standalone (embedded:false) affiche le header sombre « Colis en route »',
+  testWidgets('mode standalone (embedded:false) affiche le header « Colis en route »',
       (tester) async {
     whenListen(
       bidBloc,
