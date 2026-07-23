@@ -225,10 +225,16 @@ class NegotiationLoaded extends NegotiationState {
 }
 
 class NegotiationRejected extends NegotiationState {
-  const NegotiationRejected(this.threadId);
+  const NegotiationRejected(this.threadId, {this.cancelled = false});
   final String threadId;
+
+  /// True when this thread ended via [NegotiationCancelRequested] ("end
+  /// negotiation" from the ... menu) rather than [NegotiationRejectRequested]
+  /// (reject bottom sheet) — the only difference between the two flows,
+  /// used by the screen to pick the right snackbar wording.
+  final bool cancelled;
   @override
-  List<Object?> get props => [threadId];
+  List<Object?> get props => [threadId, cancelled];
 }
 
 class NegotiationError extends NegotiationState {
@@ -439,7 +445,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       await _repository.cancel(e.threadId, reason: e.reason);
       unawaited(_analytics.logEvent(AnalyticsEvents.negotiationCancelled));
-      emit(NegotiationRejected(e.threadId));
+      emit(NegotiationRejected(e.threadId, cancelled: true));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }

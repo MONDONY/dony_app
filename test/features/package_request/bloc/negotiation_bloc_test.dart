@@ -133,12 +133,14 @@ void main() {
         threadId: 't-1', reason: 'too expensive')),
     expect: () => [
       isA<NegotiationActionInProgress>(),
-      isA<NegotiationRejected>().having((s) => s.threadId, 'threadId', 't-1'),
+      isA<NegotiationRejected>()
+          .having((s) => s.threadId, 'threadId', 't-1')
+          .having((s) => s.cancelled, 'cancelled', false),
     ],
   );
 
   blocTest<NegotiationBloc, NegotiationState>(
-    'cancel emits Rejected after success',
+    'cancel emits Rejected(cancelled: true) after success',
     build: () {
       when(() => repo.cancel(any(), reason: any(named: 'reason')))
           .thenAnswer((_) async {});
@@ -149,7 +151,9 @@ void main() {
         threadId: 't-1', reason: 'changed my mind')),
     expect: () => [
       isA<NegotiationActionInProgress>(),
-      isA<NegotiationRejected>().having((s) => s.threadId, 'threadId', 't-1'),
+      isA<NegotiationRejected>()
+          .having((s) => s.threadId, 'threadId', 't-1')
+          .having((s) => s.cancelled, 'cancelled', true),
     ],
     verify: (_) => verify(
         () => repo.cancel('t-1', reason: 'changed my mind')).called(1),

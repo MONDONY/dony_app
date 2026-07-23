@@ -34,24 +34,10 @@ class NegotiationThreadScreen extends StatelessWidget {
   }
 }
 
-class _ThreadView extends StatefulWidget {
+class _ThreadView extends StatelessWidget {
   const _ThreadView({required this.threadId, required this.viewerUserId});
   final String threadId;
   final String viewerUserId;
-
-  @override
-  State<_ThreadView> createState() => _ThreadViewState();
-}
-
-class _ThreadViewState extends State<_ThreadView> {
-  // Distingue « rejet » (reject_bottom_sheet) de « fin de négociation »
-  // (menu ...) alors que le bloc émet le même NegotiationRejected pour les
-  // deux (cf. _onCancel qui « mirrors » _onReject) — pas de nouvel état bloc,
-  // uniquement un flag d'intention côté UI pour le libellé du snackbar.
-  bool _endRequestedLocally = false;
-
-  String get threadId => widget.threadId;
-  String get viewerUserId => widget.viewerUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +59,7 @@ class _ThreadViewState extends State<_ThreadView> {
         if (state is NegotiationRejected) {
           DonySnackbar.show(
             ctx,
-            message: _endRequestedLocally
+            message: state.cancelled
                 ? 'Négociation terminée'
                 : 'Négociation rejetée',
             type: DonySnackbarType.warning,
@@ -206,7 +192,6 @@ class _ThreadViewState extends State<_ThreadView> {
       variant: DonyDialogVariant.destructive,
     );
     if (confirmed == true && context.mounted) {
-      setState(() => _endRequestedLocally = true);
       context
           .read<NegotiationBloc>()
           .add(NegotiationCancelRequested(threadId: thread.id));

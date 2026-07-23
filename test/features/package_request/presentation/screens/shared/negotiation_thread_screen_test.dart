@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -215,6 +217,87 @@ void main() {
 
       expect(find.byType(PopupMenuButton<String>), findsNothing);
       expect(find.text('Mettre fin à la négociation'), findsNothing);
+    });
+  });
+
+  group('Snackbar de fin de négociation — wording selon NegotiationRejected.cancelled', () {
+    // Le listener appelle ctx.pop() après le snackbar : il faut une vraie
+    // pile GoRouter (push depuis /negotiations) pour que pop() soit valide.
+    Future<GoRouter> pumpOnThreadRoute(WidgetTester tester) async {
+      final router = GoRouter(
+        initialLocation: '/negotiations',
+        routes: [
+          GoRoute(
+            path: '/negotiations',
+            builder: (_, __) =>
+                const Scaffold(body: Text('LISTE_NEGOCIATIONS')),
+          ),
+          GoRoute(
+            path: '/negotiations/:id',
+            builder: (_, __) => const NegotiationThreadScreen(
+              threadId: 't-1',
+              viewerUserId: 'sender-1',
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+      );
+      await tester.pumpAndSettle();
+      // Not awaited: push() only resolves when the pushed route is popped
+      // (later in the test, via the snackbar listener's ctx.pop()).
+      unawaited(router.push('/negotiations/t-1'));
+      await tester.pumpAndSettle();
+      return router;
+    }
+
+    testWidgets(
+        'cancelled: true (fin de négociation via le menu) → "Négociation terminée"',
+        (tester) async {
+      final controller = StreamController<NegotiationState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: NegotiationLoaded(_thread()),
+      );
+
+      await pumpOnThreadRoute(tester);
+
+      controller.add(const NegotiationRejected('t-1', cancelled: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Négociation terminée'), findsOneWidget);
+      expect(find.text('Négociation rejetée'), findsNothing);
+
+      // Flush the snackbar's auto-dismiss timer so no Timer is left pending
+      // once the test tree is disposed.
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets(
+        'cancelled: false (rejet via reject_bottom_sheet) → "Négociation rejetée"',
+        (tester) async {
+      final controller = StreamController<NegotiationState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: NegotiationLoaded(_thread()),
+      );
+
+      await pumpOnThreadRoute(tester);
+
+      controller.add(const NegotiationRejected('t-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Négociation rejetée'), findsOneWidget);
+      expect(find.text('Négociation terminée'), findsNothing);
+
+      // Flush the snackbar's auto-dismiss timer so no Timer is left pending
+      // once the test tree is disposed.
+      await tester.pump(const Duration(seconds: 5));
     });
   });
 }
