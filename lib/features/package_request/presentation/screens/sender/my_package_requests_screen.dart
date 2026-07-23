@@ -35,7 +35,7 @@ class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const DonyAppBar(title: 'Mes demandes'),
       body: const MyPackageRequestsBody(showFab: true),
     );
