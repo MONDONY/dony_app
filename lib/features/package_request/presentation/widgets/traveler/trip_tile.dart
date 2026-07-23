@@ -97,7 +97,7 @@ class TripTile extends StatelessWidget {
                                   .bodyMedium!
                                   .copyWith(
                                     fontSize: 12,
-                                    color: kTextSecondary,
+                                    color: cs.onSurfaceVariant,
                                   ),
                             ),
                           ],

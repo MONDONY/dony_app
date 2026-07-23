@@ -384,7 +384,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   'CATÉGORIES',
                   style: tt.labelSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: kTextSecondary,
+                    color: cs.onSurfaceVariant,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -502,7 +502,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: kTextSecondary,
+              color: cs.onSurfaceVariant,
               letterSpacing: 0.5,
             ),
           ),
@@ -519,12 +519,13 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     String label,
     String value,
   ) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DonyIcon(iconAsset, size: 18, color: kTextSecondary),
+          DonyIcon(iconAsset, size: 18, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.md),
           SizedBox(
             width: 90,
@@ -532,7 +533,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               label,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 13,
-                color: kTextSecondary,
+                color: cs.onSurfaceVariant,
               ),
             ),
           ),
@@ -892,7 +893,7 @@ class _PaymentMethodsCard extends StatelessWidget {
             style: tt.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: kTextSecondary,
+              color: cs.onSurfaceVariant,
               letterSpacing: 0.5,
             ),
           ),

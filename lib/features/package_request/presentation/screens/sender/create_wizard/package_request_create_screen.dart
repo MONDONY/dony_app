@@ -247,9 +247,9 @@ class _PackageRequestCreateScreenState
         }
       },
       child: Scaffold(
-        backgroundColor: DonyColors.sand100,
+        backgroundColor: cs.surfaceContainerLowest,
         appBar: AppBar(
-          backgroundColor: DonyColors.sand100,
+          backgroundColor: cs.surface,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
@@ -267,7 +267,7 @@ class _PackageRequestCreateScreenState
           title: Text(
             title,
             style: tt.titleLarge?.copyWith(
-              color: DonyColors.textPrimary,
+              color: cs.onSurface,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.3,
             ),
@@ -301,7 +301,7 @@ class _PackageRequestCreateScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Divider(height: 1, color: DonyColors.neutral200),
+                Divider(height: 1, color: cs.outline),
                 WizardStepIndicator(currentStep: state.currentStep),
               ],
             ),
@@ -361,14 +361,15 @@ class _StickyCta extends StatelessWidget {
     final isFinalStep = currentStep == 2;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
-        color: DonyColors.sand100,
-        border: Border(top: BorderSide(color: DonyColors.neutral200)),
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
         boxShadow: [
           BoxShadow(
-            color: DonyColors.sand400.withValues(alpha: 0.18),
+            color: DonyColors.shadow,
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -387,7 +388,7 @@ class _StickyCta extends StatelessWidget {
             Text(
               'En publiant, tu acceptes les CGU',
               style: tt.bodySmall?.copyWith(
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
                 fontSize: 12,
               ),
             ),

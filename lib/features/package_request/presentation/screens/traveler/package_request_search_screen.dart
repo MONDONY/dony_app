@@ -153,7 +153,7 @@ class _SearchViewState extends State<_SearchView> {
                                 style: Theme.of(context).textTheme.bodyMedium!
                                     .copyWith(
                                       fontSize: 14,
-                                      color: kTextSecondary,
+                                      color: cs.onSurfaceVariant,
                                     ),
                               ),
                             ],
@@ -319,16 +319,17 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        DonyIcon(iconAsset, size: 13, color: kTextSecondary),
+        DonyIcon(iconAsset, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,
           style: Theme.of(
             context,
-          ).textTheme.bodyMedium!.copyWith(fontSize: 12, color: kTextSecondary),
+          ).textTheme.bodyMedium!.copyWith(fontSize: 12, color: cs.onSurfaceVariant),
         ),
       ],
     );

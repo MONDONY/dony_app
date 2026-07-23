@@ -35,7 +35,7 @@ class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const DonyAppBar(title: 'Mes demandes'),
       body: const MyPackageRequestsBody(showFab: true),
     );
@@ -271,6 +271,7 @@ class _FilterRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.base,
@@ -278,9 +279,9 @@ class _FilterRow extends StatelessWidget {
         DonySpacing.base,
         DonySpacing.sm + 2,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: DonyColors.neutral200)),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(bottom: BorderSide(color: cs.outline)),
       ),
       child: Row(
         children: [
@@ -340,7 +341,7 @@ class _FilterChip extends StatelessWidget {
           color: active ? cs.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: active ? cs.primary : DonyColors.neutral200,
+            color: active ? cs.primary : cs.outline,
             width: 1.5,
           ),
         ),
@@ -353,7 +354,7 @@ class _FilterChip extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: active ? Colors.white : DonyColors.textMuted,
+                  color: active ? Colors.white : cs.onSurfaceVariant,
                 ),
               ),
               if (hasNew) ...[
@@ -382,6 +383,7 @@ class _FilterEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final String label;
     if (hasQuery) {
       label = 'Aucun résultat pour cette recherche';
@@ -403,7 +405,7 @@ class _FilterEmptyState extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -447,7 +449,7 @@ class _RequestCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: DonyColors.neutral200),
+            border: Border.all(color: cs.outline),
           ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
@@ -480,7 +482,7 @@ class _RequestCard extends StatelessWidget {
                             style: tt.titleLarge?.copyWith(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: DonyColors.textPrimary,
+                              color: cs.onSurface,
                               letterSpacing: -0.3,
                               height: 1.2,
                             ),
@@ -492,7 +494,7 @@ class _RequestCard extends StatelessWidget {
                           child: Text(
                             _timeAgo(request.createdAt),
                             style: tt.bodySmall?.copyWith(
-                              color: DonyColors.textSubtle,
+                              color: cs.onSurfaceVariant,
                               fontSize: 11,
                             ),
                           ),
@@ -504,7 +506,7 @@ class _RequestCard extends StatelessWidget {
                     Text(
                       _buildDetails(request),
                       style: tt.bodySmall?.copyWith(
-                        color: DonyColors.textMuted,
+                        color: cs.onSurfaceVariant,
                         height: 1.4,
                         fontSize: 12,
                       ),

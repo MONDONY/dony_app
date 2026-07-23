@@ -41,6 +41,7 @@ class WizardSummaryCard extends StatelessWidget {
       Divider(height: 12, thickness: 1, color: cs.outlineVariant);
 
   Widget _line(BuildContext context, String label, String value) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,7 +51,7 @@ class WizardSummaryCard extends StatelessWidget {
           child: Text(
             label,
             style: tt.bodySmall?.copyWith(
-              color: DonyColors.textMuted,
+              color: cs.onSurfaceVariant,
               fontSize: 13,
             ),
           ),
@@ -62,7 +63,7 @@ class WizardSummaryCard extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w800,
-              color: DonyColors.textPrimary,
+              color: cs.onSurface,
             ),
           ),
         ),

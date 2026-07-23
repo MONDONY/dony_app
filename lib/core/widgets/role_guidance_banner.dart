@@ -116,6 +116,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
   }
 
   Widget _buildBanner(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final isSender = widget.role == ActiveRole.sender;
     final title = isSender
         ? 'Publier ta première demande'
@@ -190,7 +191,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
                   Text(
                     isFirst ? '✓' : '${e.key + 1}.',
                     style: tt.bodySmall?.copyWith(
-                      color: isFirst ? DonyColors.success : DonyColors.textMuted,
+                      color: isFirst ? DonyColors.success : cs.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -199,7 +200,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
                     child: Text(
                       e.value,
                       style: tt.bodySmall?.copyWith(
-                        color: isFirst ? DonyColors.textMuted : DonyColors.ink900,
+                        color: isFirst ? cs.onSurfaceVariant : DonyColors.ink900,
                         decoration: isFirst ? TextDecoration.lineThrough : null,
                       ),
                     ),

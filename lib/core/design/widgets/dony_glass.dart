@@ -262,6 +262,7 @@ class DonyGlassChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: onTap,
@@ -293,7 +294,7 @@ class DonyGlassChip extends StatelessWidget {
                   Icon(
                     icon,
                     size: 14,
-                    color: active ? Colors.white : DonyColors.textPrimary,
+                    color: active ? Colors.white : cs.onSurface,
                   ),
                   const SizedBox(width: 6),
                 ],
@@ -302,7 +303,7 @@ class DonyGlassChip extends StatelessWidget {
                   style: tt.labelMedium?.copyWith(
                     fontSize: 13, // never < 13 on glass
                     fontWeight: FontWeight.w700,
-                    color: active ? Colors.white : DonyColors.textPrimary,
+                    color: active ? Colors.white : cs.onSurface,
                   ),
                 ),
               ],
@@ -336,11 +337,12 @@ class DonyGlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final isPrimary = variant == DonyGlassButtonVariant.primary;
     final bgColor = isPrimary
         ? DonyColors.primary
         : Colors.white.withValues(alpha: 0.62);
-    final fgColor = isPrimary ? Colors.white : DonyColors.textPrimary;
+    final fgColor = isPrimary ? Colors.white : cs.onSurface;
     final borderColor = isPrimary
         ? DonyColors.primary
         : Colors.white.withValues(alpha: 0.6);

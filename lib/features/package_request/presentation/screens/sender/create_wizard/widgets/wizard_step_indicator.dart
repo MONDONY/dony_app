@@ -18,6 +18,7 @@ class WizardStepIndicator extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.md,
@@ -33,7 +34,7 @@ class WizardStepIndicator extends StatelessWidget
                 decoration: BoxDecoration(
                   color: i <= currentStep
                       ? DonyColors.primary
-                      : DonyColors.neutral200,
+                      : cs.outline,
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
               ),

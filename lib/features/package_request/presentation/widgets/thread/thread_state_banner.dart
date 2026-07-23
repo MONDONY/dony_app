@@ -29,6 +29,7 @@ class ThreadStateBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -64,7 +65,7 @@ class ThreadStateBanner extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
-                      color: kTextSecondary,
+                      color: cs.onSurfaceVariant,
                       height: 1.4,
                     ),
                   ),

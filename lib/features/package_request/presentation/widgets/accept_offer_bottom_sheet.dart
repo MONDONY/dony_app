@@ -232,7 +232,7 @@ class AcceptOfferBottomSheet {
                     : 'En confirmant, le paiement est mis en escrow. Le voyageur reçoit le montant à la livraison validée.',
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
-                  color: kTextSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.5,
                 ),
               ),

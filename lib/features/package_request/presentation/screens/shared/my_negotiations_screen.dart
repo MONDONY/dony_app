@@ -32,7 +32,7 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DonyColors.sand100,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // Aligné sur la tuile « Discussions de prix » du hub Activités : le
       // libellé tapé doit être celui de l'écran qui s'ouvre.
       appBar: const DonyAppBar(title: 'Discussions de prix'),
@@ -230,16 +230,17 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
-          color: active ? DonyColors.primary : Colors.white,
+          color: active ? DonyColors.primary : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
           border: Border.all(
-            color: active ? DonyColors.primary : DonyColors.neutral200,
+            color: active ? DonyColors.primary : cs.outline,
             width: 1.5,
           ),
         ),
@@ -249,7 +250,7 @@ class _FilterChip extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: active ? Colors.white : DonyColors.textMuted,
+              color: active ? Colors.white : cs.onSurfaceVariant,
             ),
           ),
         ),
@@ -278,6 +279,7 @@ class _FilterEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xl),
@@ -289,7 +291,7 @@ class _FilterEmptyState extends StatelessWidget {
             Text(
               _msg,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -346,6 +348,7 @@ class _NegoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final name =
         thread.travelerName ?? 'Voyageur ${thread.travelerId.substring(0, 4)}';
@@ -368,7 +371,7 @@ class _NegoCard extends StatelessWidget {
     return Opacity(
           opacity: _isTerminal ? 0.65 : 1.0,
           child: Material(
-            color: Colors.white,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(DonyRadius.card),
             child: InkWell(
               borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -376,12 +379,12 @@ class _NegoCard extends StatelessWidget {
               child: Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(DonyRadius.card),
                   border: Border.all(
                     color: _isNew
                         ? DonyColors.primary.withValues(alpha: 0.30)
-                        : DonyColors.neutral200,
+                        : cs.outline,
                     width: _isNew ? 1.5 : 1.0,
                   ),
                 ),
@@ -411,8 +414,8 @@ class _NegoCard extends StatelessWidget {
                                     fontSize: 15,
                                     fontWeight: FontWeight.w800,
                                     color: _isTerminal
-                                        ? DonyColors.textMuted
-                                        : DonyColors.textPrimary,
+                                        ? cs.onSurfaceVariant
+                                        : cs.onSurface,
                                     letterSpacing: -0.3,
                                   ),
                                 ),
@@ -427,8 +430,8 @@ class _NegoCard extends StatelessWidget {
                                       fontSize: 20,
                                       fontWeight: FontWeight.w800,
                                       color: _isTerminal
-                                          ? DonyColors.textMuted
-                                          : DonyColors.textPrimary,
+                                          ? cs.onSurfaceVariant
+                                          : cs.onSurface,
                                       letterSpacing: -0.5,
                                       height: 1.0,
                                     ),
@@ -437,7 +440,7 @@ class _NegoCard extends StatelessWidget {
                                     _priceLabel,
                                     style: tt.bodySmall?.copyWith(
                                       fontSize: 10,
-                                      color: DonyColors.textMuted,
+                                      color: cs.onSurfaceVariant,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -463,7 +466,7 @@ class _NegoCard extends StatelessWidget {
                                   style: tt.bodySmall?.copyWith(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: DonyColors.textMuted,
+                                    color: cs.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -485,8 +488,8 @@ class _NegoCard extends StatelessWidget {
                                     color: i < rounds
                                         ? (_isTerminal
                                               ? DonyColors.neutral300
-                                              : DonyColors.textPrimary)
-                                        : DonyColors.neutral200,
+                                              : cs.onSurface)
+                                        : cs.outline,
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
@@ -498,7 +501,7 @@ class _NegoCard extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: tt.bodySmall?.copyWith(
                                     fontSize: 11,
-                                    color: DonyColors.textSubtle,
+                                    color: cs.onSurfaceVariant,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),

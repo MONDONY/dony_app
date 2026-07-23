@@ -43,17 +43,18 @@ class ThreadMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(18),
       topRight: const Radius.circular(18),
       bottomLeft: Radius.circular(mine ? 18 : 4),
       bottomRight: Radius.circular(mine ? 4 : 18),
     );
-    final bg = mine ? DonyColors.primary : kSurface;
-    final textColor = mine ? Colors.white : kTextPrimary;
+    final bg = mine ? DonyColors.primary : cs.surface;
+    final textColor = mine ? Colors.white : cs.onSurface;
     final labelColor =
-        mine ? Colors.white.withValues(alpha: 0.85) : kTextSecondary;
-    final priceColor = mine ? Colors.white : DonyColors.primary;
+        mine ? Colors.white.withValues(alpha: 0.85) : cs.onSurfaceVariant;
+    final priceColor = mine ? Colors.white : cs.primary;
 
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -75,7 +76,7 @@ class ThreadMessageBubble extends StatelessWidget {
                     : Border.all(
                         color: highlight
                             ? DonyColors.warning
-                            : kBorder,
+                            : cs.outline,
                         width: highlight ? 1.5 : 1,
                       ),
               ),

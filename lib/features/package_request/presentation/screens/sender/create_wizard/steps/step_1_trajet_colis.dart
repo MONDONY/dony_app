@@ -134,6 +134,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -150,7 +151,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             Text(
               'TRAJET & COLIS',
               style: tt.labelMedium?.copyWith(
-                color: DonyColors.primary,
+                color: cs.primary,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.0,
               ),
@@ -160,7 +161,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
               "D'où vers où ?",
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: DonyColors.textPrimary,
+                color: cs.onSurface,
                 letterSpacing: -0.4,
               ),
             ),
@@ -256,7 +257,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
                 _toleranceHint(),
-                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
             const SizedBox(height: DonySpacing.base),
@@ -275,7 +276,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
               child: Text(
                 'Le voyageur saura tout de suite si ça lui convient. '
                 'Tu pourras en discuter ensuite.',
-                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
             const SizedBox(height: DonySpacing.base),
@@ -361,15 +362,16 @@ class _RouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200),
+        border: Border.all(color: cs.outline),
         boxShadow: [
           BoxShadow(
-            color: DonyColors.sand400.withValues(alpha: 0.10),
+            color: DonyColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -380,9 +382,9 @@ class _RouteCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                left: BorderSide(color: DonyColors.primary, width: 4),
+                left: BorderSide(color: cs.primary, width: 4),
               ),
             ),
             padding: const EdgeInsets.fromLTRB(
@@ -400,7 +402,7 @@ class _RouteCard extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1, thickness: 1, color: DonyColors.neutral200),
+          Divider(height: 1, thickness: 1, color: cs.outline),
           Container(
             decoration: BoxDecoration(
               border: Border(
@@ -458,7 +460,7 @@ class _CityHeader extends StatelessWidget {
         Text(
           label,
           style: tt.labelSmall?.copyWith(
-            color: DonyColors.textMuted,
+            color: cs.onSurfaceVariant,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.8,
             fontSize: 10,
@@ -481,7 +483,7 @@ class _FieldLabel extends StatelessWidget {
       text,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
-            color: DonyColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 14,
           ),
     );
@@ -541,8 +543,8 @@ class _DatePickerField extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: tt.bodyMedium?.copyWith(
                   color: date == null
-                      ? DonyColors.textSubtle
-                      : DonyColors.textPrimary,
+                      ? cs.onSurfaceVariant
+                      : cs.onSurface,
                   fontWeight: date == null ? FontWeight.w500 : FontWeight.w700,
                 ),
               ),
@@ -582,7 +584,7 @@ class _ToleranceField extends StatelessWidget {
         child: Text(
           '± $tolerance j',
           style: tt.bodyMedium?.copyWith(
-            color: DonyColors.textPrimary,
+            color: cs.onSurface,
             fontWeight: FontWeight.w700,
           ),
         ),
