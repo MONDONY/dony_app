@@ -174,4 +174,12 @@ class NegotiationRepository {
     );
     return NegotiationThread.fromJson(response.data!);
   }
+
+  /// Sends a nudge on this thread to prompt the other party to act.
+  /// Backend validates whether the current viewer is allowed to nudge.
+  Future<NegotiationThread> nudge(String id) async {
+    final response =
+        await _apiClient.dio.post<Map<String, dynamic>>('/negotiations/$id/nudge');
+    return NegotiationThread.fromJson(response.data!);
+  }
 }

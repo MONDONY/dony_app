@@ -57,6 +57,7 @@ class NegotiationThread extends Equatable {
     this.senderPhotoUrl,
     this.cashCommissionAvailable = true,
     this.availablePaymentMethods,
+    this.canNudge = false,
   });
 
   final String id;
@@ -109,6 +110,10 @@ class NegotiationThread extends Equatable {
   /// Moyens de paiement disponibles pour ce thread, calculés côté serveur
   /// une fois le trajet lié (null avant le trip-linking).
   final Set<PaymentMethod>? availablePaymentMethods;
+
+  /// Vrai si l'utilisateur courant peut envoyer une relance (nudge) sur ce
+  /// thread, calculé côté serveur.
+  final bool canNudge;
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
@@ -168,6 +173,7 @@ class NegotiationThread extends Equatable {
                 .whereType<PaymentMethod>()
                 .toSet()
             : null,
+        canNudge: json['canNudge'] as bool? ?? false,
       );
 
   @override
@@ -180,6 +186,6 @@ class NegotiationThread extends Equatable {
         departureCity, arrivalCity, weightKg, senderName,
         isMyTurn, canAccept, canCounter, roundsRemaining,
         linkedTrip, materializedBidId, senderPhotoUrl, cashCommissionAvailable,
-        availablePaymentMethods,
+        availablePaymentMethods, canNudge,
       ];
 }

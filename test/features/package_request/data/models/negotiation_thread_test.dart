@@ -237,4 +237,15 @@ void main() {
     expect(t.id, 't-1');
     expect(t.status, NegotiationThreadStatus.awaitingPayment);
   });
+
+  test('parse canNudge (true / défaut false)', () {
+    expect(NegotiationThread.fromJson(_baseJson(overrides: {'canNudge': true})).canNudge, isTrue);
+    expect(NegotiationThread.fromJson(_baseJson()).canNudge, isFalse);
+  });
+
+  test('canNudge participates in props/equality', () {
+    final t1 = NegotiationThread.fromJson(_baseJson());
+    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {'canNudge': true}));
+    expect(t1, isNot(equals(t2)));
+  });
 }

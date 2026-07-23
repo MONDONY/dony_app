@@ -382,4 +382,24 @@ void main() {
       expect(thread.id, 'th-1');
     });
   });
+
+  group('nudge', () {
+    test('POSTs to /negotiations/:id/nudge and returns updated thread',
+        () async {
+      final nudgedJson = {
+        ..._threadJson,
+        'canNudge': false,
+      };
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/nudge',
+        ),
+      ).thenAnswer((_) async => _ok(nudgedJson, '/negotiations/th-1/nudge'));
+
+      final thread = await repo.nudge('th-1');
+      expect(thread.id, 'th-1');
+      expect(thread.canNudge, isFalse);
+    });
+  });
 }
