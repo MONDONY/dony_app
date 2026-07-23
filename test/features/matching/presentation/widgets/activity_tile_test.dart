@@ -14,7 +14,6 @@ ActivityTile _tile({
 }) => ActivityTile(
   iconName: 'plane',
   iconColor: Colors.blue,
-  iconBackground: Colors.blue.shade50,
   value: value,
   label: 'Trajets actifs',
   isLoading: isLoading,
@@ -84,7 +83,12 @@ void main() {
     testWidgets('affiche le libellé et la valeur formatée', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          const StatTile(iconName: 'euro', label: 'Revenus', value: '152 €'),
+          const StatTile(
+            iconName: 'euro',
+            label: 'Revenus',
+            value: '152 €',
+            color: Colors.blue,
+          ),
         ),
       );
 
@@ -99,6 +103,7 @@ void main() {
             iconName: 'euro',
             label: 'Revenus',
             value: '152 €',
+            color: Colors.blue,
             isLoading: true,
           ),
         ),

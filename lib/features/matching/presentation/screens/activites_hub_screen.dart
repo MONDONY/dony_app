@@ -179,6 +179,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final summaryState = context.watch<TripsSummaryCubit>().state;
     final period = context.watch<StatsPeriodCubit>().state;
     // Trois portes gardent la section visible en plus de l'activité détectée :
@@ -268,6 +269,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'bell',
                           label: 'Mes alertes',
                           subtitle: 'Nouveaux trajets et colis',
+                          color: cs.primary,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubAlertsOpened,
                             '/corridor-alerts',
@@ -277,6 +279,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'bookmark',
                           label: 'Modèles de trajet',
                           subtitle: 'Republiez vos trajets habituels',
+                          color: DonyColors.violet,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubTemplatesOpened,
                             '/trip-templates',
@@ -289,6 +292,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'map-pin',
                           label: 'Mes adresses',
                           subtitle: 'Vos lieux d\'envoi enregistrés',
+                          color: cs.secondary,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubAddressesOpened,
                             '/profile/addresses',
@@ -298,6 +302,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'contact',
                           label: 'Mes destinataires',
                           subtitle: 'Les personnes à qui vous envoyez',
+                          color: DonyColors.violet,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubRecipientsOpened,
                             '/profile/recipients',
@@ -310,6 +315,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'chart-line',
                           label: 'Historique',
                           subtitle: 'Tout ce qui est terminé',
+                          color: cs.primary,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubHistoryOpened,
                             '/profile/shipments/history',
@@ -319,6 +325,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           iconName: 'circle-help',
                           label: 'Aide & support',
                           subtitle: 'Une question, un souci ?',
+                          color: DonyColors.amberDark,
                           onTap: () => _open(
                             AnalyticsEvents.activitesHubHelpOpened,
                             '/profile/help/faq',
@@ -488,7 +495,6 @@ class _ActivityGrid extends StatelessWidget {
         key: const Key('hub-tile-trips'),
         iconName: 'plane',
         iconColor: cs.primary,
-        iconBackground: cs.primaryContainer,
         value: state.summary?.activeTrips ?? 0,
         label: 'Trajets actifs',
         subtitle: 'Vos voyages à venir',
@@ -510,7 +516,6 @@ class _ActivityGrid extends StatelessWidget {
           key: const Key('hub-tile-shipments'),
           iconName: 'package',
           iconColor: cs.secondary,
-          iconBackground: cs.secondaryContainer,
           value: count,
           label: 'Colis en route',
           subtitle: 'Les colis que vous envoyez',
@@ -536,7 +541,6 @@ class _ActivityGrid extends StatelessWidget {
           // Ambre, pas rouge : une demande reçue est une opportunité qui
           // attend une réponse, pas une erreur — cs.error criait au problème.
           iconColor: DonyColors.amberDark,
-          iconBackground: DonyColors.amberLight,
           value: count,
           label: 'Demandes reçues',
           subtitle: 'Des colis à transporter pour vous',
@@ -562,7 +566,6 @@ class _ActivityGrid extends StatelessWidget {
           // Violet : la seule des quatre tuiles hors palette de marque, pour
           // séparer la négociation des trois domaines bleu/terracotta/rouge.
           iconColor: DonyColors.violet,
-          iconBackground: DonyColors.violetLight,
           value: count,
           label: 'Discussions de prix',
           subtitle: 'Proposez ou acceptez un tarif',
@@ -649,21 +652,26 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
       builder: (context, state) {
         final summary = state.summary;
         final loading = state.status == TripsSummaryStatus.loading;
+        // Même code couleur que les tuiles d'activité : vert = gains, bleu =
+        // volume, violet = trajets, terracotta = envois.
         final tiles = <Widget>[
           StatTile(
             iconName: 'euro',
             label: 'Revenus',
             value: _money(summary?.revenue ?? 0),
+            color: cs.success,
             isLoading: loading,
           ),
           StatTile(
             iconName: 'scale',
             label: 'Kg vendus',
             value: _weight(summary?.kgSold ?? 0),
+            color: cs.primary,
             isLoading: loading,
           ),
           // Un backend antérieur ne renvoie pas ces deux compteurs. Afficher 0
@@ -675,6 +683,7 @@ class _StatsRow extends StatelessWidget {
             value: summary?.tripsPublished == null
                 ? '—'
                 : '${summary!.tripsPublished} publiés',
+            color: DonyColors.violet,
             isLoading: loading,
           ),
           StatTile(
@@ -683,6 +692,7 @@ class _StatsRow extends StatelessWidget {
             value: summary?.parcelsSent == null
                 ? '—'
                 : '${summary!.parcelsSent} envoyés',
+            color: cs.secondary,
             isLoading: loading,
           ),
         ];
@@ -708,12 +718,16 @@ class _OtherTile extends StatelessWidget {
   const _OtherTile({
     required this.iconName,
     required this.label,
+    required this.color,
     required this.onTap,
     this.subtitle,
   });
 
   final String iconName;
   final String label;
+
+  /// Couleur de la catégorie : remplit la pastille d'icône (icône blanche).
+  final Color color;
   final String? subtitle;
   final VoidCallback onTap;
 
@@ -724,11 +738,18 @@ class _OtherTile extends StatelessWidget {
 
     return DonyCard(
       onTap: onTap,
+      elevated: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon(iconName, size: 20, color: cs.onSurface),
+          DonyIconContainer(
+            iconAsset: iconName,
+            size: DonyIconContainerSize.sm,
+            backgroundColor: color,
+            iconColor: DonyColors.neutral0,
+            borderRadius: DonyRadius.iconBtn,
+          ),
           const SizedBox(height: DonySpacing.xl),
           Text(
             label,

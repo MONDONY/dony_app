@@ -12,7 +12,6 @@ class ActivityTile extends StatelessWidget {
     super.key,
     required this.iconName,
     required this.iconColor,
-    required this.iconBackground,
     required this.value,
     required this.label,
     required this.onTap,
@@ -25,8 +24,10 @@ class ActivityTile extends StatelessWidget {
 
   /// Nom du SVG dans `assets/icons/`, sans extension.
   final String iconName;
+
+  /// Couleur de la catégorie : remplit la pastille d'icône (icône blanche
+  /// dessus) et teinte le compteur, pour un code couleur lisible d'un coup.
   final Color iconColor;
-  final Color iconBackground;
 
   /// Valeur affichée. Ignorée si [isLoading] ou [hasError].
   final int value;
@@ -55,6 +56,7 @@ class ActivityTile extends StatelessWidget {
 
     return DonyCard(
       onTap: onTap,
+      elevated: true,
       padding: const EdgeInsets.all(DonySpacing.base),
       child: Stack(
         children: [
@@ -65,8 +67,8 @@ class ActivityTile extends StatelessWidget {
               DonyIconContainer(
                 iconAsset: iconName,
                 size: DonyIconContainerSize.sm,
-                backgroundColor: iconBackground,
-                iconColor: iconColor,
+                backgroundColor: iconColor,
+                iconColor: DonyColors.neutral0,
                 borderRadius: DonyRadius.iconBtn,
               ),
               const SizedBox(height: DonySpacing.md),
@@ -166,6 +168,7 @@ class _ValueText extends StatelessWidget {
       hasError ? '—' : '$value',
       style: tt.headlineSmall?.copyWith(
         fontWeight: FontWeight.w800,
+        color: hasError ? cs.onSurfaceVariant : accentColor,
         fontFeatures: const [FontFeature.tabularFigures()],
       ),
     );

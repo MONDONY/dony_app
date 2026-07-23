@@ -10,6 +10,7 @@ class StatTile extends StatelessWidget {
     required this.iconName,
     required this.label,
     required this.value,
+    required this.color,
     this.isLoading = false,
   });
 
@@ -17,6 +18,10 @@ class StatTile extends StatelessWidget {
 
   final String iconName;
   final String label;
+
+  /// Couleur de la catégorie : teinte l'icône et la valeur, en écho au code
+  /// couleur des tuiles d'activité.
+  final Color color;
 
   /// Valeur déjà formatée (`0 €`, `12,5 kg`, `2 publiés`).
   final String value;
@@ -30,6 +35,7 @@ class StatTile extends StatelessWidget {
     return SizedBox(
       width: width,
       child: DonyCard(
+        elevated: true,
         padding: const EdgeInsets.all(DonySpacing.base),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +43,7 @@ class StatTile extends StatelessWidget {
           children: [
             // 24 plutôt que 20 : à 20 le glyphe euro se lit comme un dollar et
             // la balance devient illisible.
-            DonyIcon(iconName, size: 24, color: cs.onSurface),
+            DonyIcon(iconName, size: 24, color: color),
             const SizedBox(height: DonySpacing.lg),
             Text(
               label,
@@ -60,6 +66,7 @@ class StatTile extends StatelessWidget {
                 value,
                 style: tt.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
+                  color: color,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
                 maxLines: 1,
