@@ -33,6 +33,7 @@ class DonyNavItem extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.badgeCount = 0,
+    this.showDot = false,
     this.isPro = false,
     this.avatarUrl,
     this.avatarName,
@@ -55,6 +56,13 @@ class DonyNavItem extends StatelessWidget {
   final int currentIndex;
   final VoidCallback onTap;
   final int badgeCount;
+
+  /// Point d'attention sans chiffre — allumé quand l'onglet a du « nouveau »
+  /// à signaler mais qu'aucun décompte précis n'a de sens (ex. Activités qui
+  /// agrège demandes reçues + négociations + alertes). Ignoré si [badgeCount]
+  /// porte déjà un nombre.
+  final bool showDot;
+
   final bool isPro;
 
   /// Si renseigné, l'onglet affiche la photo de profil (style Facebook) au lieu
@@ -101,6 +109,20 @@ class DonyNavItem extends StatelessWidget {
                     right: 2,
                     top: -2,
                     child: _NavBadge(count: badgeCount, ringColor: cs.surface),
+                  ),
+                if (showDot && badgeCount <= 0 && !isPro)
+                  Positioned(
+                    right: 6,
+                    top: -1,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: DonyColors.error,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cs.surface, width: 2),
+                      ),
+                    ),
                   ),
                 if (isPro && !isAvatar)
                   Positioned(

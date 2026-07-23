@@ -15,7 +15,9 @@ import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -164,6 +166,14 @@ class _DonyAppState extends State<DonyApp> {
                 ),
                 BlocProvider<StripeAccountBloc>(
                   create: (_) => getIt<StripeAccountBloc>(),
+                ),
+                // Singletons partagés — alimentent le point d'attention de
+                // l'onglet Activités (bottom nav) même hors du hub.
+                BlocProvider<TravelerBidsBloc>.value(
+                  value: getIt<TravelerBidsBloc>(),
+                ),
+                BlocProvider<NegotiationListBloc>.value(
+                  value: getIt<NegotiationListBloc>(),
                 ),
                 // Global FavoriteIdsCubit — provides heart buttons across all screens.
                 // load() is triggered after AuthAuthenticated so it only hits the API

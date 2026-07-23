@@ -56,7 +56,9 @@ class ActivitesHubScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
-        BlocProvider(create: (_) => getIt<TravelerBidsBloc>()),
+        // TravelerBidsBloc est désormais un singleton (partagé avec l'onglet) :
+        // `.value` pour ne pas le fermer quand le hub se démonte.
+        BlocProvider.value(value: getIt<TravelerBidsBloc>()),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<StatsPeriodCubit>()),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),

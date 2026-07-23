@@ -11,12 +11,17 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
+import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
+import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
+import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -50,6 +55,22 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   StreamSubscription<void>? _fcmSub;
   bool _ratingPromptShown = false;
+
+  /// Recharge les compteurs qui allument le point d'attention de l'onglet
+  /// Activités : demandes reçues (TravelerBidsBloc) + négociations actives
+  /// (NegotiationListBloc). Les notifications non lues, troisième source, sont
+  /// déjà rechargées à côté.
+  void _loadActivityIndicators() {
+    if (!mounted) {
+      return;
+    }
+    context.read<TravelerBidsBloc>().add(
+      const TravelerBidsRequested(force: true),
+    );
+    context.read<NegotiationListBloc>().add(
+      const NegotiationListFetchRequested(),
+    );
+  }
 
   void _onTap(int index) {
     HapticFeedback.selectionClick();
@@ -90,11 +111,17 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       context.read<NotificationBloc>().add(const NotificationsLoadRequested());
       context.read<RatingBloc>().add(const PendingRatingChecked());
       context.read<StripeAccountBloc>().add(const StripeAccountStatusLoaded());
+      // Alimente le point d'attention de l'onglet Activités dès le démarrage,
+      // sans attendre que l'utilisateur ouvre le hub.
+      _loadActivityIndicators();
       _fcmSub = getIt<NotificationService>().newNotificationStream.listen((_) {
         if (mounted) {
           context.read<NotificationBloc>().add(
             const NotificationsLoadRequested(),
           );
+          // Une push peut être une nouvelle demande reçue ou une offre de
+          // négociation : rafraîchir les compteurs de l'onglet aussi.
+          _loadActivityIndicators();
         }
       });
     });
@@ -264,14 +291,42 @@ class _DonyBottomNav extends StatelessWidget {
                                 onTap: () => onTap(0),
                               ),
                             ),
-                            // 1 — Activités
+                            // 1 — Activités (point d'attention = demandes reçues
+                            // + négociations actives + notifications non lues,
+                            // même signal que les pastilles des cartes du hub)
                             Expanded(
-                              child: DonyNavItem(
-                                iconAsset: tab1IconAsset,
-                                label: tab1Label,
-                                index: 1,
-                                currentIndex: currentIndex,
-                                onTap: () => onTap(1),
+                              child: Builder(
+                                builder: (context) {
+                                  final pendingRequests =
+                                      context.select<TravelerBidsBloc, int>(
+                                    (b) => b.state is TravelerBidsLoaded
+                                        ? (b.state as TravelerBidsLoaded)
+                                            .pendingCount
+                                        : 0,
+                                  );
+                                  final activeNegos =
+                                      context.select<NegotiationListBloc, int>(
+                                    (b) => b.state.activeCount,
+                                  );
+                                  final unreadNotifs =
+                                      context.select<NotificationBloc, int>(
+                                    (b) => b.state is NotificationLoaded
+                                        ? (b.state as NotificationLoaded)
+                                            .unreadCount
+                                        : 0,
+                                  );
+                                  final hasNew = pendingRequests > 0 ||
+                                      activeNegos > 0 ||
+                                      unreadNotifs > 0;
+                                  return DonyNavItem(
+                                    iconAsset: tab1IconAsset,
+                                    label: tab1Label,
+                                    index: 1,
+                                    currentIndex: currentIndex,
+                                    onTap: () => onTap(1),
+                                    showDot: hasNew,
+                                  );
+                                },
                               ),
                             ),
                             // 2 — Suivi / scan QR : orb au même niveau que
