@@ -121,6 +121,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     this.acceptedContentTypes,
     this.refusedTypes,
     required this.paymentMethod,
+    this.useCardForCommission = false,
   });
   final String threadId;
   final DateTime departureDate;
@@ -133,11 +134,17 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
   final List<String>? refusedTypes;
   final PaymentMethod paymentMethod;
 
+  /// CASH only: traveler consents to pay the commission on their card when the
+  /// wallet is short (charged at finalize, wallet-first then card). Mirrors
+  /// [NegotiationSubmitTripRequested.useCardForCommission].
+  final bool useCardForCommission;
+
   @override
   List<Object?> get props => [
         threadId, departureDate, departureTime, arrivalTime,
         pickupAddress, deliveryAddress, description,
         acceptedContentTypes, refusedTypes, paymentMethod,
+        useCardForCommission,
       ];
 }
 
@@ -426,6 +433,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         acceptedContentTypes: e.acceptedContentTypes,
         refusedTypes: e.refusedTypes,
         paymentMethod: e.paymentMethod,
+        useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
     } catch (err) {

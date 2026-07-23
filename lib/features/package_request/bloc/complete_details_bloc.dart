@@ -66,7 +66,10 @@ class CompleteDetailsState extends Equatable {
   final String? errorMessage;
 
   /// The loaded request — used to render the read-only recap and to constrain
-  /// the payment-method picker to [PackageRequest.acceptedPaymentMethods].
+  /// the payment-method picker to the server-computed SET
+  /// (`NegotiationThread.availablePaymentMethods`) when available, falling
+  /// back to [PackageRequest.acceptedPaymentMethods] otherwise (cf.
+  /// `_availableMethods` in complete_details_screen.dart).
   final PackageRequest? request;
 
   /// True once the initial load attempt completed (success or failure). The

@@ -43,6 +43,10 @@ NegotiationBloc _makeBloc(_MockRepo repo) => NegotiationBloc(
 void main() {
   late _MockRepo repo;
 
+  setUpAll(() {
+    registerFallbackValue(PaymentMethod.stripe);
+  });
+
   setUp(() => repo = _MockRepo());
 
   blocTest<NegotiationBloc, NegotiationState>(
@@ -239,6 +243,103 @@ void main() {
         isA<NegotiationActionInProgress>(),
         isA<NegotiationError>(),
       ],
+    );
+  });
+
+  // ── NegotiationCreateDedicatedTripRequested — useCardForCommission ─────────
+
+  group('NegotiationCreateDedicatedTripRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'threads useCardForCommission=true through to the repository call',
+      build: () {
+        when(() => repo.createDedicatedTrip(
+              any(),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              description: any(named: 'description'),
+              acceptedContentTypes: any(named: 'acceptedContentTypes'),
+              refusedTypes: any(named: 'refusedTypes'),
+              paymentMethod: any(named: 'paymentMethod'),
+              useCardForCommission: any(named: 'useCardForCommission'),
+            )).thenAnswer((_) async => _fakeThread(
+              status: NegotiationThreadStatus.awaitingPayment,
+            ));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(NegotiationCreateDedicatedTripRequested(
+        threadId: 't-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.cash,
+        useCardForCommission: true,
+      )),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>(),
+      ],
+      verify: (_) => verify(() => repo.createDedicatedTrip(
+            't-1',
+            departureDate: DateTime(2026, 7, 1),
+            departureTime: null,
+            arrivalTime: null,
+            pickupAddress: const {'label': 'Paris'},
+            deliveryAddress: const {'label': 'Dakar'},
+            description: null,
+            acceptedContentTypes: null,
+            refusedTypes: null,
+            paymentMethod: PaymentMethod.cash,
+            useCardForCommission: true,
+          )).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'defaults useCardForCommission to false when not specified',
+      build: () {
+        when(() => repo.createDedicatedTrip(
+              any(),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              description: any(named: 'description'),
+              acceptedContentTypes: any(named: 'acceptedContentTypes'),
+              refusedTypes: any(named: 'refusedTypes'),
+              paymentMethod: any(named: 'paymentMethod'),
+              useCardForCommission: any(named: 'useCardForCommission'),
+            )).thenAnswer((_) async => _fakeThread(
+              status: NegotiationThreadStatus.awaitingPayment,
+            ));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(NegotiationCreateDedicatedTripRequested(
+        threadId: 't-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+      )),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>(),
+      ],
+      verify: (_) => verify(() => repo.createDedicatedTrip(
+            't-1',
+            departureDate: DateTime(2026, 7, 1),
+            departureTime: null,
+            arrivalTime: null,
+            pickupAddress: const {'label': 'Paris'},
+            deliveryAddress: const {'label': 'Dakar'},
+            description: null,
+            acceptedContentTypes: null,
+            refusedTypes: null,
+            paymentMethod: PaymentMethod.stripe,
+            useCardForCommission: false,
+          )).called(1),
     );
   });
 

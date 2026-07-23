@@ -74,8 +74,12 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
     super.dispose();
   }
 
-  /// Default = the method the traveler picked at link time (if still accepted),
-  /// else Stripe if accepted, else the first accepted method.
+  /// Default = the first available method in the server-computed SET, Stripe
+  /// preferred when present. `thread.paymentMethod` is no longer the method
+  /// the traveler picked at link time, it is now just a placeholder (the
+  /// traveler doesn't choose a payment method at trip-linking anymore, cf.
+  /// LinkTripScreen) — it's checked first purely as a legacy fallback, in
+  /// case it still happens to be part of `available`.
   void _resolveDefaultMethod(PackageRequest request) {
     if (_selectedMethod.value != null) return;
     final available = _availableMethods(request);

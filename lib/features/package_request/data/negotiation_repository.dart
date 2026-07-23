@@ -107,6 +107,7 @@ class NegotiationRepository {
     List<String>? acceptedContentTypes,
     List<String>? refusedTypes,
     required PaymentMethod paymentMethod,
+    bool useCardForCommission = false,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$threadId/create-dedicated-trip',
@@ -120,6 +121,7 @@ class NegotiationRepository {
         if (acceptedContentTypes != null) 'acceptedContentTypes': acceptedContentTypes,
         if (refusedTypes != null) 'refusedTypes': refusedTypes,
         'paymentMethod': paymentMethod.wireName,
+        'useCardForCommission': useCardForCommission,
       },
     );
     return NegotiationThread.fromJson(response.data!);

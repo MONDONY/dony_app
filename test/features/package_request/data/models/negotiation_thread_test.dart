@@ -201,4 +201,40 @@ void main() {
     }));
     expect(t1, isNot(equals(t2)));
   });
+
+  // ── Finding #5 — resilient parse of availablePaymentMethods ────────────────
+  // An unknown wire value here must be skipped, not fail the whole thread
+  // parse (unlike PaymentMethod.fromWire/setFromJson elsewhere, left as-is).
+
+  test(
+      'availablePaymentMethods ignore une valeur wire inconnue au lieu de '
+      'faire échouer tout le parse', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['STRIPE', 'BITCOIN', 'CASH'],
+    }));
+    expect(
+      t.availablePaymentMethods,
+      {PaymentMethod.stripe, PaymentMethod.cash},
+    );
+  });
+
+  test(
+      'availablePaymentMethods vide (Set vide, pas null) quand toutes les '
+      'valeurs sont inconnues', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['BITCOIN', 'GOLD'],
+    }));
+    expect(t.availablePaymentMethods, isNotNull);
+    expect(t.availablePaymentMethods, isEmpty);
+  });
+
+  test('le reste du thread parse normalement malgré une valeur wire inconnue',
+      () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'status': 'AWAITING_PAYMENT',
+      'availablePaymentMethods': ['BITCOIN'],
+    }));
+    expect(t.id, 't-1');
+    expect(t.status, NegotiationThreadStatus.awaitingPayment);
+  });
 }

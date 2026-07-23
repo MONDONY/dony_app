@@ -203,6 +203,78 @@ void main() {
     });
   });
 
+  group('createDedicatedTrip', () {
+    test(
+        'POSTs to /negotiations/:id/create-dedicated-trip and returns updated thread',
+        () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async =>
+          _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip'));
+
+      final thread = await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+      );
+      expect(thread.id, 'th-1');
+    });
+
+    test('sends useCardForCommission in the body', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip');
+      });
+
+      await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.cash,
+        useCardForCommission: true,
+      );
+
+      expect(sentData?['useCardForCommission'], true);
+    });
+
+    test('defaults useCardForCommission to false in the body', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip');
+      });
+
+      await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+      );
+
+      expect(sentData?['useCardForCommission'], false);
+    });
+  });
+
   group('initiatePayment', () {
     test('POSTs to /negotiations/:id/initiate-payment and returns secrets',
         () async {

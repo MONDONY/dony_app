@@ -152,9 +152,20 @@ class NegotiationThread extends Equatable {
         materializedBidId: json['materializedBidId'] as String?,
         senderPhotoUrl: json['senderPhotoUrl'] as String?,
         cashCommissionAvailable: json['cashCommissionAvailable'] as bool? ?? true,
+        // Resilient parse: an unknown wire value here must not fail the whole
+        // thread parse (unlike the global PaymentMethod.fromWire/setFromJson,
+        // left untouched — used elsewhere where the full list is expected to
+        // always be recognized). Skips only the offending entry.
         availablePaymentMethods: json['availablePaymentMethods'] != null
             ? (json['availablePaymentMethods'] as List<dynamic>)
-                .map((e) => PaymentMethod.fromWire(e as String))
+                .map((e) {
+                  try {
+                    return PaymentMethod.fromWire(e as String);
+                  } catch (_) {
+                    return null;
+                  }
+                })
+                .whereType<PaymentMethod>()
                 .toSet()
             : null,
       );

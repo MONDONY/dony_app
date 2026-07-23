@@ -10,11 +10,9 @@ import 'package:dony/features/package_request/data/models/locked_trip_context.da
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
-import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
-import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
-import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/package_request/presentation/widgets/traveler/trip_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,39 +21,8 @@ import 'package:intl/intl.dart';
 
 // TODO(lot2): migrate loading state to LinkTripCubit (BLoC pattern)
 
-/// Maps the 422 reasons the back-end returns from `submitTrip` /
-/// `createDedicatedTrip` when the traveler cannot honor any payment method
-/// the sender accepted, to the block-specific UX the screen must show.
-///
-/// The traveler no longer picks a payment method at trip-linking: the
-/// back-end computes the SET of methods it can actually provide, and only
-/// rejects (422) when that set is empty. Each reason maps to exactly one
-/// contextual CTA — never a dead-end error message.
-enum PaymentCapabilityBlock {
-  /// Colis is card-only; the traveler has no Stripe Connect onboarding.
-  cardCapabilityRequired,
-
-  /// Colis is cash-only; the traveler lacks wallet funds AND card consent.
-  cashFundsRequired,
-
-  /// Both methods are accepted by the sender, neither is possible for the
-  /// traveler.
-  noneAvailable;
-
-  static const Map<String, PaymentCapabilityBlock> _byCode = {
-    'payment-method/card-capability-required':
-        PaymentCapabilityBlock.cardCapabilityRequired,
-    'payment-method/cash-funds-required':
-        PaymentCapabilityBlock.cashFundsRequired,
-    'payment-method/none-available': PaymentCapabilityBlock.noneAvailable,
-  };
-
-  /// Returns `null` when [code] isn't one of the trip-linking capability
-  /// block reasons above (e.g. a network error, or an unrelated business
-  /// error) — the caller must fall back to a generic error message.
-  static PaymentCapabilityBlock? fromErrorCode(String? code) =>
-      code == null ? null : _byCode[code];
-}
+export 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart'
+    show PaymentCapabilityBlock;
 
 /// Screen shown to the traveler after sender accepted the offer.
 /// They must pick one of their existing trips matching the corridor + date,
@@ -85,6 +52,15 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   final _matchingTripsNotifier = ValueNotifier<List<AnnouncementModel>>(const []);
   final _selectedTripNotifier = ValueNotifier<AnnouncementModel?>(null);
 
+  /// True while `/trips/create` (dedicated-trip creation) is on top of this
+  /// screen. That screen owns error handling for the SAME shared
+  /// `NegotiationBloc` while it's active (cf. `create_trip_screen.dart`'s
+  /// `_isLocked` `BlocListener`) — without this guard, this screen's
+  /// `BlocListener` (still subscribed underneath, merely not visible) would
+  /// ALSO react to the same `NegotiationError`/`NegotiationLoaded` and stack
+  /// duplicate feedback (double sheets/snackbar for a single 422).
+  final _creatingDedicatedTripNotifier = ValueNotifier<bool>(false);
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +78,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     _requestNotifier.dispose();
     _matchingTripsNotifier.dispose();
     _selectedTripNotifier.dispose();
+    _creatingDedicatedTripNotifier.dispose();
     super.dispose();
   }
 
@@ -185,8 +162,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       // The back-end no longer decides capability from this field — it only
       // requires a non-null accepted method to satisfy the DTO. The actual
       // payment method is chosen by the sender at checkout, from the SET the
-      // back-end computes server-side.
-      paymentMethod: request.acceptedPaymentMethods.first,
+      // back-end computes server-side. Falls back to stripe on an empty set
+      // (shouldn't happen — a request always has at least one accepted
+      // method — but `.first` on an empty Set throws StateError).
+      paymentMethod: request.acceptedPaymentMethods.isEmpty
+          ? PaymentMethod.stripe
+          : request.acceptedPaymentMethods.first,
     ));
     // Navigation handled by BlocListener on NegotiationLoaded(awaitingPayment).
   }
@@ -199,169 +180,6 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           paymentMethod: PaymentMethod.cash,
           useCardForCommission: useCard,
         ));
-  }
-
-  /// Commission cash « wallet d'abord » : si le solde est insuffisant, on propose
-  /// de recharger le wallet OU de consentir au prélèvement sur la carte (effectué
-  /// au finalize, wallet puis carte). Reprend le pattern de l'acceptation de bid.
-  Future<void> _showCashInsufficientSheet(BuildContext context) async {
-    final announcementId = _selectedTripNotifier.value?.id;
-    if (announcementId == null) return;
-
-    final net = widget.thread.currentPriceEur;
-    final gross = widget.thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
-    final commission = gross - net;
-
-    double balance = 0;
-    bool hasCard = false;
-    try {
-      balance = (await getIt<WalletRepository>().getBalance()).balance;
-    } catch (_) {}
-    try {
-      hasCard = (await getIt<CommissionMethodRepository>().load()) != null;
-    } catch (_) {}
-    if (!context.mounted) return;
-
-    final cs = Theme.of(context).colorScheme;
-    await DonyBottomSheet.show<void>(
-      context,
-      title: 'Solde insuffisant',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Commission à régler : ${commission.toStringAsFixed(2)} €',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: cs.onSurface),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Solde wallet : ${balance.toStringAsFixed(2)} €',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            'Recharge ton wallet, ou accepte que la commission soit prélevée sur '
-            'ta carte à la remise du colis.',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
-      ),
-      stickyBottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyButton(
-            label: 'Recharger mon wallet',
-            onPressed: () async {
-              Navigator.of(context, rootNavigator: true).pop();
-              final recharged =
-                  await context.push<bool>('/payments/wallet/topup/method');
-              if ((recharged ?? false) && mounted) {
-                _resubmitCash(announcementId, useCard: false);
-              }
-            },
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          if (hasCard)
-            DonyButton(
-              label: 'Payer la commission par carte',
-              variant: DonyButtonVariant.secondary,
-              onPressed: () {
-                Navigator.of(context, rootNavigator: true).pop();
-                _resubmitCash(announcementId, useCard: true);
-              },
-            )
-          else
-            DonyButton(
-              label: 'Ajouter une carte',
-              variant: DonyButtonVariant.secondary,
-              onPressed: () async {
-                Navigator.of(context, rootNavigator: true).pop();
-                await context.push('/payments/commission-method');
-                if (mounted) _resubmitCash(announcementId, useCard: true);
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// `payment-method/card-capability-required` : le colis n'accepte que la
-  /// carte et le voyageur n'a pas encore activé les paiements par carte
-  /// (onboarding Stripe Connect). Réutilise le flux d'onboarding existant
-  /// (`/connect/onboarding/intro`, cf. `announcement_detail_body.dart`).
-  Future<void> _showCardCapabilityRequiredSheet(BuildContext context) async {
-    final cs = Theme.of(context).colorScheme;
-    await DonyBottomSheet.show<void>(
-      context,
-      title: 'Paiement carte requis',
-      child: Text(
-        'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. '
-        'Active les paiements par carte pour pouvoir lier ce trajet.',
-        style: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: cs.onSurface),
-      ),
-      stickyBottom: DonyButton(
-        key: const Key('activate-card-payment-cta'),
-        label: 'Activer le paiement carte',
-        onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop();
-          context.push('/connect/onboarding/intro');
-        },
-      ),
-    );
-  }
-
-  /// `payment-method/none-available` : le colis accepte carte ET espèces,
-  /// mais le voyageur ne peut honorer ni l'une ni l'autre. On propose les
-  /// deux chemins de déblocage.
-  Future<void> _showNoPaymentMethodAvailableSheet(BuildContext context) async {
-    final cs = Theme.of(context).colorScheme;
-    await DonyBottomSheet.show<void>(
-      context,
-      title: 'Aucun moyen de paiement disponible',
-      child: Text(
-        'Tu ne peux pas encore honorer la carte ni les espèces pour ce colis. '
-        'Active le paiement carte, ou débloque le paiement en espèces.',
-        style: Theme.of(context)
-            .textTheme
-            .bodyMedium
-            ?.copyWith(color: cs.onSurface),
-      ),
-      stickyBottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyButton(
-            key: const Key('activate-card-payment-cta'),
-            label: 'Activer le paiement carte',
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-              context.push('/connect/onboarding/intro');
-            },
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          DonyButton(
-            key: const Key('unlock-cash-payment-cta'),
-            label: 'Débloquer le paiement en espèces',
-            variant: DonyButtonVariant.secondary,
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-              _showCashInsufficientSheet(context);
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _createNewTrip() async {
@@ -377,15 +195,25 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       weightKg: r.weightKg,
       transportMode: r.transportMode,
       agreedPriceEur: widget.thread.currentPriceEur,
-      paymentMethod: r.acceptedPaymentMethods.first,
+      paymentMethod: r.acceptedPaymentMethods.isEmpty
+          ? PaymentMethod.stripe
+          : r.acceptedPaymentMethods.first,
     );
-    await context.push<bool>(
-      '/trips/create',
-      extra: CreateTripArgs(
-        lockContext: lockContext,
-        negotiationBloc: context.read<NegotiationBloc>(),
-      ),
-    );
+    // While /trips/create is on top, IT owns error handling for the shared
+    // NegotiationBloc (cf. `_creatingDedicatedTripNotifier` doc above) — this
+    // screen's BlocListener must stand down for the duration of the push.
+    _creatingDedicatedTripNotifier.value = true;
+    try {
+      await context.push<bool>(
+        '/trips/create',
+        extra: CreateTripArgs(
+          lockContext: lockContext,
+          negotiationBloc: context.read<NegotiationBloc>(),
+        ),
+      );
+    } finally {
+      if (mounted) _creatingDedicatedTripNotifier.value = false;
+    }
     // The sheet's BlocListener pops itself on success and the screen-level
     // listener below will pop us back. If the user cancelled, we still
     // refresh the matching list.
@@ -425,17 +253,36 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           // Trip linked successfully: leave this screen.
           if (context.canPop()) context.pop();
         } else if (state is NegotiationError) {
+          // `/trips/create` is on top and already owns error handling for
+          // this SAME shared bloc (cf. `_creatingDedicatedTripNotifier` doc):
+          // reacting here too would stack duplicate feedback.
+          if (_creatingDedicatedTripNotifier.value) return;
           // Le voyageur ne choisit plus de mode de paiement : le back-end
           // calcule la SET qu'il peut réellement fournir et ne rejette (422)
           // que si elle est vide. Chaque reason route vers son CTA dédié,
           // jamais un message d'erreur sans issue.
           final block = PaymentCapabilityBlock.fromErrorCode(state.error.code);
+          final announcementId = _selectedTripNotifier.value?.id;
           if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
-            _showCardCapabilityRequiredSheet(context);
-          } else if (block == PaymentCapabilityBlock.cashFundsRequired) {
-            _showCashInsufficientSheet(context);
-          } else if (block == PaymentCapabilityBlock.noneAvailable) {
-            _showNoPaymentMethodAvailableSheet(context);
+            showCardCapabilityRequiredSheet(context);
+          } else if (block == PaymentCapabilityBlock.cashFundsRequired &&
+              announcementId != null) {
+            showCashInsufficientSheet(
+              context,
+              netPriceEur: widget.thread.currentPriceEur,
+              grossPriceEur: widget.thread.grossPriceEur,
+              onResubmit: ({required useCard}) =>
+                  _resubmitCash(announcementId, useCard: useCard),
+            );
+          } else if (block == PaymentCapabilityBlock.noneAvailable &&
+              announcementId != null) {
+            showNoPaymentMethodAvailableSheet(
+              context,
+              netPriceEur: widget.thread.currentPriceEur,
+              grossPriceEur: widget.thread.grossPriceEur,
+              onResubmit: ({required useCard}) =>
+                  _resubmitCash(announcementId, useCard: useCard),
+            );
           } else {
             DonySnackbar.show(
               context,
