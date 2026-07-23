@@ -70,7 +70,7 @@ class PublishIntroScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _Hero(asset: config.asset, accent: config.accent),
+                  _Hero(asset: config.asset),
                   const SizedBox(height: DonySpacing.base),
                   _ConditionCallout(
                     verified: verified,
@@ -242,31 +242,21 @@ class _Rule {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _Hero extends StatelessWidget {
-  const _Hero({required this.asset, required this.accent});
+  const _Hero({required this.asset});
   final String asset;
-  final Color accent;
 
   @override
   Widget build(BuildContext context) {
+    // Le cadre épouse le ratio carré de l'illustration : elle remplit toute la
+    // largeur, sans bande de fond sur les côtés ni rognage du contenu.
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(
-        height: 190,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              accent.withValues(alpha: 0.16),
-              accent.withValues(alpha: 0.06),
-            ],
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Padding(
-          padding: const EdgeInsets.all(DonySpacing.xs),
-          child: Image.asset(asset, fit: BoxFit.contain),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          width: double.infinity,
         ),
       ),
     );
