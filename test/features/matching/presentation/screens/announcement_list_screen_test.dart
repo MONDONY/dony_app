@@ -156,7 +156,7 @@ void main() {
 
   group('AnnouncementListScreen — Task 9 (nouveaux widgets)', () {
     testWidgets(
-      'loaded state: shows TripsStatsStrip, 2 TripCards, chip "Tous · 2"',
+      'loaded state: no stats strip (moved to Activités), 2 TripCards, chip "Tous · 2"',
       (tester) async {
         final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
         final completed = _makeAnnouncement(id: 'a2', status: 'COMPLETED');
@@ -169,8 +169,9 @@ void main() {
         await _pump(tester, bloc);
         await tester.pump(const Duration(milliseconds: 400));
 
-        // TripsStatsStrip is shown
-        expect(find.byType(TripsStatsStrip), findsOneWidget);
+        // Les stats (Trajets actifs / Kg / Revenus) vivent désormais dans le
+        // hub Activités : plus de doublon en tête de « Mes trajets ».
+        expect(find.byType(TripsStatsStrip), findsNothing);
 
         // 2 TripCards rendered
         expect(find.byType(TripCard), findsNWidgets(2));
