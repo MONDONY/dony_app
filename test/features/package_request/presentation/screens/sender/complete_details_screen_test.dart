@@ -5,6 +5,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -38,7 +39,9 @@ class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
 
 class _FakeRecipientEvent extends Fake implements RecipientEvent {}
 
-PackageRequest _fakeRequest() => PackageRequest(
+PackageRequest _fakeRequest({
+  Set<PaymentMethod> acceptedPaymentMethods = const {PaymentMethod.stripe},
+}) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
   departureCity: 'Paris',
@@ -51,7 +54,7 @@ PackageRequest _fakeRequest() => PackageRequest(
   categories: const ['Vêtements'],
   status: PackageRequestStatus.negotiating,
   createdAt: DateTime(2026),
-  acceptedPaymentMethods: const {PaymentMethod.stripe},
+  acceptedPaymentMethods: acceptedPaymentMethods,
 );
 
 Widget _buildApp() {
@@ -64,13 +67,38 @@ Widget _buildApp() {
       ),
       GoRoute(
         path: '/complete/:id',
-        builder: (ctx, state) =>
-            CompleteDetailsScreen(requestId: state.pathParameters['id']!),
+        builder: (ctx, state) => CompleteDetailsScreen(
+          requestId: state.pathParameters['id']!,
+          // Mirrors the real router (lib/app/router.dart): the thread rides
+          // as `extra`, exactly like `/package-requests/:id/complete-details`.
+          thread: state.extra as NegotiationThread?,
+        ),
       ),
     ],
   );
   return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
 }
+
+/// Fake thread carrying the server-computed SET (Task 6). `paymentMethod` is
+/// left null so `_resolveDefaultMethod` doesn't short-circuit on a stale
+/// trip-linking choice and instead falls through to the SET-derived default.
+/// Pass `availablePaymentMethods: null` to simulate a legacy thread (created
+/// before trip-linking computed the SET).
+NegotiationThread _fakeThread({Set<PaymentMethod>? availablePaymentMethods}) =>
+    NegotiationThread(
+      id: 'thread-1',
+      packageRequestId: 'pr-1',
+      travelerId: 'traveler-1',
+      travelerTravelDate: DateTime(2026, 8, 15),
+      travelerAvailableKg: 20,
+      status: NegotiationThreadStatus.awaitingPayment,
+      currentPriceEur: 25,
+      roundsCount: 1,
+      lastActivityAt: DateTime(2026),
+      createdAt: DateTime(2026),
+      messages: const [],
+      availablePaymentMethods: availablePaymentMethods,
+    );
 
 void main() {
   setUpAll(() {
@@ -256,5 +284,98 @@ void main() {
     verifyNever(() => recipientBloc.add(any(that: isA<RecipientCreated>())));
     // Still on the form — no pop on error.
     expect(find.text('Continuer vers le paiement'), findsOneWidget);
+  });
+
+  group('payment method picker constrained to the SET (Task 8)', () {
+    Future<void> pumpLoadedWithThread(
+      WidgetTester tester, {
+      required NegotiationThread thread,
+      Set<PaymentMethod> acceptedPaymentMethods = const {
+        PaymentMethod.stripe,
+        PaymentMethod.cash,
+      },
+    }) async {
+      final loadedState = CompleteDetailsState(
+        loaded: true,
+        request: _fakeRequest(acceptedPaymentMethods: acceptedPaymentMethods),
+      );
+      when(() => completeDetailsBloc.state).thenReturn(loadedState);
+      whenListen(
+        completeDetailsBloc,
+        const Stream<CompleteDetailsState>.empty(),
+        initialState: loadedState,
+      );
+
+      await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
+      final context = tester.element(find.text('HOME'));
+      unawaited(
+        GoRouter.of(context).push('/complete/pr-1', extra: thread),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'SET={cash} narrows the picker even though the request also accepts '
+      'card (STRIPE absent, CASH present)',
+      (tester) async {
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {PaymentMethod.cash},
+          ),
+        );
+
+        // Request accepted both STRIPE and CASH, but the server-computed SET
+        // for this thread only carries CASH — the picker must follow the SET.
+        expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
+        expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
+        expect(
+          find.byKey(const Key('complete-pay-cash')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('complete-pay-stripe')),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'a SET with a single method renders as a non-interactive (collapsed) '
+      'choice, already checked',
+      (tester) async {
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {PaymentMethod.cash},
+          ),
+        );
+
+        final chip = find.byKey(const Key('complete-pay-cash'));
+        expect(chip, findsOneWidget);
+        final gesture = tester.widget<GestureDetector>(chip);
+        // Single option = preselected and not tappable (no choice to make).
+        expect(gesture.onTap, isNull);
+      },
+    );
+
+    testWidgets(
+      'legacy thread (availablePaymentMethods null) falls back to '
+      'request.acceptedPaymentMethods',
+      (tester) async {
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(), // availablePaymentMethods left null
+          acceptedPaymentMethods: const {PaymentMethod.cash},
+        );
+
+        // No server-computed SET on this thread — the picker falls back to
+        // the request's acceptedPaymentMethods (single method here, so it
+        // renders as the collapsed, preselected choice).
+        expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
+        expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
+      },
+    );
   });
 }

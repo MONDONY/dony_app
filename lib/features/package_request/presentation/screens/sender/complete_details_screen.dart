@@ -91,6 +91,14 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
     }
   }
 
+  /// Source des options du picker : le SET calculé par le serveur pour ce
+  /// thread (`availablePaymentMethods`, présent une fois le trajet lié — cf.
+  /// Task 6) prime sur les méthodes acceptées à la création de la demande. Le
+  /// backend rejette désormais (422 `payment-method/not-in-available-set`)
+  /// tout mode hors de ce SET, donc le picker ne doit jamais en proposer un
+  /// autre. Repli sur `acceptedPaymentMethods` si `availablePaymentMethods`
+  /// est `null` (threads legacy, créés avant l'introduction du SET).
+  ///
   /// Si CASH est accepté sur cette demande et que le voyageur ne peut pas
   /// couvrir la commission Dony, bloque tout le formulaire — même si une autre
   /// méthode (ex. STRIPE) est aussi acceptée. Le voyageur doit pouvoir honorer
@@ -98,7 +106,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   /// de basculer silencieusement vers une méthode que l'expéditeur n'a pas
   /// forcément privilégiée.
   Set<PaymentMethod> _availableMethods(PackageRequest request) {
-    final accepted = request.acceptedPaymentMethods;
+    final accepted =
+        widget.thread?.availablePaymentMethods ?? request.acceptedPaymentMethods;
     final cashRequested = accepted.contains(PaymentMethod.cash);
     final cashOk = widget.thread?.cashCommissionAvailable ?? true;
     if (cashRequested && !cashOk) return const <PaymentMethod>{};
@@ -266,10 +275,9 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                               },
                             ),
                             if (state.request != null &&
-                                state
-                                    .request!
-                                    .acceptedPaymentMethods
-                                    .isNotEmpty) ...[
+                                _availableMethods(
+                                  state.request!,
+                                ).isNotEmpty) ...[
                               const SizedBox(height: DonySpacing.xl),
                               _section('Mode de paiement'),
                               ValueListenableBuilder<PaymentMethod?>(
