@@ -46,4 +46,14 @@ void main() {
       expect(r.single.arrivalCity, 'Abidjan');
     });
   });
+
+  group('negoMatchesPreset — cancelled', () {
+    final cancelled = _t(arrivee: 'Bamako', status: NegotiationThreadStatus.cancelled);
+    test('preset terminal inclut cancelled', () {
+      expect(negoMatchesPreset(cancelled, NegoQuickFilter.terminal), isTrue);
+    });
+    test('preset active exclut cancelled', () {
+      expect(negoMatchesPreset(cancelled, NegoQuickFilter.active), isFalse);
+    });
+  });
 }

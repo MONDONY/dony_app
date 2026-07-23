@@ -411,6 +411,16 @@ void main() {
       expect(find.text('TERMINÉ'), findsOneWidget);
     });
 
+    testWidgets('thread cancelled est terminal (badge TERMINÉ)', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(status: NegotiationThreadStatus.cancelled)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('TERMINÉ'), findsOneWidget);
+    });
+
     testWidgets('thread open sans messages n\'affiche pas NOUVEAU', (tester) async {
       when(() => bloc.state).thenReturn(NegotiationListState(
         status: NegotiationListStatus.loaded,

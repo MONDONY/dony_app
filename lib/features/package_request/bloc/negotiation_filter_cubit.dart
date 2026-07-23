@@ -32,7 +32,8 @@ bool negoMatchesPreset(NegotiationThread t, NegoQuickFilter preset) => switch (p
       NegoQuickFilter.terminal => t.status == NegotiationThreadStatus.accepted ||
           t.status == NegotiationThreadStatus.rejected ||
           t.status == NegotiationThreadStatus.autoRejected ||
-          t.status == NegotiationThreadStatus.expired,
+          t.status == NegotiationThreadStatus.expired ||
+          t.status == NegotiationThreadStatus.cancelled,
     };
 
 List<NegotiationThread> applyNegotiationFilters(
