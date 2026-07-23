@@ -82,7 +82,7 @@ class _ThreadView extends StatelessWidget {
         }
 
         return Scaffold(
-          backgroundColor: DonyColors.sand100,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: _buildAppBar(context, thread),
           body: thread == null
               ? const Center(
@@ -98,8 +98,9 @@ class _ThreadView extends StatelessWidget {
   }
 
   AppBar _buildAppBar(BuildContext context, NegotiationThread? thread) {
+    final cs = Theme.of(context).colorScheme;
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: cs.surface,
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
@@ -123,7 +124,7 @@ class _ThreadView extends StatelessWidget {
                 'Négociation',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.textPrimary,
+                      color: cs.onSurface,
                     ),
               ),
             ],
@@ -135,8 +136,7 @@ class _ThreadView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: DonySpacing.sm),
             child: PopupMenuButton<String>(
-              icon: const DonyIcon('ellipsis',
-                  color: DonyColors.textPrimary, size: 22),
+              icon: DonyIcon('ellipsis', color: cs.onSurface, size: 22),
               onSelected: (value) {
                 if (value == 'end_negotiation') {
                   _confirmEndNegotiation(context, thread!);
@@ -156,9 +156,9 @@ class _ThreadView extends StatelessWidget {
             ),
           ),
       ],
-      bottom: const PreferredSize(
-        preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1, color: DonyColors.neutral200),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(height: 1, color: cs.outline),
       ),
     );
   }
@@ -210,6 +210,7 @@ class _PartnerTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final bool iAmTraveler = viewerUserId == thread.travelerId;
     final String name = iAmTraveler
@@ -245,14 +246,14 @@ class _PartnerTitle extends StatelessWidget {
               style: tt.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
-                color: DonyColors.textPrimary,
+                color: cs.onSurface,
               ),
             ),
             if (meta.isNotEmpty)
               Text(
                 meta,
                 style: tt.bodySmall?.copyWith(
-                  color: DonyColors.textMuted,
+                  color: cs.onSurfaceVariant,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   // Tabular figures: prevents layout shift as rating numbers update

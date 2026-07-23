@@ -210,6 +210,7 @@ class Step2DetailsState extends State<Step2Details> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -226,7 +227,7 @@ class Step2DetailsState extends State<Step2Details> {
               'Décris ton colis',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: DonyColors.textPrimary,
+                color: cs.onSurface,
                 letterSpacing: -0.4,
               ),
             ),
@@ -234,7 +235,7 @@ class Step2DetailsState extends State<Step2Details> {
             Text(
               "Ces infos aident les voyageurs à savoir s'ils peuvent transporter ton envoi.",
               style: tt.bodyMedium?.copyWith(
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
                 height: 1.4,
               ),
             ),
@@ -281,7 +282,7 @@ class Step2DetailsState extends State<Step2Details> {
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Tape pour chercher, ou écris ta propre catégorie.',
-              style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.sm),
             ContentCategoryComboBox(
@@ -298,7 +299,7 @@ class Step2DetailsState extends State<Step2Details> {
               Text(
                 'Fréquents',
                 style: tt.labelMedium?.copyWith(
-                  color: DonyColors.textSubtle,
+                  color: cs.onSurfaceVariant,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.6,
                 ),
@@ -347,6 +348,7 @@ class _DescriptionInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return TextFormField(
       key: const Key('description-input'),
       controller: controller,
@@ -357,7 +359,7 @@ class _DescriptionInput extends StatelessWidget {
         hintText:
             'Précisions utiles : fragile, contenu exact, instructions de remise…',
         filled: true,
-        fillColor: Colors.white,
+        fillColor: cs.surface,
         alignLabelWithHint: true,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
@@ -365,7 +367,7 @@ class _DescriptionInput extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.neutral200),
+          borderSide: BorderSide(color: cs.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -382,11 +384,12 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Text(
       text,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.w700,
-        color: DonyColors.textPrimary,
+        color: cs.onSurface,
         fontSize: 14,
       ),
     );
@@ -400,6 +403,7 @@ class _WeightInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return TextFormField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -407,11 +411,11 @@ class _WeightInput extends StatelessWidget {
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 26,
-        color: DonyColors.textPrimary,
+        color: cs.onSurface,
       ),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: cs.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
           vertical: DonySpacing.md + 4,
@@ -419,11 +423,11 @@ class _WeightInput extends StatelessWidget {
         suffixText: 'kg',
         suffixStyle: tt.titleSmall?.copyWith(
           fontWeight: FontWeight.w800,
-          color: DonyColors.textMuted,
+          color: cs.onSurfaceVariant,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.neutral200),
+          borderSide: BorderSide(color: cs.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -492,14 +496,14 @@ class _SizeCard extends StatelessWidget {
               style: tt.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
-                color: selected ? cs.primary : DonyColors.textPrimary,
+                color: selected ? cs.primary : cs.onSurface,
               ),
             ),
             Text(
               m.hint,
               style: tt.bodySmall?.copyWith(
                 fontSize: 11,
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
               ),
             ),
           ],

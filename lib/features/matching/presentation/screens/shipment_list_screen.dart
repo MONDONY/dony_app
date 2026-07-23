@@ -182,7 +182,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
             return Scaffold(
               backgroundColor: widget.embedded
                   ? Theme.of(context).colorScheme.surface
-                  : const Color(0xFFF2F1EF),
+                  : Theme.of(context).scaffoldBackgroundColor,
               body: Column(
                 children: [
                   if (!widget.embedded)

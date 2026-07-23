@@ -251,10 +251,10 @@ class _PhotoThumb extends StatelessWidget {
                       color: cs.onSurface,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.close_rounded,
                       size: 13,
-                      color: Colors.white,
+                      color: cs.surface,
                     ),
                   ),
                 ),

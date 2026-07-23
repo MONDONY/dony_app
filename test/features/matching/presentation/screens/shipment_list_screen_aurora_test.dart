@@ -224,18 +224,18 @@ void main() {
     expect(find.text('Colis en route'), findsOneWidget);
   });
 
-  testWidgets('fond Scaffold #F2F1EF (pas transparent)', (tester) async {
+  testWidgets('fond Scaffold theme-aware (pas transparent)', (tester) async {
     await _pump(
       tester,
       bidBloc: bidBloc,
       paymentBloc: paymentBloc,
       authBloc: authBloc,
     );
+    // Le fond suit désormais le thème (dark mode) au lieu d'un cream figé.
+    final expected = AppTheme.light.scaffoldBackgroundColor;
     final scaffolds = tester.widgetList<Scaffold>(find.byType(Scaffold));
-    final hasLightBg = scaffolds.any(
-      (s) => s.backgroundColor == const Color(0xFFF2F1EF),
-    );
-    expect(hasLightBg, isTrue);
+    final hasThemeBg = scaffolds.any((s) => s.backgroundColor == expected);
+    expect(hasThemeBg, isTrue);
   });
 
   // ── Puces de filtre ───────────────────────────────────────────────────────

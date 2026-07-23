@@ -73,46 +73,50 @@ class PublishIntroScreen extends StatelessWidget {
                 DonySpacing.lg,
                 DonySpacing.lg,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _Hero(asset: config.asset),
-                  const SizedBox(height: DonySpacing.base),
-                  _ConditionCallout(
-                    verified: verified,
-                    verifiedText: config.verifiedText,
-                    onVerify: () => _startKyc(context, user),
-                  ),
-                  // Rappel voyageur : activer Stripe pour encaisser par carte —
-                  // se masque tout seul si le compte est déjà opérationnel.
-                  if (role == PublishIntroRole.trip) const _StripeReminder(),
-                  const SizedBox(height: DonySpacing.lg),
-                  _SectionHeader(
-                    iconAsset: config.sectionIcon,
-                    accent: config.accent,
-                    title: config.engagementsTitle,
-                  ),
-                  const SizedBox(height: DonySpacing.xs),
-                  Text(
-                    config.engagementsIntro,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  for (final rule in config.rules) ...[
-                    _RuleRow(rule: rule, accent: config.accent),
-                    const SizedBox(height: DonySpacing.sm),
-                  ],
-                  const SizedBox(height: DonySpacing.sm),
-                  _WhyCard(
-                    title: config.whyTitle,
-                    bullets: config.whyBullets,
-                    accent: config.accent,
-                  ),
-                ],
-              ).animate().fadeIn(
-                duration: 300.ms,
-                curve: Curves.easeOutCubic,
-              ).slideY(begin: 0.03, curve: Curves.easeOutCubic),
+              child:
+                  Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _Hero(asset: config.asset),
+                          const SizedBox(height: DonySpacing.base),
+                          _ConditionCallout(
+                            verified: verified,
+                            verifiedText: config.verifiedText,
+                            onVerify: () => _startKyc(context, user),
+                          ),
+                          // Rappel voyageur : activer Stripe pour encaisser par carte —
+                          // se masque tout seul si le compte est déjà opérationnel.
+                          if (role == PublishIntroRole.trip)
+                            const _StripeReminder(),
+                          const SizedBox(height: DonySpacing.lg),
+                          _SectionHeader(
+                            iconAsset: config.sectionIcon,
+                            accent: config.accent,
+                            title: config.engagementsTitle,
+                          ),
+                          const SizedBox(height: DonySpacing.xs),
+                          Text(
+                            config.engagementsIntro,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.md),
+                          for (final rule in config.rules) ...[
+                            _RuleRow(rule: rule, accent: config.accent),
+                            const SizedBox(height: DonySpacing.sm),
+                          ],
+                          const SizedBox(height: DonySpacing.sm),
+                          _WhyCard(
+                            title: config.whyTitle,
+                            bullets: config.whyBullets,
+                            accent: config.accent,
+                          ),
+                        ],
+                      )
+                      .animate()
+                      .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+                      .slideY(begin: 0.03, curve: Curves.easeOutCubic),
             ),
           ),
           _CtaBar(
@@ -182,16 +186,31 @@ class _IntroConfig {
           engagementsTitle: 'Vos engagements de voyageur',
           engagementsIntro: 'En publiant, vous vous engagez à :',
           rules: const [
-            _Rule('user', 'Transporter le colis **vous-même**, sans le '
-                'confier à un tiers.'),
-            _Rule('calendar', 'Respecter la **date** et l\'**itinéraire** '
-                'annoncés.'),
-            _Rule('qr-code', '**Scanner le QR** à la remise et à la '
-                'livraison.'),
-            _Rule('shield-check', 'N\'accepter que des **contenus autorisés**, '
-                'jamais d\'objet illicite.'),
-            _Rule('handshake', 'Remettre le colis **au bon destinataire**, en '
-                'main propre.'),
+            _Rule(
+              'user',
+              'Transporter le colis **vous-même**, sans le '
+                  'confier à un tiers.',
+            ),
+            _Rule(
+              'calendar',
+              'Respecter la **date** et l\'**itinéraire** '
+                  'annoncés.',
+            ),
+            _Rule(
+              'qr-code',
+              '**Scanner le QR** à la remise et à la '
+                  'livraison.',
+            ),
+            _Rule(
+              'shield-check',
+              'N\'accepter que des **contenus autorisés**, '
+                  'jamais d\'objet illicite.',
+            ),
+            _Rule(
+              'handshake',
+              'Remettre le colis **au bon destinataire**, en '
+                  'main propre.',
+            ),
           ],
           whyTitle: 'Pourquoi publier',
           whyBullets: const [
@@ -199,10 +218,8 @@ class _IntroConfig {
             'Rentabilisez vos kilos libres à chaque voyage.',
             'Bâtissez une réputation avec les avis reçus.',
           ],
-          onContinue: (context) => context.push(
-            '/trips/create',
-            extra: const CreateTripArgs(),
-          ),
+          onContinue: (context) =>
+              context.push('/trips/create', extra: const CreateTripArgs()),
         );
       case PublishIntroRole.parcel:
         return _IntroConfig(
@@ -217,15 +234,27 @@ class _IntroConfig {
           engagementsTitle: 'Vos engagements d\'expéditeur',
           engagementsIntro: 'En envoyant un colis, vous certifiez :',
           rules: const [
-            _Rule('circle-check', 'N\'envoyer que des **contenus licites** et '
-                'autorisés.'),
-            _Rule('ban', 'Aucun **objet interdit** (espèces, armes, produits '
-                'dangereux…).'),
+            _Rule(
+              'circle-check',
+              'N\'envoyer que des **contenus licites** et '
+                  'autorisés.',
+            ),
+            _Rule(
+              'ban',
+              'Aucun **objet interdit** (espèces, armes, produits '
+                  'dangereux…).',
+            ),
             _Rule('tag', 'Déclarer la **valeur réelle** du colis (max 500 €).'),
-            _Rule('square-pen', '**Emballer soigneusement** et décrire '
-                'précisément le contenu.'),
-            _Rule('handshake', 'Être présent à la **remise** et indiquer le '
-                'bon destinataire.'),
+            _Rule(
+              'square-pen',
+              '**Emballer soigneusement** et décrire '
+                  'précisément le contenu.',
+            ),
+            _Rule(
+              'handshake',
+              'Être présent à la **remise** et indiquer le '
+                  'bon destinataire.',
+            ),
           ],
           whyTitle: 'Comment ça marche',
           whyBullets: const [
@@ -262,11 +291,7 @@ class _Hero extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: AspectRatio(
         aspectRatio: 1,
-        child: Image.asset(
-          asset,
-          fit: BoxFit.cover,
-          width: double.infinity,
-        ),
+        child: Image.asset(asset, fit: BoxFit.cover, width: double.infinity),
       ),
     );
   }
@@ -394,76 +419,85 @@ class _StripeReminder extends StatelessWidget {
 
         final cs = Theme.of(context).colorScheme;
         final tt = Theme.of(context).textTheme;
+        final radius = BorderRadius.circular(16);
 
         return Padding(
           padding: const EdgeInsets.only(top: DonySpacing.base),
-          child: Material(
-            color: DonyColors.primarySoft,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () {
-                unawaited(
-                  getIt<AnalyticsService>().logEvent(
-                    AnalyticsEvents.publishIntroStripeReminderTapped,
+          // Teinte primary légère par-dessus la surface courante : lisible en
+          // clair comme en sombre (pas de couleur claire figée).
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.10),
+              borderRadius: radius,
+              border: Border.all(color: cs.primary.withValues(alpha: 0.28)),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: radius,
+                onTap: () {
+                  unawaited(
+                    getIt<AnalyticsService>().logEvent(
+                      AnalyticsEvents.publishIntroStripeReminderTapped,
+                    ),
+                  );
+                  context.push('/connect/onboarding/intro');
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(DonySpacing.base),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: const DonyIcon(
+                          'credit-card',
+                          size: 17,
+                          color: DonyColors.neutral0,
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Activez les paiements par carte',
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: cs.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Configurez votre compte Stripe pour que vos '
+                              'expéditeurs paient par carte, et recevez plus de '
+                              'colis.',
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.xs),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: DonyIcon(
+                          'chevron-right',
+                          size: 18,
+                          color: cs.primary,
+                        ),
+                      ),
+                    ],
                   ),
-                );
-                context.push('/connect/onboarding/intro');
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(DonySpacing.base),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: cs.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      alignment: Alignment.center,
-                      child: const DonyIcon(
-                        'credit-card',
-                        size: 17,
-                        color: DonyColors.neutral0,
-                      ),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Activez les paiements par carte',
-                            style: tt.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: cs.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Configurez votre compte Stripe pour que vos '
-                            'expéditeurs paient par carte, et recevez plus de '
-                            'colis.',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: DonySpacing.xs),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: DonyIcon(
-                        'chevron-right',
-                        size: 18,
-                        color: cs.primary,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -692,13 +726,15 @@ TextSpan _boldSpans(String text, TextStyle base, Color color) {
       continue;
     }
     final bold = i.isOdd;
-    spans.add(TextSpan(
-      text: parts[i],
-      style: base.copyWith(
-        color: color,
-        fontWeight: bold ? FontWeight.w800 : FontWeight.w400,
+    spans.add(
+      TextSpan(
+        text: parts[i],
+        style: base.copyWith(
+          color: color,
+          fontWeight: bold ? FontWeight.w800 : FontWeight.w400,
+        ),
       ),
-    ));
+    );
   }
   return TextSpan(children: spans);
 }
