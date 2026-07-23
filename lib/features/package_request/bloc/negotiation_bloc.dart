@@ -228,6 +228,34 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   final NegotiationRepository _repository;
   final AnalyticsService _analytics;
 
+  /// Maps the 422 reasons the back-end returns from `submitTrip` /
+  /// `createDedicatedTrip` when the traveler can't honor any payment method
+  /// the sender accepted, to a PII-free analytics reason.
+  static const _paymentBlockReasons = {
+    'payment-method/card-capability-required': 'no_card',
+    'payment-method/cash-funds-required': 'no_cash_funds',
+    'payment-method/none-available': 'none',
+  };
+
+  /// `null` when [err] isn't one of the trip-linking payment-capability block
+  /// reasons above (network error, or an unrelated business error).
+  static String? _paymentBlockReason(AppException err) =>
+      _paymentBlockReasons[err.code];
+
+  /// Fires `payment_method_selected` for the sender's final choice at
+  /// checkout — the only point where a real user picks a payment method
+  /// now that trip-linking uses a backend-computed capability set.
+  /// `null` when the backend keeps the thread's already-decided method.
+  void _logCheckoutPaymentMethodSelected(PaymentMethod? method) {
+    if (method == null) {
+      return;
+    }
+    unawaited(_analytics.logEvent(
+      AnalyticsEvents.paymentMethodSelected,
+      properties: {'method': method.wireName},
+    ));
+  }
+
   static String _priceBracket(double eur) {
     if (eur < 20) return '<20€';
     if (eur < 50) return '20-50€';
@@ -363,12 +391,16 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.paymentMethodSelected,
-        properties: {'method': e.paymentMethod.wireName},
-      ));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      final blockReason = _paymentBlockReason(appErr);
+      if (blockReason != null) {
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.tripLinkPaymentBlocked,
+          properties: {'reason': blockReason},
+        ));
+      }
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -396,12 +428,16 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.paymentMethodSelected,
-        properties: {'method': e.paymentMethod.wireName},
-      ));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      final blockReason = _paymentBlockReason(appErr);
+      if (blockReason != null) {
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.tripLinkPaymentBlocked,
+          properties: {'reason': blockReason},
+        ));
+      }
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -422,6 +458,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
+      _logCheckoutPaymentMethodSelected(e.paymentMethod);
     } catch (err) {
       final appErr = unwrapDioError(err);
       // Course gagnée par le webhook Stripe : `payment_intent.amount_capturable_updated`
@@ -435,6 +472,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         try {
           final thread = await _repository.getById(e.threadId);
           emit(NegotiationLoaded(thread));
+          _logCheckoutPaymentMethodSelected(e.paymentMethod);
           return;
         } catch (_) {
           // Re-fetch échoué → on retombe sur l'erreur d'origine ci-dessous.

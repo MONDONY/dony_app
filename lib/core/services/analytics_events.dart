@@ -57,6 +57,11 @@ abstract final class AnalyticsEvents {
   static const firmPriceTaken = 'firm_price_taken';
   static const paymentMethodSelected = 'payment_method_selected';
 
+  /// Traveler blocked at trip-linking because no payment method they can
+  /// honor overlaps the sender's accepted set (422 `payment-method/*`).
+  /// Property `reason`: `no_card` / `no_cash_funds` / `none`.
+  static const tripLinkPaymentBlocked = 'trip_link_payment_blocked';
+
   // Messaging
   static const conversationOpened = 'conversation_opened';
   static const messageSent = 'message_sent';
