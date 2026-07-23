@@ -134,6 +134,47 @@ void main() {
     });
   });
 
+  // ── negotiation_nudge_sent ───────────────────────────────────────────────────
+
+  group('negotiation_nudge_sent', () {
+    test('fires on nudge success', () async {
+      when(() => repo.nudge('t-1')).thenAnswer((_) async => _fakeThread());
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationNudgeRequested('t-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationNudgeSent);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(AnalyticsEvents.negotiationNudgeSent, any()))
+          .called(1);
+    });
+
+    test('does not fire on nudge failure', () async {
+      when(() => repo.nudge('t-1')).thenThrow(
+        const ValidationException('too soon', code: 'nudge/rate-limited'),
+      );
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationNudgeRequested('t-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationNudgeError);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+          () => backend.capture(AnalyticsEvents.negotiationNudgeSent, any()));
+    });
+
+    test('does not fire when analytics disabled', () async {
+      when(() => repo.nudge('t-1')).thenAnswer((_) async => _fakeThread());
+
+      final bloc = makeBloc(enabled: false);
+      bloc.add(const NegotiationNudgeRequested('t-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationNudgeSent);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
   // ── payment_method_selected no longer fires at trip-linking ─────────────────
   //
   // The traveler no longer picks a real payment method at trip-linking (the

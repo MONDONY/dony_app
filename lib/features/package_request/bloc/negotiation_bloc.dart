@@ -23,6 +23,16 @@ class NegotiationFetchRequested extends NegotiationEvent {
   List<Object?> get props => [threadId];
 }
 
+/// Sends a nudge on this thread to prompt the other party to act. Backend
+/// validates whether the current viewer is allowed to nudge (returns 429
+/// `nudge/rate-limited` when relancé too soon).
+class NegotiationNudgeRequested extends NegotiationEvent {
+  const NegotiationNudgeRequested(this.threadId);
+  final String threadId;
+  @override
+  List<Object?> get props => [threadId];
+}
+
 class NegotiationStartRequested extends NegotiationEvent {
   const NegotiationStartRequested({
     required this.packageRequestId,
@@ -217,6 +227,29 @@ class NegotiationError extends NegotiationState {
   List<Object?> get props => [error];
 }
 
+/// Nudge sent successfully. Carries the refreshed thread (server-computed
+/// `canNudge` now false) plus, by its very type, a one-shot signal for the
+/// UI to show a "Relance envoyée" confirmation — distinct from
+/// [NegotiationLoaded] so the CTA bar can react to this specific action
+/// without hijacking every other success transition into the loaded state.
+class NegotiationNudgeSent extends NegotiationState {
+  const NegotiationNudgeSent(this.thread);
+  final NegotiationThread thread;
+  @override
+  List<Object?> get props => [thread];
+}
+
+/// Nudge failed. Dedicated type (not [NegotiationError]) so the screen's
+/// generic error listener doesn't also surface a second, generic error
+/// snackbar — the CTA bar alone maps `error.code == 'nudge/rate-limited'` to
+/// "Déjà relancé récemment", any other code to a generic retry message.
+class NegotiationNudgeError extends NegotiationState {
+  const NegotiationNudgeError(this.error);
+  final AppException error;
+  @override
+  List<Object?> get props => [error];
+}
+
 class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   NegotiationBloc(this._repository, {required AnalyticsService analytics})
       : _analytics = analytics,
@@ -230,6 +263,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationCreateDedicatedTripRequested>(_onCreateDedicatedTrip);
     on<NegotiationCheckoutRequested>(_onCheckout);
     on<NegotiationRefuseTripRequested>(_onRefuseTrip);
+    on<NegotiationNudgeRequested>(_onNudge);
   }
 
   final NegotiationRepository _repository;
@@ -505,6 +539,25 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       emit(NegotiationLoaded(thread));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
+    }
+  }
+
+  Future<void> _onNudge(
+    NegotiationNudgeRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      final thread = await _repository.nudge(e.threadId);
+      unawaited(_analytics.logEvent(AnalyticsEvents.negotiationNudgeSent));
+      emit(NegotiationNudgeSent(thread));
+    } catch (err) {
+      emit(NegotiationNudgeError(unwrapDioError(err)));
     }
   }
 }

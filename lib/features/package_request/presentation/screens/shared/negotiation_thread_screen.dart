@@ -73,6 +73,11 @@ class _ThreadView extends StatelessWidget {
         if (state is NegotiationActionInProgress) {
           thread = state.thread;
         }
+        // Refreshed thread from a successful nudge (canNudge now false) — the
+        // snackbar itself is shown locally by ThreadStateCtaBar.
+        if (state is NegotiationNudgeSent) {
+          thread = state.thread;
+        }
 
         return Scaffold(
           backgroundColor: DonyColors.sand100,

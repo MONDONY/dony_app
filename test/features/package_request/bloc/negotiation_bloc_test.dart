@@ -246,6 +246,58 @@ void main() {
     );
   });
 
+  // ── NegotiationNudgeRequested ────────────────────────────────────────────────
+
+  group('NegotiationNudgeRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'nudge succès -> ActionInProgress puis NegotiationNudgeSent avec le thread rafraîchi',
+      build: () {
+        when(() => repo.nudge('t-1')).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.open),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (bloc) => bloc.add(const NegotiationNudgeRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationNudgeSent>()
+            .having((s) => s.thread.id, 'thread.id', 't-1'),
+      ],
+      verify: (_) => verify(() => repo.nudge('t-1')).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'nudge 429 rate-limited -> NegotiationNudgeError avec le code backend',
+      build: () {
+        when(() => repo.nudge('t-1')).thenThrow(
+          const ValidationException('too soon', code: 'nudge/rate-limited'),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (bloc) => bloc.add(const NegotiationNudgeRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationNudgeError>()
+            .having((s) => s.error.code, 'error.code', 'nudge/rate-limited'),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'nudge depuis un état autre que Loaded -> Loading puis NegotiationNudgeSent',
+      build: () {
+        when(() => repo.nudge('t-1')).thenAnswer((_) async => _fakeThread());
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(const NegotiationNudgeRequested('t-1')),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationNudgeSent>(),
+      ],
+    );
+  });
+
   // ── NegotiationCreateDedicatedTripRequested — useCardForCommission ─────────
 
   group('NegotiationCreateDedicatedTripRequested', () {

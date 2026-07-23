@@ -60,17 +60,50 @@ class ThreadStateCtaBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: DonyColors.sand100,
-        border: Border(top: BorderSide(color: DonyColors.neutral200)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
-          child: _buildContent(context),
+    return BlocListener<NegotiationBloc, NegotiationState>(
+      listenWhen: (previous, current) =>
+          current is NegotiationNudgeSent || current is NegotiationNudgeError,
+      listener: (ctx, state) {
+        if (state is NegotiationNudgeSent) {
+          DonySnackbar.show(
+            ctx,
+            message: 'Relance envoyée',
+            type: DonySnackbarType.success,
+          );
+        } else if (state is NegotiationNudgeError) {
+          DonySnackbar.show(
+            ctx,
+            message: state.error.code == 'nudge/rate-limited'
+                ? 'Déjà relancé récemment'
+                : 'Impossible de relancer pour le moment, réessaie plus tard',
+            type: DonySnackbarType.warning,
+          );
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: DonyColors.sand100,
+          border: Border(top: BorderSide(color: DonyColors.neutral200)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildContent(context),
+                if (thread.canNudge) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  _NudgeButton(
+                    threadId: thread.id,
+                    disabled: actionInProgress,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -194,6 +227,28 @@ class ThreadStateCtaBar extends StatelessWidget {
           ),
         );
     }
+  }
+}
+
+/// Bouton secondaire « Relancer » — visible uniquement quand le backend
+/// autorise la relance (`thread.canNudge`), quel que soit le statut du thread.
+class _NudgeButton extends StatelessWidget {
+  const _NudgeButton({required this.threadId, required this.disabled});
+  final String threadId;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyButton(
+      label: 'Relancer',
+      variant: DonyButtonVariant.secondary,
+      icon: Icons.notifications_active_rounded,
+      onPressed: disabled
+          ? null
+          : () => context
+              .read<NegotiationBloc>()
+              .add(NegotiationNudgeRequested(threadId)),
+    );
   }
 }
 
