@@ -17,7 +17,6 @@ import 'package:dony/features/matching/presentation/widgets/activity_header_widg
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_period_filter_sheet.dart';
-import 'package:dony/features/package_request/presentation/package_request_actions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -72,13 +71,15 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
     }
   }
 
-  Future<void> _onNewRequest() async {
+  void _onNewRequest() {
     unawaited(
       getIt<AnalyticsService>().logEvent(
         AnalyticsEvents.shipmentNewRequestOpened,
       ),
     );
-    await openPackageRequestWizard(context);
+    // Passe par l'écran d'intro (conditions + responsabilités) ; c'est lui qui
+    // applique le gate KYC et ouvre le wizard une fois vérifié.
+    context.push('/parcels/send-intro');
   }
 
   void _onQueryChanged(String q) {

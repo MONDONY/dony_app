@@ -8,7 +8,6 @@ import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
-import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -140,11 +139,12 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
   }
 
   Future<void> _createTrip() async {
-    final changed = await context.push<bool>(
-      '/trips/create',
-      extra: const CreateTripArgs(),
-    );
-    if ((changed ?? false) && mounted) {
+    // Passe par l'écran d'intro (conditions + responsabilités) : c'est lui qui
+    // ouvre le formulaire une fois l'identité vérifiée.
+    await context.push('/trips/publish-intro');
+    // Rafraîchit au retour : un trajet a pu être créé depuis le formulaire
+    // ouvert par l'intro.
+    if (mounted) {
       context.read<AnnouncementBloc>().add(AnnouncementListRequested());
     }
   }
