@@ -35,6 +35,10 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
+import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
+import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
@@ -73,6 +77,11 @@ class _MockStripeAccountBloc
 class _MockNegotiationBloc
     extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
+
+class _MockWalletRepository extends Mock implements WalletRepository {}
+
+class _MockCommissionMethodRepository extends Mock
+    implements CommissionMethodRepository {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -164,6 +173,29 @@ Widget _wrapWithRouter(Widget child, {AuthState? authState}) {
         path: '/connect/onboarding/intro',
         builder: (_, __) =>
             const Scaffold(body: Text('stripe-onboarding-intro')),
+      ),
+      // Destinations of the cash-funds-required sheet's CTAs (Finding #1).
+      GoRoute(
+        path: '/payments/commission-method',
+        builder: (context, __) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('done-commission-method'),
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/payments/wallet/topup/method',
+        builder: (context, __) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('done-topup'),
+            ),
+          ),
+        ),
       ),
     ],
   );
@@ -261,6 +293,13 @@ void main() {
     registerFallbackValue(const TripTemplateLoaded());
     registerFallbackValue(const StripeAccountStatusLoaded());
     registerFallbackValue(const NegotiationFetchRequested('fallback-thread'));
+    registerFallbackValue(NegotiationCreateDedicatedTripRequested(
+      threadId: 'fallback-thread',
+      departureDate: DateTime(2026, 1, 1),
+      pickupAddress: const {},
+      deliveryAddress: const {},
+      paymentMethod: PaymentMethod.stripe,
+    ));
 
     // AnalyticsService — called from CreateTripScreen.initState via getIt
     if (!getIt.isRegistered<AnalyticsService>()) {
@@ -1987,6 +2026,181 @@ void main() {
       },
     );
 
+  });
+
+  // ── Group: Fix task — payment-method block routing (dedicated-trip flow) ──
+  // Covers IMPORTANT #1: the dedicated-trip creation flow (`_isLocked`) must
+  // handle the 3 payment-method 422 reasons itself with the SAME contextual
+  // sheets as LinkTripScreen, and must NOT also let the generic
+  // ErrorPresenter fire for those reasons (double feedback bug).
+
+  group('CreateTripScreen — locked flow: 422 payment-method reason routing', () {
+    late StreamController<NegotiationState> negoStreamCtrl;
+    late _MockNegotiationBloc negotiationBloc;
+
+    setUp(() {
+      negoStreamCtrl = StreamController<NegotiationState>.broadcast();
+      negotiationBloc = _MockNegotiationBloc();
+      when(() => negotiationBloc.state).thenReturn(const NegotiationInitial());
+      when(() => negotiationBloc.stream)
+          .thenAnswer((_) => negoStreamCtrl.stream);
+      when(() => negotiationBloc.add(any())).thenReturn(null);
+
+      // WalletRepository / CommissionMethodRepository are intentionally left
+      // UNREGISTERED here: showCashInsufficientSheet's try/catch treats the
+      // GetIt lookup failure the same as a real network failure (balance=0,
+      // hasCard=false) — exercising the "Ajouter une carte" branch, the one
+      // Finding #1's "dead CTA" bug affected in the dedicated flow.
+      if (getIt.isRegistered<WalletRepository>()) {
+        getIt.unregister<WalletRepository>();
+      }
+      if (getIt.isRegistered<CommissionMethodRepository>()) {
+        getIt.unregister<CommissionMethodRepository>();
+      }
+    });
+
+    tearDown(() async {
+      await negoStreamCtrl.close();
+    });
+
+    /// Navigates the locked (dedicated-trip) wizard to step 2 and taps
+    /// "Confirmer le trajet", dispatching the initial
+    /// `NegotiationCreateDedicatedTripRequested`. Combines a `lockContext`
+    /// (drives `_isLocked`) with a full `announcement` purely so step 1's
+    /// pickup/delivery addresses come pre-filled (`_isEdit`'s initState
+    /// branch) — `_submit()`'s `if (_isLocked)` branch runs first regardless,
+    /// so the dispatched event is still the dedicated-trip one.
+    Future<void> navigateLockedToStep2AndSubmit(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final args = CreateTripArgs(
+        lockContext: _makeLockContext(),
+        announcement: _makeFullAnnouncement(),
+        negotiationBloc: negotiationBloc,
+      );
+      await _pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
+
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byKey(const Key('create-dedicated-trip-submit')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
+      await tester.pump();
+    }
+
+    testWidgets(
+      'card-capability-required → sheet contextuelle « Paiement carte requis », '
+      'pas de snackbar générique (pas de double feedback)',
+      (tester) async {
+        await navigateLockedToStep2AndSubmit(tester);
+
+        negoStreamCtrl.add(const NegotiationError(ValidationException(
+          'Card capability required',
+          code: 'payment-method/card-capability-required',
+        )));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Paiement carte requis'), findsOneWidget);
+        expect(find.byKey(const Key('activate-card-payment-cta')), findsOneWidget);
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'card-capability-required → CTA route vers /connect/onboarding/intro',
+      (tester) async {
+        await navigateLockedToStep2AndSubmit(tester);
+
+        negoStreamCtrl.add(const NegotiationError(ValidationException(
+          'Card capability required',
+          code: 'payment-method/card-capability-required',
+        )));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Activer le paiement carte'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('stripe-onboarding-intro'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'reason inconnue → ErrorPresenter générique (snackbar), aucune sheet '
+      'contextuelle',
+      (tester) async {
+        await navigateLockedToStep2AndSubmit(tester);
+
+        negoStreamCtrl.add(const NegotiationError(ValidationException(
+          'Some unrelated business error',
+          code: 'some/other-code',
+        )));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Paiement carte requis'), findsNothing);
+        expect(find.text('Solde insuffisant'), findsNothing);
+        expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
+        expect(find.byType(SnackBar), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'cash-funds-required → sheet « Solde insuffisant », le CTA "Ajouter une '
+      'carte" (plus jamais mort) resoumet la MÊME demande avec '
+      'useCardForCommission=true',
+      (tester) async {
+        await navigateLockedToStep2AndSubmit(tester);
+
+        negoStreamCtrl.add(const NegotiationError(ValidationException(
+          'Cash funds required',
+          code: 'payment-method/cash-funds-required',
+        )));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Solde insuffisant'), findsOneWidget);
+        expect(find.text('Ajouter une carte'), findsOneWidget);
+
+        await tester.tap(find.text('Ajouter une carte'));
+        await tester.pumpAndSettle();
+        expect(find.text('done-commission-method'), findsOneWidget);
+
+        // Simulates the traveler completing card entry and returning.
+        await tester.tap(find.text('done-commission-method'));
+        await tester.pumpAndSettle();
+
+        final calls = verify(() => negotiationBloc.add(captureAny())).captured;
+        final resubmit = calls
+            .whereType<NegotiationCreateDedicatedTripRequested>()
+            .last;
+        expect(resubmit.useCardForCommission, isTrue);
+        expect(resubmit.threadId, 'thread-1');
+        // Same form data as the original submit — not a fresh/empty request.
+        expect(resubmit.pickupAddress['label'], 'Tour Eiffel');
+        expect(resubmit.deliveryAddress['label'], 'Dakar Centre');
+        expect(resubmit.departureDate, DateTime(2026, 8, 1));
+      },
+    );
+
+    testWidgets(
+      'none-available → sheet combinée carte + espèces, sans double feedback',
+      (tester) async {
+        await navigateLockedToStep2AndSubmit(tester);
+
+        negoStreamCtrl.add(const NegotiationError(ValidationException(
+          'No payment method available',
+          code: 'payment-method/none-available',
+        )));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
+        expect(find.byKey(const Key('activate-card-payment-cta')), findsOneWidget);
+        expect(find.byKey(const Key('unlock-cash-payment-cta')), findsOneWidget);
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
   });
 }
 

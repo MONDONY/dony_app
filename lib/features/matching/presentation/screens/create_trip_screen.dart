@@ -30,6 +30,7 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart'
     show NegotiationThreadStatus;
+import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
@@ -454,6 +455,13 @@ class _TripFormContent extends StatefulWidget {
 
 class _TripFormContentState extends State<_TripFormContent> {
   final _formKey = GlobalKey<FormState>();
+
+  /// The last `NegotiationCreateDedicatedTripRequested` dispatched by
+  /// `_submit()`, kept around so a payment-method block (cash-funds-required
+  /// / none-available) can resubmit the exact same data with card consent
+  /// (`useCardForCommission: true`) instead of re-collecting the form.
+  NegotiationCreateDedicatedTripRequested? _lastDedicatedTripEvent;
+
   final _departureCityNotifier = ValueNotifier<String?>(null);
   final _arrivalCityNotifier = ValueNotifier<String?>(null);
   // Code pays ISO-2 capturé lors de la sélection ville. Synchronisé vers le
@@ -1154,28 +1162,31 @@ class _TripFormContentState extends State<_TripFormContent> {
 
     if (_isLocked) {
       final lc = widget.lockContext!;
-      context.read<NegotiationBloc>().add(
-            NegotiationCreateDedicatedTripRequested(
-              threadId: lc.threadId,
-              departureDate: departureDate,
-              departureTime: departureTime,
-              arrivalTime: arrivalTime,
-              pickupAddress: {
-                'label': _pickupAddress!.label,
-                'lat': _pickupAddress!.lat,
-                'lng': _pickupAddress!.lng,
-              },
-              deliveryAddress: {
-                'label': _deliveryAddress!.label,
-                'lat': _deliveryAddress!.lat,
-                'lng': _deliveryAddress!.lng,
-              },
-              description: description,
-              acceptedContentTypes: allAccepted,
-              refusedTypes: refused,
-              paymentMethod: lc.paymentMethod,
-            ),
-          );
+      final event = NegotiationCreateDedicatedTripRequested(
+        threadId: lc.threadId,
+        departureDate: departureDate,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
+        pickupAddress: {
+          'label': _pickupAddress!.label,
+          'lat': _pickupAddress!.lat,
+          'lng': _pickupAddress!.lng,
+        },
+        deliveryAddress: {
+          'label': _deliveryAddress!.label,
+          'lat': _deliveryAddress!.lat,
+          'lng': _deliveryAddress!.lng,
+        },
+        description: description,
+        acceptedContentTypes: allAccepted,
+        refusedTypes: refused,
+        paymentMethod: lc.paymentMethod,
+      );
+      // Stashed so a payment-method block (cash-funds-required /
+      // none-available) can resubmit the SAME data with card consent, cf.
+      // `_resubmitDedicated`.
+      _lastDedicatedTripEvent = event;
+      context.read<NegotiationBloc>().add(event);
       return;
     }
 
@@ -1264,6 +1275,48 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   void _showError(String message) {
     DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
+  }
+
+  /// Net price agreed for this dedicated trip — used by the payment-block
+  /// sheets to show the commission owed. Locked server-side, carried by
+  /// `LockedTripContext.agreedPriceEur`.
+  double get _lockedNetPriceEur => widget.lockContext?.agreedPriceEur ?? 0;
+
+  /// Gross price, when the shared `NegotiationBloc`'s last known thread
+  /// carries it — `LockedTripContext` doesn't, so this is best-effort;
+  /// `showCashInsufficientSheet` falls back to computing it from the net
+  /// price when `null`.
+  double? get _lockedGrossPriceEur {
+    final s = context.read<NegotiationBloc>().state;
+    if (s is NegotiationLoaded) return s.thread.grossPriceEur;
+    if (s is NegotiationActionInProgress) return s.thread.grossPriceEur;
+    return null;
+  }
+
+  /// Resubmits the exact `NegotiationCreateDedicatedTripRequested` the
+  /// traveler just sent (cf. `_lastDedicatedTripEvent`), only flipping
+  /// `useCardForCommission` — used by the cash-funds-required /
+  /// none-available block sheets so the traveler doesn't have to re-fill the
+  /// form after a wallet top-up or a card-consent decision.
+  void _resubmitDedicated({required bool useCard}) {
+    if (!mounted) return;
+    final last = _lastDedicatedTripEvent;
+    if (last == null) return;
+    context.read<NegotiationBloc>().add(
+          NegotiationCreateDedicatedTripRequested(
+            threadId: last.threadId,
+            departureDate: last.departureDate,
+            departureTime: last.departureTime,
+            arrivalTime: last.arrivalTime,
+            pickupAddress: last.pickupAddress,
+            deliveryAddress: last.deliveryAddress,
+            description: last.description,
+            acceptedContentTypes: last.acceptedContentTypes,
+            refusedTypes: last.refusedTypes,
+            paymentMethod: last.paymentMethod,
+            useCardForCommission: useCard,
+          ),
+        );
   }
 
   Future<void> _selectDate() async {
@@ -1392,7 +1445,34 @@ class _TripFormContentState extends State<_TripFormContent> {
                 message: 'Trajet lié. L\'expéditeur peut désormais payer.',
                 type: DonySnackbarType.success);
           } else if (state is NegotiationError) {
-            ErrorPresenter.show(context, state.error);
+            // This screen OWNS payment-method-block feedback for the
+            // dedicated-trip flow (cf. `_lastDedicatedTripEvent` /
+            // `_resubmitDedicated`) — LinkTripScreen, which shares this same
+            // NegotiationBloc underneath, stands down while this screen is
+            // on top (see its `_creatingDedicatedTripNotifier`). Reacting
+            // here AND letting the generic ErrorPresenter also fire below
+            // would show doubled, stacked feedback for a single 422.
+            final block = PaymentCapabilityBlock.fromErrorCode(state.error.code);
+            if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
+              unawaited(showCardCapabilityRequiredSheet(context));
+            } else if (block == PaymentCapabilityBlock.cashFundsRequired) {
+              unawaited(showCashInsufficientSheet(
+                context,
+                netPriceEur: _lockedNetPriceEur,
+                grossPriceEur: _lockedGrossPriceEur,
+                onResubmit: _resubmitDedicated,
+              ));
+            } else if (block == PaymentCapabilityBlock.noneAvailable) {
+              unawaited(showNoPaymentMethodAvailableSheet(
+                context,
+                netPriceEur: _lockedNetPriceEur,
+                grossPriceEur: _lockedGrossPriceEur,
+                onResubmit: _resubmitDedicated,
+              ));
+            } else {
+              // Not a payment-method block: fall back to the generic error UX.
+              ErrorPresenter.show(context, state.error);
+            }
           }
         },
         child: formChild,

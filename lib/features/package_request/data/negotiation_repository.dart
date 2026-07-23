@@ -72,6 +72,14 @@ class NegotiationRepository {
     );
   }
 
+  /// Ends the negotiation thread (either party). Terminal, mirrors [reject].
+  Future<void> cancel(String id, {String? reason}) async {
+    await _apiClient.dio.post<void>(
+      '/negotiations/$id/cancel',
+      data: reason == null ? null : {'reason': reason},
+    );
+  }
+
   /// Traveler links a trip (existing announcement) to an AWAITING_TRIP thread.
   /// Backend validates corridor + date window match the request.
   /// Thread moves to AWAITING_PAYMENT.
@@ -107,6 +115,7 @@ class NegotiationRepository {
     List<String>? acceptedContentTypes,
     List<String>? refusedTypes,
     required PaymentMethod paymentMethod,
+    bool useCardForCommission = false,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$threadId/create-dedicated-trip',
@@ -120,6 +129,7 @@ class NegotiationRepository {
         if (acceptedContentTypes != null) 'acceptedContentTypes': acceptedContentTypes,
         if (refusedTypes != null) 'refusedTypes': refusedTypes,
         'paymentMethod': paymentMethod.wireName,
+        'useCardForCommission': useCardForCommission,
       },
     );
     return NegotiationThread.fromJson(response.data!);
@@ -170,6 +180,14 @@ class NegotiationRepository {
       '/negotiations/$id/refuse-trip',
       data: reason != null && reason.isNotEmpty ? {'reason': reason} : null,
     );
+    return NegotiationThread.fromJson(response.data!);
+  }
+
+  /// Sends a nudge on this thread to prompt the other party to act.
+  /// Backend validates whether the current viewer is allowed to nudge.
+  Future<NegotiationThread> nudge(String id) async {
+    final response =
+        await _apiClient.dio.post<Map<String, dynamic>>('/negotiations/$id/nudge');
     return NegotiationThread.fromJson(response.data!);
   }
 }

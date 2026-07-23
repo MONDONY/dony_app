@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
@@ -133,10 +134,98 @@ void main() {
     });
   });
 
-  // ── payment_method_selected — submitTrip ────────────────────────────────────
+  // ── negotiation_nudge_sent ───────────────────────────────────────────────────
 
-  group('payment_method_selected (submitTrip)', () {
-    test('fires with method wireName on submitTrip success', () async {
+  group('negotiation_nudge_sent', () {
+    test('fires on nudge success', () async {
+      when(() => repo.nudge('t-1')).thenAnswer((_) async => _fakeThread());
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationNudgeRequested('t-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationNudgeSent);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(AnalyticsEvents.negotiationNudgeSent, any()))
+          .called(1);
+    });
+
+    test('does not fire on nudge failure', () async {
+      when(() => repo.nudge('t-1')).thenThrow(
+        const ValidationException('too soon', code: 'nudge/rate-limited'),
+      );
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationNudgeRequested('t-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationNudgeError);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+          () => backend.capture(AnalyticsEvents.negotiationNudgeSent, any()));
+    });
+
+    test('does not fire when analytics disabled', () async {
+      when(() => repo.nudge('t-1')).thenAnswer((_) async => _fakeThread());
+
+      final bloc = makeBloc(enabled: false);
+      bloc.add(const NegotiationNudgeRequested('t-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationNudgeSent);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
+  // ── negotiation_cancelled ────────────────────────────────────────────────────
+
+  group('negotiation_cancelled', () {
+    test('fires on cancel success', () async {
+      when(() => repo.cancel('t-1', reason: any(named: 'reason')))
+          .thenAnswer((_) async {});
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationCancelRequested(threadId: 't-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationRejected);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(AnalyticsEvents.negotiationCancelled, any()))
+          .called(1);
+    });
+
+    test('does not fire on cancel failure', () async {
+      when(() => repo.cancel('t-1', reason: any(named: 'reason')))
+          .thenThrow(Exception('server error'));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationCancelRequested(threadId: 't-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+          () => backend.capture(AnalyticsEvents.negotiationCancelled, any()));
+    });
+
+    test('does not fire when analytics disabled', () async {
+      when(() => repo.cancel('t-1', reason: any(named: 'reason')))
+          .thenAnswer((_) async {});
+
+      final bloc = makeBloc(enabled: false);
+      bloc.add(const NegotiationCancelRequested(threadId: 't-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationRejected);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
+  // ── payment_method_selected no longer fires at trip-linking ─────────────────
+  //
+  // The traveler no longer picks a real payment method at trip-linking (the
+  // back-end computes the capability SET; `paymentMethod` here is a
+  // placeholder). The real user choice now happens at the sender's checkout
+  // — see the `payment_method_selected (checkout)` group below.
+
+  group('payment_method_selected no longer fires at trip-linking', () {
+    test('submitTrip success does not fire payment_method_selected', () async {
       when(() => repo.submitTrip(
             any(),
             travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
@@ -154,36 +243,11 @@ void main() {
       await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
       await Future<void>.delayed(Duration.zero);
 
-      verify(() => backend.capture(
-            AnalyticsEvents.paymentMethodSelected,
-            {'method': 'WAVE'},
-          )).called(1);
+      verifyNever(() => backend.capture(AnalyticsEvents.paymentMethodSelected, any()));
     });
 
-    test('does not fire when analytics disabled', () async {
-      when(() => repo.submitTrip(
-            any(),
-            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
-            paymentMethod: any(named: 'paymentMethod'),
-          )).thenAnswer((_) async => _fakeThread());
-
-      final bloc = makeBloc(enabled: false);
-      bloc.add(const NegotiationSubmitTripRequested(
-        threadId: 't-1',
-        travelerAnnouncementId: 'ann-1',
-        paymentMethod: PaymentMethod.stripe,
-      ));
-      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
-      await Future<void>.delayed(Duration.zero);
-
-      verifyNever(() => backend.capture(any(), any()));
-    });
-  });
-
-  // ── payment_method_selected — createDedicatedTrip ───────────────────────────
-
-  group('payment_method_selected (createDedicatedTrip)', () {
-    test('fires with method wireName on createDedicatedTrip success', () async {
+    test('createDedicatedTrip success does not fire payment_method_selected',
+        () async {
       when(() => repo.createDedicatedTrip(
             any(),
             departureDate: any(named: 'departureDate'),
@@ -202,7 +266,7 @@ void main() {
       final bloc = makeBloc();
       bloc.add(NegotiationCreateDedicatedTripRequested(
         threadId: 't-1',
-        departureDate: DateTime(2026, 7, 1),
+        departureDate: DateTime(2026, 7),
         pickupAddress: const {'city': 'Paris'},
         deliveryAddress: const {'city': 'Dakar'},
         paymentMethod: PaymentMethod.orangeMoney,
@@ -210,13 +274,150 @@ void main() {
       await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
       await Future<void>.delayed(Duration.zero);
 
+      verifyNever(() => backend.capture(AnalyticsEvents.paymentMethodSelected, any()));
+    });
+  });
+
+  // ── payment_method_selected — checkout (sender's real choice) ──────────────
+
+  group('payment_method_selected (checkout)', () {
+    test('fires with method wireName on checkout success', () async {
+      when(() => repo.checkout('t-1',
+              paymentIntentId: 'pi_1', paymentMethod: PaymentMethod.wave))
+          .thenAnswer((_) async =>
+              _fakeThread(status: NegotiationThreadStatus.accepted));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationCheckoutRequested(
+        threadId: 't-1',
+        paymentIntentId: 'pi_1',
+        paymentMethod: PaymentMethod.wave,
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
       verify(() => backend.capture(
             AnalyticsEvents.paymentMethodSelected,
-            {'method': 'ORANGE_MONEY'},
+            {'method': 'WAVE'},
+          )).called(1);
+    });
+
+    test('does not fire when paymentMethod is null (backend keeps existing)',
+        () async {
+      when(() => repo.checkout('t-1', paymentIntentId: 'pi_1'))
+          .thenAnswer((_) async =>
+              _fakeThread(status: NegotiationThreadStatus.accepted));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationCheckoutRequested(
+        threadId: 't-1',
+        paymentIntentId: 'pi_1',
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => backend.capture(AnalyticsEvents.paymentMethodSelected, any()));
+    });
+
+    test('fires on the webhook-race recovery path (409 thread/not-awaiting-payment)',
+        () async {
+      when(() => repo.checkout('t-1',
+              paymentIntentId: 'pi_1', paymentMethod: PaymentMethod.stripe))
+          .thenThrow(const ConflictException('thread/not-awaiting-payment'));
+      when(() => repo.getById('t-1')).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.accepted));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationCheckoutRequested(
+        threadId: 't-1',
+        paymentIntentId: 'pi_1',
+        paymentMethod: PaymentMethod.stripe,
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(
+            AnalyticsEvents.paymentMethodSelected,
+            {'method': 'STRIPE'},
           )).called(1);
     });
 
     test('does not fire when analytics disabled', () async {
+      when(() => repo.checkout('t-1',
+              paymentIntentId: 'pi_1', paymentMethod: PaymentMethod.stripe))
+          .thenAnswer((_) async =>
+              _fakeThread(status: NegotiationThreadStatus.accepted));
+
+      final bloc = makeBloc(enabled: false);
+      bloc.add(const NegotiationCheckoutRequested(
+        threadId: 't-1',
+        paymentIntentId: 'pi_1',
+        paymentMethod: PaymentMethod.stripe,
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
+  // ── trip_link_payment_blocked ────────────────────────────────────────────────
+
+  group('trip_link_payment_blocked', () {
+    test('fires with reason no_card on submitTrip 422 card-capability-required',
+        () async {
+      when(() => repo.submitTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+            paymentMethod: any(named: 'paymentMethod'),
+          )).thenThrow(const ValidationException(
+        'no capable payment method',
+        code: 'payment-method/card-capability-required',
+      ));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationSubmitTripRequested(
+        threadId: 't-1',
+        travelerAnnouncementId: 'ann-1',
+        paymentMethod: PaymentMethod.stripe,
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(
+            AnalyticsEvents.tripLinkPaymentBlocked,
+            {'reason': 'no_card'},
+          )).called(1);
+    });
+
+    test('fires with reason no_cash_funds on submitTrip 422 cash-funds-required',
+        () async {
+      when(() => repo.submitTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+            paymentMethod: any(named: 'paymentMethod'),
+          )).thenThrow(const ValidationException(
+        'no capable payment method',
+        code: 'payment-method/cash-funds-required',
+      ));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationSubmitTripRequested(
+        threadId: 't-1',
+        travelerAnnouncementId: 'ann-1',
+        paymentMethod: PaymentMethod.cash,
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(
+            AnalyticsEvents.tripLinkPaymentBlocked,
+            {'reason': 'no_cash_funds'},
+          )).called(1);
+    });
+
+    test('fires with reason none on createDedicatedTrip 422 none-available',
+        () async {
       when(() => repo.createDedicatedTrip(
             any(),
             departureDate: any(named: 'departureDate'),
@@ -228,17 +429,67 @@ void main() {
             acceptedContentTypes: any(named: 'acceptedContentTypes'),
             refusedTypes: any(named: 'refusedTypes'),
             paymentMethod: any(named: 'paymentMethod'),
-          )).thenAnswer((_) async => _fakeThread());
+          )).thenThrow(const ValidationException(
+        'no capable payment method',
+        code: 'payment-method/none-available',
+      ));
 
-      final bloc = makeBloc(enabled: false);
+      final bloc = makeBloc();
       bloc.add(NegotiationCreateDedicatedTripRequested(
         threadId: 't-1',
-        departureDate: DateTime(2026, 7, 1),
+        departureDate: DateTime(2026, 7),
         pickupAddress: const {'city': 'Paris'},
         deliveryAddress: const {'city': 'Dakar'},
-        paymentMethod: PaymentMethod.cash,
+        paymentMethod: PaymentMethod.stripe,
       ));
-      await bloc.stream.firstWhere((s) => s is NegotiationLoaded);
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(
+            AnalyticsEvents.tripLinkPaymentBlocked,
+            {'reason': 'none'},
+          )).called(1);
+    });
+
+    test('does not fire for an unrelated 422', () async {
+      when(() => repo.submitTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+            paymentMethod: any(named: 'paymentMethod'),
+          )).thenThrow(const ValidationException(
+        'unrelated validation error',
+        code: 'trip/date-mismatch',
+      ));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationSubmitTripRequested(
+        threadId: 't-1',
+        travelerAnnouncementId: 'ann-1',
+        paymentMethod: PaymentMethod.stripe,
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => backend.capture(AnalyticsEvents.tripLinkPaymentBlocked, any()));
+    });
+
+    test('does not fire when analytics disabled', () async {
+      when(() => repo.submitTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+            paymentMethod: any(named: 'paymentMethod'),
+          )).thenThrow(const ValidationException(
+        'no capable payment method',
+        code: 'payment-method/card-capability-required',
+      ));
+
+      final bloc = makeBloc(enabled: false);
+      bloc.add(const NegotiationSubmitTripRequested(
+        threadId: 't-1',
+        travelerAnnouncementId: 'ann-1',
+        paymentMethod: PaymentMethod.stripe,
+      ));
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
       await Future<void>.delayed(Duration.zero);
 
       verifyNever(() => backend.capture(any(), any()));

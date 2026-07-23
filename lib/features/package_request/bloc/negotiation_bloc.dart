@@ -23,6 +23,16 @@ class NegotiationFetchRequested extends NegotiationEvent {
   List<Object?> get props => [threadId];
 }
 
+/// Sends a nudge on this thread to prompt the other party to act. Backend
+/// validates whether the current viewer is allowed to nudge (returns 429
+/// `nudge/rate-limited` when relancé too soon).
+class NegotiationNudgeRequested extends NegotiationEvent {
+  const NegotiationNudgeRequested(this.threadId);
+  final String threadId;
+  @override
+  List<Object?> get props => [threadId];
+}
+
 class NegotiationStartRequested extends NegotiationEvent {
   const NegotiationStartRequested({
     required this.packageRequestId,
@@ -86,6 +96,17 @@ class NegotiationRejectRequested extends NegotiationEvent {
   List<Object?> get props => [threadId, reason];
 }
 
+/// Either party ends the negotiation thread ("end negotiation"). Terminal,
+/// mirrors [NegotiationRejectRequested].
+class NegotiationCancelRequested extends NegotiationEvent {
+  const NegotiationCancelRequested({required this.threadId, this.reason});
+  final String threadId;
+  final String? reason;
+
+  @override
+  List<Object?> get props => [threadId, reason];
+}
+
 /// Traveler links a trip (existing announcement) to an AWAITING_TRIP thread.
 class NegotiationSubmitTripRequested extends NegotiationEvent {
   const NegotiationSubmitTripRequested({
@@ -121,6 +142,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     this.acceptedContentTypes,
     this.refusedTypes,
     required this.paymentMethod,
+    this.useCardForCommission = false,
   });
   final String threadId;
   final DateTime departureDate;
@@ -133,11 +155,17 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
   final List<String>? refusedTypes;
   final PaymentMethod paymentMethod;
 
+  /// CASH only: traveler consents to pay the commission on their card when the
+  /// wallet is short (charged at finalize, wallet-first then card). Mirrors
+  /// [NegotiationSubmitTripRequested.useCardForCommission].
+  final bool useCardForCommission;
+
   @override
   List<Object?> get props => [
         threadId, departureDate, departureTime, arrivalTime,
         pickupAddress, deliveryAddress, description,
         acceptedContentTypes, refusedTypes, paymentMethod,
+        useCardForCommission,
       ];
 }
 
@@ -197,14 +225,43 @@ class NegotiationLoaded extends NegotiationState {
 }
 
 class NegotiationRejected extends NegotiationState {
-  const NegotiationRejected(this.threadId);
+  const NegotiationRejected(this.threadId, {this.cancelled = false});
   final String threadId;
+
+  /// True when this thread ended via [NegotiationCancelRequested] ("end
+  /// negotiation" from the ... menu) rather than [NegotiationRejectRequested]
+  /// (reject bottom sheet) — the only difference between the two flows,
+  /// used by the screen to pick the right snackbar wording.
+  final bool cancelled;
   @override
-  List<Object?> get props => [threadId];
+  List<Object?> get props => [threadId, cancelled];
 }
 
 class NegotiationError extends NegotiationState {
   const NegotiationError(this.error);
+  final AppException error;
+  @override
+  List<Object?> get props => [error];
+}
+
+/// Nudge sent successfully. Carries the refreshed thread (server-computed
+/// `canNudge` now false) plus, by its very type, a one-shot signal for the
+/// UI to show a "Relance envoyée" confirmation — distinct from
+/// [NegotiationLoaded] so the CTA bar can react to this specific action
+/// without hijacking every other success transition into the loaded state.
+class NegotiationNudgeSent extends NegotiationState {
+  const NegotiationNudgeSent(this.thread);
+  final NegotiationThread thread;
+  @override
+  List<Object?> get props => [thread];
+}
+
+/// Nudge failed. Dedicated type (not [NegotiationError]) so the screen's
+/// generic error listener doesn't also surface a second, generic error
+/// snackbar — the CTA bar alone maps `error.code == 'nudge/rate-limited'` to
+/// "Déjà relancé récemment", any other code to a generic retry message.
+class NegotiationNudgeError extends NegotiationState {
+  const NegotiationNudgeError(this.error);
   final AppException error;
   @override
   List<Object?> get props => [error];
@@ -219,14 +276,44 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationCounterRequested>(_onCounter);
     on<NegotiationAcceptRequested>(_onAccept);
     on<NegotiationRejectRequested>(_onReject);
+    on<NegotiationCancelRequested>(_onCancel);
     on<NegotiationSubmitTripRequested>(_onSubmitTrip);
     on<NegotiationCreateDedicatedTripRequested>(_onCreateDedicatedTrip);
     on<NegotiationCheckoutRequested>(_onCheckout);
     on<NegotiationRefuseTripRequested>(_onRefuseTrip);
+    on<NegotiationNudgeRequested>(_onNudge);
   }
 
   final NegotiationRepository _repository;
   final AnalyticsService _analytics;
+
+  /// Maps the 422 reasons the back-end returns from `submitTrip` /
+  /// `createDedicatedTrip` when the traveler can't honor any payment method
+  /// the sender accepted, to a PII-free analytics reason.
+  static const _paymentBlockReasons = {
+    'payment-method/card-capability-required': 'no_card',
+    'payment-method/cash-funds-required': 'no_cash_funds',
+    'payment-method/none-available': 'none',
+  };
+
+  /// `null` when [err] isn't one of the trip-linking payment-capability block
+  /// reasons above (network error, or an unrelated business error).
+  static String? _paymentBlockReason(AppException err) =>
+      _paymentBlockReasons[err.code];
+
+  /// Fires `payment_method_selected` for the sender's final choice at
+  /// checkout — the only point where a real user picks a payment method
+  /// now that trip-linking uses a backend-computed capability set.
+  /// `null` when the backend keeps the thread's already-decided method.
+  void _logCheckoutPaymentMethodSelected(PaymentMethod? method) {
+    if (method == null) {
+      return;
+    }
+    unawaited(_analytics.logEvent(
+      AnalyticsEvents.paymentMethodSelected,
+      properties: {'method': method.wireName},
+    ));
+  }
 
   static String _priceBracket(double eur) {
     if (eur < 20) return '<20€';
@@ -345,6 +432,25 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     }
   }
 
+  Future<void> _onCancel(
+    NegotiationCancelRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      await _repository.cancel(e.threadId, reason: e.reason);
+      unawaited(_analytics.logEvent(AnalyticsEvents.negotiationCancelled));
+      emit(NegotiationRejected(e.threadId, cancelled: true));
+    } catch (err) {
+      emit(NegotiationError(unwrapDioError(err)));
+    }
+  }
+
   Future<void> _onSubmitTrip(
     NegotiationSubmitTripRequested e,
     Emitter<NegotiationState> emit,
@@ -363,12 +469,16 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.paymentMethodSelected,
-        properties: {'method': e.paymentMethod.wireName},
-      ));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      final blockReason = _paymentBlockReason(appErr);
+      if (blockReason != null) {
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.tripLinkPaymentBlocked,
+          properties: {'reason': blockReason},
+        ));
+      }
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -394,14 +504,19 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         acceptedContentTypes: e.acceptedContentTypes,
         refusedTypes: e.refusedTypes,
         paymentMethod: e.paymentMethod,
+        useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.paymentMethodSelected,
-        properties: {'method': e.paymentMethod.wireName},
-      ));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      final blockReason = _paymentBlockReason(appErr);
+      if (blockReason != null) {
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.tripLinkPaymentBlocked,
+          properties: {'reason': blockReason},
+        ));
+      }
+      emit(NegotiationError(appErr));
     }
   }
 
@@ -422,6 +537,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
+      _logCheckoutPaymentMethodSelected(e.paymentMethod);
     } catch (err) {
       final appErr = unwrapDioError(err);
       // Course gagnée par le webhook Stripe : `payment_intent.amount_capturable_updated`
@@ -435,6 +551,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         try {
           final thread = await _repository.getById(e.threadId);
           emit(NegotiationLoaded(thread));
+          _logCheckoutPaymentMethodSelected(e.paymentMethod);
           return;
         } catch (_) {
           // Re-fetch échoué → on retombe sur l'erreur d'origine ci-dessous.
@@ -459,6 +576,25 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       emit(NegotiationLoaded(thread));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
+    }
+  }
+
+  Future<void> _onNudge(
+    NegotiationNudgeRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      final thread = await _repository.nudge(e.threadId);
+      unawaited(_analytics.logEvent(AnalyticsEvents.negotiationNudgeSent));
+      emit(NegotiationNudgeSent(thread));
+    } catch (err) {
+      emit(NegotiationNudgeError(unwrapDioError(err)));
     }
   }
 }

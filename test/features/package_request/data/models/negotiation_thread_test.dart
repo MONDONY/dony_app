@@ -31,7 +31,9 @@ Map<String, dynamic> _baseJson({
     ],
     'paymentIntentClientSecret': null,
   };
-  if (overrides != null) base.addAll(overrides);
+  if (overrides != null) {
+    base.addAll(overrides);
+  }
   return base;
 }
 
@@ -100,6 +102,13 @@ void main() {
       _baseJson(overrides: {'status': 'REJECTED'}),
     );
     expect(t.status, NegotiationThreadStatus.rejected);
+  });
+
+  test('NegotiationThread.fromJson parse le statut CANCELLED correctement', () {
+    final t = NegotiationThread.fromJson(
+      _baseJson(overrides: {'status': 'CANCELLED'}),
+    );
+    expect(t.status, NegotiationThreadStatus.cancelled);
   });
 
   test('fromJson parses grossPriceEur + paymentMethod', () {
@@ -174,6 +183,76 @@ void main() {
     final t2 = NegotiationThread.fromJson(_baseJson(overrides: {
       'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
     }));
+    expect(t1, isNot(equals(t2)));
+  });
+
+  test('parse availablePaymentMethods depuis le JSON', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['STRIPE', 'CASH'],
+    }));
+    expect(
+      t.availablePaymentMethods,
+      {PaymentMethod.stripe, PaymentMethod.cash},
+    );
+  });
+
+  test('availablePaymentMethods null quand absent', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.availablePaymentMethods, isNull);
+  });
+
+  test('availablePaymentMethods participates in props/equality', () {
+    final t1 = NegotiationThread.fromJson(_baseJson());
+    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['STRIPE'],
+    }));
+    expect(t1, isNot(equals(t2)));
+  });
+
+  // ── Finding #5 — resilient parse of availablePaymentMethods ────────────────
+  // An unknown wire value here must be skipped, not fail the whole thread
+  // parse (unlike PaymentMethod.fromWire/setFromJson elsewhere, left as-is).
+
+  test(
+      'availablePaymentMethods ignore une valeur wire inconnue au lieu de '
+      'faire échouer tout le parse', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['STRIPE', 'BITCOIN', 'CASH'],
+    }));
+    expect(
+      t.availablePaymentMethods,
+      {PaymentMethod.stripe, PaymentMethod.cash},
+    );
+  });
+
+  test(
+      'availablePaymentMethods vide (Set vide, pas null) quand toutes les '
+      'valeurs sont inconnues', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['BITCOIN', 'GOLD'],
+    }));
+    expect(t.availablePaymentMethods, isNotNull);
+    expect(t.availablePaymentMethods, isEmpty);
+  });
+
+  test('le reste du thread parse normalement malgré une valeur wire inconnue',
+      () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'status': 'AWAITING_PAYMENT',
+      'availablePaymentMethods': ['BITCOIN'],
+    }));
+    expect(t.id, 't-1');
+    expect(t.status, NegotiationThreadStatus.awaitingPayment);
+  });
+
+  test('parse canNudge (true / défaut false)', () {
+    expect(NegotiationThread.fromJson(_baseJson(overrides: {'canNudge': true})).canNudge, isTrue);
+    expect(NegotiationThread.fromJson(_baseJson()).canNudge, isFalse);
+  });
+
+  test('canNudge participates in props/equality', () {
+    final t1 = NegotiationThread.fromJson(_baseJson());
+    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {'canNudge': true}));
     expect(t1, isNot(equals(t2)));
   });
 }

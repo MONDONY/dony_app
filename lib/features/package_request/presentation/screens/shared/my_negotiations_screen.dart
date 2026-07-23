@@ -314,7 +314,8 @@ class _NegoCard extends StatelessWidget {
   bool get _isTerminal =>
       thread.status == NegotiationThreadStatus.rejected ||
       thread.status == NegotiationThreadStatus.autoRejected ||
-      thread.status == NegotiationThreadStatus.expired;
+      thread.status == NegotiationThreadStatus.expired ||
+      thread.status == NegotiationThreadStatus.cancelled;
 
   Color get _stripColor => switch (thread.status) {
     NegotiationThreadStatus.open => DonyColors.primary,

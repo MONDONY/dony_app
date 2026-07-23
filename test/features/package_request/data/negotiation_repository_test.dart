@@ -149,6 +149,40 @@ void main() {
     });
   });
 
+  group('cancel', () {
+    test('POSTs to /negotiations/:id/cancel', () async {
+      when(
+        () => mockDio.post<void>(
+          '/negotiations/th-1/cancel',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/negotiations/th-1/cancel'),
+        ),
+      );
+
+      await expectLater(repo.cancel('th-1', reason: 'Changed my mind'), completes);
+    });
+
+    test('POSTs with no data when reason is null', () async {
+      when(
+        () => mockDio.post<void>(
+          '/negotiations/th-1/cancel',
+          data: null,
+        ),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/negotiations/th-1/cancel'),
+        ),
+      );
+
+      await expectLater(repo.cancel('th-1'), completes);
+    });
+  });
+
   group('getById', () {
     test('GETs /negotiations/:id and returns NegotiationThread', () async {
       when(
@@ -200,6 +234,78 @@ void main() {
       );
 
       expect(sentData?['useCardForCommission'], true);
+    });
+  });
+
+  group('createDedicatedTrip', () {
+    test(
+        'POSTs to /negotiations/:id/create-dedicated-trip and returns updated thread',
+        () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async =>
+          _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip'));
+
+      final thread = await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+      );
+      expect(thread.id, 'th-1');
+    });
+
+    test('sends useCardForCommission in the body', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip');
+      });
+
+      await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.cash,
+        useCardForCommission: true,
+      );
+
+      expect(sentData?['useCardForCommission'], true);
+    });
+
+    test('defaults useCardForCommission to false in the body', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip');
+      });
+
+      await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+      );
+
+      expect(sentData?['useCardForCommission'], false);
     });
   });
 
@@ -308,6 +414,26 @@ void main() {
 
       final thread = await repo.refuseTrip('th-1');
       expect(thread.id, 'th-1');
+    });
+  });
+
+  group('nudge', () {
+    test('POSTs to /negotiations/:id/nudge and returns updated thread',
+        () async {
+      final nudgedJson = {
+        ..._threadJson,
+        'canNudge': false,
+      };
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/nudge',
+        ),
+      ).thenAnswer((_) async => _ok(nudgedJson, '/negotiations/th-1/nudge'));
+
+      final thread = await repo.nudge('th-1');
+      expect(thread.id, 'th-1');
+      expect(thread.canNudge, isFalse);
     });
   });
 }

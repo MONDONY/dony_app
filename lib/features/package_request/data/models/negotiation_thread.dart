@@ -10,7 +10,8 @@ enum NegotiationThreadStatus {
   accepted('ACCEPTED'),
   rejected('REJECTED'),
   autoRejected('AUTO_REJECTED'),
-  expired('EXPIRED');
+  expired('EXPIRED'),
+  cancelled('CANCELLED');
 
   final String wireName;
   const NegotiationThreadStatus(this.wireName);
@@ -56,6 +57,8 @@ class NegotiationThread extends Equatable {
     this.materializedBidId,
     this.senderPhotoUrl,
     this.cashCommissionAvailable = true,
+    this.availablePaymentMethods,
+    this.canNudge = false,
   });
 
   final String id;
@@ -105,6 +108,14 @@ class NegotiationThread extends Equatable {
   /// (solde wallet suffisant OU carte de commission enregistrée).
   final bool cashCommissionAvailable;
 
+  /// Moyens de paiement disponibles pour ce thread, calculés côté serveur
+  /// une fois le trajet lié (null avant le trip-linking).
+  final Set<PaymentMethod>? availablePaymentMethods;
+
+  /// Vrai si l'utilisateur courant peut envoyer une relance (nudge) sur ce
+  /// thread, calculé côté serveur.
+  final bool canNudge;
+
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
@@ -147,6 +158,23 @@ class NegotiationThread extends Equatable {
         materializedBidId: json['materializedBidId'] as String?,
         senderPhotoUrl: json['senderPhotoUrl'] as String?,
         cashCommissionAvailable: json['cashCommissionAvailable'] as bool? ?? true,
+        // Resilient parse: an unknown wire value here must not fail the whole
+        // thread parse (unlike the global PaymentMethod.fromWire/setFromJson,
+        // left untouched — used elsewhere where the full list is expected to
+        // always be recognized). Skips only the offending entry.
+        availablePaymentMethods: json['availablePaymentMethods'] != null
+            ? (json['availablePaymentMethods'] as List<dynamic>)
+                .map((e) {
+                  try {
+                    return PaymentMethod.fromWire(e as String);
+                  } catch (_) {
+                    return null;
+                  }
+                })
+                .whereType<PaymentMethod>()
+                .toSet()
+            : null,
+        canNudge: json['canNudge'] as bool? ?? false,
       );
 
   @override
@@ -159,5 +187,6 @@ class NegotiationThread extends Equatable {
         departureCity, arrivalCity, weightKg, senderName,
         isMyTurn, canAccept, canCounter, roundsRemaining,
         linkedTrip, materializedBidId, senderPhotoUrl, cashCommissionAvailable,
+        availablePaymentMethods, canNudge,
       ];
 }

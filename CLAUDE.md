@@ -321,6 +321,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `package_request_searched` | PackageRequestSearchBloc |
 | `negotiation_offer_made` | NegotiationBloc._onStart()/_onCounter() |
 | `negotiation_offer_accepted` | NegotiationBloc._onAccept() |
+| `negotiation_cancelled` | NegotiationBloc._onCancel() — l'une des parties met fin à la négociation |
+| `negotiation_nudge_sent` | NegotiationBloc._onNudge() — relance envoyée |
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |
 | `conversation_call_initiated` | ChatScreen._call() — tap 📞 dans le header chat (numéro révélé) |
@@ -351,7 +353,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
 | `urgent_filter_toggled` | HomeScreen._onUrgentToggle — chip 🔥 Urgent (propriété `active`) |
 | `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme |
-| `payment_method_selected` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — mode de paiement sélectionné au trip-linking |
+| `payment_method_selected` | NegotiationBloc._onCheckout() — mode de paiement retenu par l'expéditeur au checkout final (le voyageur ne choisit plus au trip-linking : `paymentMethod` y est un placeholder, `acceptedPaymentMethods.first`) |
+| `trip_link_payment_blocked` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — 422 `payment-method/*` : le voyageur ne peut honorer aucun mode accepté par l'expéditeur (propriété `reason` : `no_card`/`no_cash_funds`/`none`) |
 | `bid_qr_sheet_opened` | QrSheet ouverte depuis le détail d'envoi (propriété `status`) |
 | `bid_qr_downloaded` | Tap « Enregistrer » ou « Partager » dans la QrSheet |
 | `bid_retrait_code_opened` | RetraitCodeSheet ouverte depuis le talon (propriété `status`) |

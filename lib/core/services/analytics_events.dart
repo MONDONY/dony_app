@@ -54,8 +54,21 @@ abstract final class AnalyticsEvents {
   static const packageRequestSearched = 'package_request_searched';
   static const negotiationOfferMade = 'negotiation_offer_made';
   static const negotiationOfferAccepted = 'negotiation_offer_accepted';
+
+  /// Négociation terminée par l'une des parties ("end negotiation").
+  /// Terminal, comme un rejet. Pas de propriétés (aucune PII).
+  static const negotiationCancelled = 'negotiation_cancelled';
+
+  /// Relance (nudge) envoyée par une partie à l'autre sur un thread de
+  /// négociation. Pas de propriétés (aucune PII).
+  static const negotiationNudgeSent = 'negotiation_nudge_sent';
   static const firmPriceTaken = 'firm_price_taken';
   static const paymentMethodSelected = 'payment_method_selected';
+
+  /// Traveler blocked at trip-linking because no payment method they can
+  /// honor overlaps the sender's accepted set (422 `payment-method/*`).
+  /// Property `reason`: `no_card` / `no_cash_funds` / `none`.
+  static const tripLinkPaymentBlocked = 'trip_link_payment_blocked';
 
   // Messaging
   static const conversationOpened = 'conversation_opened';

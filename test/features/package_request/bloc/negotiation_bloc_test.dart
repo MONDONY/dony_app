@@ -43,6 +43,10 @@ NegotiationBloc _makeBloc(_MockRepo repo) => NegotiationBloc(
 void main() {
   late _MockRepo repo;
 
+  setUpAll(() {
+    registerFallbackValue(PaymentMethod.stripe);
+  });
+
   setUp(() => repo = _MockRepo());
 
   blocTest<NegotiationBloc, NegotiationState>(
@@ -129,7 +133,44 @@ void main() {
         threadId: 't-1', reason: 'too expensive')),
     expect: () => [
       isA<NegotiationActionInProgress>(),
-      isA<NegotiationRejected>().having((s) => s.threadId, 'threadId', 't-1'),
+      isA<NegotiationRejected>()
+          .having((s) => s.threadId, 'threadId', 't-1')
+          .having((s) => s.cancelled, 'cancelled', false),
+    ],
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'cancel emits Rejected(cancelled: true) after success',
+    build: () {
+      when(() => repo.cancel(any(), reason: any(named: 'reason')))
+          .thenAnswer((_) async {});
+      return _makeBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread()),
+    act: (bloc) => bloc.add(const NegotiationCancelRequested(
+        threadId: 't-1', reason: 'changed my mind')),
+    expect: () => [
+      isA<NegotiationActionInProgress>(),
+      isA<NegotiationRejected>()
+          .having((s) => s.threadId, 'threadId', 't-1')
+          .having((s) => s.cancelled, 'cancelled', true),
+    ],
+    verify: (_) => verify(
+        () => repo.cancel('t-1', reason: 'changed my mind')).called(1),
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'cancel throws emits Error',
+    build: () {
+      when(() => repo.cancel(any(), reason: any(named: 'reason')))
+          .thenThrow(Exception('server error'));
+      return _makeBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread()),
+    act: (bloc) => bloc.add(const NegotiationCancelRequested(threadId: 't-1')),
+    expect: () => [
+      isA<NegotiationActionInProgress>(),
+      isA<NegotiationError>(),
     ],
   );
 
@@ -239,6 +280,155 @@ void main() {
         isA<NegotiationActionInProgress>(),
         isA<NegotiationError>(),
       ],
+    );
+  });
+
+  // ── NegotiationNudgeRequested ────────────────────────────────────────────────
+
+  group('NegotiationNudgeRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'nudge succès -> ActionInProgress puis NegotiationNudgeSent avec le thread rafraîchi',
+      build: () {
+        when(() => repo.nudge('t-1')).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.open),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (bloc) => bloc.add(const NegotiationNudgeRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationNudgeSent>()
+            .having((s) => s.thread.id, 'thread.id', 't-1'),
+      ],
+      verify: (_) => verify(() => repo.nudge('t-1')).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'nudge 429 rate-limited -> NegotiationNudgeError avec le code backend',
+      build: () {
+        when(() => repo.nudge('t-1')).thenThrow(
+          const ValidationException('too soon', code: 'nudge/rate-limited'),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (bloc) => bloc.add(const NegotiationNudgeRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationNudgeError>()
+            .having((s) => s.error.code, 'error.code', 'nudge/rate-limited'),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'nudge depuis un état autre que Loaded -> Loading puis NegotiationNudgeSent',
+      build: () {
+        when(() => repo.nudge('t-1')).thenAnswer((_) async => _fakeThread());
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(const NegotiationNudgeRequested('t-1')),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationNudgeSent>(),
+      ],
+    );
+  });
+
+  // ── NegotiationCreateDedicatedTripRequested — useCardForCommission ─────────
+
+  group('NegotiationCreateDedicatedTripRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'threads useCardForCommission=true through to the repository call',
+      build: () {
+        when(() => repo.createDedicatedTrip(
+              any(),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              description: any(named: 'description'),
+              acceptedContentTypes: any(named: 'acceptedContentTypes'),
+              refusedTypes: any(named: 'refusedTypes'),
+              paymentMethod: any(named: 'paymentMethod'),
+              useCardForCommission: any(named: 'useCardForCommission'),
+            )).thenAnswer((_) async => _fakeThread(
+              status: NegotiationThreadStatus.awaitingPayment,
+            ));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(NegotiationCreateDedicatedTripRequested(
+        threadId: 't-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.cash,
+        useCardForCommission: true,
+      )),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>(),
+      ],
+      verify: (_) => verify(() => repo.createDedicatedTrip(
+            't-1',
+            departureDate: DateTime(2026, 7, 1),
+            departureTime: null,
+            arrivalTime: null,
+            pickupAddress: const {'label': 'Paris'},
+            deliveryAddress: const {'label': 'Dakar'},
+            description: null,
+            acceptedContentTypes: null,
+            refusedTypes: null,
+            paymentMethod: PaymentMethod.cash,
+            useCardForCommission: true,
+          )).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'defaults useCardForCommission to false when not specified',
+      build: () {
+        when(() => repo.createDedicatedTrip(
+              any(),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              description: any(named: 'description'),
+              acceptedContentTypes: any(named: 'acceptedContentTypes'),
+              refusedTypes: any(named: 'refusedTypes'),
+              paymentMethod: any(named: 'paymentMethod'),
+              useCardForCommission: any(named: 'useCardForCommission'),
+            )).thenAnswer((_) async => _fakeThread(
+              status: NegotiationThreadStatus.awaitingPayment,
+            ));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(NegotiationCreateDedicatedTripRequested(
+        threadId: 't-1',
+        departureDate: DateTime(2026, 7, 1),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        paymentMethod: PaymentMethod.stripe,
+      )),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>(),
+      ],
+      verify: (_) => verify(() => repo.createDedicatedTrip(
+            't-1',
+            departureDate: DateTime(2026, 7, 1),
+            departureTime: null,
+            arrivalTime: null,
+            pickupAddress: const {'label': 'Paris'},
+            deliveryAddress: const {'label': 'Dakar'},
+            description: null,
+            acceptedContentTypes: null,
+            refusedTypes: null,
+            paymentMethod: PaymentMethod.stripe,
+            useCardForCommission: false,
+          )).called(1),
     );
   });
 

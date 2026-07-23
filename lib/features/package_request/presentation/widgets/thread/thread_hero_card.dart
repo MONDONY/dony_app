@@ -21,7 +21,8 @@ enum ThreadStatusVariant {
         NegotiationThreadStatus.accepted => accepted,
         NegotiationThreadStatus.rejected ||
         NegotiationThreadStatus.autoRejected ||
-        NegotiationThreadStatus.expired =>
+        NegotiationThreadStatus.expired ||
+        NegotiationThreadStatus.cancelled =>
           terminal,
       };
 

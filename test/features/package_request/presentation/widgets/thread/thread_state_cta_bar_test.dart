@@ -28,6 +28,7 @@ NegotiationThread _thread({
   bool canCounter = true,
   PaymentMethod? paymentMethod,
   String? materializedBidId,
+  bool canNudge = false,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -55,6 +56,7 @@ NegotiationThread _thread({
     messages: messages,
     paymentMethod: paymentMethod,
     materializedBidId: materializedBidId,
+    canNudge: canNudge,
   );
 }
 
@@ -319,6 +321,37 @@ void main() {
       expect(find.byType(ThreadStateBanner), findsNothing);
       expect(find.textContaining('Accepter'), findsNothing);
       expect(find.text('Contre-offre'), findsNothing);
+    });
+  });
+
+  group('Bouton Relancer (nudge)', () {
+    testWidgets('canNudge=false → bouton "Relancer" absent', (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(status: NegotiationThreadStatus.open, canNudge: false),
+        _viewerSender,
+      ));
+      expect(find.text('Relancer'), findsNothing);
+    });
+
+    testWidgets('canNudge=true → bouton "Relancer" visible', (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(status: NegotiationThreadStatus.awaitingTrip, canNudge: true),
+        _viewerSender,
+      ));
+      expect(find.text('Relancer'), findsOneWidget);
+    });
+
+    testWidgets(
+        'canNudge=true → tap "Relancer" dispatch NegotiationNudgeRequested(thread.id)',
+        (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(status: NegotiationThreadStatus.awaitingTrip, canNudge: true),
+        _viewerSender,
+      ));
+      await tester.tap(find.text('Relancer'));
+      await tester.pump();
+
+      verify(() => bloc.add(const NegotiationNudgeRequested('t1'))).called(1);
     });
   });
 }
