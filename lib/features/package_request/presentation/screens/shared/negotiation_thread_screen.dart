@@ -34,10 +34,24 @@ class NegotiationThreadScreen extends StatelessWidget {
   }
 }
 
-class _ThreadView extends StatelessWidget {
+class _ThreadView extends StatefulWidget {
   const _ThreadView({required this.threadId, required this.viewerUserId});
   final String threadId;
   final String viewerUserId;
+
+  @override
+  State<_ThreadView> createState() => _ThreadViewState();
+}
+
+class _ThreadViewState extends State<_ThreadView> {
+  // Distingue « rejet » (reject_bottom_sheet) de « fin de négociation »
+  // (menu ...) alors que le bloc émet le même NegotiationRejected pour les
+  // deux (cf. _onCancel qui « mirrors » _onReject) — pas de nouvel état bloc,
+  // uniquement un flag d'intention côté UI pour le libellé du snackbar.
+  bool _endRequestedLocally = false;
+
+  String get threadId => widget.threadId;
+  String get viewerUserId => widget.viewerUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +73,9 @@ class _ThreadView extends StatelessWidget {
         if (state is NegotiationRejected) {
           DonySnackbar.show(
             ctx,
-            message: 'Négociation rejetée',
+            message: _endRequestedLocally
+                ? 'Négociation terminée'
+                : 'Négociation rejetée',
             type: DonySnackbarType.warning,
           );
           ctx.pop();
@@ -129,20 +145,72 @@ class _ThreadView extends StatelessWidget {
         ),
       ),
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: DonySpacing.sm),
-          child: IconButton(
-            icon: const DonyIcon('ellipsis',
-                color: DonyColors.textPrimary, size: 22),
-            onPressed: () {},
+        if (_canEndNegotiation(thread))
+          Padding(
+            padding: const EdgeInsets.only(right: DonySpacing.sm),
+            child: PopupMenuButton<String>(
+              icon: const DonyIcon('ellipsis',
+                  color: DonyColors.textPrimary, size: 22),
+              onSelected: (value) {
+                if (value == 'end_negotiation') {
+                  _confirmEndNegotiation(context, thread!);
+                }
+              },
+              itemBuilder: (menuContext) => [
+                PopupMenuItem(
+                  value: 'end_negotiation',
+                  child: Text(
+                    'Mettre fin à la négociation',
+                    style: TextStyle(
+                      color: Theme.of(menuContext).colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
       bottom: const PreferredSize(
         preferredSize: Size.fromHeight(1),
         child: Divider(height: 1, color: DonyColors.neutral200),
       ),
     );
+  }
+
+  // « Mettre fin à la négociation » n'a de sens qu'avant tout paiement engagé
+  // (open/awaitingTrip/awaitingPayment) — statuts terminaux ou déjà acceptés
+  // (accepted, rejected, autoRejected, expired, cancelled) : item absent, on
+  // masque alors l'ellipsis entier (menu vide sinon).
+  bool _canEndNegotiation(NegotiationThread? thread) {
+    if (thread == null) {
+      return false;
+    }
+    return switch (thread.status) {
+      NegotiationThreadStatus.open ||
+      NegotiationThreadStatus.awaitingTrip ||
+      NegotiationThreadStatus.awaitingPayment =>
+        true,
+      _ => false,
+    };
+  }
+
+  Future<void> _confirmEndNegotiation(
+    BuildContext context,
+    NegotiationThread thread,
+  ) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Mettre fin à cette négociation ?',
+      message: 'Cette action est définitive.',
+      confirmLabel: 'Mettre fin',
+      variant: DonyDialogVariant.destructive,
+    );
+    if (confirmed == true && context.mounted) {
+      setState(() => _endRequestedLocally = true);
+      context
+          .read<NegotiationBloc>()
+          .add(NegotiationCancelRequested(threadId: thread.id));
+    }
   }
 }
 

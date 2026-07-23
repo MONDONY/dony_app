@@ -17,6 +17,7 @@ NegotiationThread _thread({
   String? travelerName = 'Fatou Ndiaye',
   double? travelerRating = 4.9,
   int? travelerTripsCount = 24,
+  NegotiationThreadStatus status = NegotiationThreadStatus.open,
 }) =>
     NegotiationThread(
       id: 't-1',
@@ -24,7 +25,7 @@ NegotiationThread _thread({
       travelerId: 'tr-1',
       travelerTravelDate: DateTime(2026, 6, 15),
       travelerAvailableKg: 10,
-      status: NegotiationThreadStatus.open,
+      status: status,
       currentPriceEur: 50,
       roundsCount: 1,
       lastActivityAt: DateTime(2026, 5, 10),
@@ -40,6 +41,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const NegotiationFetchRequested('t-1'));
+    registerFallbackValue(const NegotiationCancelRequested(threadId: 't-1'));
   });
 
   setUp(() {
@@ -168,6 +170,51 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('LISTE_NEGOCIATIONS'), findsOneWidget);
+    });
+  });
+
+  group('Menu « ... » — mettre fin à la négociation', () {
+    testWidgets(
+        'statut pré-paiement (awaitingTrip) : ouvrir l\'ellipsis montre '
+        '« Mettre fin à la négociation », confirmer dispatch '
+        'NegotiationCancelRequested', (tester) async {
+      when(() => bloc.state).thenReturn(
+        NegotiationLoaded(_thread(status: NegotiationThreadStatus.awaitingTrip)),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PopupMenuButton<String>), findsOneWidget);
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mettre fin à la négociation'), findsOneWidget);
+
+      await tester.tap(find.text('Mettre fin à la négociation'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mettre fin à cette négociation ?'), findsOneWidget);
+      expect(find.text('Cette action est définitive.'), findsOneWidget);
+
+      await tester.tap(find.text('Mettre fin'));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(
+            const NegotiationCancelRequested(threadId: 't-1'),
+          )).called(1);
+    });
+
+    testWidgets(
+        'statut ACCEPTED : l\'item « Mettre fin à la négociation » est absent',
+        (tester) async {
+      when(() => bloc.state).thenReturn(
+        NegotiationLoaded(_thread(status: NegotiationThreadStatus.accepted)),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PopupMenuButton<String>), findsNothing);
+      expect(find.text('Mettre fin à la négociation'), findsNothing);
     });
   });
 }
