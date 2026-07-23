@@ -198,7 +198,7 @@ class _IntroConfig {
       case PublishIntroRole.parcel:
         return _IntroConfig(
           title: 'Envoyer un colis',
-          asset: 'assets/illustrations/publier_envoi.png',
+          asset: 'assets/illustrations/envoie_colis.png',
           accent: cs.secondary,
           buttonVariant: DonyButtonVariant.accent,
           verifiedText:
