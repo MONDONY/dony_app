@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -6,6 +11,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,6 +83,9 @@ class PublishIntroScreen extends StatelessWidget {
                     verifiedText: config.verifiedText,
                     onVerify: () => _startKyc(context, user),
                   ),
+                  // Rappel voyageur : activer Stripe pour encaisser par carte —
+                  // se masque tout seul si le compte est déjà opérationnel.
+                  if (role == PublishIntroRole.trip) const _StripeReminder(),
                   const SizedBox(height: DonySpacing.lg),
                   _SectionHeader(
                     iconAsset: config.sectionIcon,
@@ -364,6 +373,103 @@ class _CalloutShell extends StatelessWidget {
           Expanded(child: child),
         ],
       ),
+    );
+  }
+}
+
+/// Rappel promotionnel (voyageur) : configurer Stripe pour encaisser par carte.
+/// Ne s'affiche que si le compte Connect n'est pas encore opérationnel.
+class _StripeReminder extends StatelessWidget {
+  const _StripeReminder();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<StripeAccountBloc, StripeAccountState>(
+      builder: (context, state) {
+        final show =
+            state is StripeAccountReady && state.accountStatus.needsOnboarding;
+        if (!show) {
+          return const SizedBox.shrink();
+        }
+
+        final cs = Theme.of(context).colorScheme;
+        final tt = Theme.of(context).textTheme;
+
+        return Padding(
+          padding: const EdgeInsets.only(top: DonySpacing.base),
+          child: Material(
+            color: DonyColors.primarySoft,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                unawaited(
+                  getIt<AnalyticsService>().logEvent(
+                    AnalyticsEvents.publishIntroStripeReminderTapped,
+                  ),
+                );
+                context.push('/connect/onboarding/intro');
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(DonySpacing.base),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: cs.primary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: const DonyIcon(
+                        'credit-card',
+                        size: 17,
+                        color: DonyColors.neutral0,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Activez les paiements par carte',
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Configurez votre compte Stripe pour que vos '
+                            'expéditeurs paient par carte, et recevez plus de '
+                            'colis.',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.xs),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: DonyIcon(
+                        'chevron-right',
+                        size: 18,
+                        color: cs.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

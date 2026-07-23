@@ -120,6 +120,8 @@ abstract final class AnalyticsEvents {
 
   // Trajets (Mes trajets)
   static const tripFilterApplied = 'trip_filter_applied';
+  static const publishIntroStripeReminderTapped =
+      'publish_intro_stripe_reminder_tapped';
 
   // Détail trajet (propriétaire)
   static const tripOwnerDetailOpened = 'trip_owner_detail_opened';
