@@ -5,6 +5,8 @@ import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -15,6 +17,7 @@ import 'package:dony/features/matching/presentation/widgets/activity_header_widg
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_period_filter_sheet.dart';
+import 'package:dony/features/package_request/presentation/package_request_actions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -67,6 +70,15 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
           .read<BidBloc>()
           .add(const BidMyListAutoRefreshRequested(force: true));
     }
+  }
+
+  Future<void> _onNewRequest() async {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.shipmentNewRequestOpened,
+      ),
+    );
+    await openPackageRequestWizard(context);
   }
 
   void _onQueryChanged(String q) {
@@ -175,9 +187,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
                   if (!widget.embedded)
                     SafeArea(
                       bottom: false,
-                      child: _DarkHeader(
-                        total: hasData ? rawBids.length : 0,
-                      ),
+                      child: _ShipmentHeader(onNewRequest: _onNewRequest),
                     ),
                   // Hide filter bar when RAW bid list is empty
                   if (!rawEmpty)
@@ -332,67 +342,63 @@ class _ShipmentFilterBar extends StatelessWidget {
 
 // ── Dark Header ───────────────────────────────────────────────────────────────
 
-class _DarkHeader extends StatelessWidget {
-  const _DarkHeader({required this.total});
+/// Header clair de « Colis en route », aligné sur les autres écrans
+/// (`cs.surface` + titre encre + liseré bas). Le compteur d'antan est remplacé
+/// par une pill « Envoyer » qui ouvre le wizard de demande d'envoi.
+class _ShipmentHeader extends StatelessWidget {
+  const _ShipmentHeader({required this.onNewRequest});
 
-  final int total;
+  final VoidCallback onNewRequest;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final canGoBack = context.canPop();
 
     return Container(
-      color: const Color(0xFF0A2540),
+      color: cs.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.xs,
-              DonySpacing.sm,
-              DonySpacing.base,
-              DonySpacing.sm,
-            ),
-            child: Row(
-              children: [
-                if (canGoBack)
-                  const DonyAppBarBackButton()
-                else
-                  const SizedBox(width: DonySpacing.base),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(
-                  child: Text(
-                    'Colis en route',
-                    style: tt.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                if (total > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.sm,
-                      vertical: DonySpacing.xxs + 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                    ),
+          SizedBox(
+            height: kToolbarHeight,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.xs,
+                0,
+                DonySpacing.base,
+                0,
+              ),
+              child: Row(
+                children: [
+                  if (canGoBack)
+                    const DonyAppBarBackButton()
+                  else
+                    const SizedBox(width: DonySpacing.base),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
                     child: Text(
-                      '$total',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                      'Colis en route',
+                      style: tt.titleLarge?.copyWith(
+                        color: cs.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
-              ],
+                  HeaderPill(
+                    key: const Key('shipment-new-request'),
+                    label: 'Envoyer',
+                    iconAsset: 'package',
+                    style: HeaderPillStyle.warm,
+                    onTap: onNewRequest,
+                  ),
+                ],
+              ),
             ),
           ),
+          Container(height: 1, color: cs.outline),
         ],
       ),
     );

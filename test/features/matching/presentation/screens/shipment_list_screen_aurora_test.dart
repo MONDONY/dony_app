@@ -201,9 +201,9 @@ void main() {
     expect(find.byType(ShipmentListScreen), findsOneWidget);
   });
 
-  // ── Header sombre ─────────────────────────────────────────────────────────
+  // ── Header clair ──────────────────────────────────────────────────────────
 
-  testWidgets('header fond #0A2540 présent dans le widget tree', (
+  testWidgets('header clair : plus de fond navy #0A2540, titre visible', (
     tester,
   ) async {
     await _pump(
@@ -219,7 +219,9 @@ void main() {
           (c.decoration is BoxDecoration &&
               (c.decoration as BoxDecoration).color == const Color(0xFF0A2540)),
     );
-    expect(hasNavyHeader, isTrue);
+    // Le header s'aligne désormais sur les autres écrans (fond clair).
+    expect(hasNavyHeader, isFalse);
+    expect(find.text('Colis en route'), findsOneWidget);
   });
 
   testWidgets('fond Scaffold #F2F1EF (pas transparent)', (tester) async {
@@ -618,9 +620,9 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  // ── Badge header ──────────────────────────────────────────────────────────
+  // ── Pill « Envoyer » du header ────────────────────────────────────────────
 
-  testWidgets('header : badge "1" visible quand 1 bid ACCEPTED', (
+  testWidgets('header : pill « Envoyer » (nouvelle demande) visible', (
     tester,
   ) async {
     final bid = _makeBid(status: 'ACCEPTED');
@@ -638,7 +640,9 @@ void main() {
     await tester.pump();
     await tester.pump(_kSettle);
 
-    expect(find.text('1'), findsOneWidget);
+    // Le compteur d'antan est remplacé par une pill d'action.
+    expect(find.byKey(const Key('shipment-new-request')), findsOneWidget);
+    expect(find.text('Envoyer'), findsOneWidget);
   });
 
   // ── Rafraîchissement en cours ─────────────────────────────────────────────
