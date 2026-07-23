@@ -94,7 +94,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: kTextSecondary,
+            color: cs.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: DonySpacing.sm),

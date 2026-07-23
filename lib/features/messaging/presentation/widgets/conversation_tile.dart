@@ -20,7 +20,11 @@ class ConversationTile extends StatelessWidget {
     final unread = conversation.hasUnread;
 
     return Material(
-      color: unread ? const Color(0xFFF4F7FF) : cs.surface,
+      // Surlignage non-lu : teinte primary légère par-dessus la surface,
+      // lisible en clair comme en sombre (fini le bleu clair figé).
+      color: unread
+          ? Color.alphaBlend(cs.primary.withValues(alpha: 0.06), cs.surface)
+          : cs.surface,
       child: InkWell(
         onTap: () async {
           // Le chat a son propre ChatBloc (registerFactory) : la liste ne sait

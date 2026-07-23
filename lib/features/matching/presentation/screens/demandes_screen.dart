@@ -433,6 +433,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
     BuildContext context,
     acs.BidAcceptanceState state,
   ) {
+    final cs = Theme.of(context).colorScheme;
     if (state is acs.BidAccepted) {
       setState(_processingBidIds.clear);
       DonySnackbar.show(
@@ -461,6 +462,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
     BuildContext context,
     acs.BidWalletInsufficient state,
   ) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     DonyBottomSheet.show<void>(
       context,
@@ -470,17 +472,17 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         children: [
           Text(
             'Commission requise : ${state.requiredCommission.toStringAsFixed(2)} €',
-            style: tt.bodyMedium?.copyWith(color: DonyColors.textPrimary),
+            style: tt.bodyMedium?.copyWith(color: cs.onSurface),
           ),
           const SizedBox(height: 4),
           Text(
             'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
-            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
             'Rechargez votre wallet ou payez la commission directement par carte.',
-            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),

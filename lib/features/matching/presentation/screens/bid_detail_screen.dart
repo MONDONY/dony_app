@@ -123,6 +123,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   }
 
   void _showCardDeclinedSheet(BuildContext context, String message) {
+    final cs = Theme.of(context).colorScheme;
     DonyBottomSheet.show<void>(
       context,
       title: 'Paiement refusé',
@@ -133,14 +134,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
             message,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: DonyColors.textPrimary),
+            ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
           ),
           const SizedBox(height: 8),
           Text(
             'Changez votre carte de commission pour accepter cette demande.',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: DonyColors.textMuted),
+            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -158,6 +159,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
     BuildContext context,
     acs.BidWalletInsufficient state,
   ) {
+    final cs = Theme.of(context).colorScheme;
     DonyBottomSheet.show<void>(
       context,
       title: 'Solde insuffisant',
@@ -168,21 +170,21 @@ class _BidDetailViewState extends State<_BidDetailView> {
             'Commission requise : ${state.requiredCommission.toStringAsFixed(2)} €',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: DonyColors.textPrimary),
+            ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
           ),
           const SizedBox(height: 4),
           Text(
             'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: DonyColors.textMuted),
+            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
             'Rechargez votre wallet ou payez la commission directement par carte.',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: DonyColors.textMuted),
+            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),

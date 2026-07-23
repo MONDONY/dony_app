@@ -36,6 +36,7 @@ class WizardPhotoUpload extends StatelessWidget {
   }
 
   Widget _empty(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return InkWell(
       onTap: () => _pick(context),
@@ -57,7 +58,7 @@ class WizardPhotoUpload extends StatelessWidget {
               DonyIcon(
                 'image-plus',
                 size: 28,
-                color: DonyColors.textPrimary.withValues(alpha: 0.7),
+                color: cs.onSurface.withValues(alpha: 0.7),
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
@@ -65,7 +66,7 @@ class WizardPhotoUpload extends StatelessWidget {
                 style: tt.labelLarge?.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: DonyColors.textPrimary,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: 2),
@@ -73,7 +74,7 @@ class WizardPhotoUpload extends StatelessWidget {
                 'Aide les voyageurs à se projeter',
                 style: tt.bodySmall?.copyWith(
                   fontSize: 11,
-                  color: DonyColors.textMuted,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],
@@ -84,6 +85,7 @@ class WizardPhotoUpload extends StatelessWidget {
   }
 
   Widget _preview(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         ClipRRect(
@@ -101,7 +103,7 @@ class WizardPhotoUpload extends StatelessWidget {
             'Photo ajoutée',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: DonyColors.textPrimary,
+                  color: cs.onSurface,
                 ),
           ),
         ),

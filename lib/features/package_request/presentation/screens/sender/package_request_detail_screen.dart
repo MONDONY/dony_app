@@ -474,7 +474,7 @@ class _OfferTile extends StatelessWidget {
           border: Border.all(
             color: isPrimary
                 ? cs.primary.withValues(alpha: 0.25)
-                : DonyColors.neutral200,
+                : cs.outline,
           ),
         ),
         child: Row(
@@ -520,7 +520,7 @@ class _OfferTile extends StatelessWidget {
                   Text(
                     date,
                     style: tt.bodySmall?.copyWith(
-                      color: DonyColors.textMuted,
+                      color: cs.onSurfaceVariant,
                       fontSize: 11,
                     ),
                   ),
@@ -724,7 +724,7 @@ class _CandidateCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: DonyColors.neutral200),
+          border: Border.all(color: cs.outline),
         ),
         child: Row(
           children: [
@@ -774,7 +774,7 @@ class _CandidateCard extends StatelessWidget {
                   Text(
                     date,
                     style: tt.bodySmall?.copyWith(
-                      color: DonyColors.textMuted,
+                      color: cs.onSurfaceVariant,
                       fontSize: 11,
                     ),
                   ),
@@ -924,9 +924,9 @@ class _SheetFrame extends StatelessWidget {
 
     return Container(
       height: mq.size.height * 0.92,
-      decoration: const BoxDecoration(
-        color: DonyColors.sand100,
-        borderRadius: BorderRadius.vertical(
+      decoration: BoxDecoration(
+        color: cs.surfaceWarm,
+        borderRadius: const BorderRadius.vertical(
           top: Radius.circular(DonyRadius.sheet),
         ),
       ),
@@ -966,7 +966,7 @@ class _SheetFrame extends StatelessWidget {
               ],
             ),
           ),
-          Divider(height: DonySpacing.base, color: DonyColors.neutral200),
+          Divider(height: DonySpacing.base, color: cs.outline),
           // Contenu scrollable
           Expanded(
             child: SingleChildScrollView(
@@ -986,9 +986,9 @@ class _SheetFrame extends StatelessWidget {
               if (config == null) return SizedBox(height: bottomInset);
               return Container(
                 decoration: BoxDecoration(
-                  color: DonyColors.sand100,
-                  border: const Border(
-                    top: BorderSide(color: DonyColors.neutral200),
+                  color: cs.surfaceWarm,
+                  border: Border(
+                    top: BorderSide(color: cs.outline),
                   ),
                 ),
                 padding: EdgeInsets.fromLTRB(

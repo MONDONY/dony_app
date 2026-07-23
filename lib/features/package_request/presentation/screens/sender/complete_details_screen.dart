@@ -325,7 +325,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
         fontSize: 12,
         fontWeight: FontWeight.w700,
-        color: kTextSecondary,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
         letterSpacing: 1.2,
       ),
     ),
@@ -393,7 +393,7 @@ class _RecapCard extends StatelessWidget {
                 style: tt.bodyMedium!.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: kTextSecondary,
+                  color: cs.onSurfaceVariant,
                   letterSpacing: 1.2,
                 ),
               ),
@@ -411,7 +411,7 @@ class _RecapCard extends StatelessWidget {
                     child: Text(
                       r.$1,
                       style: tt.bodySmall?.copyWith(
-                        color: kTextSecondary,
+                        color: cs.onSurfaceVariant,
                         fontSize: 13,
                       ),
                     ),
@@ -421,7 +421,7 @@ class _RecapCard extends StatelessWidget {
                     child: Text(
                       r.$2,
                       style: tt.bodyMedium?.copyWith(
-                        color: kTextPrimary,
+                        color: cs.onSurface,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),

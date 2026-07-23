@@ -60,6 +60,7 @@ class ThreadStateCtaBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return BlocListener<NegotiationBloc, NegotiationState>(
       listenWhen: (previous, current) =>
           current is NegotiationNudgeSent || current is NegotiationNudgeError,
@@ -82,8 +83,8 @@ class ThreadStateCtaBar extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: DonyColors.sand100,
-          border: Border(top: BorderSide(color: DonyColors.neutral200)),
+          color: cs.surfaceWarm,
+          border: Border(top: BorderSide(color: cs.outline)),
         ),
         child: SafeArea(
           top: false,
@@ -110,6 +111,7 @@ class ThreadStateCtaBar extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     switch (thread.status) {
       case NegotiationThreadStatus.open:
         if (_lastFromMe) {
@@ -223,7 +225,7 @@ class ThreadStateCtaBar extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: DonyColors.textSubtle,
+              color: cs.onSurfaceVariant,
             ),
           ),
         );

@@ -415,7 +415,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: kTextSecondary,
+                      color: cs.onSurfaceVariant,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -438,7 +438,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 14,
-                              color: kTextSecondary,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -509,7 +509,7 @@ class _AvailablePaymentMethodsPreview extends StatelessWidget {
           style: tt.bodyMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: kTextSecondary,
+            color: cs.onSurfaceVariant,
             letterSpacing: 0.5,
           ),
         ),
@@ -563,6 +563,7 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -576,7 +577,7 @@ class _ErrorView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
-                color: kTextSecondary,
+                color: cs.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: DonySpacing.base),
