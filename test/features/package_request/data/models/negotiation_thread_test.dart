@@ -31,7 +31,9 @@ Map<String, dynamic> _baseJson({
     ],
     'paymentIntentClientSecret': null,
   };
-  if (overrides != null) base.addAll(overrides);
+  if (overrides != null) {
+    base.addAll(overrides);
+  }
   return base;
 }
 
@@ -173,6 +175,29 @@ void main() {
     final t1 = NegotiationThread.fromJson(_baseJson());
     final t2 = NegotiationThread.fromJson(_baseJson(overrides: {
       'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
+    }));
+    expect(t1, isNot(equals(t2)));
+  });
+
+  test('parse availablePaymentMethods depuis le JSON', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['STRIPE', 'CASH'],
+    }));
+    expect(
+      t.availablePaymentMethods,
+      {PaymentMethod.stripe, PaymentMethod.cash},
+    );
+  });
+
+  test('availablePaymentMethods null quand absent', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.availablePaymentMethods, isNull);
+  });
+
+  test('availablePaymentMethods participates in props/equality', () {
+    final t1 = NegotiationThread.fromJson(_baseJson());
+    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {
+      'availablePaymentMethods': ['STRIPE'],
     }));
     expect(t1, isNot(equals(t2)));
   });

@@ -56,6 +56,7 @@ class NegotiationThread extends Equatable {
     this.materializedBidId,
     this.senderPhotoUrl,
     this.cashCommissionAvailable = true,
+    this.availablePaymentMethods,
   });
 
   final String id;
@@ -105,6 +106,10 @@ class NegotiationThread extends Equatable {
   /// (solde wallet suffisant OU carte de commission enregistrée).
   final bool cashCommissionAvailable;
 
+  /// Moyens de paiement disponibles pour ce thread, calculés côté serveur
+  /// une fois le trajet lié (null avant le trip-linking).
+  final Set<PaymentMethod>? availablePaymentMethods;
+
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
@@ -147,6 +152,11 @@ class NegotiationThread extends Equatable {
         materializedBidId: json['materializedBidId'] as String?,
         senderPhotoUrl: json['senderPhotoUrl'] as String?,
         cashCommissionAvailable: json['cashCommissionAvailable'] as bool? ?? true,
+        availablePaymentMethods: json['availablePaymentMethods'] != null
+            ? (json['availablePaymentMethods'] as List<dynamic>)
+                .map((e) => PaymentMethod.fromWire(e as String))
+                .toSet()
+            : null,
       );
 
   @override
@@ -159,5 +169,6 @@ class NegotiationThread extends Equatable {
         departureCity, arrivalCity, weightKg, senderName,
         isMyTurn, canAccept, canCounter, roundsRemaining,
         linkedTrip, materializedBidId, senderPhotoUrl, cashCommissionAvailable,
+        availablePaymentMethods,
       ];
 }
