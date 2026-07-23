@@ -55,6 +55,10 @@ abstract final class AnalyticsEvents {
   static const negotiationOfferMade = 'negotiation_offer_made';
   static const negotiationOfferAccepted = 'negotiation_offer_accepted';
 
+  /// Négociation terminée par l'une des parties ("end negotiation").
+  /// Terminal, comme un rejet. Pas de propriétés (aucune PII).
+  static const negotiationCancelled = 'negotiation_cancelled';
+
   /// Relance (nudge) envoyée par une partie à l'autre sur un thread de
   /// négociation. Pas de propriétés (aucune PII).
   static const negotiationNudgeSent = 'negotiation_nudge_sent';

@@ -96,6 +96,17 @@ class NegotiationRejectRequested extends NegotiationEvent {
   List<Object?> get props => [threadId, reason];
 }
 
+/// Either party ends the negotiation thread ("end negotiation"). Terminal,
+/// mirrors [NegotiationRejectRequested].
+class NegotiationCancelRequested extends NegotiationEvent {
+  const NegotiationCancelRequested({required this.threadId, this.reason});
+  final String threadId;
+  final String? reason;
+
+  @override
+  List<Object?> get props => [threadId, reason];
+}
+
 /// Traveler links a trip (existing announcement) to an AWAITING_TRIP thread.
 class NegotiationSubmitTripRequested extends NegotiationEvent {
   const NegotiationSubmitTripRequested({
@@ -259,6 +270,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationCounterRequested>(_onCounter);
     on<NegotiationAcceptRequested>(_onAccept);
     on<NegotiationRejectRequested>(_onReject);
+    on<NegotiationCancelRequested>(_onCancel);
     on<NegotiationSubmitTripRequested>(_onSubmitTrip);
     on<NegotiationCreateDedicatedTripRequested>(_onCreateDedicatedTrip);
     on<NegotiationCheckoutRequested>(_onCheckout);
@@ -408,6 +420,25 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     }
     try {
       await _repository.reject(e.threadId, reason: e.reason);
+      emit(NegotiationRejected(e.threadId));
+    } catch (err) {
+      emit(NegotiationError(unwrapDioError(err)));
+    }
+  }
+
+  Future<void> _onCancel(
+    NegotiationCancelRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      await _repository.cancel(e.threadId, reason: e.reason);
+      unawaited(_analytics.logEvent(AnalyticsEvents.negotiationCancelled));
       emit(NegotiationRejected(e.threadId));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));

@@ -216,6 +216,7 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.rejected:
       case NegotiationThreadStatus.autoRejected:
       case NegotiationThreadStatus.expired:
+      case NegotiationThreadStatus.cancelled:
         return Center(
           child: Text(
             'Cette négociation est terminée',

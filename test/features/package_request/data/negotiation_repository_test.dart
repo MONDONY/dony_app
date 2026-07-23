@@ -149,6 +149,40 @@ void main() {
     });
   });
 
+  group('cancel', () {
+    test('POSTs to /negotiations/:id/cancel', () async {
+      when(
+        () => mockDio.post<void>(
+          '/negotiations/th-1/cancel',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/negotiations/th-1/cancel'),
+        ),
+      );
+
+      await expectLater(repo.cancel('th-1', reason: 'Changed my mind'), completes);
+    });
+
+    test('POSTs with no data when reason is null', () async {
+      when(
+        () => mockDio.post<void>(
+          '/negotiations/th-1/cancel',
+          data: null,
+        ),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/negotiations/th-1/cancel'),
+        ),
+      );
+
+      await expectLater(repo.cancel('th-1'), completes);
+    });
+  });
+
   group('getById', () {
     test('GETs /negotiations/:id and returns NegotiationThread', () async {
       when(

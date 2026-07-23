@@ -175,6 +175,48 @@ void main() {
     });
   });
 
+  // ── negotiation_cancelled ────────────────────────────────────────────────────
+
+  group('negotiation_cancelled', () {
+    test('fires on cancel success', () async {
+      when(() => repo.cancel('t-1', reason: any(named: 'reason')))
+          .thenAnswer((_) async {});
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationCancelRequested(threadId: 't-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationRejected);
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => backend.capture(AnalyticsEvents.negotiationCancelled, any()))
+          .called(1);
+    });
+
+    test('does not fire on cancel failure', () async {
+      when(() => repo.cancel('t-1', reason: any(named: 'reason')))
+          .thenThrow(Exception('server error'));
+
+      final bloc = makeBloc();
+      bloc.add(const NegotiationCancelRequested(threadId: 't-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationError);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(
+          () => backend.capture(AnalyticsEvents.negotiationCancelled, any()));
+    });
+
+    test('does not fire when analytics disabled', () async {
+      when(() => repo.cancel('t-1', reason: any(named: 'reason')))
+          .thenAnswer((_) async {});
+
+      final bloc = makeBloc(enabled: false);
+      bloc.add(const NegotiationCancelRequested(threadId: 't-1'));
+      await bloc.stream.firstWhere((s) => s is NegotiationRejected);
+      await Future<void>.delayed(Duration.zero);
+
+      verifyNever(() => backend.capture(any(), any()));
+    });
+  });
+
   // ── payment_method_selected no longer fires at trip-linking ─────────────────
   //
   // The traveler no longer picks a real payment method at trip-linking (the

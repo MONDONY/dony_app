@@ -104,6 +104,13 @@ void main() {
     expect(t.status, NegotiationThreadStatus.rejected);
   });
 
+  test('NegotiationThread.fromJson parse le statut CANCELLED correctement', () {
+    final t = NegotiationThread.fromJson(
+      _baseJson(overrides: {'status': 'CANCELLED'}),
+    );
+    expect(t.status, NegotiationThreadStatus.cancelled);
+  });
+
   test('fromJson parses grossPriceEur + paymentMethod', () {
     final t = NegotiationThread.fromJson(_baseJson(overrides: {
       'status': 'AWAITING_PAYMENT',

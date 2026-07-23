@@ -321,6 +321,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `package_request_searched` | PackageRequestSearchBloc |
 | `negotiation_offer_made` | NegotiationBloc._onStart()/_onCounter() |
 | `negotiation_offer_accepted` | NegotiationBloc._onAccept() |
+| `negotiation_cancelled` | NegotiationBloc._onCancel() — l'une des parties met fin à la négociation |
 | `negotiation_nudge_sent` | NegotiationBloc._onNudge() — relance envoyée |
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |

@@ -138,6 +138,39 @@ void main() {
   );
 
   blocTest<NegotiationBloc, NegotiationState>(
+    'cancel emits Rejected after success',
+    build: () {
+      when(() => repo.cancel(any(), reason: any(named: 'reason')))
+          .thenAnswer((_) async {});
+      return _makeBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread()),
+    act: (bloc) => bloc.add(const NegotiationCancelRequested(
+        threadId: 't-1', reason: 'changed my mind')),
+    expect: () => [
+      isA<NegotiationActionInProgress>(),
+      isA<NegotiationRejected>().having((s) => s.threadId, 'threadId', 't-1'),
+    ],
+    verify: (_) => verify(
+        () => repo.cancel('t-1', reason: 'changed my mind')).called(1),
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'cancel throws emits Error',
+    build: () {
+      when(() => repo.cancel(any(), reason: any(named: 'reason')))
+          .thenThrow(Exception('server error'));
+      return _makeBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread()),
+    act: (bloc) => bloc.add(const NegotiationCancelRequested(threadId: 't-1')),
+    expect: () => [
+      isA<NegotiationActionInProgress>(),
+      isA<NegotiationError>(),
+    ],
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
     'counter throws emits Error',
     build: () {
       when(() => repo.counter(any(),

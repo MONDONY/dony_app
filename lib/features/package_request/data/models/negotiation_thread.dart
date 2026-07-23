@@ -10,7 +10,8 @@ enum NegotiationThreadStatus {
   accepted('ACCEPTED'),
   rejected('REJECTED'),
   autoRejected('AUTO_REJECTED'),
-  expired('EXPIRED');
+  expired('EXPIRED'),
+  cancelled('CANCELLED');
 
   final String wireName;
   const NegotiationThreadStatus(this.wireName);

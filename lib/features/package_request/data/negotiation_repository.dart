@@ -72,6 +72,14 @@ class NegotiationRepository {
     );
   }
 
+  /// Ends the negotiation thread (either party). Terminal, mirrors [reject].
+  Future<void> cancel(String id, {String? reason}) async {
+    await _apiClient.dio.post<void>(
+      '/negotiations/$id/cancel',
+      data: reason == null ? null : {'reason': reason},
+    );
+  }
+
   /// Traveler links a trip (existing announcement) to an AWAITING_TRIP thread.
   /// Backend validates corridor + date window match the request.
   /// Thread moves to AWAITING_PAYMENT.
