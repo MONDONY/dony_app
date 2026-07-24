@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<!-- ATS : autorise le HTTP en clair vers le réseau LOCAL uniquement
+		     (backend dev sur 192.168.x / .local). N'affaiblit pas l'ATS pour les
+		     hôtes publics → la prod en https reste protégée. -->
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsLocalNetworking</key>
+			<true/>
+		</dict>
 		<key>GMSApiKey</key>
 		<string>$(GOOGLE_MAPS_API_KEY)</string>
 		<!-- PostHog : init manuelle en Dart → désactive l'auto-init natif. -->

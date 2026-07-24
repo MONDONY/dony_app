@@ -58,7 +58,6 @@ class AuthDeleteAccountRequested extends AuthEvent {
 class AuthUpdateProfileRequested extends AuthEvent {
   final String? firstName;
   final String? lastName;
-  final String? email;
   final DateTime? birthDate;
   final String? city;
   final String? phoneNumber;
@@ -69,7 +68,6 @@ class AuthUpdateProfileRequested extends AuthEvent {
   const AuthUpdateProfileRequested({
     this.firstName,
     this.lastName,
-    this.email,
     this.birthDate,
     this.city,
     this.phoneNumber,
@@ -82,7 +80,6 @@ class AuthUpdateProfileRequested extends AuthEvent {
   List<Object?> get props => [
     firstName,
     lastName,
-    email,
     birthDate,
     city,
     phoneNumber,

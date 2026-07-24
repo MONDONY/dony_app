@@ -49,7 +49,6 @@ void main() {
     when(() => mockDs.updateProfile(
           firstName: any(named: 'firstName'),
           lastName: any(named: 'lastName'),
-          email: any(named: 'email'),
           birthDate: any(named: 'birthDate'),
           city: any(named: 'city'),
         )).thenAnswer((_) async => _user);
@@ -73,6 +72,17 @@ void main() {
     final token = await repo.verifyEmailOtp('user@example.com', '123456');
     expect(token, 'fake_custom_token');
     verify(() => mockDs.verifyEmailOtp('user@example.com', '123456')).called(1);
+  });
+
+  test('attachEmail delegates to datasource', () async {
+    when(() => mockDs.attachEmail(
+          email: 'user@example.com',
+          code: '123456',
+        )).thenAnswer((_) async => _user);
+
+    final result = await repo.attachEmail(email: 'user@example.com', code: '123456');
+    expect(result.id, 'u1');
+    verify(() => mockDs.attachEmail(email: 'user@example.com', code: '123456')).called(1);
   });
 
   test('registerWithEmail delegates to datasource', () async {

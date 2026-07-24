@@ -148,7 +148,6 @@ void main() {
         () => repo.updateProfile(
           firstName: any(named: 'firstName'),
           lastName: any(named: 'lastName'),
-          email: any(named: 'email'),
           birthDate: any(named: 'birthDate'),
           city: any(named: 'city'),
           phoneNumber: any(named: 'phoneNumber'),
@@ -175,7 +174,6 @@ void main() {
         () => repo.updateProfile(
           firstName: any(named: 'firstName'),
           lastName: any(named: 'lastName'),
-          email: any(named: 'email'),
           birthDate: any(named: 'birthDate'),
           city: any(named: 'city'),
           phoneNumber: any(named: 'phoneNumber'),
@@ -200,7 +198,6 @@ void main() {
         () => repo.updateProfile(
           firstName: any(named: 'firstName'),
           lastName: any(named: 'lastName'),
-          email: any(named: 'email'),
           birthDate: any(named: 'birthDate'),
           city: any(named: 'city'),
           phoneNumber: any(named: 'phoneNumber'),
