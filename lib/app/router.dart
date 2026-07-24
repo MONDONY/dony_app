@@ -471,6 +471,9 @@ final appRouter = GoRouter(
             ? state.extra as CreateTripArgs
             : null;
         return CustomTransitionPage<bool>(
+          // `name` alimente route.settings.name, que PosthogObserver lit pour
+          // le $screen. Sans lui (page custom), cet écran n'était pas tracké.
+          name: '/trips/create',
           child: CreateTripScreen(args: args),
           transitionDuration: const Duration(milliseconds: 300),
           reverseTransitionDuration: const Duration(milliseconds: 250),

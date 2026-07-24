@@ -67,3 +67,10 @@ failures/
 
 # Generated perf reports
 reports/
+
+# Android release signing (secrets — jamais commiter)
+android/key.properties
+*.jks
+*.keystore
+# Dart obfuscation symbols (flutter build --split-debug-info)
+build/debug-info/

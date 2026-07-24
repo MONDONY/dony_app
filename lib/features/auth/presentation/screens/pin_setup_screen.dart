@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/gdpr_helper.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -22,8 +21,12 @@ import 'package:hive/hive.dart';
 /// redemandé — exactement la régression que la persistance backend élimine.
 ///
 /// - Déjà répondu (local ou après sync) → `/auth/referral-code`.
-/// - Pays RGPD, jamais répondu → `/auth/analytics-consent`.
-/// - Pays hors RGPD, jamais répondu → consentement auto-accordé puis `/auth/referral-code`.
+/// - Jamais répondu → `/auth/analytics-consent`, affiché à TOUT nouvel
+///   utilisateur au 1er lancement, quel que soit le pays. Le choix reste
+///   modifiable ensuite dans Réglages › Confidentialité.
+///
+/// [prefs] : conservé pour compat de signature (appelants/tests) ; le pays
+/// n'est plus discriminant depuis qu'on affiche l'écran partout.
 @visibleForTesting
 Future<String> resolvePostPinSetupRoute(
   AnalyticsService analytics,
@@ -33,13 +36,7 @@ Future<String> resolvePostPinSetupRoute(
     await analytics.syncFromBackend();
   }
   if (analytics.isConfigured && !analytics.hasAnswered) {
-    if (GdprHelper.requiresConsent(prefs: prefs)) {
-      // Pays RGPD (UE/EEE/UK/CH) → écran de consentement explicite.
-      return '/auth/analytics-consent';
-    }
-    // Pays hors RGPD (ex: Sénégal, Côte d'Ivoire, Mali, Cameroun)
-    // → consentement auto, pas d'écran intermédiaire.
-    await analytics.setConsent(granted: true, source: 'auto_non_gdpr');
+    return '/auth/analytics-consent';
   }
   return '/auth/referral-code';
 }

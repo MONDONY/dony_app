@@ -1,0 +1,11 @@
+# Copier en `android/key.properties` (gitignoré) pour signer le build release.
+# Générer le keystore une fois :
+#   keytool -genkey -v -keystore ~/dony-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias dony
+#
+# storeFile : chemin ABSOLU vers le .jks (hors repo, ex: ~/dony-release.jks).
+# Ne JAMAIS commiter le keystore ni les mots de passe.
+storePassword=change_me
+keyPassword=change_me
+keyAlias=dony
+storeFile=/absolute/path/to/dony-release.jks

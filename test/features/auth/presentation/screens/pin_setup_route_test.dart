@@ -101,7 +101,7 @@ void main() {
           ));
     });
 
-    test('pays hors RGPD (SN) → consentement auto-accordé puis /auth/referral-code', () async {
+    test('pays hors RGPD (SN) → /auth/analytics-consent aussi (affiché partout au 1er lancement)', () async {
       storedConsent = null;
       detectedCountry = 'SN';
       when(() => remote.fetch()).thenAnswer((_) async => null);
@@ -109,13 +109,15 @@ void main() {
 
       final route = await resolvePostPinSetupRoute(service, box);
 
-      expect(route, '/auth/referral-code');
-      // setConsent(granted: true) pousse au backend avec la source auto.
-      verify(() => remote.push(
-            granted: true,
+      // L'écran de consentement est désormais présenté à tout nouvel
+      // utilisateur, quel que soit le pays. Aucun consentement auto poussé :
+      // c'est l'écran qui recueillera le choix explicite.
+      expect(route, '/auth/analytics-consent');
+      verifyNever(() => remote.push(
+            granted: any(named: 'granted'),
             policyVersion: any(named: 'policyVersion'),
-            source: 'auto_non_gdpr',
-          )).called(1);
+            source: any(named: 'source'),
+          ));
     });
   });
 
