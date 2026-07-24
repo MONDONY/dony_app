@@ -169,6 +169,9 @@ Future<void> main() async {
       options.tracesSampleRate = 0.1;
       options.environment = _environment;
       options.sendDefaultPii = false;
+      // Logs structurés Sentry : alimentés par AppLog (cf. core/services/app_log.dart).
+      // Sans ce flag, tout appel Sentry.logger.* est ignoré côté SDK.
+      options.enableLogs = true;
     },
     appRunner: _bootstrap,
   );

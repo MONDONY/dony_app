@@ -8,6 +8,7 @@ import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 // PEM certificate for production TLS pinning.
 // Populated at build time via --dart-define-from-file=env.prod.json:
@@ -33,6 +34,11 @@ class ApiClient {
 
     _configureCertificatePinning();
     _dio.interceptors.add(_AuthInterceptor(deviceIdService));
+
+    // Piste HTTP dans Sentry (breadcrumbs) — active en tout mode, mais no-op
+    // tant que SENTRY_DSN est absent. On ne pousse QUE méthode + chemin + statut :
+    // jamais les corps ni les en-têtes (tokens Firebase, secrets Stripe, KYC).
+    _dio.interceptors.add(_SentryBreadcrumbInterceptor());
 
     if (kDebugMode) {
       // Log only method/path/status. Bodies and headers contain Firebase
@@ -85,6 +91,47 @@ class ApiClient {
         ..setTrustedCertificatesBytes(const Utf8Encoder().convert(_tlsCertPem));
       return HttpClient(context: context);
     };
+  }
+}
+
+/// Émet un breadcrumb Sentry par réponse/erreur HTTP. PII-free : uniquement
+/// méthode, chemin (sans query string) et code de statut. Ces miettes forment
+/// la piste réseau attachée au prochain incident capturé.
+class _SentryBreadcrumbInterceptor extends Interceptor {
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    _crumb(
+      response.requestOptions,
+      response.statusCode,
+      SentryLevel.info,
+    );
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    final status = err.response?.statusCode;
+    _crumb(
+      err.requestOptions,
+      status,
+      (status != null && status < 500) ? SentryLevel.warning : SentryLevel.error,
+    );
+    handler.next(err);
+  }
+
+  void _crumb(RequestOptions options, int? status, SentryLevel level) {
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        category: 'http',
+        type: 'http',
+        level: level,
+        data: {
+          'method': options.method,
+          'path': options.uri.path,
+          if (status != null) 'status_code': status,
+        },
+      ),
+    );
   }
 }
 

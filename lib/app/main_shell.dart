@@ -5,6 +5,7 @@ import 'package:dony/app/widgets/dony_nav_orb.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -56,6 +57,23 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   StreamSubscription<void>? _fcmSub;
   bool _ratingPromptShown = false;
 
+  /// Nom d'écran PostHog par onglet du shell. Les branches du
+  /// StatefulShellRoute tournent sur leur propre Navigator que le
+  /// PosthogObserver racine ne voit pas : sans ce log manuel, changer d'onglet
+  /// n'émettait aucun $screen. On aligne les noms sur les chemins de route.
+  static const List<String> _tabScreenNames = [
+    '/home',
+    '/announcements',
+    '/tracking',
+    '/messages',
+    '/profile',
+  ];
+
+  void _logTabScreen(int index) {
+    if (index < 0 || index >= _tabScreenNames.length) return;
+    unawaited(getIt<AnalyticsService>().logScreen(_tabScreenNames[index]));
+  }
+
   /// Recharge les compteurs qui allument le point d'attention de l'onglet
   /// Activités : demandes reçues (TravelerBidsBloc) + négociations actives
   /// (NegotiationListBloc). Les notifications non lues, troisième source, sont
@@ -74,6 +92,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   void _onTap(int index) {
     HapticFeedback.selectionClick();
+    _logTabScreen(index);
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
     }
@@ -114,6 +133,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // Alimente le point d'attention de l'onglet Activités dès le démarrage,
       // sans attendre que l'utilisateur ouvre le hub.
       _loadActivityIndicators();
+      // Onglet affiché au montage du shell (aucun tap ne l'a déclenché) : on
+      // émet son $screen manuellement pour ne pas perdre la 1re vue.
+      _logTabScreen(widget.navigationShell.currentIndex);
       _fcmSub = getIt<NotificationService>().newNotificationStream.listen((_) {
         if (mounted) {
           context.read<NotificationBloc>().add(

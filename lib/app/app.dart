@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -87,7 +88,9 @@ class _DonyAppState extends State<DonyApp> {
     _deepLinkSub = _appLinks.uriLinkStream.listen(
       _handleDeepLink,
       onError: (Object error, StackTrace stack) {
-        // log if Sentry is available, otherwise ignore to keep subscription alive
+        // On log dans Sentry sans laisser l'erreur tuer l'abonnement (sinon
+        // les deep links suivants ne seraient plus reçus).
+        AppLog.error('Deep link stream error', error: error, stackTrace: stack);
       },
     );
   }
