@@ -47,7 +47,7 @@ void main() {
 
     testWidgets('shows both tab options', (tester) async {
       await _pump(tester);
-      expect(find.text('Scanner le QR'), findsOneWidget);
+      expect(find.text('Lire le QR'), findsOneWidget);
       expect(find.text('Taper le code'), findsOneWidget);
     });
 
@@ -103,10 +103,10 @@ void main() {
 
     testWidgets('switching to QR tab hides code input', (tester) async {
       await _pump(tester);
-      await tester.tap(find.text('Scanner le QR'));
+      await tester.tap(find.text('Lire le QR'));
       await tester.pump();
       expect(find.text('OPTION 2 · CODE'), findsNothing);
-      expect(find.text('Scanner le QR code'), findsOneWidget);
+      expect(find.text('Lire le QR code'), findsOneWidget);
     });
 
     testWidgets('legal note mentions traveler name', (tester) async {

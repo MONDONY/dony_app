@@ -227,14 +227,14 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
+            'Solde du portefeuille : ${state.availableBalance.toStringAsFixed(2)} €',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
-            'Rechargez votre wallet ou payez la commission directement par carte.',
+            'Rechargez votre portefeuille ou payez la commission directement par carte.',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -245,7 +245,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Recharger mon wallet',
+            label: 'Recharger mon portefeuille',
             onPressed: () async {
               context.pop();
               final recharged = await context.push<bool>(

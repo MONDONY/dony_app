@@ -50,7 +50,7 @@ class AcceptOfferBottomSheet {
 
     await DonyBottomSheet.show<void>(
       context,
-      title: isCheckout ? 'Payer en escrow' : 'Accepter l\'offre',
+      title: isCheckout ? 'Payer en toute sécurité' : 'Accepter l\'offre',
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: processing,
@@ -125,7 +125,7 @@ class AcceptOfferBottomSheet {
                                     mascotteType: DonyMascotteType.securise,
                                     title: 'Offre acceptée et payée !',
                                     subtitle:
-                                        'Ton argent est bloqué en escrow sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
+                                        'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
                                     ctaLabel: 'Voir le suivi',
                                     onCta: () => routeContext
                                         .go('/negotiations/$threadId'),
@@ -229,7 +229,7 @@ class AcceptOfferBottomSheet {
               Text(
                 isTraveler
                     ? 'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras ${PriceDisplay.eur(displayPrice)} à la livraison validée.'
-                    : 'En confirmant, le paiement est mis en escrow. Le voyageur reçoit le montant à la livraison validée.',
+                    : 'En confirmant, le paiement est bloqué et sécurisé. Le voyageur reçoit le montant à la livraison validée.',
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,

@@ -194,7 +194,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                             size: 36, color: cs.onPrimary),
                         const SizedBox(height: DonySpacing.sm),
                         Text(
-                          'Ouvrir le scanner QR',
+                          'Ouvrir le lecteur QR',
                           style: tt.titleMedium?.copyWith(
                             color: cs.onPrimary,
                             fontWeight: FontWeight.w800,

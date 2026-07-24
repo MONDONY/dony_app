@@ -34,7 +34,7 @@ enum DonyMascotteType {
         donneColis  => 'Mascotte donnant un colis',
         enCourse    => 'Colis en transit',
         assis       => 'Mascotte assise',
-        scan        => 'Mascotte scannant',
+        scan        => 'Mascotte lisant un QR',
       };
 }
 

@@ -103,7 +103,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                 ),
                 const SizedBox(height: DonySpacing.base),
                 Text(
-                  'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %, min. 1 €) à chaque bid cash accepté.',
+                  'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %, min. 1 €) à chaque colis en espèces accepté.',
                   style: Theme.of(ctx).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: DonySpacing.xl),
@@ -206,7 +206,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
       child: const Padding(
         padding: EdgeInsets.all(DonySpacing.xl),
         child: Text(
-          'Supprimer cette carte ? Vous ne pourrez plus accepter de bids cash tant que vous n\'aurez pas enregistré une nouvelle carte.',
+          'Supprimer cette carte ? Vous ne pourrez plus accepter de colis en espèces tant que vous n\'aurez pas enregistré une nouvelle carte.',
         ),
       ),
     );

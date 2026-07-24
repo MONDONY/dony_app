@@ -14,7 +14,7 @@ class EscrowBlockDialog extends StatelessWidget {
         style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
       content: Text(
-        'Vous avez un paiement en cours (escrow). La suppression sera possible une fois la livraison confirmée.',
+        'Vous avez un paiement en cours (fonds bloqués). La suppression sera possible une fois la livraison confirmée.',
         style: tt.bodyMedium,
       ),
       actions: [

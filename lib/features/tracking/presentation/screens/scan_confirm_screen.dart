@@ -107,7 +107,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
-            title: Text('Confirmer le scan', style: tt.headlineLarge),
+            title: Text('Confirmer la lecture', style: tt.headlineLarge),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
               child: Divider(height: 1, color: cs.outline),
@@ -282,7 +282,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
 
                 // Bouton principal
                 DonyButton(
-                  label: _isArrivee ? 'Confirmer la livraison' : 'Valider le scan',
+                  label: _isArrivee ? 'Confirmer la livraison' : 'Valider la lecture',
                   iconAsset: _isArrivee ? 'badge-check' : 'check',
                   onPressed: isSubmitting ? null : () => _submit(context),
                   isLoading: isSubmitting,
@@ -340,7 +340,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Scan enregistré !',
+              'Lecture enregistrée !',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -424,12 +424,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Scan en attente',
+              'Lecture en attente',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Pas de connexion. Le scan sera synchronisé dès que vous serez en ligne.',
+              'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant,

@@ -152,7 +152,7 @@ void main() {
     when(() => cubit.state).thenReturn(loadedState());
     await tester.pumpWidget(_wrap(cubit));
     await tester.pumpAndSettle();
-    expect(find.text('Scan & Suivi'), findsOneWidget);
+    expect(find.text('Lecture & Suivi'), findsOneWidget);
     expect(find.text('Départ'), findsOneWidget);
     expect(find.text('Transit'), findsOneWidget);
     expect(find.text('Arrivée'), findsOneWidget);
@@ -170,7 +170,7 @@ void main() {
     when(() => cubit.state).thenReturn(const ScanHubEmpty());
     await tester.pumpWidget(_wrap(cubit));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Aucun trajet à scanner'), findsOneWidget);
+    expect(find.text('Aucun trajet à traiter'), findsOneWidget);
   });
 
   testWidgets('affiche loading quand ScanHubLoading', (tester) async {
@@ -295,7 +295,7 @@ void main() {
       when(() => cubit.state).thenReturn(loadedState());
       await tester.pumpWidget(_wrap(cubit));
       await tester.pumpAndSettle();
-      expect(find.text('Aucun scan pour l\'instant'), findsOneWidget);
+      expect(find.text('Aucune lecture pour l\'instant'), findsOneWidget);
     });
   });
 

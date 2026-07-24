@@ -227,7 +227,7 @@ class _ContactChips extends StatelessWidget {
           ),
         if (isKycVerified)
           const _Chip(
-            label: 'KYC ✓',
+            label: 'Identité ✓',
             iconAsset: 'shield-check',
             bg: DonyColors.blue50,
             fg: DonyColors.blue700,

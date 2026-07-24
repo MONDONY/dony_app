@@ -115,7 +115,7 @@ class _ConsentPoints extends StatelessWidget {
     final points = [
       ('📊', 'Écrans visités et fonctionnalités utilisées'),
       ('👆', 'Gestes pour repérer ce qui bloque'),
-      ('🔒', 'Jamais tes paiements, KYC ou numéro'),
+      ('🔒', 'Jamais tes paiements, identité ou numéro'),
       ('↩️', 'Modifiable à tout moment dans Réglages'),
     ];
 

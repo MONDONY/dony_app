@@ -138,7 +138,7 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Préférences',
-                    subtitle: 'kg/lbs, devise, rayon de pickup',
+                    subtitle: 'kg/lbs, devise, rayon de collecte',
                     onTap: () => context.push('/settings/preferences'),
                   ),
                   DonyListTile(

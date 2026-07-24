@@ -324,7 +324,7 @@ void main() {
         for (final label in [
           'Mon portefeuille',
           'Recevoir mes paiements',
-          'Carte commission cash',
+          'Carte commission espèces',
           'Ma grille de prix',
         ]) {
           await _scrollTo(tester, find.text(label));

@@ -118,7 +118,7 @@ void main() {
 
   testWidgets('ACCEPTED confirmé → Scanner le colis', (tester) async {
     await _pump(tester, _bid(status: 'ACCEPTED', voyageurConfirmed: true));
-    expect(find.text('Scanner le colis'), findsOneWidget);
+    expect(find.text('Lire le QR du colis'), findsOneWidget);
   });
 
   testWidgets('ACCEPTED non confirmé → Confirmer ma présence', (tester) async {
@@ -135,7 +135,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'));
-    expect(find.text('Scanner le transit'), findsOneWidget);
+    expect(find.text('Lire le QR de transit'), findsOneWidget);
     // « Valider la remise » n'apparaît qu'une fois le transit scanné (IN_TRANSIT).
     expect(find.text('Valider la remise'), findsNothing);
   });
@@ -147,7 +147,7 @@ void main() {
 
   testWidgets('COMPLETED → barre vide (SizedBox)', (tester) async {
     await _pump(tester, _bid(status: 'COMPLETED'));
-    expect(find.text('Scanner le colis'), findsNothing);
+    expect(find.text('Lire le QR du colis'), findsNothing);
     expect(find.text('Valider la remise'), findsNothing);
     expect(find.text('Accepter'), findsNothing);
     expect(find.text('Supprimer cette demande'), findsNothing);
@@ -163,7 +163,7 @@ void main() {
         windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
       ),
     );
-    expect(find.text('Scanner le colis'), findsNothing);
+    expect(find.text('Lire le QR du colis'), findsNothing);
     expect(find.text('Confirmer ma présence'), findsNothing);
   });
 
@@ -171,7 +171,7 @@ void main() {
     await _pump(tester, _bid(status: 'CANCELLED'));
     expect(find.text('Accepter'), findsNothing);
     expect(find.text('Annuler'), findsNothing);
-    expect(find.text('Scanner le colis'), findsNothing);
+    expect(find.text('Lire le QR du colis'), findsNothing);
     expect(find.text('Valider la remise'), findsNothing);
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
@@ -247,7 +247,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // « Scanner le colis » redirige vers l'étape Départ du hub de scan.
-    await tester.tap(find.text('Scanner le colis'));
+    await tester.tap(find.text('Lire le QR du colis'));
     await tester.pumpAndSettle();
     expect(pushedRoutes, contains('/tracking/scan/identify'));
   });

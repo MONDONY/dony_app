@@ -140,7 +140,7 @@ void main() {
 
         // Trust banner contains the escrow message
         expect(
-          find.textContaining('Sécurisé · bloqué en escrow'),
+          find.textContaining('Sécurisé · bloqué jusqu'),
           findsOneWidget,
         );
         expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'lock'), findsOneWidget);
@@ -162,7 +162,7 @@ void main() {
         );
 
         // Line 1: cash handover amount
-        expect(find.text('À remettre au voyageur (cash)'), findsOneWidget);
+        expect(find.text('À remettre au voyageur (en espèces)'), findsOneWidget);
         expect(find.text('39,20 €'), findsOneWidget);
 
         // Line 2: fee note (traveler covers fees)

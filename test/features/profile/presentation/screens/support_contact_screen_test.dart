@@ -192,7 +192,7 @@ void main() {
     // All dropdown items should be in the tree when opened
     for (final cat in [
       'Paiement',
-      'KYC / vérification',
+      'Vérification d\'identité',
       'Livraison',
       'Litige',
       'Bug technique',

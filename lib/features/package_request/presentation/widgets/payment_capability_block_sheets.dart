@@ -116,7 +116,7 @@ Future<void> showCashInsufficientSheet(
         ),
         const SizedBox(height: 4),
         Text(
-          'Solde wallet : ${balance.toStringAsFixed(2)} €',
+          'Solde du portefeuille : ${balance.toStringAsFixed(2)} €',
           style: Theme.of(context)
               .textTheme
               .bodySmall
@@ -124,7 +124,7 @@ Future<void> showCashInsufficientSheet(
         ),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'Recharge ton wallet, ou accepte que la commission soit prélevée sur '
+          'Recharge ton portefeuille, ou accepte que la commission soit prélevée sur '
           'ta carte à la remise du colis.',
           style: Theme.of(context)
               .textTheme
@@ -137,7 +137,7 @@ Future<void> showCashInsufficientSheet(
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Recharger mon wallet',
+          label: 'Recharger mon portefeuille',
           onPressed: () async {
             Navigator.of(context, rootNavigator: true).pop();
             final recharged =

@@ -34,8 +34,8 @@ class TalonTravelerActionView extends StatelessWidget {
       DonyButtonVariant variant,
     ) = switch (action) {
       TalonTravelerAction.scan => (
-        'Scanner le colis',
-        "À la remise, scannez le QR de l'expéditeur.",
+        'Lire le QR du colis',
+        "À la remise, lisez le QR de l'expéditeur.",
         'scan-line',
         DonyButtonVariant.primary,
       ),

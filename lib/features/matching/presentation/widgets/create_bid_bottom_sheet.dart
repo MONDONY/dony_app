@@ -1287,7 +1287,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               mascotteType: DonyMascotteType.securise,
               title: 'Offre payée !',
               subtitle:
-                  'Ton paiement est bloqué en escrow sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
+                  'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
               ctaLabel: 'Voir mon envoi',
               onCta: () =>
                   routeContext.go('/bids/${state.bidId}?from=payment'),

@@ -118,7 +118,7 @@ class DonyNavOrb extends StatelessWidget {
                 'scan-line',
                 size: size * 0.42,
                 color: Colors.white,
-                semanticLabel: 'Scanner',
+                semanticLabel: 'Lecteur QR',
               ),
             ],
           ),

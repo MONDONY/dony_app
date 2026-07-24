@@ -58,7 +58,7 @@ class PaymentRecapBottomSheet {
 
     await DonyBottomSheet.show<void>(
       context,
-      title: isCash ? 'Confirmer l\'accord' : 'Payer en escrow',
+      title: isCash ? 'Confirmer l\'accord' : 'Payer en toute sécurité',
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: processing,
@@ -112,7 +112,7 @@ class PaymentRecapBottomSheet {
                             ),
                             contextLabel: isCash
                                 ? 'Confirmation de l\'accord'
-                                : 'Paiement en escrow',
+                                : 'Paiement sécurisé',
                             onSuccess: () {
                               bloc.add(NegotiationCheckoutRequested(
                                 threadId: thread.id,
@@ -126,7 +126,7 @@ class PaymentRecapBottomSheet {
                                     mascotteType: DonyMascotteType.securise,
                                     title: 'Offre acceptée et payée !',
                                     subtitle:
-                                        'Ton argent est bloqué en escrow sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
+                                        'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
                                     ctaLabel: 'Voir le suivi',
                                     onCta: () => routeContext
                                         .go('/negotiations/${thread.id}'),
@@ -246,7 +246,7 @@ class PaymentRecapContent extends StatelessWidget {
             children: isCash
                 ? [
                     _FeeRow(
-                      label: 'À remettre au voyageur (cash)',
+                      label: 'À remettre au voyageur (en espèces)',
                       amount: PriceDisplay.eur(gross),
                       isTotal: false,
                     ),
@@ -290,8 +290,8 @@ class PaymentRecapContent extends StatelessWidget {
         // Explanatory note
         Text(
           isCash
-              ? 'Remettez le montant total en cash au voyageur lors de la remise du colis. Le voyageur déduira ses frais dony de ce montant.'
-              : 'Le montant est bloqué en escrow sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.',
+              ? 'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais dony de ce montant.'
+              : 'Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.',
           style: tt.bodySmall?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
@@ -336,7 +336,7 @@ class _TrustBanner extends StatelessWidget {
             child: Text(
               isCash
                   ? 'Paiement en main propre à la remise'
-                  : 'Sécurisé · bloqué en escrow jusqu\'à la livraison',
+                  : 'Sécurisé · bloqué jusqu\'à la livraison',
               style: tt.bodySmall?.copyWith(
                 color: iconColor,
                 fontWeight: FontWeight.w600,

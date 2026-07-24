@@ -29,7 +29,7 @@ class OfflineQueueBottomSheet extends StatelessWidget {
     final trackingBloc = context.read<TrackingBloc>();
     return DonyBottomSheet.show(
       context,
-      title: '${items.length} scan${items.length > 1 ? 's' : ''} hors-ligne',
+      title: '${items.length} lecture${items.length > 1 ? 's' : ''} hors-ligne',
       subtitle: 'En attente de synchronisation',
       wrapper: (child) => BlocProvider.value(value: trackingBloc, child: child),
       stickyBottom: DonyButton(

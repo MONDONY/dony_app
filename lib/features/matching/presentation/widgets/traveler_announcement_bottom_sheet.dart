@@ -434,7 +434,7 @@ class _KycVerifiedBadge extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.xxs),
           Text(
-            'KYC',
+            'Identité',
             style: tt.labelSmall?.copyWith(
               color: cs.success,
               fontWeight: FontWeight.w600,

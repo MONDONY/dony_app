@@ -35,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Paiement en cours'), findsOneWidget);
-    expect(find.textContaining('escrow'), findsOneWidget);
+    expect(find.textContaining('fonds bloqués'), findsOneWidget);
   });
 
   testWidgets('Fermer button closes the dialog', (tester) async {

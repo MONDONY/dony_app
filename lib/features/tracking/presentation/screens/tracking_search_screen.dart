@@ -84,7 +84,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                           ),
                           child: SecondaryActivityEntry(
                             iconAsset: 'scan-line',
-                            label: 'Scanner un trajet',
+                            label: 'Lire le QR d\'un trajet',
                             onTap: widget.onScanTrip!,
                           ),
                         ),

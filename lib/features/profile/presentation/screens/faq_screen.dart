@@ -12,12 +12,12 @@ class FaqScreen extends StatelessWidget {
   // courant chargé depuis le backend (donyCommissionPercentLabel).
   static final _sections = <_FaqSectionData>[
     const _FaqSectionData(
-      title: 'Compte & KYC',
+      title: 'Compte & identité',
       iconAsset: 'shield-check',
       items: [
         _FaqItem(
-          q: 'Pourquoi la vérification KYC est-elle obligatoire ?',
-          a: 'La vérification KYC (Know Your Customer) est requise par la réglementation financière européenne. Elle nous permet de lutter contre la fraude et de protéger tous les utilisateurs de dony.',
+          q: 'Pourquoi la vérification d\'identité est-elle obligatoire ?',
+          a: 'La vérification d\'identité est exigée par la réglementation financière européenne. Elle nous permet de lutter contre la fraude et de protéger tous les utilisateurs de dony.',
         ),
         _FaqItem(
           q: 'Combien de temps prend la validation ?',
@@ -28,8 +28,8 @@ class FaqScreen extends StatelessWidget {
           a: "Carte nationale d'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.",
         ),
         _FaqItem(
-          q: 'Puis-je utiliser dony sans KYC ?',
-          a: 'Tu peux explorer les annonces sans KYC, mais tu ne peux pas envoyer ni transporter de colis. Le KYC est indispensable pour effectuer des transactions.',
+          q: 'Puis-je utiliser dony sans vérifier mon identité ?',
+          a: 'Tu peux explorer les annonces sans vérifier ton identité, mais tu ne peux pas envoyer ni transporter de colis. La vérification d\'identité est indispensable pour effectuer des transactions.',
         ),
       ],
     ),
@@ -61,7 +61,7 @@ class FaqScreen extends StatelessWidget {
       items: [
         const _FaqItem(
           q: 'Quand suis-je débité ?',
-          a: 'Tu es débité à l\'acceptation du voyageur. Les fonds sont placés en séquestre (escrow) et ne sont transférés au voyageur qu\'à la confirmation de livraison.',
+          a: 'Tu es débité à l\'acceptation du voyageur. Les fonds sont bloqués et sécurisés, et ne sont transférés au voyageur qu\'à la confirmation de livraison.',
         ),
         const _FaqItem(
           q: 'Comment se passe le remboursement en cas d\'annulation ?',
@@ -83,7 +83,7 @@ class FaqScreen extends StatelessWidget {
       items: [
         _FaqItem(
           q: 'Comment fonctionne le QR de remise ?',
-          a: 'À la remise du colis, le voyageur scanne ton QR code (ou vice-versa). Cela confirme la prise en charge et déclenche le suivi. En cas d\'absence de connexion, le scan est mémorisé et synchronisé à la reconnexion.',
+          a: 'À la remise du colis, le voyageur lit ton QR code (ou vice-versa). Cela confirme la prise en charge et déclenche le suivi. En cas d\'absence de connexion, la lecture est mémorisée et synchronisée à la reconnexion.',
         ),
         _FaqItem(
           q: 'Que faire si le colis n\'arrive pas ?',

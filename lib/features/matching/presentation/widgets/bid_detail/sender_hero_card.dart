@@ -450,7 +450,7 @@ class _WindowExpiredHero extends StatelessWidget {
             const SizedBox(height: DonySpacing.md),
             Text(
               'Le voyageur aura 48 h pour contester. '
-              'Sans réponse de sa part, le bid sera annulé.',
+              'Sans réponse de sa part, l\'envoi sera annulé.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -617,7 +617,7 @@ class _ContestationHeroState extends State<_ContestationHero> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
         child: Text(
-          'En confirmant votre absence, le bid sera annulé '
+          'En confirmant votre absence, l\'envoi sera annulé '
           'et vous ne serez pas débité.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),

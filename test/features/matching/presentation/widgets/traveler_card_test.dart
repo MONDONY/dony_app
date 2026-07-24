@@ -97,7 +97,7 @@ void main() {
         onTap: () {},
       )));
       await tester.pumpAndSettle();
-      expect(find.text('KYC'), findsOneWidget);
+      expect(find.text('Identité'), findsOneWidget);
     });
 
     testWidgets('shows PRO badge when isProAccount is true', (tester) async {

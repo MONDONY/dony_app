@@ -316,7 +316,7 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
             onChanged: (v) => _update(f.copyWith(weekendOnly: v)),
           ),
           QuickChip(
-            label: 'KYC vérifié',
+            label: 'Identité vérifiée',
             iconAsset: 'shield-check',
             active: f.kycVerifiedOnly,
             onChanged: (v) => _update(f.copyWith(kycVerifiedOnly: v)),

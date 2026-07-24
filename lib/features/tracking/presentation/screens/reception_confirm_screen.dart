@@ -201,7 +201,7 @@ class _TabToggle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _TabItem(label: 'Scanner le QR', selected: selected == 0, onTap: () => onTap(0))),
+          Expanded(child: _TabItem(label: 'Lire le QR', selected: selected == 0, onTap: () => onTap(0))),
           Expanded(child: _TabItem(label: 'Taper le code', selected: selected == 1, onTap: () => onTap(1))),
         ],
       ),
@@ -284,7 +284,7 @@ class _QrTabContent extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'Scanner le QR code',
+            'Lire le QR code',
             style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: DonySpacing.xs),

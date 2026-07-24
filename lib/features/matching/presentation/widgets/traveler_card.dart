@@ -688,7 +688,7 @@ class _KycBadge extends StatelessWidget {
             decoration: BoxDecoration(color: cs.success, shape: BoxShape.circle),
           ),
           const SizedBox(width: DonySpacing.xxs),
-          Text('KYC', style: tt.labelSmall?.copyWith(color: cs.success, fontWeight: FontWeight.w600)),
+          Text('Identité', style: tt.labelSmall?.copyWith(color: cs.success, fontWeight: FontWeight.w600)),
         ],
       ),
     );

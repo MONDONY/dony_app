@@ -80,7 +80,7 @@ void main() {
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 scan hors-ligne'), findsOneWidget);
+    expect(find.text('1 lecture hors-ligne'), findsOneWidget);
     expect(find.text('En attente de synchronisation'), findsOneWidget);
   });
 
@@ -113,6 +113,6 @@ void main() {
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    expect(find.text('2 scans hors-ligne'), findsOneWidget);
+    expect(find.text('2 lectures hors-ligne'), findsOneWidget);
   });
 }

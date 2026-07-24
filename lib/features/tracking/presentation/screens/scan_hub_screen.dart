@@ -97,7 +97,7 @@ class ScanHubView extends StatelessWidget {
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text('Scan & Suivi', style: tt.headlineLarge),
+        title: Text('Lecture & Suivi', style: tt.headlineLarge),
         centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -460,7 +460,7 @@ class _SyncBanner extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
-                  '$pendingCount scan${pendingCount > 1 ? 's' : ''} en '
+                  '$pendingCount lecture${pendingCount > 1 ? 's' : ''} en '
                   'attente de synchro',
                   style: tt.bodySmall?.copyWith(
                     color: cs.warning,
@@ -485,9 +485,9 @@ class _NoTripState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DonyEmptyState(
-      title: 'Aucun trajet à scanner',
+      title: 'Aucun trajet à traiter',
       description:
-          'Tu pourras scanner les colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.',
+          'Tu pourras lire les QR des colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.',
       mascotte: DonyMascotteType.assis,
       actionLabel: 'Voir mes trajets',
       onAction: () => context.push('/announcements/trips'),
@@ -528,7 +528,7 @@ class _EtapesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'SCAN RAPIDE',
+          'LECTURE RAPIDE',
           style: tt.labelSmall?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 1,
@@ -820,7 +820,7 @@ class _ScanHistorySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'HISTORIQUE DES SCANS',
+          'HISTORIQUE DES LECTURES',
           style: tt.labelSmall?.copyWith(
             color: cs.onSurfaceVariant,
             letterSpacing: 1,
@@ -829,7 +829,7 @@ class _ScanHistorySection extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         if (history.isEmpty)
           Text(
-            'Aucun scan pour l\'instant',
+            'Aucune lecture pour l\'instant',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           )
         else

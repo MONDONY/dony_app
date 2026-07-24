@@ -135,7 +135,7 @@ class ChatMessageValidator {
     if (ChatMessageRules._url.hasMatch(text)) {
       return const ChatValidationBlocked(
         'url',
-        'Les liens externes ne sont pas autorisés dans le chat.',
+        'Les liens externes ne sont pas autorisés dans la messagerie.',
       );
     }
     if (ChatMessageRules._profanity.hasMatch(text)) {

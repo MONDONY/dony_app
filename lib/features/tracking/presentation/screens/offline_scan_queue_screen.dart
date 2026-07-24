@@ -36,7 +36,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
       'PICKUP' => 'Collecte enregistrée',
       'IN_TRANSIT' => 'En transit sauvegardé',
       'DELIVERED' => 'Livraison sauvegardée',
-      _ => 'Scan sauvegardé',
+      _ => 'Lecture sauvegardée',
     };
   }
 
@@ -53,7 +53,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(
-        title: 'Scans hors-ligne',
+        title: 'Lectures hors-ligne',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: DonySpacing.base),
@@ -114,7 +114,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(DonySpacing.xxl),
                   child: Text(
-                    'Aucun scan en attente.',
+                    'Aucune lecture en attente.',
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
@@ -132,7 +132,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
             const SizedBox(height: DonySpacing.xxl),
             Center(
               child: Text(
-                'Continuez à scanner même sans réseau.',
+                'Continuez les lectures même sans réseau.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
@@ -177,12 +177,12 @@ class _AlertBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Vos scans sont en sécurité',
+                  'Vos lectures sont en sécurité',
                   style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  '$count scans en attente. On les enverra dès que vous récupérez du réseau.',
+                  '$count lectures en attente. On les enverra dès que vous récupérez du réseau.',
                   style: tt.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               ],

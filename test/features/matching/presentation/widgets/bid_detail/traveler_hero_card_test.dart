@@ -75,7 +75,7 @@ void main() {
   testWidgets('ACCEPTED présence confirmée → scannez le colis',
       (tester) async {
     await _pump(tester, _bid(status: 'ACCEPTED', voyageurConfirmed: true));
-    expect(find.textContaining('Scannez le colis'), findsOneWidget);
+    expect(find.textContaining('Lisez le QR du colis'), findsOneWidget);
   });
 
   testWidgets('IN_TRANSIT → colis en route', (tester) async {

@@ -87,7 +87,7 @@ void main() {
 
   testWidgets('chip KYC affiché si senderKycVerified=true', (tester) async {
     await _pump(tester, _bid());
-    expect(find.text('KYC'), findsOneWidget);
+    expect(find.text('Identité'), findsOneWidget);
   });
 
   testWidgets('chip KYC absent si senderKycVerified=false', (tester) async {
@@ -116,7 +116,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('KYC'), findsNothing);
+    expect(find.text('Identité'), findsNothing);
   });
 
   testWidgets('chip Kilo Pro affiché si senderKiloPro=true', (tester) async {
