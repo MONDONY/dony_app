@@ -304,9 +304,13 @@ class _DonyBottomNav extends StatelessWidget {
                                             .pendingCount
                                         : 0,
                                   );
+                                  // Onglet : seulement quand c'est à
+                                  // l'utilisateur de répondre (pas quand on
+                                  // attend la partie adverse). La carte, elle,
+                                  // reste allumée via activeCount.
                                   final activeNegos =
                                       context.select<NegotiationListBloc, int>(
-                                    (b) => b.state.activeCount,
+                                    (b) => b.state.actionableCount,
                                   );
                                   final unreadNotifs =
                                       context.select<NotificationBloc, int>(
