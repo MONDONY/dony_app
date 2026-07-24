@@ -105,7 +105,9 @@ class ActivityTile extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: iconColor,
+                      // Rouge (attention), aligné sur le point de l'onglet
+                      // Activités — plutôt que la couleur d'accent de la carte.
+                      color: cs.error,
                       shape: BoxShape.circle,
                     ),
                   )

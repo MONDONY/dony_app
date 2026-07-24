@@ -46,11 +46,19 @@ class NegotiationListState extends Equatable {
   /// Horodatage du dernier chargement réussi.
   final DateTime fetchedAt;
 
-  /// Threads still requiring attention (used for the tab badge counter).
-  int get activeCount => threads.where((t) =>
+  /// Threads still open (any turn) — alimente la pastille de la carte
+  /// « Discussions de prix » : elle reste tant que la négociation est ouverte.
+  int get activeCount => threads.where(_isOpen).length;
+
+  /// Threads ouverts où c'est à l'utilisateur de jouer — alimente le point de
+  /// l'onglet Activités : il ne s'allume que quand une action est attendue de
+  /// lui (pas quand on attend la partie adverse).
+  int get actionableCount => threads.where((t) => _isOpen(t) && t.isMyTurn).length;
+
+  static bool _isOpen(NegotiationThread t) =>
       t.status == NegotiationThreadStatus.open ||
       t.status == NegotiationThreadStatus.awaitingTrip ||
-      t.status == NegotiationThreadStatus.awaitingPayment).length;
+      t.status == NegotiationThreadStatus.awaitingPayment;
 
   NegotiationListState copyWith({
     NegotiationListStatus? status,

@@ -260,8 +260,8 @@ void main() {
         expect(find.text('Négociation en cours'), findsOneWidget);
         expect(find.text('Aucune pour l\'instant'), findsNothing);
 
-        // Un point d'attention (Container 8×8 cercle ambre) est peint sur la
-        // tuile Demandes.
+        // Un point d'attention rouge (Container 8×8 cercle) est peint sur la
+        // tuile Demandes — même rouge que le point de l'onglet Activités.
         final dot = find.descendant(
           of: find.byKey(const Key('hub-tile-requests')),
           matching: find.byWidgetPredicate((w) {
@@ -271,7 +271,7 @@ void main() {
             final deco = w.decoration;
             return deco is BoxDecoration &&
                 deco.shape == BoxShape.circle &&
-                deco.color == DonyColors.amberDark;
+                deco.color == DonyColors.error;
           }),
         );
         expect(dot, findsOneWidget);

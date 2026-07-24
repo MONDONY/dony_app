@@ -131,4 +131,49 @@ void main() {
     );
     expect(state.activeCount, 1);
   });
+
+  // ── actionableCount ──────────────────────────────────────────────────────────
+
+  test('actionableCount ne compte que les threads ouverts où isMyTurn', () {
+    final state = NegotiationListState(
+      status: NegotiationListStatus.loaded,
+      threads: [
+        // Ouvert, à moi de jouer → compté par actionableCount ET activeCount.
+        NegotiationThread(
+          id: 't1',
+          packageRequestId: 'pr-1',
+          travelerId: 'traveler-001',
+          travelerTravelDate: DateTime(2026, 8, 1),
+          travelerAvailableKg: 10,
+          status: NegotiationThreadStatus.open,
+          currentPriceEur: 25,
+          roundsCount: 1,
+          lastActivityAt: DateTime(2026, 6, 1),
+          createdAt: DateTime(2026, 6, 1),
+          messages: const [],
+          isMyTurn: true,
+        ),
+        // Ouvert mais on attend la partie adverse → activeCount seulement.
+        NegotiationThread(
+          id: 't2',
+          packageRequestId: 'pr-1',
+          travelerId: 'traveler-001',
+          travelerTravelDate: DateTime(2026, 8, 1),
+          travelerAvailableKg: 10,
+          status: NegotiationThreadStatus.open,
+          currentPriceEur: 30,
+          roundsCount: 1,
+          lastActivityAt: DateTime(2026, 6, 1),
+          createdAt: DateTime(2026, 6, 1),
+          messages: const [],
+          isMyTurn: false,
+        ),
+      ],
+    );
+
+    // La carte « Discussions de prix » reste allumée pour les 2 (ouverts)…
+    expect(state.activeCount, 2);
+    // …mais l'onglet ne s'allume que pour celui où l'utilisateur doit jouer.
+    expect(state.actionableCount, 1);
+  });
 }
