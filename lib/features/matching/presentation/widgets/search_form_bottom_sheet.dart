@@ -380,7 +380,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                   onChanged: (v) => _weekendFilterNotifier.value = v,
                 ),
                 QuickChip(
-                  label: 'KYC vérifié',
+                  label: 'Identité vérifiée',
                   iconAsset: 'shield-check',
                   active: _kycVerifiedOnlyNotifier.value,
                   onChanged: (v) => _kycVerifiedOnlyNotifier.value = v,

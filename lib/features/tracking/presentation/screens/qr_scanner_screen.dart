@@ -148,7 +148,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       // Title centered
                       Expanded(
                         child: Text(
-                          'Scan départ',
+                          'Lecture au départ',
                           textAlign: TextAlign.center,
                           style: tt.bodyMedium?.copyWith(
                             color: DonyColors.white,
@@ -304,7 +304,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Entrez le numéro DON-XXXXXX du colis à scanner.',
+                'Entrez le numéro DON-XXXXXX du colis à lire.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.md),
@@ -414,11 +414,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   color: cs.warning, size: 40),
             ),
             const SizedBox(height: DonySpacing.base),
-            Text('Scan en attente',
+            Text('Lecture en attente',
                 style: tt.headlineMedium?.copyWith(color: cs.onSurface)),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              'Pas de connexion internet. Le scan sera synchronisé automatiquement dès que vous serez en ligne.',
+              'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.',
               textAlign: TextAlign.center,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
             ),
@@ -453,7 +453,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final isFinal = isFinalDeliveryStep(label);
     final mascotteType =
         isFinal ? DonyMascotteType.securise : DonyMascotteType.confiant;
-    final title = isFinal ? 'Colis livré !' : 'Scan enregistré !';
+    final title = isFinal ? 'Colis livré !' : 'Lecture enregistrée !';
 
     showDialog<void>(
       context: context,
@@ -788,7 +788,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               Row(
                 children: [
                   Expanded(
-                    child: Text('QR scanné', style: tt.headlineMedium),
+                    child: Text('QR lu', style: tt.headlineMedium),
                   ),
                   if (!isSubmitting)
                     IconButton(
@@ -1053,7 +1053,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               DonyButton(
                 label: isSubmitting
                     ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
-                    : (isArrivee ? 'Confirmer la livraison' : 'Confirmer le scan'),
+                    : (isArrivee ? 'Confirmer la livraison' : 'Confirmer la lecture'),
                 iconAsset: isArrivee ? 'badge-check' : 'check',
                 onPressed: isSubmitting ? null : () => _submit(context),
                 isLoading: isSubmitting,

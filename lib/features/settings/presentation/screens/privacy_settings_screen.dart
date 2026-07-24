@@ -200,7 +200,7 @@ class _KycToggleCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      "Seuls les utilisateurs ayant validé leur identité (KYC) peuvent t'envoyer une offre",
+                      "Seuls les utilisateurs ayant validé leur identité peuvent t'envoyer une offre",
                       style: tt.bodySmall?.copyWith(
                         fontSize: 11,
                         color: cs.onSurfaceVariant,

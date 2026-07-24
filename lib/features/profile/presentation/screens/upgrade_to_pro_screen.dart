@@ -294,7 +294,7 @@ class _ProActiveScreen extends StatelessWidget {
                     children: [
                       _ProChip(label: 'Badge Pro'),
                       _ProChip(label: 'Volume illimité'),
-                      _ProChip(label: 'Priorité matching'),
+                      _ProChip(label: 'Priorité de mise en relation'),
                       _ProChip(label: 'Support dédié'),
                     ],
                   ).animate().fadeIn(delay: 180.ms),

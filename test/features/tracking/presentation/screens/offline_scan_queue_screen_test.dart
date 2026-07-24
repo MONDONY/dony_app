@@ -57,7 +57,7 @@ void main() {
     testWidgets('shows Vos scans sont en sécurité alert', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
-      expect(find.text('Vos scans sont en sécurité'), findsOneWidget);
+      expect(find.text('Vos lectures sont en sécurité'), findsOneWidget);
     });
 
     testWidgets('shows FILE D\'ATTENTE — 0 when empty', (tester) async {
@@ -69,7 +69,7 @@ void main() {
     testWidgets('shows empty state message when queue is empty', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
-      expect(find.text('Aucun scan en attente.'), findsOneWidget);
+      expect(find.text('Aucune lecture en attente.'), findsOneWidget);
     });
   });
 
@@ -107,7 +107,7 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       expect(
-        find.textContaining('2 scans en attente'),
+        find.textContaining('2 lectures en attente'),
         findsOneWidget,
       );
     });
@@ -122,7 +122,7 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       expect(
-        find.text('Continuez à scanner même sans réseau.'),
+        find.text('Continuez les lectures même sans réseau.'),
         findsOneWidget,
       );
     });

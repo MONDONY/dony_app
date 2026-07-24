@@ -410,7 +410,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                   const SizedBox(height: DonySpacing.xl),
                   Text(
                     matchingTrips.isEmpty
-                        ? 'Aucun de tes trajets ne match'
+                        ? 'Aucun de tes trajets ne correspond'
                         : 'Tes trajets compatibles',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 13,

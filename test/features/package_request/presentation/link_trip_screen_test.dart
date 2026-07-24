@@ -384,7 +384,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Solde insuffisant'), findsOneWidget);
-        expect(find.text('Recharger mon wallet'), findsOneWidget);
+        expect(find.text('Recharger mon portefeuille'), findsOneWidget);
         expect(find.textContaining('commission'), findsWidgets);
       },
     );

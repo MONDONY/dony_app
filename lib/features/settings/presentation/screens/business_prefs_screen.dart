@@ -84,7 +84,7 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Rayon de pickup',
+                        Text('Rayon de collecte',
                             style: tt.bodyMedium
                                 ?.copyWith(fontWeight: FontWeight.w600)),
                         Text('${state.pickupRadiusKm} km',

@@ -99,7 +99,7 @@ class _ScanBar extends StatelessWidget {
       // Redirige vers l'étape Départ du hub de scan (identify → photo →
       // confirm), cohérent avec le flux d'étapes du Suivi.
       child: DonyButton(
-        label: 'Scanner le colis',
+        label: 'Lire le QR du colis',
         iconAsset: 'scan-line',
         onPressed: () => context.push(
           '/tracking/scan/identify',
@@ -130,7 +130,7 @@ class _TransitBar extends StatelessWidget {
       // Étape Transit du hub de scan. Une fois scanné, le bid passe en
       // IN_TRANSIT et la barre affiche « Valider la remise » (étape Arrivée).
       child: DonyButton(
-        label: 'Scanner le transit',
+        label: 'Lire le QR de transit',
         iconAsset: 'arrow-left-right',
         onPressed: () => context.push(
           '/tracking/scan/identify',

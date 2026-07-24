@@ -76,7 +76,7 @@ void main() {
     expect(find.byType(TrackingSearchScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
     // Pas d'entrée scan pour un expéditeur pur.
-    expect(find.text('Scanner un trajet'), findsNothing);
+    expect(find.text('Lire le QR d\'un trajet'), findsNothing);
   });
 
   testWidgets('voyageur occasionnel → recherche + entrée "Scanner un trajet"', (
@@ -84,7 +84,7 @@ void main() {
   ) async {
     await pump(tester, _user(roles: ['TRAVELER']));
     expect(find.byType(TrackingSearchScreen), findsOneWidget);
-    expect(find.text('Scanner un trajet'), findsOneWidget);
+    expect(find.text('Lire le QR d\'un trajet'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

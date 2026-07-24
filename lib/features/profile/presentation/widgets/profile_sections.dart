@@ -96,7 +96,7 @@ class ProfileMoneySection extends StatelessWidget {
               iconAsset: 'credit-card',
               iconColor: DonyColors.purple,
               iconBgColor: DonyColors.violetLight,
-              label: 'Carte commission cash',
+              label: 'Carte commission espèces',
               onTap: () => context.push('/payments/commission-method'),
             ),
             DonyListTile(
@@ -535,7 +535,7 @@ DonyListTile kycTile(BuildContext context, UserModel? user) {
     iconAsset: 'shield',
     iconColor: cs.primary,
     iconBgColor: cs.primaryContainer,
-    label: 'Documents KYC',
+    label: 'Documents d\'identité',
     showDivider: false,
     trailing: switch (user?.kycStatus) {
       'VERIFIED' => Text(

@@ -11,12 +11,12 @@ class OnboardingScreen extends StatelessWidget {
     (
       'shield-check',
       'Vérifié',
-      'KYC + selfie animé pour chaque profil',
+      'Vérification d\'identité + selfie animé pour chaque profil',
     ),
     (
       'qr-code',
       'Tracé',
-      'QR scanné à chaque étape, jusqu\'à la remise',
+      'QR lu à chaque étape, jusqu\'à la remise',
     ),
     (
       'lock',

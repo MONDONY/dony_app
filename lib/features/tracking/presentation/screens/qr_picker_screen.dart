@@ -88,7 +88,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        'Scanner le QR code',
+                        'Lire le QR code',
                         textAlign: TextAlign.center,
                         style: tt.bodyMedium?.copyWith(
                           color: DonyColors.neutral0,

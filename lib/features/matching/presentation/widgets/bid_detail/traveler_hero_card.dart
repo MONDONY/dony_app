@@ -122,9 +122,9 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
       if (bid.voyageurConfirmed) {
         return const _HeroContent(
           variant: TravelerHeroVariant.info,
-          title: '📷 Scannez le colis',
+          title: '📷 Lisez le QR du colis',
           subtitle:
-              'Scannez le QR code de l\'expéditeur pour confirmer la prise en charge.',
+              'Lisez le QR code de l\'expéditeur pour confirmer la prise en charge.',
         );
       }
       final subtitle = _buildAcceptedSubtitle(bid);
@@ -396,7 +396,7 @@ class _WindowExpiredHero extends StatelessWidget {
             const SizedBox(height: DonySpacing.md),
             Text(
               "L'expéditeur aura 48 h pour contester. "
-              'Sans réponse de sa part, le bid sera annulé.',
+              'Sans réponse de sa part, l\'envoi sera annulé.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -429,7 +429,7 @@ class _NoShowReportedHero extends StatelessWidget {
           ? "L'expéditeur conteste votre signalement. Notre équipe examine la "
               'demande et vous tiendra informé.'
           : "Signalement envoyé. L'expéditeur a 48 h pour confirmer ou "
-              'contester. Sans réponse, le bid sera annulé automatiquement.',
+              'contester. Sans réponse, l\'envoi sera annulé automatiquement.',
     );
   }
 }

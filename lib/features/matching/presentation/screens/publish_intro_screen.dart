@@ -198,7 +198,7 @@ class _IntroConfig {
             ),
             _Rule(
               'qr-code',
-              '**Scanner le QR** à la remise et à la '
+              '**Lire le QR** à la remise et à la '
                   'livraison.',
             ),
             _Rule(

@@ -48,7 +48,7 @@ class _ThreadView extends StatelessWidget {
             DonySnackbar.show(
               ctx,
               message:
-                  'Le paiement cash est impossible : solde et carte du voyageur indisponibles.',
+                  'Le paiement en espèces est impossible : solde et carte du voyageur indisponibles.',
               type: DonySnackbarType.warning,
             );
             ctx.pop();

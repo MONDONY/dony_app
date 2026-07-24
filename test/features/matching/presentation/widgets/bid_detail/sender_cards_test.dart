@@ -589,7 +589,7 @@ void main() {
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.text('KYC'), findsOneWidget);
+      expect(find.text('Identité'), findsOneWidget);
     });
 
     testWidgets('travelerKiloPro=true → badge Kilo Pro visible', (tester) async {

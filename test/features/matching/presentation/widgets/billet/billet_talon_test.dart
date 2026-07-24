@@ -405,7 +405,7 @@ void main() {
       false,
     );
     // Accès au scan depuis le détail → redirige vers les étapes du Suivi.
-    expect(find.text('Scanner les étapes'), findsOneWidget);
+    expect(find.text('Lire les QR des étapes'), findsOneWidget);
     expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'), findsOneWidget);
     // La bande de suivi reste.
     expect(find.text('N° DE SUIVI'), findsOneWidget);
@@ -445,7 +445,7 @@ void main() {
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
     // Redirige vers les étapes du Suivi (ScanHub).
-    expect(find.text('Scanner les étapes'), findsOneWidget);
+    expect(find.text('Lire les QR des étapes'), findsOneWidget);
     expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'), findsOneWidget);
   });
 
@@ -453,7 +453,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'IN_TRANSIT'), false);
-    expect(find.text('Scanner les étapes'), findsOneWidget);
+    expect(find.text('Lire les QR des étapes'), findsOneWidget);
   });
 
   testWidgets('voyageur + COMPLETED → bloc vert "Colis livré"', (tester) async {

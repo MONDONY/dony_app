@@ -12,7 +12,7 @@ void main() {
         mascotteType: DonyMascotteType.securise,
         title: 'Envoi réservé !',
         subtitle:
-            '50.00 € sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
+            '50.00 € sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.',
         ctaLabel: 'Voir mes envois',
         onCta: () {},
       ),

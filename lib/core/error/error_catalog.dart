@@ -197,7 +197,7 @@ abstract final class ErrorCatalog {
     ),
     'invalid-timestamp': ErrorPresentation(
       title: 'Horodatage invalide',
-      message: 'L\'horodatage du scan est incohérent. Réessaie une fois en ligne.',
+      message: 'L\'horodatage de la lecture est incohérent. Réessaie une fois en ligne.',
       severity: ErrorSeverity.warning,
       icon: Icons.access_time_rounded,
     ),
@@ -380,7 +380,7 @@ abstract final class ErrorCatalog {
     'OFFLINE': ErrorPresentation(
       title: 'Pas de connexion',
       message:
-          'Vérifie ta connexion Internet puis réessaie. Tes scans hors-ligne seront synchronisés à la reconnexion.',
+          'Vérifie ta connexion Internet puis réessaie. Tes lectures hors-ligne seront synchronisées à la reconnexion.',
       severity: ErrorSeverity.warning,
       icon: Icons.signal_wifi_off_rounded,
     ),

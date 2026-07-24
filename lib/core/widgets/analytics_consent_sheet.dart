@@ -61,7 +61,7 @@ class _ConsentBody extends StatelessWidget {
         SizedBox(height: DonySpacing.md),
         _ConsentLine(
           emoji: '🔒',
-          text: 'Jamais tes paiements, ton identité (KYC) ni ton numéro',
+          text: 'Jamais tes paiements, ton identité ni ton numéro',
         ),
         SizedBox(height: DonySpacing.md),
         _ConsentLine(

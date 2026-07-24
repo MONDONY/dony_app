@@ -72,7 +72,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       onData: (messages) =>
           event.isReadOnly ? ChatReadOnly(messages) : ChatLoaded(messages),
       onError: (e, st) => ChatError(NetworkException(
-        'Erreur de connexion au chat',
+        'Erreur de connexion à la messagerie',
         code: 'chat-stream-error',
       )),
     );

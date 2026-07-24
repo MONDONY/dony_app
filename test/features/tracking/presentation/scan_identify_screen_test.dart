@@ -179,7 +179,7 @@ void main() {
   testWidgets('bouton Ouvrir le scanner QR présent', (tester) async {
     await tester.pumpWidget(MaterialApp.router(routerConfig: _router('DEPART')));
     await tester.pump();
-    expect(find.text('Ouvrir le scanner QR'), findsOneWidget);
+    expect(find.text('Ouvrir le lecteur QR'), findsOneWidget);
   });
 
   // ─── Divider OU visible ───────────────────────────────────────────────────

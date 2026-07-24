@@ -327,7 +327,7 @@ class _TravelerScanStepsButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: () => context.push('/tracking/scan-hub'),
       icon: DonyIcon('scan-line', size: 20, color: cs.primary),
-      label: const Text('Scanner les étapes', textAlign: TextAlign.center),
+      label: const Text('Lire les QR des étapes', textAlign: TextAlign.center),
       style: OutlinedButton.styleFrom(
         foregroundColor: cs.primary,
         side: BorderSide(color: cs.primary),

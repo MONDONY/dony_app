@@ -287,7 +287,7 @@ class _EscrowConfirmedView extends StatelessWidget {
       mascotteType: DonyMascotteType.securise,
       title: 'Envoi réservé !',
       subtitle:
-          '${amount.toStringAsFixed(2)} € sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
+          '${amount.toStringAsFixed(2)} € sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.',
       ctaLabel: 'Voir mes envois',
       onCta: () => context.go('/home'),
       analyticsContext: 'escrow_payment',

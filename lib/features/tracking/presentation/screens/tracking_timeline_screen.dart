@@ -357,7 +357,7 @@ class _TimelineItem extends StatelessWidget {
                             size: 12, color: cs.warning),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
-                          'Scan offline synchronisé',
+                          'Lecture hors-ligne synchronisée',
                           style: tt.bodySmall?.copyWith(
                             color: cs.warning,
                             fontWeight: FontWeight.w500,
@@ -438,12 +438,12 @@ class _EmptyTimeline extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
-            'En attente du scan de départ',
+            'En attente de la lecture au départ',
             style: tt.titleLarge,
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Le voyageur scannera le QR code lors de la remise du colis.',
+            'Le voyageur lira le QR code lors de la remise du colis.',
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
           ),

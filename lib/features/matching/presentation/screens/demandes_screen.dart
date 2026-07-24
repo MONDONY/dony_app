@@ -476,12 +476,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
+            'Solde du portefeuille : ${state.availableBalance.toStringAsFixed(2)} €',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
-            'Rechargez votre wallet ou payez la commission directement par carte.',
+            'Rechargez votre portefeuille ou payez la commission directement par carte.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -490,7 +490,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Recharger mon wallet',
+            label: 'Recharger mon portefeuille',
             onPressed: () async {
               context.pop();
               final recharged = await context.push<bool>(

@@ -115,7 +115,7 @@ void main() {
     testWidgets('shows KYC chip when isKycVerified true', (tester) async {
       await tester.pumpWidget(_buildHeader(isKycVerified: true));
       await tester.pump();
-      expect(find.text('KYC ✓'), findsOneWidget);
+      expect(find.text('Identité ✓'), findsOneWidget);
     });
 
     testWidgets('does NOT show KYC chip when isKycVerified false', (
@@ -123,7 +123,7 @@ void main() {
     ) async {
       await tester.pumpWidget(_buildHeader(isKycVerified: false));
       await tester.pump();
-      expect(find.text('KYC ✓'), findsNothing);
+      expect(find.text('Identité ✓'), findsNothing);
     });
 
     // Pill switcher removed — additive model: no role pill in header.

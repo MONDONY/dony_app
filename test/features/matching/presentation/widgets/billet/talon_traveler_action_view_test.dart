@@ -40,7 +40,7 @@ Future<GoRouter> _pump(
 void main() {
   testWidgets('mode scan → bouton "Scanner le colis"', (tester) async {
     await _pump(tester, TalonTravelerAction.scan);
-    expect(find.text('Scanner le colis'), findsOneWidget);
+    expect(find.text('Lire le QR du colis'), findsOneWidget);
   });
 
   testWidgets('mode confirmDelivery → bouton "Confirmer la livraison"', (
@@ -56,7 +56,7 @@ void main() {
 
   testWidgets('tap scan → navigue vers /tracking/scan', (tester) async {
     await _pump(tester, TalonTravelerAction.scan);
-    await tester.tap(find.text('Scanner le colis'));
+    await tester.tap(find.text('Lire le QR du colis'));
     await tester.pumpAndSettle();
     expect(find.text('SCANNER'), findsOneWidget);
   });

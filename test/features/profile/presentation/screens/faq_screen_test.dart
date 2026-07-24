@@ -15,7 +15,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('FAQ & aide'), findsOneWidget);
-    expect(find.text('Compte & KYC'), findsOneWidget);
+    expect(find.text('Compte & identité'), findsOneWidget);
     expect(find.text('Annonces & demandes'), findsOneWidget);
     expect(find.text('Paiements & remboursements'), findsOneWidget);
     expect(find.text('Suivi & livraison'), findsOneWidget);
@@ -29,7 +29,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('Pourquoi la vérification KYC est-elle obligatoire ?'),
+      find.text('Pourquoi la vérification d\'identité est-elle obligatoire ?'),
       findsOneWidget,
     );
   });
@@ -39,7 +39,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     final question = find.text(
-      'Pourquoi la vérification KYC est-elle obligatoire ?',
+      'Pourquoi la vérification d\'identité est-elle obligatoire ?',
     );
     expect(question, findsOneWidget);
 

@@ -214,7 +214,7 @@ void main() {
 
     expect(find.text('Filtrer les trajets'), findsOneWidget);
     expect(find.text('Kilo Pro'), findsOneWidget);
-    expect(find.text('KYC vérifié'), findsOneWidget);
+    expect(find.text('Identité vérifiée'), findsOneWidget);
   });
 
   testWidgets('mode colis : titre et filtres spécifiques', (tester) async {
@@ -222,7 +222,7 @@ void main() {
 
     expect(find.text('Filtrer les colis'), findsOneWidget);
     expect(find.text('Kilo Pro'), findsNothing);
-    expect(find.text('KYC vérifié'), findsNothing);
+    expect(find.text('Identité vérifiée'), findsNothing);
   });
 
   testWidgets('le bloc commun est présent dans les deux modes', (tester) async {
@@ -626,7 +626,7 @@ void main() {
 
     await taper(tester, find.text('Note ≥ 4.5'));
     await taper(tester, find.text('Week-end'));
-    await taper(tester, find.text('KYC vérifié'));
+    await taper(tester, find.text('Identité vérifiée'));
 
     final valeur = await rechercher(tester);
     expect(valeur!.minRating, isNull);

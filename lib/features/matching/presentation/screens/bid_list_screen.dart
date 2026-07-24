@@ -576,7 +576,7 @@ class _ScannerChipButton extends StatelessWidget {
             DonyIcon('scan-line', size: 16, color: cs.onSurface),
             const SizedBox(width: DonySpacing.xs),
             Text(
-              'Scanner',
+              'Lire le QR',
               style: tt.labelMedium?.copyWith(color: cs.onSurface),
             ),
           ],

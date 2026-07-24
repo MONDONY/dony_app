@@ -174,14 +174,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
+            'Solde du portefeuille : ${state.availableBalance.toStringAsFixed(2)} €',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
-            'Rechargez votre wallet ou payez la commission directement par carte.',
+            'Rechargez votre portefeuille ou payez la commission directement par carte.',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -192,7 +192,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'Recharger mon wallet',
+            label: 'Recharger mon portefeuille',
             onPressed: () async {
               context.pop();
               // /topup/method est le point d'entrée correct : sélectionne la méthode
@@ -299,7 +299,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             DonySnackbar.show(
               context,
               message:
-                  'Absence confirmée. Le bid a été annulé, vous ne serez pas débité.',
+                  'Absence confirmée. L\'envoi a été annulé, vous ne serez pas débité.',
               type: DonySnackbarType.info,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));

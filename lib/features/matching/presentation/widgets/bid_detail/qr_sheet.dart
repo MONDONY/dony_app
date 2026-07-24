@@ -333,7 +333,7 @@ class _QrLoadedView extends StatelessWidget {
       children: [
         // Instruction text
         Text(
-          'Scanné par le voyageur à la remise, puis à chaque étape jusqu\'au '
+          'Lu par le voyageur à la remise, puis à chaque étape jusqu\'au '
           'retrait. Vous pouvez aussi l\'imprimer et le coller sur le colis.',
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,

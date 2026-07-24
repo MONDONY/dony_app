@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 const _categories = <String>[
   'Paiement',
-  'KYC / vérification',
+  'Vérification d\'identité',
   'Livraison',
   'Litige',
   'Bug technique',

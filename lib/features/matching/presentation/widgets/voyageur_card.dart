@@ -90,7 +90,7 @@ class VoyageurCard extends StatelessWidget {
                           if (bid.travelerKycVerified) ...[
                             const SizedBox(width: DonySpacing.xs),
                             MiniChip(
-                              label: 'KYC',
+                              label: 'Identité',
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),

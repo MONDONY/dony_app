@@ -644,7 +644,7 @@ void main() {
     ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Scanner'));
+    await tester.tap(find.text('Lire le QR'));
     await tester.pumpAndSettle();
 
     expect(find.text('scan'), findsOneWidget);

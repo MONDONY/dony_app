@@ -179,7 +179,7 @@ class _BenefitsSection extends StatelessWidget {
 
     const items = [
       ('lock', 'Paiement sécurisé',
-          'L\'argent est retenu en escrow jusqu\'à confirmation de livraison.'),
+          'L\'argent est bloqué et sécurisé jusqu\'à confirmation de livraison.'),
       ('zap', 'Virement rapide',
           'Reçu sur votre compte dans les 24h après confirmation.'),
       ('shield-check', 'Géré par Stripe',
@@ -282,7 +282,7 @@ class _ActiveAccountView extends StatelessWidget {
                   children: [
                     _InfoRow(
                       iconAsset: 'lock',
-                      title: 'Paiement sécurisé en escrow',
+                      title: 'Paiement sécurisé',
                       subtitle:
                           "L'argent est retenu jusqu'à confirmation de livraison.",
                     ),
@@ -298,7 +298,7 @@ class _ActiveAccountView extends StatelessWidget {
                       iconAsset: 'landmark',
                       title: 'Sur votre compte bancaire',
                       subtitle:
-                          "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un wallet Stripe.",
+                          "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.",
                     ),
                   ],
                 ),

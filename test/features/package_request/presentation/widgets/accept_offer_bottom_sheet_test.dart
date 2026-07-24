@@ -98,7 +98,7 @@ void main() {
     await tester.pumpWidget(_buildApp(bloc: bloc, isCheckout: true));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.text('Payer en escrow'), findsOneWidget);
+    expect(find.text('Payer en toute sécurité'), findsOneWidget);
   });
 
   testWidgets('shows "Tu reçois" label for traveler', (tester) async {
@@ -177,7 +177,7 @@ void main() {
     await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: false));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('mis en escrow'), findsOneWidget);
+    expect(find.textContaining('bloqué et sécurisé'), findsOneWidget);
   });
 
   // ── Checkout Stripe réussi → DonySuccessScreen ─────────────────────────

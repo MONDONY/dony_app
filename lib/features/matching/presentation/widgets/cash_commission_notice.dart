@@ -43,7 +43,7 @@ class CashCommissionNotice extends StatelessWidget {
                         'Vous ne pourrez accepter un colis en espèces que si la commission Dony peut être prélevée ',
                   ),
                   TextSpan(
-                    text: 'sur votre wallet en priorité',
+                    text: 'sur votre portefeuille en priorité',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: cs.primary,

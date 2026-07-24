@@ -82,7 +82,7 @@ class _TrackingHubView extends StatelessWidget {
               iconAsset: 'scan-line',
               iconBg: cs.primaryContainer,
               iconColor: cs.primary,
-              title: 'Scanner le QR code d\'un colis',
+              title: 'Lire le QR code d\'un colis',
               subtitle: 'À la remise, en transit ou à la livraison',
               onTap: () => context.push('/tracking/scan'),
             ),
@@ -145,7 +145,7 @@ class _OfflineBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$count scan${count > 1 ? 's' : ''} en attente',
+                    '$count lecture${count > 1 ? 's' : ''} en attente',
                     style: tt.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: cs.onSecondaryContainer,

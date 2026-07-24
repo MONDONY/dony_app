@@ -26,7 +26,7 @@ class CommissionCardEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ($donyCommissionPercentLabel %) à chaque bid accepté.',
+            'Pour accepter des paiements en espèces, enregistrez une carte sur laquelle nous prélèverons notre commission ($donyCommissionPercentLabel %) à chaque colis accepté.',
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),

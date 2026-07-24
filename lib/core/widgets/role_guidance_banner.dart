@@ -126,12 +126,12 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
     final steps = isSender
         ? [
             'Compte créé ✓',
-            'Vérifie ton identité (KYC), requis pour payer',
+            'Vérifie ton identité, requis pour payer',
             'Publie les détails de ta demande (corridor, poids, contenu)',
           ]
         : [
             'Compte créé ✓',
-            'Vérifie ton identité (KYC), obligatoire pour voyager',
+            'Vérifie ton identité, obligatoire pour voyager',
             'Publie les détails de ton trajet (date, corridor, kg dispo)',
           ];
 

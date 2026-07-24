@@ -94,7 +94,7 @@ void main() {
     whenListen(bloc, const Stream<TrackingState>.empty());
     await tester.pumpWidget(_wrap('DEPART', bloc));
     await tester.pump();
-    expect(find.text('Valider le scan'), findsOneWidget);
+    expect(find.text('Valider la lecture'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
   });
 
@@ -117,7 +117,7 @@ void main() {
     whenListen(bloc, const Stream<TrackingState>.empty());
     await tester.pumpWidget(_wrap('DEPART', bloc));
     await tester.pump();
-    await tester.tap(find.text('Valider le scan'));
+    await tester.tap(find.text('Valider la lecture'));
     await tester.pump();
     verify(() => bloc.add(any(that: isA<QrScanSubmitRequested>()))).called(1);
   });
@@ -183,7 +183,7 @@ void main() {
     );
     await tester.pumpWidget(_wrap('DEPART', bloc));
     await tester.pumpAndSettle();
-    expect(find.text('Scan enregistré !'), findsOneWidget);
+    expect(find.text('Lecture enregistrée !'), findsOneWidget);
   });
 
   // ─── QrScanQueued → showDialog ────────────────────────────────────────────
@@ -193,7 +193,7 @@ void main() {
     whenListen(bloc, Stream.fromIterable([QrScanQueued()]));
     await tester.pumpWidget(_wrap('DEPART', bloc));
     await tester.pumpAndSettle();
-    expect(find.text('Scan en attente'), findsOneWidget);
+    expect(find.text('Lecture en attente'), findsOneWidget);
   });
 
   // ─── DeliveryConfirmSuccess → DonySuccessScreen ──────────────────────────

@@ -122,7 +122,7 @@ class ExpediteurContactCard extends StatelessWidget {
                           ),
                           if (bid.senderKycVerified)
                             MiniChip(
-                              label: 'KYC',
+                              label: 'Identité',
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),

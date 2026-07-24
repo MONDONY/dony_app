@@ -96,7 +96,7 @@ class _AmountCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'BLOQUÉS EN ESCROW',
+            'FONDS BLOQUÉS',
             style: tt.labelMedium?.copyWith(
               color: cs.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -144,13 +144,13 @@ class _HowItWorksCard extends StatelessWidget {
         done: true,
         title: 'Ibrahima livre',
         description:
-            'Il scanne le QR à chaque étape. Vous suivez en direct.',
+            'Il lit le QR à chaque étape. Vous suivez en direct.',
       ),
       const _Step(
         done: true,
         title: 'Fatou confirme',
         description:
-            'Elle scanne le QR (ou tape le code à 4 chiffres) à la remise.',
+            'Elle lit le QR (ou tape le code à 4 chiffres) à la remise.',
       ),
       _Step(
         done: false,

@@ -129,7 +129,7 @@ class VoyageurContactCard extends StatelessWidget {
                           ),
                           if (bid.travelerKycVerified)
                             MiniChip(
-                              label: 'KYC',
+                              label: 'Identité',
                               color: cs.primary,
                               bg: cs.primaryContainer,
                             ),

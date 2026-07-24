@@ -142,7 +142,7 @@ class _LoadedView extends StatelessWidget {
           backgroundColor: DonyColors.blue700,
           leading: const DonyAppBarBackButton(),
           title: Text(
-            'Mon Wallet',
+            'Mon portefeuille',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   color: DonyColors.neutral0,
                   fontSize: 17,
@@ -388,7 +388,7 @@ class _TxTile extends StatelessWidget {
 
   String get _label => switch (tx.type) {
         'TOP_UP' => 'Recharge',
-        'BID_PAYMENT' => 'Paiement bid',
+        'BID_PAYMENT' => 'Paiement colis',
         'COMMISSION_DEDUCTED' => 'Commission',
         'REFUND' => 'Remboursement',
         'REFERRAL_REWARD' => 'Parrainage',
