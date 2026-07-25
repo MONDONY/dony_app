@@ -92,6 +92,7 @@ class _PackageRequestDetailScreenState
         title: 'Ma demande',
         actions: [
           IconButton(
+            tooltip: 'Plus d\'options',
             icon: DonyIcon('ellipsis', color: cs.onSurface, size: 22),
             onPressed: () {},
           ),
@@ -957,6 +958,7 @@ class _SheetFrame extends StatelessWidget {
               children: [
                 Expanded(child: Text('Ma demande', style: tt.headlineSmall)),
                 IconButton(
+                  tooltip: 'Fermer',
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const DonyIcon('x', size: 20),
                   style: IconButton.styleFrom(

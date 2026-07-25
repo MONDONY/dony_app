@@ -157,6 +157,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                     Row(
                       children: [
                         IconButton(
+                          tooltip: 'Fermer',
                           icon: const DonyIcon('x',
                               color: DonyColors.neutral0),
                           onPressed: () => context.pop(),

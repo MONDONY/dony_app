@@ -162,6 +162,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
             prefixIcon: widget.prefixIcon,
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(
+                  tooltip: 'Effacer la ville',
                     icon: DonyIcon(
                       'x',
                       size: 18,

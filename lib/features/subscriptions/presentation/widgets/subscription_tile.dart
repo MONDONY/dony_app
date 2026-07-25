@@ -41,6 +41,7 @@ class SubscriptionTile extends StatelessWidget {
               ),
             ),
             IconButton(
+              tooltip: item.pushEnabled ? 'Couper les notifications' : 'Activer les notifications',
               onPressed: onToggleBell,
               icon: DonyIcon(item.pushEnabled ? 'bell' : 'bell-off',
                   color: item.pushEnabled ? cs.primary : cs.onSurfaceVariant),

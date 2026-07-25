@@ -309,6 +309,7 @@ class TrajetStep extends StatelessWidget {
                 prefixIconColor: Theme.of(context).colorScheme.secondary,
                 trailing: arrivalTimeNotifier.value != null
                     ? IconButton(
+                      tooltip: "Effacer l'heure d'arrivée",
                         icon: Icon(
                           DonyIcons.close,
                           size: 18,

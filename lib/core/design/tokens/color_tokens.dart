@@ -129,6 +129,16 @@ abstract final class DonyColors {
   static const threadStatusGreen   = Color(0xFF15803D);
   static const threadStatusNeutral = Color(0xFF6B7280);
 
+  /// Texte des pastilles de statut de négociation, posé sur des fonds pâles
+  /// figés.
+  ///
+  /// Distinct des `threadStatus*` ci-dessus, qui servent de liseré et d'ombre
+  /// et n'ont donc aucune exigence de contraste. En texte, `threadStatusAmber`
+  /// ne tenait que 3.33:1 et `threadStatusNeutral` 4.39:1, tous deux sous le
+  /// seuil de 4.5:1.
+  static const threadPillAmberFg   = Color(0xFF8A5A12); // 5.31:1 sur #FEF3C7
+  static const threadPillNeutralFg = Color(0xFF5F6673); // 5.44:1 sur #F3F4F6
+
   // Dégradé hero (shipment_list) — fond bleu-sable/navy selon brightness
   static const heroGradientDarkA  = Color(0xFF080D18);
   static const heroGradientDarkB  = Color(0xFF0B0918);

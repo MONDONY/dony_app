@@ -792,6 +792,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   ),
                   if (!isSubmitting)
                     IconButton(
+                      tooltip: 'Fermer',
                       icon: DonyIcon('x',
                           color: cs.onSurfaceVariant),
                       onPressed: () {

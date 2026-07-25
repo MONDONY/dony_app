@@ -145,6 +145,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Fermer',
                     // `maybePop` consulte `PopScope`, contrairement à `pop` :
                     // une feuille qui protège une saisie en cours ne se fait
                     // donc plus vider par sa propre croix.

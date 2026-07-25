@@ -82,6 +82,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                 child: Row(
                   children: [
                     IconButton(
+                      tooltip: 'Fermer',
                       icon: const DonyIcon('x',
                           color: DonyColors.neutral0),
                       onPressed: () => context.pop<String?>(),
@@ -97,6 +98,7 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                       ),
                     ),
                     IconButton(
+                      tooltip: 'Activer ou couper la lampe',
                       icon: const DonyIcon('zap',
                           color: DonyColors.neutral0),
                       onPressed: () => _scanner.toggleTorch(),

@@ -560,11 +560,9 @@ class _StatusPill extends StatelessWidget {
         DonyColors.primary,
         const Color(0xFFEEF3FF),
       ),
-      // Ambre assombri par rapport à threadStatusAmber (#B5781E), qui ne
-      // faisait que 3.33:1 sur ce fond. #8A5A12 monte à 5.31:1.
       NegotiationThreadStatus.awaitingTrip => (
         'ATT. TRAJET',
-        const Color(0xFF8A5A12),
+        DonyColors.threadPillAmberFg,
         const Color(0xFFFEF3C7),
       ),
       NegotiationThreadStatus.awaitingPayment => (
@@ -577,8 +575,11 @@ class _StatusPill extends StatelessWidget {
         DonyColors.threadStatusGreen,
         const Color(0xFFDCFCE7),
       ),
-      // Gris assombri : #6B7280 ne faisait que 4.39:1 sur #F3F4F6.
-      _ => ('TERMINÉ', const Color(0xFF5F6673), const Color(0xFFF3F4F6)),
+      _ => (
+        'TERMINÉ',
+        DonyColors.threadPillNeutralFg,
+        const Color(0xFFF3F4F6),
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
