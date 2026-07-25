@@ -20,7 +20,16 @@ class AccessibilityScope extends InheritedWidget {
     required this.persistentMessages,
     required this.confirmImportantActions,
     required super.child,
+    this.highContrast = false,
   });
+
+  /// Le haut contraste est actif, système ou choix explicite déjà résolu.
+  ///
+  /// Le thème porte déjà la variante contrastée, donc presque aucun widget n'a
+  /// à lire ce drapeau. L'exception est [DonyButton], qui peint un dégradé au
+  /// lieu de lire `cs.primary` : sans ce drapeau il resterait sur ses couleurs
+  /// normales alors que tout le reste de l'écran a basculé.
+  final bool highContrast;
 
   /// Souligne les liens textuels, pour ne pas signaler un lien par la seule
   /// couleur (WCAG 1.4.1).
@@ -60,7 +69,8 @@ class AccessibilityScope extends InheritedWidget {
       underlineLinks != old.underlineLinks ||
       reinforceLabels != old.reinforceLabels ||
       persistentMessages != old.persistentMessages ||
-      confirmImportantActions != old.confirmImportantActions;
+      confirmImportantActions != old.confirmImportantActions ||
+      highContrast != old.highContrast;
 }
 
 extension AccessibilityContext on BuildContext {

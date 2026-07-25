@@ -21,7 +21,11 @@ abstract final class AppTheme {
       primary: hc
           ? (isLight ? DonyColors.primaryHc : DonyColors.primaryHcDark)
           : (isLight ? DonyColors.primary : DonyColors.blueDark500),
-      onPrimary: DonyColors.textOnBrand,
+      // En haut contraste sombre, primary est un bleu clair : un libellé blanc
+      // n'y ferait que 2.04:1. Le noir y monte à 10.30:1.
+      onPrimary: hc && !isLight
+          ? DonyColors.onBrandHcDark
+          : DonyColors.textOnBrand,
       primaryContainer: isLight ? DonyColors.primarySoft : DonyColors.blueDark50,
       onPrimaryContainer: isLight ? DonyColors.primaryHover : DonyColors.blueDark500,
       secondary: isLight ? DonyColors.accent : DonyColors.terraDark500,

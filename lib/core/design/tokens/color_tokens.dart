@@ -211,7 +211,10 @@ abstract final class DonyColors {
   static const blueDark500 = Color(0xFF4D8AFF); // PRIMARY DARK ★
   static const blueDark600 = Color(0xFF6699FF); // Hover dark
   static const blueDark700 = Color(0xFF3D7AEF); // Press dark
-  static const blueDark50  = Color(0xFF1A2B47); // PrimarySoft dark
+  // Assombri (était #1A2B47) : blueDark500 posé dessus n'atteignait que
+  // 4.32:1, sous le seuil 4.5:1 du texte courant. À #152238 la paire monte à
+  // 4.85:1.
+  static const blueDark50  = Color(0xFF152238); // PrimarySoft dark
 
   // Terra accent recalibré
   static const terraDark500 = Color(0xFFE8865B); // ACCENT DARK ★
@@ -224,7 +227,10 @@ abstract final class DonyColors {
   static const neutralDark100 = Color(0xFF161B23); // SURFACE DARK ★
   static const neutralDark200 = Color(0xFF222932);
   static const neutralDark300 = Color(0xFF2D333D); // BORDER DARK ★
-  static const neutralDark400 = Color(0xFF7E7972); // text subtle dark
+  // Éclairci (était #7E7972) : sert de couleur de placeholder via `hintStyle`,
+  // et un placeholder est du texte. À #7E7972 la paire tombait à 4.00:1 sur la
+  // surface sombre ; à #918B83 elle atteint 5.12:1.
+  static const neutralDark400 = Color(0xFF918B83); // text subtle dark
   static const neutralDark500 = Color(0xFFB5AFA5); // text muted dark
   static const neutralDark600 = Color(0xFFD8D2C7); // text high
   static const neutralDark700 = Color(0xFFF5F0E8); // TEXT PRIMARY DARK ★
@@ -254,6 +260,22 @@ abstract final class DonyColors {
   static const textMutedHc     = Color(0xFF3A3630); // 9.3:1 sur blanc
   static const borderDefaultHc = Color(0xFF5C5850); // bordure nettement visible
   static const primaryHc       = Color(0xFF00368F); // bleu assombri, 9.1:1 sur blanc
+
+  // Fonds pleins des boutons en haut contraste. `DonyButton` peint un dégradé
+  // dont la partie la plus claire descend à 2.6:1 avec un libellé blanc ; en
+  // haut contraste il bascule sur ces aplats, dont le ratio est mesuré.
+  static const successHc = Color(0xFF0A6446); // blanc dessus : 7.18:1
+  static const dangerHc  = Color(0xFFA81F18); // blanc dessus : 7.31:1
+  static const accentHc  = Color(0xFF7A3616); // blanc dessus : 8.87:1
+
+  static const successHcDark = Color(0xFF7FD4AE); // noir dessus : 11.93:1
+  static const dangerHcDark  = Color(0xFFFF9B96); // noir dessus : 10.38:1
+  static const accentHcDark  = Color(0xFFF0A882); // noir dessus : 10.63:1
+
+  /// Couleur de texte posée sur un aplat de marque en haut contraste sombre.
+  /// Les aplats y sont clairs, donc le blanc n'y tient pas : blanc sur
+  /// [primaryHcDark] ne fait que 2.04:1, noir y fait 10.30:1.
+  static const onBrandHcDark = Color(0xFF000000);
 
   static const surfaceHcDark       = Color(0xFF000000);
   static const bgAppHcDark         = Color(0xFF000000);

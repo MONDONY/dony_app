@@ -69,9 +69,12 @@ class DonyAvatar extends StatelessWidget {
     return single?.toUpperCase() ?? '?';
   }
 
+  // Fonds d'initiales. Le texte posé dessus est blanc, donc chaque couleur
+  // doit tenir 4.5:1 avec du blanc. terra500 n'y arrivait pas (3.46:1), d'où
+  // terra700 (6.92:1) ; les cinq autres passent déjà.
   static const _avatarColors = [
     DonyColors.primary,
-    DonyColors.terra500,
+    DonyColors.terra700,
     DonyColors.ink900,
     DonyColors.info,
     DonyColors.purple,

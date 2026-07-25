@@ -295,6 +295,7 @@ class _DonyAppState extends State<DonyApp> {
                               persistentMessages: a11y.persistentMessages,
                               confirmImportantActions:
                                   a11y.confirmImportantActions,
+                              highContrast: highContrast,
                               // Monté sous le Navigator de MaterialApp → peut
                               // présenter le bottom sheet de consentement
                               // analytics + brancher identify/reset sur le

@@ -1,3 +1,4 @@
+import 'package:dony/core/design/accessibility_scope.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/shadow_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
@@ -121,46 +122,60 @@ class _DonyButtonState extends State<DonyButton> {
         : const Size(120, 52);
     const padding = EdgeInsets.symmetric(horizontal: DonySpacing.base);
 
+    // Le haut contraste remplace le dégradé par un aplat mesuré. Sans cette
+    // bascule, le bouton garderait ses couleurs normales alors que tout le
+    // reste de l'écran a basculé, et son libellé descendrait à 2.6:1.
+    final hc = context.a11y.highContrast;
+    final onBrand = _onBrand(hc: hc, isLight: isLight);
+
     final button = switch (widget.variant) {
       DonyButtonVariant.primary => _GlowButton(
-          colors: isLight
-              ? [const Color(0xFF3B8AFF), DonyColors.blue500, DonyColors.blue700]
-              : [const Color(0xFF6699FF), DonyColors.blueDark500, DonyColors.blueDark700],
+          colors: hc
+              ? _flat(cs.primary)
+              : isLight
+                  ? [const Color(0xFF3B8AFF), DonyColors.blue500, DonyColors.blue700]
+                  : [const Color(0xFF6699FF), DonyColors.blueDark500, DonyColors.blueDark700],
           shadows: isLight ? DonyShadow.brand : DonyShadow.brandDark,
-          foreground: DonyColors.textOnBrand,
+          foreground: onBrand,
           pressed: _pressed,
           fullWidth: widget.fullWidth,
           onPressed: widget.isLoading ? null : widget.onPressed,
           child: content,
         ),
       DonyButtonVariant.success => _GlowButton(
-          colors: isLight
-              ? [const Color(0xFF1AA574), DonyColors.success500]
-              : [DonyColors.successDark500, const Color(0xFF22B882)],
+          colors: hc
+              ? _flat(isLight ? DonyColors.successHc : DonyColors.successHcDark)
+              : isLight
+                  ? [const Color(0xFF1AA574), DonyColors.success500]
+                  : [DonyColors.successDark500, const Color(0xFF22B882)],
           shadows: isLight ? DonyShadow.success : DonyShadow.successDark,
-          foreground: DonyColors.textOnBrand,
+          foreground: onBrand,
           pressed: _pressed,
           fullWidth: widget.fullWidth,
           onPressed: widget.isLoading ? null : widget.onPressed,
           child: content,
         ),
       DonyButtonVariant.destructive => _GlowButton(
-          colors: isLight
-              ? [const Color(0xFFFF5252), DonyColors.danger500]
-              : [DonyColors.dangerDark500, const Color(0xFFB02020)],
+          colors: hc
+              ? _flat(isLight ? DonyColors.dangerHc : DonyColors.dangerHcDark)
+              : isLight
+                  ? [const Color(0xFFFF5252), DonyColors.danger500]
+                  : [DonyColors.dangerDark500, const Color(0xFFB02020)],
           shadows: isLight ? DonyShadow.danger : DonyShadow.dangerDark,
-          foreground: DonyColors.textOnBrand,
+          foreground: onBrand,
           pressed: _pressed,
           fullWidth: widget.fullWidth,
           onPressed: widget.isLoading ? null : widget.onPressed,
           child: content,
         ),
       DonyButtonVariant.accent => _GlowButton(
-          colors: isLight
-              ? [const Color(0xFFE8865B), DonyColors.terra500]
-              : [DonyColors.terraDark500, const Color(0xFFC85A2E)],
+          colors: hc
+              ? _flat(isLight ? DonyColors.accentHc : DonyColors.accentHcDark)
+              : isLight
+                  ? [const Color(0xFFE8865B), DonyColors.terra500]
+                  : [DonyColors.terraDark500, const Color(0xFFC85A2E)],
           shadows: DonyShadow.accent, // pas de variante sombre du glow accent
-          foreground: DonyColors.textOnBrand,
+          foreground: onBrand,
           pressed: _pressed,
           fullWidth: widget.fullWidth,
           onPressed: widget.isLoading ? null : widget.onPressed,
@@ -200,15 +215,32 @@ class _DonyButtonState extends State<DonyButton> {
     );
   }
 
-  Color _spinnerColor(ColorScheme cs) => switch (widget.variant) {
-        DonyButtonVariant.primary     => DonyColors.textOnBrand,
-        DonyButtonVariant.success     => DonyColors.textOnBrand,
-        DonyButtonVariant.destructive => DonyColors.textOnBrand,
-        DonyButtonVariant.accent      => DonyColors.textOnBrand,
-        DonyButtonVariant.secondary   => cs.primary,
-        DonyButtonVariant.ghost       => cs.onSurfaceVariant,
-      };
+  Color _spinnerColor(ColorScheme cs) {
+    final onBrand = _onBrand(
+      hc: context.a11y.highContrast,
+      isLight: cs.brightness == Brightness.light,
+    );
+    return switch (widget.variant) {
+      DonyButtonVariant.primary     => onBrand,
+      DonyButtonVariant.success     => onBrand,
+      DonyButtonVariant.destructive => onBrand,
+      DonyButtonVariant.accent      => onBrand,
+      DonyButtonVariant.secondary   => cs.primary,
+      DonyButtonVariant.ghost       => cs.onSurfaceVariant,
+    };
+  }
 }
+
+/// Aplat uniforme : `_GlowButton` attend toujours un dégradé, deux fois la même
+/// couleur donne une surface unie sans dupliquer sa logique de rendu.
+List<Color> _flat(Color c) => [c, c];
+
+/// Couleur du libellé posé sur un aplat de marque.
+///
+/// En haut contraste sombre les aplats sont clairs, donc le blanc n'y tient
+/// pas. Ailleurs, le blanc reste correct sur les fonds sombres saturés.
+Color _onBrand({required bool hc, required bool isLight}) =>
+    hc && !isLight ? DonyColors.onBrandHcDark : DonyColors.textOnBrand;
 
 /// Bouton avec dégradé + ombre colorée (glow).
 /// Utilisé pour primary, success, destructive.
