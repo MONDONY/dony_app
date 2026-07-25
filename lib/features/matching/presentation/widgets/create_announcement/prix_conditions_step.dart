@@ -776,33 +776,57 @@ class PrixConditionsStep extends StatelessWidget {
                 top: Radius.circular(DonyRadius.card),
               ),
             ),
-            // Wrap plutôt que Row unique : sur une ligne quand ça tient
-            // (rendu identique à 100 %, le CTA reste à côté du texte), le
-            // CTA « Activer les paiements par carte » passe sous le texte
-            // seulement s'il n'y a plus la place (débordement constaté à
-            // 200 %). Un Column inconditionnel aurait déplacé le CTA à
-            // 100 % aussi, ce qui n'est jamais arrivé avant ce lot.
-            child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DonyIcon('circle-check', color: cs.success, size: 18),
-                    const SizedBox(width: DonySpacing.xs),
-                    Flexible(
-                      child: Text(
-                        'Publiez en espèces dès maintenant. Connectez Stripe '
-                        'pour accepter aussi la carte.',
-                        style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                      ),
-                    ),
-                  ],
-                ),
-                GestureDetector(
+            // Bascule conditionnelle, pas un Wrap. Un Wrap mesure chaque
+            // enfant INDÉPENDAMMENT contre la largeur totale avant de
+            // décider s'il tient sur la ligne courante : mesuré seul, le
+            // texte d'explication consomme presque toute la largeur et
+            // n'en laisse plus au CTA, qui retombe à la ligne — exactement
+            // le même résultat que le Column abandonné, par un autre
+            // chemin. Le Row d'origine, lui, mesurait Expanded(texte) et le
+            // CTA SIMULTANÉMENT : le CTA (largeur intrinsèque) était résolu
+            // en premier, et le texte était contraint dans la colonne
+            // étroite restante — c'est ce dimensionnement simultané, propre
+            // à Expanded dans un Row, qui permettait au CTA de tenir sur la
+            // même ligne à 100 %. Un Wrap ne peut pas reproduire ça.
+            //
+            // À 100 %, la largeur intrinsèque du CTA (~140 px) laisse assez
+            // de place au texte pour tenir sur 2-3 lignes sans déborder.
+            // Au-delà, cette largeur grandit avec la police (jusqu'à ~2x à
+            // 200 %) et peut à elle seule dépasser la largeur de la
+            // bannière, quel que soit le Expanded voisin : un enfant non
+            // flexible d'un Row est mesuré avec une contrainte de largeur
+            // non bornée, Flexible/Expanded ne protège que ses propres
+            // enfants, pas ses frères non-flex (c'est la cause du
+            // débordement constaté à 200 %).
+            //
+            // On choisit donc explicitement la disposition d'origine
+            // (identique à 100 % PAR CONSTRUCTION, pas par approximation)
+            // tant que l'échelle de texte est celle par défaut, et on ne
+            // passe à l'empilement — toujours sûr, quel que soit le
+            // contenu — que si elle grandit. Le seuil (> 1.0, pas de valeur
+            // intermédiaire calculée) est délibérément conservateur :
+            // calculer le point de rupture exact demanderait de mesurer la
+            // largeur intrinsèque réelle du CTA (TextPainter/LayoutBuilder),
+            // disproportionné pour une bannière d'info. Le prix : la
+            // disposition empilée peut s'activer un peu avant le point de
+            // rupture réel (ex. à 110 % alors que le Row tiendrait encore),
+            // jamais après.
+            child: Builder(
+              builder: (bannerCtx) {
+                final textScale =
+                    MediaQuery.textScalerOf(bannerCtx).scale(14) / 14;
+                final stacked = textScale > 1.0;
+
+                final icon =
+                    DonyIcon('circle-check', color: cs.success, size: 18);
+                final explanation = Expanded(
+                  child: Text(
+                    'Publiez en espèces dès maintenant. Connectez Stripe '
+                    'pour accepter aussi la carte.',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                  ),
+                );
+                final cta = GestureDetector(
                   key: const Key('activate-card-payments-cta'),
                   onTap: () => ctx.push('/connect/onboarding/intro'),
                   child: Container(
@@ -835,8 +859,39 @@ class PrixConditionsStep extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
-              ],
+                );
+
+                if (!stacked) {
+                  // Identique à la disposition d'origine, avant ce lot
+                  // (crossAxisAlignment.center est la valeur par défaut de
+                  // Row, inutile de la répéter).
+                  return Row(
+                    children: [
+                      icon,
+                      const SizedBox(width: DonySpacing.xs),
+                      explanation,
+                      const SizedBox(width: DonySpacing.sm),
+                      cta,
+                    ],
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        icon,
+                        const SizedBox(width: DonySpacing.xs),
+                        explanation,
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.sm),
+                    Align(alignment: Alignment.centerLeft, child: cta),
+                  ],
+                );
+              },
             ),
           ),
           // ── Ligne Carte bancaire (verrouillée OFF) ────────────────────────

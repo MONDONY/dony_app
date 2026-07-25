@@ -341,6 +341,38 @@ void main() {
       // nom · téléphone · ville, bouton Changer).
       expect(find.text('Changer'), findsOneWidget);
       expect(tester.takeException(), isNull);
+
+      // Preuve directe, pas seulement l'absence d'exception : une
+      // troncature par maxLines:1 + ellipsis ne lève jamais d'exception
+      // (c'est exactement la classe de défaut que ce test doit couvrir).
+      // On mesure la hauteur RENDUE du texte récap (nom · téléphone ·
+      // ville, repéré par le numéro qui n'apparaît nulle part ailleurs à
+      // l'écran) et on la compare à la hauteur d'UNE seule ligne pour ce
+      // même style et cette même échelle de texte, calculée avec un
+      // TextPainter indépendant. Si la troncature revenait, le texte
+      // rendu ferait exactement une ligne et l'assertion échouerait.
+      final summaryFinder = find.textContaining(longRecipient.phoneE164);
+      expect(summaryFinder, findsOneWidget);
+      final summaryWidget = tester.widget<Text>(summaryFinder);
+      final renderedHeight = tester.getSize(summaryFinder).height;
+
+      // Même échelle que celle forcée plus haut (textScaleFactorTestValue).
+      const testTextScale = 2.0;
+      final oneLineHeight = (TextPainter(
+        text: TextSpan(text: 'A', style: summaryWidget.style),
+        textDirection: TextDirection.ltr,
+        textScaler: const TextScaler.linear(testTextScale),
+      )..layout())
+          .height;
+
+      expect(
+        renderedHeight,
+        greaterThan(oneLineHeight * 1.3),
+        reason: 'le résumé nom · téléphone · ville doit occuper plusieurs '
+            'lignes à 200 % avec ce contenu long ; une seule ligne '
+            "(hauteur ≈ oneLineHeight) signifierait qu'un maxLines:1 a été "
+            'réintroduit et tronque silencieusement la ville',
+      );
     },
   );
 
