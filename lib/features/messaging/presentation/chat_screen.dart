@@ -18,10 +18,13 @@ import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dony/core/utils/phone_dialer.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ChatScreen extends StatefulWidget {
   final ConversationModel conversation;
@@ -107,19 +110,15 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _call(String phone) async {
+  void _requestCall() {
     unawaited(getIt<AnalyticsService>().logEvent(
       AnalyticsEvents.conversationCallInitiated,
     ));
-    final uri = Uri(scheme: 'tel', path: phone);
-    final ok = await canLaunchUrl(uri) && await launchUrl(uri);
-    if (!ok && mounted) {
-      DonySnackbar.show(
-        context,
-        message: 'Impossible d\'ouvrir le composeur',
-        type: DonySnackbarType.error,
-      );
-    }
+    // Le numéro n'est plus dans la conversation : on le demande au serveur, qui
+    // vérifie que le deal est actif et journalise la révélation.
+    context
+        .read<ContactRevealBloc>()
+        .add(ContactRevealRequested(widget.conversation.bidId));
   }
 
   Future<void> _sendText() async {
@@ -170,8 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final tt = Theme.of(context).textTheme;
     final conversation = widget.conversation;
     final participant = conversation.otherParticipant;
-    final phone = participant.phone;
-    final canCall = phone != null && phone.isNotEmpty;
+    final canCall = participant.phoneAvailable;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -224,18 +222,42 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           if (canCall)
-            IconButton(
-              tooltip: 'Appeler',
-              onPressed: () => _call(phone),
-              icon: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                ),
-                child: DonyIcon('phone', size: 18, color: cs.primary),
-              ),
+            BlocConsumer<ContactRevealBloc, ContactRevealState>(
+              listener: (context, state) {
+                if (state is ContactRevealSuccess) {
+                  unawaited(dialPhoneNumber(context, state.phoneNumber));
+                } else if (state is ContactRevealError) {
+                  DonySnackbar.show(
+                    context,
+                    message: state.error.message,
+                    type: DonySnackbarType.error,
+                  );
+                }
+              },
+              builder: (context, state) {
+                final isRevealing = state is ContactRevealLoading;
+                return IconButton(
+                  tooltip: 'Appeler',
+                  onPressed: isRevealing ? null : _requestCall,
+                  icon: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                    ),
+                    child: isRevealing
+                        ? Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.primary,
+                            ),
+                          )
+                        : DonyIcon('phone', size: 18, color: cs.primary),
+                  ),
+                );
+              },
             ),
           PopupMenuButton<String>(
             onSelected: (value) {

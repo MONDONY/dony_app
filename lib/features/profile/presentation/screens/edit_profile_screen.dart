@@ -130,7 +130,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _save(bool isTraveler) {
     final firstName = _firstNameCtrl.text.trim();
     final lastName = _lastNameCtrl.text.trim();
-    final email = _emailCtrl.text.trim();
     final bio = _bioCtrl.text.trim();
     final city = _cityCtrl.text.trim();
 
@@ -139,7 +138,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       AuthUpdateProfileRequested(
         firstName: firstName.isNotEmpty ? firstName : null,
         lastName: lastName.isNotEmpty ? lastName : null,
-        email: email.isNotEmpty ? email : null,
         birthDate: _birthDate,
         city: city.isNotEmpty ? city : null,
         bio: bio.isEmpty ? null : bio,
@@ -373,16 +371,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // ── Section Coordonnées ──────────────────────────────────
                 const _SectionLabel(label: 'Coordonnées'),
                 const SizedBox(height: DonySpacing.md),
+                // Email = donnée d'identification du compte, non modifiable ici.
+                // L'ajout (compte sans adresse) passe par le flux dédié avec code
+                // de vérification, pas par ce formulaire.
                 DonyTextField(
                   controller: _emailCtrl,
-                  label: 'Email (optionnel)',
+                  label: 'Email du compte',
+                  hint: 'Aucune adresse associée',
                   prefixWidget: DonyIcon(
                     'mail',
                     size: 20,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   keyboardType: TextInputType.emailAddress,
-                  enabled: !isSaving,
+                  enabled: false,
                 ),
                 const SizedBox(height: DonySpacing.xxl),
 

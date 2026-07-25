@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -14,12 +18,11 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Carte profil voyageur (vue expéditeur) — bouton 📞 conditionnel + 💬 chat.
 ///
 /// Le bouton téléphone est affiché uniquement si :
-///   - `bid.travelerPhone` est non-null et non-vide,
+///   - `bid.travelerPhoneAvailable` est vrai (le serveur autorise la révélation),
 ///   - ET le statut n'est pas COMPLETED ni DELIVERED.
 ///
 /// Requiert un [ConversationOpenBloc] dans le contexte.
@@ -28,29 +31,22 @@ class VoyageurContactCard extends StatelessWidget {
 
   const VoyageurContactCard({super.key, required this.bid});
 
+  /// Le serveur dit si le voyageur est joignable ; le numéro lui-même est
+  /// demandé au tap. On masque en plus le bouton en fin de course.
   bool get _showPhoneButton {
-    final phone = bid.travelerPhone;
-    if (phone == null || phone.isEmpty) {
+    if (!bid.travelerPhoneAvailable) {
       return false;
     }
     final s = bid.status;
     return s != 'COMPLETED' && s != 'DELIVERED';
   }
 
-  Future<void> _call(BuildContext context) async {
+  void _requestCall(BuildContext context) {
     unawaited(getItSafe<AnalyticsService>()?.logEvent(
       AnalyticsEvents.travelerCallInitiated,
       properties: {'status': bid.status},
     ));
-    final uri = Uri(scheme: 'tel', path: bid.travelerPhone);
-    final ok = await canLaunchUrl(uri) && await launchUrl(uri);
-    if (!ok && context.mounted) {
-      DonySnackbar.show(
-        context,
-        message: 'Impossible d\'ouvrir le composeur',
-        type: DonySnackbarType.error,
-      );
-    }
+    context.read<ContactRevealBloc>().add(ContactRevealRequested(bid.id));
   }
 
   @override
@@ -155,9 +151,26 @@ class VoyageurContactCard extends StatelessWidget {
                 ),
                 // Bouton 📞 — conditionnel
                 if (_showPhoneButton) ...[
-                  _IconActionButton(
-                    iconAsset: 'phone',
-                    onTap: () => _call(context),
+                  BlocConsumer<ContactRevealBloc, ContactRevealState>(
+                    listener: (context, state) {
+                      if (state is ContactRevealSuccess) {
+                        unawaited(dialPhoneNumber(context, state.phoneNumber));
+                      } else if (state is ContactRevealError) {
+                        DonySnackbar.show(
+                          context,
+                          message: state.error.message,
+                          type: DonySnackbarType.error,
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      final isRevealing = state is ContactRevealLoading;
+                      return _IconActionButton(
+                        iconAsset: 'phone',
+                        isLoading: isRevealing,
+                        onTap: isRevealing ? null : () => _requestCall(context),
+                      );
+                    },
                   ),
                   const SizedBox(width: DonySpacing.sm),
                 ],

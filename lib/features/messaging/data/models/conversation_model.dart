@@ -5,9 +5,10 @@ class ParticipantModel {
   final String name;
   final String? avatarUrl;
 
-  /// Numéro de l'interlocuteur — révélé par le backend uniquement quand le deal
-  /// est actif (même gating que les bids). `null` sinon → pas de bouton appel.
-  final String? phone;
+  /// L'interlocuteur est joignable (deal actif) : le bouton d'appel s'affiche.
+  /// Le numéro n'est plus transmis ici ; il est demandé au tap via
+  /// `GET /bids/{bidId}/contact`.
+  final bool phoneAvailable;
 
   /// Rôle affiché en sous-titre du header ('Voyageur' | 'Expéditeur').
   final String? role;
@@ -18,7 +19,7 @@ class ParticipantModel {
     required this.id,
     required this.name,
     this.avatarUrl,
-    this.phone,
+    this.phoneAvailable = false,
     this.role,
     this.kycVerified = false,
   });
@@ -27,7 +28,7 @@ class ParticipantModel {
         id: json['id'] as String,
         name: json['name'] as String? ?? '',
         avatarUrl: json['avatarUrl'] as String?,
-        phone: json['phone'] as String?,
+        phoneAvailable: json['phoneAvailable'] as bool? ?? false,
         role: json['role'] as String?,
         kycVerified: json['kycVerified'] as bool? ?? false,
       );

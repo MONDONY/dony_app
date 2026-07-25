@@ -1,6 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
@@ -28,6 +31,12 @@ class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
 
+class _MockContactRevealBloc
+    extends MockBloc<ContactRevealEvent, ContactRevealState>
+    implements ContactRevealBloc {}
+
+class _FakeContactRevealEvent extends Fake implements ContactRevealEvent {}
+
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
 
@@ -36,7 +45,7 @@ class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
 BidModel _bid({
   String status = 'ACCEPTED',
   String? travelerName,
-  String? travelerPhone,
+  bool travelerPhoneAvailable = false,
   double? travelerAverageRating,
   int? travelerTotalTrips,
   bool travelerKycVerified = false,
@@ -69,7 +78,7 @@ BidModel _bid({
       createdAt: DateTime(2026, 1, 15),
       updatedAt: DateTime(2026, 1, 15),
       travelerName: travelerName,
-      travelerPhone: travelerPhone,
+      travelerPhoneAvailable: travelerPhoneAvailable,
       travelerAverageRating: travelerAverageRating,
       travelerTotalTrips: travelerTotalTrips,
       travelerKycVerified: travelerKycVerified,
@@ -104,7 +113,13 @@ Widget _hostVoyageur(
   BidModel bid,
   _MockConversationOpenBloc bloc, {
   List<String>? pushedRoutes,
+  ContactRevealBloc? reveal,
 }) {
+  // Le numéro n'est plus dans le bid : la carte lit ContactRevealBloc au tap.
+  final revealBloc = reveal ?? _MockContactRevealBloc();
+  if (reveal == null) {
+    when(() => revealBloc.state).thenReturn(const ContactRevealInitial());
+  }
   final router = GoRouter(
     initialLocation: '/',
     observers: pushedRoutes == null
@@ -116,8 +131,11 @@ Widget _hostVoyageur(
       GoRoute(
         path: '/',
         builder: (ctx, _) => Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: bloc,
+          body: MultiBlocProvider(
+            providers: [
+              BlocProvider<ConversationOpenBloc>.value(value: bloc),
+              BlocProvider<ContactRevealBloc>.value(value: revealBloc),
+            ],
             child: VoyageurContactCard(bid: bid),
           ),
         ),
@@ -174,6 +192,7 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(const ConversationOpenRequested('bid-test'));
+    registerFallbackValue(_FakeContactRevealEvent());
   });
 
   // ── VoyageurContactCard ────────────────────────────────────────────────────
@@ -202,7 +221,7 @@ void main() {
     testWidgets('shows phone button when phone is present and status is ACCEPTED',
         (tester) async {
       final bid = _bid(
-        travelerPhone: '+33600000000',
+        travelerPhoneAvailable: true,
         status: 'ACCEPTED',
       );
 
@@ -212,7 +231,7 @@ void main() {
     });
 
     testWidgets('hides phone button when phone is null', (tester) async {
-      final bid = _bid(travelerPhone: null);
+      final bid = _bid(travelerPhoneAvailable: false);
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
@@ -222,7 +241,7 @@ void main() {
     testWidgets('hides phone button when status is COMPLETED even with phone',
         (tester) async {
       final bid = _bid(
-        travelerPhone: '+33600000000',
+        travelerPhoneAvailable: true,
         status: 'COMPLETED',
       );
 
@@ -234,7 +253,7 @@ void main() {
     testWidgets('hides phone button when status is DELIVERED even with phone',
         (tester) async {
       final bid = _bid(
-        travelerPhone: '+33600000000',
+        travelerPhoneAvailable: true,
         status: 'DELIVERED',
       );
 
@@ -270,7 +289,7 @@ void main() {
         updatedAt: DateTime(2026, 1, 15),
         travelerName: 'Ibrahima Diallo',
         travelerId: 'traveler-uuid-001',
-        travelerPhone: '+33611223344',
+        travelerPhoneAvailable: true,
         travelerAverageRating: 4.5,
         travelerTotalTrips: 8,
         travelerKycVerified: true,
@@ -324,7 +343,7 @@ void main() {
             .setMockMethodCallHandler(channel, null);
       });
 
-      final bid = _bid(travelerPhone: '+33600000001', status: 'ACCEPTED');
+      final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
       await tester.pumpAndSettle();
 
@@ -332,9 +351,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // No error snackbar should appear.
-      expect(
-          find.textContaining("Impossible d'ouvrir le composeur"), findsNothing);
+      // Le tap ne fait que demander le numéro : aucun repli ne s'affiche.
+      expect(find.text('Copier'), findsNothing);
     });
   });
 
@@ -534,7 +552,7 @@ void main() {
     });
 
     testWidgets(
-      'canLaunchUrl returns false → snackbar "Impossible d\'ouvrir le composeur" visible',
+      'canLaunchUrl returns false → le numéro est affiché et proposé à la copie',
       (tester) async {
         // Mock the url_launcher platform channel so canLaunchUrl returns false.
         const channel = MethodChannel('plugins.flutter.io/url_launcher');
@@ -551,23 +569,27 @@ void main() {
         });
 
         final bid = _bid(
-          travelerPhone: '+33600000000',
+          travelerPhoneAvailable: true,
           status: 'ACCEPTED',
         );
 
-        await tester.pumpWidget(_hostVoyageur(bid, bloc));
-        await tester.pump();
-
-        // Tap the phone button
-        await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
-        // Pump twice: once for the async _call to resolve, once for the snackbar
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-
-        expect(
-          find.textContaining('Impossible d\'ouvrir le composeur'),
-          findsOneWidget,
+        // Le tap ne compose plus directement : il demande le numéro. On simule le
+        // bloc qui le renvoie, ce qui déclenche l'ouverture du composeur.
+        final reveal = _MockContactRevealBloc();
+        whenListen(
+          reveal,
+          Stream<ContactRevealState>.fromIterable(
+            [const ContactRevealSuccess('+33600000000')],
+          ),
+          initialState: const ContactRevealInitial(),
         );
+
+        await tester.pumpWidget(_hostVoyageur(bid, bloc, reveal: reveal));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.textContaining('+33600000000'), findsOneWidget);
+        expect(find.text('Copier'), findsOneWidget);
       },
     );
   });

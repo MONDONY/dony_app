@@ -183,6 +183,34 @@ void main() {
         isA<AuthError>(),
       ],
     );
+
+    blocTest<AuthBloc, AuthState>(
+      'session Firebase rejetée (401) → signOut + AuthInitial (pas d\'écran bloquant)',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
+        when(() => mockUser.phoneNumber).thenReturn('+33612345678');
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/me'),
+              statusCode: 401,
+            ),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthCheckRequested()),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthInitial>(),
+      ],
+      verify: (_) {
+        verify(() => mockFirebaseAuth.signOut()).called(1);
+      },
+    );
   });
 
   // ─── AuthRegisterRequested ───────────────────────────────────────────────────
@@ -330,15 +358,13 @@ void main() {
           id: 'user-123',
           firstName: 'Amadou',
           lastName: 'Diallo',
-          email: 'amadou@dony.app',
-          roles: ['SENDER'],
+            roles: ['SENDER'],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
         when(() => mockRepo.updateProfile(
               firstName: any(named: 'firstName'),
               lastName: any(named: 'lastName'),
-              email: any(named: 'email'),
               birthDate: any(named: 'birthDate'),
               city: any(named: 'city'),
             )).thenAnswer((_) async => updatedUser);
@@ -347,7 +373,6 @@ void main() {
       act: (bloc) => bloc.add(const AuthUpdateProfileRequested(
         firstName: 'Amadou',
         lastName: 'Diallo',
-        email: 'amadou@dony.app',
       )),
       expect: () => [
         isA<AuthLoading>(),
@@ -362,7 +387,6 @@ void main() {
         when(() => mockRepo.updateProfile(
               firstName: any(named: 'firstName'),
               lastName: any(named: 'lastName'),
-              email: any(named: 'email'),
               birthDate: any(named: 'birthDate'),
               city: any(named: 'city'),
             )).thenThrow(Exception('Erreur serveur'));
@@ -960,6 +984,41 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '000000')),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── AuthAddEmailFromProfileRequested ────────────────────────────────────────
+
+  group('AuthAddEmailFromProfileRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'succès → un seul appel attachEmail (email+code), émet AuthProfileUpdated',
+      build: () {
+        when(() => mockRepo.attachEmail(email: 'a@b.com', code: '123456'))
+            .thenAnswer((_) async => testUser);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddEmailFromProfileRequested(email: 'a@b.com', code: '123456'),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthProfileUpdated>()],
+      verify: (_) {
+        // La vérification et l'écriture ne sont plus deux appels séparés
+        verify(() => mockRepo.attachEmail(email: 'a@b.com', code: '123456')).called(1);
+        verifyNever(() => mockRepo.verifyEmailOtp(any(), any()));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec backend (409 email déjà défini) → AuthError',
+      build: () {
+        when(() => mockRepo.attachEmail(email: 'a@b.com', code: '123456'))
+            .thenThrow(Exception('email-already-set'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddEmailFromProfileRequested(email: 'a@b.com', code: '123456'),
+      ),
       expect: () => [const AuthLoading(), isA<AuthError>()],
     );
   });
@@ -1735,7 +1794,6 @@ void main() {
               transportMode: any(named: 'transportMode'),
               firstName: any(named: 'firstName'),
               lastName: any(named: 'lastName'),
-              email: any(named: 'email'),
               birthDate: any(named: 'birthDate'),
               city: any(named: 'city'),
               phoneNumber: any(named: 'phoneNumber'),
@@ -1755,7 +1813,6 @@ void main() {
               transportMode: 'AVION',
               firstName: null,
               lastName: null,
-              email: null,
               birthDate: null,
               city: null,
               phoneNumber: null,

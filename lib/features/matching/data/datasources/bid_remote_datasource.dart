@@ -139,6 +139,16 @@ class BidRemoteDatasource {
         .toList();
   }
 
+  /// Numéro de la contrepartie, demandé au moment où l'utilisateur veut appeler.
+  ///
+  /// Le numéro ne fait plus partie des réponses de colis : le serveur ne le
+  /// communique que par cet appel, vérifie que l'appelant est bien partie au colis
+  /// et journalise la révélation. Renvoie null si le compte n'a pas de numéro.
+  Future<String?> getCounterpartyPhone(String bidId) async {
+    final response = await _apiClient.dio.get('/bids/$bidId/contact');
+    return (response.data as Map<String, dynamic>)['phoneNumber'] as String?;
+  }
+
   /// Demandes reçues sur tous les trajets du voyageur, en un seul appel.
   ///
   /// `/bids/me` ne renvoie que les bids créés en tant qu'expéditeur ; cet

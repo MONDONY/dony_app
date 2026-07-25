@@ -96,18 +96,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 404) {
         // Firebase OK mais pas encore inscrit en backend
         _pendingPhoneNumber = firebaseUser.phoneNumber;
         emit(const AuthInitial());
+      } else if (statusCode == 401 || statusCode == 403) {
+        // Session Firebase rejetée par le backend (token périmé, ou compte
+        // absent/supprimé côté serveur). Ce n'est PAS une panne : on déconnecte
+        // proprement et on renvoie vers l'onboarding/login au lieu de bloquer
+        // l'utilisateur sur un écran d'erreur sans issue (« Réessayer » rebouclerait
+        // sur le même 401).
+        unawaited(_firebaseAuth.signOut());
+        _pendingPhoneNumber = firebaseUser.phoneNumber;
+        emit(const AuthInitial());
+        unawaited(
+          _analytics?.logEvent(
+            AnalyticsEvents.loginFailed,
+            properties: {'error_type': statusCode.toString()},
+          ),
+        );
       } else {
-        // Erreur réseau/serveur → ne pas forcer la re-inscription
+        // Erreur réseau / 5xx transitoire → écran d'erreur avec réessai.
         emit(AuthError(unwrapDioError(e)));
         unawaited(
           _analytics?.logEvent(
             AnalyticsEvents.loginFailed,
             properties: {
-              'error_type': e.response?.statusCode?.toString() ?? 'network',
+              'error_type': statusCode?.toString() ?? 'network',
             },
           ),
         );
@@ -320,7 +336,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final updatedUser = await _authRepository.updateProfile(
         firstName: event.firstName,
         lastName: event.lastName,
-        email: event.email,
         birthDate: event.birthDate,
         city: event.city,
         phoneNumber: event.phoneNumber,
@@ -540,13 +555,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      // Validate OTP ownership on the backend — we intentionally discard the
-      // returned custom token to avoid replacing the current Firebase session.
-      await _authRepository.verifyEmailOtp(event.email, event.code);
-      // Update backend profile; freeEmailFromDeletedAccounts runs server-side
-      // if the email was previously held by a soft-deleted account.
-      final updatedUser = await _authRepository.updateProfile(
+      // Un seul appel : le backend consomme l'OTP et écrit l'adresse dans la même
+      // opération. Séparer vérification et écriture laissait la seconde invocable
+      // seule — on ne prouvait plus la possession de la boîte au moment d'écrire.
+      final updatedUser = await _authRepository.attachEmail(
         email: event.email,
+        code: event.code,
       );
       emit(AuthProfileUpdated(updatedUser));
     } catch (e) {

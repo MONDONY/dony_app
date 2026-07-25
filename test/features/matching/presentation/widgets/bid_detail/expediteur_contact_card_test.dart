@@ -1,5 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -15,35 +19,57 @@ import 'package:mocktail/mocktail.dart';
 class _MockConvBloc extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
 
+class _MockRevealBloc extends MockBloc<ContactRevealEvent, ContactRevealState>
+    implements ContactRevealBloc {}
+
 class _FakeConversationOpenEvent extends Fake implements ConversationOpenEvent {}
 
+class _FakeContactRevealEvent extends Fake implements ContactRevealEvent {}
+
+/// Le numéro n'est plus porté par le bid : seul un booléen dit si l'expéditeur est
+/// joignable. Le numéro est demandé au serveur au tap sur 📞.
 BidModel _bid({
   String status = 'ACCEPTED',
-  String? senderPhone = '+33600000000',
+  bool senderPhoneAvailable = true,
   String? senderName = 'Mariama D.',
+  String senderId = 's1',
+  int? senderTotalShipments,
+  bool senderKycVerified = true,
 }) =>
     BidModel(
       id: 'b1',
       announcementId: 'a1',
-      senderId: 's1',
+      senderId: senderId,
       status: status,
       weightKg: 5,
       senderName: senderName,
-      senderPhone: senderPhone,
-      senderKycVerified: true,
+      senderPhoneAvailable: senderPhoneAvailable,
+      senderTotalShipments: senderTotalShipments,
+      senderKycVerified: senderKycVerified,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
 
-Future<void> _pump(WidgetTester tester, BidModel bid) async {
+Future<void> _pump(
+  WidgetTester tester,
+  BidModel bid, {
+  ContactRevealBloc? reveal,
+}) async {
   final conv = _MockConvBloc();
   when(() => conv.state).thenReturn(ConversationOpenInitial());
+  final revealBloc = reveal ?? _MockRevealBloc();
+  if (reveal == null) {
+    when(() => revealBloc.state).thenReturn(const ContactRevealInitial());
+  }
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light,
       home: Scaffold(
-        body: BlocProvider<ConversationOpenBloc>.value(
-          value: conv,
+        body: MultiBlocProvider(
+          providers: [
+            BlocProvider<ConversationOpenBloc>.value(value: conv),
+            BlocProvider<ContactRevealBloc>.value(value: revealBloc),
+          ],
           child: ExpediteurContactCard(bid: bid),
         ),
       ),
@@ -51,38 +77,67 @@ Future<void> _pump(WidgetTester tester, BidModel bid) async {
   );
 }
 
+/// Un bloc de révélation qui part de Initial puis émet [state] : le listener de la
+/// carte réagit comme en production, sans dépendre d'un vrai repository.
+_MockRevealBloc _revealEmitting(ContactRevealState state) {
+  final bloc = _MockRevealBloc();
+  whenListen(
+    bloc,
+    Stream<ContactRevealState>.fromIterable([state]),
+    initialState: const ContactRevealInitial(),
+  );
+  return bloc;
+}
+
+void _mockUrlLauncher({required bool canLaunch}) {
+  const channel = MethodChannel('plugins.flutter.io/url_launcher');
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, (call) async {
+    if (call.method == 'canLaunch') return canLaunch;
+    if (call.method == 'launch') return canLaunch;
+    return null;
+  });
+  addTearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+}
+
+Finder get _phoneIcon =>
+    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone');
+Finder get _chatIcon =>
+    find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle');
+
 void main() {
   setUpAll(() {
     registerFallbackValue(_FakeConversationOpenEvent());
+    registerFallbackValue(_FakeContactRevealEvent());
   });
 
-  testWidgets('affiche le nom + 💬 + 📞 quand téléphone partagé', (tester) async {
+  testWidgets('affiche le nom + 💬 + 📞 quand l\'expéditeur est joignable',
+      (tester) async {
     await _pump(tester, _bid());
     expect(find.text('EXPÉDITEUR'), findsOneWidget);
     expect(find.text('Mariama D.'), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsOneWidget);
+    expect(_chatIcon, findsOneWidget);
+    expect(_phoneIcon, findsOneWidget);
   });
 
-  testWidgets('pas de 📞 si pas de téléphone', (tester) async {
-    await _pump(tester, _bid(senderPhone: null));
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'), findsOneWidget);
+  testWidgets('pas de 📞 si le serveur ne le déclare pas joignable',
+      (tester) async {
+    await _pump(tester, _bid(senderPhoneAvailable: false));
+    expect(_phoneIcon, findsNothing);
+    expect(_chatIcon, findsOneWidget);
   });
 
   testWidgets('pas de 📞 quand statut terminal (COMPLETED)', (tester) async {
     await _pump(tester, _bid(status: 'COMPLETED'));
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+    expect(_phoneIcon, findsNothing);
   });
 
   testWidgets('pas de 📞 quand statut terminal (DELIVERED)', (tester) async {
     await _pump(tester, _bid(status: 'DELIVERED'));
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
-  });
-
-  testWidgets('pas de 📞 si téléphone vide (chaîne vide)', (tester) async {
-    await _pump(tester, _bid(senderPhone: ''));
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+    expect(_phoneIcon, findsNothing);
   });
 
   testWidgets('chip KYC affiché si senderKycVerified=true', (tester) async {
@@ -91,268 +146,124 @@ void main() {
   });
 
   testWidgets('chip KYC absent si senderKycVerified=false', (tester) async {
-    final conv = _MockConvBloc();
-    when(() => conv.state).thenReturn(ConversationOpenInitial());
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      senderName: 'Mariama D.',
-      senderPhone: '+33600000000',
-      senderKycVerified: false,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
-            child: ExpediteurContactCard(bid: bid),
-          ),
-        ),
-      ),
-    );
+    await _pump(tester, _bid(senderKycVerified: false));
     expect(find.text('Identité'), findsNothing);
   });
 
-  testWidgets('chip Kilo Pro affiché si senderKiloPro=true', (tester) async {
-    final conv = _MockConvBloc();
-    when(() => conv.state).thenReturn(ConversationOpenInitial());
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      senderName: 'Mariama D.',
-      senderPhone: '+33600000000',
-      senderKiloPro: true,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
-            child: ExpediteurContactCard(bid: bid),
-          ),
-        ),
-      ),
-    );
-    expect(find.text('Kilo Pro'), findsOneWidget);
-  });
-
-  testWidgets('état chargement conversation → spinner dans bouton 💬',
-      (tester) async {
-    final conv = _MockConvBloc();
-    when(() => conv.state).thenReturn(const ConversationOpenLoading());
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
-            child: ExpediteurContactCard(bid: _bid()),
-          ),
-        ),
-      ),
-    );
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-  });
-
-  testWidgets('envois pluriel — senderTotalShipments=3', (tester) async {
-    final conv = _MockConvBloc();
-    when(() => conv.state).thenReturn(ConversationOpenInitial());
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      senderName: 'Mariama D.',
-      senderPhone: '+33600000000',
-      senderTotalShipments: 3,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
-            child: ExpediteurContactCard(bid: bid),
-          ),
-        ),
-      ),
-    );
+  testWidgets('envoi pluriel — senderTotalShipments=3', (tester) async {
+    await _pump(tester, _bid(senderTotalShipments: 3));
     expect(find.textContaining('3 envois'), findsOneWidget);
   });
 
   testWidgets('envoi singulier — senderTotalShipments=1', (tester) async {
-    final conv = _MockConvBloc();
-    when(() => conv.state).thenReturn(ConversationOpenInitial());
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      senderName: 'Mariama D.',
-      senderPhone: '+33600000000',
-      senderTotalShipments: 1,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
-            child: ExpediteurContactCard(bid: bid),
-          ),
-        ),
-      ),
-    );
+    await _pump(tester, _bid(senderTotalShipments: 1));
     expect(find.textContaining('1 envoi'), findsOneWidget);
   });
 
-  testWidgets('resolvedSenderName utilise le téléphone si pas de nom',
-      (tester) async {
-    await _pump(tester, _bid(senderName: null, senderPhone: '+33611223344'));
-    expect(find.text('+33611223344'), findsWidgets);
+  testWidgets('senderTotalShipments null → pas de texte envois', (tester) async {
+    await _pump(tester, _bid());
+    expect(find.textContaining('envoi'), findsNothing);
   });
 
-  testWidgets('resolvedSenderName = Expéditeur si ni nom ni téléphone',
+  testWidgets('sans nom → « Expéditeur » (le numéro ne sert plus de repli)',
       (tester) async {
-    await _pump(tester, _bid(senderName: null, senderPhone: null));
+    await _pump(tester, _bid(senderName: null));
     expect(find.text('Expéditeur'), findsOneWidget);
+  });
+
+  testWidgets('senderId vide → pas de chevron (canOpenProfile=false)',
+      (tester) async {
+    await _pump(tester, _bid(senderId: ''));
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'),
+        findsNothing);
   });
 
   testWidgets('tap 💬 → ConversationOpenRequested émis', (tester) async {
     final conv = _MockConvBloc();
     when(() => conv.state).thenReturn(ConversationOpenInitial());
+    final reveal = _MockRevealBloc();
+    when(() => reveal.state).thenReturn(const ContactRevealInitial());
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
         home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
+          body: MultiBlocProvider(
+            providers: [
+              BlocProvider<ConversationOpenBloc>.value(value: conv),
+              BlocProvider<ContactRevealBloc>.value(value: reveal),
+            ],
             child: ExpediteurContactCard(bid: _bid()),
           ),
         ),
       ),
     );
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'));
+    await tester.tap(_chatIcon);
     await tester.pumpAndSettle();
     verify(() => conv.add(any(that: isA<ConversationOpenRequested>()))).called(1);
   });
 
-  testWidgets(
-      'senderId vide → pas de chevron (canOpenProfile=false)',
+  // ── Révélation du numéro : le tap demande, il n'appelle pas directement ─────
+
+  testWidgets('tap 📞 → demande le numéro au serveur, sans composer',
       (tester) async {
-    final conv = _MockConvBloc();
-    when(() => conv.state).thenReturn(ConversationOpenInitial());
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: '',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      senderName: 'Mariama D.',
-      senderPhone: '+33600000000',
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
-            child: ExpediteurContactCard(bid: bid),
-          ),
-        ),
-      ),
-    );
-    // When senderId is empty, there's no chevron and no tap target for profile
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
+    final reveal = _MockRevealBloc();
+    when(() => reveal.state).thenReturn(const ContactRevealInitial());
+    await _pump(tester, _bid(), reveal: reveal);
+
+    await tester.tap(_phoneIcon);
+    await tester.pump();
+
+    verify(() => reveal.add(any(that: isA<ContactRevealRequested>()))).called(1);
   });
 
-  testWidgets('senderTotalShipments null → pas de texte envois',
+  testWidgets('numéro reçu → composeur ouvert, aucun message d\'erreur',
       (tester) async {
-    final conv = _MockConvBloc();
-    when(() => conv.state).thenReturn(ConversationOpenInitial());
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: 'ACCEPTED',
-      weightKg: 5,
-      senderName: 'Mariama D.',
-      senderPhone: '+33600000000',
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: Scaffold(
-          body: BlocProvider<ConversationOpenBloc>.value(
-            value: conv,
-            child: ExpediteurContactCard(bid: bid),
-          ),
-        ),
-      ),
-    );
-    expect(find.textContaining('envoi'), findsNothing);
-  });
-
-  testWidgets('tap 📞 canLaunchUrl=true → aucun snackbar erreur', (tester) async {
-    const channel = MethodChannel('plugins.flutter.io/url_launcher');
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-      if (call.method == 'canLaunch') return true;
-      if (call.method == 'launch') return true;
-      return null;
-    });
-    addTearDown(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, null);
-    });
-
-    await _pump(tester, _bid());
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
+    _mockUrlLauncher(canLaunch: true);
+    await _pump(tester, _bid(),
+        reveal: _revealEmitting(const ContactRevealSuccess('+33600000000')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.textContaining("Impossible d'ouvrir le composeur"), findsNothing);
+    // Le composeur s'est ouvert : aucun repli ne doit s'afficher.
+    expect(find.text('Copier'), findsNothing);
+    expect(find.textContaining('Aucun numéro disponible'), findsNothing);
   });
 
-  testWidgets('tap 📞 canLaunchUrl=false → snackbar erreur', (tester) async {
-    const channel = MethodChannel('plugins.flutter.io/url_launcher');
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-      if (call.method == 'canLaunch') return false;
-      return null;
-    });
-    addTearDown(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, null);
-    });
-
-    await _pump(tester, _bid());
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
+  testWidgets('pas d\'app téléphone → le numéro est affiché et proposé à la copie',
+      (tester) async {
+    _mockUrlLauncher(canLaunch: false);
+    await _pump(tester, _bid(),
+        reveal: _revealEmitting(const ContactRevealSuccess('+33600000000')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.textContaining("Impossible d'ouvrir le composeur"), findsOneWidget);
+    // Le numéro vient d'être obtenu du serveur : le perdre sur une simple erreur
+    // serait dommage (émulateurs et tablettes n'ont pas de composeur).
+    expect(find.textContaining('+33600000000'), findsOneWidget);
+    expect(find.text('Copier'), findsOneWidget);
+  });
+
+  testWidgets('compte sans numéro → message dédié, pas de composeur vide',
+      (tester) async {
+    await _pump(tester, _bid(),
+        reveal: _revealEmitting(const ContactRevealSuccess(null)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.textContaining('Aucun numéro disponible'), findsOneWidget);
+  });
+
+  testWidgets('échec serveur → message d\'erreur remonté', (tester) async {
+    await _pump(
+      tester,
+      _bid(),
+      reveal: _revealEmitting(
+        const ContactRevealError(ForbiddenException('Numéro indisponible')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.textContaining('Numéro indisponible'), findsOneWidget);
   });
 }

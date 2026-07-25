@@ -28,7 +28,6 @@ class AuthRemoteDatasource {
   Future<UserModel> updateProfile({
     String? firstName,
     String? lastName,
-    String? email,
     DateTime? birthDate,
     String? city,
     String? phoneNumber,
@@ -41,7 +40,6 @@ class AuthRemoteDatasource {
       data: {
         if (firstName != null) 'firstName': firstName,
         if (lastName != null) 'lastName': lastName,
-        if (email != null) 'email': email,
         if (birthDate != null)
           'birthDate': DateFormat('yyyy-MM-dd').format(birthDate),
         if (city != null) 'city': city,
@@ -78,6 +76,20 @@ class AuthRemoteDatasource {
       data: {'email': email, 'code': code},
     );
     return response.data!['customToken'] as String;
+  }
+
+  /// Rattache une adresse au compte connecté. Adresse et code partent ensemble :
+  /// le backend consomme l'OTP au moment d'écrire, donc la preuve de possession
+  /// est intrinsèque. Renvoie le profil à jour.
+  Future<UserModel> attachEmail({
+    required String email,
+    required String code,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/email-otp/attach',
+      data: {'email': email, 'code': code},
+    );
+    return UserModel.fromJson(response.data!);
   }
 
   Future<UserModel> registerWithEmail({required String email}) async {

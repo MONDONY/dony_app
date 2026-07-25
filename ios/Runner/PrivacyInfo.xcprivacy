@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Manifeste de confidentialité de la cible applicative. Les SDK tiers (Firebase,
+	     Stripe, Sentry, PostHog…) fournissent le leur dans leurs Pods ; celui-ci couvre
+	     le code de dony et le moteur Flutter. Son absence déclenche le rejet
+	     automatique ITMS-91053 « Missing API declaration ».
+
+	     NSPrivacyTracking reste false : l'app ne fait pas de suivi au sens ATT (pas
+	     d'IDFA, pas de recoupement inter-apps). Si cela change, il faudra passer à true
+	     ET ajouter NSUserTrackingUsageDescription dans Info.plist. -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+
+	<!-- À COMPLÉTER avec l'équipe produit, en cohérence stricte avec le formulaire
+	     « App Privacy » d'App Store Connect, qui est la déclaration publiée et fait foi.
+	     Laissé vide volontairement : une déclaration inventée serait pire qu'absente.
+	     Sont concernés au minimum : téléphone, email, nom, position précise, photos,
+	     informations de paiement, identifiants, données de diagnostic. -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+
+	<!-- API à « raison d'accès requise » utilisées par le moteur Flutter et les
+	     paquets embarqués (shared_preferences, path_provider, Sentry). -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<!-- shared_preferences et le moteur Flutter lisent/écrivent les réglages
+			     de l'app elle-même. -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<!-- Horodatage de fichiers du conteneur de l'app (cache Hive, fichiers
+			     temporaires de photos). -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<dict>
+			<!-- Vérification de l'espace libre avant écriture (photos de colis, QR). -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+			</array>
+		</dict>
+		<dict>
+			<!-- Mesure de durées écoulées (performance, Sentry). -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

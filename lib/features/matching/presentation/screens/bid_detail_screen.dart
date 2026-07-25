@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
@@ -55,6 +56,7 @@ class BidDetailScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
+        BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
         BlocProvider(create: (_) => getIt<RatingBloc>()),
         BlocProvider(create: (_) => getIt<CancellationBloc>()),
       ],

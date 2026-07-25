@@ -6,7 +6,7 @@ final _fullJson = {
   'announcementId': 'ann-001',
   'senderId': 'sender-001',
   'senderName': 'Amadou Diallo',
-  'senderPhone': '+33612345678',
+  'senderPhoneAvailable': true,
   'weightKg': 5.0,
   'declaredValueEur': 200.0,
   'description': 'Vêtements',
@@ -33,7 +33,7 @@ final _fullJson = {
   'confirmationCode': '4721',
   'travelerId': 'trav-001',
   'travelerName': 'Ibrahima Ba',
-  'travelerPhone': '+33698765432',
+  'travelerPhoneAvailable': true,
 };
 
 final _minimalJson = {
@@ -56,7 +56,7 @@ void main() {
       expect(model.announcementId, 'ann-001');
       expect(model.senderId, 'sender-001');
       expect(model.senderName, 'Amadou Diallo');
-      expect(model.senderPhone, '+33612345678');
+      expect(model.senderPhoneAvailable, isTrue);
       expect(model.weightKg, 5.0);
       expect(model.declaredValueEur, 200.0);
       expect(model.description, 'Vêtements');
@@ -80,14 +80,14 @@ void main() {
       expect(model.confirmationCode, '4721');
       expect(model.travelerId, 'trav-001');
       expect(model.travelerName, 'Ibrahima Ba');
-      expect(model.travelerPhone, '+33698765432');
+      expect(model.travelerPhoneAvailable, isTrue);
     });
 
     test('handles minimal JSON with all optionals null/absent', () {
       final model = BidModel.fromJson(_minimalJson);
       expect(model.id, 'bid-002');
       expect(model.senderName, isNull);
-      expect(model.senderPhone, isNull);
+      expect(model.senderPhoneAvailable, isFalse);
       expect(model.contentCategory, isNull);
       expect(model.recipientName, isNull);
       expect(model.recipientPhone, isNull);
@@ -203,12 +203,12 @@ void main() {
       expect(model.resolvedSenderName, 'Amadou Diallo');
     });
 
-    test('returns senderPhone when senderName is null', () {
+    test('returns "Expéditeur" when senderName is null (le numéro n\'est plus un repli)', () {
       final model = BidModel.fromJson({
         ..._minimalJson,
-        'senderPhone': '+221700000001',
+        'senderPhoneAvailable': true,
       });
-      expect(model.resolvedSenderName, '+221700000001');
+      expect(model.resolvedSenderName, 'Expéditeur');
     });
 
     test('returns "Expéditeur" when both null', () {

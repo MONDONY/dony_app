@@ -16,7 +16,6 @@ class AuthRepository {
   Future<UserModel> updateProfile({
     String? firstName,
     String? lastName,
-    String? email,
     DateTime? birthDate,
     String? city,
     String? phoneNumber,
@@ -26,7 +25,6 @@ class AuthRepository {
   }) => _datasource.updateProfile(
     firstName: firstName,
     lastName: lastName,
-    email: email,
     birthDate: birthDate,
     city: city,
     phoneNumber: phoneNumber,
@@ -42,6 +40,9 @@ class AuthRepository {
 
   Future<String> verifyEmailOtp(String email, String code) =>
       _datasource.verifyEmailOtp(email, code);
+
+  Future<UserModel> attachEmail({required String email, required String code}) =>
+      _datasource.attachEmail(email: email, code: code);
 
   Future<UserModel> registerWithEmail({required String email}) =>
       _datasource.registerWithEmail(email: email);

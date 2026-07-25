@@ -65,6 +65,7 @@ import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
@@ -421,6 +422,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<ConversationOpenBloc>(
     () => ConversationOpenBloc(getIt<ConversationRepository>()),
+  );
+  // Révélation du numéro au tap sur « appeler » (le numéro n'est plus dans les DTO).
+  getIt.registerFactory<ContactRevealBloc>(
+    () => ContactRevealBloc(getIt<BidRepository>()),
   );
 
   // Config (commission rate)

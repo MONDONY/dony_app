@@ -173,6 +173,7 @@ import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.
 import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
@@ -676,8 +677,12 @@ final appRouter = GoRouter(
       path: '/conversations/:id',
       builder: (context, state) {
         final conversation = state.extra as ConversationModel;
-        return BlocProvider(
-          create: (_) => getIt<ChatBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<ChatBloc>()),
+            // Le numéro n'est plus dans la conversation : il est demandé au tap.
+            BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
+          ],
           child: ChatScreen(conversation: conversation),
         );
       },

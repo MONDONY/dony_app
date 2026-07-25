@@ -84,6 +84,10 @@ class BidRepository {
 
   Future<List<BidModel>> getMyBids() => _datasource.getMyBids();
 
+  /// Numéro de la contrepartie, récupéré au moment de l'appel téléphonique.
+  Future<String?> getCounterpartyPhone(String bidId) =>
+      _datasource.getCounterpartyPhone(bidId);
+
   Future<TravelerBidsPage> getTravelerBids({int page = 0, int size = 20}) =>
       _datasource.getTravelerBids(page: page, size: size);
 

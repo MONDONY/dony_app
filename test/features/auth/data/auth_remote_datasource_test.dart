@@ -67,6 +67,29 @@ void main() {
     });
   });
 
+  group('attachEmail', () {
+    test('POST /auth/email-otp/attach avec email+code, renvoie le profil', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(
+              '/auth/email-otp/attach',
+              data: any(named: 'data')))
+          .thenAnswer((_) async => Response(
+              data: _userJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(path: '/auth/email-otp/attach')));
+
+      final result = await datasource.attachEmail(
+        email: 'amadou@dony.app',
+        code: '123456',
+      );
+
+      expect(result.id, 'user-123');
+      verify(() => mockDio.post<Map<String, dynamic>>(
+            '/auth/email-otp/attach',
+            data: {'email': 'amadou@dony.app', 'code': '123456'},
+          )).called(1);
+    });
+  });
+
   group('updateProfile', () {
     test('returns updated UserModel', () async {
       final updated = {..._userJson, 'firstName': 'Amadou', 'lastName': 'Diallo'};
@@ -79,7 +102,6 @@ void main() {
       final result = await datasource.updateProfile(
         firstName: 'Amadou',
         lastName: 'Diallo',
-        email: 'amadou@dony.app',
         birthDate: DateTime(1990, 5, 15),
         city: 'Paris',
       );
