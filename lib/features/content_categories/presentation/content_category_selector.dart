@@ -648,7 +648,12 @@ class _ComboTag extends StatelessWidget {
               ),
             ),
           ),
-          GestureDetector(
+          Semantics(
+            button: true,
+            container: true,
+            excludeSemantics: true,
+            label: 'Retirer cette catégorie',
+            child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onRemove,
             child: SizedBox(
@@ -658,6 +663,7 @@ class _ComboTag extends StatelessWidget {
                 child: DonyIcon('x', size: 12, color: cs.primary),
               ),
             ),
+          )
           ),
         ],
       ),

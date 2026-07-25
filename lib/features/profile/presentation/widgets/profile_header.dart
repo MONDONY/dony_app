@@ -112,7 +112,12 @@ class ProfileHeader extends StatelessWidget {
                 ),
               ),
               // Bouton édition
-              GestureDetector(
+              Semantics(
+                button: true,
+                container: true,
+                excludeSemantics: true,
+                label: 'Modifier le profil',
+                child: GestureDetector(
                 onTap: onEditProfile,
                 child: Container(
                   width: 32,
@@ -127,6 +132,7 @@ class ProfileHeader extends StatelessWidget {
                     color: cs.onSurfaceVariant,
                   ),
                 ),
+              )
               ),
             ],
           ),

@@ -116,13 +116,15 @@ class VoyageurCard extends StatelessWidget {
                   ),
                 ),
                 // Actions
-                _IconActionButton(iconAsset: 'phone', onTap: () {}),
+                _IconActionButton(iconAsset: 'phone',
+                        semanticLabel: 'Appeler', onTap: () {}),
                 const SizedBox(width: DonySpacing.sm),
                 BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
                   builder: (context, openState) {
                     final isOpening = openState is ConversationOpenLoading;
                     return _IconActionButton(
                       iconAsset: 'message-circle',
+                      semanticLabel: 'Ouvrir la discussion',
                       isLoading: isOpening,
                       onTap: isOpening
                           ? null
@@ -157,8 +159,13 @@ class _IconActionButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isLoading;
 
+  /// Nom annoncé. Le bouton n'affiche qu'une icône : sans lui, un lecteur
+  /// d'écran dit « bouton » et rien de plus.
+  final String semanticLabel;
+
   const _IconActionButton({
     required this.onTap,
+    required this.semanticLabel,
     this.icon,
     this.iconAsset,
     this.isLoading = false,
@@ -167,7 +174,13 @@ class _IconActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      enabled: onTap != null,
+      label: semanticLabel,
+      child: GestureDetector(
       onTap: onTap,
       child: Container(
         width: 44,
@@ -187,6 +200,7 @@ class _IconActionButton extends StatelessWidget {
             : iconAsset != null
                 ? DonyIcon(iconAsset!, color: cs.primary, size: 18)
                 : Icon(icon, color: cs.primary, size: 18),
+      ),
       ),
     );
   }

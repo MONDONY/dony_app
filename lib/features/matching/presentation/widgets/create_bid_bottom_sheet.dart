@@ -2256,7 +2256,12 @@ class _InlineAddRow extends StatelessWidget {
         Material(
           color: cs.primary,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          child: InkWell(
+          child: Semantics(
+            button: true,
+            container: true,
+            excludeSemantics: true,
+            label: 'Ajouter un article',
+            child: InkWell(
             key: const Key('add-item-btn'),
             borderRadius: BorderRadius.circular(DonyRadius.md),
             onTap: onAdd,
@@ -2265,6 +2270,7 @@ class _InlineAddRow extends StatelessWidget {
               height: 52,
               child: Icon(Icons.add_rounded, color: cs.onPrimary),
             ),
+          )
           ),
         ),
       ],

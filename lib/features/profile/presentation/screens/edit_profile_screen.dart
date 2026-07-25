@@ -247,7 +247,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Center(
                   child: Column(
                     children: [
-                      GestureDetector(
+                      Semantics(
+                        button: true,
+                        container: true,
+                        excludeSemantics: true,
+                        enabled: !isLoading,
+                        label: 'Changer la photo de profil',
+                        child: GestureDetector(
                         key: const ValueKey('avatar_pick_gesture'),
                         onTap: isLoading ? null : _pickAndUploadAvatar,
                         child: SizedBox(
@@ -312,6 +318,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                         ),
+                      )
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       Text(

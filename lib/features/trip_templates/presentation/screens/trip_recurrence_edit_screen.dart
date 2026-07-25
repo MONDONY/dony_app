@@ -189,9 +189,15 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                         ),
                       ),
                       if (_departureTime != null)
-                        GestureDetector(
+                        Semantics(
+                          button: true,
+                          container: true,
+                          excludeSemantics: true,
+                          label: "Effacer l'heure de départ",
+                          child: GestureDetector(
                           onTap: () => setState(() => _departureTime = null),
                           child: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
+                        )
                         ),
                     ],
                   ),

@@ -224,9 +224,15 @@ class CaRemovableChip extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DonySpacing.xs),
-          GestureDetector(
+          Semantics(
+            button: true,
+            container: true,
+            excludeSemantics: true,
+            label: 'Retirer \$label',
+            child: GestureDetector(
             onTap: onRemove,
             child: DonyIcon('x', size: 14, color: accentColor),
+          )
           ),
         ],
       ),
@@ -284,10 +290,16 @@ class CaTimeRow extends StatelessWidget {
               ),
             ),
             if (time != null && onClear != null)
-              GestureDetector(
+              Semantics(
+                button: true,
+                container: true,
+                excludeSemantics: true,
+                label: "Effacer l'heure",
+                child: GestureDetector(
                 onTap: onClear,
-                child: DonyIcon('x',
-                    size: 16, color: cs.onSurfaceVariant),
+                  child: DonyIcon('x',
+                      size: 16, color: cs.onSurfaceVariant),
+                ),
               )
             else
               DonyIcon('chevron-right',

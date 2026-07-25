@@ -674,7 +674,13 @@ class _GlassRefreshButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      enabled: onTap != null,
+      label: 'Actualiser',
+      child: GestureDetector(
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -706,6 +712,7 @@ class _GlassRefreshButton extends StatelessWidget {
                   ),
           ),
         ),
+      ),
       ),
     );
   }

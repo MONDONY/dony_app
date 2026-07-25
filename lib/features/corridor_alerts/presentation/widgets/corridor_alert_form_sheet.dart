@@ -448,7 +448,12 @@ class _DateWindowField extends StatelessWidget {
                   ),
                 ),
                 if (hasRange)
-                  GestureDetector(
+                  Semantics(
+                    button: true,
+                    container: true,
+                    excludeSemantics: true,
+                    label: 'Effacer la période',
+                    child: GestureDetector(
                     key: const Key('corridor-alert-date-window-clear'),
                     onTap: onClear,
                     behavior: HitTestBehavior.opaque,
@@ -460,6 +465,7 @@ class _DateWindowField extends StatelessWidget {
                         color: cs.onSurfaceVariant,
                       ),
                     ),
+                  )
                   ),
               ],
             ),
