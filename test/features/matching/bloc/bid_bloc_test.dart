@@ -1108,12 +1108,12 @@ void main() {
       expect(bid.resolvedSenderName, 'Amadou Diallo');
     });
 
-    test('sans senderName avec senderPhone → retourne le téléphone', () {
+    test('sans senderName → « Expéditeur » (le numéro ne sert plus de repli)', () {
       final bid = BidModel(
         id: 'b1',
         announcementId: 'a1',
         senderId: 's1',
-        senderPhone: '+33612345678',
+        senderPhoneAvailable: true,
         weightKg: 5.0,
         declaredValueEur: 100.0,
         description: 'Test',
@@ -1121,7 +1121,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      expect(bid.resolvedSenderName, '+33612345678');
+      expect(bid.resolvedSenderName, 'Expéditeur');
     });
   });
 

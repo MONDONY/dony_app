@@ -1,8 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
@@ -26,6 +30,10 @@ class _MockCancellationBloc
     extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
 
+class _MockContactRevealBloc
+    extends MockBloc<ContactRevealEvent, ContactRevealState>
+    implements ContactRevealBloc {}
+
 class _MockConversationOpenBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
@@ -35,7 +43,7 @@ class _MockConversationOpenBloc
 BidModel _bid({
   String status = 'ACCEPTED',
   String? travelerName = 'Mamadou',
-  String? travelerPhone = '+33600000000',
+  bool travelerPhoneAvailable = true,
   double? travelerAverageRating = 4.7,
   int? travelerTotalTrips = 8,
   String? recipientName = 'Fatou',
@@ -58,7 +66,7 @@ BidModel _bid({
   updatedAt: DateTime(2026, 1, 1),
   travelerId: 'traveler-001',
   travelerName: travelerName,
-  travelerPhone: travelerPhone,
+  travelerPhoneAvailable: travelerPhoneAvailable,
   travelerAverageRating: travelerAverageRating,
   travelerTotalTrips: travelerTotalTrips,
   recipientName: recipientName,
@@ -76,6 +84,13 @@ BidModel _bid({
 
 // ── Host widget ───────────────────────────────────────────────────────────────
 
+/// Bloc de révélation au repos : ces tests ne testent pas l'appel téléphonique.
+_MockContactRevealBloc _revealBloc() {
+  final bloc = _MockContactRevealBloc();
+  when(() => bloc.state).thenReturn(const ContactRevealInitial());
+  return bloc;
+}
+
 Widget _host(
   BidModel bid,
   _MockCancellationBloc cancellationBloc,
@@ -88,6 +103,8 @@ Widget _host(
         providers: [
           BlocProvider<CancellationBloc>.value(value: cancellationBloc),
           BlocProvider<ConversationOpenBloc>.value(value: conversationOpenBloc),
+          // Le numéro n'est plus dans le bid : la carte de contact lit ce bloc.
+          BlocProvider<ContactRevealBloc>.value(value: _revealBloc()),
         ],
         child: SenderDetailBody(bid: bid),
       ),

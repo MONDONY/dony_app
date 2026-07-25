@@ -84,23 +84,6 @@ class ExpediteurCard extends StatelessWidget {
                           ],
                         ],
                       ),
-                      if (bid.senderPhone != null)
-                        Row(
-                          children: [
-                            DonyIcon(
-                              'phone',
-                              size: 12,
-                              color: cs.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: DonySpacing.xs),
-                            Text(
-                              bid.senderPhone!,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
                       if (bid.senderTotalShipments != null)
                         Row(
                           children: [

@@ -1,6 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -19,9 +22,24 @@ void showSenderProfileSheet(BuildContext context, BidModel bid) {
     useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => BlocProvider(
-      create: (_) => getIt<RatingBloc>()
-        ..add(UserRatingsLoadRequested(userId: bid.senderId)),
+    builder: (_) => MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<RatingBloc>()
+            ..add(UserRatingsLoadRequested(userId: bid.senderId)),
+        ),
+        // Le numéro n'est plus dans le bid : la fiche le demande à son ouverture,
+        // et seulement si le serveur a marqué l'expéditeur joignable.
+        BlocProvider(
+          create: (_) {
+            final bloc = getIt<ContactRevealBloc>();
+            if (bid.senderPhoneAvailable) {
+              bloc.add(ContactRevealRequested(bid.id));
+            }
+            return bloc;
+          },
+        ),
+      ],
       child: DraggableScrollableSheet(
         initialChildSize: 0.9,
         minChildSize: 0.5,
@@ -133,22 +151,29 @@ class _SenderProfileSheet extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: DonySpacing.xs),
-                      if (bid.senderPhone != null)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            DonyIcon(
-                              'phone',
-                              size: 13,
-                              color: cs.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: DonySpacing.xs),
-                            Text(
-                              bid.senderPhone!,
-                              style: tt.bodyMedium
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                          ],
+                      if (bid.senderPhoneAvailable)
+                        BlocBuilder<ContactRevealBloc, ContactRevealState>(
+                          builder: (context, state) {
+                            final phone = state is ContactRevealSuccess
+                                ? state.phoneNumber
+                                : null;
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                DonyIcon(
+                                  'phone',
+                                  size: 13,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: DonySpacing.xs),
+                                Text(
+                                  phone ?? 'Numéro en cours de récupération…',
+                                  style: tt.bodyMedium
+                                      ?.copyWith(color: cs.onSurfaceVariant),
+                                ),
+                              ],
+                            );
+                          },
                         )
                       else
                         Text(

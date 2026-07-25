@@ -43,7 +43,10 @@ class BidModel {
   final String announcementId;
   final String senderId;
   final String? senderName;
-  final String? senderPhone;
+  /// L'expéditeur est joignable : l'UI peut afficher le bouton d'appel. Le numéro
+  /// lui-même s'obtient au tap via `GET /bids/{id}/contact` — il ne transite plus
+  /// dans les réponses de liste.
+  final bool senderPhoneAvailable;
   final int? senderTotalShipments;
   final bool senderKycVerified;
   final bool senderIsProAccount;
@@ -90,7 +93,8 @@ class BidModel {
   final String? confirmationCode;
   final String? travelerId;
   final String? travelerName;
-  final String? travelerPhone;
+  /// Idem [senderPhoneAvailable], côté voyageur.
+  final bool travelerPhoneAvailable;
   final bool travelerKycVerified;
   final bool travelerIsProAccount;
   final bool travelerKiloPro;
@@ -161,7 +165,7 @@ class BidModel {
     required this.announcementId,
     required this.senderId,
     this.senderName,
-    this.senderPhone,
+    this.senderPhoneAvailable = false,
     this.senderTotalShipments,
     this.senderKycVerified = false,
     this.senderIsProAccount = false,
@@ -194,7 +198,7 @@ class BidModel {
     this.confirmationCode,
     this.travelerId,
     this.travelerName,
-    this.travelerPhone,
+    this.travelerPhoneAvailable = false,
     this.travelerKycVerified = false,
     this.travelerIsProAccount = false,
     this.travelerKiloPro = false,
@@ -292,13 +296,10 @@ class BidModel {
       resolvedDepartureAt != null &&
       DateTime.now().isAfter(resolvedDepartureAt!);
 
-  /// Nom à afficher pour l'expéditeur (même logique que TravelerProfile.resolvedName).
-  /// Si le nom est défini → retourne le nom (le téléphone est géré séparément dans l'UI).
-  /// Si le nom est null → retourne le téléphone.
-  /// Si les deux sont null → retourne 'Expéditeur'.
+  /// Nom à afficher pour l'expéditeur. Le téléphone ne sert plus de repli : il
+  /// n'est plus dans la réponse, et un numéro affiché en guise de nom se lisait mal.
   String get resolvedSenderName {
     if (senderName != null && senderName!.isNotEmpty) return senderName!;
-    if (senderPhone != null && senderPhone!.isNotEmpty) return senderPhone!;
     return 'Expéditeur';
   }
 }
