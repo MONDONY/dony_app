@@ -71,6 +71,7 @@ AnnouncementModel _buildAnnouncement({
   String displayName = 'Ibrahima Diallo',
   DateTime? handoverStart,
   DateTime? handoverEnd,
+  bool acceptsUnverified = false,
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -89,6 +90,7 @@ AnnouncementModel _buildAnnouncement({
       averageRating: rating,
       totalTrips: totalTrips,
       kycVerified: kycVerified,
+      acceptsUnverified: acceptsUnverified,
     ),
     createdAt: now,
     updatedAt: now,
@@ -516,6 +518,45 @@ void main() {
 
       expect(find.text('Envoyer un colis'), findsOneWidget);
       expect(find.text("Vérification d'identité"), findsNothing);
+    });
+
+    testWidgets(
+        'expéditeur NON vérifié + voyageur ouvert aux non vérifiés : '
+        'ouvre le formulaire de demande', (tester) async {
+      // Le voyageur a désactivé « profils vérifiés uniquement ». Sans cette
+      // exception, son réglage resterait sans effet : le client barrait la route
+      // avant même d'appeler le serveur.
+      final a = _buildAnnouncement(kycVerified: true, acceptsUnverified: true);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        authState: AuthAuthenticated(_userWithKyc('PENDING')),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Faire une demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Envoyer un colis'), findsOneWidget);
+      expect(find.text("Vérification d'identité"), findsNothing);
+    });
+
+    testWidgets(
+        'expéditeur NON vérifié + voyageur exigeant des profils vérifiés : '
+        "renvoie vers la vérification d'identité", (tester) async {
+      final a = _buildAnnouncement(kycVerified: true);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        authState: AuthAuthenticated(_userWithKyc('PENDING')),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Faire une demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Vérification d'identité"), findsOneWidget);
+      expect(find.text('Envoyer un colis'), findsNothing);
     });
   });
 }

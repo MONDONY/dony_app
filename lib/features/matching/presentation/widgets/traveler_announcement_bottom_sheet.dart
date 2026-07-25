@@ -31,6 +31,12 @@ void showTravelerAnnouncementSheet(
   // currentUser couvre AuthAuthenticated ET AuthProfileUpdated (émis après
   // upload avatar / édition profil) — sinon le KYC repasserait à false.
   final isKycVerified = authState.currentUser?.isKycVerified ?? false;
+  // Un expéditeur non vérifié peut quand même écrire à un voyageur qui a
+  // désactivé « profils vérifiés uniquement » : sans cette exception, le réglage
+  // du voyageur resterait sans effet, le client barrant la route avant l'appel.
+  // Le serveur reste l'autorité (403 contact-kyc-required s'il s'est ravisé).
+  final canSendRequest =
+      isKycVerified || (announcement.traveler?.acceptsUnverified ?? false);
   // Capture la référence au BidBloc du parent (carousel / liste) pour pouvoir
   // déclencher un refresh après la fermeture de CreateBidBottomSheet, même
   // quand useRootNavigator: true sort du BlocProvider tree.
@@ -111,7 +117,7 @@ void showTravelerAnnouncementSheet(
             final navigator = Navigator.of(innerCtx, rootNavigator: true);
             final rootCtx = navigator.context;
             navigator.pop();
-            if (isKycVerified) {
+            if (canSendRequest) {
               await CreateBidBottomSheet.show(rootCtx,
                   announcement: announcement);
               // Refresh silencieux du BidBloc parent pour que la liste

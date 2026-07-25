@@ -243,5 +243,139 @@ void main() {
       final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
       expect(switches[1].onChanged, isNull);
     });
+
+    // ── Ouverture aux profils non vérifiés ───────────────────────────────────
+
+    testWidgets(
+        'décocher « Profils vérifiés uniquement » ouvre l\'avertissement sans rien émettre',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Switch).first);
+      await tester.pumpAndSettle();
+
+      // La sheet est affichée et la préférence n'a pas bougé : ouvrir son compte
+      // aux profils non vérifiés exige un consentement explicite.
+      expect(find.text('Accepter les profils non vérifiés ?'), findsOneWidget);
+      verifyNever(() => mockBloc.add(const ContactKycOnlyToggled(false)));
+    });
+
+    testWidgets('confirmer l\'avertissement émet ContactKycOnlyToggled(false)',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Switch).first);
+      await tester.pumpAndSettle();
+
+      // Cocher l'acceptation du risque, puis confirmer.
+      await tester.tap(find.byType(Checkbox));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Accepter quand même'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockBloc.add(const ContactKycOnlyToggled(false))).called(1);
+    });
+
+    testWidgets('réactiver la protection ne demande aucune confirmation',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: false),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Switch).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accepter les profils non vérifiés ?'), findsNothing);
+      verify(() => mockBloc.add(const ContactKycOnlyToggled(true))).called(1);
+    });
+
+    testWidgets('le rappel d\'exposition s\'affiche quand la protection est levée',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: false),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Les profils non vérifiés peuvent te faire'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('pas de rappel d\'exposition quand la protection est active',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Les profils non vérifiés peuvent te faire'),
+        findsNothing,
+      );
+    });
+
+    // ── Enregistrement échoué et valeur par défaut ────────────────────────────
+
+    /// Un interrupteur affiché « désactivé » avant que le serveur ait répondu
+    /// laisserait croire que le compte est ouvert à tous, alors que le défaut
+    /// serveur est l'inverse.
+    testWidgets('avant chargement, la protection est affichée active',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(mockBloc: mockBloc, state: const PrivacySettingsInitial()),
+      );
+      await tester.pumpAndSettle();
+
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      expect(switches.first.value, isTrue);
+    });
+
+    testWidgets('un enregistrement échoué est signalé à l\'utilisateur',
+        (tester) async {
+      whenListen(
+        mockBloc,
+        Stream.fromIterable([
+          const PrivacySettingsLoaded(contactKycOnly: false),
+          const PrivacySettingsLoaded(contactKycOnly: true, saveFailed: true),
+        ]),
+        initialState: const PrivacySettingsLoaded(contactKycOnly: false),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: false),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Réglage non enregistré'),
+        findsOneWidget,
+      );
+    });
   });
 }
