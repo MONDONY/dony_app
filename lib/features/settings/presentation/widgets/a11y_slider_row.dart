@@ -30,60 +30,74 @@ class A11ySliderRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final percent = '${(value * 100).round()} %';
 
-    return Opacity(
-      opacity: enabled ? 1.0 : 0.4,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.base,
-          DonySpacing.md,
-          DonySpacing.base,
-          DonySpacing.sm,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Taille du texte',
-                    style: tt.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface,
-                    ),
+    final content = Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.md,
+        DonySpacing.base,
+        DonySpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Taille du texte',
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface,
                   ),
                 ),
-                Text(
-                  percent,
-                  style: tt.titleMedium?.copyWith(color: cs.primary),
-                ),
-              ],
-            ),
-            Semantics(
-              label: 'Taille du texte',
-              value: percent,
-              child: Slider(
-                value: value,
-                min: kA11yMinTextScale,
-                max: kA11yMaxTextScale,
-                // Pas de 5 % : assez fin pour ajuster, assez grossier pour
-                // être atteignable au doigt.
-                divisions: ((kA11yMaxTextScale - kA11yMinTextScale) / 0.05)
-                    .round(),
-                label: percent,
-                onChanged: enabled ? onChanged : null,
               ),
+              Text(
+                percent,
+                style: tt.titleMedium?.copyWith(color: cs.primary),
+              ),
+            ],
+          ),
+          Semantics(
+            label: 'Taille du texte',
+            value: percent,
+            child: Slider(
+              value: value,
+              min: kA11yMinTextScale,
+              max: kA11yMaxTextScale,
+              // Pas de 5 % : assez fin pour ajuster, assez grossier pour
+              // être atteignable au doigt.
+              divisions: ((kA11yMaxTextScale - kA11yMinTextScale) / 0.05)
+                  .round(),
+              label: percent,
+              onChanged: enabled ? onChanged : null,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('85 %', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                Text('200 %', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-              ],
-            ),
-          ],
-        ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('85 %', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+              Text('200 %', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            ],
+          ),
+        ],
       ),
+    );
+
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.4,
+      // Un texte à 40 % d'opacité ne passe plus le contraste WCAG face à son
+      // fond, alors qu'il est simplement désactivé, pas illisible par choix
+      // de design : le signaler explicitement en tant que tel exempte ce
+      // bloc de la vérification de contraste (qui ne s'applique qu'aux
+      // contenus actifs) plutôt que de masquer un vrai défaut de lisibilité.
+      child: enabled
+          ? content
+          : Semantics(
+              container: true,
+              enabled: false,
+              label: 'Taille du texte, $percent, désactivé',
+              child: ExcludeSemantics(child: content),
+            ),
     );
   }
 }

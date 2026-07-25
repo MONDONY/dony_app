@@ -95,6 +95,9 @@ dependencies:
   # External browser (Stripe Connect onboarding)
   url_launcher: ^6.3.0
 
+  # Réglages système (accessibilité, notifications, etc.)
+  app_settings: ^8.0.3
+
   # Notifications
   flutter_local_notifications: ^18.0.0
 

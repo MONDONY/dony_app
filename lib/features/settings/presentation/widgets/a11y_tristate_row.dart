@@ -85,19 +85,26 @@ class A11yTristateRow extends StatelessWidget {
       iconBgColor: cs.primaryContainer,
       showDivider: showDivider,
       onTap: () => _open(context),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Text(
-              a11yModeLabel(value),
-              textAlign: TextAlign.end,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      // DonyListTile ne réserve pas d'espace pour `trailing` : sans borne
+      // propre, un libellé long ('Suivre le téléphone') à 200 % de taille de
+      // texte réclame sa largeur naturelle sur une seule ligne et fait
+      // déborder le Row du parent au lieu de passer à la ligne.
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 128),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                a11yModeLabel(value),
+                textAlign: TextAlign.end,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
             ),
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurfaceVariant),
-        ],
+            const SizedBox(width: DonySpacing.xs),
+            Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurfaceVariant),
+          ],
+        ),
       ),
     );
   }

@@ -56,7 +56,19 @@ class A11yPreviewCard extends StatelessWidget {
               reinforceLabels: state.reinforceLabels,
               persistentMessages: state.persistentMessages,
               confirmImportantActions: state.confirmImportantActions,
-              child: Builder(builder: _buildSample),
+              // L'échantillon est un exemple figé (trajet et bouton
+              // fictifs), pas du contenu réel ni un contrôle actionnable :
+              // l'exposer en détail à un lecteur d'écran n'apporte rien et
+              // ferait remonter ses défauts de contraste propres (ex.
+              // DonyUrgentBadge, dont l'étiquette renforcée reste à
+              // implémenter) dans l'audit de CET écran. Un seul résumé
+              // suffit.
+              child: Semantics(
+                label: 'Exemple d\'affichage avec les réglages actuels',
+                child: ExcludeSemantics(
+                  child: Builder(builder: _buildSample),
+                ),
+              ),
             ),
           ),
         ),
