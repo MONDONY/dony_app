@@ -19,25 +19,37 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
   /// ne peut alors me joindre que par la messagerie dony.
   final bool hidePhoneNumber;
 
+  /// Le dernier enregistrement a échoué et l'interrupteur vient d'être remis à
+  /// sa valeur précédente. Sans ce drapeau, un rollback est indiscernable d'un
+  /// « le réglage refuse de changer » : l'écran doit pouvoir le dire.
+  final bool saveFailed;
+
   const PrivacySettingsLoaded({
     required this.contactKycOnly,
     this.hidePhoneNumber = false,
+    this.saveFailed = false,
   });
 
-  PrivacySettingsLoaded copyWith({bool? contactKycOnly, bool? hidePhoneNumber}) =>
+  PrivacySettingsLoaded copyWith({
+    bool? contactKycOnly,
+    bool? hidePhoneNumber,
+    bool? saveFailed,
+  }) =>
       PrivacySettingsLoaded(
         contactKycOnly: contactKycOnly ?? this.contactKycOnly,
         hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
+        saveFailed: saveFailed ?? this.saveFailed,
       );
 
   @override
   bool operator ==(Object other) =>
       other is PrivacySettingsLoaded &&
       other.contactKycOnly == contactKycOnly &&
-      other.hidePhoneNumber == hidePhoneNumber;
+      other.hidePhoneNumber == hidePhoneNumber &&
+      other.saveFailed == saveFailed;
 
   @override
-  int get hashCode => Object.hash(contactKycOnly, hidePhoneNumber);
+  int get hashCode => Object.hash(contactKycOnly, hidePhoneNumber, saveFailed);
 }
 
 class PrivacySettingsError extends PrivacySettingsState {

@@ -53,6 +53,11 @@ class TravelerProfile {
   /// URL de l'avatar du voyageur (nullable, fourni par le backend).
   final String? avatarUrl;
 
+  /// Ce voyageur accepte les demandes d'expéditeurs non vérifiés (il a désactivé
+  /// « profils vérifiés uniquement »). Par défaut false, ce qui correspond au
+  /// réglage par défaut des comptes et au cas d'un backend plus ancien.
+  final bool acceptsUnverified;
+
   const TravelerProfile({
     required this.id,
     this.displayName,
@@ -63,6 +68,7 @@ class TravelerProfile {
     this.isProAccount = false,
     this.kycVerified = false,
     this.avatarUrl,
+    this.acceptsUnverified = false,
   });
 
   factory TravelerProfile.fromJson(Map<String, dynamic> json) =>

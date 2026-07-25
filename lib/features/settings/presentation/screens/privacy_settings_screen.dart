@@ -9,6 +9,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
+import 'package:dony/features/settings/presentation/widgets/unverified_contact_warning_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,21 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 class PrivacySettingsScreen extends StatelessWidget {
   const PrivacySettingsScreen({super.key});
+
+  /// Désactiver « profils vérifiés uniquement » ouvre le compte aux expéditeurs
+  /// dont l'identité n'a pas été vérifiée : on demande une confirmation explicite
+  /// avant de l'appliquer. Réactiver la protection ne demande rien, c'est le sens
+  /// prudent.
+  Future<void> _onContactKycOnlyChanged(BuildContext context, bool value) async {
+    final bloc = context.read<PrivacySettingsBloc>();
+    if (!value) {
+      final accepted = await UnverifiedContactWarningSheet.show(context);
+      if (accepted != true) {
+        return;
+      }
+    }
+    bloc.add(ContactKycOnlyToggled(value));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +58,16 @@ class PrivacySettingsScreen extends StatelessWidget {
           child: Divider(height: 1, color: cs.outline),
         ),
       ),
-      body: BlocBuilder<PrivacySettingsBloc, PrivacySettingsState>(
+      body: BlocConsumer<PrivacySettingsBloc, PrivacySettingsState>(
+        listener: (context, state) {
+          if (state is PrivacySettingsLoaded && state.saveFailed) {
+            DonySnackbar.show(
+              context,
+              message: "Réglage non enregistré, vérifie ta connexion.",
+              type: DonySnackbarType.error,
+            );
+          }
+        },
         builder: (context, state) {
           final loaded =
               state is PrivacySettingsLoaded ? state : null;
@@ -74,13 +99,14 @@ class PrivacySettingsScreen extends StatelessWidget {
                       title: 'Profils vérifiés uniquement',
                       subtitle:
                           "Seuls les utilisateurs ayant validé leur identité peuvent t'envoyer une offre",
-                      value: loaded?.contactKycOnly ?? false,
+                      // Défaut à true, comme la colonne côté serveur : afficher
+                      // « désactivé » tant que le chargement n'a pas abouti
+                      // ferait croire à tort que le compte est ouvert à tous.
+                      value: loaded?.contactKycOnly ?? true,
                       activeColor: const Color(0xFF1A6B3C),
                       onChanged: isLoading
                           ? null
-                          : (v) => context
-                              .read<PrivacySettingsBloc>()
-                              .add(ContactKycOnlyToggled(v)),
+                          : (v) => _onContactKycOnlyChanged(context, v),
                     ),
                     const _SettingsRowDivider(),
                     _SettingsToggleRow(
@@ -99,6 +125,13 @@ class PrivacySettingsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                // Rappel persistant : sans lui, l'utilisateur oublie qu'il a
+                // ouvert son compte aux profils non vérifiés, un interrupteur
+                // éteint étant peu bavard.
+                if (loaded != null && !loaded.contactKycOnly) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  const _UnverifiedExposureNotice(),
+                ],
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── 3. Section "BLOCAGE" ──────────────────────────────────
@@ -191,6 +224,45 @@ class _ProtectedNumberBanner extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Rappel d'exposition aux profils non vérifiés ──────────────────────────────
+
+class _UnverifiedExposureNotice extends StatelessWidget {
+  const _UnverifiedExposureNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.warningLight,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon('triangle-alert', color: cs.warning, size: 16),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              'Les profils non vérifiés peuvent te faire des demandes. '
+              "dony n'est pas responsable des difficultés rencontrées avec eux.",
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurface,
+                fontSize: 11,
+                height: 1.35,
+              ),
             ),
           ),
         ],

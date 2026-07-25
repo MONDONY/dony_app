@@ -98,7 +98,7 @@ class PrivacySettingsBloc
     // Défaut aligné sur le backend si l'état n'est pas encore chargé — de toute
     // façon les toggles ne sont tapables qu'une fois l'écran rendu.
     final previous = state is PrivacySettingsLoaded
-        ? state as PrivacySettingsLoaded
+        ? (state as PrivacySettingsLoaded).copyWith(saveFailed: false)
         : const PrivacySettingsLoaded(contactKycOnly: true);
     final updated = next(previous);
 
@@ -112,7 +112,10 @@ class PrivacySettingsBloc
       return true;
     } catch (_) {
       await _write(previous);
-      emit(previous);
+      // saveFailed distingue ce retour en arrière d'un simple « rien n'a
+      // changé » : l'écran s'en sert pour prévenir que l'enregistrement a
+      // échoué, sinon l'utilisateur croit que le réglage refuse de bouger.
+      emit(previous.copyWith(saveFailed: true));
       return false;
     }
   }

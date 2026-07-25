@@ -128,6 +128,16 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.search_off_rounded,
     ),
+    // Le voyageur n'accepte que les profils vérifiés : c'est son choix, pas un
+    // blocage de dony. Le message oriente vers la vérification d'identité, qui
+    // est la seule issue pour cet expéditeur.
+    'contact-kyc-required': ErrorPresentation(
+      title: 'Profil vérifié requis',
+      message: 'Ce voyageur ne reçoit que des profils vérifiés. '
+          'Vérifie ton identité pour lui envoyer une demande.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.badge_outlined,
+    ),
     'bid-not-accepted': ErrorPresentation(
       title: 'Demande non acceptée',
       message: 'Cette demande doit être acceptée par le voyageur avant cette étape.',

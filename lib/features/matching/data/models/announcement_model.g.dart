@@ -17,6 +17,7 @@ TravelerProfile _$TravelerProfileFromJson(Map<String, dynamic> json) =>
       isProAccount: json['isProAccount'] as bool? ?? false,
       kycVerified: json['kycVerified'] as bool? ?? false,
       avatarUrl: json['avatarUrl'] as String?,
+      acceptsUnverified: json['acceptsUnverified'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
@@ -30,6 +31,7 @@ Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
       'isProAccount': instance.isProAccount,
       'kycVerified': instance.kycVerified,
       'avatarUrl': instance.avatarUrl,
+      'acceptsUnverified': instance.acceptsUnverified,
     };
 
 AnnouncementModel _$AnnouncementModelFromJson(

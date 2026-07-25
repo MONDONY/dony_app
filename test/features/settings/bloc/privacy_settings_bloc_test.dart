@@ -312,6 +312,45 @@ void main() {
       },
     );
 
+    // ── Signalement d'un enregistrement échoué ──────────────────────────────
+
+    /// Sans ce drapeau, un rollback est indiscernable d'un réglage qui refuse de
+    /// bouger : l'utilisateur retape sans comprendre.
+    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
+      'échec du PUT : le rollback porte saveFailed pour que l\'écran prévienne',
+      setUp: () {
+        when(() => mockRepo.update(any()))
+            .thenAnswer((_) async => throw Exception('offline'));
+      },
+      build: buildBloc,
+      seed: () => const PrivacySettingsLoaded(contactKycOnly: false),
+      act: (bloc) => bloc.add(const ContactKycOnlyToggled(true)),
+      expect: () => [
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true)
+            .having((s) => s.saveFailed, 'saveFailed', false),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', false)
+            .having((s) => s.saveFailed, 'saveFailed', true),
+      ],
+    );
+
+    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
+      'un enregistrement réussi après un échec efface saveFailed',
+      setUp: () {
+        when(() => mockRepo.update(any())).thenAnswer((_) async {});
+      },
+      build: buildBloc,
+      seed: () => const PrivacySettingsLoaded(
+          contactKycOnly: false, saveFailed: true),
+      act: (bloc) => bloc.add(const ContactKycOnlyToggled(true)),
+      expect: () => [
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true)
+            .having((s) => s.saveFailed, 'saveFailed', false),
+      ],
+    );
+
     // ── Equality des états ──────────────────────────────────────────────────
 
     test('PrivacySettingsLoaded equality est correcte', () {
