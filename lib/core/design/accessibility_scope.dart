@@ -33,8 +33,14 @@ class AccessibilityScope extends InheritedWidget {
   /// (WCAG 2.2.1).
   final bool persistentMessages;
 
-  /// Demande une confirmation explicite avant paiement, annulation et
-  /// suppression de compte (WCAG 3.3.4).
+  /// Demande une confirmation explicite avant paiement (WCAG 3.3.4), via
+  /// `requirePaymentAuth` (`features/payments/presentation/payment_auth.dart`).
+  ///
+  /// L'annulation et la suppression de compte n'ont pas besoin de ce réglage :
+  /// elles ont chacune leur propre confirmation métier
+  /// (`cancellation_bottom_sheet.dart`, `delete_account_bottom_sheet.dart`),
+  /// inconditionnelle, donc toujours active, contrairement à ce drapeau qui
+  /// reste optionnel. Ce n'est pas un oubli.
   final bool confirmImportantActions;
 
   static const AccessibilityScope _defaults = AccessibilityScope(

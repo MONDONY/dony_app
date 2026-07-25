@@ -138,7 +138,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
     if (!authenticated) {
       DonySnackbar.show(
         context,
-        message: 'Authentification requise pour effectuer le paiement',
+        message: 'Paiement non confirmé, réessayez',
         type: DonySnackbarType.warning,
       );
       context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());

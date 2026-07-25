@@ -8,7 +8,14 @@ import 'package:hive/hive.dart';
 /// Authentifie l'utilisateur avant un paiement, **si** il s'est donné un moyen
 /// de le faire.
 ///
-/// Les protections locales sont facultatives : biométrie via
+/// Commence par [confirmImportantAction] : si l'utilisateur a activé
+/// « Confirmer les actions importantes » dans les réglages d'accessibilité, un
+/// dialogue de confirmation explicite s'affiche avant toute vérification
+/// biométrique ou PIN. Un refus à cette étape arrête la fonction immédiatement
+/// (retourne `false`) sans qu'aucune authentification n'ait été tentée. Sans
+/// l'option activée, cette étape est transparente et ne bloque jamais.
+///
+/// Les protections locales qui suivent sont facultatives : biométrie via
 /// [kBiometricEnabled], code PIN selon qu'il en a créé un dans Réglages ›
 /// Sécurité. N'ayant activé ni l'une ni l'autre, il n'y a rien à vérifier et le
 /// paiement suit son cours — exiger un code inexistant rendrait tout paiement

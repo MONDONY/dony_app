@@ -118,7 +118,7 @@ class _PaymentSummaryView extends StatelessWidget {
     if (!authenticated) {
       DonySnackbar.show(
         context,
-        message: 'Authentification requise pour effectuer le paiement',
+        message: 'Paiement non confirmé, réessayez',
         type: DonySnackbarType.error,
       );
       return;
