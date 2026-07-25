@@ -399,6 +399,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `home_search_mode_changed` | HomeScreen._onModeChanged — bascule du sélecteur de mode Trajets/Colis (propriété `mode`) |
 | `home_cross_discovery_tapped` | HomeScreen._onCrossDiscoveryTap — bascule proposée depuis l'état vide (propriétés `from_mode`, `count`) |
 | `home_matching_trips_filter_toggled` | HomeScreen._showFilterSheet — pastille « Pour mes trajets » de la feuille de filtres colis (propriétés `active`, `active_trips`) |
+| `accessibility_setting_changed` | AccessibilityBloc — un reglage d'accessibilite est modifie (proprietes `setting`, `value`) ou reinitialisation complete (`setting: reset`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---
