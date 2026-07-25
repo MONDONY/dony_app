@@ -112,5 +112,17 @@
 				</array>
 			</dict>
 		</array>
+		<!-- Depuis iOS 9, canOpenURL() renvoie false pour tout schéma non déclaré ici.
+		     Sans cette liste, canLaunchUrl() échoue et rien ne s'ouvre, même quand
+		     l'app cible existe. Équivalent iOS du bloc <queries> du AndroidManifest.
+		     tel: composeur (appel d'une contrepartie)
+		     mailto: client mail (contact support, compte Stripe rejeté)
+		     https: navigateur (pages légales, onboarding Stripe, mobile money) -->
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>tel</string>
+			<string>mailto</string>
+			<string>https</string>
+		</array>
 	</dict>
 </plist>

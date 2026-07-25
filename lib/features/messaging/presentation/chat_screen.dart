@@ -18,13 +18,13 @@ import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ChatScreen extends StatefulWidget {
   final ConversationModel conversation;
@@ -119,26 +119,6 @@ class _ChatScreenState extends State<ChatScreen> {
     context
         .read<ContactRevealBloc>()
         .add(ContactRevealRequested(widget.conversation.bidId));
-  }
-
-  Future<void> _dial(String? phone) async {
-    if (phone == null || phone.isEmpty) {
-      DonySnackbar.show(
-        context,
-        message: 'Aucun numéro disponible pour ce contact',
-        type: DonySnackbarType.warning,
-      );
-      return;
-    }
-    final uri = Uri(scheme: 'tel', path: phone);
-    final ok = await canLaunchUrl(uri) && await launchUrl(uri);
-    if (!ok && mounted) {
-      DonySnackbar.show(
-        context,
-        message: 'Impossible d\'ouvrir le composeur',
-        type: DonySnackbarType.error,
-      );
-    }
   }
 
   Future<void> _sendText() async {
@@ -245,7 +225,7 @@ class _ChatScreenState extends State<ChatScreen> {
             BlocConsumer<ContactRevealBloc, ContactRevealState>(
               listener: (context, state) {
                 if (state is ContactRevealSuccess) {
-                  unawaited(_dial(state.phoneNumber));
+                  unawaited(dialPhoneNumber(context, state.phoneNumber));
                 } else if (state is ContactRevealError) {
                   DonySnackbar.show(
                     context,

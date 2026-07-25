@@ -72,5 +72,25 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+
+        <!-- Depuis Android 11 (API 30), une app ne voit plus les autres paquets sans
+             les déclarer ici. Sans ces trois intents, canLaunchUrl() renvoie false
+             et rien ne s'ouvre, même quand l'application cible est bien installée.
+
+             tel: composeur téléphonique (appel d'une contrepartie). -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <!-- mailto: client mail (contact support, compte Stripe rejeté). -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <!-- https: navigateur (pages légales, onboarding Stripe, mobile money). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

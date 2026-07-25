@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -17,7 +18,6 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Carte profil expéditeur (vue voyageur) — bouton 📞 conditionnel + 💬 chat.
 ///
@@ -47,27 +47,6 @@ class ExpediteurContactCard extends StatelessWidget {
       properties: {'status': bid.status},
     ));
     context.read<ContactRevealBloc>().add(ContactRevealRequested(bid.id));
-  }
-
-  /// Ouvre le composeur avec le numéro que le serveur vient de communiquer.
-  Future<void> _dial(BuildContext context, String? phone) async {
-    if (phone == null || phone.isEmpty) {
-      DonySnackbar.show(
-        context,
-        message: 'Aucun numéro disponible pour ce contact',
-        type: DonySnackbarType.warning,
-      );
-      return;
-    }
-    final uri = Uri(scheme: 'tel', path: phone);
-    final ok = await canLaunchUrl(uri) && await launchUrl(uri);
-    if (!ok && context.mounted) {
-      DonySnackbar.show(
-        context,
-        message: 'Impossible d\'ouvrir le composeur',
-        type: DonySnackbarType.error,
-      );
-    }
   }
 
   @override
@@ -167,7 +146,7 @@ class ExpediteurContactCard extends StatelessWidget {
                   BlocConsumer<ContactRevealBloc, ContactRevealState>(
                     listener: (context, state) {
                       if (state is ContactRevealSuccess) {
-                        unawaited(_dial(context, state.phoneNumber));
+                        unawaited(dialPhoneNumber(context, state.phoneNumber));
                       } else if (state is ContactRevealError) {
                         DonySnackbar.show(
                           context,

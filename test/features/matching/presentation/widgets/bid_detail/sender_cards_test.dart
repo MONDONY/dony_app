@@ -351,9 +351,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // No error snackbar should appear.
-      expect(
-          find.textContaining("Impossible d'ouvrir le composeur"), findsNothing);
+      // Le tap ne fait que demander le numéro : aucun repli ne s'affiche.
+      expect(find.text('Copier'), findsNothing);
     });
   });
 
@@ -553,7 +552,7 @@ void main() {
     });
 
     testWidgets(
-      'canLaunchUrl returns false → snackbar "Impossible d\'ouvrir le composeur" visible',
+      'canLaunchUrl returns false → le numéro est affiché et proposé à la copie',
       (tester) async {
         // Mock the url_launcher platform channel so canLaunchUrl returns false.
         const channel = MethodChannel('plugins.flutter.io/url_launcher');
@@ -589,10 +588,8 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        expect(
-          find.textContaining('Impossible d\'ouvrir le composeur'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('+33600000000'), findsOneWidget);
+        expect(find.text('Copier'), findsOneWidget);
       },
     );
   });

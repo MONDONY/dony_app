@@ -224,11 +224,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.textContaining("Impossible d'ouvrir le composeur"), findsNothing);
+    // Le composeur s'est ouvert : aucun repli ne doit s'afficher.
+    expect(find.text('Copier'), findsNothing);
     expect(find.textContaining('Aucun numéro disponible'), findsNothing);
   });
 
-  testWidgets('numéro reçu mais composeur indisponible → message d\'erreur',
+  testWidgets('pas d\'app téléphone → le numéro est affiché et proposé à la copie',
       (tester) async {
     _mockUrlLauncher(canLaunch: false);
     await _pump(tester, _bid(),
@@ -236,7 +237,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.textContaining("Impossible d'ouvrir le composeur"), findsOneWidget);
+    // Le numéro vient d'être obtenu du serveur : le perdre sur une simple erreur
+    // serait dommage (émulateurs et tablettes n'ont pas de composeur).
+    expect(find.textContaining('+33600000000'), findsOneWidget);
+    expect(find.text('Copier'), findsOneWidget);
   });
 
   testWidgets('compte sans numéro → message dédié, pas de composeur vide',
