@@ -41,7 +41,7 @@ void main() {
   });
 
   group('A11yTristateRow', () {
-    testWidgets('affiche le libellé du mode courant', (tester) async {
+    testWidgets('affiche le libellé court du mode courant', (tester) async {
       await tester.pumpWidget(wrap(
         A11yTristateRow(
           label: 'Contraste élevé',
@@ -51,11 +51,16 @@ void main() {
           onChanged: (_) {},
         ),
       ));
-      expect(find.text('Suivre le téléphone'), findsOneWidget);
+      // Valeur de ligne = libellé court (a11yModeShortLabel), pas le libellé
+      // long de la sheet : 'Suivre le téléphone' n'apparaît qu'une fois
+      // ouverte (cf. test ci-dessous).
+      expect(find.text('Automatique'), findsOneWidget);
+      expect(find.text('Suivre le téléphone'), findsNothing);
       expect(find.text('Renforce le texte et les bordures'), findsOneWidget);
     });
 
-    testWidgets('le tap ouvre la sheet avec les trois choix', (tester) async {
+    testWidgets('le tap ouvre la sheet avec les trois libellés longs',
+        (tester) async {
       await tester.pumpWidget(wrap(
         A11yTristateRow(
           label: 'Contraste élevé',
@@ -67,6 +72,12 @@ void main() {
       ));
       await tester.tap(find.text('Contraste élevé').first);
       await tester.pumpAndSettle();
+      // La sheet est l'endroit où l'utilisateur choisit : les trois
+      // libellés longs et explicites, pas les versions courtes de la ligne.
+      // (La ligne d'origine, avec sa valeur courte 'Automatique', reste
+      // montée sous la sheet modale : on ne peut pas asserter son absence,
+      // seulement la présence des trois libellés longs dans la sheet.)
+      expect(find.text('Suivre le téléphone'), findsOneWidget);
       expect(find.text('Toujours activé'), findsOneWidget);
       expect(find.text('Toujours désactivé'), findsOneWidget);
     });
@@ -92,20 +103,18 @@ void main() {
     });
 
     testWidgets(
-        'le libellé de mode le plus long passe proprement sur deux lignes '
-        'à 100 % sur un écran étroit, jamais plus', (tester) async {
+        'le libellé court le plus long tient sur une seule ligne à 100 % '
+        'sur un écran étroit', (tester) async {
       // iPhone SE (3ᵉ génération) : 375 pt de large, l'écran le plus étroit
       // couramment ciblé. Padding + icône reproduits pour matcher l'usage
       // réel dans accessibility_settings_screen.dart (DonySpacing.lg de
       // chaque côté, iconAsset renseigné).
       //
-      // 'Suivre le téléphone' (228 px sans contrainte à 100 %) ne tient sur
-      // une seule ligne dans aucun scénario qui évite aussi le débordement à
-      // 200 % (cf. commentaire de kA11yTristateTrailingMaxWidth) : deux
-      // lignes est le résultat attendu et assumé, pas une régression. Ce
-      // test verrouille ce compromis à sa valeur actuelle (176) et détecte
-      // un resserrement accidentel qui le ferait replier sur trois ou
-      // quatre lignes.
+      // Contrairement à l'ancien libellé long ('Suivre le téléphone', qui ne
+      // tenait sur une ligne dans aucun scénario compatible avec 200 %),
+      // 'Automatique' (132 px sans contrainte) tient bien sous
+      // kA11yTristateTrailingMaxWidth (160 px) : voir son commentaire pour
+      // le calcul complet. Ce test verrouille ce résultat mesuré.
       tester.view.physicalSize = const Size(1125, 2436); // 375 x 812 @3.0
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.reset);
@@ -119,8 +128,8 @@ void main() {
               iconAsset: 'contrast',
               label: 'Contraste élevé',
               subtitle: 'Renforce le texte et les bordures',
-              // 'system' produit 'Suivre le téléphone', le plus long des
-              // trois libellés de a11yModeLabel.
+              // 'system' produit 'Automatique', le plus long des trois
+              // libellés courts de a11yModeShortLabel.
               value: AccessibilityMode.system,
               sheetTitle: 'Contraste élevé',
               onChanged: (_) {},
@@ -131,27 +140,59 @@ void main() {
 
       // Hauteur d'une ligne pour ce style (mise en page sans contrainte de
       // largeur ne change pas la hauteur d'une ligne, seulement sa largeur).
-      final textWidget = tester.widget<Text>(find.text('Suivre le téléphone'));
+      final textWidget = tester.widget<Text>(find.text('Automatique'));
       final singleLine = TextPainter(
         text: TextSpan(text: textWidget.data, style: textWidget.style),
         textDirection: TextDirection.ltr,
       )..layout();
 
-      final actualHeight =
-          tester.getSize(find.text('Suivre le téléphone')).height;
+      final actualHeight = tester.getSize(find.text('Automatique')).height;
 
       expect(
         actualHeight,
-        moreOrLessEquals(singleLine.height * 2, epsilon: 1.0),
-        reason: '"Suivre le téléphone" doit tenir sur exactement deux '
-            'lignes à 100 % sur un écran de 375 pt de large (hauteur '
-            'rendue $actualHeight vs ${singleLine.height} × 2 attendu). '
-            'Si le résultat est ${singleLine.height} (une ligne), très bien, '
-            'mettre à jour cette assertion et le commentaire de '
-            'kA11yTristateTrailingMaxWidth. Si le résultat dépasse deux '
-            'lignes, kA11yTristateTrailingMaxWidth a été resserrée par '
-            'erreur.',
+        moreOrLessEquals(singleLine.height, epsilon: 1.0),
+        reason: '"Automatique" ne tient plus sur une seule ligne à 100 % '
+            'sur un écran de 375 pt de large (hauteur rendue $actualHeight '
+            'vs ${singleLine.height} attendu pour une ligne) ; '
+            'kA11yTristateTrailingMaxWidth a été resserrée par erreur.',
       );
+    });
+
+    testWidgets(
+        'le libellé court le plus long ne fait pas déborder la ligne à '
+        '200 % sur un écran étroit', (tester) async {
+      // Même écran que le test « 200 % sans débordement » de
+      // accessibility_settings_screen_test.dart (360 x 800 logiques une
+      // fois le zoom pris en compte), mais isolé sur ce seul widget pour
+      // documenter précisément, dans la suite de tests de ce widget, que
+      // kA11yTristateTrailingMaxWidth (160 px) ne réintroduit pas le
+      // débordement d'origine.
+      tester.view.physicalSize = const Size(1080, 2400); // 360 x 800 @3.0
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light(),
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+          child: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+              child: A11yTristateRow(
+                iconAsset: 'contrast',
+                label: 'Contraste élevé',
+                subtitle: 'Renforce le texte et les bordures',
+                value: AccessibilityMode.system,
+                sheetTitle: 'Contraste élevé',
+                onChanged: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -160,6 +201,14 @@ void main() {
       expect(a11yModeLabel(AccessibilityMode.system), 'Suivre le téléphone');
       expect(a11yModeLabel(AccessibilityMode.on), 'Toujours activé');
       expect(a11yModeLabel(AccessibilityMode.off), 'Toujours désactivé');
+    });
+  });
+
+  group('a11yModeShortLabel', () {
+    test('traduit les trois modes en un mot', () {
+      expect(a11yModeShortLabel(AccessibilityMode.system), 'Automatique');
+      expect(a11yModeShortLabel(AccessibilityMode.on), 'Activé');
+      expect(a11yModeShortLabel(AccessibilityMode.off), 'Désactivé');
     });
   });
 }
