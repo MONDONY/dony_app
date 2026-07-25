@@ -56,19 +56,7 @@ class A11yPreviewCard extends StatelessWidget {
               reinforceLabels: state.reinforceLabels,
               persistentMessages: state.persistentMessages,
               confirmImportantActions: state.confirmImportantActions,
-              // L'échantillon est un exemple figé (trajet et bouton
-              // fictifs), pas du contenu réel ni un contrôle actionnable :
-              // l'exposer en détail à un lecteur d'écran n'apporte rien et
-              // ferait remonter ses défauts de contraste propres (ex.
-              // DonyUrgentBadge, dont l'étiquette renforcée reste à
-              // implémenter) dans l'audit de CET écran. Un seul résumé
-              // suffit.
-              child: Semantics(
-                label: 'Exemple d\'affichage avec les réglages actuels',
-                child: ExcludeSemantics(
-                  child: Builder(builder: _buildSample),
-                ),
-              ),
+              child: Builder(builder: _buildSample),
             ),
           ),
         ),
@@ -101,7 +89,16 @@ class A11yPreviewCard extends StatelessWidget {
               Text('Paris', style: tt.titleLarge?.copyWith(color: cs.onSurface)),
               Icon(Icons.arrow_forward_rounded, size: 16, color: cs.onSurfaceVariant),
               Text('Dakar', style: tt.titleLarge?.copyWith(color: cs.onSurface)),
-              const DonyUrgentBadge(),
+              // Seul ce badge a un défaut de contraste connu et déjà différé
+              // (étiquette renforcée de DonyUrgentBadge, tâche ultérieure) :
+              // on l'exempte lui seul du contrôle WCAG, pas le reste de
+              // l'échantillon (titres, poids, bouton), qui doit rester
+              // soumis aux mêmes contrôles de contraste et de cible tactile
+              // que n'importe quel contenu réel de cet écran.
+              Semantics(
+                label: 'Urgent',
+                child: const ExcludeSemantics(child: DonyUrgentBadge()),
+              ),
             ],
           ),
           const SizedBox(height: DonySpacing.xs),

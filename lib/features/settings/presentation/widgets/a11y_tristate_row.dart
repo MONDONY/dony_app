@@ -9,6 +9,30 @@ String a11yModeLabel(String mode) => switch (mode) {
       _ => 'Suivre le téléphone',
     };
 
+/// Largeur maximale du bloc de fin (libellé de mode + chevron) de
+/// [A11yTristateRow].
+///
+/// `DonyListTile` ne borne pas son slot `trailing` (un enfant non-flex d'un
+/// `Row` reçoit toute la largeur disponible comme contrainte, quels que
+/// soient les autres enfants) : sans borne, le libellé le plus long
+/// ('Suivre le téléphone', 228 px de large sans contrainte à 100 %) réclame
+/// sa largeur naturelle sur une seule ligne et fait déborder tout le `Row`
+/// du parent à 200 % de taille de texte.
+///
+/// Aucune largeur ne permet à la fois une seule ligne à 100 % ET l'absence
+/// de débordement à 200 % : à 200 %, la ligne complète (icône + libellé +
+/// ce bloc) ne tient physiquement que dans ~260 px sur l'écran de test le
+/// plus étroit couramment ciblé (360 pt logiques), ce qui borne ce bloc à
+/// ~200 px maximum pour laisser de la place au libellé principal — largement
+/// sous les ~252 px qu'exigerait 'Suivre le téléphone' sur une seule ligne.
+/// Le retour à la ligne à 100 % est donc assumé explicitement plutôt que
+/// combattu : 176 est choisie pour qu'il reste propre (exactement deux
+/// lignes, pas quatre) tout en gardant une marge confortable sous le budget
+/// de 200 %. Verrouillé par le test dédié dans
+/// `test/features/settings/presentation/widgets/a11y_rows_test.dart`
+/// (mesuré sur un écran de 375 pt, iPhone SE).
+const double kA11yTristateTrailingMaxWidth = 176;
+
 /// Ligne de réglage tri-état, ouvrant une sheet à trois choix.
 ///
 /// Motif du choix d'une sheet plutôt que de trois pastilles côte à côte :
@@ -85,12 +109,10 @@ class A11yTristateRow extends StatelessWidget {
       iconBgColor: cs.primaryContainer,
       showDivider: showDivider,
       onTap: () => _open(context),
-      // DonyListTile ne réserve pas d'espace pour `trailing` : sans borne
-      // propre, un libellé long ('Suivre le téléphone') à 200 % de taille de
-      // texte réclame sa largeur naturelle sur une seule ligne et fait
-      // déborder le Row du parent au lieu de passer à la ligne.
       trailing: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 128),
+        constraints: const BoxConstraints(
+          maxWidth: kA11yTristateTrailingMaxWidth,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
