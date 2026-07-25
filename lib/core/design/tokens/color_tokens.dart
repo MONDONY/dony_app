@@ -160,6 +160,17 @@ abstract final class DonyColors {
   static const borderStrong  = neutral300;
   static const borderFocus   = blue500;
 
+  /// Contour des champs de saisie, distinct de [borderDefault].
+  ///
+  /// Un champ est un composant d'interface : son contour doit atteindre 3:1
+  /// (WCAG 1.4.11), sinon rien ne signale qu'il est là. Avec [borderDefault]
+  /// la paire tombait à 1.26:1 sur un remplissage blanc, sur un fond d'app
+  /// lui-même blanc cassé : le champ n'avait aucune limite perceptible.
+  /// Volontairement séparé, pour ne pas alourdir les bordures de cartes ni
+  /// les séparateurs, qui eux sont décoratifs.
+  static const borderInput     = Color(0xFF948E80); // 3.26:1 sur blanc
+  static const borderInputDark = Color(0xFF646A74); // 3.17:1 sur surface sombre
+
   // ═══════════════════════════════════════════════════════════════
   // COMPAT — Anciens noms conservés pour les widgets existants
   // ignore: flutter_style_todos

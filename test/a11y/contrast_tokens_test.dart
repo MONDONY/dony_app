@@ -114,6 +114,63 @@ void main() {
     });
   });
 
+  group('champs de saisie', () {
+    // Lu depuis le thème et non depuis les tokens : c'est le thème qui décide
+    // quelle couleur atterrit sur un champ, et c'est là qu'était le défaut.
+    Color hintColor(ThemeData t) => t.inputDecorationTheme.hintStyle!.color!;
+    Color borderColor(ThemeData t) =>
+        (t.inputDecorationTheme.enabledBorder! as OutlineInputBorder)
+            .borderSide
+            .color;
+
+    testWidgets('le placeholder est du texte lisible', (tester) async {
+      final clair = AppTheme.light();
+      expectContrast(hintColor(clair), clair.colorScheme.surface, 4.5,
+          'placeholder, thème clair');
+
+      final sombre = AppTheme.dark();
+      expectContrast(hintColor(sombre), sombre.colorScheme.surface, 4.5,
+          'placeholder, thème sombre');
+    });
+
+    testWidgets('le contour du champ atteint 3:1 sur son remplissage',
+        (tester) async {
+      for (final theme in [AppTheme.light(), AppTheme.dark()]) {
+        expectContrast(
+          borderColor(theme),
+          theme.inputDecorationTheme.fillColor!,
+          3,
+          'contour de champ, ${theme.brightness}',
+        );
+      }
+    });
+
+    testWidgets('le contour du champ reste visible sur le fond d\'écran',
+        (tester) async {
+      // Le champ est posé sur le fond d'app, pas sur sa propre surface : un
+      // contour qui ne tient que face au remplissage disparaîtrait au bord.
+      for (final theme in [AppTheme.light(), AppTheme.dark()]) {
+        expectContrast(
+          borderColor(theme),
+          theme.scaffoldBackgroundColor,
+          3,
+          'contour de champ sur fond d\'écran, ${theme.brightness}',
+        );
+      }
+    });
+
+    testWidgets('le haut contraste garde sa propre bordure', (tester) async {
+      for (final theme in [
+        AppTheme.light(a11y: const A11yThemeOptions(highContrast: true)),
+        AppTheme.dark(a11y: const A11yThemeOptions(highContrast: true)),
+      ]) {
+        expect(borderColor(theme), theme.colorScheme.outline);
+        expectContrast(borderColor(theme), theme.colorScheme.surface, 3,
+            'contour HC, ${theme.brightness}');
+      }
+    });
+  });
+
   group('ColorScheme', () {
     // `testWidgets` et non `test` : construire un ThemeData déclenche le
     // chargement des polices Google, qui tente un accès réseau hors du binding

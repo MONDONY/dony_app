@@ -64,6 +64,13 @@ abstract final class AppTheme {
     // neutral200 est quasi invisible pour une basse vision.
     final borderWidth = hc ? 1.5 : 1.0;
 
+    // Le contour d'un champ est un composant d'interface, pas une décoration :
+    // il lui faut 3:1. `cs.outline` n'y arrive pas et ne le doit pas, il sert
+    // aussi aux séparateurs.
+    final inputBorderColor = hc
+        ? cs.outline
+        : (isLight ? DonyColors.borderInput : DonyColors.borderInputDark);
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -108,11 +115,11 @@ abstract final class AppTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline, width: borderWidth),
+          borderSide: BorderSide(color: inputBorderColor, width: borderWidth),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline, width: borderWidth),
+          borderSide: BorderSide(color: inputBorderColor, width: borderWidth),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -123,8 +130,10 @@ abstract final class AppTheme {
           borderSide: BorderSide(color: cs.error),
         ),
         labelStyle: DonyTypography.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        // Un placeholder est du texte, donc 4.5:1. neutral400 n'en donnait que
+        // 2.54:1 sur blanc ; textSubtle (neutral500) monte à 4.71:1.
         hintStyle: DonyTypography.textTheme.bodyMedium?.copyWith(
-          color: isLight ? DonyColors.neutral400 : DonyColors.neutralDark400,
+          color: isLight ? DonyColors.textSubtle : DonyColors.neutralDark400,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
