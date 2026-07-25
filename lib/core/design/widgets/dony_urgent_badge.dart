@@ -22,7 +22,10 @@ class DonyUrgentBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
-        '🔥 Urgent',
+        // Sans renforcement, la pastille rouge et l'emoji portent le sens. Avec
+        // renforcement, le statut est écrit en toutes lettres : une information
+        // ne doit pas dépendre de la seule couleur (WCAG 1.4.1).
+        context.a11y.reinforceLabels ? '🔥 Départ imminent' : '🔥 Urgent',
         // fontSize forcé à 12 (règle projet : fontSize < 12 interdit) —
         // labelMedium résout à 11px, aucun token DonyTypography à 12px/w500+
         // n'existe (bodySmall est 12px mais w400).
