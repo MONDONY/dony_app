@@ -69,8 +69,6 @@ class _DonyAppState extends State<DonyApp> {
   @override
   void initState() {
     super.initState();
-    // À froid, avant tout build : voir la doc de [primeReducedMotionDuration].
-    primeReducedMotionDuration(getIt<AccessibilityBloc>().state);
     _navSub = getIt<NotificationService>().navigationStream.listen((route) {
       _navigateToRoute(route);
     });
@@ -80,6 +78,21 @@ class _DonyAppState extends State<DonyApp> {
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _initDeepLinks());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // À froid, avant le premier `build` : voir la doc de
+    // [primeReducedMotionDuration]. `MediaQuery` n'est pas encore fiable
+    // dans `initState`, mais l'est ici — c'est ce que `build` exploite déjà
+    // plus bas via `MediaQuery.disableAnimationsOf(context)`. Peut être
+    // rappelée à chaque nouvelle dépendance héritée (ex. clavier), sans
+    // conséquence : voir la doc de la fonction.
+    primeReducedMotionDuration(
+      getIt<AccessibilityBloc>().state,
+      systemReducesMotion: MediaQuery.disableAnimationsOf(context),
+    );
   }
 
   void _initDeepLinks() {

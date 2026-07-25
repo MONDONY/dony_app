@@ -135,7 +135,8 @@ void main() {
     });
   });
 
-  group('primeReducedMotionDuration — synchronisation à froid (ronde 1)', () {
+  group('primeReducedMotionDuration — synchronisation à froid (rondes 1 et 2)',
+      () {
     late _MockBox box;
     late _MockAnalyticsService analytics;
 
@@ -152,22 +153,24 @@ void main() {
     });
 
     test(
+        // Ronde 1.
         'un bloc dont l\'état initial (chargé depuis Hive, sans emit) porte '
         'reduceMotion: on force Animate.defaultDuration à zéro, sans '
-        'qu\'aucun événement n\'ait été ajouté au bloc', () {
+        'qu\'aucun événement n\'ait été ajouté au bloc, même si le système '
+        'ne demande pas de réduction', () {
       when(() => box.get(HiveService.kA11yReduceMotion,
               defaultValue: any(named: 'defaultValue')))
           .thenReturn(AccessibilityMode.on);
 
       // L'état initial vient de `super(_load(_box))`, jamais d'un
-      // `emit()` : reproduit exactement ce que lit `initState` via
-      // `getIt<AccessibilityBloc>().state` avant le premier `build`, sans
-      // qu'aucun événement ne soit ajouté au bloc.
+      // `emit()` : reproduit exactement ce que lit `didChangeDependencies`
+      // via `getIt<AccessibilityBloc>().state` avant le premier `build`,
+      // sans qu'aucun événement ne soit ajouté au bloc.
       final bloc = AccessibilityBloc(box, analytics);
       addTearDown(bloc.close);
       expect(bloc.state.reduceMotion, AccessibilityMode.on);
 
-      primeReducedMotionDuration(bloc.state);
+      primeReducedMotionDuration(bloc.state, systemReducesMotion: false);
 
       expect(Animate.defaultDuration, Duration.zero);
       verifyNever(() => analytics.logEvent(any(),
@@ -175,16 +178,37 @@ void main() {
     });
 
     test(
-        'un état reduceMotion: system ou off laisse Animate.defaultDuration '
-        'inchangé (résolu ensuite par MediaQuery, pas à froid)', () {
-      Animate.defaultDuration = const Duration(milliseconds: 300);
-
+        // Ronde 2 — 'system' est la valeur par défaut de reduceMotion,
+        // donc le chemin le plus fréquent, pas un cas limite : l'utilisateur
+        // qui a activé la réduction dans les réglages de son téléphone sans
+        // jamais ouvrir l'écran d'accessibilité dony.
+        'un état reduceMotion: system avec un système qui demande la '
+        'réduction force Animate.defaultDuration à zéro', () {
       primeReducedMotionDuration(
-          const AccessibilityState(reduceMotion: AccessibilityMode.system));
+        const AccessibilityState(reduceMotion: AccessibilityMode.system),
+        systemReducesMotion: true,
+      );
+      expect(Animate.defaultDuration, Duration.zero);
+    });
+
+    test(
+        'un état reduceMotion: system avec un système qui ne demande pas la '
+        'réduction laisse Animate.defaultDuration à sa valeur normale', () {
+      primeReducedMotionDuration(
+        const AccessibilityState(reduceMotion: AccessibilityMode.system),
+        systemReducesMotion: false,
+      );
       expect(Animate.defaultDuration, const Duration(milliseconds: 300));
+    });
 
+    test(
+        'un état reduceMotion: off avec un système qui demande la réduction '
+        'garde Animate.defaultDuration à sa valeur normale : le choix '
+        'explicite de l\'utilisateur prime sur le système', () {
       primeReducedMotionDuration(
-          const AccessibilityState(reduceMotion: AccessibilityMode.off));
+        const AccessibilityState(reduceMotion: AccessibilityMode.off),
+        systemReducesMotion: true,
+      );
       expect(Animate.defaultDuration, const Duration(milliseconds: 300));
     });
   });
