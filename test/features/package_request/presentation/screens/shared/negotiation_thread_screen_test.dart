@@ -65,7 +65,7 @@ void main() {
   });
 
   Widget wrap({String viewerUserId = 'sender-1'}) => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: NegotiationThreadScreen(
           threadId: 't-1',
           viewerUserId: viewerUserId,
@@ -164,7 +164,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-        MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
       );
       await tester.pump();
 
@@ -242,7 +242,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-        MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+        MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
       );
       await tester.pumpAndSettle();
       // Not awaited: push() only resolves when the pushed route is popped

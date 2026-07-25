@@ -33,7 +33,7 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(body: SizedBox(height: 260, child: child)),
   );
 

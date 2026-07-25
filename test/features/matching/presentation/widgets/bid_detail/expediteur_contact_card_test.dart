@@ -63,7 +63,7 @@ Future<void> _pump(
   }
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: MultiBlocProvider(
           providers: [
@@ -185,7 +185,7 @@ void main() {
     when(() => reveal.state).thenReturn(const ContactRevealInitial());
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: MultiBlocProvider(
             providers: [

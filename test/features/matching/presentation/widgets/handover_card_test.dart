@@ -26,7 +26,7 @@ BidModel _bid({
 Future<void> _pump(WidgetTester tester, BidModel bid) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: HandoverCard(bid: bid)),
     ),
   );

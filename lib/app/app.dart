@@ -223,8 +223,8 @@ class _DonyAppState extends State<DonyApp> {
                   ),
                   child: MaterialApp.router(
                     title: 'dony',
-                    theme: AppTheme.light,
-                    darkTheme: AppTheme.dark,
+                    theme: AppTheme.light(),
+                    darkTheme: AppTheme.dark(),
                     themeMode: themeMode,
                     locale: Locale(prefsState.preferences.languageCode),
                     routerConfig: appRouter,

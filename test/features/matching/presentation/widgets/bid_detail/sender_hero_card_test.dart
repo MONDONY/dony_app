@@ -65,7 +65,7 @@ BidModel _bid({
 
 Widget _host(BidModel bid, _MockCancellationBloc cancellationBloc) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: BlocProvider<CancellationBloc>.value(
         value: cancellationBloc,

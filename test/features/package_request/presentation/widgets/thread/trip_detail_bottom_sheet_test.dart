@@ -27,7 +27,7 @@ LinkedTripSummary _trip({
 
 Widget _buildApp(LinkedTripSummary trip, {bool isSender = false}) =>
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: Builder(
           builder: (ctx) => ElevatedButton(

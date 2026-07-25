@@ -47,7 +47,7 @@ Widget _buildApp({required String requestId}) {
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 void main() {

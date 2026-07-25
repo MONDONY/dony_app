@@ -24,7 +24,7 @@ MatchingRequestModel _match() => MatchingRequestModel(
     );
 
 Widget _wrap(Widget child) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: child),
     );
 

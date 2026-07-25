@@ -68,7 +68,7 @@ Future<void> _pumpSheet(
   GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
   await tester.pumpWidget(MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Builder(
       builder: (ctx) => Scaffold(
         body: Center(
@@ -124,7 +124,7 @@ void main() {
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
     await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
@@ -168,7 +168,7 @@ void main() {
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
     await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
@@ -208,7 +208,7 @@ void main() {
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
     await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
@@ -252,7 +252,7 @@ void main() {
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
     await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
@@ -297,7 +297,7 @@ void main() {
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
     await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
@@ -409,7 +409,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Builder(
           builder: (ctx) => Scaffold(
             body: Center(

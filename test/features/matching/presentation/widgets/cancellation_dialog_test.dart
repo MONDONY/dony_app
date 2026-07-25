@@ -40,7 +40,7 @@ Future<void> _pumpAndOpenDialog(
   required ValueNotifier<String?> result,
 }) async {
   await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     routerConfig: _buildRouter(kind: kind, result: result),
   ));
   await tester.pump();

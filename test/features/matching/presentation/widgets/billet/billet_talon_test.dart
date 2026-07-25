@@ -60,7 +60,7 @@ Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
   when(() => b.state).thenReturn(BidInitial());
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: MultiBlocProvider(
           providers: [

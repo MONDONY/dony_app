@@ -10,7 +10,7 @@ import 'package:go_router/go_router.dart';
 /// Simple MaterialApp wrapper for widgets that do NOT use GoRouter internals
 /// (no context.pop(), no SliverAppBar leading).
 Widget _wrap(Widget child) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: Center(child: child)),
     );
 
@@ -32,7 +32,7 @@ Widget _wrapWithRouter(Widget Function(BuildContext ctx) builder) {
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@ void main() {
       IconData? icon,
     }) {
       return MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Builder(
           builder: (ctx) => Scaffold(
             body: Center(
@@ -356,7 +356,7 @@ void main() {
       bool isScrollControlled = true,
     }) {
       return MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Builder(
           builder: (ctx) => Scaffold(
             body: Center(
@@ -479,7 +479,7 @@ void main() {
     testWidgets('M3 — stickyBottom est dans un SafeArea et un Padding horizontal',
         (tester) async {
       await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Builder(
           builder: (ctx) => Scaffold(
             body: Center(
@@ -1045,7 +1045,7 @@ void main() {
       PreferredSizeWidget? bottom,
     }) {
       return MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: CustomScrollView(
             slivers: [
@@ -1104,7 +1104,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
     });
@@ -1179,7 +1179,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pump();
@@ -1214,7 +1214,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pumpAndSettle();
@@ -1247,7 +1247,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pumpAndSettle();
@@ -1276,7 +1276,7 @@ void main() {
         ],
       );
       await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pumpAndSettle();
@@ -1290,7 +1290,7 @@ void main() {
       late Color infoColor;
       late Color infoLightColor;
       await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Builder(builder: (ctx) {
           final cs = Theme.of(ctx).colorScheme;
           infoColor = cs.info;
@@ -1305,7 +1305,7 @@ void main() {
     testWidgets('errorLight returns light variant in light mode', (tester) async {
       late Color errorLightColor;
       await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Builder(builder: (ctx) {
           errorLightColor = Theme.of(ctx).colorScheme.errorLight;
           return const SizedBox.shrink();

@@ -54,7 +54,7 @@ void main() {
             analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
           );
     return MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: MultiBlocProvider(
         providers: [
           BlocProvider<PackageRequestFormBloc>.value(value: bloc),

@@ -97,7 +97,7 @@ Widget _host(
   _MockConversationOpenBloc conversationOpenBloc,
 ) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: MultiBlocProvider(
         providers: [

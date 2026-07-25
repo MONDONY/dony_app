@@ -16,7 +16,7 @@ CorridorAlertModel _alert(AlertDirection d) => CorridorAlertModel(
     );
 
 Widget _pump(CorridorAlertModel a) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: CorridorAlertTile(alert: a, onTap: () {}, onToggle: (_) {}),
       ),

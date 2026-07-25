@@ -27,7 +27,7 @@ Widget wrapWithRouter(Widget Function(BuildContext ctx) builder) {
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 Widget wrapAppBar(DonyAppBar appBar) => wrapWithRouter((_) => appBar);
@@ -57,7 +57,7 @@ Widget wrapSliver({bool showBack = true}) {
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 // ─── Matcher helper ────────────────────────────────────────────────────────────

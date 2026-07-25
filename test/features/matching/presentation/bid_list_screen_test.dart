@@ -96,7 +96,7 @@ Future<void> _pump(
   );
 
   await tester.pumpWidget(
-    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   await tester.pump();
 }
@@ -140,7 +140,7 @@ Future<GoRouter> _pumpFromRoot(
   );
 
   await tester.pumpWidget(
-    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   await tester.pump();
   return router;
@@ -603,7 +603,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
     await tester.pump();
 
     router.go('/parent/screen');
@@ -683,7 +683,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
     await tester.pump();
 
     router.go('/parent/screen');

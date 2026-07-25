@@ -93,7 +93,7 @@ void main() {
           BlocProvider<AuthBloc>.value(value: authBloc),
         ],
         child: MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: CorridorAlertMatchesScreen(alert: _alert(direction)),
         ),
       );
@@ -178,7 +178,7 @@ void main() {
 
     await tester.pumpWidget(MaterialApp.router(
       routerConfig: router,
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
     ));
     await tester.pump(const Duration(milliseconds: 600));
 

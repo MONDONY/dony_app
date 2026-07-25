@@ -35,7 +35,7 @@ const _tinyPngB64 =
 
 Widget _host(_MockTrackingBloc bloc) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: Builder(
         builder: (ctx) => TextButton(

@@ -39,7 +39,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: BlocProvider<ConversationOpenBloc>.value(
             value: mockBloc,
@@ -54,7 +54,7 @@ void main() {
   testWidgets('ExpediteurCard montre le nom de l\'expéditeur', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(body: ExpediteurCard(bid: _bid())),
       ),
     );
@@ -66,7 +66,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: MiniChip(
             label: 'KYC',

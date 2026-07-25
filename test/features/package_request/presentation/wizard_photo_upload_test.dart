@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(body: child),
       );
 

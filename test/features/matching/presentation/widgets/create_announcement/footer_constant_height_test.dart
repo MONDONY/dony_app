@@ -30,7 +30,7 @@ Future<double> _footerHeight(
 ) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
@@ -177,7 +177,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            theme: AppTheme.light,
+            theme: AppTheme.light(),
             home: Scaffold(
               body: Padding(
                 padding: const EdgeInsets.all(16),
@@ -210,7 +210,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            theme: AppTheme.light,
+            theme: AppTheme.light(),
             home: Scaffold(
               body: Padding(
                 padding: const EdgeInsets.all(16),

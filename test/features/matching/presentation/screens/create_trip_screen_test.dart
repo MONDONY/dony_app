@@ -202,7 +202,7 @@ Widget _wrapWithRouter(Widget child, {AuthState? authState}) {
 
   return MaterialApp.router(
     routerConfig: router,
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
   );
 }
 
@@ -1163,7 +1163,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
         );
         await tester.pump();
 
@@ -1221,7 +1221,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
         );
         await tester.pump();
         await tester.tap(find.text('open'));
@@ -1290,7 +1290,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
         );
         await tester.pump();
 
@@ -1382,7 +1382,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp.router(
             routerConfig: router,
-            theme: AppTheme.light,
+            theme: AppTheme.light(),
           ),
         );
         await tester.pump();

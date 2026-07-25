@@ -74,7 +74,7 @@ Widget _wrapContent({
       .thenAnswer((_) => const Stream<NegotiationState>.empty());
 
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: BlocProvider<NegotiationBloc>.value(
       value: mockBloc,
       child: Scaffold(

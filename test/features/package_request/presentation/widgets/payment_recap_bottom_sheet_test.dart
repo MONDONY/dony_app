@@ -222,7 +222,7 @@ void main() {
           ),
         ],
       );
-      return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+      return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
     }
 
     testWidgets(
@@ -323,7 +323,7 @@ void main() {
           ),
         ],
       );
-      return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+      return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
     }
 
     testWidgets(

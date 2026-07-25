@@ -22,7 +22,7 @@ BidModel _bid({
 
 Future<void> _pump(WidgetTester tester, BidModel bid) => tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(body: TravelerGainCard(bid: bid)),
       ),
     );

@@ -76,7 +76,7 @@ Widget _buildApp() {
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 /// Fake thread carrying the server-computed SET (Task 6). `paymentMethod` is

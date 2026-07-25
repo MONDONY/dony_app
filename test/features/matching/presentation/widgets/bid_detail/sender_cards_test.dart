@@ -152,7 +152,7 @@ Widget _hostVoyageur(
     ],
   );
   return MaterialApp.router(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     routerConfig: router,
   );
 }
@@ -170,17 +170,17 @@ class _RecordingObserver extends NavigatorObserver {
 }
 
 Widget _hostColis(BidModel bid) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: ColisDestinataireCard(bid: bid)),
     );
 
 Widget _hostPaiement(BidModel bid) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: PaiementCard(bid: bid)),
     );
 
 Widget _hostAccordion(BidModel bid) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: SingleChildScrollView(child: DetailsAccordion(bid: bid)),
       ),
@@ -652,7 +652,7 @@ void main() {
   // ── QuickActionsRow ───────────────────────────────────────────────────────
   group('QuickActionsRow', () {
     Widget _hostQuickActions(BidModel bid) => MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: Scaffold(
             body: QuickActionsRow(bid: bid),
           ),

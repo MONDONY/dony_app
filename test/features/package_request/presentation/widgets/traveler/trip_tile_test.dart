@@ -33,7 +33,7 @@ AnnouncementModel _trip({
 }
 
 Widget _harness(TripTile tile) =>
-    MaterialApp(theme: AppTheme.light, home: Scaffold(body: tile));
+    MaterialApp(theme: AppTheme.light(), home: Scaffold(body: tile));
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));

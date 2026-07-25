@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 Widget _harness(void Function(BuildContext) onTap, {String label = 'Show'}) =>
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Builder(
         builder: (context) => Scaffold(
           body: ElevatedButton(

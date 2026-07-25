@@ -20,7 +20,7 @@ void main() {
   testWidgets('affiche le libellé Suivi du colis', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(body: SuiviButton(bid: _bid())),
       ),
     );

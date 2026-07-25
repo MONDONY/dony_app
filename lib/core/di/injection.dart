@@ -549,7 +549,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
 
   // Settings — Accessibility (text scale, high contrast, reduce animations)
   getIt.registerFactory<AccessibilityBloc>(
-    () => AccessibilityBloc(getIt<HiveService>().userPrefs),
+    () => AccessibilityBloc(getIt<HiveService>().userPrefs, getIt<AnalyticsService>()),
   );
 
   // Settings — Diagnostics (version app + ping API)

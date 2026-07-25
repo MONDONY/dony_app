@@ -76,7 +76,7 @@ void main() {
   });
 
   Widget wrap(NegotiationThread thread, String viewerUserId) => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: BlocProvider<NegotiationBloc>.value(
           value: bloc,
           child: Scaffold(
@@ -119,7 +119,7 @@ void main() {
       ],
     );
     return MaterialApp.router(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       routerConfig: router,
     );
   }

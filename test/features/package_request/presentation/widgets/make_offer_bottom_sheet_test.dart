@@ -97,7 +97,7 @@ void main() {
             ),
           ],
         ),
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
       );
 
   group('MakeOfferBottomSheet — garde-fou de sortie', () {

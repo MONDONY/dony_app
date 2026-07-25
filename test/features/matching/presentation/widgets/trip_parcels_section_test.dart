@@ -70,7 +70,7 @@ Future<void> _pump(WidgetTester tester, _MockBidBloc bidBloc) async {
   );
 
   await tester.pumpWidget(
-    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   await tester.pump(const Duration(milliseconds: 300));
 }

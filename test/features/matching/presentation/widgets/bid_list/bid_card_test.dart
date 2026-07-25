@@ -38,7 +38,7 @@ Future<void> _pumpCard(WidgetTester tester, BidCard card) async {
 
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: SingleChildScrollView(child: card)),
     ),
   );
@@ -153,7 +153,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     );
     await tester.pump();
 

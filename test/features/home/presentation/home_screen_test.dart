@@ -301,7 +301,7 @@ Widget _buildHome({
       BlocProvider<FavoriteIdsCubit>.value(value: effectiveFavCubit),
     ],
     child: MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -481,7 +481,7 @@ Widget _buildHomeRouter({
 
   return MaterialApp.router(
     routerConfig: router,
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     localizationsDelegates: const [
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,
@@ -556,7 +556,7 @@ Widget _buildHomeStubRoutes({
 
   return MaterialApp.router(
     routerConfig: router,
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     localizationsDelegates: const [
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,
@@ -713,7 +713,7 @@ void main() {
               BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
             ],
             child: MaterialApp(
-              theme: AppTheme.light,
+              theme: AppTheme.light(),
               localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
@@ -1082,7 +1082,7 @@ void main() {
               BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
             ],
             child: MaterialApp(
-              theme: AppTheme.light,
+              theme: AppTheme.light(),
               localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
@@ -2281,7 +2281,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(
           routerConfig: router,
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

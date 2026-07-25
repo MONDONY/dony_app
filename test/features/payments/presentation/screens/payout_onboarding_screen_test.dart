@@ -49,7 +49,7 @@ Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc, MockStripeAccountBloc? s
     when(() => stripe.stream).thenAnswer((_) => const Stream.empty());
   }
   return MaterialApp.router(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     routerConfig: GoRouter(routes: [
       GoRoute(
         path: '/',

@@ -40,7 +40,7 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(routes: [
 
 Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
   await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     routerConfig: _buildRouter(authBloc),
   ));
   // Advance past all flutter_animate timers (longest delay is 380ms)

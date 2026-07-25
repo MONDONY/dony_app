@@ -32,7 +32,7 @@ Future<GoRouter> _pump(
     ],
   );
   await tester.pumpWidget(
-    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   return router;
 }

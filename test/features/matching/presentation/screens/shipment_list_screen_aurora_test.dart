@@ -96,7 +96,7 @@ Widget _buildScreen({
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 Future<void> _pump(
@@ -232,7 +232,7 @@ void main() {
       authBloc: authBloc,
     );
     // Le fond suit désormais le thème (dark mode) au lieu d'un cream figé.
-    final expected = AppTheme.light.scaffoldBackgroundColor;
+    final expected = AppTheme.light().scaffoldBackgroundColor;
     final scaffolds = tester.widgetList<Scaffold>(find.byType(Scaffold));
     final hasThemeBg = scaffolds.any((s) => s.backgroundColor == expected);
     expect(hasThemeBg, isTrue);
@@ -705,7 +705,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: MultiBlocProvider(
           providers: [
             BlocProvider<BidBloc>.value(value: bidBloc),
@@ -732,7 +732,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: MultiBlocProvider(
             providers: [
               BlocProvider<BidBloc>.value(value: bidBloc),
@@ -763,7 +763,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: MultiBlocProvider(
           providers: [
             BlocProvider<BidBloc>.value(value: bidBloc),
@@ -1084,7 +1084,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: MultiBlocProvider(
           providers: [
             BlocProvider<BidBloc>.value(value: bidBloc),

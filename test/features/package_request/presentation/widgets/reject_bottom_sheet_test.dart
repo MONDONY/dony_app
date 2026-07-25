@@ -13,7 +13,7 @@ class _MockNegotiationBloc
 
 Widget _buildApp(_MockNegotiationBloc bloc) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: BlocProvider.value(
         value: bloc,

@@ -1,4 +1,5 @@
 // Theme
+export 'package:dony/core/design/theme/a11y_theme_options.dart';
 export 'package:dony/core/design/theme/app_theme.dart';
 // Tokens
 export 'package:dony/core/design/tokens/animation_tokens.dart';

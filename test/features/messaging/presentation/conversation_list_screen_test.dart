@@ -82,7 +82,7 @@ GoRouter _buildRouter(ConversationListBloc bloc) => GoRouter(
 Future<void> _pump(WidgetTester tester, ConversationListBloc bloc) async {
   await tester.pumpWidget(
     MaterialApp.router(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       routerConfig: _buildRouter(bloc),
     ),
   );
@@ -280,7 +280,7 @@ void main() {
       // StatefulShellBranch alors que showDialog pousse sur le root navigator.
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: Navigator(
             onGenerateRoute: (_) => MaterialPageRoute(
               builder: (_) => BlocProvider<ConversationListBloc>.value(
@@ -323,7 +323,7 @@ void main() {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: Navigator(
             onGenerateRoute: (_) => MaterialPageRoute(
               builder: (_) => BlocProvider<ConversationListBloc>.value(

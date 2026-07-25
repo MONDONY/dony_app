@@ -1,3 +1,4 @@
+import 'package:dony/core/design/theme/a11y_theme_options.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/tokens/typography_tokens.dart';
@@ -5,15 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 abstract final class AppTheme {
-  static ThemeData get light => _build(Brightness.light);
-  static ThemeData get dark => _build(Brightness.dark);
+  static ThemeData light({A11yThemeOptions a11y = const A11yThemeOptions()}) =>
+      _build(Brightness.light, a11y);
 
-  static ThemeData _build(Brightness brightness) {
+  static ThemeData dark({A11yThemeOptions a11y = const A11yThemeOptions()}) =>
+      _build(Brightness.dark, a11y);
+
+  static ThemeData _build(Brightness brightness, A11yThemeOptions a11y) {
     final isLight = brightness == Brightness.light;
+    final hc = a11y.highContrast;
 
     final cs = ColorScheme(
       brightness: brightness,
-      primary: isLight ? DonyColors.primary : DonyColors.blueDark500,
+      primary: hc
+          ? (isLight ? DonyColors.primaryHc : DonyColors.primaryHcDark)
+          : (isLight ? DonyColors.primary : DonyColors.blueDark500),
       onPrimary: DonyColors.textOnBrand,
       primaryContainer: isLight ? DonyColors.primarySoft : DonyColors.blueDark50,
       onPrimaryContainer: isLight ? DonyColors.primaryHover : DonyColors.blueDark500,
@@ -21,12 +28,20 @@ abstract final class AppTheme {
       onSecondary: DonyColors.textOnBrand,
       secondaryContainer: isLight ? DonyColors.accentSoft : DonyColors.terraDark50,
       onSecondaryContainer: isLight ? DonyColors.terra700 : DonyColors.terraDark500,
-      surface: isLight ? DonyColors.surface : DonyColors.neutralDark100,
-      onSurface: isLight ? DonyColors.textPrimary : DonyColors.neutralDark700,
-      onSurfaceVariant: isLight ? DonyColors.textMuted : DonyColors.neutralDark500,
+      surface: hc
+          ? (isLight ? DonyColors.surfaceHc : DonyColors.surfaceHcDark)
+          : (isLight ? DonyColors.surface : DonyColors.neutralDark100),
+      onSurface: hc
+          ? (isLight ? DonyColors.textPrimaryHc : DonyColors.textPrimaryHcDark)
+          : (isLight ? DonyColors.textPrimary : DonyColors.neutralDark700),
+      onSurfaceVariant: hc
+          ? (isLight ? DonyColors.textMutedHc : DonyColors.textMutedHcDark)
+          : (isLight ? DonyColors.textMuted : DonyColors.neutralDark500),
       surfaceContainerHighest: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
       surfaceContainerLow: isLight ? DonyColors.bgApp : DonyColors.neutralDark50,
-      outline: isLight ? DonyColors.borderDefault : DonyColors.neutralDark300,
+      outline: hc
+          ? (isLight ? DonyColors.borderDefaultHc : DonyColors.borderDefaultHcDark)
+          : (isLight ? DonyColors.borderDefault : DonyColors.neutralDark300),
       outlineVariant: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
       error: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
       onError: DonyColors.textOnBrand,
@@ -37,7 +52,13 @@ abstract final class AppTheme {
       onInverseSurface: isLight ? DonyColors.neutral0 : DonyColors.textPrimary,
     );
 
-    final scaffoldBg = isLight ? DonyColors.bgApp : DonyColors.neutralDark0;
+    final scaffoldBg = hc
+        ? (isLight ? DonyColors.bgAppHc : DonyColors.bgAppHcDark)
+        : (isLight ? DonyColors.bgApp : DonyColors.neutralDark0);
+
+    // Bordures épaissies en haut contraste : la bordure par défaut à 1 px sur
+    // neutral200 est quasi invisible pour une basse vision.
+    final borderWidth = hc ? 1.5 : 1.0;
 
     return ThemeData(
       useMaterial3: true,
@@ -70,7 +91,7 @@ abstract final class AppTheme {
         color: cs.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          side: BorderSide(color: cs.outline),
+          side: BorderSide(color: cs.outline, width: borderWidth),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -83,11 +104,11 @@ abstract final class AppTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
+          borderSide: BorderSide(color: cs.outline, width: borderWidth),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
+          borderSide: BorderSide(color: cs.outline, width: borderWidth),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -121,20 +142,24 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
-          side: BorderSide(color: cs.outline),
+          side: BorderSide(color: cs.outline, width: borderWidth),
           textStyle: DonyTypography.textTheme.labelLarge,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: cs.primary,
-          textStyle: DonyTypography.textTheme.labelLarge,
+          textStyle: DonyTypography.textTheme.labelLarge?.copyWith(
+            decoration: a11y.underlineLinks
+                ? TextDecoration.underline
+                : TextDecoration.none,
+          ),
         ),
       ),
       dividerTheme: DividerThemeData(
         color: cs.outline,
         space: 1,
-        thickness: 1,
+        thickness: borderWidth,
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -150,6 +175,30 @@ abstract final class AppTheme {
         trackHeight: 3,
         thumbShape: const RoundSliderThumbShape(),
       ),
+      pageTransitionsTheme: a11y.reduceMotion
+          ? const PageTransitionsTheme(builders: {
+              TargetPlatform.android: _NoTransitionsBuilder(),
+              TargetPlatform.iOS: _NoTransitionsBuilder(),
+            })
+          : const PageTransitionsTheme(),
     );
   }
+}
+
+/// Transition de page instantanée, utilisée quand la réduction du mouvement
+/// est active. Les animations de navigation ne sont pas couvertes par
+/// `MediaQuery.disableAnimations` sur toutes les plateformes, il faut donc
+/// les neutraliser explicitement.
+class _NoTransitionsBuilder extends PageTransitionsBuilder {
+  const _NoTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) =>
+      child;
 }

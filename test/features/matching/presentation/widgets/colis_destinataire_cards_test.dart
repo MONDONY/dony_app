@@ -21,7 +21,7 @@ void main() {
   testWidgets('ColisCard montre le poids', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(body: ColisCard(bid: _bid())),
       ),
     );
@@ -31,7 +31,7 @@ void main() {
   testWidgets('DestinataireCard montre nom et téléphone', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(body: DestinataireCard(bid: _bid())),
       ),
     );

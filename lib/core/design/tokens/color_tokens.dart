@@ -243,6 +243,24 @@ abstract final class DonyColors {
   static const infoDark50     = Color(0xFF0F1F2D);
 
   static const shadowDark = Color(0x66000000); // black @ 40%
+
+  // ── Variante haut contraste ──────────────────────────────────────────────
+  // Ajoutée, jamais substituée aux tokens ci-dessus : le rendu normal ne
+  // change pas. Cible 7:1 sur le texte principal, 4.5:1 minimum sur le
+  // secondaire, bordures nettement visibles.
+  static const surfaceHc       = neutral0;          // blanc pur
+  static const bgAppHc         = neutral0;          // pas de fond casse, contraste max
+  static const textPrimaryHc   = Color(0xFF000000); // noir pur sur blanc, 21:1
+  static const textMutedHc     = Color(0xFF3A3630); // 9.3:1 sur blanc
+  static const borderDefaultHc = Color(0xFF5C5850); // bordure nettement visible
+  static const primaryHc       = Color(0xFF00368F); // bleu assombri, 9.1:1 sur blanc
+
+  static const surfaceHcDark       = Color(0xFF000000);
+  static const bgAppHcDark         = Color(0xFF000000);
+  static const textPrimaryHcDark   = neutral0;      // blanc pur sur noir, 21:1
+  static const textMutedHcDark     = Color(0xFFD6D2CA);
+  static const borderDefaultHcDark = Color(0xFF9A958C);
+  static const primaryHcDark       = Color(0xFF8FB6FF);
 }
 
 extension DonyStatusColors on ColorScheme {

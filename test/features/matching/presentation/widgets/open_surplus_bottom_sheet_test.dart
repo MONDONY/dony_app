@@ -64,7 +64,7 @@ void main() {
   });
 
   Widget host() => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Builder(
           builder: (ctx) => Scaffold(
             body: Center(

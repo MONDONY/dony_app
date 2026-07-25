@@ -27,7 +27,7 @@ Future<void> _pump(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: MultiBlocProvider(
           providers: [

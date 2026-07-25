@@ -18,7 +18,7 @@ Widget _buildHeader({
   VoidCallback? onEditProfile,
 }) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: ProfileHeader(
         displayName: 'Ibrahima Diallo',

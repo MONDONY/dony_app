@@ -42,7 +42,7 @@ Future<void> _pump(WidgetTester tester, BidModel bid) async {
   when(() => cancel.state).thenReturn(CancellationInitial());
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: MultiBlocProvider(
           providers: [

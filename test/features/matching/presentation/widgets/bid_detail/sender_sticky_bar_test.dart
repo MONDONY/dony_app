@@ -75,7 +75,7 @@ Widget _host(
   }
 
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: BlocProvider<BidBloc>.value(
       value: bloc,
       child: child,

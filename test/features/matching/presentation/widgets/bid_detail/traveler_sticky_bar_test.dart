@@ -61,7 +61,7 @@ Future<void> _pump(WidgetTester tester, BidModel bid) async {
   );
 
   await tester.pumpWidget(
-    MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+    MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
   );
   await tester.pumpAndSettle();
 }
@@ -242,7 +242,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     );
     await tester.pumpAndSettle();
 
@@ -289,7 +289,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     );
     await tester.pumpAndSettle();
 

@@ -92,7 +92,7 @@ void main() {
     required PackageRequest request,
     required List<NegotiationThread> threads,
   }) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: BlocProvider<NegotiationBloc>.value(
       value: bloc,
       child: Scaffold(
@@ -127,7 +127,7 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(theme: AppTheme.light, routerConfig: router);
+    return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
   }
 
   group('CandidatesSection — prix ferme (negotiable=false)', () {

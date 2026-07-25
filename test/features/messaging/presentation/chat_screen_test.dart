@@ -45,7 +45,7 @@ MessageModel _makeMsg({
 Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: BlocProvider<ChatBloc>.value(
         value: bloc,
         child: ChatScreen(conversation: _conversation),
