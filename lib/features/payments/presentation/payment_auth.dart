@@ -1,3 +1,4 @@
+import 'package:dony/core/design/accessibility_scope.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:flutter/widgets.dart';
@@ -20,6 +21,16 @@ Future<bool> requirePaymentAuth(
   required LocalAuthService authService,
   required Box userPrefs,
 }) async {
+  final confirmed = await confirmImportantAction(
+    context,
+    title: 'Confirmer le paiement',
+    message:
+        'Le montant sera bloqué jusqu\'à la livraison, puis versé au voyageur.',
+  );
+  if (!confirmed) {
+    return false;
+  }
+
   final biometricPref =
       userPrefs.get(HiveService.kBiometricEnabled, defaultValue: false) as bool;
 

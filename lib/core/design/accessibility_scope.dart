@@ -1,4 +1,5 @@
-import 'package:flutter/widgets.dart';
+import 'package:dony/core/design/widgets/dony_dialog.dart';
+import 'package:flutter/material.dart';
 
 /// Porte les réglages d'accessibilité que [MediaQuery] ne couvre pas.
 ///
@@ -59,4 +60,25 @@ class AccessibilityScope extends InheritedWidget {
 extension AccessibilityContext on BuildContext {
   /// Réglages d'accessibilité non couverts par [MediaQuery].
   AccessibilityScope get a11y => AccessibilityScope.of(this);
+}
+
+/// Intercale une confirmation quand l'utilisateur a activé « Confirmer les
+/// actions importantes ». Renvoie vrai si l'action peut se poursuivre.
+///
+/// Sans l'option, la fonction est transparente et renvoie vrai immédiatement :
+/// elle ne doit jamais ajouter un dialogue à qui ne l'a pas demandé.
+Future<bool> confirmImportantAction(
+  BuildContext context, {
+  required String title,
+  required String message,
+}) async {
+  if (!AccessibilityScope.of(context).confirmImportantActions) {
+    return true;
+  }
+  final ok = await DonyDialog.show(
+    context,
+    title: title,
+    message: message,
+  );
+  return ok ?? false;
 }

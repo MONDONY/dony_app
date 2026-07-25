@@ -57,26 +57,107 @@ void main() {
   });
 
   group('AccessibilityEvent props', () {
-    test('HighContrastToggled == HighContrastToggled (calls props)', () {
-      const a = HighContrastToggled();
-      const b = HighContrastToggled();
+    // Ancien HighContrastToggled() sans argument -> tri-état avec successeur.
+    test('HighContrastModeChanged props are correct', () {
+      const a = HighContrastModeChanged(AccessibilityMode.on);
+      const b = HighContrastModeChanged(AccessibilityMode.on);
       expect(a, equals(b));
-      expect(a.props, isEmpty);
+      expect(a.props, equals([AccessibilityMode.on]));
     });
 
-    test('ReduceAnimationsToggled == ReduceAnimationsToggled (calls props)',
+    test('HighContrastModeChanged with different modes are not equal', () {
+      const a = HighContrastModeChanged(AccessibilityMode.on);
+      const b = HighContrastModeChanged(AccessibilityMode.off);
+      expect(a, isNot(equals(b)));
+    });
+
+    // Ancien ReduceAnimationsToggled() sans argument -> tri-état avec successeur.
+    test('ReduceMotionModeChanged props are correct', () {
+      const a = ReduceMotionModeChanged(AccessibilityMode.system);
+      const b = ReduceMotionModeChanged(AccessibilityMode.system);
+      expect(a, equals(b));
+      expect(a.props, equals([AccessibilityMode.system]));
+    });
+
+    test('ReduceMotionModeChanged with different modes are not equal', () {
+      const a = ReduceMotionModeChanged(AccessibilityMode.on);
+      const b = ReduceMotionModeChanged(AccessibilityMode.off);
+      expect(a, isNot(equals(b)));
+    });
+
+    // Ancien TextScaleChanged('large') -> scindé en deux events dans le
+    // nouvel état (suivre le système, ou facteur explicite).
+    test('FollowSystemTextScaleToggled props are correct', () {
+      const a = FollowSystemTextScaleToggled(true);
+      const b = FollowSystemTextScaleToggled(true);
+      expect(a, equals(b));
+      expect(a.props, equals([true]));
+    });
+
+    test('FollowSystemTextScaleToggled with different values are not equal',
         () {
-      const a = ReduceAnimationsToggled();
-      const b = ReduceAnimationsToggled();
-      expect(a, equals(b));
-      expect(a.props, isEmpty);
+      const a = FollowSystemTextScaleToggled(true);
+      const b = FollowSystemTextScaleToggled(false);
+      expect(a, isNot(equals(b)));
     });
 
-    test('TextScaleChanged props are correct', () {
-      const a = TextScaleChanged('large');
-      const b = TextScaleChanged('large');
+    test('TextScaleFactorChanged props are correct', () {
+      const a = TextScaleFactorChanged(1.3);
+      const b = TextScaleFactorChanged(1.3);
       expect(a, equals(b));
-      expect(a.props, equals(['large']));
+      expect(a.props, equals([1.3]));
+    });
+
+    test('TextScaleFactorChanged with different values are not equal', () {
+      const a = TextScaleFactorChanged(1.0);
+      const b = TextScaleFactorChanged(1.6);
+      expect(a, isNot(equals(b)));
+    });
+
+    // Reste des events tri-état / booléens du nouvel AccessibilityState,
+    // pas couverts ailleurs.
+    test('BoldTextToggled props are correct', () {
+      const a = BoldTextToggled(true);
+      const b = BoldTextToggled(true);
+      expect(a, equals(b));
+      expect(a.props, equals([true]));
+    });
+
+    test('UnderlineLinksToggled props are correct', () {
+      const a = UnderlineLinksToggled(true);
+      const b = UnderlineLinksToggled(true);
+      expect(a, equals(b));
+      expect(a.props, equals([true]));
+    });
+
+    test('ReinforceLabelsToggled props are correct', () {
+      const a = ReinforceLabelsToggled(true);
+      const b = ReinforceLabelsToggled(true);
+      expect(a, equals(b));
+      expect(a.props, equals([true]));
+    });
+
+    test('PersistentMessagesToggled props are correct', () {
+      const a = PersistentMessagesToggled(true);
+      const b = PersistentMessagesToggled(true);
+      expect(a, equals(b));
+      expect(a.props, equals([true]));
+    });
+
+    test('ConfirmImportantActionsToggled props are correct', () {
+      const a = ConfirmImportantActionsToggled(true);
+      const b = ConfirmImportantActionsToggled(true);
+      expect(a, equals(b));
+      expect(a.props, equals([true]));
+    });
+
+    test(
+        'AccessibilityResetRequested == AccessibilityResetRequested '
+        '(calls props)', () {
+      const a = AccessibilityResetRequested();
+      const b = AccessibilityResetRequested();
+      expect(a, equals(b));
+      expect(a.props, isEmpty);
     });
   });
 
