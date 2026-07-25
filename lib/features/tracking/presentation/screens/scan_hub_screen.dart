@@ -272,6 +272,8 @@ class _TripHeroCompact extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(
                     color: DonyColors.neutral0.withValues(alpha: 0.75),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

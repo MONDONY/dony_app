@@ -98,7 +98,6 @@ class CaSectionLabel extends StatelessWidget {
     if (icon == null && iconAsset == null) return labelWidget;
     return Row(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         iconAsset != null
             ? DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant)

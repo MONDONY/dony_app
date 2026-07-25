@@ -776,19 +776,24 @@ class PrixConditionsStep extends StatelessWidget {
                 top: Radius.circular(DonyRadius.card),
               ),
             ),
-            // Colonne plutôt que Row unique : à 200 %, le texte
-            // d'explication et le CTA « Activer les paiements par carte »
-            // ne tiennent plus côte à côte (débordement constaté). Le CTA
-            // passe sur sa propre ligne, sous l'explication.
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Wrap plutôt que Row unique : sur une ligne quand ça tient
+            // (rendu identique à 100 %, le CTA reste à côté du texte), le
+            // CTA « Activer les paiements par carte » passe sous le texte
+            // seulement s'il n'y a plus la place (débordement constaté à
+            // 200 %). Un Column inconditionnel aurait déplacé le CTA à
+            // 100 % aussi, ce qui n'est jamais arrivé avant ce lot.
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: DonySpacing.sm,
+              runSpacing: DonySpacing.sm,
               children: [
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DonyIcon('circle-check', color: cs.success, size: 18),
                     const SizedBox(width: DonySpacing.xs),
-                    Expanded(
+                    Flexible(
                       child: Text(
                         'Publiez en espèces dès maintenant. Connectez Stripe '
                         'pour accepter aussi la carte.',
@@ -797,41 +802,37 @@ class PrixConditionsStep extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: DonySpacing.sm),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: GestureDetector(
-                    key: const Key('activate-card-payments-cta'),
-                    onTap: () => ctx.push('/connect/onboarding/intro'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cs.primary,
-                        borderRadius: BorderRadius.circular(DonyRadius.full),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              'Activer les paiements par carte',
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.onPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                GestureDetector(
+                  key: const Key('activate-card-payments-cta'),
+                  onTap: () => ctx.push('/connect/onboarding/intro'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm,
+                      vertical: DonySpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Activer les paiements par carte',
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onPrimary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: DonySpacing.xs),
-                          Icon(
-                            DonyIcons.arrowRight,
-                            size: 14,
-                            color: cs.onPrimary,
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: DonySpacing.xs),
+                        Icon(
+                          DonyIcons.arrowRight,
+                          size: 14,
+                          color: cs.onPrimary,
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -65,21 +65,35 @@ void main() {
     }
   });
 
-  Widget buildSut({String? fallbackCity, String? fallbackCountry}) =>
-      MaterialApp(
-        home: Scaffold(
-          body: RecipientSection(
-            controller: controller,
-            nameCtrl: nameCtrl,
-            phoneCtrl: phoneCtrl,
-            cityCtrl: cityCtrl,
-            fallbackCity: fallbackCity,
-            fallbackCountry: fallbackCountry,
-            createBloc: () => sectionBloc,
-            children: const [SizedBox.shrink()],
-          ),
-        ),
-      );
+  // [scrollable] : les écrans réels (CreateBidScreen, complete_details_screen)
+  // embarquent toujours `RecipientSection` dans un `SingleChildScrollView`,
+  // qui donne au Column interne une hauteur non bornée — un débordement
+  // vertical y est donc structurellement impossible. Le placer nu en
+  // `Scaffold.body` (comme le font les tests existants ci-dessous) le borne
+  // artificiellement à la hauteur de l'écran, un piège qui ne se manifeste
+  // qu'à 200 % avec un contenu plus haut que l'écran de test. `scrollable`
+  // reproduit le vrai conteneur pour les tests qui en ont besoin.
+  Widget buildSut({
+    String? fallbackCity,
+    String? fallbackCountry,
+    bool scrollable = false,
+  }) {
+    final section = RecipientSection(
+      controller: controller,
+      nameCtrl: nameCtrl,
+      phoneCtrl: phoneCtrl,
+      cityCtrl: cityCtrl,
+      fallbackCity: fallbackCity,
+      fallbackCountry: fallbackCountry,
+      createBloc: () => sectionBloc,
+      children: const [SizedBox.shrink()],
+    );
+    return MaterialApp(
+      home: Scaffold(
+        body: scrollable ? SingleChildScrollView(child: section) : section,
+      ),
+    );
+  }
 
   testWidgets('initial state shows picker button', (tester) async {
     await tester.pumpWidget(buildSut());
@@ -282,6 +296,53 @@ void main() {
 
     verifyNever(() => sectionBloc.add(any(that: isA<RecipientCreated>())));
   });
+
+  testWidgets(
+    'carte destinataire sélectionné (_SelectedCard) : aucun débordement à '
+    '200 % avec un nom, un numéro et une ville longs',
+    (tester) async {
+      const longRecipient = Recipient(
+        id: 'r-long',
+        fullName: 'Jean Baptiste Mamadou Alioune Cheikh Ibrahima Ndiaye',
+        phoneE164: '+221771234567',
+        city: 'Ouagadougou Secteur Quinze',
+        country: 'SN',
+      );
+      final pickerBloc = MockRecipientBloc();
+      when(() => pickerBloc.state).thenReturn(
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [longRecipient],
+        ),
+      );
+      getIt.registerFactory<RecipientBloc>(() => pickerBloc);
+
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      // scrollable: true — reproduit le SingleChildScrollView de tout écran
+      // réel embarquant RecipientSection (CreateBidScreen,
+      // complete_details_screen) : le Column interne y a une hauteur non
+      // bornée, un débordement vertical y est structurellement impossible.
+      await tester.pumpWidget(buildSut(scrollable: true));
+      await tester.pump();
+
+      await tester.tap(find.text('Choisir un destinataire'));
+      await tester.pumpAndSettle();
+
+      // Un seul destinataire dans la liste → présélectionné automatiquement.
+      await tester.tap(find.text('Confirmer ce destinataire'));
+      await tester.pumpAndSettle();
+
+      // État 2 : _SelectedCard est bien affichée (nom/relation, résumé
+      // nom · téléphone · ville, bouton Changer).
+      expect(find.text('Changer'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   group('countryFromPhone', () {
     test('+221 -> SN', () {
