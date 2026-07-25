@@ -288,15 +288,17 @@ class PrixConditionsStep extends StatelessWidget {
                                           : cs.onSurfaceVariant,
                                     ),
                                     const SizedBox(width: DonySpacing.xs),
-                                    Text(
-                                      'Autre prix',
-                                      style: tt.bodyMedium?.copyWith(
-                                        color: isCustom
-                                            ? cs.success
-                                            : cs.onSurfaceVariant,
-                                        fontWeight: isCustom
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
+                                    Flexible(
+                                      child: Text(
+                                        'Autre prix',
+                                        style: tt.bodyMedium?.copyWith(
+                                          color: isCustom
+                                              ? cs.success
+                                              : cs.onSurfaceVariant,
+                                          fontWeight: isCustom
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -512,11 +514,13 @@ class PrixConditionsStep extends StatelessWidget {
                           children: [
                             const DonyIcon('credit-card', size: 18),
                             const SizedBox(width: DonySpacing.sm),
-                            Text(
-                              'Carte bancaire (Stripe)',
-                              style: tt.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: cs.onSurface,
+                            Flexible(
+                              child: Text(
+                                'Carte bancaire (Stripe)',
+                                style: tt.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: cs.onSurface,
+                                ),
                               ),
                             ),
                             const SizedBox(width: DonySpacing.xs),
@@ -553,11 +557,13 @@ class PrixConditionsStep extends StatelessWidget {
                                     const DonyIcon('banknote',
                                         size: 18),
                                     const SizedBox(width: DonySpacing.sm),
-                                    Text(
-                                      'Espèces',
-                                      style: tt.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: cs.onSurface,
+                                    Flexible(
+                                      child: Text(
+                                        'Espèces',
+                                        style: tt.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: cs.onSurface,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -770,48 +776,62 @@ class PrixConditionsStep extends StatelessWidget {
                 top: Radius.circular(DonyRadius.card),
               ),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            // Colonne plutôt que Row unique : à 200 %, le texte
+            // d'explication et le CTA « Activer les paiements par carte »
+            // ne tiennent plus côte à côte (débordement constaté). Le CTA
+            // passe sur sa propre ligne, sous l'explication.
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DonyIcon('circle-check', color: cs.success, size: 18),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(
-                  child: Text(
-                    'Publiez en espèces dès maintenant. Connectez Stripe '
-                    'pour accepter aussi la carte.',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DonyIcon('circle-check', color: cs.success, size: 18),
+                    const SizedBox(width: DonySpacing.xs),
+                    Expanded(
+                      child: Text(
+                        'Publiez en espèces dès maintenant. Connectez Stripe '
+                        'pour accepter aussi la carte.',
+                        style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: DonySpacing.sm),
-                GestureDetector(
-                  key: const Key('activate-card-payments-cta'),
-                  onTap: () => ctx.push('/connect/onboarding/intro'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.sm,
-                      vertical: DonySpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Activer les paiements par carte',
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.onPrimary,
-                            fontWeight: FontWeight.w600,
+                const SizedBox(height: DonySpacing.sm),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    key: const Key('activate-card-payments-cta'),
+                    onTap: () => ctx.push('/connect/onboarding/intro'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.primary,
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Activer les paiements par carte',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        Icon(
-                          DonyIcons.arrowRight,
-                          size: 14,
-                          color: cs.onPrimary,
-                        ),
-                      ],
+                          const SizedBox(width: DonySpacing.xs),
+                          Icon(
+                            DonyIcons.arrowRight,
+                            size: 14,
+                            color: cs.onPrimary,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -828,11 +848,13 @@ class PrixConditionsStep extends StatelessWidget {
                 DonyIcon('credit-card',
                     size: 18, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.sm),
-                Text(
-                  'Carte bancaire (Stripe)',
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurfaceVariant,
+                Flexible(
+                  child: Text(
+                    'Carte bancaire (Stripe)',
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.xs),
@@ -859,11 +881,13 @@ class PrixConditionsStep extends StatelessWidget {
               children: [
                 const DonyIcon('banknote', size: 18),
                 const SizedBox(width: DonySpacing.sm),
-                Text(
-                  'Espèces',
-                  style: tt.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
+                Flexible(
+                  child: Text(
+                    'Espèces',
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
               ],

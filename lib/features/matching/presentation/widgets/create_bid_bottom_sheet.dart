@@ -1614,10 +1614,20 @@ class _WeightSectionState extends State<_WeightSection> {
                     ?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
-            const Spacer(),
-            Text(
-              'max ${maxKg.toStringAsFixed(0)} kg',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            // Expanded+Align plutôt que Spacer + Text non contraint : à
+            // 200 %, le gros chiffre de poids peut à lui seul approcher la
+            // largeur de la ligne. Expanded donne au libellé « max X kg »
+            // toute la place réellement restante (identique à Spacer quand
+            // il y en a assez) et l'aligne à droite ; s'il n'y en a plus, il
+            // passe à la ligne au lieu de déborder.
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'max ${maxKg.toStringAsFixed(0)} kg',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
             ),
           ],
         ),
@@ -1738,10 +1748,14 @@ class _CategoryChip extends StatelessWidget {
               DonyIcon('check', size: 14, color: cs.surface),
               const SizedBox(width: DonySpacing.xxs),
             ],
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: selected ? cs.surface : cs.onSurface,
+            // Flexible : un libellé de catégorie long à 200 % passe à la
+            // ligne dans le chip plutôt que de déborder de son Wrap parent.
+            Flexible(
+              child: Text(
+                label,
+                style: tt.labelMedium?.copyWith(
+                  color: selected ? cs.surface : cs.onSurface,
+                ),
               ),
             ),
           ],
@@ -2114,10 +2128,18 @@ class _PriceBreakdown extends StatelessWidget {
             Divider(color: cs.outline),
             const SizedBox(height: DonySpacing.xs),
           ],
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Wrap plutôt que Row spaceBetween : ni le libellé (avec badge
+          // promo) ni le prix (avec original barré) n'étaient contraints —
+          // à 200 % leur somme peut dépasser la largeur de la carte. Sur
+          // une ligne quand ça tient (rendu identique à 100 %), le prix
+          // passe sous le libellé sinon.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            runSpacing: DonySpacing.xs,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('Total', style: tt.titleLarge),
                   if (promoApplied) ...[
@@ -2141,6 +2163,7 @@ class _PriceBreakdown extends StatelessWidget {
                 ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   if (promoApplied && originalTotal != null) ...[
@@ -2172,10 +2195,13 @@ class _PriceBreakdown extends StatelessWidget {
     );
   }
 
+  // Expanded sur le libellé (variable, ex: "5.0 kg × 8.00€") plutôt qu'un
+  // Row spaceBetween non contraint : à 200 % il passe à la ligne au lieu de
+  // pousser le montant hors de la carte.
   Widget _line(TextTheme tt, String label, String value) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: tt.bodyMedium),
+          Expanded(child: Text(label, style: tt.bodyMedium)),
+          const SizedBox(width: DonySpacing.sm),
           Text(value, style: tt.titleMedium),
         ],
       );

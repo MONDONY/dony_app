@@ -65,12 +65,18 @@ class DonyChip extends StatelessWidget {
                 Icon(icon, size: 14, color: fg),
                 const SizedBox(width: DonySpacing.xs),
               ],
-              Text(
-                label,
-                style: tt.labelMedium?.copyWith(
-                  color: fg,
-                  letterSpacing: 0,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              // Flexible : un chip proche de la largeur max de son Wrap (ex.
+              // libellé long à 200 %) doit pouvoir passer sur deux lignes au
+              // lieu de déborder. N'a aucun effet quand le libellé tient déjà
+              // sur une ligne (rendu inchangé à 100 %).
+              Flexible(
+                child: Text(
+                  label,
+                  style: tt.labelMedium?.copyWith(
+                    color: fg,
+                    letterSpacing: 0,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
               ),
             ],

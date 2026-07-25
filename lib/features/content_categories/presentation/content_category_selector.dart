@@ -624,7 +624,7 @@ class _ComboTag extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
-      height: 32,
+      constraints: const BoxConstraints(minHeight: 32),
       padding: const EdgeInsets.only(left: DonySpacing.sm),
       decoration: BoxDecoration(
         color: cs.primary.withValues(alpha: 0.08),
@@ -636,11 +636,16 @@ class _ComboTag extends StatelessWidget {
         children: [
           Text(emoji, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: tt.bodySmall?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w600,
+          // Flexible : un libellé long à 200 % passe à la ligne plutôt que
+          // de déborder ; la hauteur minimale (au lieu de fixe) ci-dessus
+          // lui laisse la place de grandir.
+          Flexible(
+            child: Text(
+              label,
+              style: tt.bodySmall?.copyWith(
+                color: cs.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           GestureDetector(

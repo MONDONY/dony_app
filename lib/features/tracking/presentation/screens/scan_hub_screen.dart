@@ -257,22 +257,21 @@ class _TripHeroCompact extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Pas de maxLines sur le corridor : à 200 %, tronquer un nom
+                // de trajet long masquerait la destination du trajet
+                // sélectionné, l'information la plus importante du hero.
                 Text(
                   '${trip.departureCity} → ${trip.arrivalCity}',
                   style: tt.headlineMedium?.copyWith(
                     color: DonyColors.neutral0,
                     fontWeight: FontWeight.w800,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   _formatDate(trip.departureDate),
                   style: tt.bodySmall?.copyWith(
                     color: DonyColors.neutral0.withValues(alpha: 0.75),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -393,8 +392,6 @@ class _TripPicker extends StatelessWidget {
                             style: tt.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             _formatDate(trip.departureDate),
@@ -712,11 +709,11 @@ class _ColisRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Pas de maxLines : le nom du destinataire ne doit pas
+                  // être amputé à 200 %, la ligne est déjà dans un Expanded.
                   Text(
                     label,
                     style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: DonySpacing.xxs),
                   Row(
@@ -847,8 +844,6 @@ class _ScanHistorySection extends StatelessWidget {
                     child: Text(
                       entry.recipientName ?? entry.donNumber ?? '-',
                       style: tt.bodySmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Container(

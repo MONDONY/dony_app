@@ -304,12 +304,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
               color: cs.primary,
             ),
             const SizedBox(width: 4),
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: cs.primary,
+            Flexible(
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: cs.primary,
+                ),
               ),
             ),
           ],
@@ -1116,20 +1119,31 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
                   // ── Liste ou Carousel selon le mode Près de moi ───────────────
                   if (!_isNearMeActive || _nearMeShowList)
-                    DraggableScrollableSheet(
-                      controller: _sheetController,
-                      initialChildSize: 0.30,
-                      minChildSize: 0.30,
-                      snap: true,
-                      snapSizes: const [0.30, 0.6, 1.0],
-                      builder: (ctx, scrollCtrl) => _buildSheet(
-                        ctx,
-                        scrollCtrl,
-                        announcements,
-                        MediaQuery.of(context).padding.bottom,
-                        currentUserId: currentUserId,
-                      ),
-                    )
+                    Builder(builder: (sheetCtx) {
+                      // La fraction de peek (0.30) est calibrée pour le
+                      // contenu à 100 % : poignée + indication + en-tête. À
+                      // 200 %, ce même contenu ne tient plus dans 30 % de la
+                      // hauteur (RenderFlex overflow constaté). On agrandit
+                      // le peek proportionnellement au facteur d'échelle du
+                      // texte, sans rien changer à 100 % (facteur = 1).
+                      final textScale =
+                          MediaQuery.textScalerOf(sheetCtx).scale(14) / 14;
+                      final peekSize = (0.30 * textScale).clamp(0.30, 0.55);
+                      return DraggableScrollableSheet(
+                        controller: _sheetController,
+                        initialChildSize: peekSize,
+                        minChildSize: peekSize,
+                        snap: true,
+                        snapSizes: [peekSize, 0.6, 1.0],
+                        builder: (ctx, scrollCtrl) => _buildSheet(
+                          ctx,
+                          scrollCtrl,
+                          announcements,
+                          MediaQuery.of(context).padding.bottom,
+                          currentUserId: currentUserId,
+                        ),
+                      );
+                    })
                   else
                     Positioned(
                       left: 0,
