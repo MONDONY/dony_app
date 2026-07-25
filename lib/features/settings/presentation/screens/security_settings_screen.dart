@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/presentation/widgets/pin_confirm_bottom_sheet.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
@@ -42,12 +43,17 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
 
   /// Shows PIN confirmation when the toggle is currently ON (disabling).
   /// Dispatches the [event] directly when the toggle is currently OFF (enabling).
+  ///
+  /// [pinConfigured] faux : aucun code à vérifier, donc aucune confirmation.
+  /// Sans cette sortie, désactiver un réglage deviendrait impossible pour qui
+  /// n'a pas de PIN, la feuille de confirmation n'ayant rien à comparer.
   Future<void> _toggleWithPinGuard(
     BuildContext context, {
     required bool currentlyEnabled,
     required AppPreferencesEvent event,
+    required bool pinConfigured,
   }) async {
-    if (currentlyEnabled) {
+    if (currentlyEnabled && pinConfigured) {
       // Désactivation → confirmation PIN requise
       final confirmed = await PinConfirmBottomSheet.show(
         context,
@@ -59,6 +65,35 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     }
     if (context.mounted) {
       context.read<AppPreferencesBloc>().add(event);
+    }
+  }
+
+  /// Active le verrouillage : envoie créer un PIN, puis relit l'état réel.
+  Future<void> _enablePin(BuildContext context) async {
+    final cubit = context.read<PinStatusCubit>();
+    await context.push<bool>('/settings/security/create-pin');
+    await cubit.refresh();
+  }
+
+  /// Désactive le verrouillage, code actuel exigé : sans cette confirmation,
+  /// un téléphone déverrouillé laissé sans surveillance suffirait à retirer la
+  /// protection.
+  Future<void> _disablePin(BuildContext context) async {
+    final cubit = context.read<PinStatusCubit>();
+    final confirmed = await PinConfirmBottomSheet.show(
+      context,
+      authService: getIt<LocalAuthService>(),
+    );
+    if (confirmed != true) {
+      return;
+    }
+    await cubit.disable();
+    if (context.mounted) {
+      DonySnackbar.show(
+        context,
+        message: "Code PIN retiré, l'app s'ouvrira sans code",
+        type: DonySnackbarType.info,
+      );
     }
   }
 
@@ -77,6 +112,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             builder: (context, prefsState) {
               final biometricEnabled =
                   prefsState.preferences.biometricEnabled && biometricAvailable;
+              final pinState = context.watch<PinStatusCubit>().state;
+              // Nul pendant la lecture du secure storage : on affiche le défaut
+              // d'un compte neuf, code PIN désactivé.
+              final pinConfigured = pinState.configured ?? false;
 
               return ListView(
                 padding: const EdgeInsets.fromLTRB(
@@ -109,6 +148,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                                   currentlyEnabled:
                                       prefsState.preferences.biometricEnabled,
                                   event: const BiometricToggled(),
+                                  pinConfigured: pinConfigured,
                                 )
                             : null,
                       ),
@@ -119,6 +159,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                                 currentlyEnabled:
                                     prefsState.preferences.biometricEnabled,
                                 event: const BiometricToggled(),
+                                pinConfigured: pinConfigured,
                               )
                           : null,
                     ),
@@ -135,9 +176,15 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                           ? cs.primaryContainer
                           : cs.surfaceContainerHighest,
                       label: "Verrouillage de l'app",
-                      subtitle: biometricAvailable
-                          ? "Biométrie ou Face ID à l'ouverture"
-                          : 'Non disponible sur cet appareil',
+                      // Sans code PIN il n'y a aucun verrouillage à
+                      // l'ouverture : la biométrie ne fait que remplacer la
+                      // saisie du code. Le dire, plutôt que de laisser croire
+                      // que l'app est protégée.
+                      subtitle: !biometricAvailable
+                          ? 'Non disponible sur cet appareil'
+                          : pinConfigured
+                              ? "Biométrie ou Face ID à l'ouverture"
+                              : "Nécessite d'activer le code PIN ci-dessous",
                       trailing: Switch(
                         value: biometricAvailable &&
                             prefsState.preferences.appLockBiometricEnabled,
@@ -148,6 +195,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                                   currentlyEnabled: prefsState
                                       .preferences.appLockBiometricEnabled,
                                   event: const AppLockBiometricToggled(),
+                                  pinConfigured: pinConfigured,
                                 )
                             : null,
                       ),
@@ -158,6 +206,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                                 currentlyEnabled: prefsState
                                     .preferences.appLockBiometricEnabled,
                                 event: const AppLockBiometricToggled(),
+                                pinConfigured: pinConfigured,
                               )
                           : null,
                     ),
@@ -169,15 +218,42 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       iconAsset: 'key-round',
                       iconColor: cs.primary,
                       iconBgColor: cs.primaryContainer,
-                      label: 'Modifier le code PIN',
-                      subtitle: 'Code à 6 chiffres',
-                      showDivider: false,
-                      onTap: () async {
-                        await context.push<bool>(
-                          '/settings/security/change-pin',
-                        );
-                      },
+                      label: "Code PIN à l'ouverture",
+                      subtitle: pinConfigured
+                          ? 'Demandé à chaque ouverture de dony'
+                          : "Désactivé, l'app s'ouvre sans code",
+                      trailing: Switch(
+                        value: pinConfigured,
+                        activeThumbColor: cs.primary,
+                        onChanged: pinState.isBusy
+                            ? null
+                            : (v) => v
+                                ? _enablePin(context)
+                                : _disablePin(context),
+                      ),
+                      showDivider: pinConfigured,
+                      onTap: pinState.isBusy
+                          ? null
+                          : () => pinConfigured
+                              ? _disablePin(context)
+                              : _enablePin(context),
                     ),
+                    // Rien à modifier tant qu'aucun code n'existe : la création
+                    // passe par l'interrupteur ci-dessus.
+                    if (pinConfigured)
+                      DonyListTile(
+                        iconAsset: 'shield-check',
+                        iconColor: cs.primary,
+                        iconBgColor: cs.primaryContainer,
+                        label: 'Modifier le code PIN',
+                        subtitle: 'Code à 6 chiffres',
+                        showDivider: false,
+                        onTap: () async {
+                          await context.push<bool>(
+                            '/settings/security/change-pin',
+                          );
+                        },
+                      ),
                   ]),
                   const SizedBox(height: DonySpacing.lg),
                   const SettingsSectionHeader('SESSION'),

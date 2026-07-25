@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -32,6 +33,16 @@ void main() {
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
       getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+    if (!getIt.isRegistered<HiveService>()) {
+      final hive = MockHiveService();
+      final box = MockBox();
+      when(() => hive.userPrefs).thenReturn(box);
+      when(() => box.get(any())).thenReturn(null);
+      when(() => box.get(any(), defaultValue: any(named: 'defaultValue')))
+          .thenAnswer((i) => i.namedArguments[const Symbol('defaultValue')]);
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      getIt.registerSingleton<HiveService>(hive);
     }
   });
 
@@ -68,8 +79,8 @@ void main() {
           ),
         ),
         GoRoute(
-          path: '/auth/local',
-          builder: (_, __) => const Scaffold(body: Text('local-auth')),
+          path: '/auth/referral-code',
+          builder: (_, __) => const Scaffold(body: Text('referral-code')),
         ),
       ],
     );
@@ -96,7 +107,7 @@ void main() {
   );
 
   testWidgets(
-    'quand AuthAuthenticated est émis, navigue vers /auth/local',
+    'quand AuthAuthenticated est émis, poursuit vers le parrainage, aucune étape code PIN',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -105,7 +116,7 @@ void main() {
 
       await tester.pumpWidget(buildScreen([const AuthAuthenticated(_testUser)]));
       await tester.pumpAndSettle();
-      expect(find.text('local-auth'), findsOneWidget);
+      expect(find.text('referral-code'), findsOneWidget);
     },
   );
 

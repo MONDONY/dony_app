@@ -7,9 +7,20 @@ import 'package:go_router/go_router.dart';
 
 enum _PinStep { verifyOld, enterNew, confirmNew }
 
+/// Création ou modification du code PIN.
+///
+/// [isCreation] saute l'étape « code actuel » : il n'y a rien à vérifier quand
+/// l'utilisateur active le verrouillage pour la première fois. Le même écran
+/// sert les deux cas, plutôt qu'un second écran presque identique.
 class ChangePinScreen extends StatefulWidget {
-  const ChangePinScreen({super.key, required this.authService});
+  const ChangePinScreen({
+    super.key,
+    required this.authService,
+    this.isCreation = false,
+  });
+
   final LocalAuthService authService;
+  final bool isCreation;
 
   @override
   State<ChangePinScreen> createState() => _ChangePinScreenState();
@@ -19,7 +30,8 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
   static const _pinLength = 6;
   static const _maxAttempts = 3;
 
-  _PinStep _step = _PinStep.verifyOld;
+  late _PinStep _step =
+      widget.isCreation ? _PinStep.enterNew : _PinStep.verifyOld;
   String _pin = '';
   String? _newPin;
   bool _hasError = false;
@@ -87,7 +99,9 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
           }
           DonySnackbar.show(
             context,
-            message: 'Code PIN modifié',
+            message: widget.isCreation
+                ? "Code PIN activé, il sera demandé à l'ouverture"
+                : 'Code PIN modifié',
             type: DonySnackbarType.success,
           );
           context.pop(true);
@@ -105,8 +119,12 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
 
   String get _subtitle => switch (_step) {
     _PinStep.verifyOld => 'Saisissez votre code actuel',
-    _PinStep.enterNew => 'Créez votre nouveau code',
-    _PinStep.confirmNew => 'Confirmez le nouveau code',
+    _PinStep.enterNew => widget.isCreation
+        ? "Choisissez un code à 6 chiffres, il sera demandé à l'ouverture"
+        : 'Créez votre nouveau code',
+    _PinStep.confirmNew => widget.isCreation
+        ? 'Saisissez le même code pour confirmer'
+        : 'Confirmez le nouveau code',
   };
 
   @override
@@ -116,7 +134,9 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
     final bottom = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Modifier le code PIN'),
+      appBar: DonyAppBar(
+        title: widget.isCreation ? 'Créer un code PIN' : 'Modifier le code PIN',
+      ),
       body: SafeArea(
         child: DonyLayout.constrained(
           context,

@@ -50,6 +50,7 @@ import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/datasources/blocked_users_datasource.dart';
 import 'package:dony/features/settings/data/datasources/business_prefs_remote_datasource.dart';
@@ -245,6 +246,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<LocalAuthService>(),
       getIt<HiveService>().userPrefs,
     ),
+  );
+  getIt.registerFactory<PinStatusCubit>(
+    () => PinStatusCubit(getIt<LocalAuthService>()),
   );
 
   // KYC

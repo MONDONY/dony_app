@@ -161,10 +161,16 @@ Les scans QR fonctionnent sans connexion :
 - Écrire lat/lon dans les métadonnées EXIF (package `exif`)
 - Photo : qualité 85 %, max 1920×1080, taille max 10 MB (valider avant upload)
 
-### 9. Biométrie — Paiements (NFR14)
+### 9. Biométrie et code PIN — Paiements (NFR14)
 
-Avant tout paiement : `LocalAuthentication.authenticate()` avec `biometricOnly: false` (fallback PIN).  
-Si l'appareil ne supporte pas la biométrie → afficher `DonyKeypad` pour le PIN.
+**Les protections locales sont facultatives et désactivées par défaut.** Elles ne sont plus imposées à l'inscription : l'utilisateur les active lui-même dans Réglages › Sécurité.
+
+Avant tout paiement, passer par `requirePaymentAuth` (`features/payments/presentation/payment_auth.dart`), qui applique dans l'ordre :
+1. biométrie si `kBiometricEnabled` est activé et le capteur disponible ;
+2. sinon code PIN, **uniquement si l'utilisateur en a créé un** (`LocalAuthService.isPinSet`) ;
+3. ni l'un ni l'autre → le paiement suit son cours. Réclamer un code inexistant rendrait tout paiement impossible.
+
+Le verrouillage à l'ouverture suit la même règle : actif **si et seulement si** un PIN existe. Ne pas introduire de drapeau « PIN activé » séparé, le secure storage est la source de vérité.
 
 ### 10. FCM — Notifications
 
@@ -409,7 +415,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 7. Données sensibles dans Hive en clair
 8. Tokens Firebase dans Hive → `FirebaseAuth.instance.currentUser`
 9. Photos > 10 MB
-10. Paiement sans biométrie/PIN
+10. Contourner `requirePaymentAuth` avant un paiement (il décide seul si une vérification s'applique)
 11. GPS oublié dans les métadonnées EXIF
 12. URLs/clés hardcodées → `--dart-define-from-file`
 13. PII dans les properties analytics (téléphone, email, nom, adresse exacte)
@@ -425,7 +431,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 4. Hive pour queue QR offline
 5. Synchro automatique à la reconnexion
 6. GPS capturé avant la photo
-7. Biométrie/PIN avant paiement
+7. `requirePaymentAuth` avant paiement — biométrie et PIN restant facultatifs côté utilisateur
 8. ACK FCM pour notifications critiques
 9. FCM token mis à jour sur `onTokenRefresh`
 10. Validation côté client (backend = source de vérité)

@@ -4,11 +4,17 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 
-/// Authentifie l'utilisateur avant un paiement.
+/// Authentifie l'utilisateur avant un paiement, **si** il s'est donné un moyen
+/// de le faire.
 ///
-/// Règle : auth TOUJOURS requise. Si [kBiometricEnabled] est activé, tente la
-/// biométrie d'abord (fallback PIN). Sinon, PIN directement.
-/// Retourne `true` si l'utilisateur est authentifié.
+/// Les protections locales sont facultatives : biométrie via
+/// [kBiometricEnabled], code PIN selon qu'il en a créé un dans Réglages ›
+/// Sécurité. N'ayant activé ni l'une ni l'autre, il n'y a rien à vérifier et le
+/// paiement suit son cours — exiger un code inexistant rendrait tout paiement
+/// impossible.
+///
+/// Si la biométrie est activée, elle passe d'abord, le PIN servant de repli.
+/// Retourne `true` si le paiement peut continuer.
 Future<bool> requirePaymentAuth(
   BuildContext context, {
   required LocalAuthService authService,
@@ -26,7 +32,12 @@ Future<bool> requirePaymentAuth(
     }
   }
 
-  // Fallback PIN si pas (encore) authentifié.
+  // Repli PIN, uniquement s'il en existe un. Sans code configuré, ouvrir
+  // l'écran de saisie mènerait à une impasse : rien à saisir, donc refus.
+  if (!authenticated && !await authService.isPinSet()) {
+    return true;
+  }
+
   if (!authenticated && context.mounted) {
     final pinResult = await context.push<bool>('/auth/local?verify=true');
     authenticated = pinResult ?? false;

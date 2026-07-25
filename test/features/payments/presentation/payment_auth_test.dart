@@ -86,6 +86,10 @@ void main() {
   setUp(() {
     authService = MockLocalAuthService();
     userPrefs = MockBox();
+    // Par défaut un code PIN existe : c'était l'hypothèse implicite de tous ces
+    // tests, du temps où l'inscription en imposait un. Le groupe « aucun code
+    // PIN » plus bas couvre le cas devenu possible depuis qu'il est facultatif.
+    when(authService.isPinSet).thenAnswer((_) async => true);
   });
 
   group('requirePaymentAuth — toggle ON (biometricEnabled = true)', () {
@@ -305,6 +309,76 @@ void main() {
         expect(captured, isFalse);
         verifyNever(() => authService.isBiometricAvailable());
         verifyNever(() => authService.authenticateWithBiometric());
+      },
+    );
+  });
+
+  /// Le code PIN est facultatif depuis qu'il a quitté l'inscription. Sans code
+  /// ni biométrie, il n'y a rien à vérifier : exiger une saisie impossible
+  /// bloquerait tout paiement.
+  group('requirePaymentAuth — aucun code PIN configuré', () {
+    setUp(() {
+      when(authService.isPinSet).thenAnswer((_) async => false);
+    });
+
+    testWidgets(
+      'biométrie désactivée et pas de PIN → paiement autorisé sans rien demander',
+      (tester) async {
+        when(() => userPrefs.get(
+              HiveService.kBiometricEnabled,
+              defaultValue: any(named: 'defaultValue'),
+            )).thenReturn(false);
+
+        bool? captured;
+
+        await tester.pumpWidget(
+          _buildApp(
+            authService: authService,
+            userPrefs: userPrefs,
+            // Piège si la route était poussée quand même : le test le verrait
+            // par un résultat false au lieu de true.
+            pinRouteResult: false,
+            onResult: (r) => captured = r,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('trigger')));
+        await tester.pumpAndSettle();
+
+        expect(captured, isTrue);
+        verifyNever(() => authService.authenticateWithBiometric());
+      },
+    );
+
+    testWidgets(
+      'biométrie activée mais échouée, sans PIN → paiement autorisé',
+      (tester) async {
+        when(() => userPrefs.get(
+              HiveService.kBiometricEnabled,
+              defaultValue: any(named: 'defaultValue'),
+            )).thenReturn(true);
+        when(() => authService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => authService.authenticateWithBiometric())
+            .thenAnswer((_) async => false);
+
+        bool? captured;
+
+        await tester.pumpWidget(
+          _buildApp(
+            authService: authService,
+            userPrefs: userPrefs,
+            pinRouteResult: false,
+            onResult: (r) => captured = r,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('trigger')));
+        await tester.pumpAndSettle();
+
+        expect(captured, isTrue);
       },
     );
   });
