@@ -2158,19 +2158,14 @@ void main() {
     expect(colorOf(tester), isNot(normal));
   });
 
-  testWidgets('l\'étiquette renforcée ajoute un mot au badge urgent',
-      (tester) async {
+  testWidgets('l\'aperçu affiche un badge de statut', (tester) async {
     await tester.pumpWidget(wrap(const AccessibilityState()));
     expect(find.textContaining('Urgent'), findsOneWidget);
-
-    await tester.pumpWidget(wrap(
-      const AccessibilityState(reinforceLabels: true),
-    ));
-    await tester.pump();
-    expect(find.textContaining('Départ imminent'), findsOneWidget);
   });
 }
 ```
+
+Note : la vérification du texte renforcé (« Départ imminent ») appartient à la tâche 7, qui câble `DonyUrgentBadge`. L'écrire ici obligerait à committer un test rouge, ce que la politique de test du projet interdit.
 
 - [ ] **Step 2 : Lancer les tests pour vérifier qu'ils échouent**
 
@@ -2296,13 +2291,9 @@ class A11yPreviewCard extends StatelessWidget {
 - [ ] **Step 4 : Lancer les tests**
 
 Run: `flutter test test/features/settings/presentation/widgets/a11y_preview_card_test.dart`
-Expected: FAIL sur le dernier test seulement, `DonyUrgentBadge` ne gère pas encore l'étiquette renforcée. Les trois premiers passent.
+Expected: PASS, 4 tests.
 
-- [ ] **Step 5 : Marquer la dépendance**
-
-Le quatrième test dépend de la tâche 7. Le laisser rouge et enchaîner : il repassera au vert à la fin de la tâche 7. Ne pas le supprimer et ne pas l'assouplir.
-
-- [ ] **Step 6 : Commit**
+- [ ] **Step 5 : Commit**
 
 ```bash
 git add lib/features/settings/presentation/widgets/a11y_preview_card.dart test/features/settings/presentation/widgets/a11y_preview_card_test.dart
@@ -2310,8 +2301,7 @@ git commit -m "feat(a11y): apercu vivant des reglages d'accessibilite
 
 Applique les reglages localement via un Theme et un MediaQuery derives
 de l'etat, pour que l'effet soit visible dans le meme geste que le
-reglage. Le test de l'etiquette renforcee reste rouge jusqu'a la tache
-suivante, qui cable DonyUrgentBadge."
+reglage."
 ```
 
 ---
@@ -2516,10 +2506,10 @@ Puis, dans le `SnackBar` construit plus bas, utiliser `duration: effectiveDurati
 Run: `flutter test test/core/design/widgets/a11y_aware_widgets_test.dart`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 8 : Vérifier que l'aperçu repasse au vert**
+- [ ] **Step 8 : Vérifier que l'aperçu reste vert**
 
 Run: `flutter test test/features/settings/presentation/widgets/a11y_preview_card_test.dart`
-Expected: PASS, 4 tests, dont celui laissé rouge à la tâche 6.
+Expected: PASS, 4 tests. L'aperçu affiche `DonyUrgentBadge`, qui vient de changer de comportement conditionnel : ce test confirme qu'aucun cas par défaut n'a bougé.
 
 - [ ] **Step 9 : Vérifier la non-régression du design system**
 
@@ -3427,7 +3417,7 @@ Task 3 (thèmes)            ─┼─→ Task 4 (câblage racine, le correctif)
                             │
 Task 5 (widgets de ligne)  ─┤
 Task 6 (aperçu)            ─┴─→ Task 8 (écran)
-Task 7 (composants)        ────→ referme le test rouge de Task 6
+Task 7 (composants)        ────→ independante, avant ou apres Task 6
 
 Task 9 (confirmations)  après Task 2
 Task 10 (nettoyage)     après Task 1
