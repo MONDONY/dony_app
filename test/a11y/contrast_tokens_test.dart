@@ -171,6 +171,34 @@ void main() {
     });
   });
 
+  group('couleurs sémantiques (lot 2b)', () {
+    // Le motif dominant de l'app est « couleur 500 sur son propre fond 50 ».
+    // C'est celui qui échouait partout : chaque couleur doit tenir 4.5:1 sur
+    // le blanc ET sur sa variante pâle.
+    test('chaque couleur sémantique est lisible sur blanc et sur son fond',
+        () {
+      const paires = <String, (Color, Color)>{
+        'success': (DonyColors.success500, DonyColors.success50),
+        'warning': (DonyColors.warning500, DonyColors.warning50),
+        'error': (DonyColors.danger500, DonyColors.danger50),
+        'info': (DonyColors.info500, DonyColors.info50),
+      };
+      paires.forEach((nom, p) {
+        expectContrast(p.$1, DonyColors.neutral0, 4.5, '$nom sur blanc');
+        expectContrast(p.$1, p.$2, 4.5, '$nom sur son fond pâle');
+      });
+    });
+
+    test('l\'accent tient dans les deux sens', () {
+      // Un seul et même ratio sert au texte accent sur blanc et au texte blanc
+      // sur aplat accent : une seule valeur doit satisfaire les deux usages.
+      expectContrast(
+          DonyColors.accent, DonyColors.neutral0, 4.5, 'accent sur blanc');
+      expectContrast(
+          DonyColors.neutral0, DonyColors.accent, 4.5, 'blanc sur accent');
+    });
+  });
+
   group('ColorScheme', () {
     // `testWidgets` et non `test` : construire un ThemeData déclenche le
     // chargement des polices Google, qui tente un accès réseau hors du binding
@@ -192,6 +220,74 @@ void main() {
             .colorScheme,
       ]) {
         expect(cs.onPrimary, DonyColors.textOnBrand);
+      }
+    });
+  });
+
+  group('DonyButton hors haut contraste', () {
+    /// Récupère le dégradé peint par le bouton.
+    LinearGradient gradient(WidgetTester tester) =>
+        (tester.widget<AnimatedContainer>(find.byType(AnimatedContainer).first)
+                .decoration! as BoxDecoration)
+            .gradient! as LinearGradient;
+
+    Future<void> pumpVariant(
+      WidgetTester tester,
+      DonyButtonVariant variant,
+      Brightness brightness,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: brightness == Brightness.light
+              ? AppTheme.light()
+              : AppTheme.dark(),
+          home: Scaffold(
+            body: DonyButton(
+              label: 'Confirmer',
+              variant: variant,
+              onPressed: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    const pleins = [
+      DonyButtonVariant.primary,
+      DonyButtonVariant.success,
+      DonyButtonVariant.destructive,
+      DonyButtonVariant.accent,
+    ];
+
+    testWidgets('le libellé est lisible sur chaque point du dégradé',
+        (tester) async {
+      // Le libellé est mesuré contre le stop le moins favorable, pas contre la
+      // moyenne : le texte traverse tout le dégradé.
+      for (final brightness in Brightness.values) {
+        final fg = brightness == Brightness.light
+            ? DonyColors.textOnBrand
+            : DonyColors.onBrandHcDark;
+        for (final variant in pleins) {
+          await pumpVariant(tester, variant, brightness);
+          for (final stop in gradient(tester).colors) {
+            expectContrast(fg, stop, 4.5, '$variant / $brightness');
+          }
+        }
+      }
+    });
+
+    testWidgets('le bouton reste distinct du fond en thème sombre',
+        (tester) async {
+      // Contrepartie du test précédent : assombrir l'aplat jusqu'à porter du
+      // blanc le ferait disparaître dans le fond sombre. Les deux critères
+      // tirent en sens inverse, ce test empêche de sacrifier celui-ci.
+      final fond = AppTheme.dark().scaffoldBackgroundColor;
+      for (final variant in pleins) {
+        await pumpVariant(tester, variant, Brightness.dark);
+        for (final stop in gradient(tester).colors) {
+          expectContrast(stop, fond, 3, '$variant sur fond sombre');
+        }
       }
     });
   });

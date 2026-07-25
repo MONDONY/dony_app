@@ -72,19 +72,29 @@ abstract final class DonyColors {
   // SÉMANTIQUE — États
   // ═══════════════════════════════════════════════════════════════
   static const success50  = Color(0xFFE5F4EE);
-  static const success500 = Color(0xFF0E8A5F); // Vert validation ★
+  // Assombri (était #0E8A5F, 4.36:1 sur blanc et 3.84:1 sur success50, tous
+  // deux sous 4.5:1). À #0C7A54 : 5.35:1 et 4.71:1.
+  static const success500 = Color(0xFF0C7A54); // Vert validation ★
   static const success700 = Color(0xFF0A6446);
 
   static const warning50  = Color(0xFFFCF3DF);
-  static const warning500 = Color(0xFFE8A23B); // Amber ★
+  // Assombri franchement (était #E8A23B). L'amber vif ne faisait que 2.17:1
+  // sur blanc : il échouait même le seuil 3:1 des éléments non textuels, donc
+  // aucun usage ne le sauvait. À #96631A : 5.13:1 sur blanc, 4.64:1 sur
+  // warning50. C'est le changement le plus visible de la palette.
+  static const warning500 = Color(0xFF96631A); // Amber foncé ★
   static const warning700 = Color(0xFFB07725);
 
   static const danger50  = Color(0xFFFCE8E5);
-  static const danger500 = Color(0xFFD9342B); // Rouge erreur ★
+  // Assombri (était #D9342B, 3.98:1 sur son propre fond pâle).
+  // À #C42A22 : 5.67:1 sur blanc, 4.81:1 sur danger50.
+  static const danger500 = Color(0xFFC42A22); // Rouge erreur ★
   static const danger700 = Color(0xFFA81F18);
 
   static const info50  = Color(0xFFE5F0FA);
-  static const info500 = Color(0xFF1B7BC2); // Bleu info ★
+  // Assombri (était #1B7BC2, 3.90:1 sur info50).
+  // À #166BA9 : 5.66:1 sur blanc, 4.90:1 sur info50.
+  static const info500 = Color(0xFF166BA9); // Bleu info ★
   static const info700 = Color(0xFF115687);
 
   static const favorite = Color(0xFFE11D48); // Cœur favori (rempli). Contour = cs.onSurfaceVariant.
@@ -153,7 +163,11 @@ abstract final class DonyColors {
   static const primaryPress = blue700;
   static const primarySoft  = blue50;
 
-  static const accent     = terra500;
+  // terra600 et non terra500 : le rôle accent porte du texte et reçoit du
+  // texte blanc, deux usages qui exigent 4.5:1. terra500 n'en donnait que
+  // 3.46:1, terra600 en donne 4.79:1. terra500 reste disponible comme
+  // primitive de palette, pour les dégradés décoratifs.
+  static const accent     = terra600;
   static const accentSoft = terra50;
 
   static const bgApp       = neutral50;

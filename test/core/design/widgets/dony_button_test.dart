@@ -234,9 +234,13 @@ void main() {
       final decoration = container.decoration as BoxDecoration;
       final gradient = decoration.gradient as LinearGradient;
 
+      // Tokens et non littéraux : le dégradé accent est passé de terra500 à
+      // terra600/terra700 pour que le libellé blanc atteigne 4.5:1, terra500
+      // n'en donnant que 3.46:1. Un test qui fige une valeur hexadécimale
+      // casse à chaque ajustement de contraste sans rien prouver de plus.
       expect(
         gradient.colors,
-        containsAll(<Color>[const Color(0xFFD96A3A)]),
+        containsAll(<Color>[DonyColors.terra600, DonyColors.terra700]),
       );
     });
   });

@@ -139,7 +139,12 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: cs.primary,
-          foregroundColor: cs.onPrimary,
+          // Pas `cs.onPrimary` : ce rôle sert aussi de texte sur des dégradés
+          // de marque allant du bleu très sombre au bleu clair, où le noir
+          // serait illisible. Ici le fond est l'aplat `cs.primary`, connu, et
+          // en thème sombre il est trop clair pour un libellé blanc (3.28:1).
+          foregroundColor:
+              isLight ? cs.onPrimary : DonyColors.onBrandHcDark,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),

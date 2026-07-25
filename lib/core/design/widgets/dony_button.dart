@@ -133,7 +133,7 @@ class _DonyButtonState extends State<DonyButton> {
           colors: hc
               ? _flat(cs.primary)
               : isLight
-                  ? [const Color(0xFF3B8AFF), DonyColors.blue500, DonyColors.blue700]
+                  ? [const Color(0xFF1F6BF5), DonyColors.blue500, DonyColors.blue700]
                   : [const Color(0xFF6699FF), DonyColors.blueDark500, DonyColors.blueDark700],
           shadows: isLight ? DonyShadow.brand : DonyShadow.brandDark,
           foreground: onBrand,
@@ -146,7 +146,7 @@ class _DonyButtonState extends State<DonyButton> {
           colors: hc
               ? _flat(isLight ? DonyColors.successHc : DonyColors.successHcDark)
               : isLight
-                  ? [const Color(0xFF1AA574), DonyColors.success500]
+                  ? [const Color(0xFF0F8058), DonyColors.success700]
                   : [DonyColors.successDark500, const Color(0xFF22B882)],
           shadows: isLight ? DonyShadow.success : DonyShadow.successDark,
           foreground: onBrand,
@@ -159,8 +159,8 @@ class _DonyButtonState extends State<DonyButton> {
           colors: hc
               ? _flat(isLight ? DonyColors.dangerHc : DonyColors.dangerHcDark)
               : isLight
-                  ? [const Color(0xFFFF5252), DonyColors.danger500]
-                  : [DonyColors.dangerDark500, const Color(0xFFB02020)],
+                  ? [DonyColors.danger500, DonyColors.danger700]
+                  : [DonyColors.dangerDark500, const Color(0xFFD9453D)],
           shadows: isLight ? DonyShadow.danger : DonyShadow.dangerDark,
           foreground: onBrand,
           pressed: _pressed,
@@ -172,8 +172,8 @@ class _DonyButtonState extends State<DonyButton> {
           colors: hc
               ? _flat(isLight ? DonyColors.accentHc : DonyColors.accentHcDark)
               : isLight
-                  ? [const Color(0xFFE8865B), DonyColors.terra500]
-                  : [DonyColors.terraDark500, const Color(0xFFC85A2E)],
+                  ? [DonyColors.terra600, DonyColors.terra700]
+                  : [DonyColors.terraDark500, const Color(0xFFD9743F)],
           shadows: DonyShadow.accent, // pas de variante sombre du glow accent
           foreground: onBrand,
           pressed: _pressed,
@@ -239,8 +239,15 @@ List<Color> _flat(Color c) => [c, c];
 ///
 /// En haut contraste sombre les aplats sont clairs, donc le blanc n'y tient
 /// pas. Ailleurs, le blanc reste correct sur les fonds sombres saturés.
+/// Couleur du libellé posé sur un aplat de marque.
+///
+/// En thème sombre les aplats restent vifs, pour rester distincts du fond
+/// (1.4.11, 3:1). Un libellé blanc n'y tiendrait pas : aucune couleur unique
+/// ne satisfait à la fois « blanc lisible dessus » et « distinct du fond
+/// sombre », les deux tirant en sens inverse. C'est donc le libellé qui
+/// s'assombrit, comme le fait Material 3.
 Color _onBrand({required bool hc, required bool isLight}) =>
-    hc && !isLight ? DonyColors.onBrandHcDark : DonyColors.textOnBrand;
+    isLight ? DonyColors.textOnBrand : DonyColors.onBrandHcDark;
 
 /// Bouton avec dégradé + ombre colorée (glow).
 /// Utilisé pour primary, success, destructive.
