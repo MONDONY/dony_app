@@ -1,7 +1,17 @@
+import 'package:dony/app/reduced_motion_priming.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockBox extends Mock implements Box<dynamic> {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
 /// Reproduit le câblage racine de `app.dart` sans démarrer toute
 /// l'application : Firebase, Hive et le routeur ne sont pas nécessaires pour
@@ -122,6 +132,60 @@ void main() {
         }),
       ));
       expect(reinforce, isTrue);
+    });
+  });
+
+  group('primeReducedMotionDuration — synchronisation à froid (ronde 1)', () {
+    late _MockBox box;
+    late _MockAnalyticsService analytics;
+
+    setUp(() {
+      box = _MockBox();
+      analytics = _MockAnalyticsService();
+      when(() => box.get(any(), defaultValue: any(named: 'defaultValue')))
+          .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
+      when(() => box.get(any())).thenReturn(null);
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      when(() => box.delete(any())).thenAnswer((_) async {});
+      when(() => analytics.logEvent(any(),
+          properties: any(named: 'properties'))).thenAnswer((_) async {});
+    });
+
+    test(
+        'un bloc dont l\'état initial (chargé depuis Hive, sans emit) porte '
+        'reduceMotion: on force Animate.defaultDuration à zéro, sans '
+        'qu\'aucun événement n\'ait été ajouté au bloc', () {
+      when(() => box.get(HiveService.kA11yReduceMotion,
+              defaultValue: any(named: 'defaultValue')))
+          .thenReturn(AccessibilityMode.on);
+
+      // L'état initial vient de `super(_load(_box))`, jamais d'un
+      // `emit()` : reproduit exactement ce que lit `initState` via
+      // `getIt<AccessibilityBloc>().state` avant le premier `build`, sans
+      // qu'aucun événement ne soit ajouté au bloc.
+      final bloc = AccessibilityBloc(box, analytics);
+      addTearDown(bloc.close);
+      expect(bloc.state.reduceMotion, AccessibilityMode.on);
+
+      primeReducedMotionDuration(bloc.state);
+
+      expect(Animate.defaultDuration, Duration.zero);
+      verifyNever(() => analytics.logEvent(any(),
+          properties: any(named: 'properties')));
+    });
+
+    test(
+        'un état reduceMotion: system ou off laisse Animate.defaultDuration '
+        'inchangé (résolu ensuite par MediaQuery, pas à froid)', () {
+      Animate.defaultDuration = const Duration(milliseconds: 300);
+
+      primeReducedMotionDuration(
+          const AccessibilityState(reduceMotion: AccessibilityMode.system));
+      expect(Animate.defaultDuration, const Duration(milliseconds: 300));
+
+      primeReducedMotionDuration(
+          const AccessibilityState(reduceMotion: AccessibilityMode.off));
+      expect(Animate.defaultDuration, const Duration(milliseconds: 300));
     });
   });
 }

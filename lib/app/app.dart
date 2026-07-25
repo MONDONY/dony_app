@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:dony/app/reduced_motion_priming.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -68,6 +69,8 @@ class _DonyAppState extends State<DonyApp> {
   @override
   void initState() {
     super.initState();
+    // À froid, avant tout build : voir la doc de [primeReducedMotionDuration].
+    primeReducedMotionDuration(getIt<AccessibilityBloc>().state);
     _navSub = getIt<NotificationService>().navigationStream.listen((route) {
       _navigateToRoute(route);
     });
