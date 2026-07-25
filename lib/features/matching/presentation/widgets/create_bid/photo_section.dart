@@ -84,7 +84,12 @@ class PhotoSection extends StatelessWidget {
                     onRemove: () => context.read<BidPhotosCubit>().remove(p.localId),
                   ),
                 if (canAdd)
-                  GestureDetector(
+                  Semantics(
+                    button: true,
+                    container: true,
+                    excludeSemantics: true,
+                    label: 'Ajouter une photo du colis',
+                    child: GestureDetector(
                     onTap: () => _showSourceSheet(context),
                     child: Container(
                       width: 64,
@@ -96,6 +101,7 @@ class PhotoSection extends StatelessWidget {
                       ),
                       child: Icon(Icons.add_rounded, color: cs.primary),
                     ),
+                  )
                   ),
               ],
             ),
@@ -167,7 +173,12 @@ class _PhotoThumb extends StatelessWidget {
           Positioned(
             top: -18,
             right: -18,
-            child: GestureDetector(
+            child: Semantics(
+              button: true,
+              container: true,
+              excludeSemantics: true,
+              label: 'Supprimer cette photo',
+              child: GestureDetector(
               onTap: onRemove,
               behavior: HitTestBehavior.opaque,
               child: SizedBox(
@@ -189,6 +200,7 @@ class _PhotoThumb extends StatelessWidget {
                   ),
                 ),
               ),
+            )
             ),
           ),
         ],

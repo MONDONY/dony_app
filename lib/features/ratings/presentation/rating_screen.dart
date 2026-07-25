@@ -1,9 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/presentation/widgets/star_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -97,7 +97,7 @@ class _RatingScreenState extends State<RatingScreen> {
                     const SizedBox(height: DonySpacing.xl),
 
                     // ── Star selector ────────────────────────────────────
-                    _StarSelector(
+                    StarSelector(
                       selected: _stars,
                       onSelect: (s) => setState(() => _stars = s),
                     ),
@@ -177,45 +177,4 @@ class _RatingScreenState extends State<RatingScreen> {
         5 => 'Excellent !',
         _ => '',
       };
-}
-
-// ── Star selector ─────────────────────────────────────────────────────────────
-
-class _StarSelector extends StatelessWidget {
-  const _StarSelector({required this.selected, required this.onSelect});
-
-  final int selected;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(5, (i) {
-          final index = i + 1;
-          final filled = index <= selected;
-          return GestureDetector(
-            onTap: () => onSelect(index),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: Builder(
-                  builder: (context) => DonyIcon(
-                    'star',
-                    key: ValueKey(filled),
-                    size: 44,
-                    color: filled
-                        ? DonyColors.starGold
-                        : Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
 }
