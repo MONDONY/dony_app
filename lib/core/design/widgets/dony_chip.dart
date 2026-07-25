@@ -46,7 +46,15 @@ class DonyChip extends StatelessWidget {
     // agrandit la zone tappable sans toucher au visuel : `opaque` rend la
     // marge transparente cliquable, et le `Center` à facteur 1 laisse la
     // pastille à sa taille d'origine.
-    return GestureDetector(
+    // La sélection n'était portée que par la couleur : invisible pour un
+    // lecteur d'écran, et contraire au 1.4.1. `selected` la fait annoncer,
+    // `button` fait annoncer l'élément comme actionnable, ce qu'un
+    // GestureDetector nu ne dit pas.
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      selected: selected,
+      child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: enabled ? onTap : null,
       child: ConstrainedBox(
@@ -94,6 +102,7 @@ class DonyChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
