@@ -347,6 +347,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `upgrade_to_pro_started` | UpgradeToProScreen.initState |
 | `referral_shared` | ReferralBloc._onShared() |
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
+| `phone_visibility_toggled` | PrivacySettingsBloc._onToggleHidePhone — bascule « Masquer mon numéro » confirmée par le serveur (propriété `hidden`) |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
 | `shipment_new_request_opened` | ShipmentListScreen — pill « Envoyer » du header ouvre le wizard de demande d'envoi |

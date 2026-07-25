@@ -44,6 +44,10 @@ class PrivacySettingsScreen extends StatelessWidget {
       ),
       body: BlocBuilder<PrivacySettingsBloc, PrivacySettingsState>(
         builder: (context, state) {
+          final loaded =
+              state is PrivacySettingsLoaded ? state : null;
+          final isLoading = state is PrivacySettingsLoading;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
@@ -55,12 +59,46 @@ class PrivacySettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── 1. Bandeau vert informatif ────────────────────────────
-                _ProtectedNumberBanner(),
+                _ProtectedNumberBanner(
+                  phoneHidden: loaded?.hidePhoneNumber ?? false,
+                ),
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── 2. Section "QUI PEUT ME CONTACTER" ───────────────────
                 const SettingsSectionHeader('QUI PEUT ME CONTACTER'),
-                _KycToggleCard(state: state),
+                SettingsFlatGroup(
+                  children: [
+                    _SettingsToggleRow(
+                      emoji: '✅',
+                      emojiBackground: const Color(0xFFE8F5EE),
+                      title: 'Profils vérifiés uniquement',
+                      subtitle:
+                          "Seuls les utilisateurs ayant validé leur identité peuvent t'envoyer une offre",
+                      value: loaded?.contactKycOnly ?? false,
+                      activeColor: const Color(0xFF1A6B3C),
+                      onChanged: isLoading
+                          ? null
+                          : (v) => context
+                              .read<PrivacySettingsBloc>()
+                              .add(ContactKycOnlyToggled(v)),
+                    ),
+                    const _SettingsRowDivider(),
+                    _SettingsToggleRow(
+                      emoji: '📵',
+                      emojiBackground: const Color(0xFFEAF1FF),
+                      title: 'Masquer mon numéro',
+                      subtitle:
+                          "Ton numéro n'est jamais communiqué, même après une offre acceptée. "
+                          'Tes échanges passent par la messagerie dony.',
+                      value: loaded?.hidePhoneNumber ?? false,
+                      onChanged: isLoading
+                          ? null
+                          : (v) => context
+                              .read<PrivacySettingsBloc>()
+                              .add(HidePhoneNumberToggled(v)),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── 3. Section "BLOCAGE" ──────────────────────────────────
@@ -97,6 +135,12 @@ class PrivacySettingsScreen extends StatelessWidget {
 // ── Bandeau vert ──────────────────────────────────────────────────────────────
 
 class _ProtectedNumberBanner extends StatelessWidget {
+  const _ProtectedNumberBanner({required this.phoneHidden});
+
+  /// Le bandeau décrit la règle réellement appliquée : promettre un échange de
+  /// numéros à quelqu'un qui vient de le masquer serait faux.
+  final bool phoneHidden;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -122,7 +166,9 @@ class _ProtectedNumberBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ton numéro est protégé',
+                  phoneHidden
+                      ? 'Ton numéro reste masqué'
+                      : 'Ton numéro est protégé',
                   style: tt.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -131,9 +177,13 @@ class _ProtectedNumberBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  "Personne ne voit ton numéro tant qu'une offre n'est pas acceptée. "
-                  "Une fois l'accord conclu, toi et ton partenaire échangez vos numéros "
-                  "pour organiser la remise.",
+                  phoneHidden
+                      ? "Ton numéro n'est communiqué à personne, même une fois "
+                          "l'accord conclu. Tes partenaires te joignent par la "
+                          'messagerie dony, et tu peux toujours appeler le leur.'
+                      : "Personne ne voit ton numéro tant qu'une offre n'est pas "
+                          "acceptée. Une fois l'accord conclu, toi et ton "
+                          'partenaire échangez vos numéros pour organiser la remise.',
                   style: tt.bodySmall?.copyWith(
                     color: Colors.white.withOpacity(0.85),
                     fontSize: 12,
@@ -149,81 +199,101 @@ class _ProtectedNumberBanner extends StatelessWidget {
   }
 }
 
-// ── Card toggle KYC ──────────────────────────────────────────────────────────
+// ── Ligne de réglage à interrupteur ───────────────────────────────────────────
 
-class _KycToggleCard extends StatelessWidget {
-  const _KycToggleCard({required this.state});
-  final PrivacySettingsState state;
+/// Ligne « icône + titre + description + Switch » des listes groupées de
+/// Confidentialité. Un seul widget pour les trois réglages de l'écran : ils
+/// partageaient jusqu'ici une mise en page recopiée à l'identique.
+class _SettingsToggleRow extends StatelessWidget {
+  const _SettingsToggleRow({
+    required this.emoji,
+    required this.emojiBackground,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.activeColor,
+  });
+
+  final String emoji;
+  final Color emojiBackground;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+  final Color? activeColor;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final isLoading = state is PrivacySettingsLoading;
-    final contactKycOnly = state is PrivacySettingsLoaded
-        ? (state as PrivacySettingsLoaded).contactKycOnly
-        : false;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.md,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: emojiBackground,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 16)),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.base),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: cs.onSurfaceVariant,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Switch(
+            value: value,
+            activeColor: activeColor,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    return SettingsFlatGroup(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.md,
-          ),
-          child: Row(
-            children: [
-              // Icône dans container vert clair
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5EE),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Center(
-                  child: Text('✅', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(width: DonySpacing.base),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Profils vérifiés uniquement',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "Seuls les utilisateurs ayant validé leur identité peuvent t'envoyer une offre",
-                      style: tt.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: cs.onSurfaceVariant,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              Switch(
-                value: contactKycOnly,
-                activeColor: const Color(0xFF1A6B3C),
-                onChanged: isLoading
-                    ? null
-                    : (v) => context
-                        .read<PrivacySettingsBloc>()
-                        .add(ContactKycOnlyToggled(v)),
-              ),
-            ],
-          ),
-        ),
-      ],
+/// Séparateur des listes groupées : aligné sur le texte, pas sur le bord, pour
+/// que l'icône reste visuellement rattachée à sa ligne.
+class _SettingsRowDivider extends StatelessWidget {
+  const _SettingsRowDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: DonySpacing.base + 36 + DonySpacing.base,
+      color: Theme.of(context).colorScheme.outline,
     );
   }
 }
@@ -235,8 +305,6 @@ class _AnalyticsConsentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final hive = getIt<HiveService>();
 
     return ValueListenableBuilder<Box>(
@@ -247,63 +315,21 @@ class _AnalyticsConsentCard extends StatelessWidget {
 
         return SettingsFlatGroup(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.base,
-                vertical: DonySpacing.md,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEAF1FF),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text('📊', style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.base),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Statistiques d'utilisation",
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "Mesure anonyme de l'usage pour améliorer l'app. "
-                          "Jamais tes paiements ni ton identité.",
-                          style: tt.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: cs.onSurfaceVariant,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  Switch(
-                    value: enabled,
-                    onChanged: (v) {
-                      getIt<AnalyticsService>()
-                          .setConsent(granted: v, source: 'settings');
-                      unawaited(getIt<AnalyticsService>().logEvent(
-                        AnalyticsEvents.analyticsConsentChanged,
-                        properties: {'granted': v},
-                      ));
-                    },
-                  ),
-                ],
-              ),
+            _SettingsToggleRow(
+              emoji: '📊',
+              emojiBackground: const Color(0xFFEAF1FF),
+              title: "Statistiques d'utilisation",
+              subtitle: "Mesure anonyme de l'usage pour améliorer l'app. "
+                  'Jamais tes paiements ni ton identité.',
+              value: enabled,
+              onChanged: (v) {
+                getIt<AnalyticsService>()
+                    .setConsent(granted: v, source: 'settings');
+                unawaited(getIt<AnalyticsService>().logEvent(
+                  AnalyticsEvents.analyticsConsentChanged,
+                  properties: {'granted': v},
+                ));
+              },
             ),
           ],
         );

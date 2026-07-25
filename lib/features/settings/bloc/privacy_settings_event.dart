@@ -21,3 +21,17 @@ class ContactKycOnlyToggled extends PrivacySettingsEvent {
   @override
   int get hashCode => value.hashCode;
 }
+
+/// Masque (true) ou révèle (false) mon numéro auprès de mes contreparties.
+/// Même traitement optimiste que [ContactKycOnlyToggled].
+class HidePhoneNumberToggled extends PrivacySettingsEvent {
+  final bool value;
+  const HidePhoneNumberToggled(this.value);
+
+  @override
+  bool operator ==(Object other) =>
+      other is HidePhoneNumberToggled && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
+}

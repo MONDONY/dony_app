@@ -199,14 +199,16 @@ class _DonyAppState extends State<DonyApp> {
                           .run()
                           .then((_) => favCubit.load()),
                     );
-                    // Réconciliation de la préférence contactKycOnly depuis le backend
-                    // vers le cache Hive local (utile en cas de changement sur un autre appareil).
+                    // Réconciliation des préférences de confidentialité depuis le
+                    // backend vers le cache Hive local (utile après un changement
+                    // fait sur un autre appareil).
                     unawaited(
-                      getIt<PrivacySettingsRepository>()
-                          .fetchContactKycOnly()
-                          .then((v) => getIt<HiveService>().userPrefs
-                              .put(HiveService.kContactKycOnly, v))
-                          .catchError((_) {}),
+                      getIt<PrivacySettingsRepository>().fetch().then((s) {
+                        final prefs = getIt<HiveService>().userPrefs;
+                        prefs.put(HiveService.kContactKycOnly, s.contactKycOnly);
+                        prefs.put(
+                            HiveService.kHidePhoneNumber, s.hidePhoneNumber);
+                      }).catchError((_) {}),
                     );
                   } else if (state is AuthProfileUpdated) {
                     context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
