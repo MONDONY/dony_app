@@ -547,9 +547,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     dispose: (b) => b.close(),
   );
 
-  // Settings — Accessibility (text scale, high contrast, reduce animations)
-  getIt.registerFactory<AccessibilityBloc>(
-    () => AccessibilityBloc(getIt<HiveService>().userPrefs, getIt<AnalyticsService>()),
+  // Settings — Accessibility.
+  // Singleton et non factory : l'état pilote le thème et le MediaQuery de
+  // toute l'application depuis app.dart. Une factory donnerait une instance
+  // distincte à l'écran de réglages, et aucun changement ne sortirait de cet
+  // écran, ce qui était précisément le bug corrigé ici.
+  getIt.registerLazySingleton<AccessibilityBloc>(
+    () => AccessibilityBloc(
+      getIt<HiveService>().userPrefs,
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Settings — Diagnostics (version app + ping API)
