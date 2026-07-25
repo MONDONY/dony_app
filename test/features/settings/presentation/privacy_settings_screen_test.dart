@@ -175,5 +175,73 @@ void main() {
 
       verify(() => mockBloc.add(const ContactKycOnlyToggled(true))).called(1);
     });
+
+    // ── Masquage du numéro ───────────────────────────────────────────────────
+
+    testWidgets('affiche la tuile "Masquer mon numéro"', (tester) async {
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Masquer mon numéro'), findsOneWidget);
+    });
+
+    testWidgets('le Switch de masquage reflète hidePhoneNumber', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(
+              contactKycOnly: false, hidePhoneNumber: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Ordre des interrupteurs : KYC, masquage du numéro, puis analytics.
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      expect(switches[1].value, isTrue);
+    });
+
+    testWidgets('tapper le Switch de masquage envoie HidePhoneNumberToggled(true)',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: false),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Switch).at(1));
+      await tester.pumpAndSettle();
+
+      verify(() => mockBloc.add(const HidePhoneNumberToggled(true))).called(1);
+    });
+
+    testWidgets('le bandeau annonce le masquage quand la préférence est active',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(
+              contactKycOnly: false, hidePhoneNumber: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Le bandeau ne doit plus promettre un échange de numéros à quelqu'un qui
+      // vient justement de le refuser.
+      expect(find.text('Ton numéro reste masqué'), findsOneWidget);
+      expect(find.text('Ton numéro est protégé'), findsNothing);
+    });
+
+    testWidgets('le Switch de masquage est désactivé pendant le chargement',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(mockBloc: mockBloc, state: const PrivacySettingsLoading()),
+      );
+      await tester.pumpAndSettle();
+
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      expect(switches[1].onChanged, isNull);
+    });
   });
 }

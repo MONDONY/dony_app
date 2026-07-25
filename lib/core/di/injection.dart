@@ -495,7 +495,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AppPreferencesBloc(getIt<HiveService>().userPrefs),
   );
 
-  // Settings — Privacy (contactKycOnly via backend)
+  // Settings — Privacy (contactKycOnly + hidePhoneNumber via backend)
   getIt.registerLazySingleton<PrivacySettingsDatasource>(
     () => PrivacySettingsDatasource(getIt<ApiClient>()),
   );
@@ -506,6 +506,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PrivacySettingsBloc(
       getIt<PrivacySettingsRepository>(),
       getIt<HiveService>().userPrefs,
+      getIt<AnalyticsService>(),
     ),
   );
   getIt.registerLazySingleton<BlockedUsersDatasource>(
