@@ -10,7 +10,7 @@ const _presignedUrl =
 const _stableKey = 'https://s3.dony.store/bucket/tracking/abc/123_photo.jpg';
 
 Widget _wrap(Widget child) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: Center(child: child)),
     );
 

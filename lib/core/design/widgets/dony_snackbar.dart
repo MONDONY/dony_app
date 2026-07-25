@@ -33,6 +33,16 @@ abstract final class DonySnackbar {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    // Avec l'option « garder les messages affichés », le message ne disparaît
+    // plus tout seul : quatre secondes ne suffisent pas à qui lit lentement ou
+    // navigue au lecteur d'écran (WCAG 2.2.1). Une action de fermeture
+    // explicite remplace la disparition automatique.
+    final persistent = context.a11y.persistentMessages;
+    final effectiveDuration =
+        persistent ? const Duration(minutes: 10) : duration;
+    final effectiveActionLabel =
+        actionLabel ?? (persistent ? 'Fermer' : null);
+
     final (bg, fg, defaultIcon) = switch (type) {
       DonySnackbarType.info => (
           cs.inverseSurface,
@@ -131,7 +141,7 @@ abstract final class DonySnackbar {
             ],
           ),
           backgroundColor: bg,
-          duration: duration,
+          duration: effectiveDuration,
           behavior: SnackBarBehavior.floating,
           elevation: 8,
           shape: RoundedRectangleBorder(
@@ -148,11 +158,15 @@ abstract final class DonySnackbar {
             DonySpacing.lg,
           ),
           dismissDirection: DismissDirection.horizontal,
-          action: actionLabel != null
+          action: effectiveActionLabel != null
               ? SnackBarAction(
-                  label: actionLabel,
+                  label: effectiveActionLabel,
                   textColor: fg,
-                  onPressed: onAction ?? () {},
+                  onPressed: onAction ??
+                      (persistent
+                          ? () =>
+                              ScaffoldMessenger.of(context).hideCurrentSnackBar()
+                          : () {}),
                 )
               : null,
         ),

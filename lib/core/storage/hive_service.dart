@@ -35,9 +35,20 @@ class HiveService {
   static const String kResponseDelay           = 'response_delay';            // int?
 
   // ── Accessibilité ────────────────────────────────────────────────────────
+  // Clés héritées, lues une seule fois pour la migration puis supprimées.
   static const String kTextScale         = 'text_scale';       // 'small'|'normal'|'large'|'xlarge'
   static const String kHighContrast      = 'high_contrast';    // bool
   static const String kReduceAnimations  = 'reduce_animations';// bool
+
+  static const String kA11yFollowSystemTextScale = 'a11y_follow_system_text_scale'; // bool
+  static const String kA11yTextScaleFactor       = 'a11y_text_scale_factor';        // double
+  static const String kA11yHighContrast          = 'a11y_high_contrast';            // 'system'|'on'|'off'
+  static const String kA11yReduceMotion          = 'a11y_reduce_motion';            // 'system'|'on'|'off'
+  static const String kA11yBoldText              = 'a11y_bold_text';                // bool
+  static const String kA11yUnderlineLinks        = 'a11y_underline_links';          // bool
+  static const String kA11yReinforceLabels       = 'a11y_reinforce_labels';         // bool
+  static const String kA11yPersistentMessages    = 'a11y_persistent_messages';      // bool
+  static const String kA11yConfirmImportant      = 'a11y_confirm_important';        // bool
 
   // ── Confidentialité ──────────────────────────────────────────────────────
   static const String kProfileVisibility = 'profile_visibility'; // 'public' | 'limited'

@@ -22,7 +22,7 @@ BidModel _bid({String status = 'ACCEPTED'}) => BidModel(
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: ColisBillet(bid: bid, isSender: isSender),
       ),

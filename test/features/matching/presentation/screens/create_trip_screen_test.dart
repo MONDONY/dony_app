@@ -202,7 +202,7 @@ Widget _wrapWithRouter(Widget child, {AuthState? authState}) {
 
   return MaterialApp.router(
     routerConfig: router,
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
   );
 }
 
@@ -1092,6 +1092,79 @@ void main() {
     );
   });
 
+  // ── Group: bannière Stripe non configuré — bascule Row/Column ────────────────
+  // La bannière d'info + CTA « Activer les paiements par carte » utilise un
+  // Row (identique à 100 %, par construction) tant que l'échelle de texte
+  // est celle par défaut, et une disposition empilée seulement si elle
+  // grandit (cf. commentaire dans prix_conditions_step.dart). Les deux
+  // branches sont couvertes : la position relative à 100 %, l'absence de
+  // débordement à 200 %.
+
+  group('CreateTripScreen — bannière Stripe non configuré (bascule Row/Column)', () {
+    Future<void> navigateToStep2NotConfigured(WidgetTester tester) async {
+      // Viewport large : les chips de moyens de paiement de l'étape 2
+      // débordent sur un écran étroit à 100 % déjà (bug préexistant, hors
+      // sujet ici) — les tests existants de ce fichier utilisent la même
+      // largeur pour l'isoler.
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Activer les paiements par carte'), findsOneWidget);
+    }
+
+    testWidgets(
+      'à 100 %, le CTA reste sur la même ligne que le texte (disposition '
+      "d'origine, celle d'avant ce lot)",
+      (tester) async {
+        await navigateToStep2NotConfigured(tester);
+
+        // Le texte d'explication et le CTA sont les deux widgets comparés
+        // (pas l'icône 'circle-check' : elle apparaît deux fois sur cet
+        // écran, aussi dans l'en-tête « Ce que j'accepte » plus bas dans le
+        // formulaire — find.byWidgetPredicate serait ambigu). Sur une même
+        // ligne (Row, crossAxisAlignment au centre par défaut), leurs
+        // centres verticaux sont proches. Empilés (Column), le CTA serait
+        // nettement plus bas — au moins une hauteur de texte plus
+        // l'espacement entre les deux lignes.
+        final textY = tester
+            .getCenter(find.textContaining('Publiez en espèces'))
+            .dy;
+        final ctaY = tester
+            .getCenter(find.byKey(const Key('activate-card-payments-cta')))
+            .dy;
+
+        expect(
+          (textY - ctaY).abs(),
+          lessThan(20),
+          reason: 'à 100 %, le CTA doit être sur la même ligne que le texte '
+              "d'explication, pas en dessous",
+        );
+      },
+    );
+
+    testWidgets(
+      'à 200 %, aucun débordement (bascule en disposition empilée)',
+      (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+        await navigateToStep2NotConfigured(tester);
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+  });
+
   // ── Group: pricingMode MIXED → BlocListener ────────────────────────────────
   // PricingMode listener tested via unit test of _TripFormContentState.
 
@@ -1163,7 +1236,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
         );
         await tester.pump();
 
@@ -1221,7 +1294,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
         );
         await tester.pump();
         await tester.tap(find.text('open'));
@@ -1290,7 +1363,7 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
         );
         await tester.pump();
 
@@ -1382,7 +1455,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp.router(
             routerConfig: router,
-            theme: AppTheme.light,
+            theme: AppTheme.light(),
           ),
         );
         await tester.pump();

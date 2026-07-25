@@ -109,7 +109,7 @@ void main() {
   });
 
   Widget wrap() => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: MultiBlocProvider(
           providers: [
             BlocProvider<NegotiationListBloc>.value(value: bloc),

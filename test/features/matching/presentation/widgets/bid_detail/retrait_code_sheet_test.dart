@@ -40,7 +40,7 @@ void main() {
   });
 
   Widget host(BidModel b) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Builder(
       builder: (context) => Scaffold(
         body: Center(

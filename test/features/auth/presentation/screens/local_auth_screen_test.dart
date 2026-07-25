@@ -44,7 +44,7 @@ Future<void> _pump(
   bool verifyMode = false,
 }) async {
   await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     routerConfig: _buildRouter(authBloc, localAuthBloc, verifyMode: verifyMode),
   ));
   await tester.pump(const Duration(milliseconds: 300));

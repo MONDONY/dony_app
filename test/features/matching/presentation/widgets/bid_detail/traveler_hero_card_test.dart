@@ -43,7 +43,7 @@ Future<void> _pump(WidgetTester tester, BidModel bid) async {
   when(() => cancel.state).thenReturn(CancellationInitial());
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: BlocProvider<CancellationBloc>.value(
           value: cancel,
@@ -233,7 +233,7 @@ void main() {
     when(() => cancel.state).thenReturn(CancellationLoading());
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: BlocProvider<CancellationBloc>.value(
             value: cancel,
@@ -326,7 +326,7 @@ void main() {
     when(() => cancel.state).thenReturn(CancellationInitial());
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: BlocProvider<CancellationBloc>.value(
             value: cancel,
@@ -355,7 +355,7 @@ void main() {
     when(() => cancel.state).thenReturn(CancellationInitial());
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: BlocProvider<CancellationBloc>.value(
             value: cancel,
@@ -473,7 +473,7 @@ void main() {
     when(() => cancel.state).thenReturn(CancellationInitial());
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: BlocProvider<CancellationBloc>.value(
             value: cancel,
@@ -507,7 +507,7 @@ void main() {
     when(() => cancel.state).thenReturn(CancellationInitial());
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: BlocProvider<CancellationBloc>.value(
             value: cancel,

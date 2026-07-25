@@ -33,7 +33,7 @@ Future<void> _tearDownHive() async {
 }
 
 Widget _buildApp() => MaterialApp.router(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       routerConfig: GoRouter(
         routes: [
           GoRoute(

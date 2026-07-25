@@ -274,7 +274,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Authentification requise pour effectuer le paiement'),
+        find.text('Paiement non confirmé, réessayez'),
         findsOneWidget,
       );
     });
@@ -304,7 +304,7 @@ void main() {
       verifyNever(() => mockLocalAuth.authenticateWithBiometric());
       verifyNever(() => mockBloc.add(any()));
       expect(
-        find.text('Authentification requise pour effectuer le paiement'),
+        find.text('Paiement non confirmé, réessayez'),
         findsOneWidget,
       );
     });

@@ -25,7 +25,7 @@ void main() {
     VoidCallback? onSecondary,
   }) =>
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: DonySuccessScreen(
           mascotteType: DonyMascotteType.securise,
           title: 'Envoi réservé !',
@@ -61,7 +61,7 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+    return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
   }
 
   setUp(() {
@@ -147,7 +147,7 @@ void main() {
     final navigatorKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         navigatorKey: navigatorKey,
         home: const Scaffold(body: Text('Formulaire sous-jacent')),
       ),

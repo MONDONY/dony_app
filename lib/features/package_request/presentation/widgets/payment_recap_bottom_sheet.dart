@@ -94,7 +94,7 @@ class PaymentRecapBottomSheet {
                           processing.value = false;
                           DonySnackbar.show(
                             ctx,
-                            message: 'Authentification requise pour effectuer le paiement',
+                            message: 'Paiement non confirmé, réessayez',
                             type: DonySnackbarType.warning,
                           );
                           return;

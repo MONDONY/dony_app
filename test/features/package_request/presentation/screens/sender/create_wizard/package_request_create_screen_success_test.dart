@@ -191,7 +191,7 @@ void main() {
     );
     return MaterialApp.router(
       routerConfig: router,
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

@@ -28,7 +28,7 @@ void main() {
   tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
   Widget wrap(Widget child) => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(body: child),
       );
 

@@ -71,7 +71,7 @@ void main() {
   });
 
   Widget wrap(Widget child, {PackageRequestFormBloc? bloc}) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: MultiBlocProvider(
       providers: [
         BlocProvider<PackageRequestFormBloc>.value(

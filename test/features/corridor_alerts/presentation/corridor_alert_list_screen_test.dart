@@ -67,7 +67,7 @@ void main() {
     AlertDirection direction = AlertDirection.travelerWantsPackages,
   }) =>
       MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: CorridorAlertListScreen(direction: direction),
       );
 

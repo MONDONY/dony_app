@@ -128,7 +128,7 @@ Future<void> _pump(
   );
 
   await tester.pumpWidget(
-    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   // Avance le temps pour que les animations flutter_animate (300ms fadeIn)
   // se terminent complètement, évitant les timers "pending" en fin de test.

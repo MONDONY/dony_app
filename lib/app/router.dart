@@ -1078,8 +1078,8 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'accessibility',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<AccessibilityBloc>(),
+          builder: (context, state) => BlocProvider.value(
+            value: getIt<AccessibilityBloc>(),
             child: const AccessibilitySettingsScreen(),
           ),
         ),

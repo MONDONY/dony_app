@@ -67,7 +67,7 @@ void main() {
   });
 
   Widget wrap() => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: BlocProvider<PackageRequestBloc>.value(
       value: bloc,
       child: const Scaffold(body: MyPackageRequestsBody()),
@@ -148,7 +148,7 @@ void main() {
 
   group('_RequestCard', () {
     Widget wrapCard(PackageRequest r) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: BlocProvider<PackageRequestBloc>.value(
         value: bloc,
         child: const Scaffold(body: MyPackageRequestsBody()),
@@ -402,7 +402,7 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: BlocProvider<PackageRequestBloc>.value(
             value: bloc,
             child: const Scaffold(body: MyPackageRequestsBody(showFab: true)),
@@ -531,7 +531,7 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: BlocProvider<PackageRequestBloc>.value(
             value: bloc,
             child: const MyPackageRequestsScreen(),

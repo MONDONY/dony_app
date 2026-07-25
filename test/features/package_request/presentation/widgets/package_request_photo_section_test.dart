@@ -22,7 +22,7 @@ void main() {
   });
 
   Widget wrap() => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         home: Scaffold(
           body: BlocProvider.value(
             value: cubit,

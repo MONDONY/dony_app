@@ -144,7 +144,7 @@ void main() {
 
   group('PackageRequestPublicDetailBody — firm price (negotiable=false)', () {
     Widget wrap(PackageRequest request) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: PackageRequestPublicDetailBody(request: request)),
     );
 
@@ -199,7 +199,7 @@ void main() {
   // ─── Mode de paiement souhaité par l'expéditeur ──────────────────────────
   group('PackageRequestPublicDetailBody — mode de paiement', () {
     Widget wrap(PackageRequest request) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: PackageRequestPublicDetailBody(request: request)),
     );
 
@@ -257,7 +257,7 @@ void main() {
   group('ThreadStateCtaBar — sender · canCounter=false', () {
     Widget wrapCtaBar(NegotiationThread thread, String viewerUserId) =>
         MaterialApp(
-          theme: AppTheme.light,
+          theme: AppTheme.light(),
           home: BlocProvider<NegotiationBloc>.value(
             value: mockNegotiationBloc,
             child: Scaffold(

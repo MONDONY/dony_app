@@ -31,6 +31,20 @@ class DonyBadge extends StatelessWidget {
       DonyBadgeType.error   => (cs.errorLight,   cs.error),
     };
 
+    // En mode étiquettes renforcées, un badge sans icône en reçoit une, tirée
+    // de son type : la couleur seule ne suffit pas à distinguer un succès d'une
+    // erreur pour une vision des couleurs atypique.
+    final fallbackIcon = switch (type) {
+      DonyBadgeType.info => Icons.info_outline,
+      DonyBadgeType.success => Icons.check_circle_outline,
+      DonyBadgeType.warning => Icons.warning_amber_rounded,
+      DonyBadgeType.error => Icons.error_outline,
+    };
+    final effectiveIcon = icon ??
+        (context.a11y.reinforceLabels && iconAsset == null
+            ? fallbackIcon
+            : null);
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
@@ -44,8 +58,8 @@ class DonyBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 12, color: fg),
+          if (effectiveIcon != null) ...[
+            Icon(effectiveIcon, size: 12, color: fg),
             const SizedBox(width: 4),
           ] else if (iconAsset != null) ...[
             DonyIcon(iconAsset!, size: 12, color: fg),

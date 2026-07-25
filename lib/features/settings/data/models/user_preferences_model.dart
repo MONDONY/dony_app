@@ -8,9 +8,6 @@ class UserPreferencesModel {
   final String weightUnit;
   final String currencyCode;
   final int pickupRadiusKm;
-  final String textScale;
-  final bool highContrast;
-  final bool reduceAnimations;
   final String profileVisibility;
   final bool hidePhoneNumber;
   final bool biometricEnabled;
@@ -23,9 +20,6 @@ class UserPreferencesModel {
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
     this.pickupRadiusKm = 10,
-    this.textScale = 'normal',
-    this.highContrast = false,
-    this.reduceAnimations = false,
     this.profileVisibility = 'public',
     this.hidePhoneNumber = false,
     this.biometricEnabled = false,
@@ -39,9 +33,6 @@ class UserPreferencesModel {
     String? weightUnit,
     String? currencyCode,
     int? pickupRadiusKm,
-    String? textScale,
-    bool? highContrast,
-    bool? reduceAnimations,
     String? profileVisibility,
     bool? hidePhoneNumber,
     bool? biometricEnabled,
@@ -54,9 +45,6 @@ class UserPreferencesModel {
         weightUnit: weightUnit ?? this.weightUnit,
         currencyCode: currencyCode ?? this.currencyCode,
         pickupRadiusKm: pickupRadiusKm ?? this.pickupRadiusKm,
-        textScale: textScale ?? this.textScale,
-        highContrast: highContrast ?? this.highContrast,
-        reduceAnimations: reduceAnimations ?? this.reduceAnimations,
         profileVisibility: profileVisibility ?? this.profileVisibility,
         hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
         biometricEnabled: biometricEnabled ?? this.biometricEnabled,
@@ -77,12 +65,6 @@ class UserPreferencesModel {
             box.get(HiveService.kCurrencyCode, defaultValue: 'EUR') as String,
         pickupRadiusKm:
             box.get(HiveService.kPickupRadiusKm, defaultValue: 10) as int,
-        textScale:
-            box.get(HiveService.kTextScale, defaultValue: 'normal') as String,
-        highContrast:
-            box.get(HiveService.kHighContrast, defaultValue: false) as bool,
-        reduceAnimations:
-            box.get(HiveService.kReduceAnimations, defaultValue: false) as bool,
         profileVisibility: box.get(HiveService.kProfileVisibility,
             defaultValue: 'public') as String,
         hidePhoneNumber:
@@ -100,9 +82,6 @@ class UserPreferencesModel {
     box.put(HiveService.kWeightUnit, weightUnit);
     box.put(HiveService.kCurrencyCode, currencyCode);
     box.put(HiveService.kPickupRadiusKm, pickupRadiusKm);
-    box.put(HiveService.kTextScale, textScale);
-    box.put(HiveService.kHighContrast, highContrast);
-    box.put(HiveService.kReduceAnimations, reduceAnimations);
     box.put(HiveService.kProfileVisibility, profileVisibility);
     box.put(HiveService.kHidePhoneNumber, hidePhoneNumber);
     box.put(HiveService.kBiometricEnabled, biometricEnabled);

@@ -215,7 +215,7 @@ Widget _buildHarness(AnnouncementModel announcement) {
   );
   return MaterialApp.router(
     routerConfig: router,
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     localizationsDelegates: const [
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,

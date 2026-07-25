@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(body: Center(child: child)),
     );
 
 Widget _wrapDark(Widget child) => MaterialApp(
-      theme: AppTheme.dark,
+      theme: AppTheme.dark(),
       home: Scaffold(body: Center(child: child)),
     );
 

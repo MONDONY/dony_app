@@ -93,7 +93,7 @@ Future<void> _pump(
   );
 
   await tester.pumpWidget(
-    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   // Draine les timers d'animation (flutter_animate dans l'empty state / les
   // cartes) : sans ça le binding échoue sur un timer encore en vol.

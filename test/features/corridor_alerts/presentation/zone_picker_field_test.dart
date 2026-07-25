@@ -21,7 +21,7 @@ Widget _host({
   required void Function(double, double, int, String?) onChanged,
 }) =>
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: ZonePickerField(
           initialCenter: center ?? const LatLng(48.85, 2.35),

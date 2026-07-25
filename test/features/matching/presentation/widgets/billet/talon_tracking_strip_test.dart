@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 Future<void> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: const Scaffold(
         body: TalonTrackingStrip(trackingNumber: 'DON-3TSTR9VH'),
       ),

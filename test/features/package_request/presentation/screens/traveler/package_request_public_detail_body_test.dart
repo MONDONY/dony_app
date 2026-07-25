@@ -34,7 +34,7 @@ PackageRequest _req({
 
 void main() {
   Widget wrap(PackageRequest r) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(body: PackageRequestPublicDetailBody(request: r)),
   );
 
@@ -111,7 +111,7 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Voir ma négociation'));
@@ -122,7 +122,7 @@ void main() {
   // ── Vue propriétaire ─────────────────────────────────────────────────────
 
   Widget wrapOwner(PackageRequest r, {String? uid = 'sender-1'}) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: PackageRequestPublicDetailBody(request: r, currentUserId: uid),
     ),
@@ -191,7 +191,7 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Offres reçues'));

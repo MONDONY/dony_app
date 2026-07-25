@@ -44,7 +44,7 @@ Widget _wrap(Widget child, TripTemplateBloc bloc) {
       ),
     ],
   );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 void main() {

@@ -103,7 +103,9 @@ class CaSectionLabel extends StatelessWidget {
             ? DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant)
             : Icon(icon, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
-        labelWidget,
+        // Flexible plutôt que mainAxisSize.min : un libellé long à 200 % doit
+        // pouvoir passer à la ligne au lieu de déborder du Row.
+        Flexible(child: labelWidget),
       ],
     );
   }

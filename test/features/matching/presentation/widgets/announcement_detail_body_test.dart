@@ -67,7 +67,7 @@ void main() {
   });
 
   Widget host(AnnouncementModel a) => MaterialApp(
-        theme: AppTheme.light,
+        theme: AppTheme.light(),
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

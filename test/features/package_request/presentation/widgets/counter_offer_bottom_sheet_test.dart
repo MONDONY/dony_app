@@ -42,7 +42,7 @@ void main() {
     int roundsCount = 2,
   }) async {
     await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: BlocProvider<NegotiationBloc>.value(
         value: bloc,
         child: Builder(

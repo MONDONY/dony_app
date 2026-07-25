@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 Future<void> _pump(WidgetTester tester, String status) async {
   await tester.pumpWidget(MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(body: Center(child: BilletStatusStamp(status: status))),
   ));
 }

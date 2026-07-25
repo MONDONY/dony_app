@@ -29,7 +29,7 @@ void main() {
   testWidgets('renders corridor, traveler, kg and price', (tester) async {
     var tapped = false;
     await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: TripMatchCard(
           match: _trip(),
@@ -49,7 +49,7 @@ void main() {
 
   testWidgets('renders price per kg', (tester) async {
     await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: TripMatchCard(
           match: _trip(),
@@ -75,7 +75,7 @@ void main() {
       availableKg: 8.0,
     );
     await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: TripMatchCard(match: trip, index: 1),
       ),
@@ -86,7 +86,7 @@ void main() {
 
   testWidgets('renders traveler rating', (tester) async {
     await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: TripMatchCard(match: _trip(), index: 0),
       ),

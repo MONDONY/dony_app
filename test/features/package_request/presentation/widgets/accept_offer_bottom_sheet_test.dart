@@ -48,7 +48,7 @@ Widget _buildApp({
   double? grossPriceEur,
 }) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: BlocProvider.value(
         value: bloc,
@@ -404,7 +404,7 @@ void main() {
           ),
         ],
       );
-      return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
+      return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
     }
 
     testWidgets(

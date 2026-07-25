@@ -1,4 +1,5 @@
 // Theme
+export 'package:dony/core/design/theme/a11y_theme_options.dart';
 export 'package:dony/core/design/theme/app_theme.dart';
 // Tokens
 export 'package:dony/core/design/tokens/animation_tokens.dart';
@@ -8,6 +9,8 @@ export 'package:dony/core/design/tokens/spacing_tokens.dart';
 export 'package:dony/core/design/tokens/typography_tokens.dart';
 // Utils
 export 'package:dony/core/design/utils/dony_layout.dart';
+// Accessibility
+export 'package:dony/core/design/accessibility_scope.dart';
 // Navigation & layout
 export 'package:dony/core/design/widgets/dony_app_bar.dart';
 // Onboarding shared

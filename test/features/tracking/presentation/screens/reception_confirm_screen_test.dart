@@ -26,7 +26,7 @@ GoRouter _buildRouter({String bidId = 'bid-001', String travelerName = 'Ibrahima
 
 Future<void> _pump(WidgetTester tester, {String travelerName = 'Ibrahima'}) async {
   await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     routerConfig: _buildRouter(travelerName: travelerName),
   ));
   await tester.pump(const Duration(milliseconds: 900)); // drain mascotte confiant animation

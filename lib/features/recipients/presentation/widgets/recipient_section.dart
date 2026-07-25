@@ -218,14 +218,21 @@ class _PickerButton extends StatelessWidget {
             children: [
               DonyIcon('contact', size: 18, color: cs.primary),
               const SizedBox(width: DonySpacing.sm),
-              Text(
-                'Choisir un destinataire',
-                style: tt.bodyMedium?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w600,
+              // Expanded plutôt que Text + Spacer : le Spacer (flex:1)
+              // partageait la largeur restante à parts égales avec un
+              // Flexible(flex:1), ce qui aurait fait passer le libellé à la
+              // ligne même à 100 %. Expanded lui laisse toute la place
+              // disponible (rendu identique à 100 %), avec passage à la
+              // ligne seulement si besoin à 200 %.
+              Expanded(
+                child: Text(
+                  'Choisir un destinataire',
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              const Spacer(),
               DonyIcon('chevron-right', size: 16, color: cs.primary),
             ],
           ),
@@ -272,8 +279,9 @@ class _SelectedCard extends StatelessWidget {
                     recipient.phoneE164,
                     if (recipient.city != null) recipient.city!,
                   ].join(' · '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  // Pas de maxLines : à 200 %, ce résumé (nom · téléphone ·
+                  // ville) ne doit pas amputer une information réelle
+                  // (ville tronquée), le champ est déjà dans un Expanded.
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

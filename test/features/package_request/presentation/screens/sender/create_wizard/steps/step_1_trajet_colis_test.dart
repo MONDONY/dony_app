@@ -42,7 +42,7 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: BlocProvider(
       create: (_) => PackageRequestFormBloc(
         packageRepo,
@@ -155,7 +155,7 @@ void main() {
         );
         await tester.pumpWidget(
           MaterialApp(
-            theme: AppTheme.light,
+            theme: AppTheme.light(),
             home: BlocProvider(
               create: (_) => PackageRequestFormBloc(
                 packageRepo,
@@ -195,7 +195,7 @@ void main() {
         );
         await tester.pumpWidget(
           MaterialApp(
-            theme: AppTheme.light,
+            theme: AppTheme.light(),
             home: BlocProvider(
               create: (_) => PackageRequestFormBloc(
                 packageRepo,
@@ -234,7 +234,7 @@ void main() {
         );
         await tester.pumpWidget(
           MaterialApp(
-            theme: AppTheme.light,
+            theme: AppTheme.light(),
             home: BlocProvider(
               create: (_) => PackageRequestFormBloc(
                 packageRepo,

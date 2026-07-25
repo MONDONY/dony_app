@@ -69,7 +69,7 @@ Widget _buildApp({
     ],
   );
   return MaterialApp.router(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     routerConfig: router,
   );
 }

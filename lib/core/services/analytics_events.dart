@@ -219,4 +219,7 @@ abstract final class AnalyticsEvents {
   // Litiges
   static const disputesOpened = 'disputes_opened';
   static const disputeDetailOpened = 'dispute_detail_opened';
+
+  // Accessibilité
+  static const accessibilitySettingChanged = 'accessibility_setting_changed';
 }

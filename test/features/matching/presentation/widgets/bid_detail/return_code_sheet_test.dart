@@ -39,7 +39,7 @@ Widget _host(
   void Function(BuildContext) onTap,
 ) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.light(),
     home: Scaffold(
       body: Builder(
         builder: (ctx) => Center(

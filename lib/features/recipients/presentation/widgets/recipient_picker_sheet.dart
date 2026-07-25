@@ -194,13 +194,17 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                       ),
                       child: Row(
                         children: [
-                          Text(
-                            '👤  Destinataire',
-                            style: tt.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                          // Expanded plutôt que Text + Spacer : à 200 %, la
+                          // somme des deux dépassait la largeur disponible
+                          // (le Spacer ne peut pas devenir négatif).
+                          Expanded(
+                            child: Text(
+                              '👤  Destinataire',
+                              style: tt.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                          const Spacer(),
                           IconButton(
                             icon: const DonyIcon('x'),
                             onPressed: () => Navigator.of(context).pop(),

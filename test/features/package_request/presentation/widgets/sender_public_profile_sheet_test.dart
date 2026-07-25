@@ -18,7 +18,7 @@ SenderPublicProfile _sender({
     );
 
 Widget _buildApp(SenderPublicProfile sender) => MaterialApp(
-      theme: AppTheme.light,
+      theme: AppTheme.light(),
       home: Scaffold(
         body: Builder(
           builder: (ctx) => ElevatedButton(

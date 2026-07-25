@@ -1,3 +1,4 @@
+import 'package:dony/core/design/accessibility_scope.dart';
 import 'package:dony/core/design/tokens/color_tokens.dart'; // DonyStatusColors extension
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -114,6 +115,19 @@ class DonyStatusBanner extends StatelessWidget {
       );
     }
 
+    // Le bandeau porte déjà une icône par type. En mode étiquettes renforcées,
+    // on garantit en plus qu'un titre textuel est présent, pour ne pas laisser
+    // la couleur de fond porter seule la nature du message.
+    final reinforcedTitle = title ??
+        (context.a11y.reinforceLabels
+            ? switch (type) {
+                DonyStatusBannerType.info => 'Information',
+                DonyStatusBannerType.success => 'Succès',
+                DonyStatusBannerType.warning => 'Attention',
+                DonyStatusBannerType.error => 'Erreur',
+              }
+            : null);
+
     return Container(
       padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
@@ -133,9 +147,9 @@ class DonyStatusBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (title != null) ...[
+                if (reinforcedTitle != null) ...[
                   Text(
-                    title!,
+                    reinforcedTitle,
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurface,
                       fontWeight: FontWeight.w600,
