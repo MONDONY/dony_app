@@ -7,6 +7,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -92,7 +93,14 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
       if (result is AuthAuthenticated) {
-        context.go('/auth/local'); // → écran PIN, terminé
+        // Le verrouillage est facultatif : on ne montre l'écran de code que si
+        // l'utilisateur en a créé un. Sinon on entre directement, sans faire
+        // clignoter un écran de saisie qui se refermerait aussitôt.
+        final pinSet = await getIt<LocalAuthService>().isPinSet();
+        if (!mounted) {
+          return;
+        }
+        context.go(pinSet ? '/auth/local' : '/home');
         return;
       }
       if (result is AuthError) {

@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
 import 'package:dony/features/settings/presentation/widgets/pin_confirm_bottom_sheet.dart';
@@ -26,17 +27,29 @@ class MockLocalAuthService extends Mock implements LocalAuthService {}
 /// Builds the screen with [biometricAvailableOverride] and the provided bloc.
 /// When [biometricAvailableOverride] is true a [MockLocalAuthService] is
 /// registered in GetIt so that [PinConfirmBottomSheet] can resolve the service.
+/// [pinConfigured] pilote l'état du verrouillage par code PIN, devenu
+/// facultatif : les tests de garde PIN supposent un code existant, sinon la
+/// confirmation n'a rien à vérifier et l'écran ne la demande plus.
 Widget _wrap({
   required MockAppPreferencesBloc mockBloc,
   required AppPreferencesState state,
   bool biometricAvailable = false,
   MockLocalAuthService? authService,
+  bool pinConfigured = true,
 }) {
   when(() => mockBloc.state).thenReturn(state);
 
+  final pinService = MockLocalAuthService();
+  when(pinService.isPinSet).thenAnswer((_) async => pinConfigured);
+
   return MaterialApp(
-    home: BlocProvider<AppPreferencesBloc>.value(
-      value: mockBloc,
+    home: MultiBlocProvider(
+      providers: [
+        BlocProvider<AppPreferencesBloc>.value(value: mockBloc),
+        BlocProvider<PinStatusCubit>(
+          create: (_) => PinStatusCubit(pinService)..refresh(),
+        ),
+      ],
       child: SecuritySettingsScreen(
         biometricAvailableOverride: biometricAvailable,
       ),
@@ -441,5 +454,77 @@ void main() {
         verifyNever(() => mockBloc.add(const BiometricToggled()));
       },
     );
+  });
+
+  // ── Code PIN facultatif ───────────────────────────────────────────────────
+
+  group('Code PIN à l\'ouverture', () {
+    testWidgets('sans code configuré : interrupteur éteint et pas de « Modifier »',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        mockBloc: mockBloc,
+        state: const AppPreferencesState(preferences: UserPreferencesModel()),
+        pinConfigured: false,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Code PIN à l'ouverture"), findsOneWidget);
+      expect(find.text("Désactivé, l'app s'ouvre sans code"), findsOneWidget);
+      // Rien à modifier tant qu'aucun code n'existe.
+      expect(find.text('Modifier le code PIN'), findsNothing);
+    });
+
+    testWidgets('avec code configuré : « Modifier » apparaît',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        mockBloc: mockBloc,
+        state: const AppPreferencesState(preferences: UserPreferencesModel()),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Demandé à chaque ouverture de dony'), findsOneWidget);
+      expect(find.text('Modifier le code PIN'), findsOneWidget);
+    });
+
+    /// Sans code PIN, `LocalAuthBloc` sort avant d'atteindre la biométrie : le
+    /// verrouillage à l'ouverture ne s'applique pas. L'écran doit le dire au
+    /// lieu de laisser croire l'app protégée.
+    testWidgets("sans code, le verrouillage de l'app renvoie vers le PIN",
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        mockBloc: mockBloc,
+        state: const AppPreferencesState(preferences: UserPreferencesModel()),
+        biometricAvailable: true,
+        pinConfigured: false,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text("Nécessite d'activer le code PIN ci-dessous"),
+        findsOneWidget,
+      );
+    });
+
+    /// Sans code à comparer, la feuille de confirmation n'a rien à vérifier :
+    /// la réclamer enfermerait l'utilisateur dans un réglage indésactivable.
+    testWidgets(
+        'sans code, désactiver la biométrie ne demande aucune confirmation',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        mockBloc: mockBloc,
+        state: const AppPreferencesState(
+          preferences: UserPreferencesModel(biometricEnabled: true),
+        ),
+        biometricAvailable: true,
+        pinConfigured: false,
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Biométrie avant paiement'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PinConfirmBottomSheet), findsNothing);
+      verify(() => mockBloc.add(const BiometricToggled())).called(1);
+    });
   });
 }

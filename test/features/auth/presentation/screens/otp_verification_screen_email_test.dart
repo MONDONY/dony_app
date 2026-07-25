@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -31,7 +32,7 @@ Widget _buildEmail({required AuthBloc bloc, String contact = 'user@example.com'}
             ),
           ),
         ),
-        GoRoute(path: '/auth/local', builder: (_, __) => const Scaffold(body: Text('Local Auth'))),
+        GoRoute(path: '/auth/referral-code', builder: (_, __) => const Scaffold(body: Text('Referral Code'))),
       ],
     ),
   );
@@ -44,6 +45,16 @@ void main() {
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
       getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+    if (!getIt.isRegistered<HiveService>()) {
+      final hive = MockHiveService();
+      final box = MockBox();
+      when(() => hive.userPrefs).thenReturn(box);
+      when(() => box.get(any())).thenReturn(null);
+      when(() => box.get(any(), defaultValue: any(named: 'defaultValue')))
+          .thenAnswer((i) => i.namedArguments[const Symbol('defaultValue')]);
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      getIt.registerSingleton<HiveService>(hive);
     }
   });
 
@@ -170,7 +181,7 @@ void main() {
     expect(find.text('Vérifier'), findsOneWidget);
   });
 
-  testWidgets('mode email — navigue vers /auth/local quand AuthAuthenticated émis', (tester) async {
+  testWidgets('mode email — poursuit vers le parrainage, aucune étape code PIN quand AuthAuthenticated émis', (tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -186,6 +197,6 @@ void main() {
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
     await tester.pumpAndSettle();
 
-    expect(find.text('Local Auth'), findsOneWidget);
+    expect(find.text('Referral Code'), findsOneWidget);
   });
 }

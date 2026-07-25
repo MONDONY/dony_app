@@ -137,6 +137,10 @@ void main() {
       initialState: const ConfigLoaded(0.12),
     );
     when(() => mockLocalAuth.isBiometricAvailable()).thenAnswer((_) async => true);
+    // Ces tests portent sur le repli PIN : ils supposent donc un code
+    // configuré. Depuis que le PIN est facultatif, `requirePaymentAuth` ne
+    // pousse l'écran de saisie que si un code existe.
+    when(mockLocalAuth.isPinSet).thenAnswer((_) async => true);
   });
 
   group('PaymentScreen biometric gate', () {

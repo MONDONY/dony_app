@@ -17,7 +17,6 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
-import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -133,6 +132,7 @@ import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
@@ -187,7 +187,6 @@ const _publicRoutes = {
   '/auth/otp',
   '/auth/email',
   '/auth/email-otp',
-  '/auth/pin-setup',
   '/auth/referral-code',
   '/auth/analytics-consent',
   '/auth/local',
@@ -265,10 +264,6 @@ final appRouter = GoRouter(
           contact: (extra['email'] as String?) ?? '',
         );
       },
-    ),
-    GoRoute(
-      path: '/auth/pin-setup',
-      builder: (context, state) => const PinSetupScreen(),
     ),
     GoRoute(
       path: '/auth/referral-code',
@@ -1008,12 +1003,23 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: 'security',
-          builder: (context, state) => const SecuritySettingsScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<PinStatusCubit>()..refresh(),
+            child: const SecuritySettingsScreen(),
+          ),
           routes: [
             GoRoute(
               path: 'change-pin',
               builder: (context, state) =>
                   ChangePinScreen(authService: getIt<LocalAuthService>()),
+            ),
+            // Première configuration : aucun code actuel à vérifier.
+            GoRoute(
+              path: 'create-pin',
+              builder: (context, state) => ChangePinScreen(
+                authService: getIt<LocalAuthService>(),
+                isCreation: true,
+              ),
             ),
             GoRoute(
               path: 'devices',

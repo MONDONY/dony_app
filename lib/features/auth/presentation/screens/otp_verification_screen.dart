@@ -7,6 +7,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -97,6 +99,24 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
   }
 
+  /// Compte créé : on enchaîne sur la suite de l'inscription.
+  ///
+  /// L'étape « code PIN » a quitté ce parcours, le verrouillage étant devenu un
+  /// réglage facultatif (Réglages › Sécurité). C'est donc ici que l'inscription
+  /// est considérée comme terminée.
+  Future<void> _continueAfterSignup(BuildContext context) async {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(AnalyticsEvents.signupCompleted),
+    );
+    final route = await resolvePostSignupRoute(
+      getIt<AnalyticsService>(),
+      getIt<HiveService>().userPrefs,
+    );
+    if (context.mounted) {
+      context.go(route);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,7 +161,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 AuthRegisterWithEmailRequested(email: state.email),
               );
             } else if (state is AuthAuthenticated) {
-              context.go('/auth/local');
+              unawaited(_continueAfterSignup(context));
             } else if (state is AuthError) {
               ErrorPresenter.show(context, state.error);
             }
@@ -149,7 +169,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             if (state is AuthOtpVerified) {
               context.read<AuthBloc>().add(const AuthRegisterRequested());
             } else if (state is AuthAuthenticated) {
-              context.go('/auth/local');
+              unawaited(_continueAfterSignup(context));
             } else if (state is AuthError) {
               ErrorPresenter.show(context, state.error);
             }

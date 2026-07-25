@@ -138,12 +138,14 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
               context.go('/home');
             }
           } else if (state is LocalAuthNoPinSet) {
+            // Le code PIN est facultatif et désactivé par défaut : sans code
+            // configuré, il n'y a rien à demander. On laisse donc passer au
+            // lieu de renvoyer vers une création forcée, l'utilisateur
+            // choisissant lui-même de l'activer dans Réglages › Sécurité.
             if (widget.verifyMode) {
-              // Aucun PIN configuré : on ne peut pas vérifier ici. On renvoie
-              // un échec ; l'appelant invite l'utilisateur à créer un PIN.
-              context.pop(false);
+              context.pop(true);
             } else {
-              context.go('/auth/pin-setup');
+              context.go('/home');
             }
           } else if (state is LocalAuthLocked) {
             _startLockCountdown(state.secondsLeft);

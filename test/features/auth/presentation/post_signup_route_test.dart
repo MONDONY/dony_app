@@ -1,12 +1,12 @@
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
+import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
-/// Couvre `resolvePostPinSetupRoute` — la décision de routing post-création de
+/// Couvre `resolvePostSignupRoute` — la décision de routing après création de
 /// PIN selon le consentement analytics. Le cas critique : un utilisateur
 /// réinstallé (Hive local vide) qui a déjà consenti côté backend ne doit PAS
 /// être redemandé.
@@ -52,7 +52,7 @@ void main() {
     service = AnalyticsService(hive, backend: backend, remote: remote);
   });
 
-  group('resolvePostPinSetupRoute — réinstall (Hive vide, backend renseigné)', () {
+  group('resolvePostSignupRoute — réinstall (Hive vide, backend renseigné)', () {
     test(
         'backend granted=true → /auth/referral-code, PAS de re-prompt (régression corrigée)',
         () async {
@@ -63,7 +63,7 @@ void main() {
       when(() => remote.fetch()).thenAnswer((_) async => true);
       await service.onConfigured();
 
-      final route = await resolvePostPinSetupRoute(service, box);
+      final route = await resolvePostSignupRoute(service, box);
 
       expect(route, '/auth/referral-code');
       verify(() => remote.fetch()).called(1);
@@ -76,14 +76,14 @@ void main() {
       when(() => remote.fetch()).thenAnswer((_) async => false);
       await service.onConfigured();
 
-      final route = await resolvePostPinSetupRoute(service, box);
+      final route = await resolvePostSignupRoute(service, box);
 
       expect(route, '/auth/referral-code');
       verify(() => remote.fetch()).called(1);
     });
   });
 
-  group('resolvePostPinSetupRoute — jamais répondu (backend null)', () {
+  group('resolvePostSignupRoute — jamais répondu (backend null)', () {
     test('pays RGPD (FR) → /auth/analytics-consent, aucun consentement poussé',
         () async {
       storedConsent = null;
@@ -91,7 +91,7 @@ void main() {
       when(() => remote.fetch()).thenAnswer((_) async => null);
       await service.onConfigured();
 
-      final route = await resolvePostPinSetupRoute(service, box);
+      final route = await resolvePostSignupRoute(service, box);
 
       expect(route, '/auth/analytics-consent');
       verifyNever(() => remote.push(
@@ -107,7 +107,7 @@ void main() {
       when(() => remote.fetch()).thenAnswer((_) async => null);
       await service.onConfigured();
 
-      final route = await resolvePostPinSetupRoute(service, box);
+      final route = await resolvePostSignupRoute(service, box);
 
       // L'écran de consentement est désormais présenté à tout nouvel
       // utilisateur, quel que soit le pays. Aucun consentement auto poussé :
@@ -121,10 +121,10 @@ void main() {
     });
   });
 
-  group('resolvePostPinSetupRoute — pas de sync inutile', () {
+  group('resolvePostSignupRoute — pas de sync inutile', () {
     test('non configuré (analytics off) → /auth/referral-code sans appel backend', () async {
       // onConfigured non appelé → isConfigured=false.
-      final route = await resolvePostPinSetupRoute(service, box);
+      final route = await resolvePostSignupRoute(service, box);
 
       expect(route, '/auth/referral-code');
       verifyNever(() => remote.fetch());
@@ -135,7 +135,7 @@ void main() {
       detectedCountry = 'FR';
       await service.onConfigured();
 
-      final route = await resolvePostPinSetupRoute(service, box);
+      final route = await resolvePostSignupRoute(service, box);
 
       expect(route, '/auth/referral-code');
       verifyNever(() => remote.fetch());
