@@ -1260,7 +1260,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     );
     if (!context.mounted) return;
     if (!authenticated) {
-      _showError('Authentification requise pour effectuer le paiement');
+      _showError('Paiement non confirmé, réessayez');
       return;
     }
 
