@@ -42,9 +42,19 @@ class DonyChip extends StatelessWidget {
     final fg = selected ? cs.primary : cs.onSurfaceVariant;
     final border = selected ? cs.primary : cs.outline;
 
+    // La pastille ne fait que 27 px de haut, trop peu pour un pouce. On
+    // agrandit la zone tappable sans toucher au visuel : `opaque` rend la
+    // marge transparente cliquable, et le `Center` à facteur 1 laisse la
+    // pastille à sa taille d'origine.
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: enabled ? onTap : null,
-      child: Opacity(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+        child: Center(
+          widthFactor: 1,
+          heightFactor: 1,
+          child: Opacity(
         opacity: enabled ? 1.0 : 0.5,
         child: AnimatedContainer(
           duration: DonyDuration.micro,
@@ -80,6 +90,8 @@ class DonyChip extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+            ),
           ),
         ),
       ),

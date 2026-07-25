@@ -74,7 +74,11 @@ class DonyListTile extends StatelessWidget {
                   onTap!();
                 }
               : null,
-          child: Padding(
+          // Une ligne sans sous-titre descendait à 41 px. Le plancher ne
+          // change rien aux lignes déjà plus hautes.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+            child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: DonySpacing.xs,
               vertical: DonySpacing.sm + 2,
@@ -121,6 +125,7 @@ class DonyListTile extends StatelessWidget {
                           )
                         : const SizedBox.shrink()),
               ],
+            ),
             ),
           ),
         ),
