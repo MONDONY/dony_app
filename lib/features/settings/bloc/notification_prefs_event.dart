@@ -6,6 +6,11 @@ abstract class NotificationPrefsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Lit les préférences depuis le serveur, qui fait autorité sur le cache Hive.
+class NotifPrefsSyncRequested extends NotificationPrefsEvent {
+  const NotifPrefsSyncRequested();
+}
+
 class NotifPrefToggled extends NotificationPrefsEvent {
   final String key;
   const NotifPrefToggled(this.key);

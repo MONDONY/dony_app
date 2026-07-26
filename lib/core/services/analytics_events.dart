@@ -191,6 +191,9 @@ abstract final class AnalyticsEvents {
   static const tripMatchingViewed = 'trip_matching_viewed';
   static const packageMatchAlertToggled = 'package_match_alert_toggled';
 
+  // Préférences de notification (Réglages › Notifications)
+  static const notificationPrefToggled = 'notification_pref_toggled';
+
   // Corridor alerts
   static const corridorAlertToggled = 'corridor_alert_toggled';
   static const corridorAlertDeleted = 'corridor_alert_deleted';

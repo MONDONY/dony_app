@@ -380,6 +380,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `reviews_filtered` | MyReviewsBloc._onStarFilterToggled — tap sur une ligne de distribution dans « Mes avis reçus » (propriété `stars`: note 1–5 ou `all` si filtre retiré) |
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
+| `notification_pref_toggled` | NotificationPrefsBloc._onToggled — bascule d'une catégorie de push confirmée par le serveur (propriétés `pref`, `enabled`) ; non émis si l'écriture échoue |
 | `corridor_alert_toggled` | CorridorAlertListBloc._onToggle — actif/pause d'une alerte corridor (propriété `active`) |
 | `corridor_alert_deleted` | CorridorAlertListBloc._onDelete — suppression d'une alerte corridor |
 | `corridor_alert_created` | CorridorAlertFormCubit.submit() — création d'une alerte corridor |
