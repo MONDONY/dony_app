@@ -23,7 +23,6 @@ Widget _wrap({Map<String, bool>? prefs}) {
           'push_trip_reminder': true,
           'push_corridor_alerts': true,
           'push_promo': false,
-          'email_promo': false,
         },
   );
   when(() => mockBloc.state).thenReturn(state);
@@ -60,7 +59,6 @@ MockNotificationPrefsBloc _buildMockBloc([
     'push_trip_reminder': true,
     'push_corridor_alerts': true,
     'push_promo': false,
-    'email_promo': false,
   };
   final state = NotificationPrefsState(
     prefs: prefs,
@@ -120,7 +118,7 @@ void main() {
       );
     });
 
-    testWidgets('affiche la section ACTIVITÉ avec ses 5 tiles', (tester) async {
+    testWidgets('affiche la section ACTIVITÉ avec ses 4 tiles', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
       expect(find.text('ACTIVITÉ'), findsOneWidget);
@@ -128,7 +126,19 @@ void main() {
       expect(find.text('Nouveaux trajets'), findsOneWidget);
       expect(find.text('Discussions de prix'), findsOneWidget);
       expect(find.text('Messages'), findsOneWidget);
-      expect(find.text('Rappel trajet J-1'), findsOneWidget);
+    });
+
+    /// Trois lignes retirées, toutes sans effet possible : « Rappel trajet J-1 »
+    /// ne gouvernait plus rien (aucun scheduler J-1, et « Bon voyage ! » est
+    /// passé in-app), et « Actus dony » n'a jamais eu d'émetteur.
+    testWidgets('les lignes sans effet ne sont plus affichées', (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rappel trajet J-1'), findsNothing);
+      expect(find.text('ACTUS & PROMOTIONS'), findsNothing);
+      expect(find.text('Actus dony (Push)'), findsNothing);
+      expect(find.text('Actus dony (E-mail)'), findsNothing);
     });
 
     // La préférence `push_corridor_alerts` existait côté serveur et gouvernait
@@ -222,21 +232,6 @@ void main() {
           )).called(1);
     });
 
-    testWidgets('affiche la section ACTUS & PROMOTIONS', (tester) async {
-      await tester.pumpWidget(_wrap());
-      await tester.pumpAndSettle();
-
-      await tester.scrollUntilVisible(
-        find.text('ACTUS & PROMOTIONS'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('ACTUS & PROMOTIONS'), findsOneWidget);
-      expect(find.text('Actus dony (Push)'), findsOneWidget);
-      expect(find.text('Actus dony (E-mail)'), findsOneWidget);
-    });
   });
 
   // ─── Synchronisation serveur ───────────────────────────────────────────────

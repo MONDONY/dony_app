@@ -61,8 +61,10 @@ void main() {
       expect(bloc.state.prefs['push_activity_negotiations'], isTrue);
       expect(bloc.state.prefs['push_messages'], isTrue);
       expect(bloc.state.prefs['push_trip_reminder'], isTrue);
+      expect(bloc.state.prefs['push_corridor_alerts'], isTrue);
       expect(bloc.state.prefs['push_promo'], isFalse);
-      expect(bloc.state.prefs['email_promo'], isFalse);
+      // Retiré : aucun champ serveur, aucun émetteur, plus aucune ligne à l'écran.
+      expect(bloc.state.prefs.containsKey('email_promo'), isFalse);
       // Anciennes clés supprimées
       expect(bloc.state.prefs.containsKey('push_payment'), isFalse);
       expect(bloc.state.prefs.containsKey('sms_payment'), isFalse);
@@ -458,14 +460,31 @@ void main() {
       },
     );
 
+    // email_promo n'existe plus : ni champ serveur, ni émetteur, ni ligne à l'écran.
+    // La clé ne doit plus rien déclencher, ni en local ni au serveur.
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'email_promo n\'a pas de contrepartie serveur : aucun PUT',
+      'email_promo a été retiré : la clé n\'est plus reconnue',
       build: build,
       act: (bloc) => bloc.add(const NotifPrefToggled('email_promo')),
+      expect: () => [],
       verify: (_) {
         verifyNever(() => prefsRepo.updatePrefs(any()));
-        verify(() => mockBox.put('notif_email_promo', true)).called(1);
+        verifyNever(() => mockBox.put('notif_email_promo', any()));
       },
+    );
+
+    // Toutes les clés restantes sont synchronisées : il n'existe plus de réglage
+    // local-only, donc plus de bascule qui n'atteindrait jamais le serveur.
+    blocTest<NotificationPrefsBloc, NotificationPrefsState>(
+      'chaque clé de l\'état est poussée au serveur',
+      build: build,
+      act: (bloc) {
+        for (final key in bloc.state.prefs.keys) {
+          bloc.add(NotifPrefToggled(key));
+        }
+      },
+      verify: (bloc) => verify(() => prefsRepo.updatePrefs(any()))
+          .called(bloc.state.prefs.length),
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(

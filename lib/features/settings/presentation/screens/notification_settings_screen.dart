@@ -121,32 +121,17 @@ class _NotificationSettingsScreenState
                     prefs: state.prefs,
                     onToggle: (key) => _toggle(context, key),
                   ),
-                  _buildTile(context,
-                    label: 'Rappel trajet J-1',
-                    subtitle: 'La veille de chaque trajet',
-                    key: 'push_trip_reminder',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xl),
-              // ── Section 3 : Actus & promotions ─────────────────────────
-              const SettingsSectionHeader('ACTUS & PROMOTIONS'),
-              SettingsFlatGroup(
-                children: [
-                  _buildTile(context,
-                    label: 'Actus dony (Push)',
-                    key: 'push_promo',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                  _buildTile(context,
-                    label: 'Actus dony (E-mail)',
-                    key: 'email_promo',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
+                  // Trois lignes retirées ici, toutes sans effet possible :
+                  //
+                  // « Rappel trajet J-1 » ne gouvernait rien. Aucun scheduler J-1 n'existe
+                  // côté serveur ; la préférence ne filtrait en réalité que « Bon voyage ! »,
+                  // désormais in-app, donc plus jamais soumis à une préférence de push.
+                  //
+                  // « Actus dony » (Push et E-mail) n'a aucun émetteur : aucun code n'envoie
+                  // de notification de type PROMO, et `email_promo` n'a même pas de champ
+                  // correspondant côté serveur. La préférence `pushPromo` reste en base et
+                  // dans le contrat, à `false` par défaut : le jour où des actus existeront,
+                  // la ligne reviendra sans que personne ait été abonné à son insu.
                 ],
               ),
             ],

@@ -34,12 +34,10 @@ class NotificationPrefsBloc
   /// le serveur ignorait.
   final NotificationPrefsRepository _prefsRepository;
 
-  /// Défauts locaux : ceux du serveur, plus `email_promo` qui n'a pas de
-  /// contrepartie serveur et reste donc purement local.
-  static const Map<String, bool> _defaults = {
-    ...NotificationPrefsDto.defaults,
-    'email_promo': false,
-  };
+  /// Défauts locaux, strictement ceux du serveur. `email_promo` a été retiré :
+  /// il n'avait ni champ correspondant côté serveur, ni émetteur, ni plus
+  /// aucune ligne dans l'écran.
+  static const Map<String, bool> _defaults = NotificationPrefsDto.defaults;
 
   NotificationPrefsBloc(
     this._box,
