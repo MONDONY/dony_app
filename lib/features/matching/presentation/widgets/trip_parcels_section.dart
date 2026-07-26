@@ -192,7 +192,7 @@ class _ColisRow extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final content = bid.contentCategory ?? bid.description ?? 'Colis';
-    final sender = bid.senderName ?? 'Expéditeur';
+    final sender = bid.resolvedSenderName;
     final weight = _weightLabel;
 
     return Material(
