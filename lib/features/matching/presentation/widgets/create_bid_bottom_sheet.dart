@@ -1155,6 +1155,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           // proposée par le voyageur (sauf types explicitement refusés).
           alwaysAllowCustom: true,
         ).animate().fadeIn(delay: 60.ms),
+        const SizedBox(height: DonySpacing.sm),
+        _ContentHint(
+          text: 'Ces suggestions sont les contenus acceptés par le '
+              'voyageur. Si le contenu de votre colis n\'y figure pas, '
+              'ajoutez-le : ce sera au voyageur de décider s\'il accepte '
+              'votre colis ou non.',
+        ).animate().fadeIn(delay: 90.ms),
         if (refused.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.md),
           const _SectionLabel(label: 'REFUSÉ PAR LE VOYAGEUR'),
@@ -1356,6 +1363,36 @@ class _SectionLabel extends StatelessWidget {
           .textTheme
           .labelMedium
           ?.copyWith(color: cs.onSurfaceVariant),
+    );
+  }
+}
+
+// ── Content hint ───────────────────────────────────────────────────────────────
+
+/// Note explicative sous le sélecteur de contenu : rappelle que les
+/// suggestions sont les contenus acceptés par le voyageur, et qu'un contenu
+/// libre reste possible (soumis à l'accord du voyageur).
+class _ContentHint extends StatelessWidget {
+  const _ContentHint({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DonyIcon('info', size: 14, color: cs.onSurfaceVariant),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            text,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
