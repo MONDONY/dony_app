@@ -101,6 +101,7 @@ class ContentCategoryComboBox extends StatefulWidget {
     this.hint = 'Ajouter un type de contenu…',
     this.keyPrefix = 'content-combo',
     this.singleSelection = false,
+    this.alwaysAllowCustom = false,
   });
 
   final List<ContentCategory> catalog;
@@ -117,6 +118,13 @@ class ContentCategoryComboBox extends StatefulWidget {
   /// Un vrai plafond à N devrait refuser l'ajout et le dire, comme le fait
   /// déjà l'étape 2 du wizard avec sa limite de 5.
   final bool singleSelection;
+
+  /// Propose toujours « Ajouter "X" » dès qu'on tape, même quand des items du
+  /// catalogue matchent encore (tant que la saisie n'est pas un libellé exact
+  /// déjà listé). Sinon la ligne d'ajout n'apparaît qu'une fois la liste
+  /// filtrée vide. Utile là où l'expéditeur doit pouvoir saisir un contenu
+  /// libre hors de la liste proposée (ex: formulaire d'envoi d'un colis).
+  final bool alwaysAllowCustom;
 
   @override
   State<ContentCategoryComboBox> createState() =>
@@ -163,14 +171,32 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     super.didUpdateWidget(oldWidget);
     final incoming = LinkedHashSet<String>.from(widget.selected);
     if (!setEquals(incoming, _selected)) {
+      // Assignation directe : `didUpdateWidget` est déjà dans la phase de
+      // build, le framework reconstruit ce widget juste après — un `setState`
+      // ici serait redondant et interdit.
       _selected = incoming;
-      if (mounted) {
-        setState(() {});
-      }
-      _overlayEntry?.markNeedsBuild();
+      _scheduleOverlayRebuild();
     } else if (!listEquals(widget.catalog, oldWidget.catalog)) {
-      _overlayEntry?.markNeedsBuild();
+      _scheduleOverlayRebuild();
     }
+  }
+
+  /// Reconstruit l'overlay hors de la phase de build courante.
+  ///
+  /// `markNeedsBuild()` sur l'`OverlayEntry` pendant que le parent se
+  /// reconstruit (cas d'un rebuild déclenché par `selected` qui change alors
+  /// que la liste est ouverte) lève « setState/markNeedsBuild called during
+  /// build ». On le repousse au post-frame.
+  void _scheduleOverlayRebuild() {
+    final entry = _overlayEntry;
+    if (entry == null) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_overlayEntry == entry) {
+        entry.markNeedsBuild();
+      }
+    });
   }
 
   @override
@@ -211,8 +237,6 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
         .where((c) => c.label.toLowerCase().contains(q))
         .toList();
   }
-
-  bool get _showAddRow => _query.trim().isNotEmpty && _filteredCatalog.isEmpty;
 
   void _emit() => widget.onChanged(_selected.toList());
 
@@ -310,11 +334,22 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 
   Widget _buildOverlay(BuildContext context) {
     final width = _fieldWidth;
-    // Une seule évaluation : `_showAddRow` reparcourait `_filteredCatalog`,
-    // donc les deux lectures pouvaient diverger.
+    // Une seule évaluation du catalogue filtré, réutilisée pour la liste et la
+    // décision d'afficher la ligne « Ajouter ».
     final filtered = _filteredCatalog;
     final query = _controller.text.trim();
-    final showAddRow = query.isNotEmpty && filtered.isEmpty;
+    // La saisie est-elle déjà un libellé exact du catalogue ? Si oui, pas de
+    // ligne d'ajout (l'item existe déjà, sélectionnable directement).
+    final hasExactMatch = widget.catalog.any(
+      (c) => c.label.toLowerCase() == query.toLowerCase(),
+    );
+    // Par défaut : ligne d'ajout seulement quand la liste filtrée est vide.
+    // En mode [alwaysAllowCustom] : dès qu'on tape un contenu hors catalogue,
+    // même si des items matchent encore — l'expéditeur peut toujours saisir
+    // un élément libre.
+    final showAddRow = query.isNotEmpty &&
+        !hasExactMatch &&
+        (filtered.isEmpty || widget.alwaysAllowCustom);
     final maxHeight = _dropdownMaxHeight(context);
 
     return Stack(
@@ -468,25 +503,27 @@ class _ComboDropdown extends StatelessWidget {
           child: SingleChildScrollView(
             key: Key('$keyPrefix-dropdown'),
             padding: const EdgeInsets.all(DonySpacing.xs),
+            // Items du catalogue filtré PUIS, le cas échéant, la ligne
+            // « Ajouter "X" ». Liste unifiée : quand la liste est vide seule
+            // la ligne d'ajout reste, quand elle ne l'est pas l'ajout se pose
+            // sous les correspondances (mode saisie libre).
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: showAddRow
-                  ? [
-                      _AddRow(
-                        key: Key('$keyPrefix-item-add'),
-                        query: query,
-                        onTap: onAddCustom,
-                      ),
-                    ]
-                  : [
-                      for (final category in catalog)
-                        _ComboItem(
-                          key: Key('$keyPrefix-item-${category.label}'),
-                          category: category,
-                          selected: selected.contains(category.label),
-                          onTap: () => onToggle(category.label),
-                        ),
-                    ],
+              children: [
+                for (final category in catalog)
+                  _ComboItem(
+                    key: Key('$keyPrefix-item-${category.label}'),
+                    category: category,
+                    selected: selected.contains(category.label),
+                    onTap: () => onToggle(category.label),
+                  ),
+                if (showAddRow)
+                  _AddRow(
+                    key: Key('$keyPrefix-item-add'),
+                    query: query,
+                    onTap: onAddCustom,
+                  ),
+              ],
             ),
           ),
         ),

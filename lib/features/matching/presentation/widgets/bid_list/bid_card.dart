@@ -54,6 +54,16 @@ class BidCard extends StatelessWidget {
         ? '${((bid.weightKg ?? 0) * bid.pricePerKg!).toStringAsFixed(0)} €'
         : '-';
     final content = bid.contentCategory ?? bid.description;
+    // Catégories déclarées, découpées : on n'affiche que la première + un
+    // « +N » pour le reste (le détail liste tout). Évite le débordement de la
+    // ligne quand plusieurs catégories sont cochées.
+    final categories =
+        bid.contentCategory
+            ?.split(',')
+            .map((c) => c.trim())
+            .where((c) => c.isNotEmpty)
+            .toList() ??
+        const <String>[];
     final hasTracking =
         bid.trackingNumber != null && bid.trackingNumber!.isNotEmpty;
 
@@ -137,8 +147,12 @@ class BidCard extends StatelessWidget {
                         ? 'Forfait'
                         : '-',
                   ),
-                  if (content != null && content.isNotEmpty)
-                    _MetaPill(iconAsset: 'package', label: content),
+                  if (categories.isNotEmpty) ...[
+                    _MetaPill(iconAsset: 'package', label: categories.first),
+                    if (categories.length > 1)
+                      _MetaPill(label: '+${categories.length - 1}'),
+                  ] else if (content != null && content.isNotEmpty)
+                    _ContentDescriptionPill(label: content),
                 ],
               ),
               const SizedBox(height: DonySpacing.md),
@@ -215,10 +229,10 @@ class _HighlightedText extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _MetaPill extends StatelessWidget {
-  final String iconAsset;
+  final String? iconAsset;
   final String label;
 
-  const _MetaPill({required this.label, required this.iconAsset});
+  const _MetaPill({required this.label, this.iconAsset});
 
   @override
   Widget build(BuildContext context) {
@@ -236,13 +250,59 @@ class _MetaPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon(iconAsset, size: 13, color: cs.onSurfaceVariant),
-          const SizedBox(width: DonySpacing.xs),
+          if (iconAsset != null) ...[
+            DonyIcon(iconAsset!, size: 13, color: cs.onSurfaceVariant),
+            const SizedBox(width: DonySpacing.xs),
+          ],
           Text(
             label,
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _ContentDescriptionPill — pastille contenu quand le bid n'a pas de catégories
+// mais une description libre : bornée en largeur + ellipsis, jamais d'overflow.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ContentDescriptionPill extends StatelessWidget {
+  final String label;
+  const _ContentDescriptionPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 240),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm,
+          vertical: DonySpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DonyIcon('package', size: 13, color: cs.onSurfaceVariant),
+            const SizedBox(width: DonySpacing.xs),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
