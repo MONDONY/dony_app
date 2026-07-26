@@ -20,12 +20,15 @@ class _NotificationSettingsScreenState
   @override
   void initState() {
     super.initState();
-    // La cloche « nouveaux colis compatibles » vit côté serveur : son état
-    // n'est connu qu'après lecture, contrairement aux préférences Hive dont le
-    // BLoC dispose dès sa construction.
-    context
-        .read<NotificationPrefsBloc>()
-        .add(const NotifPackageMatchAlertLoadRequested());
+    // Les réglages Hive s'affichent dès la construction du BLoC, mais c'est le
+    // serveur qui filtre réellement les push : on le relit à l'ouverture pour
+    // que l'écran montre ce qui est appliqué, et non un cache qui aurait pu
+    // diverger (réinstallation, second appareil).
+    final bloc = context.read<NotificationPrefsBloc>();
+    bloc.add(const NotifPrefsSyncRequested());
+    // La cloche « nouveaux colis compatibles » vit sur un autre endpoint : son
+    // état n'est connu qu'après lecture.
+    bloc.add(const NotifPackageMatchAlertLoadRequested());
   }
 
   void _toggle(BuildContext context, String key) {
@@ -47,6 +50,10 @@ class _NotificationSettingsScreenState
               DonySpacing.huge,
             ),
             children: [
+              if (state.errorMessage != null) ...[
+                _SyncErrorBanner(message: state.errorMessage!),
+                const SizedBox(height: DonySpacing.lg),
+              ],
               // ── Section 1 : Protections critiques ──────────────────────
               SettingsSectionHeader(
                 'PROTECTIONS CRITIQUES',
@@ -91,6 +98,15 @@ class _NotificationSettingsScreenState
                   // Cloche rapatriée de l'écran « Colis sur mes trajets »,
                   // supprimé avec sa route : le réglage reste, son écran non.
                   _buildPackageMatchTile(context, state.packageMatchAlert),
+                  // Préférence serveur qui existait déjà et gouvernait les alertes
+                  // corridor, sans qu'aucune tuile ne permette de l'atteindre.
+                  _buildTile(context,
+                    label: 'Nouveaux trajets',
+                    subtitle: 'Alertes corridor et voyageurs suivis',
+                    key: 'push_corridor_alerts',
+                    prefs: state.prefs,
+                    onToggle: (key) => _toggle(context, key),
+                  ),
                   _buildTile(context,
                     label: 'Discussions de prix',
                     subtitle: 'Propositions, contre-offres, paiements…',
@@ -105,32 +121,17 @@ class _NotificationSettingsScreenState
                     prefs: state.prefs,
                     onToggle: (key) => _toggle(context, key),
                   ),
-                  _buildTile(context,
-                    label: 'Rappel trajet J-1',
-                    subtitle: 'La veille de chaque trajet',
-                    key: 'push_trip_reminder',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xl),
-              // ── Section 3 : Actus & promotions ─────────────────────────
-              const SettingsSectionHeader('ACTUS & PROMOTIONS'),
-              SettingsFlatGroup(
-                children: [
-                  _buildTile(context,
-                    label: 'Actus dony (Push)',
-                    key: 'push_promo',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                  _buildTile(context,
-                    label: 'Actus dony (E-mail)',
-                    key: 'email_promo',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
+                  // Trois lignes retirées ici, toutes sans effet possible :
+                  //
+                  // « Rappel trajet J-1 » ne gouvernait rien. Aucun scheduler J-1 n'existe
+                  // côté serveur ; la préférence ne filtrait en réalité que « Bon voyage ! »,
+                  // désormais in-app, donc plus jamais soumis à une préférence de push.
+                  //
+                  // « Actus dony » (Push et E-mail) n'a aucun émetteur : aucun code n'envoie
+                  // de notification de type PROMO, et `email_promo` n'a même pas de champ
+                  // correspondant côté serveur. La préférence `pushPromo` reste en base et
+                  // dans le contrat, à `false` par défaut : le jour où des actus existeront,
+                  // la ligne reviendra sans que personne ait été abonné à son insu.
                 ],
               ),
             ],
@@ -250,6 +251,43 @@ class _NotificationSettingsScreenState
         child: Switch(value: isOn, onChanged: (_) {}),
       ),
       onTap: () => onToggle(key),
+    );
+  }
+}
+
+/// Affiché quand le serveur a refusé une bascule : celle-ci a été annulée, donc
+/// l'interrupteur au-dessus montre bien l'état réellement appliqué.
+class _SyncErrorBanner extends StatelessWidget {
+  const _SyncErrorBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.errorContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      child: Row(
+        children: [
+          DonyIcon('wifi-off', color: cs.onErrorContainer, size: 18),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: tt.bodySmall?.copyWith(color: cs.onErrorContainer),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

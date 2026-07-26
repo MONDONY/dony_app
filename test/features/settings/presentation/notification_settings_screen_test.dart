@@ -21,8 +21,8 @@ Widget _wrap({Map<String, bool>? prefs}) {
           'push_activity_negotiations': true,
           'push_messages': true,
           'push_trip_reminder': true,
+          'push_corridor_alerts': true,
           'push_promo': false,
-          'email_promo': false,
         },
   );
   when(() => mockBloc.state).thenReturn(state);
@@ -49,6 +49,7 @@ Widget _wrapWithBloc(MockNotificationPrefsBloc mockBloc) {
 MockNotificationPrefsBloc _buildMockBloc([
   Map<String, bool>? customPrefs,
   bool? packageMatchAlert,
+  String? errorMessage,
 ]) {
   final mockBloc = MockNotificationPrefsBloc();
   final prefs = customPrefs ?? {
@@ -56,12 +57,13 @@ MockNotificationPrefsBloc _buildMockBloc([
     'push_activity_negotiations': true,
     'push_messages': true,
     'push_trip_reminder': true,
+    'push_corridor_alerts': true,
     'push_promo': false,
-    'email_promo': false,
   };
   final state = NotificationPrefsState(
     prefs: prefs,
     packageMatchAlert: packageMatchAlert,
+    errorMessage: errorMessage,
   );
   when(() => mockBloc.state).thenReturn(state);
   whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
@@ -116,14 +118,53 @@ void main() {
       );
     });
 
-    testWidgets('affiche la section ACTIVITÉ avec 4 tiles', (tester) async {
+    testWidgets('affiche la section ACTIVITÉ avec ses 4 tiles', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
       expect(find.text('ACTIVITÉ'), findsOneWidget);
       expect(find.text('Matchs & enchères'), findsOneWidget);
+      expect(find.text('Nouveaux trajets'), findsOneWidget);
       expect(find.text('Discussions de prix'), findsOneWidget);
       expect(find.text('Messages'), findsOneWidget);
-      expect(find.text('Rappel trajet J-1'), findsOneWidget);
+    });
+
+    /// Trois lignes retirées, toutes sans effet possible : « Rappel trajet J-1 »
+    /// ne gouvernait plus rien (aucun scheduler J-1, et « Bon voyage ! » est
+    /// passé in-app), et « Actus dony » n'a jamais eu d'émetteur.
+    testWidgets('les lignes sans effet ne sont plus affichées', (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rappel trajet J-1'), findsNothing);
+      expect(find.text('ACTUS & PROMOTIONS'), findsNothing);
+      expect(find.text('Actus dony (Push)'), findsNothing);
+      expect(find.text('Actus dony (E-mail)'), findsNothing);
+    });
+
+    // La préférence `push_corridor_alerts` existait côté serveur et gouvernait
+    // déjà les alertes corridor, mais aucune tuile ne permettait de l'atteindre.
+    testWidgets('tap Nouveaux trajets dispatche NotifPrefToggled(push_corridor_alerts)',
+        (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Nouveaux trajets'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Nouveaux trajets'));
+      await tester.pump();
+
+      verify(() => mockBloc.add(
+            any(that: isA<NotifPrefToggled>()
+                .having((e) => e.key, 'key', 'push_corridor_alerts')),
+          )).called(1);
     });
 
     testWidgets('tap Matchs & enchères dispatche NotifPrefToggled(push_activity_bids)',
@@ -191,20 +232,53 @@ void main() {
           )).called(1);
     });
 
-    testWidgets('affiche la section ACTUS & PROMOTIONS', (tester) async {
-      await tester.pumpWidget(_wrap());
+  });
+
+  // ─── Synchronisation serveur ───────────────────────────────────────────────
+  group('NotificationSettingsScreen — synchronisation serveur', () {
+    testWidgets('l\'écran relit les préférences du serveur à l\'ouverture',
+        (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(
-        find.text('ACTUS & PROMOTIONS'),
-        300,
-        scrollable: find.byType(Scrollable).first,
+      // Sans cette lecture, l'écran afficherait le cache Hive, qui peut diverger
+      // de ce que le serveur applique réellement (réinstallation, 2e appareil).
+      verify(
+        () => mockBloc.add(any(that: isA<NotifPrefsSyncRequested>())),
+      ).called(1);
+    });
+
+    testWidgets('un échec d\'écriture affiche un bandeau', (tester) async {
+      final mockBloc = _buildMockBloc(
+        null,
+        null,
+        'Impossible de synchroniser. Réessayez.',
       );
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('ACTUS & PROMOTIONS'), findsOneWidget);
-      expect(find.text('Actus dony (Push)'), findsOneWidget);
-      expect(find.text('Actus dony (E-mail)'), findsOneWidget);
+      expect(
+        find.text('Impossible de synchroniser. Réessayez.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sans erreur, aucun bandeau', (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Impossible de synchroniser'),
+        findsNothing,
+      );
     });
   });
 

@@ -54,9 +54,11 @@ import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/datasources/blocked_users_datasource.dart';
 import 'package:dony/features/settings/data/datasources/business_prefs_remote_datasource.dart';
+import 'package:dony/features/settings/data/datasources/notification_prefs_remote_datasource.dart';
 import 'package:dony/features/settings/data/datasources/privacy_settings_datasource.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
+import 'package:dony/features/settings/data/repositories/notification_prefs_repository.dart';
 import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/settings/data/connected_devices_datasource.dart';
 import 'package:dony/features/settings/data/connected_devices_repository.dart';
@@ -524,11 +526,20 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
 
   // Settings — Notification preferences
+  getIt.registerLazySingleton<NotificationPrefsRemoteDatasource>(
+    () => NotificationPrefsRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationPrefsRepository>(
+    () => NotificationPrefsRepository(
+      getIt<NotificationPrefsRemoteDatasource>(),
+    ),
+  );
   getIt.registerFactory<NotificationPrefsBloc>(
     () => NotificationPrefsBloc(
       getIt<HiveService>().userPrefs,
       getIt<PackageRequestRepository>(),
       getIt<AnalyticsService>(),
+      getIt<NotificationPrefsRepository>(),
     ),
   );
 
