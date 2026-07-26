@@ -76,23 +76,26 @@ class TravelerProfile {
 
   Map<String, dynamic> toJson() => _$TravelerProfileToJson(this);
 
-  /// Nom à afficher : displayName en priorité, puis phoneNumber si nom null, puis 'Voyageur'.
+  /// Nom à afficher.
+  ///
+  /// Le serveur renvoie désormais toujours un [displayName] non vide : « Prénom N. » ou, à
+  /// défaut de prénom, le username du compte. Le repli sur 'Voyageur' ne couvre plus qu'une
+  /// réponse tronquée ou un cache antérieur.
+  ///
+  /// Le numéro de téléphone n'est plus un repli : il n'a jamais figuré dans
+  /// TravelerProfileDto côté serveur, et l'afficher comme nom contredisait le réglage
+  /// « Masquer mon numéro ».
   String get resolvedName {
     if (displayName != null && displayName!.isNotEmpty) return displayName!;
-    if (phoneNumber != null && phoneNumber!.isNotEmpty) return phoneNumber!;
     return 'Voyageur';
   }
 
-  /// Initiales : basées sur le nom si disponible, sinon sur le numéro, sinon '?'.
+  /// Initiales, dérivées du seul nom affiché.
   String get resolvedInitials {
     if (displayName != null && displayName!.isNotEmpty) {
       final parts = displayName!.trim().split(' ');
       if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
       return displayName![0].toUpperCase();
-    }
-    if (phoneNumber != null && phoneNumber!.isNotEmpty) {
-      final digits = phoneNumber!.replaceAll(RegExp(r'[^\d]'), '');
-      return digits.isNotEmpty ? digits[0] : '?';
     }
     return '?';
   }

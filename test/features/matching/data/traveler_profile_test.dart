@@ -12,23 +12,35 @@ void main() {
       expect(p.resolvedName, 'Ibrahima Diallo');
     });
 
-    test('returns phoneNumber when displayName is null', () {
+    // Le numéro n'est plus un repli : il n'a jamais figuré dans TravelerProfileDto côté
+    // serveur, et l'afficher comme nom contredisait « Masquer mon numéro ». Depuis la
+    // migration V183 le serveur renvoie toujours un displayName (username à défaut de prénom).
+    test('ignore le numéro quand displayName est null', () {
       const p = TravelerProfile(
         id: 't2',
         phoneNumber: '+33612345678',
         kiloPro: false,
       );
-      expect(p.resolvedName, '+33612345678');
+      expect(p.resolvedName, 'Voyageur');
     });
 
-    test('returns phoneNumber when displayName is empty string', () {
+    test('ignore le numéro quand displayName est vide', () {
       const p = TravelerProfile(
         id: 't3',
         displayName: '',
         phoneNumber: '+33699999999',
         kiloPro: false,
       );
-      expect(p.resolvedName, '+33699999999');
+      expect(p.resolvedName, 'Voyageur');
+    });
+
+    test('affiche le username renvoyé comme displayName', () {
+      const p = TravelerProfile(
+        id: 't6',
+        displayName: 'user1785153600',
+        kiloPro: false,
+      );
+      expect(p.resolvedName, 'user1785153600');
     });
 
     test('returns "Voyageur" when both displayName and phoneNumber are null', () {
@@ -66,13 +78,13 @@ void main() {
       expect(p.resolvedInitials, 'I');
     });
 
-    test('returns first digit of phone when displayName is null', () {
+    test('ignore le numéro quand displayName est null', () {
       const p = TravelerProfile(
         id: 't3',
         phoneNumber: '+33612345678',
         kiloPro: false,
       );
-      expect(p.resolvedInitials, '3');
+      expect(p.resolvedInitials, '?');
     });
 
     test('returns "?" when both are null', () {
@@ -88,6 +100,15 @@ void main() {
         kiloPro: false,
       );
       expect(p.resolvedInitials, '?');
+    });
+
+    test('initiale du username quand il tient lieu de displayName', () {
+      const p = TravelerProfile(
+        id: 't7',
+        displayName: 'user1785153600',
+        kiloPro: false,
+      );
+      expect(p.resolvedInitials, 'U');
     });
 
     test('initials are uppercase', () {
