@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:dony/core/design/accessibility_scope.dart';
 import 'package:dony/core/design/theme/a11y_theme_options.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
@@ -9,33 +7,7 @@ import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Luminance relative WCAG 2.1, formule 1.4.3.
-double _luminance(Color c) {
-  double channel(double v) =>
-      v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
-  return 0.2126 * channel(c.r) +
-      0.7152 * channel(c.g) +
-      0.0722 * channel(c.b);
-}
-
-/// Ratio de contraste entre deux couleurs opaques.
-double contrastRatio(Color a, Color b) {
-  final la = _luminance(a);
-  final lb = _luminance(b);
-  final hi = math.max(la, lb);
-  final lo = math.min(la, lb);
-  return (hi + 0.05) / (lo + 0.05);
-}
-
-/// Échoue avec le ratio mesuré, sinon un écart de 0.01 se lit « false ».
-void expectContrast(Color fg, Color bg, double min, String label) {
-  final r = contrastRatio(fg, bg);
-  expect(
-    r,
-    greaterThanOrEqualTo(min),
-    reason: '$label : ${r.toStringAsFixed(2)}:1, minimum requis $min:1',
-  );
-}
+import 'contrast_helpers.dart';
 
 void main() {
   group('contrastRatio', () {

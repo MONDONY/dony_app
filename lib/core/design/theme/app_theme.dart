@@ -48,7 +48,11 @@ abstract final class AppTheme {
           : (isLight ? DonyColors.borderDefault : DonyColors.neutralDark300),
       outlineVariant: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
       error: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
-      onError: DonyColors.textOnBrand,
+      // Le rouge d'erreur du thème sombre est clair : un libellé blanc dessus
+      // ne fait que 3.55:1. Le noir y monte à 5.91:1. Contrairement à
+      // `onPrimary`, ce rôle n'est posé que sur des aplats d'erreur, jamais
+      // sur un dégradé, donc la bascule est sans risque.
+      onError: isLight ? DonyColors.textOnBrand : DonyColors.onBrandHcDark,
       errorContainer: isLight ? DonyColors.danger50 : DonyColors.dangerDark50,
       onErrorContainer: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
       shadow: isLight ? DonyColors.shadow : DonyColors.shadowDark,
