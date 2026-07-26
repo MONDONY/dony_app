@@ -132,9 +132,8 @@ Widget _buildHarness(AnnouncementModel announcement) {
       // lib/app/router.dart.
       GoRoute(
         path: '/bids/new',
-        builder: (_, state) => CreateBidScreen(
-          announcement: state.extra as AnnouncementModel,
-        ),
+        builder: (_, state) =>
+            CreateBidScreen(announcement: state.extra as AnnouncementModel),
       ),
       GoRoute(
         path: '/bids/:id',
@@ -168,7 +167,14 @@ Future<void> _openSheet(
 }
 
 Future<void> _enableSubmitButton(WidgetTester tester) async {
-  await tester.tap(find.text('Vêtements & tissus'));
+  await tester.tap(find.byKey(const Key('bid-content-field')));
+  await tester.pumpAndSettle();
+  await tester.tap(
+    find.byKey(const Key('bid-content-item-Vêtements & tissus')),
+  );
+  await tester.pumpAndSettle();
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
   await tester.pump();
   await tester.tap(find.byType(Checkbox).first);
   await tester.pump();
@@ -197,15 +203,17 @@ void main() {
     await initializeDateFormatting('fr');
     registerFallbackValue(BidInitial());
     registerFallbackValue(const PaymentInitial());
-    registerFallbackValue(BidCheckoutRequested(
-      announcementId: '',
-      weightKg: 0,
-      declaredValueEur: 0,
-      description: '',
-      contentCategory: '',
-      recipientName: '',
-      recipientPhone: '',
-    ));
+    registerFallbackValue(
+      BidCheckoutRequested(
+        announcementId: '',
+        weightKg: 0,
+        declaredValueEur: 0,
+        description: '',
+        contentCategory: '',
+        recipientName: '',
+        recipientPhone: '',
+      ),
+    );
     registerFallbackValue(_FakeRecipientEvent());
 
     if (!getIt.isRegistered<BidBloc>()) {
@@ -233,52 +241,55 @@ void main() {
   setUp(() {
     _currentBidBloc = _MockBidBloc();
     when(() => _currentBidBloc.state).thenReturn(BidInitial());
-    when(() => _currentBidBloc.stream)
-        .thenAnswer((_) => const Stream.empty());
+    when(() => _currentBidBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => _currentBidBloc.close()).thenAnswer((_) async {});
 
     _currentPaymentBloc = _MockPaymentBloc();
     when(() => _currentPaymentBloc.state).thenReturn(const PaymentInitial());
-    when(() => _currentPaymentBloc.stream)
-        .thenAnswer((_) => const Stream.empty());
+    when(
+      () => _currentPaymentBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => _currentPaymentBloc.close()).thenAnswer((_) async {});
 
     _currentWalletBloc = _MockWalletBloc();
     when(() => _currentWalletBloc.state).thenReturn(WalletInitial());
-    when(() => _currentWalletBloc.stream)
-        .thenAnswer((_) => const Stream.empty());
+    when(
+      () => _currentWalletBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => _currentWalletBloc.close()).thenAnswer((_) async {});
 
     _currentPhotosCubit = _MockBidPhotosCubit();
     when(() => _currentPhotosCubit.state).thenReturn(const <BidPhotoUpload>[]);
-    when(() => _currentPhotosCubit.stream)
-        .thenAnswer((_) => const Stream.empty());
+    when(
+      () => _currentPhotosCubit.stream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => _currentPhotosCubit.close()).thenAnswer((_) async {});
     when(() => _currentPhotosCubit.readyKeys).thenReturn(const <String>[]);
 
     _currentRecipientBloc = _MockRecipientBloc();
     when(() => _currentRecipientBloc.state).thenReturn(const RecipientState());
-    when(() => _currentRecipientBloc.stream)
-        .thenAnswer((_) => const Stream.empty());
+    when(
+      () => _currentRecipientBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => _currentRecipientBloc.close()).thenAnswer((_) async {});
     when(() => _currentRecipientBloc.add(any())).thenReturn(null);
   });
 
   group('Rendu — RecipientSection', () {
     testWidgets(
-        'affiche le bouton "Choisir un destinataire" et les 2 champs inchangés',
-        (tester) async {
-      await _openSheet(tester, _announcement());
+      'affiche le bouton "Choisir un destinataire" et les 2 champs inchangés',
+      (tester) async {
+        await _openSheet(tester, _announcement());
 
-      expect(find.text('Choisir un destinataire'), findsOneWidget);
-      expect(find.text('Prénom et nom du destinataire'), findsOneWidget);
-      expect(find.text('Téléphone du destinataire'), findsOneWidget);
-    });
+        expect(find.text('Choisir un destinataire'), findsOneWidget);
+        expect(find.text('Prénom et nom du destinataire'), findsOneWidget);
+        expect(find.text('Téléphone du destinataire'), findsOneWidget);
+      },
+    );
   });
 
   group('Sauvegarde destinataire — mode direct (Stripe seul)', () {
-    testWidgets(
-        'soumission valide → RecipientCreated dispatché avec '
+    testWidgets('soumission valide → RecipientCreated dispatché avec '
         'fallbackCity/fallbackCountry de l\'annonce', (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: false));
 
@@ -305,17 +316,17 @@ void main() {
       expect(createdEvents.single.country, 'CI');
 
       // The existing submit flow still happens, unaffected.
-      verify(() => _currentBidBloc
-              .add(any(that: isA<BidCheckoutRequested>())))
-          .called(1);
+      verify(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      ).called(1);
     });
   });
 
   group('Sauvegarde destinataire — étape paiement (cash disponible)', () {
-    testWidgets(
-        'annonce avec cash → soumission valide bascule vers le picker '
-        'ET sauvegarde quand même le destinataire (widget déjà démonté)',
-        (tester) async {
+    testWidgets('annonce avec cash → soumission valide bascule vers le picker '
+        'ET sauvegarde quand même le destinataire (widget déjà démonté)', (
+      tester,
+    ) async {
       await _openSheet(tester, _announcement(cashEnabled: true));
 
       await _enableSubmitButton(tester);
@@ -343,14 +354,15 @@ void main() {
       // The BidBloc submission itself hasn't fired yet at this point (user
       // still needs to confirm a payment method on the picker step).
       verifyNever(
-          () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())));
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      );
     });
   });
 
   group('Pas de sauvegarde sur échec de validation', () {
-    testWidgets(
-        'nom destinataire vide → aucun dispatch RecipientCreated',
-        (tester) async {
+    testWidgets('nom destinataire vide → aucun dispatch RecipientCreated', (
+      tester,
+    ) async {
       await _openSheet(tester, _announcement());
 
       await _enableSubmitButton(tester);
@@ -365,11 +377,13 @@ void main() {
 
       expect(find.text('Nom du destinataire obligatoire'), findsOneWidget);
       verifyNever(
-          () => _currentRecipientBloc.add(any(that: isA<RecipientCreated>())));
+        () => _currentRecipientBloc.add(any(that: isA<RecipientCreated>())),
+      );
     });
 
-    testWidgets('BidError après soumission → pas de nouveau dispatch',
-        (tester) async {
+    testWidgets('BidError après soumission → pas de nouveau dispatch', (
+      tester,
+    ) async {
       final ctrl = StreamController<BidState>.broadcast();
       addTearDown(ctrl.close);
       when(() => _currentBidBloc.stream).thenAnswer((_) => ctrl.stream);
@@ -390,7 +404,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       verifyNever(
-          () => _currentRecipientBloc.add(any(that: isA<RecipientCreated>())));
+        () => _currentRecipientBloc.add(any(that: isA<RecipientCreated>())),
+      );
     });
   });
 }

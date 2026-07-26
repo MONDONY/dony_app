@@ -186,7 +186,7 @@ void main() {
 
   group('Content step driven by announcement', () {
     testWidgets(
-        'shows accepted category chip and refused chip with REFUSÉ label',
+        'le combobox propose les types acceptés, la section refusé reste visible',
         (tester) async {
       await openSheet(
         tester,
@@ -196,15 +196,21 @@ void main() {
         ),
       );
 
-      // Accepted category chip is present.
-      expect(find.text('Vêtements'), findsOneWidget);
-
-      // Refused section label and refused chip are present.
+      // La section « refusé » est affichée sans ouvrir le combobox.
       expect(find.text('REFUSÉ PAR LE VOYAGEUR'), findsOneWidget);
       expect(find.text('Hi-fi'), findsOneWidget);
+
+      // Ouvrir le combobox → le type accepté apparaît dans la liste déroulante.
+      await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+      await tester.tap(find.byKey(const Key('bid-content-field')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('bid-content-item-Vêtements')),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('saisie inline + bouton + ajoute un élément custom',
+    testWidgets('ajout libre via le combobox ajoute un tag de contenu',
         (tester) async {
       await openSheet(
         tester,
@@ -214,18 +220,77 @@ void main() {
         ),
       );
 
-      // Saisir dans l'input inline puis taper le bouton + (écran plein
-      // scrollable depuis PR #126 — scroller jusqu'à la rangée d'ajout).
-      await tester.ensureVisible(find.byKey(const Key('custom-item-input')));
+      // Ouvrir le combobox, taper un type hors catalogue → ligne « Ajouter ».
+      await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+      await tester.tap(find.byKey(const Key('bid-content-field')));
       await tester.pumpAndSettle();
       await tester.enterText(
-          find.byKey(const Key('custom-item-input')), 'Épices maison');
-      await tester.tap(find.byKey(const Key('add-item-btn')));
+        find.byKey(const Key('bid-content-field')),
+        'Épices maison',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('bid-content-item-add')));
       await tester.pumpAndSettle();
 
-      // Le chip custom apparaît ; aucun modal.
-      expect(find.text('Épices maison'), findsOneWidget);
-      expect(find.text('Ajouter un élément'), findsNothing);
+      // Le tag custom apparaît au-dessus du champ.
+      expect(
+        find.byKey(const Key('bid-content-tag-Épices maison')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        "la ligne « Ajouter » reste proposée même quand un item du catalogue "
+        'matche encore (saisie libre)', (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          acceptedContentTypes: ['Vêtements'],
+          refusedTypes: ['Hi-fi'],
+        ),
+      );
+
+      await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+      await tester.tap(find.byKey(const Key('bid-content-field')));
+      await tester.pumpAndSettle();
+      // « Vêt » matche encore l'item accepté « Vêtements »…
+      await tester.enterText(
+        find.byKey(const Key('bid-content-field')),
+        'Vêt',
+      );
+      await tester.pumpAndSettle();
+
+      // …mais la ligne d'ajout est tout de même proposée (contenu libre).
+      expect(find.byKey(const Key('bid-content-item-Vêtements')), findsOneWidget);
+      expect(find.byKey(const Key('bid-content-item-add')), findsOneWidget);
+    });
+
+    testWidgets('un type refusé saisi librement est écarté (pas de tag)',
+        (tester) async {
+      await openSheet(
+        tester,
+        _announcement(
+          acceptedContentTypes: ['Vêtements'],
+          refusedTypes: ['Hi-fi'],
+        ),
+      );
+
+      await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+      await tester.tap(find.byKey(const Key('bid-content-field')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('bid-content-field')),
+        'Hi-fi',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('bid-content-item-add')));
+      await tester.pumpAndSettle();
+
+      // Aucun tag « Hi-fi » : le contenu refusé par le voyageur est bloqué.
+      expect(
+        find.byKey(const Key('bid-content-tag-Hi-fi')),
+        findsNothing,
+      );
     });
   });
 }

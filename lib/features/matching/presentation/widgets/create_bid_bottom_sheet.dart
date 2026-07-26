@@ -4,6 +4,7 @@ import 'package:dony/features/payments/presentation/widgets/payment_method_names
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -118,13 +119,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _recipientSection = RecipientSectionController();
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
-  final _customItemCtrl = TextEditingController();
   // Seedé synchrone avec le catalogue embarqué (fallbackCatalog) — jamais
   // vide au premier frame — puis remplacé par le catalogue live du
   // repository dès qu'il répond (avec repli automatique hors ligne, voir
-  // ContentCategoryRepository.getCategories()).
-  final _catalogLabelsNotifier = ValueNotifier<List<String>>(
-    fallbackCatalog.map((c) => c.label).toList(),
+  // ContentCategoryRepository.getCategories()). Catégories complètes (emoji
+  // inclus) pour alimenter le combobox de contenu.
+  final _catalogNotifier = ValueNotifier<List<ContentCategory>>(
+    fallbackCatalog,
   );
   final _disclaimerNotifier = ValueNotifier<bool>(false);
   final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
@@ -144,7 +145,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         _valueCtrl.text,
         _recipientNameCtrl.text,
         _recipientPhoneCtrl.text,
-        _customItemCtrl.text,
         _promoCtrl.text,
         _weightNotifier.value,
         (_categoriesNotifier.value.toList()..sort()).join(','),
@@ -177,7 +177,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   List<String> get _acceptedCategories {
     final accepted = widget.announcement.acceptedContentTypes;
     if (accepted != null && accepted.isNotEmpty) return accepted;
-    return _catalogLabelsNotifier.value;
+    return _catalogNotifier.value.map((c) => c.label).toList();
   }
 
   List<String> get _refusedCategories =>
@@ -263,7 +263,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         _valueCtrl,
         _recipientNameCtrl,
         _recipientPhoneCtrl,
-        _customItemCtrl,
         _promoCtrl,
         _weightNotifier,
         _categoriesNotifier,
@@ -293,7 +292,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final categories =
         await getIt<IContentCategoryRepository>().getCategories();
     if (!mounted) return;
-    _catalogLabelsNotifier.value = categories.map((c) => c.label).toList();
+    _catalogNotifier.value = categories;
   }
 
   @override
@@ -311,7 +310,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _valueCtrl.dispose();
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
-    _customItemCtrl.dispose();
     _promoCtrl.dispose();
     _weightNotifier.removeListener(_syncFormButtonState);
     _categoriesNotifier.removeListener(_syncFormButtonState);
@@ -324,7 +322,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _quoteNotifier.dispose();
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
-    _catalogLabelsNotifier.dispose();
+    _catalogNotifier.dispose();
     _disclaimerNotifier.dispose();
     _gridQuantitiesNotifier.dispose();
     _stepNotifier.dispose();
@@ -393,28 +391,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   // ── Content helpers ─────────────────────────────────────────────────────────
 
-  void _toggleCategory(Set<String> categories, String cat) {
-    final updated = Set<String>.from(categories);
-    if (updated.contains(cat)) {
-      updated.remove(cat);
-    } else {
-      updated.add(cat);
-    }
-    _categoriesNotifier.value = updated;
-  }
-
-  void _addCustomItem() {
-    final v = _customItemCtrl.text.trim();
-    if (v.isEmpty) return;
-    if (_refusedCategories
-        .map((e) => e.toLowerCase())
-        .contains(v.toLowerCase())) {
-      _customItemCtrl.clear();
-      return;
-    }
-    final updated = Set<String>.from(_categoriesNotifier.value)..add(v);
-    _categoriesNotifier.value = updated;
-    _customItemCtrl.clear();
+  /// Sélection émise par le combobox de contenu. Les types refusés par le
+  /// voyageur sont écartés en silence (le catalogue proposé ne les liste déjà
+  /// pas, mais un ajout libre pourrait retomber sur un libellé refusé).
+  void _onCategoriesChanged(List<String> labels) {
+    final refusedLower = _refusedCategories.map((e) => e.toLowerCase()).toSet();
+    _categoriesNotifier.value = labels
+        .where((l) => !refusedLower.contains(l.toLowerCase()))
+        .toSet();
   }
 
   List<Map<String, dynamic>>? _selectedGridItems() {
@@ -892,7 +876,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             // ── Contenu ───────────────────────────────────────────────────
             ListenableBuilder(
               listenable:
-                  Listenable.merge([_categoriesNotifier, _catalogLabelsNotifier]),
+                  Listenable.merge([_categoriesNotifier, _catalogNotifier]),
               builder: (_, __) =>
                   _buildContentSection(context, _categoriesNotifier.value),
             ),
@@ -1139,36 +1123,45 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   ) {
     final accepted = _acceptedCategories;
     final refused = _refusedCategories;
-    final custom = categories.where((c) => !accepted.contains(c)).toList();
+    // Catalogue proposé = uniquement ce que CE voyageur accepte (avec emoji).
+    // Un libellé accepté hors catalogue embarqué retombe sur 📦.
+    final catalog = _catalogNotifier.value;
+    final acceptedCatalog = [
+      for (final label in accepted)
+        catalog.firstWhere(
+          (c) => c.label == label,
+          orElse: () => ContentCategory(
+            code: 'CUSTOM',
+            label: label,
+            emoji: emojiForLabel(label),
+          ),
+        ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _SectionLabel(label: 'CONTENU DU COLIS'),
         const SizedBox(height: DonySpacing.md),
-        Wrap(
-          spacing: DonySpacing.sm,
-          runSpacing: DonySpacing.sm,
-          children: [
-            for (final cat in accepted)
-              _CategoryChip(
-                label: cat,
-                selected: categories.contains(cat),
-                onTap: () => _toggleCategory(categories, cat),
-              ),
-            for (final cat in custom)
-              _CategoryChip(
-                label: cat,
-                selected: true,
-                onTap: () => _toggleCategory(categories, cat),
-              ),
-          ],
+        // Auto-suggestion (même composant que la feuille de filtres) : le
+        // voyageur choisit le contenu de son colis avant la demande. Multi-
+        // sélection, ajout libre autorisé, tags supprimables au-dessus.
+        ContentCategoryComboBox(
+          catalog: acceptedCatalog,
+          selected: categories.toList(),
+          onChanged: _onCategoriesChanged,
+          hint: 'Rechercher un type de contenu…',
+          keyPrefix: 'bid-content',
+          // L'expéditeur peut toujours saisir un contenu hors de la liste
+          // proposée par le voyageur (sauf types explicitement refusés).
+          alwaysAllowCustom: true,
         ).animate().fadeIn(delay: 60.ms),
         const SizedBox(height: DonySpacing.sm),
-        _InlineAddRow(
-          controller: _customItemCtrl,
-          hint: 'Ex : Épices maison',
-          onAdd: _addCustomItem,
-        ),
+        _ContentHint(
+          text: 'Ces suggestions sont les contenus acceptés par le '
+              'voyageur. Si le contenu de votre colis n\'y figure pas, '
+              'ajoutez-le : ce sera au voyageur de décider s\'il accepte '
+              'votre colis ou non.',
+        ).animate().fadeIn(delay: 90.ms),
         if (refused.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.md),
           const _SectionLabel(label: 'REFUSÉ PAR LE VOYAGEUR'),
@@ -1370,6 +1363,36 @@ class _SectionLabel extends StatelessWidget {
           .textTheme
           .labelMedium
           ?.copyWith(color: cs.onSurfaceVariant),
+    );
+  }
+}
+
+// ── Content hint ───────────────────────────────────────────────────────────────
+
+/// Note explicative sous le sélecteur de contenu : rappelle que les
+/// suggestions sont les contenus acceptés par le voyageur, et qu'un contenu
+/// libre reste possible (soumis à l'accord du voyageur).
+class _ContentHint extends StatelessWidget {
+  const _ContentHint({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DonyIcon('info', size: 14, color: cs.onSurfaceVariant),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            text,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1703,62 +1726,6 @@ class _StepperButton extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Category chip ──────────────────────────────────────────────────────────────
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: 150.ms,
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? cs.onSurface : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: selected ? cs.onSurface : cs.outline,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (selected) ...[
-              DonyIcon('check', size: 14, color: cs.surface),
-              const SizedBox(width: DonySpacing.xxs),
-            ],
-            // Flexible : un libellé de catégorie long à 200 % passe à la
-            // ligne dans le chip plutôt que de déborder de son Wrap parent.
-            Flexible(
-              child: Text(
-                label,
-                style: tt.labelMedium?.copyWith(
-                  color: selected ? cs.surface : cs.onSurface,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -2205,77 +2172,6 @@ class _PriceBreakdown extends StatelessWidget {
           Text(value, style: tt.titleMedium),
         ],
       );
-}
-
-// ── Inline add row ─────────────────────────────────────────────────────────────
-
-class _InlineAddRow extends StatelessWidget {
-  const _InlineAddRow({
-    required this.controller,
-    required this.hint,
-    required this.onAdd,
-  });
-  final TextEditingController controller;
-  final String hint;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: TextField(
-            key: const Key('custom-item-input'),
-            controller: controller,
-            maxLength: 40,
-            textCapitalization: TextCapitalization.sentences,
-            onSubmitted: (_) => onAdd(),
-            decoration: InputDecoration(
-              hintText: hint,
-              filled: true,
-              fillColor: cs.surface,
-              counterText: '',
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.base,
-                vertical: DonySpacing.md,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: cs.primary, width: 2),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        Material(
-          color: cs.primary,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          child: Semantics(
-            button: true,
-            container: true,
-            excludeSemantics: true,
-            label: 'Ajouter un article',
-            child: InkWell(
-            key: const Key('add-item-btn'),
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            onTap: onAdd,
-            child: SizedBox(
-              width: 52,
-              height: 52,
-              child: Icon(Icons.add_rounded, color: cs.onPrimary),
-            ),
-          )
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 // ── Refused chip ───────────────────────────────────────────────────────────────

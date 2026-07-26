@@ -14,6 +14,8 @@ BidModel _makeBid({
   String id = 'bid-00000001',
   String senderName = 'Moussa Traoré',
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+  String? contentCategory = 'Vêtements',
+  String? description,
 }) =>
     BidModel(
       id: id,
@@ -22,7 +24,8 @@ BidModel _makeBid({
       senderName: senderName,
       weightKg: 3,
       pricePerKg: 15,
-      contentCategory: 'Vêtements',
+      contentCategory: contentCategory,
+      description: description,
       status: status,
       paymentMethod: paymentMethod,
       createdAt: DateTime(2026, 5),
@@ -161,5 +164,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Bid detail bid-zzz'), findsOneWidget);
+  });
+
+  testWidgets(
+      'plusieurs catégories → 1re catégorie + « +N », pas la chaîne complète',
+      (tester) async {
+    await _pumpCard(
+      tester,
+      BidCard(
+        bid: _makeBid(
+          status: 'ACCEPTED',
+          contentCategory:
+              'Vêtements & tissus, Documents & administratif, Alimentaire',
+        ),
+        isProcessing: false,
+      ),
+    );
+
+    // 1re catégorie affichée seule, reste replié dans « +2 ».
+    expect(find.text('Vêtements & tissus'), findsOneWidget);
+    expect(find.text('+2'), findsOneWidget);
+    // La chaîne jointe complète n'est jamais rendue telle quelle.
+    expect(find.textContaining('Documents & administratif'), findsNothing);
+  });
+
+  testWidgets(
+      'sans catégorie mais description → pill description (ellipsis, pas d\'overflow)',
+      (tester) async {
+    await _pumpCard(
+      tester,
+      BidCard(
+        bid: _makeBid(
+          status: 'ACCEPTED',
+          contentCategory: null,
+          description: 'Un très long texte de description du colis à transporter',
+        ),
+        isProcessing: false,
+      ),
+    );
+
+    expect(
+      find.textContaining('Un très long texte de description'),
+      findsOneWidget,
+    );
+    // Aucun overflow rendu (le test échouerait sinon via l'exception Flutter).
+    expect(tester.takeException(), isNull);
   });
 }
