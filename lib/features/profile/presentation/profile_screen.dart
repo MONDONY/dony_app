@@ -364,8 +364,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       const SizedBox(height: DonySpacing.xxl),
       DonyButton(
         label: 'Se déconnecter',
-        onPressed: () =>
-            context.read<AuthBloc>().add(const AuthLogoutRequested()),
+        onPressed: () async {
+          final authBloc = context.read<AuthBloc>();
+          final confirmed = await DonyDialog.show(
+            context,
+            title: 'Se déconnecter ?',
+            message: 'Vous devrez saisir à nouveau votre numéro pour '
+                'vous reconnecter.',
+            confirmLabel: 'Se déconnecter',
+            variant: DonyDialogVariant.destructive,
+            iconAsset: 'circle-alert',
+          );
+          if (confirmed ?? false) {
+            authBloc.add(const AuthLogoutRequested());
+          }
+        },
         variant: DonyButtonVariant.ghost,
       ),
       const SizedBox(height: DonySpacing.xxl),
