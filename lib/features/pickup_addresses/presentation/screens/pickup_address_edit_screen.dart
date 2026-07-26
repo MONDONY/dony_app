@@ -193,6 +193,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
               // ── Étiquette ──────────────────────────────────────
               const AddressSectionLabel('Étiquette'),
               DonyTextField(
+                textInputAction: TextInputAction.next,
                 controller: _labelCtrl,
                 label: "Nom de l'adresse",
                 hint: 'Ex : Maison, Bureau…',
@@ -231,6 +232,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                   Expanded(
                     flex: 2,
                     child: DonyTextField(
+                      textInputAction: TextInputAction.next,
                       controller: _postalCtrl,
                       label: 'Code postal',
                       hint: '75001',
@@ -242,6 +244,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                   Expanded(
                     flex: 3,
                     child: DonyTextField(
+                      textInputAction: TextInputAction.next,
                       controller: _cityCtrl,
                       label: 'Ville',
                       hint: 'Paris',
@@ -257,6 +260,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
               // ── Étage ──────────────────────────────────────────
               const AddressSectionLabel('Étage / Appartement'),
               DonyTextField(
+                textInputAction: TextInputAction.done,
                 controller: _floorCtrl,
                 label: 'Étage / Appartement',
                 hint: 'Optionnel (Ex : Bât. B, 3ème étage)',
