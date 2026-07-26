@@ -128,7 +128,13 @@ class DonyStatusBanner extends StatelessWidget {
               }
             : null);
 
-    return Container(
+    // Région live : le bandeau surgit en réponse à une action et disparaît
+    // souvent seul. Sans ce marquage, un lecteur d'écran ne l'annonce jamais,
+    // et l'utilisateur ne sait ni que son action a réussi ni pourquoi elle a
+    // échoué.
+    return Semantics(
+      liveRegion: true,
+      child: Container(
       padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
         color: style.background,
@@ -138,9 +144,13 @@ class DonyStatusBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          iconAsset != null
-              ? DonyIcon(iconAsset!, size: 18, color: style.iconColor)
-              : Icon(effectiveIcon, size: 18, color: style.iconColor),
+          // Icône décorative : elle redit le type que la couleur porte déjà,
+          // et le texte du bandeau l'exprime.
+          ExcludeSemantics(
+            child: iconAsset != null
+                ? DonyIcon(iconAsset!, size: 18, color: style.iconColor)
+                : Icon(effectiveIcon, size: 18, color: style.iconColor),
+          ),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Column(
@@ -167,12 +177,24 @@ class DonyStatusBanner extends StatelessWidget {
           ),
           if (onDismiss != null) ...[
             const SizedBox(width: DonySpacing.xs),
-            GestureDetector(
-              onTap: onDismiss,
-              child: DonyIcon('x', size: 16, color: style.iconColor),
+            // Bouton à icône seule : sans nom accessible, il est annoncé
+            // « bouton » et rien d'autre.
+            // `container` crée le nœud, `excludeSemantics` écarte le SVG qui
+            // n'a rien à dire : sans les deux, le libellé ne forme aucun nœud
+            // et le bouton reste anonyme.
+            Semantics(
+              button: true,
+              container: true,
+              excludeSemantics: true,
+              label: 'Fermer le message',
+              child: GestureDetector(
+                onTap: onDismiss,
+                child: DonyIcon('x', size: 16, color: style.iconColor),
+              ),
             ),
           ],
         ],
+      ),
       ),
     );
   }

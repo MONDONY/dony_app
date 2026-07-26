@@ -1,3 +1,4 @@
+import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -17,8 +18,8 @@ class DonyBackCircle extends StatelessWidget {
         onTap: onTap ?? () => context.pop(),
         customBorder: const CircleBorder(),
         child: Container(
-          width: 40,
-          height: 40,
+          width: kDonyMinTapTarget,
+          height: kDonyMinTapTarget,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: cs.surface,

@@ -105,7 +105,11 @@ class _DonyRadioTile<T> extends StatelessWidget {
     return InkWell(
       onTap: option.enabled ? () => onChanged(option.value) : null,
       borderRadius: BorderRadius.circular(DonyRadius.md),
-      child: Padding(
+      // Une option sans sous-titre descendait à 37 px. Le plancher ne change
+      // rien aux options déjà plus hautes.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+        child: Padding(
         padding: const EdgeInsets.symmetric(
           vertical: DonySpacing.sm,
           horizontal: DonySpacing.xs,
@@ -150,6 +154,7 @@ class _DonyRadioTile<T> extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

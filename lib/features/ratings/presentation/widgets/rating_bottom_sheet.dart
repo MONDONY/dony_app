@@ -1,9 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/presentation/widgets/star_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -122,7 +122,10 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
           builder: (ctx, stars, _) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _StarSelector(
+              StarSelector(
+                // Marge verticale que portait l'ancien sélecteur local du
+                // sheet, absente de celui de l'écran.
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
                 selected: stars,
                 onSelect: (s) {
                   if (widget.starsNotifier != null) {
@@ -181,45 +184,4 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
     5 => 'Excellent !',
     _ => '',
   };
-}
-
-class _StarSelector extends StatelessWidget {
-  const _StarSelector({required this.selected, required this.onSelect});
-  final int selected;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(5, (i) {
-            final idx = i + 1;
-            final filled = idx <= selected;
-            return GestureDetector(
-              onTap: () => onSelect(idx),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  child: Builder(
-                    builder: (context) => DonyIcon(
-                      'star',
-                      key: ValueKey(filled),
-                      size: 44,
-                      color: filled
-                          ? DonyColors.starGold
-                          : Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
 }

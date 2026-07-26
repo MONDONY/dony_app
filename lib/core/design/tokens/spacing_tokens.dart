@@ -1,3 +1,14 @@
+/// Plus petite zone tappable acceptable, en points logiques.
+///
+/// Le seuil de conformité AA est plus bas (WCAG 2.2, critère 2.5.8 : 24 × 24),
+/// et WCAG 2.1 n'en impose aucun. 44 est le seuil de confort, commun aux
+/// recommandations Apple et à WCAG 2.5.5 (niveau AAA). C'est un choix de
+/// qualité d'usage, pas une obligation.
+///
+/// À appliquer à la zone tappable, jamais au visuel : une pastille de filtre
+/// doit rester fine à l'écran tout en étant facile à viser.
+const double kDonyMinTapTarget = 44;
+
 abstract final class DonySpacing {
   static const double xxs  = 2;
   static const double xs   = 4;

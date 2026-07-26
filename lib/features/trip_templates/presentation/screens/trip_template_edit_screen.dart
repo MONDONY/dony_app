@@ -477,9 +477,15 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                         ),
                       ),
                       if (_arrivalTime != null)
-                        GestureDetector(
+                        Semantics(
+                          button: true,
+                          container: true,
+                          excludeSemantics: true,
+                          label: "Effacer l'heure d'arrivée",
+                          child: GestureDetector(
                           onTap: () => setState(() => _arrivalTime = null),
                           child: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
+                        )
                         ),
                     ],
                   ),

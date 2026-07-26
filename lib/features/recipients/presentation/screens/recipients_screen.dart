@@ -164,6 +164,7 @@ class _SearchField extends StatelessWidget {
         prefixIconConstraints: const BoxConstraints(minWidth: 40),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
+              tooltip: 'Effacer la recherche',
                 icon: const DonyIcon('x', size: 16),
                 onPressed: () => controller.clear(),
               )

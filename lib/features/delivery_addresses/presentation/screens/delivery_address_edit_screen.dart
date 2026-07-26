@@ -235,6 +235,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
               // ── Étiquette ──────────────────────────────────────
               const AddressSectionLabel('Étiquette'),
               DonyTextField(
+                textInputAction: TextInputAction.next,
                 controller: _labelCtrl,
                 label: "Nom de l'adresse",
                 hint: 'Ex : Famille Dakar, Dépôt…',
@@ -286,6 +287,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
               // ── Adresse ────────────────────────────────────────
               const AddressSectionLabel('Adresse'),
               DonyTextField(
+                textInputAction: TextInputAction.done,
                 controller: _cityCtrl,
                 label: 'Ville',
                 hint: 'Ex : Dakar, Abidjan, Bamako…',

@@ -96,7 +96,12 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
                         ),
                       ),
                       const Spacer(),
-                      GestureDetector(
+                      Semantics(
+                        button: true,
+                        container: true,
+                        excludeSemantics: true,
+                        label: 'Fermer',
+                        child: GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
                         behavior: HitTestBehavior.opaque,
                         child: SizedBox(
@@ -118,6 +123,7 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
                             ),
                           ),
                         ),
+                      )
                       ),
                     ],
                   ),

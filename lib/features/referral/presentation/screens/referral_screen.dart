@@ -243,7 +243,12 @@ class _CodeBox extends StatelessWidget {
                     ),
               ),
               const SizedBox(width: DonySpacing.md),
-              GestureDetector(
+              Semantics(
+                button: true,
+                container: true,
+                excludeSemantics: true,
+                label: 'Copier le code de parrainage',
+                child: GestureDetector(
                 onTap: () async {
                   await Clipboard.setData(ClipboardData(text: code));
                   if (context.mounted) {
@@ -267,6 +272,7 @@ class _CodeBox extends StatelessWidget {
                     size: 20,
                   ),
                 ),
+              )
               ),
             ],
           ),

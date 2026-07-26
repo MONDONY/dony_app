@@ -336,6 +336,7 @@ class _DeliveryAddressPickerSheetState
                                 ?.copyWith(fontWeight: FontWeight.w700)),
                         const Spacer(),
                         IconButton(
+                          tooltip: 'Fermer',
                           icon: const DonyIcon('x'),
                           onPressed: () => Navigator.of(context).pop(),
                           style: IconButton.styleFrom(
@@ -558,6 +559,7 @@ class _SearchField extends StatelessWidget {
               )
             : controller.text.isNotEmpty
                 ? IconButton(
+                  tooltip: 'Fermer',
                     icon: const DonyIcon('x', size: 16),
                     onPressed: () => controller.clear(),
                   )

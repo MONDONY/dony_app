@@ -150,12 +150,12 @@ class DonyFeedbackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: 'Signaler un problème',
-      child: IconButton(
-        icon: const DonyIcon('bug'),
-        onPressed: () => _openSheet(context),
-      ),
+    // `IconButton.tooltip` enveloppe déjà dans un Tooltip : le Tooltip externe
+    // qui existait ici en créait un second, avec le même message.
+    return IconButton(
+      tooltip: 'Signaler un problème',
+      icon: const DonyIcon('bug'),
+      onPressed: () => _openSheet(context),
     );
   }
 }

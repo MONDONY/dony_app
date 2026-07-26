@@ -21,7 +21,11 @@ abstract final class AppTheme {
       primary: hc
           ? (isLight ? DonyColors.primaryHc : DonyColors.primaryHcDark)
           : (isLight ? DonyColors.primary : DonyColors.blueDark500),
-      onPrimary: DonyColors.textOnBrand,
+      // En haut contraste sombre, primary est un bleu clair : un libellé blanc
+      // n'y ferait que 2.04:1. Le noir y monte à 10.30:1.
+      onPrimary: hc && !isLight
+          ? DonyColors.onBrandHcDark
+          : DonyColors.textOnBrand,
       primaryContainer: isLight ? DonyColors.primarySoft : DonyColors.blueDark50,
       onPrimaryContainer: isLight ? DonyColors.primaryHover : DonyColors.blueDark500,
       secondary: isLight ? DonyColors.accent : DonyColors.terraDark500,
@@ -44,7 +48,11 @@ abstract final class AppTheme {
           : (isLight ? DonyColors.borderDefault : DonyColors.neutralDark300),
       outlineVariant: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
       error: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
-      onError: DonyColors.textOnBrand,
+      // Le rouge d'erreur du thème sombre est clair : un libellé blanc dessus
+      // ne fait que 3.55:1. Le noir y monte à 5.91:1. Contrairement à
+      // `onPrimary`, ce rôle n'est posé que sur des aplats d'erreur, jamais
+      // sur un dégradé, donc la bascule est sans risque.
+      onError: isLight ? DonyColors.textOnBrand : DonyColors.onBrandHcDark,
       errorContainer: isLight ? DonyColors.danger50 : DonyColors.dangerDark50,
       onErrorContainer: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
       shadow: isLight ? DonyColors.shadow : DonyColors.shadowDark,
@@ -59,6 +67,13 @@ abstract final class AppTheme {
     // Bordures épaissies en haut contraste : la bordure par défaut à 1 px sur
     // neutral200 est quasi invisible pour une basse vision.
     final borderWidth = hc ? 1.5 : 1.0;
+
+    // Le contour d'un champ est un composant d'interface, pas une décoration :
+    // il lui faut 3:1. `cs.outline` n'y arrive pas et ne le doit pas, il sert
+    // aussi aux séparateurs.
+    final inputBorderColor = hc
+        ? cs.outline
+        : (isLight ? DonyColors.borderInput : DonyColors.borderInputDark);
 
     return ThemeData(
       useMaterial3: true,
@@ -104,11 +119,11 @@ abstract final class AppTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline, width: borderWidth),
+          borderSide: BorderSide(color: inputBorderColor, width: borderWidth),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline, width: borderWidth),
+          borderSide: BorderSide(color: inputBorderColor, width: borderWidth),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -119,14 +134,21 @@ abstract final class AppTheme {
           borderSide: BorderSide(color: cs.error),
         ),
         labelStyle: DonyTypography.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        // Un placeholder est du texte, donc 4.5:1. neutral400 n'en donnait que
+        // 2.54:1 sur blanc ; textSubtle (neutral500) monte à 4.71:1.
         hintStyle: DonyTypography.textTheme.bodyMedium?.copyWith(
-          color: isLight ? DonyColors.neutral400 : DonyColors.neutralDark400,
+          color: isLight ? DonyColors.textSubtle : DonyColors.neutralDark400,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: cs.primary,
-          foregroundColor: cs.onPrimary,
+          // Pas `cs.onPrimary` : ce rôle sert aussi de texte sur des dégradés
+          // de marque allant du bleu très sombre au bleu clair, où le noir
+          // serait illisible. Ici le fond est l'aplat `cs.primary`, connu, et
+          // en thème sombre il est trop clair pour un libellé blanc (3.28:1).
+          foregroundColor:
+              isLight ? cs.onPrimary : DonyColors.onBrandHcDark,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),

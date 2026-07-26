@@ -1048,13 +1048,24 @@ class _InputBar extends StatelessWidget {
                       child: Material(
                         color: hasText ? cs.primary : cs.outlineVariant,
                         shape: const CircleBorder(),
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: hasText && !isSending ? onSendText : null,
-                          child: const SizedBox(
-                            width: 38,
-                            height: 38,
-                            child: DonyIcon('send', color: Colors.white, size: 18),
+                        // Bouton à icône seule, et seul moyen d'envoyer un
+                        // message depuis que le chat est le canal de contact
+                        // unique. Sans nom accessible il était annoncé
+                        // « bouton », sans plus.
+                        child: Semantics(
+                          button: true,
+                          enabled: hasText && !isSending,
+                          label: 'Envoyer le message',
+                          container: true,
+                          excludeSemantics: true,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: hasText && !isSending ? onSendText : null,
+                            child: const SizedBox(
+                              width: 38,
+                              height: 38,
+                              child: DonyIcon('send', color: Colors.white, size: 18),
+                            ),
                           ),
                         ),
                       ),

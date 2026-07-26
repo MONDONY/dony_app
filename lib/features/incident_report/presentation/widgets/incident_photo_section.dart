@@ -81,7 +81,12 @@ class IncidentPhotoSection extends StatelessWidget {
                 onRemove: () => context.read<IncidentPhotosCubit>().remove(p.localId),
               ),
             if (canAdd)
-              GestureDetector(
+              Semantics(
+                button: true,
+                container: true,
+                excludeSemantics: true,
+                label: 'Ajouter une photo',
+                child: GestureDetector(
                 onTap: () => _showSourceSheet(context),
                 child: Container(
                   width: 64,
@@ -93,6 +98,7 @@ class IncidentPhotoSection extends StatelessWidget {
                   ),
                   child: Icon(Icons.add_rounded, color: cs.primary),
                 ),
+              )
               ),
           ],
         );
@@ -161,7 +167,12 @@ class _PhotoThumb extends StatelessWidget {
           Positioned(
             top: -18,
             right: -18,
-            child: GestureDetector(
+            child: Semantics(
+              button: true,
+              container: true,
+              excludeSemantics: true,
+              label: 'Supprimer cette photo',
+              child: GestureDetector(
               onTap: onRemove,
               behavior: HitTestBehavior.opaque,
               child: SizedBox(
@@ -183,6 +194,7 @@ class _PhotoThumb extends StatelessWidget {
                   ),
                 ),
               ),
+            )
             ),
           ),
         ],

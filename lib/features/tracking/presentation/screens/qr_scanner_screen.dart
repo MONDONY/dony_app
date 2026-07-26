@@ -792,6 +792,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   ),
                   if (!isSubmitting)
                     IconButton(
+                      tooltip: 'Fermer',
                       icon: DonyIcon('x',
                           color: cs.onSurfaceVariant),
                       onPressed: () {
@@ -997,7 +998,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         Positioned(
                           top: DonySpacing.sm,
                           right: DonySpacing.sm,
-                          child: GestureDetector(
+                          child: Semantics(
+                            button: true,
+                            container: true,
+                            excludeSemantics: true,
+                            label: 'Supprimer la photo',
+                            child: GestureDetector(
                             onTap: () => setState(() => _photo = null),
                             child: Container(
                               padding: const EdgeInsets.all(DonySpacing.xs),
@@ -1007,6 +1013,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                               child: const DonyIcon('x',
                                   color: DonyColors.white, size: 16),
                             ),
+                          )
                           ),
                         ),
                     ],

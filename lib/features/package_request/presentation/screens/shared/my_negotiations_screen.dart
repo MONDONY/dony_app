@@ -562,7 +562,7 @@ class _StatusPill extends StatelessWidget {
       ),
       NegotiationThreadStatus.awaitingTrip => (
         'ATT. TRAJET',
-        DonyColors.threadStatusAmber,
+        DonyColors.threadPillAmberFg,
         const Color(0xFFFEF3C7),
       ),
       NegotiationThreadStatus.awaitingPayment => (
@@ -575,7 +575,11 @@ class _StatusPill extends StatelessWidget {
         DonyColors.threadStatusGreen,
         const Color(0xFFDCFCE7),
       ),
-      _ => ('TERMINÉ', const Color(0xFF6B7280), const Color(0xFFF3F4F6)),
+      _ => (
+        'TERMINÉ',
+        DonyColors.threadPillNeutralFg,
+        const Color(0xFFF3F4F6),
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

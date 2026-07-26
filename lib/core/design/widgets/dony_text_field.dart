@@ -33,6 +33,9 @@ class DonyTextField extends StatelessWidget {
     this.autofocus = false,
     this.maxLines = 1,
     this.minLines,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
   })  : _variant = _DonyTextFieldVariant.text,
         _value = null,
         _onTap = null,
@@ -81,7 +84,12 @@ class DonyTextField extends StatelessWidget {
         enabled = true,
         autofocus = false,
         maxLines = 1,
-        minLines = null;
+        minLines = null,
+        // La variante tappable n'ouvre pas de clavier : ni focus, ni touche
+        // d'action, ni validation clavier n'ont de sens ici.
+        focusNode = null,
+        textInputAction = null,
+        onSubmitted = null;
 
   // ── Champs partagés ─────────────────────────────────────────────────────────
 
@@ -115,6 +123,18 @@ class DonyTextField extends StatelessWidget {
   final bool autofocus;
   final int maxLines;
   final int? minLines;
+
+  /// Nœud de focus du champ, pour que le formulaire puisse donner la main au
+  /// champ suivant.
+  final FocusNode? focusNode;
+
+  /// Touche d'action du clavier : `next` sur les champs intermédiaires, `done`
+  /// sur le dernier. Sans elle, le clavier n'offre aucun moyen d'avancer et
+  /// remplir un formulaire au clavier demande de viser chaque champ à la main.
+  final TextInputAction? textInputAction;
+
+  /// Déclenché à la validation clavier. Sert à passer au champ suivant.
+  final ValueChanged<String>? onSubmitted;
 
   // Tappable
   final String? _value;
@@ -175,6 +195,9 @@ class DonyTextField extends StatelessWidget {
           autofocus: autofocus,
           maxLines: maxLines,
           minLines: minLines,
+          focusNode: focusNode,
+          textInputAction: textInputAction,
+          onFieldSubmitted: onSubmitted,
           scrollPadding: const EdgeInsets.only(bottom: 120),
           decoration: _decoration(context),
         );

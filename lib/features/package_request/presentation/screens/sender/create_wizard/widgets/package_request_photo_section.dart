@@ -129,7 +129,12 @@ class PackageRequestPhotoSection extends StatelessWidget {
                     ),
                   ),
                 if (canAdd)
-                  GestureDetector(
+                  Semantics(
+                    button: true,
+                    container: true,
+                    excludeSemantics: true,
+                    label: 'Ajouter une photo du colis',
+                    child: GestureDetector(
                     key: const Key('pr-add-photo'),
                     onTap: () => _showSourceSheet(context),
                     child: Container(
@@ -142,6 +147,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
                       ),
                       child: Icon(Icons.add_rounded, color: cs.primary),
                     ),
+                  )
                   ),
               ],
             ),
@@ -219,7 +225,12 @@ class _PhotoThumb extends StatelessWidget {
             ),
           if (upload.status == PackageRequestPhotoUploadStatus.failed)
             Positioned.fill(
-              child: GestureDetector(
+              child: Semantics(
+                button: true,
+                container: true,
+                excludeSemantics: true,
+                label: "Réessayer l'envoi de la photo",
+                child: GestureDetector(
                 onTap: onTapFailed,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -232,12 +243,18 @@ class _PhotoThumb extends StatelessWidget {
                     size: 18,
                   ),
                 ),
+              )
               ),
             ),
           Positioned(
             top: -18,
             right: -18,
-            child: GestureDetector(
+            child: Semantics(
+              button: true,
+              container: true,
+              excludeSemantics: true,
+              label: 'Supprimer cette photo',
+              child: GestureDetector(
               onTap: onRemove,
               behavior: HitTestBehavior.opaque,
               child: SizedBox(
@@ -259,6 +276,7 @@ class _PhotoThumb extends StatelessWidget {
                   ),
                 ),
               ),
+            )
             ),
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Bouton favori (signet) — pur visuel, stateless.
@@ -74,11 +75,15 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
         child: child,
       ),
       child: IconButton(
-        visualDensity: VisualDensity.compact,
+        // `compact` retranche 4 px sur chaque axe et ramenait la cible à 40 px
+        // malgré les contraintes ci-dessous.
+        visualDensity: VisualDensity.standard,
         padding: EdgeInsets.zero,
-        constraints: BoxConstraints(
-          minWidth: widget.size + 8,
-          minHeight: widget.size + 8,
+        // L'icône reste à sa taille, seule la zone tappable est portée au
+        // minimum confortable : à 26 px d'icône la cible ne faisait que 40 px.
+        constraints: const BoxConstraints(
+          minWidth: kDonyMinTapTarget,
+          minHeight: kDonyMinTapTarget,
         ),
         icon: Icon(
           widget.isFavorite ? Icons.bookmark : Icons.bookmark_border,

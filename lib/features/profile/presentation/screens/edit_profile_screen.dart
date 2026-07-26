@@ -247,7 +247,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Center(
                   child: Column(
                     children: [
-                      GestureDetector(
+                      Semantics(
+                        button: true,
+                        container: true,
+                        excludeSemantics: true,
+                        enabled: !isLoading,
+                        label: 'Changer la photo de profil',
+                        child: GestureDetector(
                         key: const ValueKey('avatar_pick_gesture'),
                         onTap: isLoading ? null : _pickAndUploadAvatar,
                         child: SizedBox(
@@ -312,6 +318,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                         ),
+                      )
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       Text(
@@ -328,6 +335,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const _SectionLabel(label: 'Identité'),
                 const SizedBox(height: DonySpacing.md),
                 DonyTextField(
+                  textInputAction: TextInputAction.next,
                   controller: _firstNameCtrl,
                   label: 'Prénom',
                   prefixWidget: DonyIcon(
@@ -339,6 +347,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: DonySpacing.md),
                 DonyTextField(
+                  textInputAction: TextInputAction.next,
                   controller: _lastNameCtrl,
                   label: 'Nom de famille',
                   prefixWidget: DonyIcon(
@@ -375,6 +384,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // L'ajout (compte sans adresse) passe par le flux dédié avec code
                 // de vérification, pas par ce formulaire.
                 DonyTextField(
+                  textInputAction: TextInputAction.next,
                   controller: _emailCtrl,
                   label: 'Email du compte',
                   hint: 'Aucune adresse associée',
@@ -398,6 +408,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: DonySpacing.md),
                 DonyTextField(
+                  textInputAction: TextInputAction.done,
                   controller: _cityCtrl,
                   label: "Ville / lieu d'habitation",
                   prefixWidget: DonyIcon(

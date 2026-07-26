@@ -219,6 +219,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                               fallbackCity: state.request?.arrivalCity,
                               children: [
                                 TextFormField(
+                                  textInputAction: TextInputAction.next,
                                   controller: _recipientNameCtrl,
                                   decoration: const InputDecoration(
                                     labelText: 'Nom complet',
@@ -227,6 +228,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 ),
                                 const SizedBox(height: DonySpacing.md),
                                 TextFormField(
+                                  textInputAction: TextInputAction.next,
                                   controller: _recipientPhoneCtrl,
                                   keyboardType: TextInputType.phone,
                                   decoration: const InputDecoration(
@@ -247,6 +249,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 ),
                                 const SizedBox(height: DonySpacing.md),
                                 TextFormField(
+                                  textInputAction: TextInputAction.next,
                                   controller: _recipientCityCtrl,
                                   decoration: const InputDecoration(
                                     labelText: 'Ville / commune',
@@ -257,6 +260,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                             ),
                             const SizedBox(height: DonySpacing.md),
                             TextFormField(
+                              textInputAction: TextInputAction.done,
                               key: const Key('declared-value-input'),
                               controller: _declaredValueCtrl,
                               keyboardType:

@@ -195,6 +195,7 @@ class _GridItemRow extends StatelessWidget {
                 key: Key('grid-item-remove-${item.id}'),
                 iconAsset: 'minus',
                 active: quantity > 0,
+                semanticLabel: 'Retirer un ${item.label}',
                 onTap: onDecrement,
               ),
               SizedBox(
@@ -207,6 +208,7 @@ class _GridItemRow extends StatelessWidget {
                 key: Key('grid-item-add-${item.id}'),
                 iconAsset: 'plus',
                 active: true,
+                semanticLabel: 'Ajouter un ${item.label}',
                 onTap: onIncrement,
               ),
             ],
@@ -222,8 +224,13 @@ class _StepBtn extends StatelessWidget {
     super.key,
     required this.iconAsset,
     required this.active,
+    required this.semanticLabel,
     this.onTap,
   });
+
+  /// Nom annoncé, distinct par article : « moins » et « plus » répétés sur
+  /// chaque ligne d'une grille ne disent pas de quoi on change la quantité.
+  final String semanticLabel;
 
   final String iconAsset;
   final bool active;
@@ -234,7 +241,13 @@ class _StepBtn extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final bgColor = active ? cs.primary : cs.surfaceContainerLow;
     final iconColor = active ? cs.onPrimary : cs.onSurfaceVariant;
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      enabled: onTap != null,
+      label: semanticLabel,
+      child: GestureDetector(
       onTap: onTap,
       child: Opacity(
         opacity: onTap != null ? 1.0 : 0.4,
@@ -247,6 +260,7 @@ class _StepBtn extends StatelessWidget {
           ),
           child: DonyIcon(iconAsset, size: 14, color: iconColor),
         ),
+      ),
       ),
     );
   }

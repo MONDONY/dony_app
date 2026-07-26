@@ -72,19 +72,29 @@ abstract final class DonyColors {
   // SÉMANTIQUE — États
   // ═══════════════════════════════════════════════════════════════
   static const success50  = Color(0xFFE5F4EE);
-  static const success500 = Color(0xFF0E8A5F); // Vert validation ★
+  // Assombri (était #0E8A5F, 4.36:1 sur blanc et 3.84:1 sur success50, tous
+  // deux sous 4.5:1). À #0C7A54 : 5.35:1 et 4.71:1.
+  static const success500 = Color(0xFF0C7A54); // Vert validation ★
   static const success700 = Color(0xFF0A6446);
 
   static const warning50  = Color(0xFFFCF3DF);
-  static const warning500 = Color(0xFFE8A23B); // Amber ★
+  // Assombri franchement (était #E8A23B). L'amber vif ne faisait que 2.17:1
+  // sur blanc : il échouait même le seuil 3:1 des éléments non textuels, donc
+  // aucun usage ne le sauvait. À #96631A : 5.13:1 sur blanc, 4.64:1 sur
+  // warning50. C'est le changement le plus visible de la palette.
+  static const warning500 = Color(0xFF96631A); // Amber foncé ★
   static const warning700 = Color(0xFFB07725);
 
   static const danger50  = Color(0xFFFCE8E5);
-  static const danger500 = Color(0xFFD9342B); // Rouge erreur ★
+  // Assombri (était #D9342B, 3.98:1 sur son propre fond pâle).
+  // À #C42A22 : 5.67:1 sur blanc, 4.81:1 sur danger50.
+  static const danger500 = Color(0xFFC42A22); // Rouge erreur ★
   static const danger700 = Color(0xFFA81F18);
 
   static const info50  = Color(0xFFE5F0FA);
-  static const info500 = Color(0xFF1B7BC2); // Bleu info ★
+  // Assombri (était #1B7BC2, 3.90:1 sur info50).
+  // À #166BA9 : 5.66:1 sur blanc, 4.90:1 sur info50.
+  static const info500 = Color(0xFF166BA9); // Bleu info ★
   static const info700 = Color(0xFF115687);
 
   static const favorite = Color(0xFFE11D48); // Cœur favori (rempli). Contour = cs.onSurfaceVariant.
@@ -129,6 +139,16 @@ abstract final class DonyColors {
   static const threadStatusGreen   = Color(0xFF15803D);
   static const threadStatusNeutral = Color(0xFF6B7280);
 
+  /// Texte des pastilles de statut de négociation, posé sur des fonds pâles
+  /// figés.
+  ///
+  /// Distinct des `threadStatus*` ci-dessus, qui servent de liseré et d'ombre
+  /// et n'ont donc aucune exigence de contraste. En texte, `threadStatusAmber`
+  /// ne tenait que 3.33:1 et `threadStatusNeutral` 4.39:1, tous deux sous le
+  /// seuil de 4.5:1.
+  static const threadPillAmberFg   = Color(0xFF8A5A12); // 5.31:1 sur #FEF3C7
+  static const threadPillNeutralFg = Color(0xFF5F6673); // 5.44:1 sur #F3F4F6
+
   // Dégradé hero (shipment_list) — fond bleu-sable/navy selon brightness
   static const heroGradientDarkA  = Color(0xFF080D18);
   static const heroGradientDarkB  = Color(0xFF0B0918);
@@ -143,7 +163,11 @@ abstract final class DonyColors {
   static const primaryPress = blue700;
   static const primarySoft  = blue50;
 
-  static const accent     = terra500;
+  // terra600 et non terra500 : le rôle accent porte du texte et reçoit du
+  // texte blanc, deux usages qui exigent 4.5:1. terra500 n'en donnait que
+  // 3.46:1, terra600 en donne 4.79:1. terra500 reste disponible comme
+  // primitive de palette, pour les dégradés décoratifs.
+  static const accent     = terra600;
   static const accentSoft = terra50;
 
   static const bgApp       = neutral50;
@@ -159,6 +183,17 @@ abstract final class DonyColors {
   static const borderDefault = neutral200;
   static const borderStrong  = neutral300;
   static const borderFocus   = blue500;
+
+  /// Contour des champs de saisie, distinct de [borderDefault].
+  ///
+  /// Un champ est un composant d'interface : son contour doit atteindre 3:1
+  /// (WCAG 1.4.11), sinon rien ne signale qu'il est là. Avec [borderDefault]
+  /// la paire tombait à 1.26:1 sur un remplissage blanc, sur un fond d'app
+  /// lui-même blanc cassé : le champ n'avait aucune limite perceptible.
+  /// Volontairement séparé, pour ne pas alourdir les bordures de cartes ni
+  /// les séparateurs, qui eux sont décoratifs.
+  static const borderInput     = Color(0xFF948E80); // 3.26:1 sur blanc
+  static const borderInputDark = Color(0xFF646A74); // 3.17:1 sur surface sombre
 
   // ═══════════════════════════════════════════════════════════════
   // COMPAT — Anciens noms conservés pour les widgets existants
@@ -211,7 +246,10 @@ abstract final class DonyColors {
   static const blueDark500 = Color(0xFF4D8AFF); // PRIMARY DARK ★
   static const blueDark600 = Color(0xFF6699FF); // Hover dark
   static const blueDark700 = Color(0xFF3D7AEF); // Press dark
-  static const blueDark50  = Color(0xFF1A2B47); // PrimarySoft dark
+  // Assombri (était #1A2B47) : blueDark500 posé dessus n'atteignait que
+  // 4.32:1, sous le seuil 4.5:1 du texte courant. À #152238 la paire monte à
+  // 4.85:1.
+  static const blueDark50  = Color(0xFF152238); // PrimarySoft dark
 
   // Terra accent recalibré
   static const terraDark500 = Color(0xFFE8865B); // ACCENT DARK ★
@@ -224,7 +262,10 @@ abstract final class DonyColors {
   static const neutralDark100 = Color(0xFF161B23); // SURFACE DARK ★
   static const neutralDark200 = Color(0xFF222932);
   static const neutralDark300 = Color(0xFF2D333D); // BORDER DARK ★
-  static const neutralDark400 = Color(0xFF7E7972); // text subtle dark
+  // Éclairci (était #7E7972) : sert de couleur de placeholder via `hintStyle`,
+  // et un placeholder est du texte. À #7E7972 la paire tombait à 4.00:1 sur la
+  // surface sombre ; à #918B83 elle atteint 5.12:1.
+  static const neutralDark400 = Color(0xFF918B83); // text subtle dark
   static const neutralDark500 = Color(0xFFB5AFA5); // text muted dark
   static const neutralDark600 = Color(0xFFD8D2C7); // text high
   static const neutralDark700 = Color(0xFFF5F0E8); // TEXT PRIMARY DARK ★
@@ -254,6 +295,22 @@ abstract final class DonyColors {
   static const textMutedHc     = Color(0xFF3A3630); // 9.3:1 sur blanc
   static const borderDefaultHc = Color(0xFF5C5850); // bordure nettement visible
   static const primaryHc       = Color(0xFF00368F); // bleu assombri, 9.1:1 sur blanc
+
+  // Fonds pleins des boutons en haut contraste. `DonyButton` peint un dégradé
+  // dont la partie la plus claire descend à 2.6:1 avec un libellé blanc ; en
+  // haut contraste il bascule sur ces aplats, dont le ratio est mesuré.
+  static const successHc = Color(0xFF0A6446); // blanc dessus : 7.18:1
+  static const dangerHc  = Color(0xFFA81F18); // blanc dessus : 7.31:1
+  static const accentHc  = Color(0xFF7A3616); // blanc dessus : 8.87:1
+
+  static const successHcDark = Color(0xFF7FD4AE); // noir dessus : 11.93:1
+  static const dangerHcDark  = Color(0xFFFF9B96); // noir dessus : 10.38:1
+  static const accentHcDark  = Color(0xFFF0A882); // noir dessus : 10.63:1
+
+  /// Couleur de texte posée sur un aplat de marque en haut contraste sombre.
+  /// Les aplats y sont clairs, donc le blanc n'y tient pas : blanc sur
+  /// [primaryHcDark] ne fait que 2.04:1, noir y fait 10.30:1.
+  static const onBrandHcDark = Color(0xFF000000);
 
   static const surfaceHcDark       = Color(0xFF000000);
   static const bgAppHcDark         = Color(0xFF000000);

@@ -159,6 +159,7 @@ class ExpediteurContactCard extends StatelessWidget {
                       final isRevealing = state is ContactRevealLoading;
                       return _IconActionButton(
                         iconAsset: 'phone',
+                        semanticLabel: 'Appeler',
                         isLoading: isRevealing,
                         onTap: isRevealing ? null : () => _requestCall(context),
                       );
@@ -172,6 +173,7 @@ class ExpediteurContactCard extends StatelessWidget {
                     final isOpening = openState is ConversationOpenLoading;
                     return _IconActionButton(
                       iconAsset: 'message-circle',
+                      semanticLabel: 'Ouvrir la discussion',
                       isLoading: isOpening,
                       onTap: isOpening
                           ? null
@@ -205,16 +207,27 @@ class _IconActionButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isLoading;
 
+  /// Nom annoncé. Le bouton n'affiche qu'une icône : sans lui, un lecteur
+  /// d'écran dit « bouton » et rien de plus.
+  final String semanticLabel;
+
   const _IconActionButton({
     required this.iconAsset,
     required this.onTap,
+    required this.semanticLabel,
     this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      enabled: onTap != null,
+      label: semanticLabel,
+      child: GestureDetector(
       onTap: onTap,
       child: Container(
         width: 44,
@@ -232,6 +245,7 @@ class _IconActionButton extends StatelessWidget {
                 ),
               )
             : DonyIcon(iconAsset, color: cs.primary, size: 18),
+      ),
       ),
     );
   }

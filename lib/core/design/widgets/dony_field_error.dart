@@ -38,26 +38,36 @@ class DonyFieldError extends StatelessWidget {
         Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.error);
     final text = Text(msg, key: textKey, style: style);
 
-    return Padding(
-      // Aligné sur le gabarit d'InputDecoration.errorText, pour que les
-      // messages d'un même formulaire se placent tous pareil, qu'ils viennent
-      // d'un champ décoré ou d'un sélecteur.
-      padding: const EdgeInsets.only(
-        top: DonySpacing.xs,
-        left: DonySpacing.base,
-        right: DonySpacing.base,
-        bottom: DonySpacing.xs,
+    // Région live : le message apparaît après coup, en réponse à une
+    // validation. Sans ce marquage, un lecteur d'écran ne dit rien et
+    // l'utilisateur reste bloqué sur un formulaire qui refuse sans expliquer
+    // pourquoi (WCAG 3.3.1). L'icône, elle, est décorative : le message la
+    // dit déjà.
+    return Semantics(
+      liveRegion: true,
+      child: Padding(
+        // Aligné sur le gabarit d'InputDecoration.errorText, pour que les
+        // messages d'un même formulaire se placent tous pareil, qu'ils viennent
+        // d'un champ décoré ou d'un sélecteur.
+        padding: const EdgeInsets.only(
+          top: DonySpacing.xs,
+          left: DonySpacing.base,
+          right: DonySpacing.base,
+          bottom: DonySpacing.xs,
+        ),
+        child: withIcon
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ExcludeSemantics(
+                    child: DonyIcon('circle-alert', size: 16, color: cs.error),
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(child: text),
+                ],
+              )
+            : text,
       ),
-      child: withIcon
-          ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DonyIcon('circle-alert', size: 16, color: cs.error),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(child: text),
-              ],
-            )
-          : text,
     );
   }
 }
