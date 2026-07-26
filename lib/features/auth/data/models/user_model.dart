@@ -2,6 +2,13 @@ import 'package:equatable/equatable.dart';
 
 class UserModel extends Equatable {
   final String id;
+
+  /// Identifiant public généré par le serveur à la création du compte
+  /// (« user » + horodatage). Sert de nom de repli quand [firstName] est vide.
+  ///
+  /// Nullable uniquement pour tolérer un cache Hive écrit avant son introduction :
+  /// le serveur le renvoie toujours.
+  final String? username;
   final String? phoneNumber;
   final String? email;
   final String? firstName;
@@ -26,6 +33,7 @@ class UserModel extends Equatable {
 
   const UserModel({
     required this.id,
+    this.username,
     this.phoneNumber,
     this.email,
     this.firstName,
@@ -51,6 +59,7 @@ class UserModel extends Equatable {
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
     id: json['id'] as String,
+    username: json['username'] as String?,
     phoneNumber: json['phoneNumber'] as String?,
     email: json['email'] as String?,
     firstName: json['firstName'] as String?,
@@ -84,6 +93,7 @@ class UserModel extends Equatable {
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'username': username,
     'phoneNumber': phoneNumber,
     'email': email,
     'firstName': firstName,
@@ -109,6 +119,7 @@ class UserModel extends Equatable {
 
   UserModel copyWith({
     String? id,
+    String? username,
     String? phoneNumber,
     String? email,
     String? firstName,
@@ -132,6 +143,7 @@ class UserModel extends Equatable {
     double? averageRating,
   }) => UserModel(
     id: id ?? this.id,
+    username: username ?? this.username,
     phoneNumber: phoneNumber ?? this.phoneNumber,
     email: email ?? this.email,
     firstName: firstName ?? this.firstName,
@@ -155,14 +167,19 @@ class UserModel extends Equatable {
     averageRating: averageRating ?? this.averageRating,
   );
 
+  /// Nom affiché : prénom et nom si renseignés, sinon le [username] du compte.
+  ///
+  /// Ne retombe volontairement ni sur le numéro de téléphone ni sur l'email. C'était le
+  /// comportement précédent, et il affichait une coordonnée personnelle comme nom, ce que
+  /// le réglage « Masquer mon numéro » est censé interdire. Le serveur garantit un
+  /// [username] non vide depuis la migration V183.
   String get displayName {
     final parts = [
       firstName,
       lastName,
     ].where((p) => p != null && p.isNotEmpty).join(' ');
     if (parts.isNotEmpty) return parts;
-    if (phoneNumber != null && phoneNumber!.isNotEmpty) return phoneNumber!;
-    if (email != null && email!.isNotEmpty) return email!;
+    if (username != null && username!.isNotEmpty) return username!;
     return 'Utilisateur';
   }
 
@@ -172,11 +189,10 @@ class UserModel extends Equatable {
     }
     if (firstName?.isNotEmpty ?? false) return firstName![0].toUpperCase();
     if (lastName?.isNotEmpty ?? false) return lastName![0].toUpperCase();
-    if (email?.isNotEmpty ?? false) return email![0].toUpperCase();
-    if (phoneNumber?.isNotEmpty ?? false) {
-      final digits = phoneNumber!.replaceAll(RegExp(r'[^\d]'), '');
-      if (digits.length >= 2) return digits.substring(digits.length - 2);
-      return digits;
+    // Les deux derniers chiffres du username : ils distinguent deux comptes sans nom,
+    // là où le « U » de « user » les rendrait identiques.
+    if (username != null && username!.length >= 2) {
+      return username!.substring(username!.length - 2);
     }
     return '?';
   }
@@ -219,6 +235,7 @@ class UserModel extends Equatable {
   @override
   List<Object?> get props => [
     id,
+    username,
     phoneNumber,
     email,
     firstName,

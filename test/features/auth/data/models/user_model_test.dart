@@ -43,26 +43,43 @@ void main() {
         expect(user.displayName, 'Sow');
       });
 
-      test('pas de nom → retourne le numéro de téléphone', () {
+      // Ni le numéro ni l'email ne servent plus de repli : ils affichaient une coordonnée
+      // personnelle comme nom, ce que « Masquer mon numéro » interdit. Le serveur garantit
+      // un username non vide depuis la migration V183.
+      test('pas de nom → retourne le username, pas le numéro', () {
         const user = UserModel(
           id: 'u1',
+          username: 'user1785153600',
           phoneNumber: '+33699887766',
           roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.displayName, '+33699887766');
+        expect(user.displayName, 'user1785153600');
       });
 
-      test('pas de nom ni téléphone → retourne email', () {
+      test('pas de nom → retourne le username, pas l\'email', () {
         const user = UserModel(
           id: 'u1',
+          username: 'user1785153600',
           email: 'user@example.com',
           roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.displayName, 'user@example.com');
+        expect(user.displayName, 'user1785153600');
+      });
+
+      test('numéro et email seuls, sans username → "Utilisateur"', () {
+        const user = UserModel(
+          id: 'u1',
+          phoneNumber: '+33699887766',
+          email: 'user@example.com',
+          roles: [],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.displayName, 'Utilisateur');
       });
 
       test('rien de disponible → retourne "Utilisateur"', () {
@@ -94,7 +111,7 @@ void main() {
         expect(user.initials, 'K');
       });
 
-      test('seulement email → première lettre en majuscule', () {
+      test('seulement email → ignoré, retourne "?"', () {
         const user = UserModel(
           id: 'u1',
           email: 'amadou@dony.app',
@@ -102,10 +119,10 @@ void main() {
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.initials, 'A');
+        expect(user.initials, '?');
       });
 
-      test('seulement téléphone → deux derniers chiffres', () {
+      test('seulement téléphone → ignoré, retourne "?"', () {
         const user = UserModel(
           id: 'u1',
           phoneNumber: '+33612345678',
@@ -113,7 +130,20 @@ void main() {
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.initials, '78');
+        expect(user.initials, '?');
+      });
+
+      // Deux derniers chiffres du username : le « U » de « user » rendrait tous les
+      // comptes sans nom identiques.
+      test('sans nom → deux derniers chiffres du username', () {
+        const user = UserModel(
+          id: 'u1',
+          username: 'user1785153600',
+          roles: [],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.initials, '00');
       });
 
       test('rien → retourne "?"', () {
