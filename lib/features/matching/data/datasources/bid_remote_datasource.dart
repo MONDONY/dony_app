@@ -23,7 +23,6 @@ class BidRemoteDatasource {
   Future<BidCheckoutResponseModel> checkoutBid({
     required String announcementId,
     required double weightKg,
-    required double declaredValueEur,
     required String description,
     required String contentCategory,
     required String recipientName,
@@ -33,7 +32,6 @@ class BidRemoteDatasource {
   }) async {
     final body = <String, dynamic>{
       'announcementId': announcementId,
-      'declaredValueEur': declaredValueEur,
       'description': description,
       'contentCategory': contentCategory,
       'recipientName': recipientName,
@@ -77,7 +75,6 @@ class BidRemoteDatasource {
   Future<BidModel> createBid({
     required String announcementId,
     required double weightKg,
-    required double declaredValueEur,
     required String description,
     required String contentCategory,
     required String recipientName,
@@ -90,7 +87,6 @@ class BidRemoteDatasource {
     List<Map<String, dynamic>>? gridItems,
   }) async {
     final body = <String, dynamic>{
-      'declaredValueEur': declaredValueEur,
       'description': description,
       'contentCategory': contentCategory,
       'recipientName': recipientName,

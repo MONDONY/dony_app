@@ -43,13 +43,6 @@ class ColisDestinataireCard extends StatelessWidget {
             InfoRow(label: 'Description', value: bid.description!),
           ],
           const SizedBox(height: DonySpacing.sm),
-          InfoRow(
-            label: 'Valeur déclarée',
-            value: bid.declaredValueEur != null
-                ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
-                : '- (à compléter)',
-          ),
-          const SizedBox(height: DonySpacing.sm),
           InfoRow(label: 'Destinataire', value: bid.recipientName ?? '-'),
           const SizedBox(height: DonySpacing.sm),
           InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '-'),

@@ -16,7 +16,6 @@ class BidRepository {
   Future<BidCheckoutResponseModel> checkoutBid({
     required String announcementId,
     required double weightKg,
-    required double declaredValueEur,
     required String description,
     required String contentCategory,
     required String recipientName,
@@ -26,7 +25,6 @@ class BidRepository {
   }) => _datasource.checkoutBid(
     announcementId: announcementId,
     weightKg: weightKg,
-    declaredValueEur: declaredValueEur,
     description: description,
     contentCategory: contentCategory,
     recipientName: recipientName,
@@ -50,7 +48,6 @@ class BidRepository {
   Future<BidModel> createBid({
     required String announcementId,
     required double weightKg,
-    required double declaredValueEur,
     required String description,
     required String contentCategory,
     required String recipientName,
@@ -64,7 +61,6 @@ class BidRepository {
   }) => _datasource.createBid(
     announcementId: announcementId,
     weightKg: weightKg,
-    declaredValueEur: declaredValueEur,
     description: description,
     contentCategory: contentCategory,
     recipientName: recipientName,

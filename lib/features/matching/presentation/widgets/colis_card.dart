@@ -18,13 +18,6 @@ class ColisCard extends StatelessWidget {
           InfoRow(label: 'Description', value: bid.description ?? '-'),
           const SizedBox(height: DonySpacing.sm),
           InfoRow(label: 'Poids', value: bid.weightKg != null ? '${bid.weightKg} kg' : '-'),
-          const SizedBox(height: DonySpacing.sm),
-          InfoRow(
-            label: 'Valeur déclarée',
-            value: bid.declaredValueEur != null
-                ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
-                : '- (à compléter)',
-          ),
         ],
       ),
     );

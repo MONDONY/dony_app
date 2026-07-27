@@ -56,7 +56,6 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       final response = await _repository.checkoutBid(
         announcementId: event.announcementId,
         weightKg: event.weightKg,
-        declaredValueEur: event.declaredValueEur,
         description: event.description,
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
@@ -81,7 +80,6 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       final bid = await _repository.createBid(
         announcementId: event.announcementId,
         weightKg: event.weightKg,
-        declaredValueEur: event.declaredValueEur,
         description: event.description,
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,

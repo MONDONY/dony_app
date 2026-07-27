@@ -21,6 +21,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -54,7 +55,6 @@ class _BtnConfig {
 class _CollectedFormData {
   const _CollectedFormData({
     required this.weightKg,
-    required this.declaredValueEur,
     required this.description,
     required this.contentCategory,
     required this.recipientName,
@@ -64,7 +64,6 @@ class _CollectedFormData {
     this.photoKeys,
   });
   final double weightKg;
-  final double declaredValueEur;
   final String description;
   final String contentCategory;
   final String recipientName;
@@ -113,7 +112,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   // ── Form step fields ────────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
-  final _valueCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
   final _recipientSection = RecipientSectionController();
@@ -142,7 +140,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// devis calculé, catalogue chargé en asynchrone).
   String get _formSignature => [
         _descCtrl.text,
-        _valueCtrl.text,
         _recipientNameCtrl.text,
         _recipientPhoneCtrl.text,
         _promoCtrl.text,
@@ -260,7 +257,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// Tout ce que l'utilisateur peut saisir, pour brancher `_recomputeDirty`.
   List<Listenable> get _dirtySources => [
         _descCtrl,
-        _valueCtrl,
         _recipientNameCtrl,
         _recipientPhoneCtrl,
         _promoCtrl,
@@ -307,7 +303,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _paymentBloc.close();
     _photosCubit.close();
     _descCtrl.dispose();
-    _valueCtrl.dispose();
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
     _promoCtrl.dispose();
@@ -447,15 +442,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError('Description obligatoire');
       return;
     }
-    final val = double.tryParse(_valueCtrl.text);
-    if (val == null || val <= 0) {
-      _showError('Valeur déclarée invalide');
-      return;
-    }
-    if (val > 500) {
-      _showError('Valeur maximum : 500 €');
-      return;
-    }
     if (_recipientNameCtrl.text.trim().isEmpty) {
       _showError('Nom du destinataire obligatoire');
       return;
@@ -478,7 +464,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         : null;
     _formData = _CollectedFormData(
       weightKg: _weightNotifier.value,
-      declaredValueEur: val,
       description: _descCtrl.text.trim(),
       contentCategory: _categoriesNotifier.value.join(', '),
       recipientName: _recipientNameCtrl.text.trim(),
@@ -505,7 +490,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _bidBloc.add(BidCreateRequested(
         announcementId: widget.announcement.id,
         weightKg: data.weightKg,
-        declaredValueEur: data.declaredValueEur,
         description: data.description,
         contentCategory: data.contentCategory,
         recipientName: data.recipientName,
@@ -519,7 +503,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _bidBloc.add(BidCheckoutRequested(
         announcementId: widget.announcement.id,
         weightKg: data.weightKg,
-        declaredValueEur: data.declaredValueEur,
         description: data.description,
         contentCategory: data.contentCategory,
         recipientName: data.recipientName,
@@ -899,35 +882,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ).animate().fadeIn(delay: 100.ms),
             const SizedBox(height: DonySpacing.xxl),
 
-            // ── Valeur déclarée ───────────────────────────────────────────
-            const _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
-            const SizedBox(height: DonySpacing.sm),
-            TextFormField(
-              controller: _valueCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              scrollPadding: const EdgeInsets.only(bottom: 120),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                    RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-              decoration: InputDecoration(
-                hintText: '120',
-                helperText:
-                    'Plafond : 500 € (couvre l\'assurance en cas de sinistre)',
-                helperStyle:
-                    Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                        ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
-                  vertical: DonySpacing.md,
-                ),
-              ),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ).animate().fadeIn(delay: 140.ms),
+            // ── Politique de remboursement ────────────────────────────────
+            const ReimbursementInfoBanner().animate().fadeIn(delay: 140.ms),
             const SizedBox(height: DonySpacing.xxl),
 
             // ── Destinataire ──────────────────────────────────────────────

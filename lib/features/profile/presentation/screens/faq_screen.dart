@@ -49,10 +49,6 @@ class FaqScreen extends StatelessWidget {
           q: 'Puis-je modifier ma demande après publication ?',
           a: 'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Une fois un voyageur accepté, contacte le support pour toute modification.',
         ),
-        _FaqItem(
-          q: 'Quelle est la valeur maximale déclarable ?',
-          a: 'La valeur maximale est de 500 €. Cette limite protège les deux parties et correspond aux seuils réglementaires de déclaration en douane.',
-        ),
       ],
     ),
     _FaqSectionData(
@@ -95,15 +91,15 @@ class FaqScreen extends StatelessWidget {
         ),
       ],
     ),
-    const _FaqSectionData(
+    _FaqSectionData(
       title: 'Sécurité & données',
       iconAsset: 'shield-check',
       items: [
         _FaqItem(
-          q: 'Pourquoi la valeur déclarée est-elle limitée à 500 € ?',
-          a: 'Cette limite correspond aux seuils réglementaires de déclaration en douane pour les envois personnels. Au-delà, des formalités douanières supplémentaires sont requises.',
+          q: 'Que se passe-t-il si mon colis est perdu ?',
+          a: 'dony ne couvre pas automatiquement la perte d\'un colis. En cas de perte confirmée après recherche de notre équipe, un remboursement jusqu\'à $donyReimbursementCapLabel € peut être accordé si toutes les conditions suivantes sont respectées : paiement effectué par carte via dony (jamais en espèces) ; aucun échange ou paiement effectué en dehors de la plateforme avec le voyageur ; colis scanné via QR code dony au dépôt et à la remise ; litige signalé dans l\'application dans les 15 jours suivant la date de livraison prévue ; contenu du colis conforme aux objets autorisés par dony. Le remboursement n\'est jamais automatique et reste soumis à validation de l\'équipe dony après investigation.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Que faire en cas de litige avec un voyageur ?',
           a: 'Ouvre un litige depuis ton profil → "Mes litiges". Fournis les preuves (photos, messages). Notre équipe arbitre dans les 48 h.',
         ),
