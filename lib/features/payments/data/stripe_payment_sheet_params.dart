@@ -4,7 +4,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 const _stripePublishableKeyDefault =
     String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
 
-/// Params uniques de la PaymentSheet Stripe pour yadony (Approche A).
+/// Params uniques de la PaymentSheet Stripe pour Yadony (Approche A).
 ///
 /// Affiche Carte + Apple Pay + Google Pay + PayPal dans la feuille native :
 /// - Apple Pay / Google Pay = wallets carte (config client ci-dessous).

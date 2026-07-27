@@ -70,7 +70,7 @@ class TalonTrackingStrip extends StatelessWidget {
             ),
             tooltip: 'Partager',
             onPressed: () =>
-                Share.share('Suivez mon colis yadony #$trackingNumber'),
+                Share.share('Suivez mon colis Yadony #$trackingNumber'),
           ),
         ],
       ),

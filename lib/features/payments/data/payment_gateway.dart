@@ -27,7 +27,7 @@ class PaymentConfirmationException implements Exception {
 /// Abstraction testable du SDK flutter_stripe pour la DonyPaymentSheet.
 /// La saisie carte passe exclusivement par la PaymentSheet native Stripe
 /// ([initPaymentSheet] + [presentPaymentSheet]) — jamais de numéro brut côté
-/// yadony.
+/// Yadony.
 abstract class PaymentGateway {
   Future<bool> isPlatformPaySupported();
 

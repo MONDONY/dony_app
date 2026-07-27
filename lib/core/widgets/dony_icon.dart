@@ -91,7 +91,7 @@ class DonyIcon3d extends StatelessWidget {
   }
 }
 
-/// Raccourci pratique : icône SVG teintée en couleur primaire yadony.
+/// Raccourci pratique : icône SVG teintée en couleur primaire Yadony.
 ///
 /// Équivaut à `DonyIcon(name, color: DonyColors.primary)`.
 class DonyIconPrimary extends StatelessWidget {

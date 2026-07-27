@@ -482,7 +482,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Demandé à chaque ouverture de yadony'), findsOneWidget);
+      expect(find.text('Demandé à chaque ouverture de Yadony'), findsOneWidget);
       expect(find.text('Modifier le code PIN'), findsOneWidget);
     });
 

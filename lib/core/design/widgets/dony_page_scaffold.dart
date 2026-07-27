@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Scaffold standardisé pour les écrans secondaires yadony.
+/// Scaffold standardisé pour les écrans secondaires Yadony.
 ///
 /// - [DonyAppBar] avec back button
 /// - Fond [Theme.scaffoldBackgroundColor] (brightness-aware)

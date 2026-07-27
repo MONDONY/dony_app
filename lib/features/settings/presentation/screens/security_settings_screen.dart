@@ -220,7 +220,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       iconBgColor: cs.primaryContainer,
                       label: "Code PIN à l'ouverture",
                       subtitle: pinConfigured
-                          ? 'Demandé à chaque ouverture de yadony'
+                          ? 'Demandé à chaque ouverture de Yadony'
                           : "Désactivé, l'app s'ouvre sans code",
                       trailing: Switch(
                         value: pinConfigured,

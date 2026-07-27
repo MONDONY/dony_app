@@ -1524,7 +1524,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                           '${announcement.arrivalCity} le '
                           '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
                           'avec de la place dans mes bagages !\n'
-                          'Réserve tes kilos sur yadony 📦',
+                          'Réserve tes kilos sur Yadony 📦',
                         )),
               ),
             ));

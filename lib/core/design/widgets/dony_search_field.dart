@@ -2,7 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
-/// Champ de recherche yadony avec animation de focus et bouton clear.
+/// Champ de recherche Yadony avec animation de focus et bouton clear.
 ///
 /// Usage :
 /// ```dart

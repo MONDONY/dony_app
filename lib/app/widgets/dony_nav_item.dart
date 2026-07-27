@@ -2,7 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 
-/// Item de la bottom navigation bar yadony (île flottante).
+/// Item de la bottom navigation bar Yadony (île flottante).
 ///
 /// L'état actif est signalé par deux choses : (1) une pastille bleue
 /// PARTAGÉE et glissante, peinte par le parent (`_DonyBottomNav` dans

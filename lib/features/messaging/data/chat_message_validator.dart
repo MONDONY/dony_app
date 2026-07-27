@@ -1,4 +1,4 @@
-/// Validation du contenu des messages texte du chat yadony.
+/// Validation du contenu des messages texte du chat Yadony.
 ///
 /// Règles (cf. spec 2026-06-20-chat-redesign) — bloque + avertit :
 /// 1. Longueur 1–500, trim, pas de vide.
@@ -46,7 +46,7 @@ abstract final class ChatMessageRules {
   static const Duration dedupWindow = Duration(seconds: 30);
 
   static const String contactMsg =
-      'Pour ta sécurité, garde les échanges et le paiement sur yadony. '
+      'Pour ta sécurité, garde les échanges et le paiement sur Yadony. '
       'Le partage de coordonnées est interdit.';
 
   // ── Détecteurs (anti-contournement / contenu interdit) ──────────────────────

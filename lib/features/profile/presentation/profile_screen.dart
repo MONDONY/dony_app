@@ -383,7 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       const SizedBox(height: DonySpacing.xxl),
       Text(
-        'yadony v1.0.0 · Made with ❤️ in Paris',
+        'Yadony v1.0.0 · Made with ❤️ in Paris',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: Theme.of(context).colorScheme.outline,
         ),

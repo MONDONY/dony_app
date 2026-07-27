@@ -17,7 +17,7 @@ class FaqScreen extends StatelessWidget {
       items: [
         _FaqItem(
           q: 'Pourquoi la vérification d\'identité est-elle obligatoire ?',
-          a: 'La vérification d\'identité est exigée par la réglementation financière européenne. Elle nous permet de lutter contre la fraude et de protéger tous les utilisateurs de yadony.',
+          a: 'La vérification d\'identité est exigée par la réglementation financière européenne. Elle nous permet de lutter contre la fraude et de protéger tous les utilisateurs de Yadony.',
         ),
         _FaqItem(
           q: 'Combien de temps prend la validation ?',
@@ -28,7 +28,7 @@ class FaqScreen extends StatelessWidget {
           a: "Carte nationale d'identité, passeport ou titre de séjour en cours de validité. Le document doit être lisible et non expiré.",
         ),
         _FaqItem(
-          q: 'Puis-je utiliser yadony sans vérifier mon identité ?',
+          q: 'Puis-je utiliser Yadony sans vérifier mon identité ?',
           a: 'Tu peux explorer les annonces sans vérifier ton identité, mais tu ne peux pas envoyer ni transporter de colis. La vérification d\'identité est indispensable pour effectuer des transactions.',
         ),
       ],
@@ -97,7 +97,7 @@ class FaqScreen extends StatelessWidget {
       items: [
         _FaqItem(
           q: 'Que se passe-t-il si mon colis est perdu ?',
-          a: 'yadony ne couvre pas automatiquement la perte d\'un colis. En cas de perte confirmée après recherche de notre équipe, un remboursement jusqu\'à $donyReimbursementCapLabel € peut être accordé si toutes les conditions suivantes sont respectées : paiement effectué par carte via yadony (jamais en espèces) ; aucun échange ou paiement effectué en dehors de la plateforme avec le voyageur ; colis scanné via QR code yadony au dépôt et à la remise ; litige signalé dans l\'application dans les 15 jours suivant la date de livraison prévue ; contenu du colis conforme aux objets autorisés par yadony. Le remboursement n\'est jamais automatique et reste soumis à validation de l\'équipe yadony après investigation.',
+          a: 'Yadony ne couvre pas automatiquement la perte d\'un colis. En cas de perte confirmée après recherche de notre équipe, un remboursement jusqu\'à $donyReimbursementCapLabel € peut être accordé si toutes les conditions suivantes sont respectées : paiement effectué par carte via Yadony (jamais en espèces) ; aucun échange ou paiement effectué en dehors de la plateforme avec le voyageur ; colis scanné via QR code Yadony au dépôt et à la remise ; litige signalé dans l\'application dans les 15 jours suivant la date de livraison prévue ; contenu du colis conforme aux objets autorisés par Yadony. Le remboursement n\'est jamais automatique et reste soumis à validation de l\'équipe Yadony après investigation.',
         ),
         const _FaqItem(
           q: 'Que faire en cas de litige avec un voyageur ?',

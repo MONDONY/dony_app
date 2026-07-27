@@ -471,7 +471,7 @@ void main() {
         expect(
           find.textContaining(
             'Paiement en espèces : pas de séquestre, vous payez le voyageur '
-            'directement, sans garantie de remboursement par yadony.',
+            'directement, sans garantie de remboursement par Yadony.',
           ),
           findsOneWidget,
         );

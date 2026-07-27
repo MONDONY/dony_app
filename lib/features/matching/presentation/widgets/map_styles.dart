@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Style Google « nuit » dérivé des tokens dark du design system yadony :
+/// Style Google « nuit » dérivé des tokens dark du design system Yadony :
 /// geometry = neutralDark50 (#11161E), water = neutralDark0 (#0A0E14),
 /// road = neutralDark200 (#222932), road stroke = neutralDark100 (#161B23),
 /// highway = neutralDark300 (#2D333D), labels = neutralDark500 (#B5AFA5).

@@ -1,4 +1,4 @@
-// Seuils de performance pour le harness perf yadony.
+// Seuils de performance pour le harness perf Yadony.
 // Ces constantes définissent les limites PASS / WARN / FAIL
 // utilisées par tool/parse_timeline.dart et les tests associés.
 

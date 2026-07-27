@@ -34,8 +34,8 @@ Future<void> shareTrackingLink(BidModel bid) async {
 
   final url = trackingPublicUrl(token);
   await Share.share(
-    'Suivez votre colis yadony en temps réel :\n$url',
-    subject: 'Suivi de colis yadony · ${bid.trackingNumber ?? ''}',
+    'Suivez votre colis Yadony en temps réel :\n$url',
+    subject: 'Suivi de colis Yadony · ${bid.trackingNumber ?? ''}',
   );
 }
 

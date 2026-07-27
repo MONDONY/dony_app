@@ -12,7 +12,7 @@ abstract final class AnalyticsConsentSheet {
     final accepted = await DonyBottomSheet.show<bool>(
       context,
       isDismissible: false,
-      title: 'Aide-nous à améliorer yadony',
+      title: 'Aide-nous à améliorer Yadony',
       subtitle:
           "Avec ton accord, on mesure de façon anonyme comment l'app est "
           "utilisée, pour corriger les bugs et simplifier ton expérience.",

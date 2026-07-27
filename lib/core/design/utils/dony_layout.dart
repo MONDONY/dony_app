@@ -1,7 +1,7 @@
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 
-/// Utility class for responsive layout helpers used throughout the yadony design system.
+/// Utility class for responsive layout helpers used throughout the Yadony design system.
 abstract final class DonyLayout {
   /// Returns true when the screen width is < 600 (phone/compact).
   static bool isCompact(BuildContext context) {

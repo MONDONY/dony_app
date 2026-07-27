@@ -87,8 +87,8 @@ class DisputeTimeline extends StatelessWidget {
           dotColor: resolved ? cs.primary : cs.warning,
           title: 'En instruction',
           subtitle: resolved
-              ? 'examiné par l\'équipe yadony'
-              : 'en cours d\'examen par l\'équipe yadony',
+              ? 'examiné par l\'équipe Yadony'
+              : 'en cours d\'examen par l\'équipe Yadony',
         ),
         step(
           dotColor: cs.success,

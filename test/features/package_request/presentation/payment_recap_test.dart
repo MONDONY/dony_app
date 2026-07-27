@@ -117,7 +117,7 @@ void main() {
         expect(find.text('35,00 €'), findsOneWidget);
 
         // Line 2: service fee
-        expect(find.text('Frais de service yadony'), findsOneWidget);
+        expect(find.text('Frais de service Yadony'), findsOneWidget);
         expect(find.text('4,20 €'), findsOneWidget);
 
         // Line 3: total
@@ -167,7 +167,7 @@ void main() {
 
         // Line 2: fee note (traveler covers fees)
         expect(
-          find.text('dont frais yadony (réglés par le voyageur)'),
+          find.text('dont frais Yadony (réglés par le voyageur)'),
           findsOneWidget,
         );
         expect(find.text('4,20 €'), findsOneWidget);

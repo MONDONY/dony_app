@@ -554,7 +554,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       BidPaymentMethod.cash =>
         'Paiement en espèces : si le voyageur accepte, tu remets le montant '
             'en main propre à la remise du colis. En cas d\'annulation après la '
-            'remise, yadony ne peut pas te rembourser immédiatement mais '
+            'remise, Yadony ne peut pas te rembourser immédiatement mais '
             's\'assurera que le voyageur te restitue ton argent.',
       _ => 'Le voyageur va examiner ta demande.',
     };
@@ -1842,7 +1842,7 @@ class _CashEscrowWarning extends StatelessWidget {
         Expanded(
           child: Text(
             'Paiement en espèces : pas de séquestre, vous payez le voyageur '
-            'directement, sans garantie de remboursement par yadony.',
+            'directement, sans garantie de remboursement par Yadony.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),

@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Chip de filtre/sélection yadony.
+/// Chip de filtre/sélection Yadony.
 ///
 /// Usage simple :
 /// ```dart

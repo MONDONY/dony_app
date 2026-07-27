@@ -128,7 +128,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       ),
                       const TextSpan(
                         text: 'Le paiement se fait en main propre au '
-                            'voyageur, yadony ne séquestre pas votre argent '
+                            'voyageur, Yadony ne séquestre pas votre argent '
                             'et ne peut pas le rembourser automatiquement '
                             'en cas de litige.',
                       ),

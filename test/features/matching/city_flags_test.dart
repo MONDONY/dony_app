@@ -2,7 +2,7 @@ import 'package:dony/features/matching/presentation/utils/city_flags.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('villes des corridors yadony', () {
+  test('villes des corridors Yadony', () {
     expect(cityFlag('Paris'), '🇫🇷');
     expect(cityFlag('lyon'), '🇫🇷');
     expect(cityFlag('MARSEILLE'), '🇫🇷');

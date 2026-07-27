@@ -124,7 +124,7 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Remboursement gelé le temps de l\'instruction — l\'équipe yadony tranche sous 72 h ouvrées.',
+                      'Remboursement gelé le temps de l\'instruction — l\'équipe Yadony tranche sous 72 h ouvrées.',
                       style: tt.bodySmall?.copyWith(
                           color: cs.primary, fontWeight: FontWeight.w600),
                     ),

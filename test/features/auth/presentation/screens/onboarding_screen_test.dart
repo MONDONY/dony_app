@@ -95,7 +95,7 @@ void main() {
     expect(find.text('Garanti'), findsOneWidget);
   });
 
-  testWidgets('OnboardingScreen affiche le logo yadony', (tester) async {
+  testWidgets('OnboardingScreen affiche le logo Yadony', (tester) async {
     await _pump(tester, mockAuthBloc);
 
     // DonyLogo is an Image.asset widget — verify it is present

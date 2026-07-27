@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// Variante du champ : texte (saisie clavier) ou tappable (picker).
 enum _DonyTextFieldVariant { text, tappable }
 
-/// Champ de formulaire yadony.
+/// Champ de formulaire Yadony.
 ///
 /// Deux variantes :
 /// - **Constructeur par défaut** — champ texte classique (TextFormField).

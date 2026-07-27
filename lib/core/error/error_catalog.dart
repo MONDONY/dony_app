@@ -129,7 +129,7 @@ abstract final class ErrorCatalog {
       icon: Icons.search_off_rounded,
     ),
     // Le voyageur n'accepte que les profils vérifiés : c'est son choix, pas un
-    // blocage de yadony. Le message oriente vers la vérification d'identité, qui
+    // blocage de Yadony. Le message oriente vers la vérification d'identité, qui
     // est la seule issue pour cet expéditeur.
     'contact-kyc-required': ErrorPresentation(
       title: 'Profil vérifié requis',

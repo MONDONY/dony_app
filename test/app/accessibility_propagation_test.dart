@@ -181,7 +181,7 @@ void main() {
         // Ronde 2 — 'system' est la valeur par défaut de reduceMotion,
         // donc le chemin le plus fréquent, pas un cas limite : l'utilisateur
         // qui a activé la réduction dans les réglages de son téléphone sans
-        // jamais ouvrir l'écran d'accessibilité yadony.
+        // jamais ouvrir l'écran d'accessibilité Yadony.
         'un état reduceMotion: system avec un système qui demande la '
         'réduction force Animate.defaultDuration à zéro', () {
       primeReducedMotionDuration(

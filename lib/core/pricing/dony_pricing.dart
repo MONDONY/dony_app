@@ -56,7 +56,7 @@ double netToSenderPrice(double net) => net * donyCommissionMultiplier;
 String formatKgPrice(double value) =>
     value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
 
-/// Plafond de remboursement yadony en cas de perte de colis (€), source unique
+/// Plafond de remboursement Yadony en cas de perte de colis (€), source unique
 /// backend `dony.reimbursement.max-amount-eur`. Chargé une fois au démarrage
 /// via `GET /config/reimbursement-cap` → [setDonyReimbursementCap], repli sur
 /// [kDonyReimbursementCapDefault] tant qu'il n'est pas chargé / en cas d'erreur.

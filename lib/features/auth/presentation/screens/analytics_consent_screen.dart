@@ -90,7 +90,7 @@ class _Header extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              "Pour améliorer yadony, on aimerait mesurer comment\nl'app est utilisée. C'est anonyme et facultatif.",
+              "Pour améliorer Yadony, on aimerait mesurer comment\nl'app est utilisée. C'est anonyme et facultatif.",
               style: tt.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 height: 1.45,
