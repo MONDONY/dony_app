@@ -23,7 +23,6 @@ BidModel _bid({
   required String status,
   String? trackingNumber,
   String? confirmationCode,
-  double? declaredValueEur,
   String? contentCategory,
   double weightKg = 5,
   String? returnCode,
@@ -41,7 +40,6 @@ BidModel _bid({
   updatedAt: DateTime(2026, 5),
   trackingNumber: trackingNumber,
   confirmationCode: confirmationCode,
-  declaredValueEur: declaredValueEur,
   contentCategory: contentCategory,
   returnCode: returnCode,
   returnDeadline: returnDeadline,
@@ -412,33 +410,23 @@ void main() {
   });
 
   testWidgets(
-    'voyageur + PENDING → résumé de décision avec poids/valeur/type',
+    'voyageur + PENDING → résumé de décision avec poids/type',
     (tester) async {
       await _pump(
         tester,
         _bid(
           status: 'PENDING',
-          declaredValueEur: 150,
           contentCategory: 'Vêtements',
           weightKg: 3.5,
         ),
         false,
       );
       expect(find.text('POIDS'), findsOneWidget);
-      expect(find.text('VALEUR'), findsOneWidget);
       expect(find.text('TYPE'), findsOneWidget);
       expect(find.text('3.5 kg'), findsOneWidget);
-      expect(find.text('150 €'), findsOneWidget);
       expect(find.text('Vêtements'), findsOneWidget);
     },
   );
-
-  testWidgets('voyageur + PENDING sans valeur déclarée → "-" pour la valeur', (
-    tester,
-  ) async {
-    await _pump(tester, _bid(status: 'PENDING'), false);
-    expect(find.text('-'), findsWidgets);
-  });
 
   testWidgets('voyageur + HANDED_OVER → lien "Scanner les étapes" (Suivi)', (
     tester,

@@ -188,11 +188,10 @@ Future<void> _fillMandatoryFields(
 }) async {
   await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(2), '100');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(3), 'Amadou Diallo');
+  await tester.enterText(find.byType(TextField).at(2), 'Amadou Diallo');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(4), phone);
+  await tester.enterText(find.byType(TextField).at(3), phone);
   await tester.pump();
 }
 
@@ -207,7 +206,6 @@ void main() {
       BidCheckoutRequested(
         announcementId: '',
         weightKg: 0,
-        declaredValueEur: 0,
         description: '',
         contentCategory: '',
         recipientName: '',
@@ -368,7 +366,6 @@ void main() {
       await _enableSubmitButton(tester);
       await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(2), '100');
       await tester.pump();
       // Nom et téléphone laissés vides.
 

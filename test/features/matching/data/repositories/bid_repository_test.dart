@@ -13,7 +13,6 @@ BidModel _bid({String id = 'bid-001', String status = 'PENDING'}) => BidModel(
       announcementId: 'ann-001',
       senderId: 'sender-001',
       weightKg: 5.0,
-      declaredValueEur: 100.0,
       description: 'Test',
       status: status,
       createdAt: DateTime(2024, 5, 1),
@@ -34,7 +33,6 @@ void main() {
       when(() => mockDs.createBid(
             announcementId: any(named: 'announcementId'),
             weightKg: any(named: 'weightKg'),
-            declaredValueEur: any(named: 'declaredValueEur'),
             description: any(named: 'description'),
             contentCategory: any(named: 'contentCategory'),
             recipientName: any(named: 'recipientName'),
@@ -44,7 +42,6 @@ void main() {
       final result = await repo.createBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Test',
         contentCategory: 'OTHER',
         recipientName: 'Fatou',
@@ -145,7 +142,6 @@ void main() {
       when(() => mockDs.checkoutBid(
             announcementId: any(named: 'announcementId'),
             weightKg: any(named: 'weightKg'),
-            declaredValueEur: any(named: 'declaredValueEur'),
             description: any(named: 'description'),
             contentCategory: any(named: 'contentCategory'),
             recipientName: any(named: 'recipientName'),
@@ -155,7 +151,6 @@ void main() {
       final result = await repo.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Test',
         contentCategory: 'OTHER',
         recipientName: 'Fatou',
@@ -176,7 +171,6 @@ void main() {
       when(() => mockDs.checkoutBid(
             announcementId: any(named: 'announcementId'),
             weightKg: any(named: 'weightKg'),
-            declaredValueEur: any(named: 'declaredValueEur'),
             description: any(named: 'description'),
             contentCategory: any(named: 'contentCategory'),
             recipientName: any(named: 'recipientName'),
@@ -187,7 +181,6 @@ void main() {
       final result = await repo.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Test',
         contentCategory: 'OTHER',
         recipientName: 'Fatou',

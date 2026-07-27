@@ -64,7 +64,6 @@ BidModel _bid({
       announcementId: announcementId,
       senderId: 'uid-1',
       weightKg: 5,
-      declaredValueEur: 100,
       description: 'Test',
       status: status,
       createdAt: DateTime(2026, 5, 1),

@@ -53,7 +53,6 @@ BidModel _makeBid({String id = 'bid-00000001', String status = 'PENDING'}) =>
       announcementId: 'ann-00000001',
       senderId: 'u-1',
       weightKg: 5,
-      declaredValueEur: 100,
       description: 'Vêtements pour la famille',
       status: status,
       createdAt: DateTime(2026, 1, 1),
@@ -143,7 +142,6 @@ void main() {
       BidCheckoutRequested(
         announcementId: '',
         weightKg: 0,
-        declaredValueEur: 0,
         description: '',
         contentCategory: '',
         recipientName: '',

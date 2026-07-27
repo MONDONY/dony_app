@@ -165,7 +165,7 @@ void main() {
     expect(find.text('Choisir un destinataire'), findsOneWidget);
     // The 3 raw fields are still there, unchanged, as RecipientSection's
     // children.
-    expect(find.byType(TextFormField), findsNWidgets(4));
+    expect(find.byType(TextFormField), findsNWidgets(3));
   });
 
   testWidgets(
@@ -200,7 +200,6 @@ void main() {
       await tester.enterText(fields.at(1), '+221771112233'); // recipient phone
       // City left empty on purpose: maybeSave must fall back to
       // state.request!.arrivalCity ('Dakar').
-      await tester.enterText(fields.at(3), '120'); // declared value
       await tester.pump();
 
       // Toggle "Enregistrer ce destinataire" appears once the phone is a
@@ -216,7 +215,6 @@ void main() {
       expect(submittedEvents, hasLength(1));
       expect(submittedEvents.single.recipientName, 'Fatou Ndiaye');
       expect(submittedEvents.single.recipientPhone, '+221771112233');
-      expect(submittedEvents.single.declaredValueEur, 120.0);
 
       // Simulate the backend confirming success — this is when the listener
       // must call RecipientSectionController.maybeSaveManualEntry() BEFORE
@@ -271,7 +269,6 @@ void main() {
     final fields = find.byType(TextFormField);
     await tester.enterText(fields.at(0), 'Fatou Ndiaye');
     await tester.enterText(fields.at(1), '+221771112233');
-    await tester.enterText(fields.at(3), '120');
     await tester.pump();
 
     await tester.tap(find.text('Continuer vers le paiement'));

@@ -19,7 +19,6 @@ BidModel buildBid({String id = 'bid-001', String status = 'PENDING'}) => BidMode
       announcementId: 'ann-001',
       senderId: 'sender-001',
       weightKg: 5.0,
-      declaredValueEur: 100.0,
       description: 'Vêtements',
       status: status,
       createdAt: DateTime.now(),
@@ -63,7 +62,6 @@ void main() {
         when(() => mockRepo.checkoutBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -75,7 +73,6 @@ void main() {
       act: (bloc) => bloc.add(BidCheckoutRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Aminata Diallo',
@@ -94,7 +91,6 @@ void main() {
         when(() => mockRepo.checkoutBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -107,7 +103,6 @@ void main() {
       act: (bloc) => bloc.add(BidCheckoutRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Électronique',
         contentCategory: 'ELECTRONICS',
         recipientName: 'Mamadou Ba',
@@ -128,7 +123,6 @@ void main() {
         when(() => mockRepo.checkoutBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -140,7 +134,6 @@ void main() {
       act: (bloc) => bloc.add(BidCheckoutRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Aminata',
@@ -155,7 +148,6 @@ void main() {
         when(() => mockRepo.checkoutBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -175,7 +167,6 @@ void main() {
       act: (bloc) => bloc.add(BidCheckoutRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 501.0,
         description: 'Bijoux',
         contentCategory: 'JEWELRY',
         recipientName: 'Recip',
@@ -194,7 +185,6 @@ void main() {
         when(() => mockRepo.checkoutBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -206,7 +196,6 @@ void main() {
       act: (bloc) => bloc.add(BidCheckoutRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Desc',
         contentCategory: 'OTHER',
         recipientName: 'Recip',
@@ -225,7 +214,6 @@ void main() {
         when(() => mockRepo.createBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -237,7 +225,6 @@ void main() {
       act: (bloc) => bloc.add(BidCreateRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Aminata Diallo',
@@ -255,7 +242,6 @@ void main() {
         when(() => mockRepo.createBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -275,7 +261,6 @@ void main() {
       act: (bloc) => bloc.add(BidCreateRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 501.0,
         description: 'Bijoux',
         contentCategory: 'JEWELRY',
         recipientName: 'Recip',
@@ -293,7 +278,6 @@ void main() {
         when(() => mockRepo.createBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -305,7 +289,6 @@ void main() {
       act: (bloc) => bloc.add(BidCreateRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Desc',
         contentCategory: 'OTHER',
         recipientName: 'Recip',
@@ -320,7 +303,6 @@ void main() {
         when(() => mockRepo.createBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -332,7 +314,6 @@ void main() {
       act: (bloc) => bloc.add(BidCreateRequested(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Aminata Diallo',
@@ -344,7 +325,6 @@ void main() {
         verify(() => mockRepo.createBid(
               announcementId: any(named: 'announcementId'),
               weightKg: any(named: 'weightKg'),
-              declaredValueEur: any(named: 'declaredValueEur'),
               description: any(named: 'description'),
               contentCategory: any(named: 'contentCategory'),
               recipientName: any(named: 'recipientName'),
@@ -1099,7 +1079,6 @@ void main() {
         senderId: 's1',
         senderName: 'Amadou Diallo',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Test',
         status: 'PENDING',
         createdAt: DateTime.now(),
@@ -1115,7 +1094,6 @@ void main() {
         senderId: 's1',
         senderPhoneAvailable: true,
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Test',
         status: 'PENDING',
         createdAt: DateTime.now(),

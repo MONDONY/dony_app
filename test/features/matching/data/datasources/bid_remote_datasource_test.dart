@@ -15,7 +15,6 @@ final _bidJson = {
   'announcementId': 'ann-001',
   'senderId': 'sender-001',
   'weightKg': 5.0,
-  'declaredValueEur': 100.0,
   'description': 'Vêtements',
   'status': 'PENDING',
   'voyageurConfirmed': false,
@@ -53,7 +52,6 @@ void main() {
       final result = await datasource.createBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -246,7 +244,6 @@ void main() {
       final result = await datasource.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -268,7 +265,6 @@ void main() {
       await datasource.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Électronique',
         contentCategory: 'ELECTRONICS',
         recipientName: 'Mamadou',
@@ -294,7 +290,6 @@ void main() {
       await datasource.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -315,7 +310,6 @@ void main() {
       await datasource.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -339,7 +333,6 @@ void main() {
       await datasource.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 3.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -525,7 +518,6 @@ void main() {
       await datasource.createBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -550,7 +542,6 @@ void main() {
       await datasource.createBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -572,7 +563,6 @@ void main() {
       await datasource.createBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -595,7 +585,6 @@ void main() {
       await datasource.createBid(
         announcementId: 'ann-001',
         weightKg: 0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
@@ -620,7 +609,6 @@ void main() {
       await datasource.createBid(
         announcementId: 'ann-001',
         weightKg: 4.0,
-        declaredValueEur: 100.0,
         description: 'Vêtements',
         contentCategory: 'CLOTHING',
         recipientName: 'Fatou',
