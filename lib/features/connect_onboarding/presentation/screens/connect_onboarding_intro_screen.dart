@@ -157,7 +157,7 @@ class _IntroView extends StatelessWidget {
                   type: DonyStatusBannerType.info,
                   iconAsset: 'shield',
                   message:
-                      'Tes données sont chiffrées et gérées directement par Stripe : dony n\'a jamais accès à tes informations bancaires.',
+                      'Tes données sont chiffrées et gérées directement par Stripe : yadony n\'a jamais accès à tes informations bancaires.',
                 ).animate().fadeIn(delay: 180.ms),
                 const SizedBox(height: DonySpacing.xl),
 

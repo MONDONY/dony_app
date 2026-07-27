@@ -149,7 +149,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           setupIntentClientSecret: clientSecret,
-          merchantDisplayName: 'Dony',
+          merchantDisplayName: 'Yadony',
           style: ThemeMode.system,
         ),
       );

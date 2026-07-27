@@ -4,7 +4,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 const _stripePublishableKeyDefault =
     String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
 
-/// Params uniques de la PaymentSheet Stripe pour dony (Approche A).
+/// Params uniques de la PaymentSheet Stripe pour yadony (Approche A).
 ///
 /// Affiche Carte + Apple Pay + Google Pay + PayPal dans la feuille native :
 /// - Apple Pay / Google Pay = wallets carte (config client ci-dessous).
@@ -23,7 +23,7 @@ SetupPaymentSheetParameters donyPaymentSheetParams(
   String stripePublishableKey = _stripePublishableKeyDefault,
 }) {
   return SetupPaymentSheetParameters(
-    merchantDisplayName: 'dony',
+    merchantDisplayName: 'Yadony',
     paymentIntentClientSecret: clientSecret,
     style: ThemeMode.light,
     returnURL: 'dony://stripe/payment-return',

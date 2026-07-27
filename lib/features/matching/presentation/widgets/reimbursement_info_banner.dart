@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Bandeau informatif remplaçant l'ancien champ « valeur déclarée ». Explique
-/// la politique de remboursement dony (plafond configurable, sous conditions,
+/// la politique de remboursement yadony (plafond configurable, sous conditions,
 /// jamais automatique) et renvoie vers le détail des conditions (FAQ).
 class ReimbursementInfoBanner extends StatelessWidget {
   const ReimbursementInfoBanner({
@@ -61,7 +61,7 @@ class ReimbursementInfoBanner extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'En cas de perte confirmée après recherche, dony rembourse '
+                      'En cas de perte confirmée après recherche, yadony rembourse '
                       "jusqu'à $donyReimbursementCapLabel € sous conditions.",
                       style: textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,

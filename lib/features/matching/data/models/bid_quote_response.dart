@@ -28,10 +28,10 @@ class BidQuoteResponse {
   @JsonKey(defaultValue: 0)
   final double kgNetEur;
 
-  /// Taux de commission Dony effectif (promo/override/global).
+  /// Taux de commission Yadony effectif (promo/override/global).
   final double rate;
 
-  /// Commission Dony = netEur × rate.
+  /// Commission Yadony = netEur × rate.
   final double commissionEur;
 
   /// Total expéditeur = netEur + commissionEur.

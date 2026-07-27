@@ -122,7 +122,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('commission Dony'), findsNothing);
+    expect(find.textContaining('commission Yadony'), findsNothing);
   });
 
   testWidgets('does NOT show commission breakdown for traveler',
@@ -132,7 +132,7 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('commission Dony'), findsNothing);
+    expect(find.textContaining('commission Yadony'), findsNothing);
   });
 
   testWidgets('confirms button label uses Confirmer when not checkout',

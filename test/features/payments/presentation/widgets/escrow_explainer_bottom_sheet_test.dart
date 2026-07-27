@@ -42,6 +42,6 @@ void main() {
 
     expect(find.text("Votre paiement est bloqué en séquestre jusqu'à confirmation de livraison par le destinataire."), findsOneWidget);
     expect(find.text('Libération automatique 48h après la date de livraison prévue si aucune confirmation.'), findsOneWidget);
-    expect(find.text('En cas de litige, dony intervient pour arbitrer et protéger les deux parties.'), findsOneWidget);
+    expect(find.text('En cas de litige, yadony intervient pour arbitrer et protéger les deux parties.'), findsOneWidget);
   });
 }

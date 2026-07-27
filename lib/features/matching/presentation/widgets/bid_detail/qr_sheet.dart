@@ -253,7 +253,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
       await file.writeAsBytes(imageBytes);
       final result = await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
-        subject: 'QR du colis Dony',
+        subject: 'QR du colis Yadony',
         text: 'QR à présenter ou à coller sur le colis.',
       );
       // Only log if the user actually shared (not dismissed)

@@ -554,7 +554,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       BidPaymentMethod.cash =>
         'Paiement en espèces : si le voyageur accepte, tu remets le montant '
             'en main propre à la remise du colis. En cas d\'annulation après la '
-            'remise, dony ne peut pas te rembourser immédiatement mais '
+            'remise, yadony ne peut pas te rembourser immédiatement mais '
             's\'assurera que le voyageur te restitue ton argent.',
       _ => 'Le voyageur va examiner ta demande.',
     };
@@ -1842,7 +1842,7 @@ class _CashEscrowWarning extends StatelessWidget {
         Expanded(
           child: Text(
             'Paiement en espèces : pas de séquestre, vous payez le voyageur '
-            'directement, sans garantie de remboursement par dony.',
+            'directement, sans garantie de remboursement par yadony.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),
@@ -1963,7 +1963,7 @@ class _WalletTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Compte Dony',
+                    'Compte Yadony',
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurface,
                       fontWeight: FontWeight.w600,
@@ -2110,7 +2110,7 @@ class _PriceBreakdown extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Commission Dony incluse',
+            'Commission Yadony incluse',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

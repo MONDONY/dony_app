@@ -4,7 +4,7 @@ class PrivacySettingsModel {
   final bool contactKycOnly;
 
   /// Mon numéro n'est jamais révélé à ma contrepartie, même après acceptation :
-  /// la messagerie dony devient mon seul canal de contact.
+  /// la messagerie yadony devient mon seul canal de contact.
   final bool hidePhoneNumber;
 
   const PrivacySettingsModel({

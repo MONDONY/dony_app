@@ -19,7 +19,7 @@ void main() {
     mockDio = MockDio();
     when(() => mockApiClient.dio).thenReturn(mockDio);
     PackageInfo.setMockInitialValues(
-      appName: 'dony',
+      appName: 'Yadony',
       packageName: 'com.dony.app',
       version: '1.2.3',
       buildNumber: '42',

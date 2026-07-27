@@ -70,7 +70,7 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         _InfoTile(
           iconAsset: 'shield',
-          text: 'En cas de litige, dony intervient pour arbitrer et protéger les deux parties.',
+          text: 'En cas de litige, yadony intervient pour arbitrer et protéger les deux parties.',
           cs: cs,
           tt: tt,
         ),

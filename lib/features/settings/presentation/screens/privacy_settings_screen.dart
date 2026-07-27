@@ -115,7 +115,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                       title: 'Masquer mon numéro',
                       subtitle:
                           "Ton numéro n'est jamais communiqué, même après une offre acceptée. "
-                          'Tes échanges passent par la messagerie dony.',
+                          'Tes échanges passent par la messagerie yadony.',
                       value: loaded?.hidePhoneNumber ?? false,
                       onChanged: isLoading
                           ? null
@@ -213,7 +213,7 @@ class _ProtectedNumberBanner extends StatelessWidget {
                   phoneHidden
                       ? "Ton numéro n'est communiqué à personne, même une fois "
                           "l'accord conclu. Tes partenaires te joignent par la "
-                          'messagerie dony, et tu peux toujours appeler le leur.'
+                          'messagerie yadony, et tu peux toujours appeler le leur.'
                       : "Personne ne voit ton numéro tant qu'une offre n'est pas "
                           "acceptée. Une fois l'accord conclu, toi et ton "
                           'partenaire échangez vos numéros pour organiser la remise.',
@@ -257,7 +257,7 @@ class _UnverifiedExposureNotice extends StatelessWidget {
           Expanded(
             child: Text(
               'Les profils non vérifiés peuvent te faire des demandes. '
-              "dony n'est pas responsable des difficultés rencontrées avec eux.",
+              "yadony n'est pas responsable des difficultés rencontrées avec eux.",
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurface,
                 fontSize: 11,

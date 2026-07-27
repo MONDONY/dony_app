@@ -3,7 +3,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// ListTile stylisé dony — paramètres, infos, actions.
+/// ListTile stylisé yadony — paramètres, infos, actions.
 ///
 /// Usage :
 /// ```dart

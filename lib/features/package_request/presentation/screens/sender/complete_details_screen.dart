@@ -102,7 +102,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   /// est `null` (threads legacy, créés avant l'introduction du SET).
   ///
   /// Si CASH est accepté sur cette demande et que le voyageur ne peut pas
-  /// couvrir la commission Dony, bloque tout le formulaire — même si une autre
+  /// couvrir la commission Yadony, bloque tout le formulaire — même si une autre
   /// méthode (ex. STRIPE) est aussi acceptée. Le voyageur doit pouvoir honorer
   /// le cash avant que l'expéditeur ne s'engage sur cette demande, plutôt que
   /// de basculer silencieusement vers une méthode que l'expéditeur n'a pas

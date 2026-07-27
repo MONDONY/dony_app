@@ -84,7 +84,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo dony
+                  // Logo yadony
                   const DonyLogo(fontSize: 39),
                   const SizedBox(height: DonySpacing.sm),
                   // Greeting — corridor city as context

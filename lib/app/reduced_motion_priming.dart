@@ -9,11 +9,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 /// son constructeur (`super(_load(_box))`), jamais par un `emit()`. Or
 /// `BlocListener`/`BlocConsumer` s'abonnent à `bloc.stream`, qui ne rejoue
 /// pas l'état déjà présent au moment de l'abonnement. Sans cet appel, un
-/// utilisateur ayant activé la réduction des animations (dans dony ou dans
+/// utilisateur ayant activé la réduction des animations (dans yadony ou dans
 /// les réglages de son téléphone) rouvrirait l'application avec
 /// `Animate.defaultDuration` bloqué à sa valeur par défaut (300 ms) pour
 /// toute la session, jusqu'à ce qu'il change un réglage d'accessibilité
-/// dony par hasard — ce qui n'arrive jamais pour l'utilisateur dont le seul
+/// yadony par hasard — ce qui n'arrive jamais pour l'utilisateur dont le seul
 /// réglage actif est celui de son OS.
 ///
 /// [systemReducesMotion] doit venir de `MediaQuery.disableAnimationsOf`,

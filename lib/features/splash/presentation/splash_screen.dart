@@ -196,7 +196,7 @@ class SplashContent extends StatelessWidget {
                 'assets/splash/logo_name.png',
                 key: const Key('splash-brand-logo'),
                 fit: BoxFit.contain,
-                semanticLabel: 'dony',
+                semanticLabel: 'Yadony',
               ),
             );
 

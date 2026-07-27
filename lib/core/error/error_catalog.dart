@@ -129,7 +129,7 @@ abstract final class ErrorCatalog {
       icon: Icons.search_off_rounded,
     ),
     // Le voyageur n'accepte que les profils vérifiés : c'est son choix, pas un
-    // blocage de dony. Le message oriente vers la vérification d'identité, qui
+    // blocage de yadony. Le message oriente vers la vérification d'identité, qui
     // est la seule issue pour cet expéditeur.
     'contact-kyc-required': ErrorPresentation(
       title: 'Profil vérifié requis',
@@ -270,7 +270,7 @@ abstract final class ErrorCatalog {
     'payment-method/traveler-insufficient-funds-cash': ErrorPresentation(
       title: 'Solde insuffisant',
       message:
-          "Ton portefeuille n'a pas assez de fonds pour payer la commission Dony en espèces. Recharge-le ou ajoute une carte.",
+          "Ton portefeuille n'a pas assez de fonds pour payer la commission Yadony en espèces. Recharge-le ou ajoute une carte.",
       severity: ErrorSeverity.warning,
       icon: Icons.account_balance_wallet_outlined,
     ),

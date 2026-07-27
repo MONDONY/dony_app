@@ -61,7 +61,7 @@ void main() {
 
   testWidgets('bouton support absent au premier affichage', (tester) async {
     await tester.pumpWidget(buildWidget());
-    expect(find.text('Contacter le support Dony'), findsNothing);
+    expect(find.text('Contacter le support Yadony'), findsNothing);
   });
 
   testWidgets('bouton support apparaît après 2 taps sur Reconfigurer',
@@ -72,7 +72,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Reconfigurer mon compte'));
     await tester.pump();
-    expect(find.text('Contacter le support Dony'), findsOneWidget);
+    expect(find.text('Contacter le support Yadony'), findsOneWidget);
   });
 
   testWidgets('affiche un SnackBar quand ConnectOnboardingError est émis',

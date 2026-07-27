@@ -6,7 +6,7 @@ void main() {
     final params = donyPaymentSheetParams('pi_secret_123');
 
     expect(params.paymentIntentClientSecret, 'pi_secret_123');
-    expect(params.merchantDisplayName, 'dony');
+    expect(params.merchantDisplayName, 'Yadony');
     expect(params.returnURL, 'dony://stripe/payment-return');
     expect(params.applePay?.merchantCountryCode, 'FR');
     expect(params.googlePay?.merchantCountryCode, 'FR');

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract final class DonyColors {
   // ═══════════════════════════════════════════════════════════════
-  // BLEU DONY — Primaire (Confiance)
+  // BLEU YADONY — Primaire (Confiance)
   // ═══════════════════════════════════════════════════════════════
   static const blue50  = Color(0xFFEDF2FF);
   static const blue100 = Color(0xFFD6E1FF);
@@ -16,7 +16,7 @@ abstract final class DonyColors {
   static const blue900 = Color(0xFF041D54);
 
   // ═══════════════════════════════════════════════════════════════
-  // TERRACOTTA DONY — Accent (Chaleur africaine)
+  // TERRACOTTA YADONY — Accent (Chaleur africaine)
   // ═══════════════════════════════════════════════════════════════
   static const terra50  = Color(0xFFFCF0E9);
   static const terra100 = Color(0xFFF8DBC8);

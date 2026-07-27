@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Checkbox stylisé dony avec label.
+/// Checkbox stylisé yadony avec label.
 ///
 /// Usage :
 /// ```dart

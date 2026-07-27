@@ -130,15 +130,15 @@ void main() {
 
     /// Trois lignes retirées, toutes sans effet possible : « Rappel trajet J-1 »
     /// ne gouvernait plus rien (aucun scheduler J-1, et « Bon voyage ! » est
-    /// passé in-app), et « Actus dony » n'a jamais eu d'émetteur.
+    /// passé in-app), et « Actus yadony » n'a jamais eu d'émetteur.
     testWidgets('les lignes sans effet ne sont plus affichées', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
       expect(find.text('Rappel trajet J-1'), findsNothing);
       expect(find.text('ACTUS & PROMOTIONS'), findsNothing);
-      expect(find.text('Actus dony (Push)'), findsNothing);
-      expect(find.text('Actus dony (E-mail)'), findsNothing);
+      expect(find.text('Actus yadony (Push)'), findsNothing);
+      expect(find.text('Actus yadony (E-mail)'), findsNothing);
     });
 
     // La préférence `push_corridor_alerts` existait côté serveur et gouvernait

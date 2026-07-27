@@ -27,7 +27,7 @@ class PaymentConfirmationException implements Exception {
 /// Abstraction testable du SDK flutter_stripe pour la DonyPaymentSheet.
 /// La saisie carte passe exclusivement par la PaymentSheet native Stripe
 /// ([initPaymentSheet] + [presentPaymentSheet]) — jamais de numéro brut côté
-/// dony.
+/// yadony.
 abstract class PaymentGateway {
   Future<bool> isPlatformPaySupported();
 
@@ -72,7 +72,7 @@ class StripePaymentGateway implements PaymentGateway {
                       currencyCode: 'EUR',
                       cartItems: [
                         ApplePayCartSummaryItem.immediate(
-                          label: 'dony',
+                          label: 'Yadony',
                           amount: amountEur.toStringAsFixed(2),
                         ),
                       ],
@@ -82,7 +82,7 @@ class StripePaymentGateway implements PaymentGateway {
                     googlePay: GooglePayParams(
                       merchantCountryCode: 'FR',
                       currencyCode: 'EUR',
-                      merchantName: 'dony',
+                      merchantName: 'Yadony',
                     ),
                   ),
           ));
@@ -107,7 +107,7 @@ class StripePaymentGateway implements PaymentGateway {
               paymentIntentClientSecret: clientSecret,
               customerId: customerId,
               customerEphemeralKeySecret: customerEphemeralKeySecret,
-              merchantDisplayName: 'dony',
+              merchantDisplayName: 'Yadony',
               style: ThemeMode.system,
             ),
           ));

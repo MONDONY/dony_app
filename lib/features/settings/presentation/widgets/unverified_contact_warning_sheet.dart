@@ -24,7 +24,7 @@ class UnverifiedContactWarningSheet extends StatefulWidget {
       context,
       isDanger: true,
       title: 'Accepter les profils non vérifiés ?',
-      subtitle: "Cette option n'est pas recommandée par dony.",
+      subtitle: "Cette option n'est pas recommandée par yadony.",
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: acceptedNotifier,
         builder: (context, accepted, _) => DonyButton(
@@ -54,12 +54,12 @@ class _UnverifiedContactWarningSheetState
     ),
     (
       icon: 'shield',
-      text: "dony ne peut pas confirmer l'identité d'un profil non vérifié, "
+      text: "yadony ne peut pas confirmer l'identité d'un profil non vérifié, "
           'ni son nom, ni ses papiers.',
     ),
     (
       icon: 'triangle-alert',
-      text: "dony n'est pas responsable des difficultés que tu pourrais "
+      text: "yadony n'est pas responsable des difficultés que tu pourrais "
           'rencontrer avec un profil non vérifié.',
     ),
   ];

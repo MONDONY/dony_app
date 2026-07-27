@@ -42,7 +42,7 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
       '[${state.category}] ${state.subject.trim()}',
     );
     final body = Uri.encodeComponent(
-      '${state.message.trim()}\n\n---\nEnvoyé depuis dony app',
+      '${state.message.trim()}\n\n---\nEnvoyé depuis yadony app',
     );
     final uri = Uri.parse(
       'mailto:support@dony.app?subject=$subject&body=$body',
