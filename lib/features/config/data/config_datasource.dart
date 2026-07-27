@@ -16,4 +16,10 @@ class ConfigDatasource {
     final data = response.data as Map<String, dynamic>;
     return (data['thresholdDays'] as num).toInt();
   }
+
+  Future<double> getReimbursementCap() async {
+    final response = await _client.dio.get('/config/reimbursement-cap');
+    final data = response.data as Map<String, dynamic>;
+    return (data['maxAmountEur'] as num).toDouble();
+  }
 }

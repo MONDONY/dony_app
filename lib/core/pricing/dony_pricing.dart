@@ -53,6 +53,35 @@ double netToSenderPrice(double net) => net * donyCommissionMultiplier;
 String formatKgPrice(double value) =>
     value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
 
+/// Plafond de remboursement dony en cas de perte de colis (€), source unique
+/// backend `dony.reimbursement.max-amount-eur`. Chargé une fois au démarrage
+/// via `GET /config/reimbursement-cap` → [setDonyReimbursementCap], repli sur
+/// [kDonyReimbursementCapDefault] tant qu'il n'est pas chargé / en cas d'erreur.
+const double kDonyReimbursementCapDefault = 50;
+
+double _donyReimbursementCapEur = kDonyReimbursementCapDefault;
+
+/// Plafond de remboursement courant en euros.
+double get donyReimbursementCapEur => _donyReimbursementCapEur;
+
+/// Libellé du plafond (entier si rond, sinon 2 décimales max, virgule FR).
+/// À interpoler dans les textes UI : `'$donyReimbursementCapLabel €'`.
+String get donyReimbursementCapLabel {
+  final v = _donyReimbursementCapEur;
+  return v % 1 == 0
+      ? v.toStringAsFixed(0)
+      : v
+          .toStringAsFixed(2)
+          .replaceFirst(RegExp(r'0+$'), '')
+          .replaceFirst('.', ',');
+}
+
+/// Met à jour le plafond au démarrage avec la valeur backend. Ignore les
+/// valeurs non strictement positives (repli sur le défaut).
+void setDonyReimbursementCap(double amount) {
+  if (amount > 0) _donyReimbursementCapEur = amount;
+}
+
 extension AnnouncementSenderPricing on AnnouncementModel {
   /// Prix au kilo **affiché à l'expéditeur** (net + commission). Préfère le
   /// champ backend [AnnouncementModel.pricePerKgDisplay] s'il est présent, sinon

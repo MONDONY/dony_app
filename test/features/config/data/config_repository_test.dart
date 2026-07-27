@@ -90,6 +90,33 @@ void main() {
         throwsA(isA<DioException>()),
       );
     });
+
+    test('getReimbursementCap returns maxAmountEur from API response', () async {
+      when(() => mockDio.get('/config/reimbursement-cap')).thenAnswer(
+        (_) async => Response(
+          data: {'maxAmountEur': 50},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/reimbursement-cap'),
+        ),
+      );
+
+      final cap = await datasource.getReimbursementCap();
+      expect(cap, 50.0);
+    });
+
+    test('getReimbursementCap throws on network error', () async {
+      when(() => mockDio.get('/config/reimbursement-cap')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/reimbursement-cap'),
+          message: 'Network error',
+        ),
+      );
+
+      expect(
+        () => datasource.getReimbursementCap(),
+        throwsA(isA<DioException>()),
+      );
+    });
   });
 
   group('ConfigRepository', () {
@@ -143,6 +170,33 @@ void main() {
 
       expect(
         () => repository.getUrgencyThresholdDays(),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('getReimbursementCap delegates to datasource', () async {
+      when(() => mockDio.get('/config/reimbursement-cap')).thenAnswer(
+        (_) async => Response(
+          data: {'maxAmountEur': 75},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/reimbursement-cap'),
+        ),
+      );
+
+      final cap = await repository.getReimbursementCap();
+      expect(cap, 75.0);
+    });
+
+    test('getReimbursementCap rethrows network exceptions', () async {
+      when(() => mockDio.get('/config/reimbursement-cap')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/reimbursement-cap'),
+          message: 'Server error',
+        ),
+      );
+
+      expect(
+        () => repository.getReimbursementCap(),
         throwsA(isA<Exception>()),
       );
     });

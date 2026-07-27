@@ -137,6 +137,11 @@ Future<void> _bootstrap() async {
   // Seuil d'urgence Dony (SOURCE UNIQUE : dony.urgency.threshold-days côté backend) :
   // chargé une fois pour que le badge « urgent » suive automatiquement. Non bloquant.
   unawaited(_loadUrgencyThreshold());
+
+  // Plafond de remboursement Dony (SOURCE UNIQUE : dony.reimbursement.max-amount-eur
+  // côté backend) : chargé une fois pour que le banner + la FAQ suivent
+  // automatiquement. Non bloquant.
+  unawaited(_loadReimbursementCap());
 }
 
 Future<void> _loadDonyCommissionRate() async {
@@ -154,6 +159,16 @@ Future<void> _loadUrgencyThreshold() async {
     );
   } catch (_) {
     // Repli sur kUrgencyThresholdDaysDefault conservé — non bloquant.
+  }
+}
+
+Future<void> _loadReimbursementCap() async {
+  try {
+    setDonyReimbursementCap(
+      await getIt<IConfigRepository>().getReimbursementCap(),
+    );
+  } catch (_) {
+    // Repli sur kDonyReimbursementCapDefault conservé — non bloquant.
   }
 }
 

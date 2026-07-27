@@ -4,6 +4,7 @@ import 'package:dony/features/config/data/config_datasource.dart';
 abstract class IConfigRepository {
   Future<double> getCommissionRate();
   Future<int> getUrgencyThresholdDays();
+  Future<double> getReimbursementCap();
 }
 
 class ConfigRepository implements IConfigRepository {
@@ -24,6 +25,15 @@ class ConfigRepository implements IConfigRepository {
   Future<int> getUrgencyThresholdDays() async {
     try {
       return await _datasource.getUrgencyThresholdDays();
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<double> getReimbursementCap() async {
+    try {
+      return await _datasource.getReimbursementCap();
     } catch (e) {
       throw unwrapDioError(e);
     }
