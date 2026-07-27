@@ -10,7 +10,7 @@ class FaqScreen extends StatelessWidget {
 
   // `final` (pas `const`) : la question sur la commission interpole le taux
   // courant chargé depuis le backend (donyCommissionPercentLabel).
-  static final _sections = <_FaqSectionData>[
+  static List<_FaqSectionData> get _sections => <_FaqSectionData>[
     const _FaqSectionData(
       title: 'Compte & identité',
       iconAsset: 'shield-check',
@@ -103,11 +103,11 @@ class FaqScreen extends StatelessWidget {
           q: 'Que faire en cas de litige avec un voyageur ?',
           a: 'Ouvre un litige depuis ton profil → "Mes litiges". Fournis les preuves (photos, messages). Notre équipe arbitre dans les 48 h.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Mes données personnelles sont-elles protégées ?',
           a: 'Oui. Nos données sont chiffrées AES-256 au repos et TLS en transit. Nous ne vendons aucune donnée à des tiers. Conformité RGPD garantie.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Comment supprimer mon compte ?',
           a: 'Dans Paramètres → Compte → Supprimer mon compte. La suppression est définitive et irréversible après un délai légal de 30 jours.',
         ),
@@ -120,23 +120,26 @@ class FaqScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    return DonyPageScaffold(
-      title: 'FAQ & aide',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Toutes les réponses aux questions fréquentes.',
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.xl),
-          ...List.generate(_sections.length, (i) {
-            return _FaqSection(data: _sections[i])
-                .animate()
-                .fadeIn(delay: (i * 80).ms, duration: 300.ms)
-                .slideY(begin: 0.04, curve: Curves.easeOutCubic);
-          }),
-        ],
+    return ValueListenableBuilder<double>(
+      valueListenable: donyReimbursementCapListenable,
+      builder: (context, _, _) => DonyPageScaffold(
+        title: 'FAQ & aide',
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Toutes les réponses aux questions fréquentes.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.xl),
+            ...List.generate(_sections.length, (i) {
+              return _FaqSection(data: _sections[i])
+                  .animate()
+                  .fadeIn(delay: (i * 80).ms, duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -181,11 +184,7 @@ class _FaqSection extends StatelessWidget {
                     ),
                     child: data.iconAsset == 'package'
                         ? const DonyEmoji.parcel(size: 18)
-                        : DonyIcon(
-                            data.iconAsset,
-                            color: cs.primary,
-                            size: 18,
-                          ),
+                        : DonyIcon(data.iconAsset, color: cs.primary, size: 18),
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Text(
