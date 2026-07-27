@@ -20,7 +20,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Dony</string>
+		<string>Yadony</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -28,7 +28,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>dony</string>
+		<string>Yadony</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -82,17 +82,17 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Dony utilise ta position pour trouver les trajets depuis ta ville.</string>
+		<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 		<key>NSCameraUsageDescription</key>
-		<string>Dony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
+		<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Dony accède à tes photos pour joindre des images de colis.</string>
+		<string>Yadony accède à tes photos pour joindre des images de colis.</string>
 		<!-- Écriture en galerie : « Enregistrer » sur le QR code d'un colis. Sans cette
 		     clé, iOS termine l'app au moment de la sauvegarde. -->
 		<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>Dony enregistre le QR code de ton colis dans tes photos pour que tu puisses le retrouver hors ligne.</string>
+		<string>Yadony enregistre le QR code de ton colis dans tes photos pour que tu puisses le retrouver hors ligne.</string>
 		<key>NSFaceIDUsageDescription</key>
-		<string>Dony utilise Face ID pour sécuriser tes paiements.</string>
+		<string>Yadony utilise Face ID pour sécuriser tes paiements.</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>

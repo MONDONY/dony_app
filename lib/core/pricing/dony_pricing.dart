@@ -2,7 +2,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/foundation.dart';
 
 /// Source unique de vérité, côté app, pour le passage **prix net voyageur →
-/// prix affiché expéditeur** (commission Dony incluse).
+/// prix affiché expéditeur** (commission Yadony incluse).
 ///
 /// Modèle métier (vérifié backend, `PaymentService` / `PriceGridService`) :
 /// - `pricePerKg` (mode KG) et `unitPriceNet` (mode MIXED) = **NET** = ce que
@@ -21,7 +21,7 @@ const double kDonyCommissionRateDefault = 0.05;
 
 double _donyCommissionRate = kDonyCommissionRateDefault;
 
-/// Taux de commission Dony courant (ex. 0,05 = 5 %).
+/// Taux de commission Yadony courant (ex. 0,05 = 5 %).
 double get donyCommissionRate => _donyCommissionRate;
 
 /// Libellé du taux courant en pourcentage, virgule française si décimal
@@ -46,7 +46,7 @@ void setDonyCommissionRate(double rate) {
 }
 
 /// Convertit un prix **net** (ce que touche le voyageur) en prix **affiché à
-/// l'expéditeur** (commission Dony incluse). À n'utiliser que faute de champ
+/// l'expéditeur** (commission Yadony incluse). À n'utiliser que faute de champ
 /// `*Display` fourni par le backend.
 double netToSenderPrice(double net) => net * donyCommissionMultiplier;
 
@@ -56,7 +56,7 @@ double netToSenderPrice(double net) => net * donyCommissionMultiplier;
 String formatKgPrice(double value) =>
     value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
 
-/// Plafond de remboursement dony en cas de perte de colis (€), source unique
+/// Plafond de remboursement Yadony en cas de perte de colis (€), source unique
 /// backend `dony.reimbursement.max-amount-eur`. Chargé une fois au démarrage
 /// via `GET /config/reimbursement-cap` → [setDonyReimbursementCap], repli sur
 /// [kDonyReimbursementCapDefault] tant qu'il n'est pas chargé / en cas d'erreur.

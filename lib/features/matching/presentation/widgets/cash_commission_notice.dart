@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// à la publication d'un trajet.
 ///
 /// Rappelle la règle métier : un colis en espèces ne peut être accepté que si
-/// la commission Dony est prélevable — sur le wallet en priorité, sinon sur une
+/// la commission Yadony est prélevable — sur le wallet en priorité, sinon sur une
 /// carte enregistrée. À défaut, le voyageur devra recharger son wallet ou
 /// ajouter une carte valide au moment d'accepter le bid.
 class CashCommissionNotice extends StatelessWidget {
@@ -40,7 +40,7 @@ class CashCommissionNotice extends StatelessWidget {
                 children: [
                   const TextSpan(
                     text:
-                        'Vous ne pourrez accepter un colis en espèces que si la commission Dony peut être prélevée ',
+                        'Vous ne pourrez accepter un colis en espèces que si la commission Yadony peut être prélevée ',
                   ),
                   TextSpan(
                     text: 'sur votre portefeuille en priorité',

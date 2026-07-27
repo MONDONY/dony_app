@@ -106,7 +106,7 @@ class _DeliveryCard extends StatelessWidget {
     ].where((c) => c != null).join(' → ');
     final weight = (bid.weightKg ?? 0) > 0 ? '${bid.weightKg} kg' : null;
     final description = bid.description;
-    // Prix affiché à l'expéditeur = brut (net voyageur + commission Dony).
+    // Prix affiché à l'expéditeur = brut (net voyageur + commission Yadony).
     final price = bid.totalSenderAmountEur != null
         ? '${bid.totalSenderAmountEur!.toStringAsFixed(0)} €'
         : bid.pricePerKg != null

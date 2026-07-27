@@ -11,7 +11,7 @@ import 'package:intl/intl.dart';
 
 /// Carte billet de colis complète (boarding-pass metaphor).
 ///
-/// Assemble l'en-tête DONY, le corridor départ→arrivée, la zone dates,
+/// Assemble l'en-tête YADONY, le corridor départ→arrivée, la zone dates,
 /// la ligne de perforation et le talon d'action.
 ///
 /// NOTE sur le format de date : [DateFormat] avec locale 'fr' nécessite que
@@ -80,7 +80,7 @@ class _BilletHeader extends StatelessWidget {
         children: [
           Flexible(
             child: Text(
-              'DONY · TRANSPORT DE COLIS',
+              'YADONY · TRANSPORT DE COLIS',
               style: tt.bodySmall?.copyWith(
                 color: cs.primary,
                 fontWeight: FontWeight.w800,

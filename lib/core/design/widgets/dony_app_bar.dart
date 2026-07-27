@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-/// AppBar standardisé dony.
+/// AppBar standardisé Yadony.
 ///
 /// Deux variantes :
 /// - [DonyAppBarVariant.compact] — barre fine 56px (écrans secondaires)
@@ -71,7 +71,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-/// Bouton retour stylé dony (carré [ColorScheme.primaryContainer] + chevron).
+/// Bouton retour stylé Yadony (carré [ColorScheme.primaryContainer] + chevron).
 /// À placer en `leading` d'une AppBar custom pour rester cohérent avec
 /// [DonyAppBar] (qui l'utilise en interne).
 class DonyAppBarBackButton extends StatelessWidget {

@@ -4,7 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-/// Card d'annonce/trajet — composant signature dony.
+/// Card d'annonce/trajet — composant signature Yadony.
 ///
 /// Affiche :
 /// - Avatar du voyageur + nom + étoiles

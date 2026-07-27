@@ -36,7 +36,7 @@ class RatingBottomSheet extends StatefulWidget {
     return DonyBottomSheet.show(
       context,
       title: isTravelerRating ? 'Évaluer l\'expéditeur' : 'Évaluer $travelerName',
-      subtitle: 'Votre avis aide la communauté dony',
+      subtitle: 'Votre avis aide la communauté Yadony',
       wrapper: (child) => BlocProvider.value(value: ratingBloc, child: child),
       stickyBottom: ValueListenableBuilder<int>(
         valueListenable: starsNotifier,

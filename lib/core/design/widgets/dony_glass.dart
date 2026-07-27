@@ -5,7 +5,7 @@ import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Dony Glassmorphism — 4 patterns canoniques
+// Yadony Glassmorphism — 4 patterns canoniques
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 // Pattern A · DonyGlassOnBrand        — glass clair sur fond brand (gradient)

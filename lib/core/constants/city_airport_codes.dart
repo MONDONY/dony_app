@@ -1,4 +1,4 @@
-/// IATA airport codes for dony departure and arrival cities.
+/// IATA airport codes for Yadony departure and arrival cities.
 const kDepartureCityCodes = <String, String>{
   'Paris': 'CDG',
   'Lyon': 'LYS',

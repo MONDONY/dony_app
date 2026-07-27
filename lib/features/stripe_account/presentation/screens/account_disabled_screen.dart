@@ -96,7 +96,7 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
                           await launchUrl(uri);
                         }
                       },
-                      child: const Text('Contacter le support Dony'),
+                      child: const Text('Contacter le support Yadony'),
                     ),
                   ),
                 ],

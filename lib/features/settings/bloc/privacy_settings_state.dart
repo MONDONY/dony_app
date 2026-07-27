@@ -16,7 +16,7 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
   final bool contactKycOnly;
 
   /// Mon numéro reste masqué même après acceptation d'une offre : ma contrepartie
-  /// ne peut alors me joindre que par la messagerie dony.
+  /// ne peut alors me joindre que par la messagerie Yadony.
   final bool hidePhoneNumber;
 
   /// Le dernier enregistrement a échoué et l'interrupteur vient d'être remis à

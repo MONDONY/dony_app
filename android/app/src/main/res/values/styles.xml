@@ -8,7 +8,7 @@
         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
-    <!-- NormalTheme : fond bleu pour éviter l'écran noir entre splash natif et Flutter -->
+    <!-- Même fond que les splash natif et Flutter pour éviter tout flash -->
     <style name="NormalTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowBackground">@color/splashBackground</item>
     </style>

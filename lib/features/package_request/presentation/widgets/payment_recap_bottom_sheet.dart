@@ -150,7 +150,7 @@ class PaymentRecapBottomSheet {
                         }
                       } else {
                         // Cash: no online payment. The agreement is settled in
-                        // person and dony collects its commission from the
+                        // person and Yadony collects its commission from the
                         // traveler separately. We finalize the AWAITING_PAYMENT
                         // thread via /checkout (idempotent placeholder), NOT
                         // /accept — the thread is already past OPEN, so calling
@@ -167,7 +167,7 @@ class PaymentRecapBottomSheet {
                               mascotteType: DonyMascotteType.donneColis,
                               title: 'Accord confirmé !',
                               subtitle:
-                                  'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, dony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
+                                  'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
                               ctaLabel: 'Voir le suivi',
                               onCta: () => routeContext
                                   .go('/negotiations/${thread.id}'),
@@ -252,7 +252,7 @@ class PaymentRecapContent extends StatelessWidget {
                     ),
                     const _Divider(),
                     _FeeRow(
-                      label: 'dont frais dony (réglés par le voyageur)',
+                      label: 'dont frais Yadony (réglés par le voyageur)',
                       amount: PriceDisplay.eur(fee),
                       isTotal: false,
                       isSubNote: true,
@@ -272,7 +272,7 @@ class PaymentRecapContent extends StatelessWidget {
                     ),
                     const _Divider(),
                     _FeeRow(
-                      label: 'Frais de service dony',
+                      label: 'Frais de service Yadony',
                       amount: PriceDisplay.eur(fee),
                       isTotal: false,
                     ),
@@ -290,7 +290,7 @@ class PaymentRecapContent extends StatelessWidget {
         // Explanatory note
         Text(
           isCash
-              ? 'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais dony de ce montant.'
+              ? 'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.'
               : 'Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.',
           style: tt.bodySmall?.copyWith(
             color: cs.onSurfaceVariant,

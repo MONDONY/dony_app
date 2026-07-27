@@ -387,7 +387,7 @@ class _ReviewItem extends StatelessWidget {
         DateFormat('d MMM yyyy', 'fr').format(item.createdAt).toUpperCase();
     final name = (item.authorName?.trim().isNotEmpty ?? false)
         ? item.authorName!.trim()
-        : 'Utilisateur dony';
+        : 'Utilisateur Yadony';
     final corridor = _corridor;
 
     return Padding(

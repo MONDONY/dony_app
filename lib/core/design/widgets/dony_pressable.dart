@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 /// Wrapper tactile « scale on press ».
 ///
-/// Applique le retour visuel de pression standard dony (réduction à [scale],
+/// Applique le retour visuel de pression standard Yadony (réduction à [scale],
 /// 100 ms `easeOutCubic`) + un retour haptique léger au toucher, à n'importe
 /// quel [child] tappable qui n'est PAS un bouton (cards, chips, tuiles,
 /// actions rapides). Pour les boutons pleins, utiliser [DonyButton] qui gère

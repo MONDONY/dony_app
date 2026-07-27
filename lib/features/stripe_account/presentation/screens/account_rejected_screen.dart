@@ -128,7 +128,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
                             await launchUrl(uri);
                           }
                         },
-                        child: const Text('Contacter le support Dony'),
+                        child: const Text('Contacter le support Yadony'),
                       ),
                     ),
                   ],

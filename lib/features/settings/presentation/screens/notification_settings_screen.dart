@@ -127,7 +127,7 @@ class _NotificationSettingsScreenState
                   // côté serveur ; la préférence ne filtrait en réalité que « Bon voyage ! »,
                   // désormais in-app, donc plus jamais soumis à une préférence de push.
                   //
-                  // « Actus dony » (Push et E-mail) n'a aucun émetteur : aucun code n'envoie
+                  // « Actus Yadony » (Push et E-mail) n'a aucun émetteur : aucun code n'envoie
                   // de notification de type PROMO, et `email_promo` n'a même pas de champ
                   // correspondant côté serveur. La préférence `pushPromo` reste en base et
                   // dans le contrat, à `false` par défaut : le jour où des actus existeront,

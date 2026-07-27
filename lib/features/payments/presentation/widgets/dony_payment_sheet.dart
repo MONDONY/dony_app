@@ -8,13 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
-/// Bottom sheet de paiement custom dony (Apple Pay/Google Pay + PayPal +
+/// Bottom sheet de paiement custom Yadony (Apple Pay/Google Pay + PayPal +
 /// bouton « Carte »), Stripe restant le seul processeur.
 ///
 /// PCI : la saisie carte est intégralement déléguée à la PaymentSheet native
 /// Stripe (bouton « Carte » → [PaymentGateway.initPaymentSheet] +
 /// [PaymentGateway.presentPaymentSheet]) — aucun champ de saisie carte custom
-/// dans dony.
+/// dans Yadony.
 abstract final class DonyPaymentSheet {
   static Future<void> show(
     BuildContext context, {

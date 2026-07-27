@@ -46,7 +46,7 @@ class NotificationService {
 
   static const _androidChannel = AndroidNotificationChannel(
     'dony_transactional',
-    'Notifications dony',
+    'Notifications Yadony',
     description: 'Paiements, livraisons et mises à jour de vos envois',
     importance: Importance.high,
   );

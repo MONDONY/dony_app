@@ -354,7 +354,7 @@ class _ShareButton extends StatelessWidget {
             ),
           ),
           onPressed: () => Share.share(
-            'Salut ! Utilise mon code dony : ${info.code} et reçois ton 1er envoi avec 5€ de réduction. ${info.shareUrl}',
+            'Salut ! Utilise mon code Yadony : ${info.code} et reçois ton 1er envoi avec 5€ de réduction. ${info.shareUrl}',
           ),
         ),
       ),

@@ -192,7 +192,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de dony.',
+          'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.',
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,

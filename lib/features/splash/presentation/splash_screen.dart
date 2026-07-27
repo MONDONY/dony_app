@@ -25,14 +25,26 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   bool _hasError = false;
+  bool _startupScheduled = false;
 
   @override
-  void initState() {
-    super.initState();
-    // Retire le splash natif dès que Flutter a dessiné son premier frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_startupScheduled) {
+      return;
+    }
+    _startupScheduled = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await precacheImage(
+        const AssetImage('assets/splash/logo_name.png'),
+        context,
+      );
+      if (!mounted) {
+        return;
+      }
       FlutterNativeSplash.remove();
-      _checkAndNavigate();
+      await _checkAndNavigate();
     });
   }
 
@@ -41,14 +53,18 @@ class _SplashScreenState extends State<SplashScreen> {
     const retryDelay = Duration(milliseconds: 1500);
 
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       try {
         final response = await getIt<ApiClient>().dio.get<Map<String, dynamic>>(
           '/actuator/health',
           options: Options(extra: {'skipAuth': true}),
         );
         final status = response.data?['status'] as String? ?? '';
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         if (status == 'UP') {
           await _navigateNext();
           return;
@@ -64,7 +80,9 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     // Toutes les tentatives épuisées
-    if (mounted) setState(() => _hasError = true);
+    if (mounted) {
+      setState(() => _hasError = true);
+    }
   }
 
   Future<void> _navigateNext() async {
@@ -133,139 +151,216 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.paddingOf(context).bottom;
-    final h = DonyLayout.hPadding(context);
-
-    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.surface,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Illustration xl + logo 104px : centrés, mais scrollent si le
-            // viewport est trop court (très petit device / gros text scale).
-            // Positioned.fill est nécessaire ici : un Stack aligne ses
-            // enfants non positionnés en haut à gauche (topStart) par
-            // défaut, et un SingleChildScrollView sous contraintes lâches
-            // se réduit à la largeur de son contenu — sans ça, tout le bloc
-            // se retrouvait collé au bord gauche de l'écran.
-            Positioned.fill(
-              child: LayoutBuilder(
-                builder: (context, constraints) => SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const DonyMascotteAnimated(
-                          type: DonyMascotteType.joyeux,
-                          size: DonyMascotteSize.xl,
-                        ),
-                        const SizedBox(height: DonySpacing.xl),
-                        const DonyLogo(
-                          variant: DonyLogoVariant.onLight,
-                          fontSize: 104,
-                        ),
-                        const SizedBox(height: DonySpacing.xxl),
-                        Text(
-                          'Livrez vos colis en confiance',
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: cs.onSurface.withValues(alpha: 0.45),
-                                    letterSpacing: 0.4,
-                                  ),
-                        ),
-                        const SizedBox(height: DonySpacing.sm),
-                        Text(
-                          'v1.0.0',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant
-                                        .withValues(alpha: 0.6),
-                                    letterSpacing: 0.5,
-                                  ),
-                        ),
-                      ],
-                    ),
+      backgroundColor: DonyColors.neutral0,
+      body: SplashContent(hasError: _hasError, onRetry: _retry),
+    );
+  }
+}
+
+@visibleForTesting
+class SplashContent extends StatelessWidget {
+  const SplashContent({
+    required this.hasError,
+    this.onRetry = _noop,
+    super.key,
+  });
+
+  final bool hasError;
+  final VoidCallback onRetry;
+
+  static void _noop() {}
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final textTheme = Theme.of(context).textTheme;
+
+    return ColoredBox(
+      color: DonyColors.neutral0,
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final logoWidth = (constraints.maxWidth * 0.78).clamp(240.0, 560.0);
+            final logoHeight = (constraints.maxHeight * 0.30).clamp(
+              112.0,
+              260.0,
+            );
+
+            final logo = ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: logoWidth,
+                maxHeight: logoHeight,
+              ),
+              child: Image.asset(
+                'assets/splash/logo_name.png',
+                key: const Key('splash-brand-logo'),
+                fit: BoxFit.contain,
+                semanticLabel: 'Yadony',
+              ),
+            );
+
+            final copy = Column(
+              children: [
+                Text(
+                  'Livrez vos colis en confiance',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: DonyColors.textMuted,
+                    letterSpacing: 0,
                   ),
                 ),
+                const SizedBox(height: DonySpacing.sm),
+                Text(
+                  'v1.0.0',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: DonyColors.textSubtle,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
+            );
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.xl,
+                vertical: DonySpacing.xl,
               ),
-            ),
-            if (!_hasError)
-              Positioned(
-                bottom: 48 + bottom,
-                left: 0,
-                right: 0,
-                child: _LoadingDots(),
-              ),
-            if (_hasError)
-              Positioned(
-                bottom: 40 + bottom,
-                left: h,
-                right: h,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: (constraints.maxHeight - DonySpacing.huge).clamp(
+                    0,
+                    double.infinity,
+                  ),
+                ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        DonyIcon(
-                          'wifi-off',
-                          color: cs.onSurfaceVariant,
-                          size: 16,
-                        ),
-                        const SizedBox(width: DonySpacing.sm),
-                        Text(
-                          'Impossible de se connecter',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: DonySpacing.lg),
-                    OutlinedButton.icon(
-                      onPressed: _retry,
-                      icon: DonyIcon('refresh-cw', color: cs.primary, size: 16),
-                      label: const Text('Réessayer'),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: cs.primary.withValues(alpha: 0.4),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.xl,
-                          vertical: DonySpacing.md,
-                        ),
+                    if (reduceMotion)
+                      logo
+                    else
+                      logo
+                          .animate()
+                          .fadeIn(duration: 280.ms, curve: Curves.easeOutCubic)
+                          .slideY(
+                            begin: 0.08,
+                            end: 0,
+                            duration: 280.ms,
+                            curve: Curves.easeOutCubic,
+                          ),
+                    const SizedBox(height: DonySpacing.xxl),
+                    if (reduceMotion)
+                      copy
+                    else
+                      copy.animate().fadeIn(
+                        delay: 100.ms,
+                        duration: 240.ms,
+                        curve: Curves.easeOutCubic,
                       ),
-                    ),
+                    const SizedBox(height: DonySpacing.xxl),
+                    if (hasError)
+                      _SplashError(
+                        onRetry: onRetry,
+                        disableAnimation: reduceMotion,
+                      )
+                    else
+                      _LoadingDots(disableAnimation: reduceMotion),
                   ],
-                ).animate().fadeIn(duration: 300.ms),
+                ),
               ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _LoadingDots extends StatelessWidget {
+class _SplashError extends StatelessWidget {
+  const _SplashError({required this.onRetry, required this.disableAnimation});
+
+  final VoidCallback onRetry;
+  final bool disableAnimation;
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final content = Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const DonyIcon('wifi-off', color: DonyColors.textMuted, size: 16),
+            const SizedBox(width: DonySpacing.sm),
+            Flexible(
+              child: Text(
+                'Impossible de se connecter',
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: DonyColors.textMuted),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.lg),
+        OutlinedButton.icon(
+          onPressed: onRetry,
+          icon: const DonyIcon(
+            'refresh-cw',
+            color: DonyColors.primary,
+            size: 16,
+          ),
+          label: const Text('Réessayer'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: DonyColors.primary,
+            minimumSize: const Size(0, kDonyMinTapTarget),
+            side: const BorderSide(color: DonyColors.blue200),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.xl,
+              vertical: DonySpacing.md,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (disableAnimation) {
+      return content;
+    }
+    return content.animate().fadeIn(
+      duration: 300.ms,
+      curve: Curves.easeOutCubic,
+    );
+  }
+}
+
+class _LoadingDots extends StatelessWidget {
+  const _LoadingDots({required this.disableAnimation});
+
+  final bool disableAnimation;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (i) {
-        return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.3),
-                shape: BoxShape.circle,
-              ),
-            )
+        final dot = Container(
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: DonyColors.primary.withValues(alpha: 0.3),
+            shape: BoxShape.circle,
+          ),
+        );
+        if (disableAnimation) {
+          return dot;
+        }
+        return dot
             .animate(
               onPlay: (c) => c.repeat(reverse: true),
               delay: Duration(milliseconds: i * 180),

@@ -96,7 +96,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         // wallet — le bouton PayPal reste donc masqué (dégradation propre).
         paymentMethodTypes: const [],
       ),
-      contextLabel: 'Recharge de votre solde dony',
+      contextLabel: 'Recharge de votre solde Yadony',
       onSuccess: () {
         if (!context.mounted) return;
         Navigator.of(context).push(MaterialPageRoute(

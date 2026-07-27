@@ -125,7 +125,7 @@ class AnnouncementModel {
   final double totalKg;
   final double pricePerKg;
 
-  /// Prix au kilo affiché à l'EXPÉDITEUR = `pricePerKg` (net voyageur) + commission Dony.
+  /// Prix au kilo affiché à l'EXPÉDITEUR = `pricePerKg` (net voyageur) + commission Yadony.
   /// Fourni par le backend (symétrique de `unitPriceDisplay` du mode MIXED) ; null si
   /// absent (anciens payloads / mode MIXED). Utiliser l'extension `senderPricePerKg`
   /// qui retombe sur un calcul net×multiplicateur le cas échéant.

@@ -45,7 +45,7 @@ class TravelerGainCard extends StatelessWidget {
       topLabel = 'VOUS ENCAISSEZ';
       amountText = '$amount € en espèces';
       amountColor = cs.onSurface;
-      note = 'Commission Dony prélevée séparément.';
+      note = 'Commission Yadony prélevée séparément.';
       pill = _Pill(
         label: 'ESPÈCES',
         fg: cs.onSurface,

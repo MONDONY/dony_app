@@ -131,7 +131,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                     '${state.announcement.arrivalCity} le '
                     '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
                     'avec de la place dans mes bagages !\n'
-                    'Réserve tes kilos sur dony 📦',
+                    'Réserve tes kilos sur Yadony 📦',
                   )),
                 ),
               ));

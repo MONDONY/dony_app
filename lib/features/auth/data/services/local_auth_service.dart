@@ -87,7 +87,7 @@ class LocalAuthService {
   Future<bool> authenticateWithBiometric() async {
     try {
       return await _localAuth.authenticate(
-        localizedReason: 'Déverrouillez dony pour accéder à votre compte',
+        localizedReason: 'Déverrouillez Yadony pour accéder à votre compte',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,

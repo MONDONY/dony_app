@@ -247,9 +247,9 @@ class SenderActionBar extends StatelessWidget {
   void _openOptions(BuildContext context) =>
       showSenderOptionsSheet(context, bid);
 
-  /// Whether the sender pays dony online (escrow). Only [BidPaymentMethod.stripe]
+  /// Whether the sender pays Yadony online (escrow). Only [BidPaymentMethod.stripe]
   /// involves an in-app sender payment. Cash / Wave / Orange Money are settled in
-  /// person with the traveler — dony already collects its commission from the
+  /// person with the traveler — Yadony already collects its commission from the
   /// traveler server-side — so the sender must NOT see "Payer mon envoi".
   bool get _hasOnlineSenderPayment =>
       bid.paymentMethod == BidPaymentMethod.stripe;
@@ -288,7 +288,7 @@ class SenderActionBar extends StatelessWidget {
           if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') ...[
             const SizedBox(width: DonySpacing.md),
             Expanded(
-              // Cash / Wave / Orange Money: paid in person, dony's commission
+              // Cash / Wave / Orange Money: paid in person, Yadony's commission
               // is collected from the traveler server-side — never show an
               // online sender payment button or its loading placeholder.
               child: !_hasOnlineSenderPayment
@@ -495,7 +495,7 @@ class EscrowBadge extends StatelessWidget {
 }
 
 /// Informational pill shown to the sender when the deal is settled in person
-/// (cash / Wave / Orange Money). There is no online sender payment: dony's
+/// (cash / Wave / Orange Money). There is no online sender payment: Yadony's
 /// commission is collected from the traveler server-side. Styled like
 /// [EscrowBadge] but with a warning tone.
 class _CashBadge extends StatelessWidget {
@@ -576,7 +576,7 @@ class _SenderOptionsSheet extends StatelessWidget {
             iconColor: cs.error,
             iconBg: cs.errorLight,
             label: 'Signaler ce trajet',
-            subtitle: 'Signaler un problème au support Dony',
+            subtitle: 'Signaler un problème au support Yadony',
             onTap: () {
               context.pop();
               _showReportSheet(outerContext);
@@ -710,7 +710,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               Text('Signaler ce trajet', style: tt.headlineMedium),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                'Votre signalement sera traité par l\'équipe Dony.',
+                'Votre signalement sera traité par l\'équipe Yadony.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.base),

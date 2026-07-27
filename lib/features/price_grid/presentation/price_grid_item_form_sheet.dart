@@ -225,7 +225,7 @@ class _PriceGridItemFormContentState
                           child: Text(
                             'L\'expéditeur verra '
                             '${netToSenderPrice(_parsedPrice!).toStringAsFixed(2)} € '
-                            '(+${(donyCommissionRate * 100).toStringAsFixed(0)} % Dony)',
+                            '(+${(donyCommissionRate * 100).toStringAsFixed(0)} % Yadony)',
                             style: tt.bodySmall?.copyWith(color: cs.primary),
                           ),
                         ),

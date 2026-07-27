@@ -1,7 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Groupe de boutons radio stylisés dony.
+/// Groupe de boutons radio stylisés Yadony.
 ///
 /// Usage :
 /// ```dart

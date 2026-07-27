@@ -163,12 +163,12 @@ flutter_launcher_icons:
     theme_color: "#0B5FFF"
 
 flutter_native_splash:
-  color: "#FAFAF8"
-  image: assets/mascotte/joyeux.png
+  color: "#FFFFFF"
+  image: assets/splash/app_icon_native.png
   android_12:
-    color: "#FAFAF8"
-    icon_background_color: "#FAFAF8"
-    image: assets/splash/joyeux_square.png
+    color: "#FFFFFF"
+    icon_background_color: "#FFFFFF"
+    image: assets/splash/app_icon_android12.png
   ios: true
   android: true
 
@@ -182,6 +182,7 @@ flutter:
     - assets/logos/3.0x/
     - assets/logos/payment/
     - assets/mascotte/
+    - assets/splash/
     - assets/illustrations/
     - assets/icons/
     - assets/icons_3d/

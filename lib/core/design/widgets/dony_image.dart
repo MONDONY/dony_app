@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 /// Image réseau avec cache disque stable.
 ///
-/// Les photos dony sont servies via des URLs S3 présignées dont les query
+/// Les photos Yadony sont servies via des URLs S3 présignées dont les query
 /// params (signature, date, expiration) changent à chaque fetch backend.
 /// Ce widget dérive une clé de cache stable (URL sans query params) pour que
 /// la même image ne soit téléchargée qu'une seule fois, quelle que soit la

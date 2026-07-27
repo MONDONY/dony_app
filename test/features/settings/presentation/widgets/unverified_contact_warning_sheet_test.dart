@@ -34,7 +34,7 @@ void main() {
 
       expect(find.text('Accepter les profils non vérifiés ?'), findsOneWidget);
       expect(
-        find.text("Cette option n'est pas recommandée par dony."),
+        find.text("Cette option n'est pas recommandée par Yadony."),
         findsOneWidget,
       );
       expect(
@@ -42,11 +42,11 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.textContaining("dony ne peut pas confirmer l'identité"),
+        find.textContaining("Yadony ne peut pas confirmer l'identité"),
         findsOneWidget,
       );
       expect(
-        find.textContaining("dony n'est pas responsable"),
+        find.textContaining("Yadony n'est pas responsable"),
         findsOneWidget,
       );
     });

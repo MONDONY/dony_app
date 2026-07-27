@@ -1,4 +1,4 @@
-/// Drapeaux emoji par ville des corridors dony.
+/// Drapeaux emoji par ville des corridors Yadony.
 /// Retourne null pour une ville inconnue — l'appelant affiche un point bleu.
 String? cityFlag(String city) {
   final key = _normalize(city);

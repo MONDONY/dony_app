@@ -129,16 +129,16 @@ Future<void> _bootstrap() async {
   getIt<OfflineSyncService>().startListening();
   await getIt<NotificationService>().initialize();
 
-  // Taux de commission Dony (SOURCE UNIQUE : dony.commission.rate côté backend) :
+  // Taux de commission Yadony (SOURCE UNIQUE : dony.commission.rate côté backend) :
   // chargé une fois pour que les prix calculés côté app (aperçu checkout, repli des
   // surfaces sans champ *Display) suivent automatiquement. Non bloquant.
   unawaited(_loadDonyCommissionRate());
 
-  // Seuil d'urgence Dony (SOURCE UNIQUE : dony.urgency.threshold-days côté backend) :
+  // Seuil d'urgence Yadony (SOURCE UNIQUE : dony.urgency.threshold-days côté backend) :
   // chargé une fois pour que le badge « urgent » suive automatiquement. Non bloquant.
   unawaited(_loadUrgencyThreshold());
 
-  // Plafond de remboursement Dony (SOURCE UNIQUE : dony.reimbursement.max-amount-eur
+  // Plafond de remboursement Yadony (SOURCE UNIQUE : dony.reimbursement.max-amount-eur
   // côté backend) : chargé une fois pour que le banner + la FAQ suivent
   // automatiquement. Non bloquant.
   unawaited(_loadReimbursementCap());

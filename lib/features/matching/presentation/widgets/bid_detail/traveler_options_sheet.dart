@@ -120,7 +120,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
               iconColor: cs.error,
               iconBg: cs.errorLight,
               label: "Signaler l'expéditeur",
-              subtitle: 'Signaler un problème au support Dony',
+              subtitle: 'Signaler un problème au support Yadony',
               onTap: () {
                 context.pop();
                 _showReportSheet(outerContext);
@@ -268,7 +268,7 @@ class _TravelerOptionsSheet extends StatelessWidget {
               Text("Signaler l'expéditeur", style: tt.headlineMedium),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                'Votre signalement sera traité par l\'équipe Dony.',
+                'Votre signalement sera traité par l\'équipe Yadony.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.base),

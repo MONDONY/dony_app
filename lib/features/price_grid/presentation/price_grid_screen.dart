@@ -157,7 +157,7 @@ class _LoadedView extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
-                  'Dony ajoute $donyCommissionPercentLabel % sur chaque prix. '
+                  'Yadony ajoute $donyCommissionPercentLabel % sur chaque prix. '
                   'Vous recevez exactement le montant saisi.',
                   style: tt.bodySmall?.copyWith(color: cs.info),
                 ),

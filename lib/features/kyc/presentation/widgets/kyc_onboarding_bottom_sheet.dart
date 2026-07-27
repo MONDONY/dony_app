@@ -80,7 +80,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Requis pour publier des annonces sur dony',
+              'Requis pour publier des annonces sur Yadony',
               style: tt.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
               ),

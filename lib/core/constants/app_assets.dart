@@ -1,7 +1,10 @@
 abstract final class AppAssets {
-  // ── Logos PNG (1x — Flutter charge 2x/3x automatiquement) ───────────────
-  static const logoBlueOrange  = 'assets/logos/logo-blue-orange.png';   // fond clair
-  static const logoWhiteOrange = 'assets/logos/logo-white-orange.png';  // fond sombre
+  // ── Mot-logo Yadony ─────────────────────────────────────────────────────
+  // Un seul fichier haute résolution (1081×295), identique à celui du splash
+  // native. Aucune déclinaison sur fond sombre n'existe encore, d'où les deux
+  // constantes pointant sur la même image.
+  static const logoBlueOrange  = 'assets/logos/logo-yadony.png';  // fond clair
+  static const logoWhiteOrange = 'assets/logos/logo-yadony.png';  // fond sombre
 
   // Aliases sémantiques
   static const logo      = logoBlueOrange;

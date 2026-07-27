@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Mapping sémantique des icônes dony → Material Icons.
+/// Mapping sémantique des icônes Yadony → Material Icons.
 /// L'app ne référence jamais Material directement : toujours via DonyIcons.
 ///
 /// NB : phosphor_flutter a été retiré car il étend `IconData`, devenu une

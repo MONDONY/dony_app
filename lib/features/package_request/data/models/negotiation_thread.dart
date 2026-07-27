@@ -104,7 +104,7 @@ class NegotiationThread extends Equatable {
   /// URL de la photo de l'expéditeur (nullable, fourni par le backend).
   final String? senderPhotoUrl;
 
-  /// Vrai si le voyageur peut couvrir la commission Dony en cash
+  /// Vrai si le voyageur peut couvrir la commission Yadony en cash
   /// (solde wallet suffisant OU carte de commission enregistrée).
   final bool cashCommissionAvailable;
 
