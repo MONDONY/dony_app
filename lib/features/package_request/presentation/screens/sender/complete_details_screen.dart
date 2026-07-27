@@ -3,13 +3,13 @@ import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
-import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -57,7 +57,6 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
   final _recipientCityCtrl = TextEditingController();
-  final _declaredValueCtrl = TextEditingController();
   final _recipientSection = RecipientSectionController();
 
   /// Payment method chosen by the sender (null until the request is loaded and
@@ -69,7 +68,6 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
     _recipientCityCtrl.dispose();
-    _declaredValueCtrl.dispose();
     _selectedMethod.dispose();
     super.dispose();
   }
@@ -121,16 +119,12 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   void _submit() {
     if (!_form.currentState!.validate()) return;
     final city = _recipientCityCtrl.text.trim();
-    final declared = double.parse(
-      _declaredValueCtrl.text.trim().replaceAll(',', '.'),
-    );
     context.read<CompleteDetailsBloc>().add(
       CompleteDetailsSubmitted(
         requestId: widget.requestId,
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
         recipientCity: city.isEmpty ? null : city,
-        declaredValueEur: declared,
       ),
     );
   }
@@ -259,29 +253,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                               ],
                             ),
                             const SizedBox(height: DonySpacing.md),
-                            TextFormField(
-                              textInputAction: TextInputAction.done,
-                              key: const Key('declared-value-input'),
-                              controller: _declaredValueCtrl,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: const InputDecoration(
-                                labelText: 'Valeur déclarée du colis',
-                                hintText: 'Ex. 120 (max 500 €)',
-                                suffixText: '€',
-                              ),
-                              validator: (v) {
-                                final d = double.tryParse(
-                                  (v ?? '').trim().replaceAll(',', '.'),
-                                );
-                                if (d == null) return 'Valeur requise';
-                                if (d <= 0) return 'Doit être positive';
-                                if (d > 500) return 'Maximum 500 €';
-                                return null;
-                              },
-                            ),
+                            const ReimbursementInfoBanner(),
                             if (state.request != null &&
                                 _availableMethods(
                                   state.request!,

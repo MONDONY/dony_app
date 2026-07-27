@@ -7,7 +7,6 @@ abstract class BidEvent {
 class BidCheckoutRequested extends BidEvent {
   final String announcementId;
   final double weightKg;
-  final double declaredValueEur;
   final String description;
   final String contentCategory;
   final String recipientName;
@@ -21,7 +20,6 @@ class BidCheckoutRequested extends BidEvent {
   BidCheckoutRequested({
     required this.announcementId,
     required this.weightKg,
-    required this.declaredValueEur,
     required this.description,
     required this.contentCategory,
     required this.recipientName,
@@ -34,7 +32,6 @@ class BidCheckoutRequested extends BidEvent {
 class BidCreateRequested extends BidEvent {
   final String announcementId;
   final double weightKg;
-  final double declaredValueEur;
   final String description;
   final String contentCategory;
   final String recipientName;
@@ -57,7 +54,6 @@ class BidCreateRequested extends BidEvent {
   BidCreateRequested({
     required this.announcementId,
     required this.weightKg,
-    required this.declaredValueEur,
     required this.description,
     required this.contentCategory,
     required this.recipientName,

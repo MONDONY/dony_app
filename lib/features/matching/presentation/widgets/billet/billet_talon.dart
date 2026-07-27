@@ -424,15 +424,11 @@ class _TravelerDecisionSummary extends StatelessWidget {
     final weight = bid.weightKg != null
         ? '${bid.weightKg!.toStringAsFixed(1)} kg'
         : '-';
-    final value = bid.declaredValueEur != null
-        ? '${bid.declaredValueEur!.toStringAsFixed(0)} €'
-        : '-';
     final category = bid.contentCategory ?? '-';
 
     return Row(
       children: [
         _MiniStat(value: weight, label: 'POIDS', tt: tt),
-        _MiniStat(value: value, label: 'VALEUR', tt: tt),
         _MiniStat(value: category, label: 'TYPE', tt: tt),
       ],
     );

@@ -581,7 +581,6 @@ final _paymentTestBid = BidModel(
   senderId: 'sender-1',
   weightKg: 5.0,
   pricePerKg: 6.0,
-  declaredValueEur: 100.0,
   description: 'Vêtements',
   status: 'ACCEPTED',
   departureCity: 'Paris',

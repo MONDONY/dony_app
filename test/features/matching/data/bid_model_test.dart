@@ -8,7 +8,6 @@ final _fullJson = {
   'senderName': 'Amadou Diallo',
   'senderPhoneAvailable': true,
   'weightKg': 5.0,
-  'declaredValueEur': 200.0,
   'description': 'Vêtements',
   'contentCategory': 'CLOTHING',
   'recipientName': 'Fatou Sow',
@@ -41,7 +40,6 @@ final _minimalJson = {
   'announcementId': 'ann-002',
   'senderId': 'sender-002',
   'weightKg': 3,
-  'declaredValueEur': 50,
   'description': 'Produits cosmétiques',
   'status': 'PENDING',
   'createdAt': '2024-05-01T00:00:00.000Z',
@@ -58,7 +56,6 @@ void main() {
       expect(model.senderName, 'Amadou Diallo');
       expect(model.senderPhoneAvailable, isTrue);
       expect(model.weightKg, 5.0);
-      expect(model.declaredValueEur, 200.0);
       expect(model.description, 'Vêtements');
       expect(model.contentCategory, 'CLOTHING');
       expect(model.recipientName, 'Fatou Sow');
@@ -139,10 +136,6 @@ void main() {
       expect(BidModel.fromJson(_minimalJson).totalSenderAmountEur, isNull);
     });
 
-    test('declaredValueEur parsed from int', () {
-      final model = BidModel.fromJson({..._minimalJson, 'declaredValueEur': 100});
-      expect(model.declaredValueEur, 100.0);
-    });
   });
 
   group('BidModel.toJson', () {

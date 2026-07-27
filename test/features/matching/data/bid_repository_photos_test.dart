@@ -11,7 +11,6 @@ BidModel _bid() => BidModel(
       announcementId: 'ann-001',
       senderId: 'sender-001',
       weightKg: 5.0,
-      declaredValueEur: 100.0,
       description: 'Colis test',
       status: 'PENDING',
       createdAt: DateTime(2024, 5, 1),
@@ -41,7 +40,6 @@ void main() {
     when(() => ds.createBid(
           announcementId: any(named: 'announcementId'),
           weightKg: any(named: 'weightKg'),
-          declaredValueEur: any(named: 'declaredValueEur'),
           description: any(named: 'description'),
           contentCategory: any(named: 'contentCategory'),
           recipientName: any(named: 'recipientName'),
@@ -57,7 +55,6 @@ void main() {
     await repo.createBid(
       announcementId: 'ann-001',
       weightKg: 5.0,
-      declaredValueEur: 100.0,
       description: 'Colis test',
       contentCategory: 'OTHER',
       recipientName: 'Fatou',
@@ -68,7 +65,6 @@ void main() {
     verify(() => ds.createBid(
           announcementId: 'ann-001',
           weightKg: 5.0,
-          declaredValueEur: 100.0,
           description: 'Colis test',
           contentCategory: 'OTHER',
           recipientName: 'Fatou',
@@ -86,7 +82,6 @@ void main() {
     when(() => ds.checkoutBid(
           announcementId: any(named: 'announcementId'),
           weightKg: any(named: 'weightKg'),
-          declaredValueEur: any(named: 'declaredValueEur'),
           description: any(named: 'description'),
           contentCategory: any(named: 'contentCategory'),
           recipientName: any(named: 'recipientName'),
@@ -101,7 +96,6 @@ void main() {
       await repo.checkoutBid(
         announcementId: 'ann-001',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'Colis test',
         contentCategory: 'OTHER',
         recipientName: 'Fatou',
@@ -113,7 +107,6 @@ void main() {
     verify(() => ds.checkoutBid(
           announcementId: 'ann-001',
           weightKg: 5.0,
-          declaredValueEur: 100.0,
           description: 'Colis test',
           contentCategory: 'OTHER',
           recipientName: 'Fatou',

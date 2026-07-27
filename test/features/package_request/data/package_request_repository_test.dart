@@ -192,7 +192,6 @@ void main() {
         recipientName: 'Fatou Diop',
         recipientPhone: '+221771234567',
         recipientCity: 'Dakar',
-        declaredValueEur: 120.0,
       );
 
       expect(result.id, 'pr-1');
@@ -207,7 +206,6 @@ void main() {
       expect(capturedBody!.containsKey('deliveryAddressLabel'), false);
       expect(capturedBody!.containsKey('deliveryLat'), false);
       expect(capturedBody!.containsKey('deliveryLng'), false);
-      expect(capturedBody!['declaredValueEur'], 120.0);
       expect(capturedBody!.containsKey('disclaimerSigned'), false);
     });
 
@@ -227,7 +225,6 @@ void main() {
         'pr-1',
         recipientName: 'Fatou Diop',
         recipientPhone: '+221771234567',
-        declaredValueEur: 120.0,
       );
 
       expect(capturedBody!.containsKey('recipientCity'), false);
@@ -250,7 +247,6 @@ void main() {
         recipientName: 'Fatou Diop',
         recipientPhone: '+221771234567',
         recipientCity: '',
-        declaredValueEur: 120.0,
       );
 
       expect(capturedBody!.containsKey('recipientCity'), false);

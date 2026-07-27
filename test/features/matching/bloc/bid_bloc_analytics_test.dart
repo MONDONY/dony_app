@@ -58,7 +58,6 @@ void main() {
         () => repo.createBid(
           announcementId: any(named: 'announcementId'),
           weightKg: any(named: 'weightKg'),
-          declaredValueEur: any(named: 'declaredValueEur'),
           description: any(named: 'description'),
           contentCategory: any(named: 'contentCategory'),
           recipientName: any(named: 'recipientName'),
@@ -78,7 +77,6 @@ void main() {
         BidCreateRequested(
           announcementId: 'ann1',
           weightKg: 5.0,
-          declaredValueEur: 100.0,
           description: 'test',
           contentCategory: 'OTHER',
           recipientName: 'Test',
@@ -133,7 +131,6 @@ void main() {
       () => repo.createBid(
         announcementId: any(named: 'announcementId'),
         weightKg: any(named: 'weightKg'),
-        declaredValueEur: any(named: 'declaredValueEur'),
         description: any(named: 'description'),
         contentCategory: any(named: 'contentCategory'),
         recipientName: any(named: 'recipientName'),
@@ -152,7 +149,6 @@ void main() {
       BidCreateRequested(
         announcementId: 'ann1',
         weightKg: 5.0,
-        declaredValueEur: 100.0,
         description: 'test',
         contentCategory: 'OTHER',
         recipientName: 'Test',

@@ -53,7 +53,6 @@ BidModel _bid({
   double? weightKg,
   String? contentCategory,
   String? description,
-  double? declaredValueEur,
   String? recipientName,
   String? recipientPhone,
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
@@ -86,7 +85,6 @@ BidModel _bid({
       weightKg: weightKg,
       contentCategory: contentCategory,
       description: description,
-      declaredValueEur: declaredValueEur,
       recipientName: recipientName,
       recipientPhone: recipientPhone,
       paymentMethod: paymentMethod,
@@ -358,11 +356,10 @@ void main() {
 
   // ── ColisDestinataireCard ──────────────────────────────────────────────────
   group('ColisDestinataireCard', () {
-    testWidgets('shows weight, category, declared value and recipient', (tester) async {
+    testWidgets('shows weight, category and recipient', (tester) async {
       final bid = _bid(
         weightKg: 5.0,
         contentCategory: 'Vêtements',
-        declaredValueEur: 120.0,
         recipientName: 'Aminata Traoré',
         recipientPhone: '+221700000000',
       );
@@ -371,18 +368,10 @@ void main() {
 
       expect(find.textContaining('5.0'), findsWidgets);
       expect(find.textContaining('Vêtements'), findsWidgets);
-      expect(find.textContaining('120'), findsWidgets);
       expect(find.textContaining('Aminata'), findsWidgets);
       expect(find.textContaining('+221700000000'), findsWidgets);
     });
 
-    testWidgets('shows dash when declared value is null', (tester) async {
-      final bid = _bid(declaredValueEur: null);
-
-      await tester.pumpWidget(_hostColis(bid));
-
-      expect(find.textContaining('à compléter'), findsOneWidget);
-    });
   });
 
   // ── PaiementCard ──────────────────────────────────────────────────────────

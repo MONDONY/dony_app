@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:flutter/foundation.dart';
 
 /// Source unique de vérité, côté app, pour le passage **prix net voyageur →
 /// prix affiché expéditeur** (commission Dony incluse).
@@ -39,7 +40,9 @@ double get donyCommissionMultiplier => 1 + _donyCommissionRate;
 /// Met à jour le taux au démarrage avec la valeur backend. Ignore les valeurs
 /// aberrantes (hors ]0,1[) pour rester sur le repli [kDonyCommissionRateDefault].
 void setDonyCommissionRate(double rate) {
-  if (rate > 0 && rate < 1) _donyCommissionRate = rate;
+  if (rate > 0 && rate < 1) {
+    _donyCommissionRate = rate;
+  }
 }
 
 /// Convertit un prix **net** (ce que touche le voyageur) en prix **affiché à
@@ -52,6 +55,43 @@ double netToSenderPrice(double net) => net * donyCommissionMultiplier;
 /// Pratique car le prix expéditeur (net × multiplicateur) est rarement entier.
 String formatKgPrice(double value) =>
     value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
+
+/// Plafond de remboursement dony en cas de perte de colis (€), source unique
+/// backend `dony.reimbursement.max-amount-eur`. Chargé une fois au démarrage
+/// via `GET /config/reimbursement-cap` → [setDonyReimbursementCap], repli sur
+/// [kDonyReimbursementCapDefault] tant qu'il n'est pas chargé / en cas d'erreur.
+const double kDonyReimbursementCapDefault = 50;
+
+final ValueNotifier<double> _donyReimbursementCapNotifier = ValueNotifier(
+  kDonyReimbursementCapDefault,
+);
+
+/// Plafond de remboursement courant en euros.
+double get donyReimbursementCapEur => _donyReimbursementCapNotifier.value;
+
+/// Écoute les changements du plafond chargé depuis le backend.
+ValueListenable<double> get donyReimbursementCapListenable =>
+    _donyReimbursementCapNotifier;
+
+/// Libellé du plafond (entier si rond, sinon 2 décimales max, virgule FR).
+/// À interpoler dans les textes UI : `'$donyReimbursementCapLabel €'`.
+String get donyReimbursementCapLabel {
+  final v = donyReimbursementCapEur;
+  return v % 1 == 0
+      ? v.toStringAsFixed(0)
+      : v
+            .toStringAsFixed(2)
+            .replaceFirst(RegExp(r'0+$'), '')
+            .replaceFirst('.', ',');
+}
+
+/// Met à jour le plafond au démarrage avec la valeur backend. Ignore les
+/// valeurs non strictement positives (repli sur le défaut).
+void setDonyReimbursementCap(double amount) {
+  if (amount > 0) {
+    _donyReimbursementCapNotifier.value = amount;
+  }
+}
 
 extension AnnouncementSenderPricing on AnnouncementModel {
   /// Prix au kilo **affiché à l'expéditeur** (net + commission). Préfère le

@@ -116,7 +116,6 @@ void main() {
       senderIsProAccount: false,
       senderKiloPro: false,
       weightKg: 3.5,
-      declaredValueEur: 200,
       description: 'Médicaments',
       status: 'COMPLETED',
       voyageurConfirmed: true,

@@ -10,7 +10,7 @@ class FaqScreen extends StatelessWidget {
 
   // `final` (pas `const`) : la question sur la commission interpole le taux
   // courant chargé depuis le backend (donyCommissionPercentLabel).
-  static final _sections = <_FaqSectionData>[
+  static List<_FaqSectionData> get _sections => <_FaqSectionData>[
     const _FaqSectionData(
       title: 'Compte & identité',
       iconAsset: 'shield-check',
@@ -48,10 +48,6 @@ class FaqScreen extends StatelessWidget {
         _FaqItem(
           q: 'Puis-je modifier ma demande après publication ?',
           a: 'Tu peux modifier une demande tant qu\'aucune offre n\'a été acceptée. Une fois un voyageur accepté, contacte le support pour toute modification.',
-        ),
-        _FaqItem(
-          q: 'Quelle est la valeur maximale déclarable ?',
-          a: 'La valeur maximale est de 500 €. Cette limite protège les deux parties et correspond aux seuils réglementaires de déclaration en douane.',
         ),
       ],
     ),
@@ -95,23 +91,23 @@ class FaqScreen extends StatelessWidget {
         ),
       ],
     ),
-    const _FaqSectionData(
+    _FaqSectionData(
       title: 'Sécurité & données',
       iconAsset: 'shield-check',
       items: [
         _FaqItem(
-          q: 'Pourquoi la valeur déclarée est-elle limitée à 500 € ?',
-          a: 'Cette limite correspond aux seuils réglementaires de déclaration en douane pour les envois personnels. Au-delà, des formalités douanières supplémentaires sont requises.',
+          q: 'Que se passe-t-il si mon colis est perdu ?',
+          a: 'dony ne couvre pas automatiquement la perte d\'un colis. En cas de perte confirmée après recherche de notre équipe, un remboursement jusqu\'à $donyReimbursementCapLabel € peut être accordé si toutes les conditions suivantes sont respectées : paiement effectué par carte via dony (jamais en espèces) ; aucun échange ou paiement effectué en dehors de la plateforme avec le voyageur ; colis scanné via QR code dony au dépôt et à la remise ; litige signalé dans l\'application dans les 15 jours suivant la date de livraison prévue ; contenu du colis conforme aux objets autorisés par dony. Le remboursement n\'est jamais automatique et reste soumis à validation de l\'équipe dony après investigation.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Que faire en cas de litige avec un voyageur ?',
           a: 'Ouvre un litige depuis ton profil → "Mes litiges". Fournis les preuves (photos, messages). Notre équipe arbitre dans les 48 h.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Mes données personnelles sont-elles protégées ?',
           a: 'Oui. Nos données sont chiffrées AES-256 au repos et TLS en transit. Nous ne vendons aucune donnée à des tiers. Conformité RGPD garantie.',
         ),
-        _FaqItem(
+        const _FaqItem(
           q: 'Comment supprimer mon compte ?',
           a: 'Dans Paramètres → Compte → Supprimer mon compte. La suppression est définitive et irréversible après un délai légal de 30 jours.',
         ),
@@ -124,23 +120,26 @@ class FaqScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    return DonyPageScaffold(
-      title: 'FAQ & aide',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Toutes les réponses aux questions fréquentes.',
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.xl),
-          ...List.generate(_sections.length, (i) {
-            return _FaqSection(data: _sections[i])
-                .animate()
-                .fadeIn(delay: (i * 80).ms, duration: 300.ms)
-                .slideY(begin: 0.04, curve: Curves.easeOutCubic);
-          }),
-        ],
+    return ValueListenableBuilder<double>(
+      valueListenable: donyReimbursementCapListenable,
+      builder: (context, _, _) => DonyPageScaffold(
+        title: 'FAQ & aide',
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Toutes les réponses aux questions fréquentes.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.xl),
+            ...List.generate(_sections.length, (i) {
+              return _FaqSection(data: _sections[i])
+                  .animate()
+                  .fadeIn(delay: (i * 80).ms, duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -185,11 +184,7 @@ class _FaqSection extends StatelessWidget {
                     ),
                     child: data.iconAsset == 'package'
                         ? const DonyEmoji.parcel(size: 18)
-                        : DonyIcon(
-                            data.iconAsset,
-                            color: cs.primary,
-                            size: 18,
-                          ),
+                        : DonyIcon(data.iconAsset, color: cs.primary, size: 18),
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   Text(

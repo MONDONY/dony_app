@@ -52,9 +52,6 @@ class BidModel {
   final bool senderIsProAccount;
   final bool senderKiloPro;
   final double? weightKg;
-  // Nullable: bids issued from the package_request marketplace flow have
-  // null declared value until the sender completes the post-acceptance details.
-  final double? declaredValueEur;
   // Nullable for the same reason — request.description is optional.
   final String? description;
   final String? contentCategory;
@@ -171,7 +168,6 @@ class BidModel {
     this.senderIsProAccount = false,
     this.senderKiloPro = false,
     this.weightKg,
-    this.declaredValueEur,
     this.description,
     this.contentCategory,
     this.recipientName,

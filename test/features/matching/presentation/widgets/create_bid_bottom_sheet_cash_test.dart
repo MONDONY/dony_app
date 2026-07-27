@@ -16,6 +16,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -261,11 +262,10 @@ Future<void> _fillMandatoryFields(WidgetTester tester) async {
   // at(0) = input inline contenu (ignoré) ; at(1)=description, at(2)=valeur, at(3)=nom, at(4)=tel
   await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(2), '100');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(3), 'Amadou Diallo');
+  await tester.enterText(find.byType(TextField).at(2), 'Amadou Diallo');
   await tester.pump();
-  await tester.enterText(find.byType(TextField).at(4), '+221 77 000 00 00');
+  await tester.enterText(find.byType(TextField).at(3), '+221 77 000 00 00');
   await tester.pump();
 }
 
@@ -290,7 +290,6 @@ void main() {
       BidCreateRequested(
         announcementId: '',
         weightKg: 0,
-        declaredValueEur: 0,
         description: '',
         contentCategory: '',
         recipientName: '',
@@ -301,7 +300,6 @@ void main() {
       BidCheckoutRequested(
         announcementId: '',
         weightKg: 0,
-        declaredValueEur: 0,
         description: '',
         contentCategory: '',
         recipientName: '',
@@ -373,6 +371,18 @@ void main() {
   });
 
   // ── 1. Visibilité du sélecteur ─────────────────────────────────────────────
+
+  group('Politique de remboursement', () {
+    testWidgets(
+      'le champ valeur déclarée est absent, le banner remboursement présent',
+      (tester) async {
+        await _openSheet(tester, _announcement());
+
+        expect(find.text('VALEUR DÉCLARÉE (€)'), findsNothing);
+        expect(find.byType(ReimbursementInfoBanner), findsOneWidget);
+      },
+    );
+  });
 
   group('Visibilité du sélecteur de paiement', () {
     testWidgets('annonce Stripe-only → sélecteur non affiché', (tester) async {
@@ -757,11 +767,10 @@ void main() {
       await _openSheet(tester, _announcement());
       await _enableSubmitButton(tester);
       // Laisser la description vide, remplir le reste
-      await tester.enterText(find.byType(TextField).at(2), '100');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(3), 'Amadou');
+      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(4), '+221770000000');
+      await tester.enterText(find.byType(TextField).at(3), '+221770000000');
       await tester.pump();
 
       await tester.tap(find.text('Envoyer'));
@@ -770,47 +779,6 @@ void main() {
       expect(find.text('Description obligatoire'), findsOneWidget);
     });
 
-    testWidgets('valeur déclarée > 500 → snackbar "Valeur maximum : 500 €"', (
-      tester,
-    ) async {
-      await _openSheet(tester, _announcement());
-      await _enableSubmitButton(tester);
-      await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
-      await tester.pump();
-      await tester.enterText(find.byType(TextField).at(2), '501');
-      await tester.pump();
-      await tester.enterText(find.byType(TextField).at(3), 'Amadou');
-      await tester.pump();
-      await tester.enterText(find.byType(TextField).at(4), '+221770000000');
-      await tester.pump();
-
-      await tester.tap(find.text('Envoyer'));
-      await tester.pump();
-
-      expect(find.text('Valeur maximum : 500 €'), findsOneWidget);
-    });
-
-    testWidgets(
-      'valeur déclarée invalide → snackbar "Valeur déclarée invalide"',
-      (tester) async {
-        await _openSheet(tester, _announcement());
-        await _enableSubmitButton(tester);
-        await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
-        await tester.pump();
-        await tester.enterText(find.byType(TextField).at(2), 'abc');
-        await tester.pump();
-        await tester.enterText(find.byType(TextField).at(3), 'Amadou');
-        await tester.pump();
-        await tester.enterText(find.byType(TextField).at(4), '+221770000000');
-        await tester.pump();
-
-        await tester.tap(find.text('Envoyer'));
-        await tester.pump();
-
-        expect(find.text('Valeur déclarée invalide'), findsOneWidget);
-      },
-    );
-
     testWidgets(
       'nom destinataire vide → snackbar "Nom du destinataire obligatoire"',
       (tester) async {
@@ -818,7 +786,6 @@ void main() {
         await _enableSubmitButton(tester);
         await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
         await tester.pump();
-        await tester.enterText(find.byType(TextField).at(2), '100');
         await tester.pump();
         // Laisser nom et téléphone vides
         await tester.tap(find.text('Envoyer'));
@@ -835,9 +802,8 @@ void main() {
         await _enableSubmitButton(tester);
         await tester.enterText(find.byType(TextField).at(1), 'Médicaments');
         await tester.pump();
-        await tester.enterText(find.byType(TextField).at(2), '100');
         await tester.pump();
-        await tester.enterText(find.byType(TextField).at(3), 'Amadou');
+        await tester.enterText(find.byType(TextField).at(2), 'Amadou');
         await tester.pump();
         // Laisser le téléphone vide
         await tester.tap(find.text('Envoyer'));
