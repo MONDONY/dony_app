@@ -90,7 +90,13 @@ feature/
 - Utiliser `BlocConsumer` : `listener` pour navigation/snackbar, `builder` pour l'UI.
 - Aucun `Navigator.push()`. Utiliser GoRouter :
   `context.go`, `context.push` et `context.pop`, avec auth guard dans `router.dart`.
+- Conserver les deep links existants :
+  `dony://payment/confirm?payment_intent=pi_xxx`,
+  `dony://tracking/scan?bid_id=xxx` et
+  `https://dony.app/tracking/{token}`.
 - Aucun package `http`. Utiliser l'instance Dio unique et `AuthInterceptor`.
+- Dio : timeout de connexion 10 s, timeout de réception 30 s et retry avec
+  backoff exponentiel sur les erreurs réseau.
 - Ne jamais instancier service, repository ou BLoC dans un widget. GetIt :
   singletons paresseux pour core/repositories/datasources, factories pour les BLoCs.
 - La validation client améliore l'UX; le backend reste la source de vérité.
@@ -116,6 +122,8 @@ Après une navigation qui peut modifier des données :
   continue.
 - FCM : mettre à jour le token au démarrage et sur `onTokenRefresh`; acquitter les
   notifications critiques.
+- Le handler FCM background est une fonction top-level annotée
+  `@pragma('vm:entry-point')`.
 
 ## Analytics
 
@@ -128,7 +136,18 @@ Après une navigation qui peut modifier des données :
 - Utiliser `unawaited(_analytics.logEvent(...))` pour ne jamais bloquer le flux.
 - Aucune PII dans les propriétés analytics : pas de téléphone, email, nom, adresse
   exacte, token ni valeur exacte sensible.
-- Le backend est la source de vérité du consentement RGPD; Hive n'est qu'un cache.
+- Lors de toute modification d'un écran existant, vérifier et mettre à jour le
+  tracking des actions modifiées, ajoutées ou supprimées.
+- Le consentement RGPD utilise
+  `AnalyticsService.setConsent({required granted, source})`. Toujours fournir
+  `source` : `manual`, `auto_non_gdpr` ou `settings`.
+- `setConsent` écrit dans Hive puis pousse au backend avec
+  `PUT /auth/me/analytics-consent`; le backend est la source de vérité, Hive n'est
+  qu'un cache et `audit_log` constitue la preuve légale.
+- Le payload de consentement ne contient que `granted`, `policyVersion` et `source`,
+  sans PII.
+- Au login, `AnalyticsService.syncFromBackend()` réconcilie le cache. Toute nouvelle
+  décision doit appeler `syncFromBackend()` avant de tester `hasAnswered`.
 
 ## Bottom sheets : bouton sticky obligatoire
 
@@ -186,6 +205,14 @@ DonyBottomSheet.show(
 - Ne jamais ajouter de ligne `Co-Authored-By: Codex`; les commits restent au nom du
   développeur.
 - Ne pas inclure de secret, fichier d'environnement ou changement hors périmètre.
+
+## Sécurité release
+
+- HTTPS uniquement et SSL pinning activé en production.
+- ProGuard/R8 et obfuscation activés pour les builds release.
+- Aucune donnée sensible dans les logs de production.
+- Firebase ID token auto-refreshé et jamais stocké dans Hive.
+- Sentry configuré sans PII ni secret.
 
 ## Tests et couverture
 

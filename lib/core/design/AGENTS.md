@@ -33,13 +33,20 @@ token existe.
 | `DonyColors.textPrimary` | `#0A2540` | texte principal light |
 | `DonyColors.textMuted` | `#54504A` | texte secondaire light |
 | `DonyColors.textSubtle` | `#797367` | hints light |
+| `DonyColors.textOnBrand` | `#FFFFFF` | texte blanc sur fond de marque |
 | `DonyColors.borderDefault` | `#E8E5DF` | bordures light |
+| `DonyColors.borderFocus` | `#0B5FFF` | bordure de champ au focus |
 | `DonyColors.success` | `#0E8A5F` | succès |
 | `DonyColors.warning` | `#E8A23B` | avertissement |
 | `DonyColors.error` | `#D9342B` | erreur |
+| `DonyColors.shadow` | `#1A0A2540` | ombre de card, ink à 10 % |
 
 Les palettes primitives `blue`, `terra`, `neutral`, `sand` et `ink` sont réservées
 aux contextes `const` ou usages volontairement non sémantiques.
+
+Aliases legacy dépréciés, à ne pas utiliser dans du nouveau code :
+`green400 → blue500`, `grey200 → neutral200`, `bg → neutral50` et
+`white → neutral0`. Ils seront supprimés en phase 5.
 
 ### Espacement et rayons
 
@@ -85,8 +92,11 @@ cs.onSurfaceVariant;
 cs.outline;
 cs.error;
 cs.success;
+cs.successLight;
 cs.warning;
+cs.warningLight;
 cs.info;
+cs.infoLight;
 cs.errorLight;
 cs.surfaceWarm;
 ```
@@ -98,6 +108,25 @@ Ne jamais utiliser directement dans un widget brightness-aware :
 
 Les primitives restent autorisées dans un contexte `const` ou un dégradé
 intentionnel. Vérifier chaque nouveau composant en light et dark mode.
+
+### Valeurs en dur interdites
+
+- Jamais de `Color(0xFF...)` hardcodé : utiliser `DonyColors.X` ou `cs.X`.
+- Jamais de `GoogleFonts.hankenGrotesk(...)` ni
+  `GoogleFonts.plusJakartaSans(...)` directement : utiliser
+  `Theme.of(context).textTheme.X`.
+- Jamais de `EdgeInsets.all(16)` : utiliser
+  `EdgeInsets.all(DonySpacing.base)`.
+- Jamais de `BorderRadius.circular(16)` pour une card : utiliser
+  `BorderRadius.circular(DonyRadius.card)`.
+- Jamais de `BorderRadius.circular(14)` pour un bouton : utiliser
+  `BorderRadius.circular(DonyRadius.lg)`.
+- Jamais de `BorderRadius.circular(24)` pour une sheet : utiliser
+  `BorderRadius.circular(DonyRadius.sheet)`.
+- Jamais de couleur sémantique light-only directement dans `build()` : passer par
+  `Theme.of(context).colorScheme`.
+- Jamais d'`Image.asset('assets/mascottes/...')` direct : utiliser
+  `DonyMascotte(type:)` ou `DonyMascotteAnimated(type:)`.
 
 ## Typographie
 
