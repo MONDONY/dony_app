@@ -70,10 +70,17 @@ class OfflineQueueBottomSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item.donNumber, style: tt.titleSmall),
+                        Text(
+                          item.donNumber,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.titleSmall,
+                        ),
                         const SizedBox(height: DonySpacing.xxs),
                         Text(
                           item.eventType,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
@@ -81,10 +88,16 @@ class OfflineQueueBottomSheet extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Text(
-                    _relativeTime(item.timestamp),
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
+                  const SizedBox(width: DonySpacing.xs),
+                  Flexible(
+                    child: Text(
+                      _relativeTime(item.timestamp),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],

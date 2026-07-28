@@ -65,6 +65,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
         scrolledUnderElevation: 0,
         title: Text(
           '${alert.departureCity} → ${alert.arrivalCity}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         actions: [

@@ -432,8 +432,15 @@ class PrixConditionsStep extends StatelessWidget {
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(item.label,
-                                    style: tt.bodySmall),
+                                Expanded(
+                                  child: Text(
+                                    item.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: tt.bodySmall,
+                                  ),
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
                                 Text(
                                   '${item.unitPriceDisplay.toStringAsFixed(2)} €',
                                   style: tt.labelSmall?.copyWith(

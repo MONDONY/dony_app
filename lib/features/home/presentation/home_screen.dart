@@ -1880,6 +1880,7 @@ class _CorridorBar extends StatelessWidget {
                   color: cs.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

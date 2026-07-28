@@ -338,6 +338,8 @@ class _ProfileHero extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             profile.displayName,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: tt.headlineLarge?.copyWith(
               fontWeight: FontWeight.w800,
               color: cs.onSurface,
@@ -361,6 +363,8 @@ class _ProfileHero extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             metaLine,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: tt.bodySmall?.copyWith(
               color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w600,
@@ -1038,6 +1042,8 @@ class _FlatReviewRow extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xs),
                   Text(
                     item.comment!,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       height: 1.4,

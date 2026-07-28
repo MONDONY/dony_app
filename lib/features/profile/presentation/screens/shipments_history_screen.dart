@@ -171,9 +171,13 @@ class _DeliveryCard extends StatelessWidget {
                 children: [
                   DonyIcon('route', size: 16, color: cs.primary),
                   const SizedBox(width: DonySpacing.xs),
-                  Text(
-                    route,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                  Expanded(
+                    child: Text(
+                      route,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                    ),
                   ),
                 ],
               ),

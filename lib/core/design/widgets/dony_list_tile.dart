@@ -101,6 +101,8 @@ class DonyListTile extends StatelessWidget {
                     children: [
                       Text(
                         label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: tt.bodyMedium?.copyWith(
                           color: labelColor,
                           fontWeight: FontWeight.w500,
@@ -110,6 +112,8 @@ class DonyListTile extends StatelessWidget {
                         const SizedBox(height: DonySpacing.xxs),
                         Text(
                           subtitle!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ],

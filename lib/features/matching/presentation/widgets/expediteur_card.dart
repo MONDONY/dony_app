@@ -59,6 +59,7 @@ class ExpediteurCard extends StatelessWidget {
                           Flexible(
                             child: Text(
                               bid.resolvedSenderName,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: tt.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,

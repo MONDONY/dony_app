@@ -377,28 +377,40 @@ class _ActiveCardContent extends StatelessWidget {
 
           // ── Footer: available kg + price ──
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const DonyEmoji.parcel(size: 14),
-                  const SizedBox(width: DonySpacing.xs),
-                  Text(
-                    announcement.isKgFree
-                        ? 'Kg libre'
-                        : '${kg(availableKg)} disponibles',
-                    style: tt.titleSmall?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const DonyEmoji.parcel(size: 14),
+                    const SizedBox(width: DonySpacing.xs),
+                    Flexible(
+                      child: Text(
+                        announcement.isKgFree
+                            ? 'Kg libre'
+                            : '${kg(availableKg)} disponibles',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.titleSmall?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              Text(
-                _activePriceLabel(announcement, price),
-                style: tt.titleSmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: DonySpacing.sm),
+              Flexible(
+                child: Text(
+                  _activePriceLabel(announcement, price),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: tt.titleSmall?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],

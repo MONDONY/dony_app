@@ -118,7 +118,9 @@ class _ThreadView extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.sm + 2),
             if (thread != null) ...[
-              _PartnerTitle(thread: thread, viewerUserId: viewerUserId),
+              Expanded(
+                child: _PartnerTitle(thread: thread, viewerUserId: viewerUserId),
+              ),
             ] else ...[
               Text(
                 'Négociation',
@@ -237,30 +239,36 @@ class _PartnerTitle extends StatelessWidget {
           verified: (trips ?? 0) > 0,
         ),
         const SizedBox(width: DonySpacing.sm + 2),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              name,
-              style: tt.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: cs.onSurface,
-              ),
-            ),
-            if (meta.isNotEmpty)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Text(
-                meta,
-                style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  // Tabular figures: prevents layout shift as rating numbers update
-                  fontFeatures: const [FontFeature.tabularFigures()],
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: cs.onSurface,
                 ),
               ),
-          ],
+              if (meta.isNotEmpty)
+                Text(
+                  meta,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    // Tabular figures: prevents layout shift as rating numbers update
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );

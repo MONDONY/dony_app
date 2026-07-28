@@ -197,12 +197,12 @@ class _HighlightedText extends StatelessWidget {
   Widget build(BuildContext context) {
     final q = normalizeSearch(query.trim());
     if (q.isEmpty) {
-      return Text(text, style: style, overflow: TextOverflow.ellipsis);
+      return Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
     }
     // normalizeSearch préserve la longueur → les index sont valides sur `text`.
     final idx = normalizeSearch(text).indexOf(q);
     if (idx < 0 || idx + q.length > text.length) {
-      return Text(text, style: style, overflow: TextOverflow.ellipsis);
+      return Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
     }
     final cs = Theme.of(context).colorScheme;
     final highlight = (style ?? const TextStyle()).copyWith(
@@ -219,6 +219,7 @@ class _HighlightedText extends StatelessWidget {
           TextSpan(text: text.substring(idx + q.length)),
         ],
       ),
+      maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
   }

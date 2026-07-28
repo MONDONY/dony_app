@@ -25,6 +25,8 @@ class DonyStepPill extends StatelessWidget {
       ),
       child: Text(
         '$current / $total · $label',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: tt.labelSmall?.copyWith(
           color: cs.primary,
           fontWeight: FontWeight.w700,

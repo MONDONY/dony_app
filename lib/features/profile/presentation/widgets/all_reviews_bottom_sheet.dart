@@ -262,6 +262,8 @@ class _ReviewRow extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             Text(
               item.comment!,
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
             ),
           ],
@@ -377,11 +379,15 @@ class _CorridorChip extends StatelessWidget {
         children: [
           const DonyEmoji.planeTakeoff(size: 12),
           const SizedBox(width: DonySpacing.xs),
-          Text(
-            '$departure → $arrival',
-            style: tt.labelMedium?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              '$departure → $arrival',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.labelMedium?.copyWith(
+                color: cs.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

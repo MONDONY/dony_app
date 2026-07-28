@@ -50,7 +50,12 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     final tt = Theme.of(context).textTheme;
 
     return AppBar(
-      title: Text(title, style: tt.headlineMedium),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: tt.headlineMedium,
+      ),
       centerTitle: false,
       scrolledUnderElevation: 0,
       leading: showBackButton
@@ -181,7 +186,12 @@ class DonySliverAppBar extends StatelessWidget {
         titlePadding: const EdgeInsets.fromLTRB(
           DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.base,
         ),
-        title: Text(title, style: tt.headlineMedium),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: tt.headlineMedium,
+        ),
         collapseMode: CollapseMode.pin,
       ),
       bottom: bottom ??

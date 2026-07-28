@@ -175,6 +175,8 @@ class _UserTile extends StatelessWidget {
               children: [
                 Text(
                   user.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
