@@ -89,7 +89,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                   child: CircularProgressIndicator(color: cs.primary));
             case CorridorAlertMatchesStatus.error:
               return DonyEmptyState(
-                mascotte: DonyMascotteType.assis,
+                mascotte: DonyMascotteType.erreurLegere,
                 type: DonyEmptyStateType.error,
                 iconAsset: 'circle-alert',
                 title: 'Erreur de chargement',
@@ -106,7 +106,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const DonyMascotteAnimated(
-                        type: DonyMascotteType.assis,
+                        type: DonyMascotteType.aucunResultat,
                         size: DonyMascotteSize.lg,
                       ),
                       const SizedBox(height: DonySpacing.base),

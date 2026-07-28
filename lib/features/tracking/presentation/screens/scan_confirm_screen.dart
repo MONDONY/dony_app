@@ -381,7 +381,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
   }) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => DonySuccessScreen(
-        mascotteType: DonyMascotteType.securise,
+        mascotteType: DonyMascotteType.succes,
         title: 'Colis livré !',
         subtitle: label,
         ctaLabel: 'Terminer',

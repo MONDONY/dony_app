@@ -73,7 +73,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
           // Header mascotte
           const Center(
             child: DonyMascotteAnimated(
-              type: DonyMascotteType.confiant,
+              type: DonyMascotteType.attente,
               size: DonyMascotteSize.md,
             ),
           ),

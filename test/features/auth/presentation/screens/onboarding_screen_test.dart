@@ -141,7 +141,7 @@ void main() {
     expect(mascotteFinder, findsOneWidget);
 
     final mascotte = tester.widget<DonyMascotteAnimated>(mascotteFinder);
-    expect(mascotte.type, DonyMascotteType.joyeux);
+    expect(mascotte.type, DonyMascotteType.bienvenue);
     expect(mascotte.size, DonyMascotteSize.lg);
   });
 }

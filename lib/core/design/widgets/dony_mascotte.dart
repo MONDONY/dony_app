@@ -4,37 +4,55 @@ import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-/// Types de mascotte disponibles — 8 expressions alignées sur les assets.
+/// Types de mascotte disponibles — 14 expressions alignées sur les assets.
 enum DonyMascotteType {
   joyeux,
+  bienvenue,
   confiant,
   securise,
+  succes,
   tenantColis,
   donneColis,
   enCourse,
   assis,
+  aucunResultat,
+  attente,
+  erreur,
+  erreurLegere,
   scan;
 
   String get assetPath => switch (this) {
-        joyeux      => 'assets/mascotte/joyeux.png',
-        confiant    => 'assets/mascotte/confiant.png',
-        securise    => 'assets/mascotte/sécurisé.png',
-        tenantColis => 'assets/mascotte/tenant_le_colis.png',
-        donneColis  => 'assets/mascotte/donne_un_colis.png',
-        enCourse    => 'assets/mascotte/en_course.png',
-        assis       => 'assets/mascotte/assis.png',
-        scan        => 'assets/mascotte/Scan.png',
+        joyeux        => 'assets/mascotte/hello.png',
+        bienvenue     => 'assets/mascotte/welcome.png',
+        confiant      => 'assets/mascotte/travel.png',
+        securise      => 'assets/mascotte/success.png',
+        succes        => 'assets/mascotte/success_celebration.png',
+        tenantColis   => 'assets/mascotte/welcome.png',
+        donneColis    => 'assets/mascotte/travel.png',
+        enCourse      => 'assets/mascotte/travel.png',
+        assis         => 'assets/mascotte/empty_search.png',
+        aucunResultat => 'assets/mascotte/no_result.png',
+        attente       => 'assets/mascotte/waiting.png',
+        erreur        => 'assets/mascotte/error.png',
+        erreurLegere  => 'assets/mascotte/error_light.png',
+        scan          => 'assets/mascotte/search.png',
       };
 
   String get semanticLabel => switch (this) {
-        joyeux      => 'Mascotte joyeuse',
-        confiant    => 'Mascotte confiante',
-        securise    => 'Colis sécurisé',
-        tenantColis => 'Mascotte tenant un colis',
-        donneColis  => 'Mascotte donnant un colis',
-        enCourse    => 'Colis en transit',
-        assis       => 'Mascotte assise',
-        scan        => 'Mascotte lisant un QR',
+        joyeux        => 'Mascotte qui salue',
+        bienvenue     => 'Mascotte accueillante, bras ouverts',
+        confiant      => 'Mascotte prête à partir en voyage',
+        securise      => 'Mascotte brandissant un badge de validation',
+        succes        => 'Mascotte célébrant une réussite',
+        tenantColis   => 'Mascotte prête à prendre un colis',
+        donneColis    => 'Mascotte confiant un colis au voyageur',
+        enCourse      => 'Colis en transit',
+        assis         => 'Mascotte cherchant à la loupe, rien trouvé',
+        aucunResultat => 'Mascotte perplexe devant une carte, aucun résultat',
+        attente       => 'Mascotte patientant devant une horloge',
+        erreur        => 'Mascotte inquiète, une erreur est survenue',
+        erreurLegere  => 'Mascotte signalant un souci mineur',
+        scan          => 'Mascotte inspectant à la loupe',
       };
 }
 
@@ -172,6 +190,14 @@ class DonyMascotteAnimated extends StatelessWidget {
               duration: 500.ms,
               curve: Curves.easeOutBack,
             ),
+        DonyMascotteType.bienvenue => child
+            .animate()
+            .fadeIn(duration: 350.ms)
+            .scaleXY(
+              begin: 0.9,
+              duration: 450.ms,
+              curve: Curves.easeOutBack,
+            ),
         DonyMascotteType.confiant => child
             .animate()
             .fadeIn(duration: 250.ms)
@@ -187,6 +213,14 @@ class DonyMascotteAnimated extends StatelessWidget {
             .scaleXY(
               begin: 0.88,
               duration: 480.ms,
+              curve: Curves.easeOutBack,
+            ),
+        DonyMascotteType.succes => child
+            .animate()
+            .fadeIn(duration: 300.ms)
+            .scaleXY(
+              begin: 0.8,
+              duration: 520.ms,
               curve: Curves.easeOutBack,
             ),
         DonyMascotteType.tenantColis => child
@@ -219,6 +253,39 @@ class DonyMascotteAnimated extends StatelessWidget {
             .scaleXY(
               begin: 0.92,
               duration: 450.ms,
+              curve: DonyCurve.enter,
+            ),
+        DonyMascotteType.aucunResultat => child
+            .animate()
+            .fadeIn(duration: 400.ms, curve: DonyCurve.enter)
+            .scaleXY(
+              begin: 0.9,
+              duration: 420.ms,
+              curve: DonyCurve.enter,
+            ),
+        // Respiration continue : l'attente est un état qui dure, pas une entrée.
+        DonyMascotteType.attente => child
+            .animate(onPlay: (c) => c.repeat(reverse: true))
+            .scaleXY(
+              begin: 0.98,
+              end: 1.02,
+              duration: 1200.ms,
+              curve: Curves.easeInOut,
+            ),
+        DonyMascotteType.erreur => child
+            .animate()
+            .fadeIn(duration: 300.ms)
+            .slideX(
+              begin: -0.03,
+              duration: 320.ms,
+              curve: Curves.easeOutBack,
+            ),
+        DonyMascotteType.erreurLegere => child
+            .animate()
+            .fadeIn(duration: 300.ms)
+            .slideY(
+              begin: 0.05,
+              duration: 360.ms,
               curve: DonyCurve.enter,
             ),
         DonyMascotteType.scan => child

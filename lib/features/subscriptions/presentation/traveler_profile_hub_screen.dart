@@ -568,7 +568,7 @@ class _TripsTab extends StatelessWidget {
           return SingleChildScrollView(
             child: DonyEmptyState(
               type: DonyEmptyStateType.error,
-              mascotte: DonyMascotteType.assis,
+              mascotte: DonyMascotteType.erreurLegere,
               iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
               description: 'Impossible de charger les trajets. Réessayez dans un instant.',
@@ -629,7 +629,7 @@ class _ReviewsTab extends StatelessWidget {
         if (state is ProfilePublicError) {
           return DonyEmptyState(
             type: DonyEmptyStateType.error,
-            mascotte: DonyMascotteType.assis,
+            mascotte: DonyMascotteType.erreur,
             iconAsset: 'circle-alert',
             title: 'Impossible de charger les avis',
             description: state.message,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,44 +19,73 @@ Future<void> _drainAndDispose(WidgetTester tester, int ms) async {
 
 void main() {
   group('DonyMascotteType', () {
-    test('chaque type expose un assetPath unique non vide', () {
-      final paths = DonyMascotteType.values.map((t) => t.assetPath).toSet();
-      expect(paths.length, DonyMascotteType.values.length,
-          reason: 'paths must be unique');
-      for (final p in paths) {
-        expect(p, isNotEmpty);
-        expect(p, startsWith('assets/mascotte/'));
-        expect(p, endsWith('.png'));
+    test('chaque type pointe vers un fichier existant', () {
+      // Plusieurs types peuvent partager une illustration (ex. les états liés au
+      // voyage), mais aucun ne doit pointer vers un asset absent.
+      for (final t in DonyMascotteType.values) {
+        expect(t.assetPath, isNotEmpty);
+        expect(t.assetPath, startsWith('assets/mascotte/'));
+        expect(t.assetPath, endsWith('.png'));
+        expect(File(t.assetPath).existsSync(), isTrue,
+            reason: 'asset manquant pour $t : ${t.assetPath}');
       }
     });
 
-    test('chaque type a un semanticLabel non vide', () {
+    test('aucun asset mascotte orphelin dans le dossier', () {
+      final referenced =
+          DonyMascotteType.values.map((t) => t.assetPath).toSet();
+      final onDisk = Directory('assets/mascotte')
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.path.replaceAll(r'\', '/'))
+          .where((p) => p.endsWith('.png'))
+          .toSet();
+      expect(onDisk.difference(referenced), isEmpty,
+          reason: 'assets embarqués mais jamais référencés par l\'enum');
+    });
+
+    test('chaque type a un semanticLabel non vide et distinct', () {
+      final labels = <String>{};
       for (final t in DonyMascotteType.values) {
         expect(t.semanticLabel, isNotEmpty);
+        expect(labels.add(t.semanticLabel), isTrue,
+            reason: 'semanticLabel dupliqué : ${t.semanticLabel}');
       }
     });
 
-    test('8 types exactement dans l\'enum', () {
-      expect(DonyMascotteType.values.length, 8);
+    test('14 types exactement dans l\'enum', () {
+      expect(DonyMascotteType.values.length, 14);
     });
 
-    test('mappings asset corrects pour les 8 types', () {
+    test('mappings asset corrects', () {
       expect(DonyMascotteType.joyeux.assetPath,
-          'assets/mascotte/joyeux.png');
+          'assets/mascotte/hello.png');
+      expect(DonyMascotteType.bienvenue.assetPath,
+          'assets/mascotte/welcome.png');
       expect(DonyMascotteType.confiant.assetPath,
-          'assets/mascotte/confiant.png');
+          'assets/mascotte/travel.png');
       expect(DonyMascotteType.securise.assetPath,
-          'assets/mascotte/sécurisé.png');
+          'assets/mascotte/success.png');
+      expect(DonyMascotteType.succes.assetPath,
+          'assets/mascotte/success_celebration.png');
       expect(DonyMascotteType.tenantColis.assetPath,
-          'assets/mascotte/tenant_le_colis.png');
+          'assets/mascotte/welcome.png');
       expect(DonyMascotteType.donneColis.assetPath,
-          'assets/mascotte/donne_un_colis.png');
+          'assets/mascotte/travel.png');
       expect(DonyMascotteType.enCourse.assetPath,
-          'assets/mascotte/en_course.png');
+          'assets/mascotte/travel.png');
       expect(DonyMascotteType.assis.assetPath,
-          'assets/mascotte/assis.png');
+          'assets/mascotte/empty_search.png');
+      expect(DonyMascotteType.aucunResultat.assetPath,
+          'assets/mascotte/no_result.png');
+      expect(DonyMascotteType.attente.assetPath,
+          'assets/mascotte/waiting.png');
+      expect(DonyMascotteType.erreur.assetPath,
+          'assets/mascotte/error.png');
+      expect(DonyMascotteType.erreurLegere.assetPath,
+          'assets/mascotte/error_light.png');
       expect(DonyMascotteType.scan.assetPath,
-          'assets/mascotte/Scan.png');
+          'assets/mascotte/search.png');
     });
   });
 
@@ -75,7 +106,7 @@ void main() {
 
       final image = tester.widget<Image>(find.byType(Image));
       final assetImage = image.image as AssetImage;
-      expect(assetImage.assetName, 'assets/mascotte/joyeux.png');
+      expect(assetImage.assetName, 'assets/mascotte/hello.png');
     });
 
     testWidgets('utilise dimension par défaut (md = 96)', (tester) async {
@@ -138,7 +169,7 @@ void main() {
         const DonyMascotte(type: DonyMascotteType.joyeux),
       ));
 
-      expect(find.bySemanticsLabel('Mascotte joyeuse'), findsOneWidget);
+      expect(find.bySemanticsLabel('Mascotte qui salue'), findsOneWidget);
     });
 
     testWidgets('expose Semantics avec label pour assis', (tester) async {
@@ -146,7 +177,10 @@ void main() {
         const DonyMascotte(type: DonyMascotteType.assis),
       ));
 
-      expect(find.bySemanticsLabel('Mascotte assise'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Mascotte cherchant à la loupe, rien trouvé'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -193,7 +227,7 @@ void main() {
       await _drainAndDispose(tester, 500);
     });
 
-    testWidgets('scan charge le bon asset Scan.png', (tester) async {
+    testWidgets('scan charge le bon asset search.png', (tester) async {
       await tester.pumpWidget(_wrap(
         const DonyMascotteAnimated(type: DonyMascotteType.scan),
       ));
@@ -201,7 +235,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 950));
 
       final m = tester.widget<DonyMascotte>(find.byType(DonyMascotte));
-      expect(m.type.assetPath, 'assets/mascotte/Scan.png');
+      expect(m.type.assetPath, 'assets/mascotte/search.png');
 
       // Dispose avant que le repeat continue
       await tester.pumpWidget(const SizedBox.shrink());

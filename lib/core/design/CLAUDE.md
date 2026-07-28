@@ -271,16 +271,28 @@ DonyMascotteAnimated(
 
 **Mapping des mascottes (assets/mascotte/) :**
 
-| Type | Animation | Usage recommandé |
-|------|-----------|------------------|
-| `joyeux` | scaleXY easeOutBack | Onboarding, auth, accueil |
-| `confiant` | slideY + shimmer | OTP / étapes de vérification |
-| `securise` | scaleXY easeOutBack | PIN setup, confirmation, KYC succès |
-| `tenantColis` | slideY | Tutoriel envoi (rôle expéditeur) |
-| `donneColis` | slideY (haut) | Remise du colis au voyageur |
-| `enCourse` | slideX | Tracking en transit |
-| `assis` | fadeIn + scaleXY | `DonyEmptyState` vide (aucun contenu) |
-| `scan` | pulse répété | QR scanner actif |
+La mascotte est une valise personnifiée. Plusieurs types partagent volontairement la
+même illustration quand la situation racontée est la même (départ, remise, transit).
+
+| Type | Asset | Animation | Usage recommandé |
+|------|-------|-----------|------------------|
+| `joyeux` | `hello.png` | scaleXY easeOutBack | Auth, accueil, parrainage |
+| `bienvenue` | `welcome.png` | scaleXY easeOutBack | Onboarding, premier lancement |
+| `confiant` | `travel.png` | slideY + shimmer | OTP / étapes de vérification |
+| `securise` | `success.png` | scaleXY easeOutBack | PIN setup, escrow, KYC validé |
+| `succes` | `success_celebration.png` | scaleXY easeOutBack ample | Succès terminal (trajet publié, colis livré) |
+| `tenantColis` | `welcome.png` | slideY | Tutoriel envoi (rôle expéditeur) |
+| `donneColis` | `travel.png` | slideY (haut) | Remise du colis au voyageur |
+| `enCourse` | `travel.png` | slideX | Tracking en transit |
+| `assis` | `empty_search.png` | fadeIn + scaleXY | `DonyEmptyState` vide (aucun contenu) |
+| `aucunResultat` | `no_result.png` | fadeIn + scaleXY | Recherche ou filtres sans résultat |
+| `attente` | `waiting.png` | respiration répétée | Vérification en cours, statut pending |
+| `erreur` | `error.png` | fadeIn + slideX | Erreur sans issue (pas de bouton d'action) |
+| `erreurLegere` | `error_light.png` | fadeIn + slideY | Erreur récupérable (« Réessayer ») |
+| `scan` | `search.png` | pulse répété | QR scanner actif |
+
+**Choisir entre `erreur` et `erreurLegere` :** si l'écran propose une action de
+reprise, prendre `erreurLegere` (ton léger) ; sinon `erreur` (ton inquiet).
 
 ### `DonyMascotte` (widget statique — usage restreint)
 

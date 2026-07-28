@@ -94,7 +94,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     if (state is ConversationListError) {
       return DonyEmptyState(
         type: DonyEmptyStateType.error,
-        mascotte: DonyMascotteType.assis,
+        mascotte: DonyMascotteType.erreurLegere,
         iconAsset: 'wifi-off',
         title: 'Erreur de chargement',
         description: ErrorPresenter.resolve(state.error).message,

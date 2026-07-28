@@ -389,7 +389,7 @@ class _EmptyState extends StatelessWidget {
         description: isNearMe
             ? 'Élargis ta zone ou désactive “Près de moi”'
             : 'Reviens dans un instant, de nouvelles demandes sont publiées chaque jour',
-        mascotte: DonyMascotteType.assis,
+        mascotte: DonyMascotteType.aucunResultat,
       ),
     );
   }

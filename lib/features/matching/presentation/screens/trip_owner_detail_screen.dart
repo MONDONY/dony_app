@@ -117,7 +117,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               );
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (routeContext) => DonySuccessScreen(
-                  mascotteType: DonyMascotteType.joyeux,
+                  mascotteType: DonyMascotteType.succes,
                   title: 'Trajet publié !',
                   subtitle:
                       'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',

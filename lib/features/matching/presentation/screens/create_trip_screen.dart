@@ -1497,7 +1497,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             final isEdit = state is AnnouncementUpdated;
             Navigator.of(context).push(MaterialPageRoute(
               builder: (routeContext) => DonySuccessScreen(
-                mascotteType: DonyMascotteType.joyeux,
+                mascotteType: DonyMascotteType.succes,
                 title: isEdit ? 'Trajet modifié !' : 'Trajet publié !',
                 subtitle:
                     'Ton trajet ${announcement.departureCity} → ${announcement.arrivalCity} est en ligne.',
