@@ -143,7 +143,7 @@ class _SearchViewState extends State<_SearchView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const DonyMascotteAnimated(
-                                type: DonyMascotteType.assis,
+                                type: DonyMascotteType.aucunResultat,
                                 size: DonyMascotteSize.lg,
                               ),
                               const SizedBox(height: DonySpacing.base),

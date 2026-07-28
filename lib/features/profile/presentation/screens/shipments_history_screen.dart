@@ -26,7 +26,7 @@ class ShipmentsHistoryScreen extends StatelessWidget {
           if (state is BidError) {
             return DonyEmptyState(
               type: DonyEmptyStateType.error,
-              mascotte: DonyMascotteType.assis,
+              mascotte: DonyMascotteType.erreurLegere,
               iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
               description: state.error.message,
@@ -171,9 +171,13 @@ class _DeliveryCard extends StatelessWidget {
                 children: [
                   DonyIcon('route', size: 16, color: cs.primary),
                   const SizedBox(width: DonySpacing.xs),
-                  Text(
-                    route,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                  Expanded(
+                    child: Text(
+                      route,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                    ),
                   ),
                 ],
               ),

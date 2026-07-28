@@ -771,7 +771,7 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
             body: DonyEmptyState(
               iconAsset: 'circle-alert',
               type: DonyEmptyStateType.error,
-              mascotte: DonyMascotteType.assis,
+              mascotte: DonyMascotteType.erreurLegere,
               title: 'Erreur de chargement',
               description: description,
               actionLabel: 'Réessayer',

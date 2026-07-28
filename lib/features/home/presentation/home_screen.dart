@@ -1647,7 +1647,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               description: hasFilters
                                   ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
                                   : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
-                              mascotte: DonyMascotteType.assis,
+                              mascotte: DonyMascotteType.aucunResultat,
                               actionLabel: hasFilters
                                   ? 'Effacer les filtres'
                                   : null,
@@ -1722,7 +1722,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             : _activeFilterCount > 0
                             ? 'Modifie tes filtres pour voir plus de voyageurs.'
                             : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
-                        mascotte: DonyMascotteType.assis,
+                        mascotte: DonyMascotteType.aucunResultat,
                         actionLabel: !_isNearMeActive && _activeFilterCount > 0
                             ? 'Effacer les filtres'
                             : null,
@@ -1880,6 +1880,7 @@ class _CorridorBar extends StatelessWidget {
                   color: cs.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

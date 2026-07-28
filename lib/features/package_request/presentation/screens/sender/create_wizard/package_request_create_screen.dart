@@ -182,7 +182,7 @@ class _PackageRequestCreateScreenState
       final requestId = state.createdRequest!.id;
       Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (routeContext) => DonySuccessScreen(
-          mascotteType: DonyMascotteType.tenantColis,
+          mascotteType: DonyMascotteType.succes,
           title: isEditing ? 'Demande modifiée !' : 'Demande publiée !',
           subtitle: isEditing
               ? 'Tes modifications sont en ligne.'

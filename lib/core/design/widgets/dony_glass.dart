@@ -298,12 +298,16 @@ class DonyGlassChip extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                 ],
-                Text(
-                  label,
-                  style: tt.labelMedium?.copyWith(
-                    fontSize: 13, // never < 13 on glass
-                    fontWeight: FontWeight.w700,
-                    color: active ? Colors.white : cs.onSurface,
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.labelMedium?.copyWith(
+                      fontSize: 13, // never < 13 on glass
+                      fontWeight: FontWeight.w700,
+                      color: active ? Colors.white : cs.onSurface,
+                    ),
                   ),
                 ),
               ],
@@ -384,13 +388,17 @@ class DonyGlassButton extends StatelessWidget {
                     Icon(icon, size: 18, color: fgColor),
                     const SizedBox(width: 8),
                   ],
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: fgColor,
-                      letterSpacing: 0.2,
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: fgColor,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
                 ],

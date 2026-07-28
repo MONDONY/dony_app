@@ -103,7 +103,7 @@ class _CorridorAlertListView extends StatelessWidget {
           if (state.status == CorridorAlertListStatus.error &&
               visible.isEmpty) {
             return DonyEmptyState(
-              mascotte: DonyMascotteType.assis,
+              mascotte: DonyMascotteType.erreurLegere,
               type: DonyEmptyStateType.error,
               iconAsset: 'circle-alert',
               title: 'Erreur de chargement',

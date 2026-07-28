@@ -43,11 +43,18 @@ class DonySectionHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: tt.headlineSmall),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.headlineSmall,
+                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
                     subtitle!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -69,11 +76,15 @@ class DonySectionHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    actionLabel!,
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.primary,
-                      letterSpacing: 0,
+                  Flexible(
+                    child: Text(
+                      actionLabel!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.primary,
+                        letterSpacing: 0,
+                      ),
                     ),
                   ),
                   const SizedBox(width: DonySpacing.xxs),

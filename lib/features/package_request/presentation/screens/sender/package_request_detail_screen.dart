@@ -493,11 +493,15 @@ class _OfferTile extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        name,
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                      Flexible(
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                       if (rating != null) ...[

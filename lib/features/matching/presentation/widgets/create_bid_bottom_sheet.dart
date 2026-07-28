@@ -566,7 +566,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       // unsafe ». On navigue donc via le contexte de la route succès,
       // toujours monté sous le Navigator racine.
       builder: (routeContext) => DonySuccessScreen(
-        mascotteType: DonyMascotteType.tenantColis,
+        mascotteType: DonyMascotteType.succes,
         title: title,
         subtitle: subtitle,
         ctaLabel: 'Voir mon envoi',

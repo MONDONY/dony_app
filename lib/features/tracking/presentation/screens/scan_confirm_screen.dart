@@ -381,7 +381,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
   }) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => DonySuccessScreen(
-        mascotteType: DonyMascotteType.securise,
+        mascotteType: DonyMascotteType.succes,
         title: 'Colis livré !',
         subtitle: label,
         ctaLabel: 'Terminer',
@@ -487,12 +487,19 @@ class _MetaRow extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-        Text(value,
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(width: DonySpacing.sm),
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.right,
+            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
       ],
     );
   }

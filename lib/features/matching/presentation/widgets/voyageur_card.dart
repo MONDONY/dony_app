@@ -81,6 +81,7 @@ class VoyageurCard extends StatelessWidget {
                           Flexible(
                             child: Text(
                               name,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: tt.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w700,

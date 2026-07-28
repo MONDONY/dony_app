@@ -56,7 +56,7 @@ class OnboardingScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DonyMascotteAnimated(
-                        type: DonyMascotteType.joyeux,
+                        type: DonyMascotteType.bienvenue,
                         size: DonyMascotteSize.lg,
                       ),
                       const SizedBox(height: DonySpacing.lg),

@@ -156,7 +156,7 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
                   if (state is CancellationError) {
                     return DonyEmptyState(
                       type: DonyEmptyStateType.error,
-                      mascotte: DonyMascotteType.assis,
+                      mascotte: DonyMascotteType.erreurLegere,
                       title: 'Erreur de chargement',
                       description: ErrorPresenter.resolve(state.error).message,
                       actionLabel: 'Réessayer',

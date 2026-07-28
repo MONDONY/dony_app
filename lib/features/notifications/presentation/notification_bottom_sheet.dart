@@ -152,7 +152,7 @@ class _NotificationList extends StatelessWidget {
 
         if (state is NotificationError) {
           return DonyEmptyState(
-            mascotte: DonyMascotteType.assis,
+            mascotte: DonyMascotteType.erreurLegere,
             type: DonyEmptyStateType.error,
             iconAsset: 'wifi-off',
             title: 'Erreur de chargement',

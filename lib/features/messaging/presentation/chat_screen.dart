@@ -329,7 +329,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   if (state is ChatError) {
                     return DonyEmptyState(
                       type: DonyEmptyStateType.error,
-                      mascotte: DonyMascotteType.assis,
+                      mascotte: DonyMascotteType.erreurLegere,
                       iconAsset: 'wifi-off',
                       title: 'Connexion interrompue',
                       description: ErrorPresenter.resolve(state.error).message,

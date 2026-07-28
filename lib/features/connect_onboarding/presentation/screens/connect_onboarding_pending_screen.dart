@@ -135,7 +135,7 @@ class _AnimatedPendingIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const DonyMascotteAnimated(
-      type: DonyMascotteType.confiant,
+      type: DonyMascotteType.attente,
       size: DonyMascotteSize.lg,
     );
   }

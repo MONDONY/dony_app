@@ -71,7 +71,7 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
           if (state.status == RecipientStatus.error &&
               state.recipients.isEmpty) {
             return DonyEmptyState(
-              mascotte: DonyMascotteType.assis,
+              mascotte: DonyMascotteType.erreurLegere,
               type: DonyEmptyStateType.error,
               iconAsset: 'circle-alert',
               title: 'Erreur de chargement',

@@ -271,16 +271,41 @@ DonyMascotteAnimated(
 
 **Mapping des mascottes (assets/mascotte/) :**
 
-| Type | Animation | Usage recommandé |
-|------|-----------|------------------|
-| `joyeux` | scaleXY easeOutBack | Onboarding, auth, accueil |
-| `confiant` | slideY + shimmer | OTP / étapes de vérification |
-| `securise` | scaleXY easeOutBack | PIN setup, confirmation, KYC succès |
-| `tenantColis` | slideY | Tutoriel envoi (rôle expéditeur) |
-| `donneColis` | slideY (haut) | Remise du colis au voyageur |
-| `enCourse` | slideX | Tracking en transit |
-| `assis` | fadeIn + scaleXY | `DonyEmptyState` vide (aucun contenu) |
-| `scan` | pulse répété | QR scanner actif |
+La mascotte est une valise personnifiée. `confiant` et `enCourse` partagent
+délibérément `travel.png` : c'est leur animation qui les distingue.
+
+| Type | Asset | Animation | Usage recommandé |
+|------|-------|-----------|------------------|
+| `joyeux` | `hello.png` | scaleXY easeOutBack | Auth, accueil, parrainage |
+| `bienvenue` | `welcome.png` | scaleXY easeOutBack | Onboarding, premier lancement |
+| `confiant` | `travel.png` | slideY + shimmer | OTP / étapes de vérification |
+| `securise` | `success.png` | scaleXY easeOutBack | PIN setup, escrow, KYC validé |
+| `succes` | `success_celebration.png` | scaleXY easeOutBack ample | Succès terminal (`DonySuccessScreen`) |
+| `enCourse` | `travel.png` | slideX | Tracking en transit |
+| `assis` | `search.png` | fadeIn + scaleXY | `DonyEmptyState` vide (aucun contenu) |
+| `aucunResultat` | `no_result.png` | fadeIn + scaleXY | Recherche ou filtres sans résultat |
+| `attente` | `waiting.png` | respiration répétée | Vérification en cours, statut pending |
+| `erreur` | `error.png` | fadeIn + slideX | Erreur sans issue (pas de bouton d'action) |
+| `erreurLegere` | `error_light.png` | fadeIn + slideY | Erreur récupérable (« Réessayer ») |
+
+**Choisir entre `erreur` et `erreurLegere` :** si l'écran propose une action de
+reprise, prendre `erreurLegere` (ton léger) ; sinon `erreur` (ton inquiet).
+
+**Choisir entre `assis` et `aucunResultat` :** `assis` pour « il n'y a rien
+encore » (liste vierge, premier lancement) — son illustration est neutre et
+curieuse, pas découragée. `aucunResultat` pour « ta recherche n'a rien donné »,
+là où l'utilisateur a saisi des critères.
+
+**Tout nouveau type doit avoir son propre asset.** Le test
+`dony_mascotte_test.dart` échoue si un type pointe vers un fichier absent, et
+aussi si un fichier du dossier n'est référencé par aucun type : un asset
+embarqué mais inutilisé pèse dans l'APK sans jamais s'afficher.
+
+**Animations en boucle :** `DonyMascotteType.loops` marque les types qui
+respirent en continu (aujourd'hui `attente` seul). `DonyMascotteAnimated` les
+isole derrière un `RepaintBoundary` et coupe la boucle quand la réduction du
+mouvement est active — `Animate.defaultDuration`, que l'app pose globalement,
+n'agit ni sur les durées explicites ni sur un `repeat()`.
 
 ### `DonyMascotte` (widget statique — usage restreint)
 

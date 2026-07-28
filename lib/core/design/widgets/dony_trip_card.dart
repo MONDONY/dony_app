@@ -80,7 +80,12 @@ class DonyTripCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(travelerName, style: tt.titleLarge),
+                    Text(
+                      travelerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleLarge,
+                    ),
                     if (rating != null)
                       Row(
                         children: [
@@ -101,7 +106,8 @@ class DonyTripCard extends StatelessWidget {
                   ],
                 ),
               ),
-              ?badge,
+              if (badge != null)
+                Flexible(child: badge!),
             ],
           ),
 
@@ -127,9 +133,13 @@ class DonyTripCard extends StatelessWidget {
                 color: cs.onSurfaceVariant,
               ),
               const SizedBox(width: DonySpacing.xs),
-              Text(
-                date,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              Flexible(
+                child: Text(
+                  date,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
               ),
               const Spacer(),
               if (availableKg != null) ...[
@@ -145,11 +155,15 @@ class DonyTripCard extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
               ],
-              Text(
-                price,
-                style: tt.titleLarge?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w800,
+              Flexible(
+                child: Text(
+                  price,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.titleLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],

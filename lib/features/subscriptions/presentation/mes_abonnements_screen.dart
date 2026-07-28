@@ -41,7 +41,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
           if (state.status == SubscriptionsStatus.error &&
               state.items.isEmpty) {
             return DonyEmptyState(
-              mascotte: DonyMascotteType.assis,
+              mascotte: DonyMascotteType.erreurLegere,
               type: DonyEmptyStateType.error,
               iconAsset: 'circle-alert',
               title: 'Erreur de chargement',

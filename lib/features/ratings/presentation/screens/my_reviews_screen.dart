@@ -81,7 +81,7 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DonyEmptyState(
-      mascotte: DonyMascotteType.assis,
+      mascotte: DonyMascotteType.erreurLegere,
       type: DonyEmptyStateType.error,
       iconAsset: 'circle-alert',
       title: 'Impossible de charger les avis',

@@ -81,14 +81,19 @@ class DonyInfoRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          valueWidget ??
-              Text(
-                value,
-                style: tt.bodyMedium?.copyWith(
-                  color: valueColor,
-                  fontWeight: valueFw,
+          Flexible(
+            child: valueWidget ??
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: tt.bodyMedium?.copyWith(
+                    color: valueColor,
+                    fontWeight: valueFw,
+                  ),
                 ),
-              ),
+          ),
         ],
       ),
     );

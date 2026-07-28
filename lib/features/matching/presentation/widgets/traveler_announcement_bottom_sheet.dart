@@ -315,7 +315,15 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(item.label, style: tt.bodyMedium),
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: tt.bodyMedium,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.sm),
                     Text(
                       '${item.unitPriceDisplay % 1 == 0 ? item.unitPriceDisplay.toStringAsFixed(0) : item.unitPriceDisplay.toStringAsFixed(2)} €',
                       style: tt.titleSmall?.copyWith(

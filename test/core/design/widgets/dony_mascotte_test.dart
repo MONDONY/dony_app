@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
@@ -17,44 +20,53 @@ Future<void> _drainAndDispose(WidgetTester tester, int ms) async {
 
 void main() {
   group('DonyMascotteType', () {
-    test('chaque type expose un assetPath unique non vide', () {
-      final paths = DonyMascotteType.values.map((t) => t.assetPath).toSet();
-      expect(paths.length, DonyMascotteType.values.length,
-          reason: 'paths must be unique');
-      for (final p in paths) {
-        expect(p, isNotEmpty);
-        expect(p, startsWith('assets/mascotte/'));
-        expect(p, endsWith('.png'));
+    test('les types et le dossier d\'assets se recouvrent exactement', () {
+      // Une seule passe de lecture disque pour les deux sens de l'égalité :
+      // aucun type ne pointe vers un fichier absent, aucun fichier embarqué
+      // n'est laissé sans type qui l'utilise.
+      for (final t in DonyMascotteType.values) {
+        expect(t.assetPath, startsWith('assets/mascotte/'));
+        expect(t.assetPath, endsWith('.png'));
       }
+      final referenced =
+          DonyMascotteType.values.map((t) => t.assetPath).toSet();
+      final onDisk = Directory('assets/mascotte')
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.path.replaceAll(r'\', '/'))
+          .where((p) => p.endsWith('.png'))
+          .toSet();
+      expect(referenced.difference(onDisk), isEmpty,
+          reason: 'types pointant vers un asset absent');
+      expect(onDisk.difference(referenced), isEmpty,
+          reason: 'assets embarqués mais jamais référencés par l\'enum');
     });
 
-    test('chaque type a un semanticLabel non vide', () {
+    test('chaque type a un semanticLabel non vide et distinct', () {
+      final labels = <String>{};
       for (final t in DonyMascotteType.values) {
         expect(t.semanticLabel, isNotEmpty);
+        expect(labels.add(t.semanticLabel), isTrue,
+            reason: 'semanticLabel dupliqué : ${t.semanticLabel}');
       }
     });
 
-    test('8 types exactement dans l\'enum', () {
-      expect(DonyMascotteType.values.length, 8);
+    test('11 types exactement dans l\'enum', () {
+      expect(DonyMascotteType.values.length, 11);
     });
 
-    test('mappings asset corrects pour les 8 types', () {
-      expect(DonyMascotteType.joyeux.assetPath,
-          'assets/mascotte/joyeux.png');
+    test('les partages d\'asset volontaires sont préservés', () {
+      // Seule information que le test de recouvrement ne porte pas : deux types
+      // pointent délibérément vers la même illustration, leur animation étant
+      // ce qui les distingue. Un futur asset dédié doit être un choix explicite.
       expect(DonyMascotteType.confiant.assetPath,
-          'assets/mascotte/confiant.png');
-      expect(DonyMascotteType.securise.assetPath,
-          'assets/mascotte/sécurisé.png');
-      expect(DonyMascotteType.tenantColis.assetPath,
-          'assets/mascotte/tenant_le_colis.png');
-      expect(DonyMascotteType.donneColis.assetPath,
-          'assets/mascotte/donne_un_colis.png');
-      expect(DonyMascotteType.enCourse.assetPath,
-          'assets/mascotte/en_course.png');
-      expect(DonyMascotteType.assis.assetPath,
-          'assets/mascotte/assis.png');
-      expect(DonyMascotteType.scan.assetPath,
-          'assets/mascotte/Scan.png');
+          DonyMascotteType.enCourse.assetPath);
+    });
+
+    test('seul attente boucle en continu', () {
+      final looping =
+          DonyMascotteType.values.where((t) => t.loops).toList();
+      expect(looping, [DonyMascotteType.attente]);
     });
   });
 
@@ -74,8 +86,14 @@ void main() {
       ));
 
       final image = tester.widget<Image>(find.byType(Image));
-      final assetImage = image.image as AssetImage;
-      expect(assetImage.assetName, 'assets/mascotte/joyeux.png');
+      // `cacheWidth`/`cacheHeight` enveloppent l'AssetImage dans un ResizeImage :
+      // le décodage est borné une fois pour toutes, quelle que soit la taille
+      // de rendu demandée, pour ne pas garder plusieurs copies en cache.
+      final resized = image.image as ResizeImage;
+      expect(resized.width, 480);
+      expect(resized.height, 480);
+      expect((resized.imageProvider as AssetImage).assetName,
+          'assets/mascotte/hello.png');
     });
 
     testWidgets('utilise dimension par défaut (md = 96)', (tester) async {
@@ -103,7 +121,7 @@ void main() {
     testWidgets('customDimension override le size', (tester) async {
       await tester.pumpWidget(_wrap(
         const DonyMascotte(
-          type: DonyMascotteType.scan,
+          type: DonyMascotteType.attente,
           size: DonyMascotteSize.lg,
           customDimension: 42,
         ),
@@ -138,7 +156,7 @@ void main() {
         const DonyMascotte(type: DonyMascotteType.joyeux),
       ));
 
-      expect(find.bySemanticsLabel('Mascotte joyeuse'), findsOneWidget);
+      expect(find.bySemanticsLabel('Mascotte qui salue'), findsOneWidget);
     });
 
     testWidgets('expose Semantics avec label pour assis', (tester) async {
@@ -146,7 +164,10 @@ void main() {
         const DonyMascotte(type: DonyMascotteType.assis),
       ));
 
-      expect(find.bySemanticsLabel('Mascotte assise'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Mascotte curieuse, une loupe à la main'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -193,19 +214,46 @@ void main() {
       await _drainAndDispose(tester, 500);
     });
 
-    testWidgets('scan charge le bon asset Scan.png', (tester) async {
+    testWidgets('attente isole sa boucle derrière un RepaintBoundary',
+        (tester) async {
       await tester.pumpWidget(_wrap(
-        const DonyMascotteAnimated(type: DonyMascotteType.scan),
+        const DonyMascotteAnimated(type: DonyMascotteType.attente),
       ));
-      // Avance d'un cycle (900ms) puis vérifie
-      await tester.pump(const Duration(milliseconds: 950));
+      // Avance d'un cycle (1200ms) puis vérifie
+      await tester.pump(const Duration(milliseconds: 1250));
 
       final m = tester.widget<DonyMascotte>(find.byType(DonyMascotte));
-      expect(m.type.assetPath, 'assets/mascotte/Scan.png');
+      expect(m.type.assetPath, 'assets/mascotte/waiting.png');
+      expect(
+        find.ancestor(
+          of: find.byType(DonyMascotte),
+          matching: find.byType(RepaintBoundary),
+        ),
+        findsWidgets,
+      );
 
       // Dispose avant que le repeat continue
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(milliseconds: 200));
+    });
+
+    testWidgets('attente ne boucle pas si le mouvement est réduit',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light(),
+        home: const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: DonyMascotteAnimated(type: DonyMascotteType.attente),
+          ),
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 1250));
+
+      // Sans Animate au-dessus, plus rien ne redemande de frame : le test se
+      // termine sans timer pendant, ce qui échouerait si la boucle tournait.
+      expect(find.byType(Animate), findsNothing);
+      expect(find.byType(DonyMascotte), findsOneWidget);
     });
 
     testWidgets('size lg propagée au DonyMascotte interne', (tester) async {
