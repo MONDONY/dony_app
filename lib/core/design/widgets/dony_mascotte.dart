@@ -4,22 +4,28 @@ import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-/// Types de mascotte disponibles — 14 expressions alignées sur les assets.
+/// Côté de décodage des PNG, en pixels.
+///
+/// La plus grande taille de rendu réellement employée est [DonyMascotteSize.lg]
+/// (160 pt) ; 480 px la couvre jusqu'à un ratio de 3. Volontairement constant
+/// plutôt que dérivé de la taille demandée : `ResizeImage` est clé par
+/// dimension cible, donc un calcul par taille ferait vivre plusieurs copies
+/// décodées du même fichier dans l'`ImageCache`.
+const int _kDecodeSize = 480;
+
+/// Types de mascotte disponibles — 11 situations alignées sur les assets.
 enum DonyMascotteType {
   joyeux,
   bienvenue,
   confiant,
   securise,
   succes,
-  tenantColis,
-  donneColis,
   enCourse,
   assis,
   aucunResultat,
   attente,
   erreur,
-  erreurLegere,
-  scan;
+  erreurLegere;
 
   String get assetPath => switch (this) {
         joyeux        => 'assets/mascotte/hello.png',
@@ -27,15 +33,12 @@ enum DonyMascotteType {
         confiant      => 'assets/mascotte/travel.png',
         securise      => 'assets/mascotte/success.png',
         succes        => 'assets/mascotte/success_celebration.png',
-        tenantColis   => 'assets/mascotte/welcome.png',
-        donneColis    => 'assets/mascotte/travel.png',
         enCourse      => 'assets/mascotte/travel.png',
-        assis         => 'assets/mascotte/empty_search.png',
+        assis         => 'assets/mascotte/search.png',
         aucunResultat => 'assets/mascotte/no_result.png',
         attente       => 'assets/mascotte/waiting.png',
         erreur        => 'assets/mascotte/error.png',
         erreurLegere  => 'assets/mascotte/error_light.png',
-        scan          => 'assets/mascotte/search.png',
       };
 
   String get semanticLabel => switch (this) {
@@ -44,16 +47,17 @@ enum DonyMascotteType {
         confiant      => 'Mascotte prête à partir en voyage',
         securise      => 'Mascotte brandissant un badge de validation',
         succes        => 'Mascotte célébrant une réussite',
-        tenantColis   => 'Mascotte prête à prendre un colis',
-        donneColis    => 'Mascotte confiant un colis au voyageur',
         enCourse      => 'Colis en transit',
-        assis         => 'Mascotte cherchant à la loupe, rien trouvé',
+        assis         => 'Mascotte curieuse, une loupe à la main',
         aucunResultat => 'Mascotte perplexe devant une carte, aucun résultat',
         attente       => 'Mascotte patientant devant une horloge',
         erreur        => 'Mascotte inquiète, une erreur est survenue',
         erreurLegere  => 'Mascotte signalant un souci mineur',
-        scan          => 'Mascotte inspectant à la loupe',
       };
+
+  /// Vrai pour les types dont l'animation tourne tant que la mascotte est
+  /// visible, au lieu de se jouer une fois à l'entrée.
+  bool get loops => this == attente;
 }
 
 enum DonyMascotteSize {
@@ -98,6 +102,8 @@ class DonyMascotte extends StatelessWidget {
       width: dim,
       height: dim,
       fit: fit,
+      cacheWidth: _kDecodeSize,
+      cacheHeight: _kDecodeSize,
       semanticLabel: type.semanticLabel,
     );
     if (borderRadius != null) {
@@ -109,8 +115,9 @@ class DonyMascotte extends StatelessWidget {
 
 /// Wrapper animé autour de [DonyMascotte] avec presets flutter_animate par type.
 ///
-/// Chaque type a une animation d'entrée distincte (< 500 ms, easeOutCubic).
-/// `scan` utilise un pulse répété pendant toute la durée du scan.
+/// La plupart des types jouent une entrée unique (< 500 ms). [DonyMascotteType]
+/// expose `loops` pour ceux qui respirent en continu ; leur animation est
+/// coupée quand l'utilisateur a demandé la réduction du mouvement.
 ///
 /// ```dart
 /// // Entrée standard
@@ -139,9 +146,6 @@ class DonyMascotteAnimated extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dim = customDimension ?? size.dimension;
-    final cs = Theme.of(context).colorScheme;
-
     Widget mascot = DonyMascotte(
       type: type,
       size: size,
@@ -149,12 +153,29 @@ class DonyMascotteAnimated extends StatelessWidget {
       fit: fit,
     );
 
-    mascot = _animate(mascot);
+    if (type.loops) {
+      // Une boucle infinie sans frontière de repeinture ferait ré-enregistrer
+      // toute la couche parente à chaque vsync, aussi longtemps que l'écran
+      // reste ouvert — précisément le cas des surfaces d'attente.
+      mascot = RepaintBoundary(child: mascot);
+      // `Animate.defaultDuration`, que l'app pose pour la réduction du
+      // mouvement, ne s'applique pas aux durées explicites et n'arrête pas un
+      // `repeat()` : le réglage doit être consulté ici.
+      if (MediaQuery.disableAnimationsOf(context)) {
+        return _wrapGlow(context, mascot);
+      }
+    }
 
+    return _wrapGlow(context, _animate(mascot));
+  }
+
+  Widget _wrapGlow(BuildContext context, Widget mascot) {
     if (!withGlow) {
       return mascot;
     }
 
+    final dim = customDimension ?? size.dimension;
+    final cs = Theme.of(context).colorScheme;
     final glowColor = cs.brightness == Brightness.light
         ? DonyColors.primary.withValues(alpha: 0.15)
         : DonyColors.blueDark500.withValues(alpha: 0.20);
@@ -181,121 +202,67 @@ class DonyMascotteAnimated extends StatelessWidget {
     );
   }
 
+  /// Entrée qui grandit — pour les moments positifs (accueil, validation).
+  Widget _scaleIn(
+    Widget child, {
+    required double begin,
+    required int fade,
+    required int scale,
+    Curve curve = Curves.easeOutBack,
+  }) =>
+      child
+          .animate()
+          .fadeIn(duration: fade.ms)
+          .scaleXY(begin: begin, duration: scale.ms, curve: curve);
+
+  /// Entrée qui glisse — pour les états de progression et les alertes.
+  Widget _slideIn(
+    Widget child, {
+    required int fade,
+    required int slide,
+    double dy = 0,
+    double dx = 0,
+  }) {
+    final animation = child.animate().fadeIn(duration: fade.ms);
+    return dx != 0
+        ? animation.slideX(begin: dx, duration: slide.ms, curve: DonyCurve.enter)
+        : animation.slideY(begin: dy, duration: slide.ms, curve: DonyCurve.enter);
+  }
+
+  /// Respiration continue — pour les états qui durent.
+  Widget _breathe(Widget child, {required int duration}) => child
+      .animate(onPlay: (c) => c.repeat(reverse: true))
+      .scaleXY(
+        begin: 0.98,
+        end: 1.02,
+        duration: duration.ms,
+        curve: Curves.easeInOut,
+      );
+
   Widget _animate(Widget child) => switch (type) {
-        DonyMascotteType.joyeux => child
-            .animate()
-            .fadeIn(duration: 400.ms)
-            .scaleXY(
-              begin: 0.85,
-              duration: 500.ms,
-              curve: Curves.easeOutBack,
-            ),
-        DonyMascotteType.bienvenue => child
-            .animate()
-            .fadeIn(duration: 350.ms)
-            .scaleXY(
-              begin: 0.9,
-              duration: 450.ms,
-              curve: Curves.easeOutBack,
-            ),
-        DonyMascotteType.confiant => child
-            .animate()
-            .fadeIn(duration: 250.ms)
-            .slideY(
-              begin: 0.06,
-              duration: 350.ms,
-              curve: DonyCurve.enter,
-            )
-            .shimmer(duration: 600.ms, delay: 300.ms),
-        DonyMascotteType.securise => child
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .scaleXY(
-              begin: 0.88,
-              duration: 480.ms,
-              curve: Curves.easeOutBack,
-            ),
-        DonyMascotteType.succes => child
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .scaleXY(
-              begin: 0.8,
-              duration: 520.ms,
-              curve: Curves.easeOutBack,
-            ),
-        DonyMascotteType.tenantColis => child
-            .animate()
-            .fadeIn(duration: 350.ms)
-            .slideY(
-              begin: 0.08,
-              duration: 420.ms,
-              curve: DonyCurve.enter,
-            ),
-        DonyMascotteType.donneColis => child
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .slideY(
-              begin: -0.06,
-              duration: 400.ms,
-              curve: DonyCurve.enter,
-            ),
-        DonyMascotteType.enCourse => child
-            .animate()
-            .fadeIn(duration: 250.ms)
-            .slideX(
-              begin: -0.1,
-              duration: 400.ms,
-              curve: DonyCurve.enter,
-            ),
-        DonyMascotteType.assis => child
-            .animate()
-            .fadeIn(duration: 450.ms, curve: DonyCurve.enter)
-            .scaleXY(
-              begin: 0.92,
-              duration: 450.ms,
-              curve: DonyCurve.enter,
-            ),
-        DonyMascotteType.aucunResultat => child
-            .animate()
-            .fadeIn(duration: 400.ms, curve: DonyCurve.enter)
-            .scaleXY(
-              begin: 0.9,
-              duration: 420.ms,
-              curve: DonyCurve.enter,
-            ),
-        // Respiration continue : l'attente est un état qui dure, pas une entrée.
-        DonyMascotteType.attente => child
-            .animate(onPlay: (c) => c.repeat(reverse: true))
-            .scaleXY(
-              begin: 0.98,
-              end: 1.02,
-              duration: 1200.ms,
-              curve: Curves.easeInOut,
-            ),
-        DonyMascotteType.erreur => child
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .slideX(
-              begin: -0.03,
-              duration: 320.ms,
-              curve: Curves.easeOutBack,
-            ),
-        DonyMascotteType.erreurLegere => child
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .slideY(
-              begin: 0.05,
-              duration: 360.ms,
-              curve: DonyCurve.enter,
-            ),
-        DonyMascotteType.scan => child
-            .animate(onPlay: (c) => c.repeat(reverse: true))
-            .scaleXY(
-              begin: 0.97,
-              end: 1.03,
-              duration: 900.ms,
-              curve: Curves.easeInOut,
-            ),
+        DonyMascotteType.joyeux =>
+          _scaleIn(child, begin: 0.85, fade: 400, scale: 500),
+        DonyMascotteType.bienvenue =>
+          _scaleIn(child, begin: 0.90, fade: 350, scale: 450),
+        DonyMascotteType.securise =>
+          _scaleIn(child, begin: 0.88, fade: 300, scale: 480),
+        DonyMascotteType.succes =>
+          _scaleIn(child, begin: 0.80, fade: 300, scale: 480),
+        DonyMascotteType.assis => _scaleIn(child,
+            begin: 0.92, fade: 450, scale: 450, curve: DonyCurve.enter),
+        DonyMascotteType.aucunResultat => _scaleIn(child,
+            begin: 0.90, fade: 400, scale: 420, curve: DonyCurve.enter),
+        DonyMascotteType.confiant =>
+          _slideIn(child, fade: 250, slide: 350, dy: 0.06)
+              .animate()
+              .shimmer(duration: 600.ms, delay: 300.ms),
+        DonyMascotteType.erreurLegere =>
+          _slideIn(child, fade: 300, slide: 360, dy: 0.05),
+        DonyMascotteType.enCourse =>
+          _slideIn(child, fade: 250, slide: 400, dx: -0.1),
+        DonyMascotteType.erreur =>
+          _slideIn(child, fade: 300, slide: 320, dx: -0.03),
+        DonyMascotteType.attente => _breathe(child, duration: 1200),
       };
 }
 

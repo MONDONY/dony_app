@@ -164,7 +164,7 @@ class PaymentRecapBottomSheet {
                           Navigator.of(ctx, rootNavigator: true).pop();
                           Navigator.of(context).push(MaterialPageRoute(
                             builder: (routeContext) => DonySuccessScreen(
-                              mascotteType: DonyMascotteType.donneColis,
+                              mascotteType: DonyMascotteType.succes,
                               title: 'Accord confirmé !',
                               subtitle:
                                   'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',

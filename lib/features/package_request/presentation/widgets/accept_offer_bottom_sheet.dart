@@ -158,7 +158,7 @@ class AcceptOfferBottomSheet {
                             Navigator.of(ctx, rootNavigator: true).pop();
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (routeContext) => DonySuccessScreen(
-                                mascotteType: DonyMascotteType.donneColis,
+                                mascotteType: DonyMascotteType.succes,
                                 title: 'Accord confirmé !',
                                 subtitle: subtitle,
                                 ctaLabel: 'Voir le suivi',

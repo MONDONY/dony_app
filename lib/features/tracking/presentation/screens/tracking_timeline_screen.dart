@@ -433,7 +433,7 @@ class _EmptyTimeline extends StatelessWidget {
       child: Column(
         children: [
           const DonyMascotteAnimated(
-            type: DonyMascotteType.donneColis,
+            type: DonyMascotteType.attente,
             size: DonyMascotteSize.md,
           ),
           const SizedBox(height: DonySpacing.base),

@@ -247,7 +247,7 @@ void main() {
     final successScreen = tester.widget<DonySuccessScreen>(
       find.byType(DonySuccessScreen),
     );
-    expect(successScreen.mascotteType, DonyMascotteType.tenantColis);
+    expect(successScreen.mascotteType, DonyMascotteType.succes);
     expect(find.text('Demande publiée !'), findsOneWidget);
     expect(
       find.text(
