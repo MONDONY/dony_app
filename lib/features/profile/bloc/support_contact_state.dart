@@ -30,13 +30,16 @@ class SupportContactState {
     String? message,
     SupportSubmitStatus? submitStatus,
     String? errorMessage,
+    bool clearErrorMessage = false,
   }) {
     return SupportContactState(
       category: category ?? this.category,
       subject: subject ?? this.subject,
       message: message ?? this.message,
       submitStatus: submitStatus ?? this.submitStatus,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearErrorMessage
+          ? null
+          : (errorMessage ?? this.errorMessage),
     );
   }
 }

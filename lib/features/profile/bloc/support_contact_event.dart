@@ -22,3 +22,13 @@ class SupportMessageChanged extends SupportContactEvent {
 class SupportSubmitRequested extends SupportContactEvent {
   const SupportSubmitRequested();
 }
+
+class SupportEmailComposerOpened extends SupportContactEvent {
+  const SupportEmailComposerOpened();
+}
+
+class SupportEmailComposerFailed extends SupportContactEvent {
+  const SupportEmailComposerFailed({required this.reason});
+
+  final String reason;
+}

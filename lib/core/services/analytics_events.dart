@@ -108,6 +108,10 @@ abstract final class AnalyticsEvents {
   static const profileAboutUpdated = 'profile_about_updated';
   static const publicReviewsOpened = 'public_reviews_opened';
   static const reviewsFiltered = 'reviews_filtered';
+  static const faqQuestionOpened = 'faq_question_opened';
+  static const faqContactRequested = 'faq_contact_requested';
+  static const supportEmailComposerOpened = 'support_email_composer_opened';
+  static const supportContactFailed = 'support_contact_failed';
 
   // Referral
   static const referralShared = 'referral_shared';

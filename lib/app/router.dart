@@ -111,6 +111,7 @@ import 'package:dony/features/trip_templates/presentation/screens/trip_templates
 import 'package:dony/features/trip_templates/presentation/screens/trip_recurrence_edit_screen.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
+import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
@@ -788,7 +789,10 @@ final appRouter = GoRouter(
     // ── Profile — quick wins (hors shell) ────────────────────────────
     GoRoute(
       path: '/profile/help/faq',
-      builder: (context, state) => const FaqScreen(),
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<FaqBloc>(),
+        child: const FaqScreen(),
+      ),
     ),
     GoRoute(
       path: '/profile/help/contact',

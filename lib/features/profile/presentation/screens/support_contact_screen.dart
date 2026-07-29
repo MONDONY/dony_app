@@ -2,16 +2,42 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+const _supportEmail = 'support@dony.app';
+
+String _encodeQueryParameters(Map<String, String> parameters) {
+  return parameters.entries
+      .map(
+        (entry) =>
+            '${Uri.encodeComponent(entry.key)}='
+            '${Uri.encodeComponent(entry.value)}',
+      )
+      .join('&');
+}
+
+Uri buildSupportMailtoUri(SupportContactState state) {
+  return Uri(
+    scheme: 'mailto',
+    path: _supportEmail,
+    query: _encodeQueryParameters({
+      'subject': '[${state.category}] ${state.subject.trim()}',
+      'body': '${state.message.trim()}\n\n---\nEnvoyé depuis Yadony',
+    }),
+  );
+}
 
 const _categories = <String>[
   'Paiement',
+  'Annulation et remboursement',
   'Vérification d\'identité',
+  'Compte et sécurité',
   'Livraison',
   'Litige',
+  'Signalement ou fraude',
   'Bug technique',
   'Autre',
 ];
@@ -38,29 +64,24 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
     BuildContext context,
     SupportContactState state,
   ) async {
-    final subject = Uri.encodeComponent(
-      '[${state.category}] ${state.subject.trim()}',
-    );
-    final body = Uri.encodeComponent(
-      '${state.message.trim()}\n\n---\nEnvoyé depuis Yadony app',
-    );
-    final uri = Uri.parse(
-      'mailto:support@dony.app?subject=$subject&body=$body',
-    );
+    final bloc = context.read<SupportContactBloc>();
+    bloc.add(const SupportSubmitRequested());
 
-    if (!await launchUrl(uri)) {
-      if (context.mounted) {
-        DonySnackbar.show(
-          context,
-          message:
-              'Impossible d\'ouvrir le client mail. Écris-nous à support@dony.app',
-          type: DonySnackbarType.error,
+    final uri = buildSupportMailtoUri(state);
+
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        bloc.add(
+          const SupportEmailComposerFailed(reason: 'mail_client_unavailable'),
         );
+        return;
       }
-      return;
+      bloc.add(const SupportEmailComposerOpened());
+    } catch (_) {
+      bloc.add(
+        const SupportEmailComposerFailed(reason: 'mail_launch_exception'),
+      );
     }
-
-    context.read<SupportContactBloc>().add(const SupportSubmitRequested());
   }
 
   @override
@@ -70,25 +91,35 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
         if (state.submitStatus == SupportSubmitStatus.success) {
           DonySnackbar.show(
             context,
-            message: 'Email ouvert dans ton client mail',
+            message: 'Brouillon ouvert dans ton application Mail',
             type: DonySnackbarType.success,
           );
-          context.pop();
+        } else if (state.submitStatus == SupportSubmitStatus.error) {
+          DonySnackbar.show(
+            context,
+            message:
+                state.errorMessage ??
+                'Impossible d\'ouvrir l\'application Mail.',
+            type: DonySnackbarType.error,
+          );
         }
       },
       builder: (context, state) {
         return DonyPageScaffold(
           title: 'Contacter le support',
           stickyBottom: DonyButton(
-            label: 'Envoyer un message',
-            onPressed: state.isValid ? () => _openMailto(context, state) : null,
+            label: 'Continuer dans l\'app Mail',
+            iconAsset: 'mail',
+            onPressed: state.isValid && !state.isSubmitting
+                ? () => _openMailto(context, state)
+                : null,
             isLoading: state.isSubmitting,
           ),
           body:
               Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _InfoCard(),
+                      const _InfoCard(),
                       const SizedBox(height: DonySpacing.xl),
                       _buildForm(context, state),
                     ],
@@ -108,11 +139,17 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Catégorie', style: tt.labelLarge?.copyWith(color: cs.onSurface)),
+        _RequiredFieldLabel(
+          label: 'Catégorie',
+          textStyle: tt.labelLarge?.copyWith(color: cs.onSurface),
+        ),
         const SizedBox(height: DonySpacing.sm),
         _CategoryDropdown(selected: state.category),
         const SizedBox(height: DonySpacing.base),
-        Text('Sujet', style: tt.labelLarge?.copyWith(color: cs.onSurface)),
+        _RequiredFieldLabel(
+          label: 'Sujet',
+          textStyle: tt.labelLarge?.copyWith(color: cs.onSurface),
+        ),
         const SizedBox(height: DonySpacing.sm),
         DonyTextField(
           controller: _subjectCtrl,
@@ -121,17 +158,17 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
               context.read<SupportContactBloc>().add(SupportSubjectChanged(v)),
         ),
         const SizedBox(height: DonySpacing.base),
-        Text('Message', style: tt.labelLarge?.copyWith(color: cs.onSurface)),
+        _RequiredFieldLabel(
+          label: 'Message',
+          textStyle: tt.labelLarge?.copyWith(color: cs.onSurface),
+        ),
         const SizedBox(height: DonySpacing.sm),
-        TextFormField(
+        DonyTextField(
           controller: _messageCtrl,
           maxLines: 6,
+          hint: 'Décris ta situation avec le maximum de détails',
           onChanged: (v) =>
               context.read<SupportContactBloc>().add(SupportMessageChanged(v)),
-          decoration: InputDecoration(
-            hintText: 'Décris ta situation avec le maximum de détails',
-            hintStyle: TextStyle(color: cs.onSurfaceVariant),
-          ),
         ),
         const SizedBox(height: DonySpacing.sm),
         if (state.message.trim().length < 20 && state.message.isNotEmpty)
@@ -144,7 +181,46 @@ class _SupportContactScreenState extends State<SupportContactScreen> {
   }
 }
 
+class _RequiredFieldLabel extends StatelessWidget {
+  const _RequiredFieldLabel({required this.label, required this.textStyle});
+
+  final String label;
+  final TextStyle? textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: '$label, obligatoire',
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          Text(label, style: textStyle),
+          Text(
+            ' *',
+            style: textStyle?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _InfoCard extends StatelessWidget {
+  const _InfoCard();
+
+  Future<void> _copyEmail(BuildContext context) async {
+    await Clipboard.setData(const ClipboardData(text: _supportEmail));
+    if (context.mounted) {
+      DonySnackbar.show(
+        context,
+        message: 'Adresse email copiée',
+        type: DonySnackbarType.success,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -157,13 +233,41 @@ class _InfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DonyIcon('headset', color: cs.primary, size: 28),
           const SizedBox(width: DonySpacing.base),
           Expanded(
-            child: Text(
-              'Notre équipe répond sous 24 h en moyenne.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurface, height: 1.4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Notre équipe répond sous 24 h en moyenne.',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurface,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        _supportEmail,
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Copier l\'adresse email',
+                      onPressed: () => _copyEmail(context),
+                      icon: DonyIcon('copy', color: cs.primary, size: 20),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
