@@ -1,4 +1,8 @@
-# Deep Links — Dony App
+# Deep Links — Yadony
+
+> **Branding :** le nom public est **Yadony**. Le schème `dony://` décrit
+> ci-dessous est un identifiant technique historique et ne doit jamais être
+> utilisé comme nom visible de l'application.
 
 ## Phase actuelle : custom scheme `dony://` (dev / local)
 

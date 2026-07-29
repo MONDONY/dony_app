@@ -4,12 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Project: dony Mobile App (Flutter)
+## Project: Yadony Mobile App (Flutter)
 
 P2P marketplace mobile pour la diaspora africaine (transport de colis vers l'Afrique).
 
 **Stack:** Flutter/Dart · flutter_bloc · GoRouter · Dio · Hive · Firebase Auth (Phone) · Stripe · FCM · Sentry  
 Min SDK: iOS 14+ / Android 8.0+ (API 26)
+
+---
+
+## Branding — RÈGLE ABSOLUE
+
+- Le nom public de l'application et de la marque est **Yadony**.
+- Toute copie visible par l'utilisateur doit écrire **Yadony**, avec cette casse exacte. Ne jamais afficher « Dony » pour désigner l'application ou la marque.
+- `dony_app`, les classes/widgets `Dony*`, les packages, chemins, clés et le schème historique `dony://` sont des identifiants techniques internes. Ils ne définissent pas le nom public et ne doivent pas être renommés sans une migration dédiée.
+- Lors de toute création ou modification d'écran, vérifier les titres, descriptions, messages, semantics et textes d'accessibilité afin qu'aucun nom public « Dony » ne soit introduit.
 
 ---
 
