@@ -1,12 +1,21 @@
 ---
 name: dony-app-rules
-description: Règles obligatoires pour l'app Flutter dony. À lire AVANT toute modification du frontend. Couvre architecture feature-first, BLoC, GoRouter, Dio, GetIt, flux d'authentification et patterns obligatoires.
+description: Règles obligatoires pour l'app Flutter Yadony (repo technique dony_app). À lire AVANT toute modification du frontend. Couvre branding, architecture feature-first, BLoC, GoRouter, Dio, GetIt, flux d'authentification et patterns obligatoires.
 ---
 
 # Règles Flutter dony_app
 
 > Lire ce fichier INTÉGRALEMENT avant toute modification de l'app Flutter.
 > Référence complémentaire : `/home/a-diakite/Desktop/MyProject/my_app/dony_app/.ai-instructions.md`
+
+---
+
+## Branding public — RÈGLE ABSOLUE
+
+- Le nom public de l'application et de la marque est **Yadony**.
+- Toute copie visible par l'utilisateur doit écrire **Yadony**, avec cette casse exacte. Ne jamais afficher « Dony » pour désigner l'application ou la marque.
+- `dony_app`, les symboles `Dony*` et le schème `dony://` restent des identifiants techniques historiques. Ne pas les confondre avec le nom public et ne pas les renommer sans migration dédiée.
+- Vérifier les textes, titres, semantics et libellés d'accessibilité de tout écran créé ou modifié.
 
 ---
 

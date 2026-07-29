@@ -178,8 +178,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logos/
-    - assets/logos/2.0x/
-    - assets/logos/3.0x/
     - assets/logos/payment/
     - assets/mascotte/
     - assets/splash/
