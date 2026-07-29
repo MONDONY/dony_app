@@ -52,7 +52,7 @@ void main() {
     );
 
     expect(uri.scheme, 'mailto');
-    expect(uri.path, 'support@dony.app');
+    expect(uri.path, 'support@yadony.com');
     expect(uri.toString(), isNot(contains('+')));
     expect(uri.toString(), contains('%20'));
     expect(
@@ -116,7 +116,7 @@ void main() {
 
     expect(find.textContaining('Notre équipe répond sous 24'), findsOneWidget);
     expect(
-      find.widgetWithText(SelectableText, 'support@dony.app'),
+      find.widgetWithText(SelectableText, 'support@yadony.com'),
       findsOneWidget,
     );
   });

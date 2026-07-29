@@ -1340,7 +1340,7 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () async {
-                    final uri = Uri.parse('mailto:support@dony.app');
+                    final uri = Uri.parse('mailto:support@yadony.com');
                     if (await canLaunchUrl(uri)) launchUrl(uri);
                   },
                   child: const Text('Contacter le support Dony'),
@@ -1432,7 +1432,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () async {
-                    final uri = Uri.parse('mailto:support@dony.app');
+                    final uri = Uri.parse('mailto:support@yadony.com');
                     if (await canLaunchUrl(uri)) launchUrl(uri);
                   },
                   child: const Text('Contacter le support Dony'),

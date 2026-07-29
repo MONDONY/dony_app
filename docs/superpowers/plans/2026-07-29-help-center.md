@@ -169,7 +169,7 @@ Expected: PASS.
 - [ ] **Step 1: Écrire les tests en échec**
 
 Vérifier « Continuer dans l’app Mail », la présence sélectionnable de
-`support@dony.app` et le maintien de l’écran lors d’un état success.
+`support@yadony.com` et le maintien de l’écran lors d’un état success.
 
 - [ ] **Step 2: Vérifier l’échec**
 

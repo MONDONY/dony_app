@@ -7,7 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const _supportEmail = 'support@dony.app';
+const _supportEmail = 'support@yadony.com';
 
 String _encodeQueryParameters(Map<String, String> parameters) {
   return parameters.entries

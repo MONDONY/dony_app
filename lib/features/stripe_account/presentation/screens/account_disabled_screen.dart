@@ -91,7 +91,7 @@ class _AccountDisabledScreenState extends State<AccountDisabledScreen> {
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () async {
-                        final uri = Uri.parse('mailto:support@dony.app');
+                        final uri = Uri.parse('mailto:support@yadony.com');
                         if (await canLaunchUrl(uri)) {
                           await launchUrl(uri);
                         }
