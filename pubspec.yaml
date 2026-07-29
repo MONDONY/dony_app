@@ -184,3 +184,4 @@ flutter:
     - assets/illustrations/
     - assets/icons/
     - assets/icons_3d/
+    - assets/config/help_center_config.default.json
