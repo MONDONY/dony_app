@@ -14,7 +14,7 @@ Remplacement de 10 entrées `ComingSoonBottomSheet.show(...)` du profil sender p
 
 - `features/profile/presentation/screens/faq_screen.dart` — FAQ statique, 5 sections accordéon, stagger animation
 - `features/profile/bloc/support_contact_bloc.dart` + event + state — form BLoC avec validation (`isValid` : category + subject ≥5 chars + message ≥20 chars)
-- `features/profile/presentation/screens/support_contact_screen.dart` — dropdown catégorie, TextFields, `launchUrl(mailto:support@dony.app)`, bouton disabled tant qu'invalide
+- `features/profile/presentation/screens/support_contact_screen.dart` — dropdown catégorie, TextFields, `launchUrl(mailto:support@yadony.com)`, bouton disabled tant qu'invalide
 - `features/profile/presentation/screens/shipments_history_screen.dart` — filtre `status == 'DELIVERED'` sur `BidMyListRequested`, `_DeliveryCard` avec route vers `/bids/:id/detail`
 
 ### Phase 2 — Carnet sender
@@ -61,7 +61,7 @@ Remplacement de 10 entrées `ComingSoonBottomSheet.show(...)` du profil sender p
 1. Dropdown catégorie → `SupportCategorySelected` → state.category
 2. Subject + message saisis → `SupportSubjectChanged` / `SupportMessageChanged`
 3. Bouton enabled dès `state.isValid` (category non vide + subject ≥5 + message ≥20)
-4. Tap "Envoyer" → `SupportSubmitRequested` → `launchUrl(Uri(scheme: 'mailto', path: 'support@dony.app', ...))`
+4. Tap "Envoyer" → `SupportSubmitRequested` → `launchUrl(Uri(scheme: 'mailto', path: 'support@yadony.com', ...))`
 
 ### Flux utilisateur (Parrainage)
 

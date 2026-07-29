@@ -31,11 +31,35 @@ void main() {
     registerFallbackValue(const SupportSubjectChanged(''));
     registerFallbackValue(const SupportMessageChanged(''));
     registerFallbackValue(const SupportSubmitRequested());
+    registerFallbackValue(const SupportEmailComposerOpened());
+    registerFallbackValue(
+      const SupportEmailComposerFailed(reason: 'test_failure'),
+    );
   });
 
   setUp(() {
     bloc = MockSupportContactBloc();
     when(() => bloc.state).thenReturn(const SupportContactState());
+  });
+
+  test('buildSupportMailtoUri encode les espaces sans signe plus', () {
+    final uri = buildSupportMailtoUri(
+      const SupportContactState(
+        category: 'Annulation et remboursement',
+        subject: 'Colis non livré',
+        message: 'Je souhaite connaître les étapes à suivre.',
+      ),
+    );
+
+    expect(uri.scheme, 'mailto');
+    expect(uri.path, 'support@yadony.com');
+    expect(uri.toString(), isNot(contains('+')));
+    expect(uri.toString(), contains('%20'));
+    expect(
+      uri.queryParameters['subject'],
+      '[Annulation et remboursement] Colis non livré',
+    );
+    expect(uri.queryParameters['body'], contains('Envoyé depuis Yadony'));
   });
 
   testWidgets('renders the form elements', (tester) async {
@@ -46,7 +70,7 @@ void main() {
     expect(find.text('Catégorie'), findsOneWidget);
     expect(find.text('Sujet'), findsOneWidget);
     expect(find.text('Message'), findsOneWidget);
-    expect(find.text('Envoyer un message'), findsOneWidget);
+    expect(find.text('Continuer dans l\'app Mail'), findsOneWidget);
   });
 
   testWidgets('submit button is disabled when state is invalid', (
@@ -91,6 +115,33 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.textContaining('Notre équipe répond sous 24'), findsOneWidget);
+    expect(
+      find.widgetWithText(SelectableText, 'support@yadony.com'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('success keeps the form visible after opening the email draft', (
+    tester,
+  ) async {
+    const validState = SupportContactState(
+      category: 'Paiement',
+      subject: 'Problème remboursement',
+      message: 'Je n\'ai pas reçu mon remboursement depuis plusieurs jours.',
+    );
+    whenListen(
+      bloc,
+      Stream<SupportContactState>.fromIterable([
+        validState.copyWith(submitStatus: SupportSubmitStatus.success),
+      ]),
+      initialState: validState,
+    );
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Contacter le support'), findsOneWidget);
+    expect(find.text('Continuer dans l\'app Mail'), findsOneWidget);
   });
 
   testWidgets('shows char count hint when message is short but not empty', (
@@ -123,7 +174,9 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    await tester.tap(find.text('Choisir une catégorie'));
+    final dropdown = find.byType(DropdownButton<String>);
+    await tester.ensureVisible(dropdown);
+    await tester.tap(dropdown);
     await tester.pump(const Duration(milliseconds: 300));
 
     await tester.tap(find.text('Paiement').last);
@@ -192,9 +245,12 @@ void main() {
     // All dropdown items should be in the tree when opened
     for (final cat in [
       'Paiement',
+      'Annulation et remboursement',
       'Vérification d\'identité',
+      'Compte et sécurité',
       'Livraison',
       'Litige',
+      'Signalement ou fraude',
       'Bug technique',
       'Autre',
     ]) {

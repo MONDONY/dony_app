@@ -285,9 +285,6 @@ class ProfileHelpSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // « FAQ & aide » n'est plus ici : le hub Activités la porte dans sa
-    // section Outils. Préférences et Support ne pesaient qu'une ligne
-    // chacune, elles fusionnent.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -301,11 +298,19 @@ class ProfileHelpSection extends StatelessWidget {
               onTap: () => context.push('/settings'),
             ),
             DonyListTile(
+              iconAsset: 'circle-help',
+              iconColor: cs.tertiary,
+              iconBgColor: cs.tertiaryContainer,
+              label: 'FAQ & aide',
+              subtitle: 'Réponses aux questions fréquentes',
+              onTap: () => context.push('/profile/help/faq'),
+            ),
+            DonyListTile(
               iconAsset: 'headset',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
               label: 'Contacter le support',
-              subtitle: 'On répond sous 24 h',
+              subtitle: 'Réponse généralement sous 24 h',
               showDivider: false,
               onTap: () => context.push('/profile/help/contact'),
             ),

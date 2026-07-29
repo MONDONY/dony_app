@@ -1,14 +1,30 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-Widget _wrap() => MaterialApp.router(
-  routerConfig: GoRouter(
-    routes: [GoRoute(path: '/', builder: (_, _) => const FaqScreen())],
-  ),
-);
+import '../../../../helpers/mock_analytics_backend.dart';
+
+Widget _wrap() {
+  final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
+  return BlocProvider(
+    create: (_) => FaqBloc(analytics),
+    child: MaterialApp.router(
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const FaqScreen()),
+          GoRoute(
+            path: '/profile/help/contact',
+            builder: (_, _) => const Scaffold(body: Text('SupportContactStub')),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
 void main() {
   tearDown(() => setDonyReimbursementCap(kDonyReimbursementCapDefault));
@@ -57,7 +73,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(
-      find.text('Toutes les réponses aux questions fréquentes.'),
+      find.text('Recherche une réponse ou parcours les catégories.'),
       findsOneWidget,
     );
   });
@@ -80,5 +96,85 @@ void main() {
 
     expect(find.textContaining('jusqu\'à 75 €'), findsOneWidget);
     expect(find.textContaining('jusqu\'à 50 €'), findsNothing);
+  });
+
+  testWidgets('filters questions and answers from the search field', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.enterText(
+      find.byKey(const Key('faq-search-field')),
+      'remboursement',
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Comment se passe le remboursement en cas d\'annulation ?'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Pourquoi la vérification d\'identité est-elle obligatoire ?'),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+    'search ignores accents and restores all categories when cleared',
+    (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pump(const Duration(milliseconds: 600));
+
+      final searchField = find.byKey(const Key('faq-search-field'));
+      await tester.enterText(searchField, 'identite');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Pourquoi la vérification d\'identité est-elle obligatoire ?',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Paiements & remboursements'), findsNothing);
+
+      await tester.enterText(searchField, '');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Compte & identité'), findsOneWidget);
+      expect(find.text('Paiements & remboursements'), findsOneWidget);
+      expect(find.text('Sécurité & données'), findsOneWidget);
+    },
+  );
+
+  testWidgets('shows an empty state for a search without result', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.enterText(
+      find.byKey(const Key('faq-search-field')),
+      'question inexistante xyz',
+    );
+    await tester.pump();
+
+    expect(find.text('Aucun résultat'), findsOneWidget);
+    expect(
+      find.text('Essaie avec d\'autres mots-clés ou contacte notre équipe.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('opens support from the contact card', (tester) async {
+    await tester.pumpWidget(_wrap());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final contact = find.text('Contacter le support');
+    await tester.ensureVisible(contact);
+    await tester.tap(contact);
+    await tester.pumpAndSettle();
+
+    expect(find.text('SupportContactStub'), findsOneWidget);
   });
 }

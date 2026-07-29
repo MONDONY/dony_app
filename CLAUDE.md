@@ -388,6 +388,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
 | `public_reviews_opened` | UserReviewsCubit — ouverture de la bottom sheet « tous les avis » (propriété `rating_count`) |
 | `reviews_filtered` | MyReviewsBloc._onStarFilterToggled — tap sur une ligne de distribution dans « Mes avis reçus » (propriété `stars`: note 1–5 ou `all` si filtre retiré) |
+| `faq_question_opened` | FaqBloc — ouverture d’une réponse du Centre d’aide (propriétés `category`, `question_id`, identifiants non sensibles) |
+| `faq_contact_requested` | FaqBloc — tap sur « Contacter le support » depuis le Centre d’aide |
+| `support_email_composer_opened` | SupportContactBloc — brouillon support ouvert dans l’application Mail (propriété `category`, aucun texte libre) |
+| `support_contact_failed` | SupportContactBloc — échec d’ouverture de l’application Mail (propriétés `category`, `reason`, aucun texte libre) |
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
 | `notification_pref_toggled` | NotificationPrefsBloc._onToggled — bascule d'une catégorie de push confirmée par le serveur (propriétés `pref`, `enabled`) ; non émis si l'écriture échoue |

@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -123,7 +122,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
                       width: double.infinity,
                       child: OutlinedButton(
                         onPressed: () async {
-                          final uri = Uri.parse('mailto:support@dony.app');
+                          final uri = Uri.parse('mailto:support@yadony.com');
                           if (await canLaunchUrl(uri)) {
                             await launchUrl(uri);
                           }

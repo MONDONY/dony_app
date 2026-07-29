@@ -124,6 +124,7 @@ Widget _buildTestHarness({
     GoRoute(path: '/profile/public', builder: (_, _) => stub('PublicProfile')),
     GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
     GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
+    GoRoute(path: '/profile/help/faq', builder: (_, _) => stub('FAQ')),
     GoRoute(path: '/profile/help/contact', builder: (_, _) => stub('Contact')),
     GoRoute(
       path: '/payments/onboarding',
@@ -298,14 +299,13 @@ void main() {
       }
     });
 
-    testWidgets('les entrées migrées vers le hub Activités ont disparu', (
+    testWidgets('les entrées toujours migrées vers Activités ont disparu', (
       tester,
     ) async {
       await pumpWith(tester, _dualRoleUser);
       await _scrollTo(tester, find.text('AIDE & RÉGLAGES'));
 
       expect(find.text('Mes négociations'), findsNothing);
-      expect(find.text('FAQ & aide'), findsNothing);
       expect(find.text('Mes colis'), findsNothing);
       expect(find.text('Mes trajets et colis'), findsNothing);
     });
@@ -367,6 +367,7 @@ void main() {
   group('Navigation', () {
     for (final nav in [
       ('Paramètres', 'Settings'),
+      ('FAQ & aide', 'FAQ'),
       ('Contacter le support', 'Contact'),
       ('Mes litiges', 'Disputes'),
       ('Mes abonnements', 'Subscriptions'),
@@ -580,8 +581,10 @@ void main() {
       await pumpWith(tester, _dualRoleUser);
       await _scrollTo(tester, find.text('Se déconnecter'));
 
-      await tester.tap(find.text('Se déconnecter'));
-      await tester.pump();
+      await tester.tap(find.text('Se déconnecter').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Se déconnecter').last);
+      await tester.pumpAndSettle();
 
       verify(() => authBloc.add(const AuthLogoutRequested())).called(1);
     });

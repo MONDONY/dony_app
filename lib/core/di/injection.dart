@@ -37,6 +37,7 @@ import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasou
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_datasource.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
@@ -474,7 +475,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<ProStatsBloc>(
     () => ProStatsBloc(getIt<ProStatsRepository>()),
   );
-  getIt.registerFactory<SupportContactBloc>(() => SupportContactBloc());
+  getIt.registerFactory<SupportContactBloc>(
+    () => SupportContactBloc(getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<FaqBloc>(() => FaqBloc(getIt<AnalyticsService>()));
 
   // Settings — Account Deletion
   getIt.registerLazySingleton<AccountDeletionRepository>(
