@@ -53,10 +53,9 @@ class AuthMethodScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(child: const DonyHeroAvatar(emoji: '🦋'))
-                      .animate()
-                      .fadeIn(duration: 300.ms)
-                      .scaleXY(begin: 0.85, curve: Curves.easeOutBack),
+                  const Center(
+                    child: DonyMascotteAnimated(type: DonyMascotteType.joyeux),
+                  ),
                   const SizedBox(height: DonySpacing.md),
                   Center(child: _SecureBadge()),
                   const SizedBox(height: DonySpacing.xl),
