@@ -22,6 +22,7 @@ class HelpTutorialCard extends StatelessWidget {
     return Semantics(
           button: true,
           label: 'Lire le tutoriel ${tutorial.title}',
+          onTap: onTap,
           child: ExcludeSemantics(
             child: DonyCard(
               onTap: onTap,
@@ -40,6 +41,23 @@ class HelpTutorialCard extends StatelessWidget {
                         children: [
                           DonyImage(
                             url: _thumbnailUrl(tutorial.youtubeVideoId),
+                            errorWidget: (context) => ColoredBox(
+                              key: const Key(
+                                'help-tutorial-thumbnail-fallback',
+                              ),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              child: Center(
+                                child: DonyIcon(
+                                  'image-off',
+                                  size: 32,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
                           ),
                           ColoredBox(color: cs.scrim.withValues(alpha: 0.18)),
                           Center(
@@ -78,6 +96,7 @@ class HelpTutorialCard extends StatelessWidget {
                                 child: Text(
                                   duration,
                                   style: tt.labelMedium?.copyWith(
+                                    fontSize: 12,
                                     color: cs.onInverseSurface,
                                     fontWeight: FontWeight.w700,
                                   ),

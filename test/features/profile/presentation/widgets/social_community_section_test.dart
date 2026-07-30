@@ -1,10 +1,13 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +15,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
+import '../../../../a11y/contrast_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 const _socialConfigJson = '''
@@ -51,12 +55,14 @@ const _socialConfigJson = '''
 Widget _wrap({
   required MockAnalyticsBackend backend,
   required _RecordingLauncher launcher,
+  AnalyticsService? analytics,
   TextScaler textScaler = TextScaler.noScaling,
+  ThemeMode themeMode = ThemeMode.light,
 }) {
-  final analytics = makeEnabledAnalytics(backend);
+  final effectiveAnalytics = analytics ?? makeEnabledAnalytics(backend);
   return MultiBlocProvider(
     providers: [
-      BlocProvider(create: (_) => FaqBloc(analytics)),
+      BlocProvider(create: (_) => FaqBloc(effectiveAnalytics)),
       BlocProvider(
         create: (_) => HelpCenterBloc(
           HelpCenterRepository(
@@ -64,11 +70,14 @@ Widget _wrap({
             fallbackJsonLoader: () async => _socialConfigJson,
             urlLauncher: launcher,
           ),
-          analytics,
+          effectiveAnalytics,
         )..add(const HelpCenterLoadRequested()),
       ),
     ],
     child: MaterialApp.router(
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(textScaler: textScaler),
         child: child!,
@@ -148,6 +157,68 @@ void main() {
     ).called(1);
   });
 
+  testWidgets('active Instagram par l’action sémantique une seule fois', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final analytics = makeEnabledAnalytics(backend);
+    await analytics.onConfigured();
+
+    await tester.pumpWidget(
+      _wrap(backend: backend, launcher: launcher, analytics: analytics),
+    );
+    await tester.pumpAndSettle();
+
+    final instagram = find.bySemanticsLabel('Suivre Instagram');
+    await tester.ensureVisible(instagram);
+    await tester.pumpAndSettle();
+    final node = tester.getSemantics(instagram);
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+
+    _semanticsOwner(tester).performAction(node.id, SemanticsAction.tap);
+    await tester.pumpAndSettle();
+
+    expect(launcher.launchedUrls, ['https://community.example/instagram']);
+    verify(
+      () => backend.capture(AnalyticsEvents.helpSocialLinkOpened, {
+        'network': 'instagram',
+      }),
+    ).called(1);
+    semantics.dispose();
+  });
+
+  for (final themeMode in [ThemeMode.light, ThemeMode.dark]) {
+    testWidgets('garde le CTA Instagram contrasté en thème ${themeMode.name}', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(backend: backend, launcher: launcher, themeMode: themeMode),
+      );
+      await tester.pumpAndSettle();
+
+      const cardKey = Key('help-social-instagram');
+      final action = find.descendant(
+        of: find.byKey(cardKey),
+        matching: find.text('Suivre'),
+      );
+      final actionText = tester.widget<Text>(action);
+      final context = tester.element(find.byKey(cardKey));
+      final theme = Theme.of(context);
+      final expectedColor = themeMode == ThemeMode.light
+          ? DonyColors.accent
+          : DonyColors.terraDark500;
+
+      expect(actionText.style?.color, expectedColor);
+      expectContrast(
+        actionText.style!.color!,
+        theme.colorScheme.surface,
+        Seuil.texte,
+        'CTA Instagram sur la surface ${themeMode.name}',
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('reste lisible avec un facteur de texte 2.0', (tester) async {
     tester.view.physicalSize = const Size(320, 720);
     tester.view.devicePixelRatio = 1;
@@ -189,3 +260,7 @@ final class _RecordingLauncher extends UrlLauncherPlatform {
     return true;
   }
 }
+
+SemanticsOwner _semanticsOwner(WidgetTester tester) =>
+    // ignore: deprecated_member_use
+    tester.binding.pipelineOwner.semanticsOwner!;

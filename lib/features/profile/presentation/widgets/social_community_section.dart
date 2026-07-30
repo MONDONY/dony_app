@@ -73,6 +73,9 @@ class _SocialCommunityCard extends StatelessWidget {
     final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.5;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    void openLink() => context.read<HelpCenterBloc>().add(
+      HelpExternalOpenRequested.social(link: link),
+    );
 
     final identity = Row(
       children: [
@@ -117,12 +120,11 @@ class _SocialCommunityCard extends StatelessWidget {
     return Semantics(
       button: true,
       label: '${style.actionLabel} ${style.networkLabel}',
+      onTap: openLink,
       child: ExcludeSemantics(
         child: DonyCard(
           key: Key('help-social-${link.network.name}'),
-          onTap: () => context.read<HelpCenterBloc>().add(
-            HelpExternalOpenRequested.social(link: link),
-          ),
+          onTap: openLink,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 56),
             child: largeText
@@ -171,7 +173,7 @@ _SocialStyle _styleFor(BuildContext context, SocialNetwork network) {
       networkLabel: 'Instagram',
       actionLabel: 'Suivre',
       iconAsset: 'camera',
-      foreground: cs.secondary,
+      foreground: isLight ? DonyColors.accent : DonyColors.terraDark500,
       background: cs.secondaryContainer,
     ),
     SocialNetwork.tiktok => _SocialStyle(
