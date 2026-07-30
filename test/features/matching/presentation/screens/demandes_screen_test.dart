@@ -14,11 +14,16 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/mock_analytics_backend.dart';
 
 class _MockTravelerBidsBloc
     extends MockBloc<TravelerBidsEvent, TravelerBidsState>
@@ -45,6 +50,29 @@ BidModel _bid(String id, String status) => BidModel(
   createdAt: DateTime(2026, 1, 1),
   updatedAt: DateTime(2026, 1, 1),
 );
+
+// ContextualTutorialCard (contexte receivedRequests) lit HelpCenterBloc via
+// context.select : sans ce provider, context.select lève
+// ProviderNotFoundException dès le premier pump.
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
 
 late List<String> visited;
 
@@ -78,6 +106,15 @@ Future<void> _pump(
             BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<BidAcceptanceBloc>.value(value: acceptance),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
+            BlocProvider<HelpCenterBloc>(
+              create: (_) => HelpCenterBloc(
+                HelpCenterRepository(
+                  const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                  fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                ),
+                makeDisabledAnalytics(MockAnalyticsBackend()),
+              )..add(const HelpCenterLoadRequested()),
+            ),
           ],
           child: const DemandesScreenTesting(),
         ),

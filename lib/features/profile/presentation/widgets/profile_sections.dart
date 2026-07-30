@@ -306,6 +306,14 @@ class ProfileHelpSection extends StatelessWidget {
               onTap: () => context.push('/profile/help/faq'),
             ),
             DonyListTile(
+              iconAsset: 'globe',
+              iconColor: cs.secondary,
+              iconBgColor: cs.secondaryContainer,
+              label: 'Réseaux sociaux et tutoriels',
+              subtitle: 'Vidéos et communauté Yadony',
+              onTap: () => context.push('/profile/community'),
+            ),
+            DonyListTile(
               iconAsset: 'headset',
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,

@@ -22,6 +22,8 @@ import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_ch
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -153,6 +155,13 @@ class _DemandesViewState extends State<_DemandesView> {
               },
             ),
           ),
+          if (_tab == DemandesTab.recues)
+            Padding(
+              padding: EdgeInsets.fromLTRB(hp, 0, hp, DonySpacing.sm),
+              child: const ContextualTutorialCard(
+                context: TutorialContext.receivedRequests,
+              ),
+            ),
           Expanded(
             child: switch (_tab) {
               DemandesTab.recues => const _DemandesRecuesBody(),

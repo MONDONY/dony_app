@@ -34,6 +34,8 @@ import 'package:dony/features/package_request/presentation/widgets/payment_capab
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -213,17 +215,26 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(DonySpacing.base),
-          child: _TripFormContent(
-            announcement: args?.announcement,
-            lockContext: args?.lockContext,
-            lockCorridorAndDate: args?.lockCorridorAndDate ?? false,
-            canSubmitNotifier: _canSubmitNotifier,
-            canContinueNotifier: _canContinueNotifier,
-            canContinueStep1Notifier: _canContinueStep1Notifier,
-            currentStepNotifier: _currentStepNotifier,
-            departureTimeNotifier: _departureTimeNotifier,
-            onSubmitReady: (fn) => _submit = fn,
-            dirtyNotifier: _isDirtyNotifier,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const ContextualTutorialCard(
+                context: TutorialContext.tripPublish,
+              ),
+              const SizedBox(height: DonySpacing.base),
+              _TripFormContent(
+                announcement: args?.announcement,
+                lockContext: args?.lockContext,
+                lockCorridorAndDate: args?.lockCorridorAndDate ?? false,
+                canSubmitNotifier: _canSubmitNotifier,
+                canContinueNotifier: _canContinueNotifier,
+                canContinueStep1Notifier: _canContinueStep1Notifier,
+                currentStepNotifier: _currentStepNotifier,
+                departureTimeNotifier: _departureTimeNotifier,
+                onSubmitReady: (fn) => _submit = fn,
+                dirtyNotifier: _isDirtyNotifier,
+              ),
+            ],
           ),
         ),
         bottomNavigationBar: SafeArea(

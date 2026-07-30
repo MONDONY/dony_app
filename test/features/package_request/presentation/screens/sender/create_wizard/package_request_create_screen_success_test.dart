@@ -10,13 +10,55 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../../helpers/mock_analytics_backend.dart';
+
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+const _requestPublishHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "request_publish_basics",
+      "title": "Publier une demande",
+      "description": "Décrire son colis pour recevoir des offres.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["requestPublish"]
+    }
+  ]
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
 
 /// Widget test de la publication/édition d'une demande d'envoi — le SnackBar
 /// de succès a été remplacé par `DonySuccessScreen` (Task 14). Le
@@ -112,16 +154,17 @@ void main() {
       ),
     ).thenAnswer((_) async => editRequest);
 
-    getIt.registerFactoryParam<PackageRequestFormBloc, PackageRequest?, void>(
-      (editing, _) {
-        capturedBloc = PackageRequestFormBloc(
-          repo,
-          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-          editing: editing,
-        );
-        return capturedBloc;
-      },
-    );
+    getIt.registerFactoryParam<PackageRequestFormBloc, PackageRequest?, void>((
+      editing,
+      _,
+    ) {
+      capturedBloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editing,
+      );
+      return capturedBloc;
+    });
     getIt.registerFactory<PackageRequestPhotosCubit>(
       () => PackageRequestPhotosCubit(
         repo,
@@ -145,7 +188,7 @@ void main() {
     }
   });
 
-  Widget buildHarness() {
+  Widget buildHarness({String helpConfigJson = _emptyHelpConfigJson}) {
     final router = GoRouter(
       initialLocation: '/',
       routes: [
@@ -173,19 +216,33 @@ void main() {
         ),
         GoRoute(
           path: '/wizard',
-          builder: (_, state) => PackageRequestCreateScreen(
-            initial: state.extra as PackageRequest?,
+          builder: (_, state) => BlocProvider<HelpCenterBloc>(
+            create: (_) => HelpCenterBloc(
+              HelpCenterRepository(
+                _StaticHelpCenterSource(helpConfigJson),
+                fallbackJsonLoader: () async => _emptyHelpConfigJson,
+              ),
+              makeDisabledAnalytics(MockAnalyticsBackend()),
+            )..add(const HelpCenterLoadRequested()),
+            child: PackageRequestCreateScreen(
+              initial: state.extra as PackageRequest?,
+            ),
           ),
         ),
         GoRoute(
           path: '/package-requests/:id',
-          builder: (_, state) => Scaffold(
-            body: Text('Détail ${state.pathParameters['id']}'),
-          ),
+          builder: (_, state) =>
+              Scaffold(body: Text('Détail ${state.pathParameters['id']}')),
         ),
         GoRoute(
           path: '/home',
           builder: (_, _) => const Scaffold(body: Text('Accueil')),
+        ),
+        GoRoute(
+          path: '/profile/help/tutorial/:tutorialId',
+          builder: (_, state) => Scaffold(
+            body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
+          ),
         ),
       ],
     );
@@ -204,11 +261,10 @@ void main() {
   Future<void> driveToSuccess(
     WidgetTester tester, {
     bool editing = false,
+    String helpConfigJson = _emptyHelpConfigJson,
   }) async {
-    await tester.pumpWidget(buildHarness());
-    await tester.tap(
-      find.byKey(Key(editing ? 'open-edit' : 'open-create')),
-    );
+    await tester.pumpWidget(buildHarness(helpConfigJson: helpConfigJson));
+    await tester.tap(find.byKey(Key(editing ? 'open-edit' : 'open-create')));
     await tester.pumpAndSettle();
 
     capturedBloc
@@ -232,9 +288,27 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets(
-      'création réussie affiche DonySuccessScreen (plus de SnackBar)',
-      (tester) async {
+  testWidgets('carte tutoriel contextuelle affichée avant la première étape et '
+      'navigue vers le tutoriel au tap', (tester) async {
+    await tester.pumpWidget(
+      buildHarness(helpConfigJson: _requestPublishHelpConfigJson),
+    );
+    await tester.tap(find.byKey(const Key('open-create')));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(PackageRequestCreateScreen), findsOneWidget);
+    expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
+
+    await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('TutorialStub:request_publish_basics'), findsOneWidget);
+  });
+
+  testWidgets('création réussie affiche DonySuccessScreen (plus de SnackBar)', (
+    tester,
+  ) async {
     await driveToSuccess(tester);
 
     expect(find.byType(SnackBar), findsNothing);
@@ -259,36 +333,36 @@ void main() {
   });
 
   testWidgets(
-      'édition réussie affiche DonySuccessScreen avec le libellé édition',
-      (tester) async {
-    await driveToSuccess(tester, editing: true);
+    'édition réussie affiche DonySuccessScreen avec le libellé édition',
+    (tester) async {
+      await driveToSuccess(tester, editing: true);
 
-    expect(find.byType(SnackBar), findsNothing);
-    expect(find.text('Demande modifiée'), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('Demande modifiée'), findsNothing);
 
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Demande modifiée !'), findsOneWidget);
-    expect(find.text('Tes modifications sont en ligne.'), findsOneWidget);
-    expect(find.text('Voir ma demande'), findsOneWidget);
-  });
-
-  testWidgets(
-      'CTA « Voir ma demande » ferme le wizard et navigue vers le détail',
-      (tester) async {
-    await driveToSuccess(tester);
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-
-    await tester.tap(find.text('Voir ma demande'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(DonySuccessScreen), findsNothing);
-    expect(find.byType(PackageRequestCreateScreen), findsNothing);
-    expect(find.text('Détail pr-created-1'), findsOneWidget);
-  });
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Demande modifiée !'), findsOneWidget);
+      expect(find.text('Tes modifications sont en ligne.'), findsOneWidget);
+      expect(find.text('Voir ma demande'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'bouton fermer (X) par défaut ramène vers /home',
-      (tester) async {
+    'CTA « Voir ma demande » ferme le wizard et navigue vers le détail',
+    (tester) async {
+      await driveToSuccess(tester);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+      await tester.tap(find.text('Voir ma demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsNothing);
+      expect(find.byType(PackageRequestCreateScreen), findsNothing);
+      expect(find.text('Détail pr-created-1'), findsOneWidget);
+    },
+  );
+
+  testWidgets('bouton fermer (X) par défaut ramène vers /home', (tester) async {
     await driveToSuccess(tester);
     expect(find.byType(DonySuccessScreen), findsOneWidget);
 

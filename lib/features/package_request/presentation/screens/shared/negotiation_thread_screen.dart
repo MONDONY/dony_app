@@ -10,6 +10,8 @@ import 'package:dony/features/package_request/presentation/widgets/thread/thread
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_cta_bar.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/trip_detail_bottom_sheet.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -348,6 +350,15 @@ class _LoadedViewState extends State<_LoadedView> {
             .animate()
             .fadeIn(duration: 220.ms)
             .slideY(begin: -0.04, curve: Curves.easeOutCubic),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(
+            DonySpacing.base,
+            DonySpacing.sm,
+            DonySpacing.base,
+            0,
+          ),
+          child: ContextualTutorialCard(context: TutorialContext.negotiation),
+        ),
         Expanded(
           child: RefreshIndicator(
             color: DonyColors.primary,

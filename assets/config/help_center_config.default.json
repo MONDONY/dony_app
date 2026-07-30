@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "youtubeChannelUrl": "https://www.youtube.com/@yadony",
+  "socialLinks": [
+    {
+      "network": "whatsapp",
+      "url": "https://whatsapp.com/channel/0029VbCfmMzAYlUE5EddiT41",
+      "active": true
+    },
+    {
+      "network": "youtube",
+      "url": "https://www.youtube.com/@yadony",
+      "active": true
+    },
+    {
+      "network": "tiktok",
+      "url": "https://www.tiktok.com/@yadony26",
+      "active": true
+    },
+    {
+      "network": "facebook",
+      "url": "https://www.facebook.com/groups/1051558350756867",
+      "active": true
+    },
+    {
+      "network": "instagram",
+      "url": "https://www.instagram.com/yadony2026/",
+      "active": true
+    }
+  ],
+  "tutorials": [
+    {
+      "id": "tuto_recherche",
+      "title": "Rechercher un trajet ou un colis",
+      "description": "Comment utiliser la recherche pour trouver un trajet ou une demande compatible.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["search"],
+      "durationLabel": "1:30"
+    },
+    {
+      "id": "tuto_activites",
+      "title": "Suivre mes activités",
+      "description": "Vue d'ensemble du hub Activités : trajets, envois, demandes, négociations.",
+      "youtubeVideoId": "jNQXAC9IVRw",
+      "order": 2,
+      "active": true,
+      "contexts": ["activities"]
+    },
+    {
+      "id": "tuto_publier_trajet",
+      "title": "Publier un trajet",
+      "description": "Étapes pour publier un trajet et déclarer l'espace bagage disponible.",
+      "youtubeVideoId": "9bZkp7q19f0",
+      "order": 3,
+      "active": true,
+      "contexts": ["tripPublish"],
+      "durationLabel": "2:10"
+    },
+    {
+      "id": "tuto_publier_demande",
+      "title": "Envoyer une demande de colis",
+      "description": "Comment décrire un colis et publier une demande d'envoi.",
+      "youtubeVideoId": "L_jWHffIx5E",
+      "order": 4,
+      "active": true,
+      "contexts": ["requestPublish"]
+    },
+    {
+      "id": "tuto_negociation",
+      "title": "Négocier une offre",
+      "description": "Comprendre les contre-offres et accepter un prix.",
+      "youtubeVideoId": "kJQP7kiw5Fk",
+      "order": 5,
+      "active": true,
+      "contexts": ["negotiation"]
+    },
+    {
+      "id": "tuto_paiement",
+      "title": "Payer en toute sécurité",
+      "description": "Le paiement sécurisé (séquestre) et son déblocage à la livraison.",
+      "youtubeVideoId": "M7lc1UVf-VE",
+      "order": 6,
+      "active": true,
+      "contexts": ["payment"],
+      "durationLabel": "1:45"
+    },
+    {
+      "id": "tuto_remise_qr",
+      "title": "Remettre le colis (QR code)",
+      "description": "Scanner le QR code de remise et confirmer la prise en charge du colis.",
+      "youtubeVideoId": "fJ9rUzIMcZQ",
+      "order": 7,
+      "active": true,
+      "contexts": ["qrHandover"]
+    },
+    {
+      "id": "tuto_suivi",
+      "title": "Suivre mon colis",
+      "description": "Lire la timeline de suivi et comprendre chaque étape.",
+      "youtubeVideoId": "60ItHLz5WEA",
+      "order": 8,
+      "active": true,
+      "contexts": ["tracking"]
+    },
+    {
+      "id": "tuto_litige",
+      "title": "Ouvrir un litige",
+      "description": "Quand et comment ouvrir un litige en cas de problème.",
+      "youtubeVideoId": "eYq7WapuDLU",
+      "order": 9,
+      "active": true,
+      "contexts": ["dispute"]
+    },
+    {
+      "id": "tuto_alertes_corridor",
+      "title": "Créer une alerte corridor",
+      "description": "Être prévenu automatiquement dès qu'un trajet ou un colis apparaît sur ton corridor.",
+      "youtubeVideoId": "OPf0YbXqDm0",
+      "order": 10,
+      "active": true,
+      "contexts": ["corridorAlerts"]
+    },
+    {
+      "id": "tuto_modeles_trajet",
+      "title": "Créer un modèle de trajet",
+      "description": "Publier tes trajets récurrents en quelques secondes grâce aux modèles.",
+      "youtubeVideoId": "JGwWNGJdvx8",
+      "order": 11,
+      "active": true,
+      "contexts": ["tripTemplates"]
+    },
+    {
+      "id": "tuto_destinataires",
+      "title": "Gérer mes destinataires",
+      "description": "Enregistrer tes proches pour envoyer un colis en un seul tap.",
+      "youtubeVideoId": "3JZ_D3ELwOQ",
+      "order": 12,
+      "active": true,
+      "contexts": ["recipients"]
+    },
+    {
+      "id": "tuto_demandes_recues",
+      "title": "Gérer les demandes reçues",
+      "description": "Accepter ou refuser une demande d'expéditeur sur l'un de tes trajets.",
+      "youtubeVideoId": "CevxZvSJLk8",
+      "order": 13,
+      "active": true,
+      "contexts": ["receivedRequests"]
+    }
+  ]
+}

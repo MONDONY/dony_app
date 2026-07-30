@@ -12,6 +12,8 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_step_indicator.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -308,8 +310,27 @@ class _PackageRequestCreateScreenState
           ),
         ),
         body: switch (state.currentStep) {
-          0 => Step1TrajetColis(
-              key: _step1Key, canContinueNotifier: _canContinueNotifier),
+          0 => Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    DonySpacing.base,
+                    DonySpacing.sm,
+                    DonySpacing.base,
+                    0,
+                  ),
+                  child: ContextualTutorialCard(
+                    context: TutorialContext.requestPublish,
+                  ),
+                ),
+                Expanded(
+                  child: Step1TrajetColis(
+                    key: _step1Key,
+                    canContinueNotifier: _canContinueNotifier,
+                  ),
+                ),
+              ],
+            ),
           1 => Step2Details(
               key: _step2Key, canContinueNotifier: _canContinueNotifier),
           _ => Step3RecapBudget(

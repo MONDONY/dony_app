@@ -38,8 +38,11 @@ import 'package:dony/features/connect_onboarding/data/connect_onboarding_reposit
 import 'package:dony/features/content_categories/data/content_category_datasource.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
@@ -479,6 +482,18 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => SupportContactBloc(getIt<AnalyticsService>()),
   );
   getIt.registerFactory<FaqBloc>(() => FaqBloc(getIt<AnalyticsService>()));
+  getIt.registerLazySingleton<HelpCenterConfigSource>(
+    () => HelpCenterRemoteConfigDatasource(),
+  );
+  getIt.registerLazySingleton<HelpCenterRepository>(
+    () => HelpCenterRepository(getIt<HelpCenterConfigSource>()),
+  );
+  getIt.registerFactory<HelpCenterBloc>(
+    () => HelpCenterBloc(
+      getIt<HelpCenterRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
 
   // Settings — Account Deletion
   getIt.registerLazySingleton<AccountDeletionRepository>(

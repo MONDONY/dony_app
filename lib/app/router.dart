@@ -120,7 +120,9 @@ import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dar
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
+import 'package:dony/features/profile/presentation/screens/community_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/features/profile/presentation/screens/help_tutorial_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -795,6 +797,11 @@ final appRouter = GoRouter(
       ),
     ),
     GoRoute(
+      path: '/profile/community',
+      builder: (context, state) => const CommunityScreen(),
+    ),
+    buildHelpTutorialRoute(),
+    GoRoute(
       path: '/profile/help/contact',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<SupportContactBloc>(),
@@ -1292,6 +1299,19 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+GoRoute buildHelpTutorialRoute({
+  HelpTutorialPlayerSessionFactory playerSessionFactory =
+      createYoutubeTutorialPlayerSession,
+}) {
+  return GoRoute(
+    path: '/profile/help/tutorial/:tutorialId',
+    builder: (context, state) => HelpTutorialScreen(
+      tutorialId: state.pathParameters['tutorialId']!,
+      playerSessionFactory: playerSessionFactory,
+    ),
+  );
+}
 
 class _PlaceholderScreen extends StatelessWidget {
   const _PlaceholderScreen({required this.title});

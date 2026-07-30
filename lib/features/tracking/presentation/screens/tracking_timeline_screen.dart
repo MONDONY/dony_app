@@ -4,6 +4,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -148,6 +150,12 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                                   arrivalCode: corridorCodes.$3,
                                   departureCity: corridorCodes.$2,
                                   arrivalCity: corridorCodes.$4,
+                                ),
+                                const SizedBox(height: DonySpacing.base),
+
+                                // Carte tutoriel contextuelle (lecture & suivi)
+                                const ContextualTutorialCard(
+                                  context: TutorialContext.tracking,
                                 ),
                                 const SizedBox(height: DonySpacing.base),
 

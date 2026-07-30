@@ -10,6 +10,8 @@ import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,9 +38,24 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
       // Aligné sur la tuile « Discussions de prix » du hub Activités : le
       // libellé tapé doit être celui de l'écran qui s'ouvre.
       appBar: const DonyAppBar(title: 'Discussions de prix'),
-      body: BlocProvider<NegotiationListBloc>.value(
-        value: getIt<NegotiationListBloc>(),
-        child: const MyNegotiationsBody(),
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              DonySpacing.sm,
+              DonySpacing.base,
+              0,
+            ),
+            child: ContextualTutorialCard(context: TutorialContext.negotiation),
+          ),
+          Expanded(
+            child: BlocProvider<NegotiationListBloc>.value(
+              value: getIt<NegotiationListBloc>(),
+              child: const MyNegotiationsBody(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -575,11 +592,7 @@ class _StatusPill extends StatelessWidget {
         DonyColors.threadStatusGreen,
         const Color(0xFFDCFCE7),
       ),
-      _ => (
-        'TERMINÉ',
-        DonyColors.threadPillNeutralFg,
-        const Color(0xFFF3F4F6),
-      ),
+      _ => ('TERMINÉ', DonyColors.threadPillNeutralFg, const Color(0xFFF3F4F6)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

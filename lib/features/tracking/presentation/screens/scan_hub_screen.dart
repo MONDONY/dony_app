@@ -6,6 +6,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_selectors.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
@@ -160,6 +162,12 @@ class ScanHubView extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.only(bottom: DonySpacing.xl),
                       child: _EtapesSection(),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: DonySpacing.xl),
+                      child: ContextualTutorialCard(
+                        context: TutorialContext.qrHandover,
+                      ),
                     ),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 240),

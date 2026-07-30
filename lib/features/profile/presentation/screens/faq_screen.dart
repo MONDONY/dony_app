@@ -3,14 +3,20 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class FaqScreen extends StatelessWidget {
+class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
 
+  @override
+  State<FaqScreen> createState() => _FaqScreenState();
+}
+
+class _FaqScreenState extends State<FaqScreen> {
   // `final` (pas `const`) : les réponses de tarification interpolent les
   // valeurs courantes chargées depuis le backend.
   static List<_FaqSectionData> get _sections => <_FaqSectionData>[
@@ -180,6 +186,16 @@ class FaqScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<HelpCenterBloc>().add(const HelpCenterOpenRequested());
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
@@ -195,7 +211,7 @@ class FaqScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Comment pouvons-nous t’aider ?',
+                  'Trouver une réponse',
                   style: tt.titleLarge?.copyWith(
                     color: cs.onSurface,
                     fontWeight: FontWeight.w800,

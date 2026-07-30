@@ -43,6 +43,8 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1616,6 +1618,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         ? ActiveRole.traveler
                         : ActiveRole.sender,
                     hiveService: getIt<HiveService>(),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.sm,
+                      DonySpacing.lg,
+                      0,
+                    ),
+                    child: const ContextualTutorialCard(
+                      context: TutorialContext.search,
+                    ),
                   ),
                 ),
                 if (_mode.isParcels)

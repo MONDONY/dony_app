@@ -5,6 +5,8 @@ import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -81,107 +83,128 @@ class _CorridorAlertListView extends StatelessWidget {
               isSender: formIsSender,
             );
             if (fabCtx.mounted) {
-              fabCtx
-                  .read<CorridorAlertListBloc>()
-                  .add(CorridorAlertListRequested());
+              fabCtx.read<CorridorAlertListBloc>().add(
+                CorridorAlertListRequested(),
+              );
             }
           },
         ),
       ),
-      body: BlocBuilder<CorridorAlertListBloc, CorridorAlertListState>(
-        builder: (ctx, state) {
-          // Filtre mono-direction ; sans direction, tout est visible.
-          final visible = direction == null
-              ? state.alerts
-              : state.alerts.where((a) => a.direction == direction).toList();
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.sm,
+              DonySpacing.lg,
+              0,
+            ),
+            child: ContextualTutorialCard(
+              context: TutorialContext.corridorAlerts,
+            ),
+          ),
+          Expanded(
+            child: BlocBuilder<CorridorAlertListBloc, CorridorAlertListState>(
+              builder: (ctx, state) {
+                // Filtre mono-direction ; sans direction, tout est visible.
+                final visible = direction == null
+                    ? state.alerts
+                    : state.alerts
+                          .where((a) => a.direction == direction)
+                          .toList();
 
-          if (state.status == CorridorAlertListStatus.loading &&
-              visible.isEmpty) {
-            return Center(
-                child: CircularProgressIndicator(color: cs.primary));
-          }
-          if (state.status == CorridorAlertListStatus.error &&
-              visible.isEmpty) {
-            return DonyEmptyState(
-              mascotte: DonyMascotteType.erreurLegere,
-              type: DonyEmptyStateType.error,
-              iconAsset: 'circle-alert',
-              title: 'Erreur de chargement',
-              description: state.errorMessage ?? 'Une erreur est survenue.',
-              actionLabel: 'Réessayer',
-              onAction: () => ctx
-                  .read<CorridorAlertListBloc>()
-                  .add(CorridorAlertListRequested()),
-            );
-          }
-          if (visible.isEmpty) {
-            return DonyEmptyState(
-              mascotte: DonyMascotteType.assis,
-              title: 'Aucune alerte corridor',
-              description: emptyDescription,
-              actionLabel: 'Créer une alerte',
-              onAction: () async {
-                await CorridorAlertFormSheet.show(
-                  ctx,
-                  isTraveler: formIsTraveler,
-                  isSender: formIsSender,
-                );
-                if (ctx.mounted) {
-                  ctx
-                      .read<CorridorAlertListBloc>()
-                      .add(CorridorAlertListRequested());
+                if (state.status == CorridorAlertListStatus.loading &&
+                    visible.isEmpty) {
+                  return Center(
+                    child: CircularProgressIndicator(color: cs.primary),
+                  );
                 }
-              },
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.only(
-              top: DonySpacing.sm,
-              bottom: DonySpacing.huge,
-            ),
-            itemCount: visible.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              thickness: 1,
-              indent: DonySpacing.lg + 44 + DonySpacing.md,
-              color: cs.outline.withValues(alpha: 0.5),
-            ),
-            itemBuilder: (lCtx, i) {
-              final alert = visible[i];
-              return Dismissible(
-                key: ValueKey(alert.id),
-                direction: DismissDirection.endToStart,
-                onDismissed: (_) => lCtx
-                    .read<CorridorAlertListBloc>()
-                    .add(CorridorAlertDeleted(alert.id)),
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: DonySpacing.xl),
-                  color: cs.error,
-                  // size: 24 is the DonyIcon default — matches the brief.
-                  child: DonyIcon('trash-2', color: cs.onError),
-                ),
-                child: CorridorAlertTile(
-                  alert: alert,
-                  onToggle: (next) => lCtx
-                      .read<CorridorAlertListBloc>()
-                      .add(CorridorAlertActiveToggled(alert.id, next)),
-                  onTap: () async {
-                    await lCtx.push(
-                      '/corridor-alerts/${alert.id}/matches',
-                      extra: alert,
-                    );
-                    if (lCtx.mounted) {
-                      lCtx
+                if (state.status == CorridorAlertListStatus.error &&
+                    visible.isEmpty) {
+                  return DonyEmptyState(
+                    mascotte: DonyMascotteType.erreurLegere,
+                    type: DonyEmptyStateType.error,
+                    iconAsset: 'circle-alert',
+                    title: 'Erreur de chargement',
+                    description:
+                        state.errorMessage ?? 'Une erreur est survenue.',
+                    actionLabel: 'Réessayer',
+                    onAction: () => ctx.read<CorridorAlertListBloc>().add(
+                      CorridorAlertListRequested(),
+                    ),
+                  );
+                }
+                if (visible.isEmpty) {
+                  return DonyEmptyState(
+                    mascotte: DonyMascotteType.assis,
+                    title: 'Aucune alerte corridor',
+                    description: emptyDescription,
+                    actionLabel: 'Créer une alerte',
+                    onAction: () async {
+                      await CorridorAlertFormSheet.show(
+                        ctx,
+                        isTraveler: formIsTraveler,
+                        isSender: formIsSender,
+                      );
+                      if (ctx.mounted) {
+                        ctx.read<CorridorAlertListBloc>().add(
+                          CorridorAlertListRequested(),
+                        );
+                      }
+                    },
+                  );
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.only(
+                    top: DonySpacing.sm,
+                    bottom: DonySpacing.huge,
+                  ),
+                  itemCount: visible.length,
+                  separatorBuilder: (context, index) => Divider(
+                    height: 1,
+                    thickness: 1,
+                    indent: DonySpacing.lg + 44 + DonySpacing.md,
+                    color: cs.outline.withValues(alpha: 0.5),
+                  ),
+                  itemBuilder: (lCtx, i) {
+                    final alert = visible[i];
+                    return Dismissible(
+                      key: ValueKey(alert.id),
+                      direction: DismissDirection.endToStart,
+                      onDismissed: (_) => lCtx
                           .read<CorridorAlertListBloc>()
-                          .add(CorridorAlertListRequested());
-                    }
+                          .add(CorridorAlertDeleted(alert.id)),
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: DonySpacing.xl),
+                        color: cs.error,
+                        // size: 24 is the DonyIcon default — matches the brief.
+                        child: DonyIcon('trash-2', color: cs.onError),
+                      ),
+                      child: CorridorAlertTile(
+                        alert: alert,
+                        onToggle: (next) => lCtx
+                            .read<CorridorAlertListBloc>()
+                            .add(CorridorAlertActiveToggled(alert.id, next)),
+                        onTap: () async {
+                          await lCtx.push(
+                            '/corridor-alerts/${alert.id}/matches',
+                            extra: alert,
+                          );
+                          if (lCtx.mounted) {
+                            lCtx.read<CorridorAlertListBloc>().add(
+                              CorridorAlertListRequested(),
+                            );
+                          }
+                        },
+                      ),
+                    );
                   },
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

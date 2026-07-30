@@ -91,6 +91,10 @@ dependencies:
 
   # WebView (Stripe Identity, KYC)
   webview_flutter: ^4.10.0
+  # 6.0.2 corrige la course setSize()/onReady de la 5.2.2 (crash JS silencieux
+  # dans l'iframe qui bloquait le lecteur en chargement infini) et son bridge
+  # JS a désormais un timeout natif de 30 s si le player ne devient jamais Ready.
+  youtube_player_iframe: 6.0.2
 
   # External browser (Stripe Connect onboarding)
   url_launcher: ^6.3.0
@@ -122,6 +126,8 @@ dependencies:
     sdk: flutter
   gal: ^2.3.2
   flutter_skill: ^0.9.36
+  firebase_remote_config: ^5.5.0
+  url_launcher_platform_interface: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -179,8 +185,10 @@ flutter:
   assets:
     - assets/logos/
     - assets/logos/payment/
+    - assets/logos/social/
     - assets/mascotte/
     - assets/splash/
     - assets/illustrations/
     - assets/icons/
     - assets/icons_3d/
+    - assets/config/help_center_config.default.json

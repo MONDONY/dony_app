@@ -35,6 +35,9 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -47,6 +50,58 @@ import 'package:dony/features/package_request/bloc/package_request_search_bloc.d
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+import '../../../helpers/mock_analytics_backend.dart';
+
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+const _searchHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "search_intro",
+      "title": "Découvrir la recherche",
+      "description": "Trouver un voyageur ou un colis compatible.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["search"]
+    }
+  ]
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
+
+BlocProvider<HelpCenterBloc> _helpCenterProvider({
+  String helpConfigJson = _emptyHelpConfigJson,
+}) => BlocProvider<HelpCenterBloc>(
+  create: (_) => HelpCenterBloc(
+    HelpCenterRepository(
+      _StaticHelpCenterSource(helpConfigJson),
+      fallbackJsonLoader: () async => _emptyHelpConfigJson,
+    ),
+    makeDisabledAnalytics(MockAnalyticsBackend()),
+  )..add(const HelpCenterLoadRequested()),
+);
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -157,20 +212,22 @@ UserModel _makeUser({List<String> roles = const ['ROLE_SENDER']}) => UserModel(
   status: 'ACTIVE',
 );
 
-AnnouncementModel _makeAnn({String id = 'a1', String travelerId = 'traveler-1'}) =>
-    AnnouncementModel(
-      id: id,
-      travelerId: travelerId,
-      departureCity: 'Paris · CDG, ORY',
-      arrivalCity: 'Dakar · DKR',
-      departureDate: DateTime(2026, 6, 15),
-      availableKg: 10,
-      totalKg: 20,
-      pricePerKg: 7,
-      status: 'ACTIVE',
-      createdAt: DateTime(2026, 5, 1),
-      updatedAt: DateTime(2026, 5, 1),
-    );
+AnnouncementModel _makeAnn({
+  String id = 'a1',
+  String travelerId = 'traveler-1',
+}) => AnnouncementModel(
+  id: id,
+  travelerId: travelerId,
+  departureCity: 'Paris · CDG, ORY',
+  arrivalCity: 'Dakar · DKR',
+  departureDate: DateTime(2026, 6, 15),
+  availableKg: 10,
+  totalKg: 20,
+  pricePerKg: 7,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 5, 1),
+  updatedAt: DateTime(2026, 5, 1),
+);
 
 /// Trois trajets d'un autre voyageur : le feed n'est pas vide, donc l'état vide
 /// (et sa tuile de découverte croisée) ne doit pas apparaître.
@@ -189,8 +246,11 @@ MockTripsSummaryCubit _registerTripsSummaryState(TripsSummaryState state) {
   // stub response »).
   final cubit = MockTripsSummaryCubit();
   when(() => cubit.state).thenReturn(state);
-  whenListen(cubit, const Stream<TripsSummaryState>.empty(),
-      initialState: state);
+  whenListen(
+    cubit,
+    const Stream<TripsSummaryState>.empty(),
+    initialState: state,
+  );
   when(() => cubit.load(period: any(named: 'period'))).thenAnswer((_) async {});
   getIt.registerFactory<TripsSummaryCubit>(() => cubit);
   return cubit;
@@ -268,6 +328,7 @@ Widget _buildHome({
   NotificationState? notificationState,
   MockBidBloc? bidBloc,
   MockFavoriteIdsCubit? favCubit,
+  String helpConfigJson = _emptyHelpConfigJson,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
@@ -299,6 +360,7 @@ Widget _buildHome({
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: effectiveBidBloc),
       BlocProvider<FavoriteIdsCubit>.value(value: effectiveFavCubit),
+      _helpCenterProvider(helpConfigJson: helpConfigJson),
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
@@ -384,9 +446,7 @@ Future<void> pumpHome(
           announcementState ??
           (tripResults == null ? null : AnnouncementSearchLoaded(tripResults)),
       user: _makeUser(
-        roles: isTraveler
-            ? const ['SENDER', 'TRAVELER']
-            : const ['SENDER'],
+        roles: isTraveler ? const ['SENDER', 'TRAVELER'] : const ['SENDER'],
       ),
     ),
   );
@@ -397,11 +457,7 @@ Future<void> pumpHome(
 /// filtres : saisie, attente du debounce (300 ms) du `CitySearchBloc`, puis tap
 /// sur la suggestion. Le dépôt de villes est mocké pour renvoyer la ville
 /// saisie, ce qui rend la suggestion déterministe.
-Future<void> _choisirVille(
-  WidgetTester tester,
-  Key champ,
-  String nom,
-) async {
+Future<void> _choisirVille(WidgetTester tester, Key champ, String nom) async {
   await tester.enterText(find.byKey(champ), nom);
   await tester.pump(const Duration(milliseconds: 400));
   await tester.pumpAndSettle();
@@ -435,6 +491,7 @@ Widget _buildHomeRouter({
   required List<String> visitedTripIds,
   UserModel? user,
   BidState? bidState,
+  String helpConfigJson = _emptyHelpConfigJson,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
@@ -461,6 +518,7 @@ Widget _buildHomeRouter({
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: bidBloc),
       BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+      _helpCenterProvider(helpConfigJson: helpConfigJson),
     ],
     child: const HomeScreen(),
   );
@@ -475,6 +533,12 @@ Widget _buildHomeRouter({
           visitedTripIds.add(state.pathParameters['id']!);
           return const Scaffold(body: Text('STUB_TRIP_DETAIL'));
         },
+      ),
+      GoRoute(
+        path: '/profile/help/tutorial/:tutorialId',
+        builder: (_, state) => Scaffold(
+          body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
+        ),
       ),
     ],
   );
@@ -524,6 +588,7 @@ Widget _buildHomeStubRoutes({
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: bidBloc),
       BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+      _helpCenterProvider(),
     ],
     child: const HomeScreen(),
   );
@@ -534,10 +599,8 @@ Widget _buildHomeStubRoutes({
     visited.add(path);
     return Scaffold(
       body: Builder(
-        builder: (ctx) => TextButton(
-          onPressed: () => ctx.pop(),
-          child: Text('STUB $path'),
-        ),
+        builder: (ctx) =>
+            TextButton(onPressed: () => ctx.pop(), child: Text('STUB $path')),
       ),
     );
   }
@@ -546,10 +609,7 @@ Widget _buildHomeStubRoutes({
     initialLocation: '/',
     routes: [
       GoRoute(path: '/', builder: (_, _) => providers),
-      GoRoute(
-        path: '/trips/create',
-        builder: (_, _) => stub('/trips/create'),
-      ),
+      GoRoute(path: '/trips/create', builder: (_, _) => stub('/trips/create')),
       GoRoute(path: '/settings', builder: (_, _) => stub('/settings')),
     ],
   );
@@ -656,6 +716,68 @@ void main() {
     });
 
     testWidgets(
+      'affiche la carte tutoriel après le contrôle de recherche et navigue '
+      'vers le tutoriel au tap',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildHomeRouter(
+            announcementState: AnnouncementSearchLoaded(const []),
+            visitedTripIds: [],
+            helpConfigJson: _searchHelpConfigJson,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1000));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        final corridorTop = tester
+            .getTopLeft(find.text('Tous les corridors').first)
+            .dy;
+        final cardTop = tester
+            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
+            .dy;
+        expect(cardTop, greaterThan(corridorTop));
+
+        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('TutorialStub:search_intro'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'masque intentionnellement la carte tutoriel en mode carousel Près de '
+      'moi (comme le contrôle de recherche lui-même)',
+      (tester) async {
+        GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+        await tester.pumpWidget(
+          _buildHome(
+            announcementState: AnnouncementSearchLoaded([_makeAnn()]),
+            helpConfigJson: _searchHelpConfigJson,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        // Avant activation : la carte est présente (mode liste/sheet).
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
+
+        // Activation de « Près de moi » → bascule sur le carousel : le
+        // contrôle de recherche (barre corridor du top overlay) s'efface
+        // lui-même (opacity 0 / IgnorePointer) pour laisser la place à la
+        // carte plein écran. La carte tutoriel, ancrée dans le même sheet
+        // que la barre corridor, disparaît pour la même raison — ce n'est
+        // pas une régression, elle réapparaît dès qu'on repasse en liste.
+        await tester.tap(find.byKey(const Key('near-me-fab')));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(NearMeCarousel), findsOneWidget);
+        expect(find.byType(DraggableScrollableSheet), findsNothing);
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+      },
+    );
+
+    testWidgets(
       'régression : initState dispatche BidMyListAutoRefreshRequested '
       '(jamais BidMyListRequested qui écraserait l\'état partagé)',
       (tester) async {
@@ -681,88 +803,89 @@ void main() {
       expect(find.text('Note'), findsOneWidget);
     });
 
-    testWidgets(
-      'le chip Urgent déclenche une recherche avec urgent=true',
-      (tester) async {
-        final announcementBloc = MockAnnouncementBloc();
-        final authBloc = MockAuthBloc();
-        final roleCubit = MockActiveRoleCubit();
-        final notifBloc = MockNotificationBloc();
-        final bidBloc = MockBidBloc();
+    testWidgets('le chip Urgent déclenche une recherche avec urgent=true', (
+      tester,
+    ) async {
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      final roleCubit = MockActiveRoleCubit();
+      final notifBloc = MockNotificationBloc();
+      final bidBloc = MockBidBloc();
 
-        when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-        when(() => announcementBloc.stream)
-            .thenAnswer((_) => const Stream.empty());
-        when(() => authBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
-        when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
-        when(() => roleCubit.state).thenReturn(ActiveRole.sender);
-        when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
-        when(() => notifBloc.state).thenReturn(const NotificationInitial());
-        when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
-        when(() => bidBloc.state).thenReturn(BidInitial());
-        when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(
+        () => announcementBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => authBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
+      when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+      when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+      when(() => notifBloc.state).thenReturn(const NotificationInitial());
+      when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => bidBloc.state).thenReturn(BidInitial());
+      when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
 
-        await tester.pumpWidget(
-          MultiBlocProvider(
-            providers: [
-              BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
-              BlocProvider<AuthBloc>.value(value: authBloc),
-              BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
-              BlocProvider<NotificationBloc>.value(value: notifBloc),
-              BlocProvider<BidBloc>.value(value: bidBloc),
-              BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+            BlocProvider<AuthBloc>.value(value: authBloc),
+            BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+            BlocProvider<NotificationBloc>.value(value: notifBloc),
+            BlocProvider<BidBloc>.value(value: bidBloc),
+            BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+            _helpCenterProvider(),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
             ],
-            child: MaterialApp(
-              theme: AppTheme.light(),
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [Locale('fr'), Locale('en')],
-              locale: const Locale('fr'),
-              home: const HomeScreen(),
+            supportedLocales: const [Locale('fr'), Locale('en')],
+            locale: const Locale('fr'),
+            home: const HomeScreen(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      // L'appel dispatché au montage (initState) ne doit pas porter urgent.
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: isA<AnnouncementSearchRequested>().having(
+              (e) => e.urgent,
+              'urgent',
+              isNull,
             ),
           ),
-        );
-        await tester.pump(const Duration(milliseconds: 1000));
+        ),
+      ).called(1);
 
-        // L'appel dispatché au montage (initState) ne doit pas porter urgent.
-        verify(
-          () => announcementBloc.add(
-            any(
-              that: isA<AnnouncementSearchRequested>().having(
-                (e) => e.urgent,
-                'urgent',
-                isNull,
-              ),
+      await tester.tap(find.text('🔥 Urgent'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.urgentFilterToggled,
+          properties: {'active': true},
+        ),
+      ).called(1);
+
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: isA<AnnouncementSearchRequested>().having(
+              (e) => e.urgent,
+              'urgent',
+              true,
             ),
           ),
-        ).called(1);
-
-        await tester.tap(find.text('🔥 Urgent'));
-        await tester.pumpAndSettle();
-
-        verify(
-          () => analytics.logEvent(
-            AnalyticsEvents.urgentFilterToggled,
-            properties: {'active': true},
-          ),
-        ).called(1);
-
-        verify(
-          () => announcementBloc.add(
-            any(
-              that: isA<AnnouncementSearchRequested>().having(
-                (e) => e.urgent,
-                'urgent',
-                true,
-              ),
-            ),
-          ),
-        ).called(1);
-      },
-    );
+        ),
+      ).called(1);
+    });
 
     testWidgets('shows TravelerCards when announcements loaded', (
       tester,
@@ -780,35 +903,34 @@ void main() {
       expect(find.byType(TravelerCard), findsAtLeastNWidgets(1));
     });
 
-    testWidgets(
-      'ses propres trajets sont exclus du feed de recherche',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1600);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
+    testWidgets('ses propres trajets sont exclus du feed de recherche', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
 
-        await tester.pumpWidget(
-          _buildHomeRouter(
-            // travelerId == id de _makeUser ('uid-1') : l'utilisateur ne doit
-            // pas voir ses propres trajets dans la recherche.
-            announcementState: AnnouncementSearchLoaded([
-              _makeAnn(id: 'a-own', travelerId: 'uid-1'),
-            ]),
-            visitedTripIds: <String>[],
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 1000));
+      await tester.pumpWidget(
+        _buildHomeRouter(
+          // travelerId == id de _makeUser ('uid-1') : l'utilisateur ne doit
+          // pas voir ses propres trajets dans la recherche.
+          announcementState: AnnouncementSearchLoaded([
+            _makeAnn(id: 'a-own', travelerId: 'uid-1'),
+          ]),
+          visitedTripIds: <String>[],
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
 
-        // Déplier le sheet en plein écran.
-        await tester.tap(find.textContaining('Tirer pour voir'));
-        await tester.pumpAndSettle();
+      // Déplier le sheet en plein écran.
+      await tester.tap(find.textContaining('Tirer pour voir'));
+      await tester.pumpAndSettle();
 
-        // Aucune carte trajet ni pill « Votre trajet » : l'annonce propre est
-        // filtrée du feed (elle reste accessible via « Mes trajets »).
-        expect(find.byKey(const Key('own-trip-pill')), findsNothing);
-        expect(find.byType(TravelerCard), findsNothing);
-      },
-    );
+      // Aucune carte trajet ni pill « Votre trajet » : l'annonce propre est
+      // filtrée du feed (elle reste accessible via « Mes trajets »).
+      expect(find.byKey(const Key('own-trip-pill')), findsNothing);
+      expect(find.byType(TravelerCard), findsNothing);
+    });
 
     testWidgets('shows empty message when search loaded with no results', (
       tester,
@@ -848,16 +970,22 @@ void main() {
 
         await pumpHome(tester, tripResults: [_makeAnn()]);
 
-        expect(find.textContaining('Tirer pour voir les 1 résultat'),
-            findsOneWidget);
+        expect(
+          find.textContaining('Tirer pour voir les 1 résultat'),
+          findsOneWidget,
+        );
 
         await tester.tap(find.text('Colis'));
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('Tirer pour voir les 3 résultats'),
-            findsOneWidget);
-        expect(find.textContaining('Tirer pour voir les 1 résultat'),
-            findsNothing);
+        expect(
+          find.textContaining('Tirer pour voir les 3 résultats'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Tirer pour voir les 1 résultat'),
+          findsNothing,
+        );
       },
     );
 
@@ -880,10 +1008,14 @@ void main() {
         await tester.tap(find.text('Colis'));
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('Tirer pour voir les 2 résultats'),
-            findsOneWidget);
-        expect(find.textContaining('Tirer pour voir les 3 résultats'),
-            findsNothing);
+        expect(
+          find.textContaining('Tirer pour voir les 2 résultats'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Tirer pour voir les 3 résultats'),
+          findsNothing,
+        );
       },
     );
 
@@ -1058,8 +1190,9 @@ void main() {
         final bidBloc = MockBidBloc();
 
         when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-        when(() => announcementBloc.stream)
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => announcementBloc.stream,
+        ).thenAnswer((_) => const Stream.empty());
         when(() => authBloc.state).thenReturn(
           AuthAuthenticated(_makeUser(roles: const ['SENDER', 'TRAVELER'])),
         );
@@ -1080,6 +1213,7 @@ void main() {
               BlocProvider<NotificationBloc>.value(value: notifBloc),
               BlocProvider<BidBloc>.value(value: bidBloc),
               BlocProvider<FavoriteIdsCubit>.value(value: _makeFavCubit()),
+              _helpCenterProvider(),
             ],
             child: MaterialApp(
               theme: AppTheme.light(),
@@ -1249,7 +1383,9 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(
-        () => packageRequestSearchBloc.add(any(that: isA<SearchFiltersChanged>())),
+        () => packageRequestSearchBloc.add(
+          any(that: isA<SearchFiltersChanged>()),
+        ),
       ).called(greaterThanOrEqualTo(1));
     });
 
@@ -1558,26 +1694,27 @@ void main() {
       expect(find.textContaining('0 trajet'), findsNothing);
     });
 
-    testWidgets('activer la pastille trace la bascule et le nombre de trajets', (
-      tester,
-    ) async {
-      await pumpHome(tester, activeTrips: 3);
-      await tester.tap(find.text('Colis'));
-      await tester.pumpAndSettle();
-      await ouvrirPastille(tester);
+    testWidgets(
+      'activer la pastille trace la bascule et le nombre de trajets',
+      (tester) async {
+        await pumpHome(tester, activeTrips: 3);
+        await tester.tap(find.text('Colis'));
+        await tester.pumpAndSettle();
+        await ouvrirPastille(tester);
 
-      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Rechercher'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Rechercher'));
+        await tester.pumpAndSettle();
 
-      verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.homeMatchingTripsFilterToggled,
-          properties: {'active': true, 'active_trips': 3},
-        ),
-      ).called(1);
-    });
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeMatchingTripsFilterToggled,
+            properties: {'active': true, 'active_trips': 3},
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets('valider sans toucher la pastille ne trace rien', (
       tester,
@@ -1614,7 +1751,10 @@ void main() {
 
       expect(find.text('COLIS COMPATIBLES'), findsOneWidget);
       expect(find.text("DEMANDES D'ENVOI"), findsNothing);
-      expect(find.text('2 résultats, compatibles avec tes 3 trajets'), findsOneWidget);
+      expect(
+        find.text('2 résultats, compatibles avec tes 3 trajets'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('un seul résultat et un seul trajet : accord au singulier', (
@@ -1630,7 +1770,10 @@ void main() {
       await tester.tap(find.text('Colis'));
       await tester.pumpAndSettle();
 
-      expect(find.text('1 résultat, compatible avec ton trajet'), findsOneWidget);
+      expect(
+        find.text('1 résultat, compatible avec ton trajet'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('filtre inactif : l\'en-tête reste celui des demandes', (
@@ -1915,7 +2058,10 @@ void main() {
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
       expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
-      expect(labelTuile(tester), '5 colis cherchent un voyageur sur Lyon → Bamako');
+      expect(
+        labelTuile(tester),
+        '5 colis cherchent un voyageur sur Lyon → Bamako',
+      );
       // Jamais de tiret cadratin dans un texte affiché.
       expect(labelTuile(tester), isNot(contains('—')));
     });
@@ -1991,47 +2137,48 @@ void main() {
       await pumpHome(tester, tripResults: const [], otherModeCount: 1);
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
-      expect(labelTuile(tester), '1 colis cherche un voyageur sur Lyon → Bamako');
+      expect(
+        labelTuile(tester),
+        '1 colis cherche un voyageur sur Lyon → Bamako',
+      );
     });
 
-    testWidgets(
-      'ville de départ seule : suffixe « au départ de Lyon »',
-      (tester) async {
-        await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+    testWidgets('ville de départ seule : suffixe « au départ de Lyon »', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const [], otherModeCount: 5);
 
-        await tester.tap(find.byKey(const Key('corridor-bar')));
-        await tester.pumpAndSettle();
-        await _choisirVille(tester, const Key('filter-departure-city'), 'Lyon');
-        await tester.tap(find.text('Rechercher'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('corridor-bar')));
+      await tester.pumpAndSettle();
+      await _choisirVille(tester, const Key('filter-departure-city'), 'Lyon');
+      await tester.tap(find.text('Rechercher'));
+      await tester.pumpAndSettle();
 
-        expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
-        expect(
-          labelTuile(tester),
-          '5 colis cherchent un voyageur au départ de Lyon',
-        );
-        // Jamais de tiret cadratin dans un texte affiché.
-        expect(labelTuile(tester), isNot(contains('—')));
-      },
-    );
+      expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
+      expect(
+        labelTuile(tester),
+        '5 colis cherchent un voyageur au départ de Lyon',
+      );
+      // Jamais de tiret cadratin dans un texte affiché.
+      expect(labelTuile(tester), isNot(contains('—')));
+    });
 
-    testWidgets(
-      'ville d\'arrivée seule : suffixe « vers Bamako »',
-      (tester) async {
-        await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+    testWidgets('ville d\'arrivée seule : suffixe « vers Bamako »', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const [], otherModeCount: 5);
 
-        await tester.tap(find.byKey(const Key('corridor-bar')));
-        await tester.pumpAndSettle();
-        await _choisirVille(tester, const Key('filter-arrival-city'), 'Bamako');
-        await tester.tap(find.text('Rechercher'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('corridor-bar')));
+      await tester.pumpAndSettle();
+      await _choisirVille(tester, const Key('filter-arrival-city'), 'Bamako');
+      await tester.tap(find.text('Rechercher'));
+      await tester.pumpAndSettle();
 
-        expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
-        expect(labelTuile(tester), '5 colis cherchent un voyageur vers Bamako');
-        // Jamais de tiret cadratin dans un texte affiché.
-        expect(labelTuile(tester), isNot(contains('—')));
-      },
-    );
+      expect(find.byKey(const Key('cross-discovery')), findsOneWidget);
+      expect(labelTuile(tester), '5 colis cherchent un voyageur vers Bamako');
+      // Jamais de tiret cadratin dans un texte affiché.
+      expect(labelTuile(tester), isNot(contains('—')));
+    });
 
     testWidgets(
       'sans corridor, le libellé n\'affiche ni flèche orpheline ni corridor vide',
@@ -2201,8 +2348,9 @@ void main() {
       expect(find.byKey(const Key('favorites-badge')), findsNothing);
     });
 
-    testWidgets('shows badge with count when favorites count > 0',
-        (tester) async {
+    testWidgets('shows badge with count when favorites count > 0', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildHome(favCubit: _makeFavCubit(count: 3)));
       await tester.pumpAndSettle();
 
@@ -2240,10 +2388,10 @@ void main() {
       final bidBloc = MockBidBloc();
 
       when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-      when(() => announcementBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
-      when(() => authBloc.state)
-          .thenReturn(AuthAuthenticated(_makeUser()));
+      when(
+        () => announcementBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => authBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
       when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
       when(() => roleCubit.state).thenReturn(ActiveRole.sender);
       when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
@@ -2260,6 +2408,7 @@ void main() {
           BlocProvider<NotificationBloc>.value(value: notifBloc),
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
+          _helpCenterProvider(),
         ],
         child: const HomeScreen(),
       );
