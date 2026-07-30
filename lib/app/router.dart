@@ -120,6 +120,7 @@ import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dar
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
+import 'package:dony/features/profile/presentation/screens/community_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/help_tutorial_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
@@ -794,6 +795,10 @@ final appRouter = GoRouter(
         create: (_) => getIt<FaqBloc>(),
         child: const FaqScreen(),
       ),
+    ),
+    GoRoute(
+      path: '/profile/community',
+      builder: (context, state) => const CommunityScreen(),
     ),
     buildHelpTutorialRoute(),
     GoRoute(

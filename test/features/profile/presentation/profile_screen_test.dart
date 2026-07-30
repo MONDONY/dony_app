@@ -125,6 +125,10 @@ Widget _buildTestHarness({
     GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
     GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
     GoRoute(path: '/profile/help/faq', builder: (_, _) => stub('FAQ')),
+    GoRoute(
+      path: '/profile/community',
+      builder: (_, _) => stub('Community'),
+    ),
     GoRoute(path: '/profile/help/contact', builder: (_, _) => stub('Contact')),
     GoRoute(
       path: '/payments/onboarding',
@@ -368,6 +372,7 @@ void main() {
     for (final nav in [
       ('Paramètres', 'Settings'),
       ('FAQ & aide', 'FAQ'),
+      ('Réseaux sociaux', 'Community'),
       ('Contacter le support', 'Contact'),
       ('Mes litiges', 'Disputes'),
       ('Mes abonnements', 'Subscriptions'),
