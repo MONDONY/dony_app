@@ -1,24 +1,99 @@
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
 
-Widget _wrap() {
-  final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
-  return BlocProvider(
-    create: (_) => FaqBloc(analytics),
+const _emptyConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+const _hubConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [
+    {
+      "network": "whatsapp",
+      "url": "https://community.example/whatsapp",
+      "active": true
+    }
+  ],
+  "tutorials": [
+    {
+      "id": "payment",
+      "title": "Accepter une offre et payer",
+      "description": "Sécuriser le règlement dans Yadony.",
+      "youtubeVideoId": "M7lc1UVf-VE",
+      "order": 2,
+      "active": true,
+      "contexts": ["payment"]
+    },
+    {
+      "id": "search_intro",
+      "title": "Découvrir Yadony",
+      "description": "Comprendre la recherche en quelques minutes.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["search"],
+      "durationLabel": "2:30"
+    }
+  ]
+}
+''';
+
+Widget _wrap({
+  String configJson = _emptyConfigJson,
+  AnalyticsService? analytics,
+  MockAnalyticsBackend? backend,
+  TextScaler textScaler = TextScaler.noScaling,
+}) {
+  final effectiveAnalytics =
+      analytics ?? makeDisabledAnalytics(backend ?? MockAnalyticsBackend());
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider(create: (_) => FaqBloc(effectiveAnalytics)),
+      BlocProvider(
+        create: (_) => HelpCenterBloc(
+          HelpCenterRepository(
+            _StaticHelpCenterSource(configJson),
+            fallbackJsonLoader: () async => _emptyConfigJson,
+          ),
+          effectiveAnalytics,
+        )..add(const HelpCenterLoadRequested()),
+      ),
+    ],
     child: MaterialApp.router(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+        child: child!,
+      ),
       routerConfig: GoRouter(
         routes: [
           GoRoute(path: '/', builder: (_, _) => const FaqScreen()),
           GoRoute(
             path: '/profile/help/contact',
             builder: (_, _) => const Scaffold(body: Text('SupportContactStub')),
+          ),
+          GoRoute(
+            path: '/profile/help/tutorial/:tutorialId',
+            builder: (_, state) => Scaffold(
+              body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
+            ),
           ),
         ],
       ),
@@ -177,4 +252,99 @@ void main() {
 
     expect(find.text('SupportContactStub'), findsOneWidget);
   });
+
+  testWidgets('ordonne les réponses, les tutoriels puis la communauté', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(configJson: _hubConfigJson));
+    await tester.pumpAndSettle();
+
+    final faqTop = tester.getTopLeft(find.text('Trouver une réponse')).dy;
+    final tutorialsTop = tester.getTopLeft(find.text('Tutoriels vidéo')).dy;
+    final communityTop = tester
+        .getTopLeft(find.text('Rejoindre la communauté'))
+        .dy;
+
+    expect(faqTop, lessThan(tutorialsTop));
+    expect(tutorialsTop, lessThan(communityTop));
+  });
+
+  testWidgets('masque les sections distantes quand la configuration est vide', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Trouver une réponse'), findsOneWidget);
+    expect(find.text('Tutoriels vidéo'), findsNothing);
+    expect(find.text('Rejoindre la communauté'), findsNothing);
+  });
+
+  testWidgets('affiche les tutoriels selon leur ordre configuré', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(configJson: _hubConfigJson));
+    await tester.pumpAndSettle();
+
+    final searchTop = tester.getTopLeft(find.text('Découvrir Yadony')).dy;
+    final paymentTop = tester
+        .getTopLeft(find.text('Accepter une offre et payer'))
+        .dy;
+
+    expect(searchTop, lessThan(paymentTop));
+  });
+
+  testWidgets('ouvre le tutoriel et trace son identifiant depuis le hub', (
+    tester,
+  ) async {
+    final backend = MockAnalyticsBackend();
+    final analytics = makeEnabledAnalytics(backend);
+    await analytics.onConfigured();
+
+    await tester.pumpWidget(
+      _wrap(configJson: _hubConfigJson, analytics: analytics, backend: backend),
+    );
+    await tester.pumpAndSettle();
+
+    final tutorial = find.text('Découvrir Yadony');
+    await tester.ensureVisible(tutorial);
+    await tester.tap(tutorial);
+    await tester.pumpAndSettle();
+
+    expect(find.text('TutorialStub:search_intro'), findsOneWidget);
+    verify(
+      () => backend.capture(AnalyticsEvents.helpTutorialOpened, {
+        'tutorial_id': 'search_intro',
+        'source': 'help_center',
+      }),
+    ).called(1);
+  });
+
+  testWidgets('reste sans overflow avec un facteur de texte 2.0', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 720);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      _wrap(configJson: _hubConfigJson, textScaler: const TextScaler.linear(2)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+  });
+}
+
+final class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
 }

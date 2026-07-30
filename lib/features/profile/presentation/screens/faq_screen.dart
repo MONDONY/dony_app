@@ -3,14 +3,23 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/help_tutorial_card.dart';
+import 'package:dony/features/profile/presentation/widgets/social_community_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class FaqScreen extends StatelessWidget {
+class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
 
+  @override
+  State<FaqScreen> createState() => _FaqScreenState();
+}
+
+class _FaqScreenState extends State<FaqScreen> {
   // `final` (pas `const`) : les réponses de tarification interpolent les
   // valeurs courantes chargées depuis le backend.
   static List<_FaqSectionData> get _sections => <_FaqSectionData>[
@@ -180,75 +189,156 @@ class FaqScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<HelpCenterBloc>().add(const HelpCenterOpenRequested());
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     return ValueListenableBuilder<double>(
       valueListenable: donyReimbursementCapListenable,
-      builder: (context, _, _) => BlocBuilder<FaqBloc, FaqState>(
-        builder: (context, state) {
-          final sections = _filterSections(state.query);
-          return DonyPageScaffold(
-            title: 'FAQ & aide',
-            body: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Comment pouvons-nous t’aider ?',
-                  style: tt.titleLarge?.copyWith(
-                    color: cs.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  'Recherche une réponse ou parcours les catégories.',
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: DonySpacing.base),
-                DonyTextField(
-                  key: const Key('faq-search-field'),
-                  hint: 'Rechercher dans l’aide',
-                  prefixWidget: Padding(
-                    padding: const EdgeInsets.all(DonySpacing.md),
-                    child: DonyIcon(
-                      'search',
-                      size: 20,
-                      color: cs.onSurfaceVariant,
+      builder: (context, _, _) => BlocBuilder<HelpCenterBloc, HelpCenterState>(
+        builder: (context, helpState) {
+          final config = _configFrom(helpState);
+          final tutorials =
+              config.tutorials.where((tutorial) => tutorial.active).toList()
+                ..sort((a, b) => a.order.compareTo(b.order));
+          final socialLinks = config.socialLinks
+              .where((link) => link.active)
+              .toList();
+
+          return BlocBuilder<FaqBloc, FaqState>(
+            builder: (context, state) {
+              final sections = _filterSections(state.query);
+              return DonyPageScaffold(
+                title: 'FAQ & aide',
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Trouver une réponse',
+                      style: tt.titleLarge?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  textInputAction: TextInputAction.search,
-                  onChanged: (query) =>
-                      context.read<FaqBloc>().add(FaqSearchChanged(query)),
-                ),
-                const SizedBox(height: DonySpacing.xl),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: sections.isEmpty
-                      ? const _FaqEmptyState(key: Key('faq-empty-state'))
-                      : Column(
-                          key: ValueKey(state.query),
-                          children: List.generate(sections.length, (i) {
-                            return _FaqSection(data: sections[i])
-                                .animate()
-                                .fadeIn(delay: (i * 60).ms, duration: 280.ms)
-                                .slideY(
-                                  begin: 0.04,
-                                  curve: Curves.easeOutCubic,
-                                );
-                          }),
+                    const SizedBox(height: DonySpacing.xs),
+                    Text(
+                      'Recherche une réponse ou parcours les catégories.',
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.base),
+                    DonyTextField(
+                      key: const Key('faq-search-field'),
+                      hint: 'Rechercher dans l’aide',
+                      prefixWidget: Padding(
+                        padding: const EdgeInsets.all(DonySpacing.md),
+                        child: DonyIcon(
+                          'search',
+                          size: 20,
+                          color: cs.onSurfaceVariant,
                         ),
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onChanged: (query) =>
+                          context.read<FaqBloc>().add(FaqSearchChanged(query)),
+                    ),
+                    const SizedBox(height: DonySpacing.xl),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: sections.isEmpty
+                          ? const _FaqEmptyState(key: Key('faq-empty-state'))
+                          : Column(
+                              key: ValueKey(state.query),
+                              children: List.generate(sections.length, (i) {
+                                return _FaqSection(data: sections[i])
+                                    .animate()
+                                    .fadeIn(
+                                      delay: (i * 60).ms,
+                                      duration: 280.ms,
+                                    )
+                                    .slideY(
+                                      begin: 0.04,
+                                      curve: Curves.easeOutCubic,
+                                    );
+                              }),
+                            ),
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                    const _ContactSupportCard(),
+                    if (tutorials.isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.xxl),
+                      Text(
+                        'Tutoriels vidéo',
+                        style: tt.titleLarge?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xs),
+                      Text(
+                        'Apprends les parcours essentiels de Yadony.',
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.base),
+                      ...List.generate(tutorials.length, (index) {
+                        final tutorial = tutorials[index];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == tutorials.length - 1
+                                ? 0
+                                : DonySpacing.base,
+                          ),
+                          child: HelpTutorialCard(
+                            tutorial: tutorial,
+                            onTap: () {
+                              context.read<HelpCenterBloc>().add(
+                                HelpTutorialOpenRequested(
+                                  tutorialId: tutorial.id,
+                                  source: null,
+                                ),
+                              );
+                              context.push(
+                                '/profile/help/tutorial/${tutorial.id}',
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                    ],
+                    if (socialLinks.isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.xxl),
+                      SocialCommunitySection(links: socialLinks),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: DonySpacing.md),
-                const _ContactSupportCard(),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
     );
   }
+}
+
+HelpCenterConfig _configFrom(HelpCenterState state) {
+  return switch (state) {
+    HelpCenterSuccess(:final config) => config,
+    HelpCenterError(:final config) => config,
+    _ => HelpCenterConfig.empty,
+  };
 }
 
 class _FaqSection extends StatelessWidget {
