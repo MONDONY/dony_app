@@ -1,6 +1,33 @@
 {
   "schemaVersion": 1,
-  "youtubeChannelUrl": null,
-  "socialLinks": [],
-  "tutorials": []
+  "youtubeChannelUrl": "https://www.youtube.com/@yadony",
+  "socialLinks": [
+    {
+      "network": "youtube",
+      "url": "https://www.youtube.com/@yadony",
+      "active": true
+    },
+    {
+      "network": "tiktok",
+      "url": "https://www.tiktok.com/@yadony26",
+      "active": true
+    },
+    {
+      "network": "facebook",
+      "url": "https://www.facebook.com/groups/1051558350756867",
+      "active": true
+    }
+  ],
+  "tutorials": [
+    {
+      "id": "search_intro",
+      "title": "Découvrir Yadony",
+      "description": "Comprendre la recherche en quelques minutes.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["search"],
+      "durationLabel": "2:30"
+    }
+  ]
 }
