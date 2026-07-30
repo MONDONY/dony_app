@@ -5,6 +5,7 @@ import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SocialCommunitySection extends StatelessWidget {
   const SocialCommunitySection({super.key, required this.links});
@@ -86,7 +87,14 @@ class _SocialCommunityCard extends StatelessWidget {
             color: style.background,
             borderRadius: BorderRadius.circular(DonyRadius.md),
           ),
-          child: DonyIcon(style.iconAsset, size: 22, color: style.foreground),
+          child: Center(
+            child: SvgPicture.asset(
+              'assets/logos/social/${style.logoAsset}.svg',
+              width: 22,
+              height: 22,
+              semanticsLabel: style.networkLabel,
+            ),
+          ),
         ),
         const SizedBox(width: DonySpacing.md),
         Expanded(
@@ -158,35 +166,35 @@ _SocialStyle _styleFor(BuildContext context, SocialNetwork network) {
     SocialNetwork.whatsapp => _SocialStyle(
       networkLabel: 'WhatsApp',
       actionLabel: 'Rejoindre',
-      iconAsset: 'message-circle',
+      logoAsset: 'whatsapp',
       foreground: isLight ? DonyColors.success500 : DonyColors.successDark500,
       background: isLight ? DonyColors.success50 : DonyColors.successDark50,
     ),
     SocialNetwork.facebook => _SocialStyle(
       networkLabel: 'Facebook',
       actionLabel: 'Rejoindre',
-      iconAsset: 'user-plus',
+      logoAsset: 'facebook',
       foreground: cs.primary,
       background: cs.primaryContainer,
     ),
     SocialNetwork.instagram => _SocialStyle(
       networkLabel: 'Instagram',
       actionLabel: 'Suivre',
-      iconAsset: 'camera',
+      logoAsset: 'instagram',
       foreground: isLight ? DonyColors.accent : DonyColors.terraDark500,
       background: cs.secondaryContainer,
     ),
     SocialNetwork.tiktok => _SocialStyle(
       networkLabel: 'TikTok',
       actionLabel: 'Suivre',
-      iconAsset: 'smartphone',
+      logoAsset: 'tiktok',
       foreground: cs.onSurface,
       background: cs.surfaceContainerHighest,
     ),
     SocialNetwork.youtube => _SocialStyle(
       networkLabel: 'YouTube',
       actionLabel: 'S’abonner',
-      iconAsset: 'circle-play',
+      logoAsset: 'youtube',
       foreground: cs.error,
       background: cs.errorContainer,
     ),
@@ -197,14 +205,18 @@ final class _SocialStyle {
   const _SocialStyle({
     required this.networkLabel,
     required this.actionLabel,
-    required this.iconAsset,
+    required this.logoAsset,
     required this.foreground,
     required this.background,
   });
 
   final String networkLabel;
   final String actionLabel;
-  final String iconAsset;
+
+  /// Nom de fichier (sans extension) dans `assets/logos/social/` — le logo
+  /// officiel de la marque, affiché dans ses couleurs d'origine (pas
+  /// recoloré, contrairement à `DonyIcon`).
+  final String logoAsset;
   final Color foreground;
   final Color background;
 }

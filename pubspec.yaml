@@ -184,6 +184,7 @@ flutter:
   assets:
     - assets/logos/
     - assets/logos/payment/
+    - assets/logos/social/
     - assets/mascotte/
     - assets/splash/
     - assets/illustrations/
