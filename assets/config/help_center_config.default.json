@@ -3,6 +3,11 @@
   "youtubeChannelUrl": "https://www.youtube.com/@yadony",
   "socialLinks": [
     {
+      "network": "whatsapp",
+      "url": "https://whatsapp.com/channel/0029VbCfmMzAYlUE5EddiT41",
+      "active": true
+    },
+    {
       "network": "youtube",
       "url": "https://www.youtube.com/@yadony",
       "active": true
@@ -15,6 +20,11 @@
     {
       "network": "facebook",
       "url": "https://www.facebook.com/groups/1051558350756867",
+      "active": true
+    },
+    {
+      "network": "instagram",
+      "url": "https://www.instagram.com/yadony2026/",
       "active": true
     }
   ],
