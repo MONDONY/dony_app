@@ -1,11 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/help_tutorial_card.dart';
 import 'package:dony/features/profile/presentation/widgets/social_community_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-/// Accès direct aux réseaux sociaux officiels Yadony, au même niveau que
+/// Tutoriels vidéo et réseaux sociaux officiels Yadony, au même niveau que
 /// « FAQ & aide » dans le menu Profil — sans passer par le hub FAQ.
 ///
 /// `HelpCenterBloc` est fourni globalement (voir `lib/app/app.dart`) : cet
@@ -15,6 +17,9 @@ class CommunityScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return BlocBuilder<HelpCenterBloc, HelpCenterState>(
       builder: (context, state) {
         final config = switch (state) {
@@ -22,21 +27,74 @@ class CommunityScreen extends StatelessWidget {
           HelpCenterError(:final config) => config,
           _ => HelpCenterConfig.empty,
         };
+        final tutorials =
+            config.tutorials.where((tutorial) => tutorial.active).toList()
+              ..sort((a, b) => a.order.compareTo(b.order));
         final socialLinks = config.socialLinks
             .where((link) => link.active)
             .toList();
 
         return DonyPageScaffold(
-          title: 'Réseaux sociaux',
-          body: socialLinks.isEmpty
+          title: 'Réseaux sociaux et tutoriels',
+          body: tutorials.isEmpty && socialLinks.isEmpty
               ? const DonyEmptyState(
                   key: Key('community-empty-state'),
-                  title: 'Aucun réseau pour le moment',
+                  title: 'Aucun contenu pour le moment',
                   description:
-                      'Nos espaces communautaires seront bientôt disponibles ici.',
+                      'Nos tutoriels et espaces communautaires seront bientôt disponibles ici.',
                   mascotte: DonyMascotteType.assis,
                 )
-              : SocialCommunitySection(links: socialLinks),
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (tutorials.isNotEmpty) ...[
+                      Text(
+                        'Tutoriels vidéo',
+                        style: tt.titleLarge?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xs),
+                      Text(
+                        'Apprends les parcours essentiels de Yadony.',
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.base),
+                      ...List.generate(tutorials.length, (index) {
+                        final tutorial = tutorials[index];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == tutorials.length - 1
+                                ? 0
+                                : DonySpacing.base,
+                          ),
+                          child: HelpTutorialCard(
+                            tutorial: tutorial,
+                            onTap: () {
+                              context.read<HelpCenterBloc>().add(
+                                HelpTutorialOpenRequested(
+                                  tutorialId: tutorial.id,
+                                  source: null,
+                                ),
+                              );
+                              context.push(
+                                '/profile/help/tutorial/${tutorial.id}',
+                              );
+                            },
+                          ),
+                        );
+                      }),
+                    ],
+                    if (socialLinks.isNotEmpty) ...[
+                      if (tutorials.isNotEmpty)
+                        const SizedBox(height: DonySpacing.xxl),
+                      SocialCommunitySection(links: socialLinks),
+                    ],
+                  ],
+                ),
         );
       },
     );

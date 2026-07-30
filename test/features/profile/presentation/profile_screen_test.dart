@@ -372,7 +372,7 @@ void main() {
     for (final nav in [
       ('Paramètres', 'Settings'),
       ('FAQ & aide', 'FAQ'),
-      ('Réseaux sociaux', 'Community'),
+      ('Réseaux sociaux et tutoriels', 'Community'),
       ('Contacter le support', 'Contact'),
       ('Mes litiges', 'Disputes'),
       ('Mes abonnements', 'Subscriptions'),

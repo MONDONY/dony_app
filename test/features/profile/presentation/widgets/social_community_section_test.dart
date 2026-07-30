@@ -1,11 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
-import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/features/profile/presentation/screens/community_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -60,20 +59,15 @@ Widget _wrap({
   ThemeMode themeMode = ThemeMode.light,
 }) {
   final effectiveAnalytics = analytics ?? makeEnabledAnalytics(backend);
-  return MultiBlocProvider(
-    providers: [
-      BlocProvider(create: (_) => FaqBloc(effectiveAnalytics)),
-      BlocProvider(
-        create: (_) => HelpCenterBloc(
-          HelpCenterRepository(
-            const _StaticHelpCenterSource(),
-            fallbackJsonLoader: () async => _socialConfigJson,
-            urlLauncher: launcher,
-          ),
-          effectiveAnalytics,
-        )..add(const HelpCenterLoadRequested()),
+  return BlocProvider(
+    create: (_) => HelpCenterBloc(
+      HelpCenterRepository(
+        const _StaticHelpCenterSource(),
+        fallbackJsonLoader: () async => _socialConfigJson,
+        urlLauncher: launcher,
       ),
-    ],
+      effectiveAnalytics,
+    )..add(const HelpCenterLoadRequested()),
     child: MaterialApp.router(
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
@@ -83,7 +77,7 @@ Widget _wrap({
         child: child!,
       ),
       routerConfig: GoRouter(
-        routes: [GoRoute(path: '/', builder: (_, _) => const FaqScreen())],
+        routes: [GoRoute(path: '/', builder: (_, _) => const CommunityScreen())],
       ),
     ),
   );
@@ -121,23 +115,20 @@ void main() {
     await analytics.onConfigured();
 
     await tester.pumpWidget(
-      MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (_) => FaqBloc(analytics)),
-          BlocProvider(
-            create: (_) => HelpCenterBloc(
-              HelpCenterRepository(
-                const _StaticHelpCenterSource(),
-                fallbackJsonLoader: () async => _socialConfigJson,
-                urlLauncher: launcher,
-              ),
-              analytics,
-            )..add(const HelpCenterLoadRequested()),
+      BlocProvider(
+        create: (_) => HelpCenterBloc(
+          HelpCenterRepository(
+            const _StaticHelpCenterSource(),
+            fallbackJsonLoader: () async => _socialConfigJson,
+            urlLauncher: launcher,
           ),
-        ],
+          analytics,
+        )..add(const HelpCenterLoadRequested()),
         child: MaterialApp.router(
           routerConfig: GoRouter(
-            routes: [GoRoute(path: '/', builder: (_, _) => const FaqScreen())],
+            routes: [
+              GoRoute(path: '/', builder: (_, _) => const CommunityScreen()),
+            ],
           ),
         ),
       ),

@@ -309,8 +309,8 @@ class ProfileHelpSection extends StatelessWidget {
               iconAsset: 'globe',
               iconColor: cs.secondary,
               iconBgColor: cs.secondaryContainer,
-              label: 'Réseaux sociaux',
-              subtitle: 'Rejoins la communauté Yadony',
+              label: 'Réseaux sociaux et tutoriels',
+              subtitle: 'Vidéos et communauté Yadony',
               onTap: () => context.push('/profile/community'),
             ),
             DonyListTile(
