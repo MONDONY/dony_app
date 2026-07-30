@@ -53,6 +53,9 @@ import 'package:dony/features/payments/data/repositories/payment_repository.dart
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
@@ -69,6 +72,44 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+
+import '../helpers/mock_analytics_backend.dart';
+
+// Fournit un HelpCenterBloc minimal (catalogue vide) aux 4 harnais de ce
+// fichier dont l'écran embarque désormais une ContextualTutorialCard
+// (Task 7 du plan centre d'aide) : accueil, publication de trajet, paiement,
+// scan. Sans ce provider, HelpCenterBloc n'est pas résolu dans l'arbre de
+// widgets et context.select lève ProviderNotFoundException.
+const _smokeEmptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+class _SmokeStaticHelpCenterSource implements HelpCenterConfigSource {
+  const _SmokeStaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
+
+BlocProvider<HelpCenterBloc> _smokeHelpCenterProvider() =>
+    BlocProvider<HelpCenterBloc>(
+      create: (_) => HelpCenterBloc(
+        HelpCenterRepository(
+          const _SmokeStaticHelpCenterSource(_smokeEmptyHelpConfigJson),
+          fallbackJsonLoader: () async => _smokeEmptyHelpConfigJson,
+        ),
+        makeDisabledAnalytics(MockAnalyticsBackend()),
+      )..add(const HelpCenterLoadRequested()),
+    );
 
 /// Monte un widget déjà entièrement câblé (MaterialApp/GoRouter compris,
 /// c'est le rôle de chaque harnais spécifique à sa feature) à 200 % de
@@ -264,6 +305,7 @@ Widget _buildHomeHarness() {
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: bidBloc),
       BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
+      _smokeHelpCenterProvider(),
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
@@ -444,6 +486,7 @@ Widget _wrapCreateTripScreen(Widget child) {
                 return b;
               }(),
             ),
+            _smokeHelpCenterProvider(),
           ],
           child: child,
         ),
@@ -599,6 +642,7 @@ Widget _wrapPaymentScreen(Widget child, PaymentBloc bloc, ConfigBloc configBloc)
           providers: [
             BlocProvider<PaymentBloc>.value(value: bloc),
             BlocProvider<ConfigBloc>.value(value: configBloc),
+            _smokeHelpCenterProvider(),
           ],
           child: child,
         ),
@@ -674,8 +718,11 @@ GoRouter _scanRouter(ScanHubCubit cubit) => GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => BlocProvider<ScanHubCubit>.value(
-            value: cubit,
+          builder: (_, __) => MultiBlocProvider(
+            providers: [
+              BlocProvider<ScanHubCubit>.value(value: cubit),
+              _smokeHelpCenterProvider(),
+            ],
             child: const ScanHubView(),
           ),
         ),
