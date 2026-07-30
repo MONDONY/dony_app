@@ -208,16 +208,16 @@ void main() {
     expect(find.text('Rejoindre la communauté'), findsNothing);
   });
 
-  testWidgets('ordonne les tutoriels avant les réseaux', (tester) async {
+  testWidgets('ordonne les réseaux avant les tutoriels', (tester) async {
     await tester.pumpWidget(_wrap(configJson: _hubConfigJson));
     await tester.pumpAndSettle();
 
-    final tutorialsTop = tester.getTopLeft(find.text('Tutoriels vidéo')).dy;
     final communityTop = tester
         .getTopLeft(find.text('Rejoindre la communauté'))
         .dy;
+    final tutorialsTop = tester.getTopLeft(find.text('Tutoriels vidéo')).dy;
 
-    expect(tutorialsTop, lessThan(communityTop));
+    expect(communityTop, lessThan(tutorialsTop));
   });
 
   testWidgets('affiche les tutoriels selon leur ordre configuré', (

@@ -47,7 +47,12 @@ class CommunityScreen extends StatelessWidget {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (socialLinks.isNotEmpty) ...[
+                      SocialCommunitySection(links: socialLinks),
+                    ],
                     if (tutorials.isNotEmpty) ...[
+                      if (socialLinks.isNotEmpty)
+                        const SizedBox(height: DonySpacing.xxl),
                       Text(
                         'Tutoriels vidéo',
                         style: tt.titleLarge?.copyWith(
@@ -87,11 +92,6 @@ class CommunityScreen extends StatelessWidget {
                           ),
                         );
                       }),
-                    ],
-                    if (socialLinks.isNotEmpty) ...[
-                      if (tutorials.isNotEmpty)
-                        const SizedBox(height: DonySpacing.xxl),
-                      SocialCommunitySection(links: socialLinks),
                     ],
                   ],
                 ),
