@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
-const _youtubePrivacyEnhancedOrigin = 'https://www.youtube-nocookie.com';
 const _webViewDetachStepTimeout = Duration(milliseconds: 500);
 
 enum HelpTutorialPlayerEvent { ready, playing, ended, error }
@@ -130,9 +128,7 @@ HelpTutorialPlayerSession createYoutubeTutorialPlayerSession(
         strictRelatedVideos: configuration.strictRelatedVideos,
         captionLanguage: 'fr',
         interfaceLanguage: 'fr',
-        origin: configuration.privacyEnhanced
-            ? _youtubePrivacyEnhancedOrigin
-            : 'https://www.youtube.com',
+        privacyEnhancedMode: configuration.privacyEnhanced,
       ),
       onWebResourceError: (error) {
         if (!resourceErrors.isClosed) {
@@ -362,48 +358,28 @@ final class _PackageYoutubeController implements HelpTutorialYoutubeController {
     required double aspectRatio,
     required Widget Function(Widget player) pageBuilder,
   }) {
-    return YoutubePlayerScaffold(
+    return YoutubePlayerControllerProvider(
       controller: _activeController,
-      aspectRatio: aspectRatio,
-      backgroundColor: Colors.black,
-      builder: (context, player) => pageBuilder(player),
+      child: pageBuilder(
+        YoutubePlayer(
+          controller: _activeController,
+          aspectRatio: aspectRatio,
+          backgroundColor: Colors.black,
+        ),
+      ),
     );
   }
 
   @override
   void exitFullScreen() => _activeController.exitFullScreen();
 
+  // youtube_player_iframe 6.0.2's close() no longer waits for Ready — it
+  // checks isInitCompleted instead, so it's already safe to call pre-Ready.
+  // abandon() and close() are therefore identical; both interface methods
+  // are kept because _YoutubeTutorialPlayerSession chooses between them
+  // based on _isReady/_webViewFailed.
   @override
-  Future<void> abandon() async {
-    final controller = _controller;
-    _controller = null;
-    if (controller == null) {
-      return;
-    }
-
-    // youtube_player_iframe 5.2.2 attend Ready dans close(). En pré-Ready,
-    // on détache donc d'abord tous les callbacks Dart puis on remplace l'iframe
-    // par une page locale vide. Les PlatformViews Android/iOS sont ensuite
-    // libérées par leurs finalizers quand cette référence sort de portée.
-    // ignore: invalid_use_of_internal_member
-    final webViewController = controller.webViewController;
-    // `playerId` est le nom exact du JavaScriptChannel créé par la version
-    // épinglée 5.2.2 ; son close() retire par erreur un autre nom de channel.
-    // ignore: invalid_use_of_internal_member
-    final playerId = controller.playerId;
-    await detachHelpTutorialWebView(
-      neutralizeNavigation: () => webViewController.setNavigationDelegate(
-        NavigationDelegate(
-          onNavigationRequest: (_) => NavigationDecision.prevent,
-        ),
-      ),
-      removePlayerChannel: () =>
-          webViewController.removeJavaScriptChannel(playerId),
-      loadBlankPage: () => webViewController.loadHtmlString(
-        '<!doctype html><html><head></head><body></body></html>',
-      ),
-    );
-  }
+  Future<void> abandon() => close();
 
   @override
   Future<void> close() async {
@@ -478,6 +454,12 @@ Future<void> _ignoreCleanupError(Future<void> cleanup) async {
 /// Les trois opérations sont toujours tentées : une PlatformView déjà cassée
 /// ne doit ni bloquer [HelpTutorialPlayerSession.close], ni empêcher le retrait
 /// des références Dart restantes.
+///
+/// Plus appelée par [_PackageYoutubeController.abandon] depuis
+/// youtube_player_iframe 6.0.2 : son `close()` gère nativement la fermeture
+/// pré-Ready (vérifie `isInitCompleted`, pas `Ready`). Conservée pour les
+/// implémentations de [HelpTutorialYoutubeController] qui en auraient encore
+/// besoin.
 Future<void> detachHelpTutorialWebView({
   required Future<void> Function() neutralizeNavigation,
   required Future<void> Function() removePlayerChannel,

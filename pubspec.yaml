@@ -91,9 +91,10 @@ dependencies:
 
   # WebView (Stripe Identity, KYC)
   webview_flutter: ^4.10.0
-  # 5.2.2 reste compatible avec la baseline Flutter >=3.41 et le lock WebView
-  # actuel. La série 6.x exige des plugins WebView plus récents.
-  youtube_player_iframe: 5.2.2
+  # 6.0.2 corrige la course setSize()/onReady de la 5.2.2 (crash JS silencieux
+  # dans l'iframe qui bloquait le lecteur en chargement infini) et son bridge
+  # JS a désormais un timeout natif de 30 s si le player ne devient jamais Ready.
+  youtube_player_iframe: 6.0.2
 
   # External browser (Stripe Connect onboarding)
   url_launcher: ^6.3.0

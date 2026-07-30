@@ -9,9 +9,9 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 const _configuration = HelpTutorialPlayerConfiguration(videoId: 'dQw4w9WgXcQ');
 
 void main() {
-  group('adaptateur YouTube 5.2.2', () {
+  group('adaptateur YouTube 6.0.2', () {
     test(
-      'attend la readiness réelle et configure cue, contrôles et nocookie',
+      'attend la readiness réelle et configure cue, contrôles et privacyEnhancedMode',
       () async {
         final controller = _FakeYoutubeController();
         late YoutubePlayerParams capturedParams;
@@ -39,7 +39,7 @@ void main() {
         expect(capturedParams.showFullscreenButton, isTrue);
         expect(capturedParams.enableCaption, isTrue);
         expect(capturedParams.strictRelatedVideos, isTrue);
-        expect(capturedParams.origin, 'https://www.youtube-nocookie.com');
+        expect(capturedParams.privacyEnhancedMode, isTrue);
         expect(controller.cuedVideoIds, ['dQw4w9WgXcQ']);
 
         controller.completeCue();
