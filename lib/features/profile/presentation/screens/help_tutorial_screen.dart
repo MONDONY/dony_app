@@ -168,6 +168,7 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
   HelpTutorialPlayerSession? _session;
   // ignore: cancel_subscriptions
   StreamSubscription<HelpTutorialPlayerEvent>? _eventSubscription;
+  Future<void>? _releaseFuture;
   _PlayerViewStatus _currentStatus = _PlayerViewStatus.loading;
   bool _startedReported = false;
   bool _completedReported = false;
@@ -188,7 +189,7 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
     if (oldWidget.tutorial.youtubeVideoId != widget.tutorial.youtubeVideoId) {
       _startedReported = false;
       _completedReported = false;
-      _restart();
+      unawaited(_restart());
     }
   }
 
@@ -246,7 +247,7 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
     if (_currentStatus == _PlayerViewStatus.error && _session == null) {
       return;
     }
-    _releaseCurrentSession();
+    unawaited(_releaseCurrentSession());
     _emitStatus(_PlayerViewStatus.error);
   }
 
@@ -257,36 +258,58 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
     }
   }
 
-  void _restart() {
+  Future<void> _restart() async {
     if (_restarting) {
       return;
     }
     _restarting = true;
-    _emitStatus(_PlayerViewStatus.loading);
-    _releaseCurrentSession();
-    if (mounted) {
-      _createSession();
+    try {
+      _emitStatus(_PlayerViewStatus.loading);
+      await _releaseCurrentSession();
+      if (mounted) {
+        _createSession();
+      }
+    } finally {
+      _restarting = false;
     }
-    _restarting = false;
   }
 
-  void _releaseCurrentSession() {
+  Future<void> _releaseCurrentSession() {
     final subscription = _eventSubscription;
     final session = _session;
     _eventSubscription = null;
     _session = null;
 
+    if (subscription == null && session == null) {
+      return _releaseFuture ?? Future<void>.value();
+    }
+
+    final release = _closeSession(subscription, session);
+    late final Future<void> trackedRelease;
+    trackedRelease = release.whenComplete(() {
+      if (identical(_releaseFuture, trackedRelease)) {
+        _releaseFuture = null;
+      }
+    });
+    _releaseFuture = trackedRelease;
+    return trackedRelease;
+  }
+
+  Future<void> _closeSession(
+    StreamSubscription<HelpTutorialPlayerEvent>? subscription,
+    HelpTutorialPlayerSession? session,
+  ) async {
     if (subscription != null) {
       unawaited(_ignoreCleanupError(subscription.cancel()));
     }
     if (session != null) {
-      unawaited(_ignoreCleanupError(session.close()));
+      await _ignoreCleanupError(session.close());
     }
   }
 
   @override
   void dispose() {
-    _releaseCurrentSession();
+    unawaited(_releaseCurrentSession());
     unawaited(_statusController.close());
     super.dispose();
   }
@@ -326,7 +349,7 @@ class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
           switchOutCurve: DonyCurve.exit,
           child: switch (status) {
             _PlayerViewStatus.error => _PlayerErrorCard(
-              onRetry: _restart,
+              onRetry: () => unawaited(_restart()),
               onOpenExternal: _openExternal,
             ),
             _PlayerViewStatus.loading || _PlayerViewStatus.ready =>

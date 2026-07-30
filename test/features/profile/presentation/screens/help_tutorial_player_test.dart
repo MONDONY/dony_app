@@ -49,8 +49,75 @@ void main() {
       },
     );
 
+    test('traite une erreur WebView du frame principal comme fatale', () async {
+      final controller = _FakeYoutubeController();
+      late ValueChanged<YoutubeWebResourceError> resourceErrorCallback;
+      final session = createYoutubeTutorialPlayerSession(
+        _configuration,
+        controllerFactory:
+            ({required key, required params, required onWebResourceError}) {
+              resourceErrorCallback = onWebResourceError;
+              return controller;
+            },
+        systemUi: _RecordingSystemUi(<String>[]),
+      );
+      addTearDown(session.close);
+      final events = <HelpTutorialPlayerEvent>[];
+      final subscription = session.events.listen(events.add);
+      addTearDown(subscription.cancel);
+      await pumpEventQueue();
+      events.clear();
+
+      resourceErrorCallback(
+        const YoutubeWebResourceError(
+          errorCode: -2,
+          description: 'host lookup failed',
+          isForMainFrame: true,
+        ),
+      );
+      await pumpEventQueue();
+
+      expect(events, [HelpTutorialPlayerEvent.error]);
+    });
+
     test(
-      'fusionne une erreur de ressource WebView dans le flux métier',
+      'ignore une sous-ressource non critique qui échoue après Ready',
+      () async {
+        final controller = _FakeYoutubeController()..completeCue();
+        late ValueChanged<YoutubeWebResourceError> resourceErrorCallback;
+        final session = createYoutubeTutorialPlayerSession(
+          _configuration,
+          controllerFactory:
+              ({required key, required params, required onWebResourceError}) {
+                resourceErrorCallback = onWebResourceError;
+                return controller;
+              },
+          systemUi: _RecordingSystemUi(<String>[]),
+        );
+        addTearDown(session.close);
+        final events = <HelpTutorialPlayerEvent>[];
+        final subscription = session.events.listen(events.add);
+        addTearDown(subscription.cancel);
+        await pumpEventQueue();
+
+        expect(events, [HelpTutorialPlayerEvent.ready]);
+        events.clear();
+        resourceErrorCallback(
+          const YoutubeWebResourceError(
+            errorCode: -2,
+            description: 'thumbnail unavailable',
+            isForMainFrame: false,
+            url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+          ),
+        );
+        await pumpEventQueue();
+
+        expect(events, isEmpty);
+      },
+    );
+
+    test(
+      'traite une ressource YouTube critique pré-Ready comme fatale',
       () async {
         final controller = _FakeYoutubeController();
         late ValueChanged<YoutubeWebResourceError> resourceErrorCallback;
@@ -68,18 +135,54 @@ void main() {
         final subscription = session.events.listen(events.add);
         addTearDown(subscription.cancel);
         await pumpEventQueue();
-        events.clear();
 
         resourceErrorCallback(
           const YoutubeWebResourceError(
             errorCode: -2,
-            description: 'host lookup failed',
-            isForMainFrame: true,
+            description: 'iframe unavailable',
+            isForMainFrame: false,
+            url:
+                'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'
+                '?enablejsapi=1',
           ),
         );
         await pumpEventQueue();
 
         expect(events, [HelpTutorialPlayerEvent.error]);
+      },
+    );
+
+    test(
+      'ignore une sous-ressource non critique qui échoue pré-Ready',
+      () async {
+        final controller = _FakeYoutubeController();
+        late ValueChanged<YoutubeWebResourceError> resourceErrorCallback;
+        final session = createYoutubeTutorialPlayerSession(
+          _configuration,
+          controllerFactory:
+              ({required key, required params, required onWebResourceError}) {
+                resourceErrorCallback = onWebResourceError;
+                return controller;
+              },
+          systemUi: _RecordingSystemUi(<String>[]),
+        );
+        addTearDown(session.close);
+        final events = <HelpTutorialPlayerEvent>[];
+        final subscription = session.events.listen(events.add);
+        addTearDown(subscription.cancel);
+        await pumpEventQueue();
+
+        resourceErrorCallback(
+          const YoutubeWebResourceError(
+            errorCode: -2,
+            description: 'tracking pixel unavailable',
+            isForMainFrame: false,
+            url: 'https://www.google.com/pagead/1p-user-list/123/',
+          ),
+        );
+        await pumpEventQueue();
+
+        expect(events, isEmpty);
       },
     );
 
@@ -109,6 +212,98 @@ void main() {
         HelpTutorialPlayerEvent.error,
       ]);
     });
+
+    test('émet une erreur quand l’iframe ne devient jamais Ready', () async {
+      final controller = _FakeYoutubeController();
+      final session = createYoutubeTutorialPlayerSession(
+        const HelpTutorialPlayerConfiguration(
+          videoId: 'dQw4w9WgXcQ',
+          readinessTimeout: Duration.zero,
+        ),
+        controllerFactory:
+            ({required key, required params, required onWebResourceError}) =>
+                controller,
+        systemUi: _RecordingSystemUi(<String>[]),
+      );
+      addTearDown(session.close);
+      final events = <HelpTutorialPlayerEvent>[];
+      final subscription = session.events.listen(events.add);
+      addTearDown(subscription.cancel);
+
+      await pumpEventQueue();
+
+      expect(events, [HelpTutorialPlayerEvent.error]);
+    });
+
+    test(
+      'abandonne sans bloquer quand le WebView échoue avant Ready',
+      () async {
+        final blockedClose = Completer<void>();
+        final controller = _FakeYoutubeController(
+          blockedClose: blockedClose.future,
+        );
+        late ValueChanged<YoutubeWebResourceError> resourceErrorCallback;
+        final session = createYoutubeTutorialPlayerSession(
+          const HelpTutorialPlayerConfiguration(
+            videoId: 'dQw4w9WgXcQ',
+            readinessTimeout: Duration(hours: 1),
+          ),
+          controllerFactory:
+              ({required key, required params, required onWebResourceError}) {
+                resourceErrorCallback = onWebResourceError;
+                return controller;
+              },
+          systemUi: _RecordingSystemUi(<String>[]),
+        );
+        final events = <HelpTutorialPlayerEvent>[];
+        final subscription = session.events.listen(events.add);
+        addTearDown(subscription.cancel);
+        await pumpEventQueue();
+
+        resourceErrorCallback(
+          const YoutubeWebResourceError(
+            errorCode: -2,
+            description: 'main frame unavailable',
+            isForMainFrame: true,
+            url: 'https://www.youtube-nocookie.com',
+          ),
+        );
+        await pumpEventQueue();
+
+        expect(events, [HelpTutorialPlayerEvent.error]);
+        await session.close().timeout(const Duration(milliseconds: 100));
+        expect(controller.abandonCalls, 1);
+        expect(controller.closeCalls, 0);
+      },
+    );
+
+    test(
+      'borne chaque détachement WebView et tente toutes les étapes',
+      () async {
+        final order = <String>[];
+        final neverCompletes = Completer<void>();
+
+        await detachHelpTutorialWebView(
+          neutralizeNavigation: () {
+            order.add('neutralize_navigation');
+            return neverCompletes.future;
+          },
+          removePlayerChannel: () async {
+            order.add('remove_player_channel');
+          },
+          loadBlankPage: () async {
+            order.add('load_blank_page');
+          },
+          stepTimeout: const Duration(milliseconds: 10),
+        ).timeout(const Duration(milliseconds: 100));
+
+        expect(order, [
+          'neutralize_navigation',
+          'remove_player_channel',
+          'load_blank_page',
+        ]);
+      },
+    );
 
     test('propage une factory qui échoue au host appelant', () {
       expect(
@@ -178,12 +373,16 @@ void main() {
 }
 
 final class _FakeYoutubeController implements HelpTutorialYoutubeController {
-  _FakeYoutubeController({List<String>? order}) : order = order ?? <String>[];
+  _FakeYoutubeController({List<String>? order, this.blockedClose})
+    : order = order ?? <String>[];
 
   final _values = StreamController<YoutubePlayerValue>.broadcast(sync: true);
   final _cueCompleter = Completer<void>();
   final List<String> order;
+  final Future<void>? blockedClose;
   final cuedVideoIds = <String>[];
+  int abandonCalls = 0;
+  int closeCalls = 0;
 
   @override
   bool isFullScreen = false;
@@ -197,6 +396,13 @@ final class _FakeYoutubeController implements HelpTutorialYoutubeController {
   void emit(YoutubePlayerValue value) => _values.add(value);
 
   void emitError(Object error) => _values.addError(error);
+
+  @override
+  Future<void> abandon() async {
+    abandonCalls++;
+    order.add('abandon');
+    await _values.close();
+  }
 
   @override
   Stream<YoutubePlayerValue> get values => _values.stream;
@@ -223,7 +429,11 @@ final class _FakeYoutubeController implements HelpTutorialYoutubeController {
 
   @override
   Future<void> close() async {
+    closeCalls++;
     order.add('close');
+    if (blockedClose case final blocked?) {
+      await blocked;
+    }
     await _values.close();
   }
 }

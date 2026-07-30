@@ -175,6 +175,33 @@ void main() {
     expect(find.byKey(const Key('fake-player-2')), findsOneWidget);
   });
 
+  testWidgets(
+    'attend la fermeture pré-Ready avant de créer la session de retry',
+    (tester) async {
+      final harness = _TutorialHarness(holdFirstClose: true);
+      await tester.pumpWidget(harness.build());
+      await tester.pumpAndSettle();
+      final firstSession = harness.sessions.single;
+
+      firstSession.emit(HelpTutorialPlayerEvent.error);
+      await tester.pump();
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      expect(firstSession.closed, isTrue);
+      expect(harness.sessions, hasLength(1));
+
+      firstSession.completeClose();
+      for (var i = 0; i < 5; i++) {
+        await tester.pump();
+      }
+      await tester.pump(DonyDuration.slow);
+
+      expect(harness.sessions, hasLength(2));
+      expect(find.byKey(const Key('fake-player-2')), findsOneWidget);
+    },
+  );
+
   testWidgets('ouvre la vidéo exacte dans YouTube depuis le fallback', (
     tester,
   ) async {
@@ -326,6 +353,7 @@ final class _TutorialHarness {
     this.textScaler = TextScaler.noScaling,
     this.autoReady = true,
     this.throwOnFactory = false,
+    this.holdFirstClose = false,
   }) : analytics =
            analytics ??
            makeDisabledAnalytics(analyticsBackend ?? MockAnalyticsBackend());
@@ -335,6 +363,7 @@ final class _TutorialHarness {
   final TextScaler textScaler;
   final bool autoReady;
   final bool throwOnFactory;
+  final bool holdFirstClose;
   final launcher = _FakeUrlLauncherPlatform();
   final configurations = <HelpTutorialPlayerConfiguration>[];
   final sessions = <_FakePlayerSession>[];
@@ -372,6 +401,7 @@ final class _TutorialHarness {
                 final session = _FakePlayerSession(
                   sessions.length + 1,
                   autoReady: autoReady,
+                  holdClose: holdFirstClose && sessions.isEmpty,
                 );
                 sessions.add(session);
                 return session;
@@ -385,7 +415,11 @@ final class _TutorialHarness {
 }
 
 final class _FakePlayerSession implements HelpTutorialPlayerSession {
-  _FakePlayerSession(this.id, {required bool autoReady}) {
+  _FakePlayerSession(
+    this.id, {
+    required bool autoReady,
+    required bool holdClose,
+  }) : _closeCompleter = holdClose ? Completer<void>() : null {
     if (autoReady) {
       scheduleMicrotask(() => emit(HelpTutorialPlayerEvent.ready));
     }
@@ -396,6 +430,7 @@ final class _FakePlayerSession implements HelpTutorialPlayerSession {
     sync: true,
   );
   final _fullScreen = ValueNotifier<bool>(false);
+  final Completer<void>? _closeCompleter;
   bool closed = false;
 
   @override
@@ -406,6 +441,13 @@ final class _FakePlayerSession implements HelpTutorialPlayerSession {
   void emitStreamError(Object error) => _events.addError(error);
 
   void enterFullScreen() => _fullScreen.value = true;
+
+  void completeClose() {
+    final completer = _closeCompleter;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
+  }
 
   @override
   Widget buildScaffold({required Widget Function(Widget player) pageBuilder}) {
@@ -420,6 +462,11 @@ final class _FakePlayerSession implements HelpTutorialPlayerSession {
   @override
   Future<void> close() async {
     closed = true;
+    if (_closeCompleter case final completer?) {
+      await completer.future;
+      _fullScreen.dispose();
+      return;
+    }
     _fullScreen.dispose();
     await _events.close();
   }
