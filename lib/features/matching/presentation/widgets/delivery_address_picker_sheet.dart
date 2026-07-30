@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
@@ -22,8 +22,10 @@ class DeliveryAddressPickerSheet extends StatefulWidget {
 
   final AddressData? current;
 
-  static Future<AddressData?> show(BuildContext context,
-      {AddressData? current}) {
+  static Future<AddressData?> show(
+    BuildContext context, {
+    AddressData? current,
+  }) {
     return showModalBottomSheet<AddressData>(
       context: context,
       useRootNavigator: true,
@@ -55,6 +57,7 @@ class _DeliveryAddressPickerSheetState
   bool _searching = false;
   bool _resolving = false;
   bool _offline = false;
+  bool _error = false;
   String _lastQuery = '';
   String? _sessionToken;
   DateTime? _sessionTokenAt;
@@ -98,6 +101,7 @@ class _DeliveryAddressPickerSheetState
       setState(() {
         _suggestions = [];
         _offline = false;
+        _error = false;
         _searching = false;
       });
       return;
@@ -106,11 +110,20 @@ class _DeliveryAddressPickerSheetState
     _debounce = Timer(const Duration(milliseconds: 300), () => _fetch(text));
   }
 
+  // La connectivité réelle est la seule chose qui doit déclencher l'état
+  // « Connexion requise » : une erreur backend (401, 500, timeout) sur un
+  // device bien connecté n'est pas un problème réseau.
+  Future<bool> _isOffline() async {
+    final results = await Connectivity().checkConnectivity();
+    return results.every((r) => r == ConnectivityResult.none);
+  }
+
   Future<void> _fetch(String query) async {
     if (!mounted) return;
     setState(() {
       _searching = true;
       _offline = false;
+      _error = false;
     });
     try {
       final token = _getOrCreateToken();
@@ -120,18 +133,13 @@ class _DeliveryAddressPickerSheetState
         _suggestions = results;
         _searching = false;
       });
-    } on DioException {
-      if (!mounted) return;
-      setState(() {
-        _searching = false;
-        _offline = true;
-        _suggestions = [];
-      });
     } catch (_) {
+      final offline = await _isOffline();
       if (!mounted) return;
       setState(() {
         _searching = false;
-        _offline = true;
+        _offline = offline;
+        _error = !offline;
         _suggestions = [];
       });
     }
@@ -150,10 +158,12 @@ class _DeliveryAddressPickerSheetState
       _sessionToken = null;
       _sessionTokenAt = null;
       if (!mounted) return;
-      setState(() {
-        _resolving = false;
-        _offline = true;
-      });
+      setState(() => _resolving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible de sélectionner cette adresse. Réessayez.'),
+        ),
+      );
     }
   }
 
@@ -172,64 +182,75 @@ class _DeliveryAddressPickerSheetState
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       if (!mounted) return;
-      _showInfoSheet(
-          permanent: permission == LocationPermission.deniedForever);
+      _showInfoSheet(permanent: permission == LocationPermission.deniedForever);
       return;
     }
     setState(() => _resolving = true);
+    // [timeLimit] borne l'attente : sans fix GPS (ex: simulateur sans
+    // position) getCurrentPosition ne renvoie jamais → chargement infini.
+    // En cas d'échec/timeout on retombe sur la dernière position connue.
+    Position? pos;
     try {
-      // [timeLimit] borne l'attente : sans fix GPS (ex: simulateur sans
-      // position) getCurrentPosition ne renvoie jamais → chargement infini.
-      // En cas d'échec/timeout on retombe sur la dernière position connue.
-      Position? pos;
-      try {
-        pos = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 12),
-          ),
-        );
-      } catch (_) {
-        pos = await Geolocator.getLastKnownPosition();
-      }
-      if (pos == null) {
-        if (!mounted) return;
-        setState(() => _resolving = false);
-        _showInfoSheet(gpsDisabled: true);
-        return;
-      }
-      final position = pos;
-      final addr = await _service
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 12),
+        ),
+      );
+    } catch (_) {
+      pos = await Geolocator.getLastKnownPosition();
+    }
+    if (pos == null) {
+      if (!mounted) return;
+      setState(() => _resolving = false);
+      // Le GPS est bien actif (vérifié plus haut) — c'est juste qu'aucun fix
+      // n'est encore disponible, distinct d'un GPS désactivé.
+      _showInfoSheet(positionUnavailable: true);
+      return;
+    }
+    final position = pos;
+    AddressData? addr;
+    try {
+      addr = await _service
           .reverseGeocode(position.latitude, position.longitude)
           .timeout(const Duration(seconds: 12));
-      if (!mounted) return;
-      Navigator.of(context).pop(addr ??
+    } catch (_) {
+      addr = null;
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop(
+      addr ??
           AddressData(
             label:
                 'Position GPS (${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)})',
             lat: position.latitude,
             lng: position.longitude,
-          ));
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _resolving = false);
-      _showInfoSheet(gpsDisabled: true);
-    }
+          ),
+    );
   }
 
-  void _showInfoSheet({bool permanent = false, bool gpsDisabled = false}) {
+  void _showInfoSheet({
+    bool permanent = false,
+    bool gpsDisabled = false,
+    bool positionUnavailable = false,
+  }) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
       builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.lg,
-            DonySpacing.lg, MediaQuery.of(ctx).padding.bottom + DonySpacing.lg),
+        padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.lg,
+          DonySpacing.lg,
+          MediaQuery.of(ctx).padding.bottom + DonySpacing.lg,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -246,9 +267,11 @@ class _DeliveryAddressPickerSheetState
             Text(
               gpsDisabled
                   ? 'GPS désactivé'
+                  : positionUnavailable
+                  ? 'Position indisponible'
                   : permanent
-                      ? 'Localisation définitivement refusée'
-                      : 'Localisation refusée',
+                  ? 'Localisation définitivement refusée'
+                  : 'Localisation refusée',
               style: tt.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -256,6 +279,8 @@ class _DeliveryAddressPickerSheetState
             Text(
               gpsDisabled
                   ? 'Activez la géolocalisation dans vos paramètres système.'
+                  : positionUnavailable
+                  ? 'Impossible de récupérer votre position pour le moment. Réessayez.'
                   : 'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
@@ -266,9 +291,15 @@ class _DeliveryAddressPickerSheetState
               child: FilledButton(
                 onPressed: () {
                   Navigator.pop(ctx);
-                  Geolocator.openAppSettings();
+                  if (positionUnavailable) {
+                    _onGps();
+                  } else {
+                    Geolocator.openAppSettings();
+                  }
                 },
-                child: const Text('Ouvrir les paramètres'),
+                child: Text(
+                  positionUnavailable ? 'Réessayer' : 'Ouvrir les paramètres',
+                ),
               ),
             ),
           ],
@@ -277,11 +308,8 @@ class _DeliveryAddressPickerSheetState
     );
   }
 
-  String _labelOf(DeliveryAddress a) => [
-        a.label,
-        if (a.street != null) a.street!,
-        a.city,
-      ].join(', ');
+  String _labelOf(DeliveryAddress a) =>
+      [a.label, if (a.street != null) a.street!, a.city].join(', ');
 
   bool _isSelected(DeliveryAddress a) {
     if (_selectedId != null) return _selectedId == a.id;
@@ -302,96 +330,112 @@ class _DeliveryAddressPickerSheetState
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(DonyRadius.sheet)),
+        return Material(
+          color: cs.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(DonyRadius.sheet),
           ),
-          padding: EdgeInsets.only(bottom: keyboard),
-          child: BlocBuilder<DeliveryAddressBloc, DeliveryAddressState>(
-            builder: (context, state) {
-              return Column(
-                children: [
-                  // Handle
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 12),
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: cs.outline,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.lg, vertical: DonySpacing.md),
-                    child: Row(
-                      children: [
-                        Text('🗺️  Adresse de livraison',
-                            style: tt.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700)),
-                        const Spacer(),
-                        IconButton(
-                          tooltip: 'Fermer',
-                          icon: const DonyIcon('x'),
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: IconButton.styleFrom(
-                              backgroundColor: cs.surfaceContainerHighest),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // ── Champ de recherche (toujours visible) ─────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.md),
-                    child: _SearchField(
-                      controller: _searchCtrl,
-                      focusNode: _searchFocus,
-                      loading: _searching || _resolving,
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // ── Corps ─────────────────────────────────────────────
-                  Expanded(
-                    child: _isSearchMode
-                        ? _buildSuggestions(scrollController, cs, tt)
-                        : _buildDefault(scrollController, state, cs, tt),
-                  ),
-                  // ── Bouton confirmer (hors mode recherche) ────────────
-                  if (!_isSearchMode)
-                    SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(DonySpacing.lg,
-                            DonySpacing.sm, DonySpacing.lg, DonySpacing.md),
-                        child: DonyButton(
-                          label: 'Confirmer cette adresse',
-                          onPressed: state.addresses.isEmpty
-                              ? null
-                              : () {
-                                  final address = state.addresses.firstWhere(
-                                    _isSelected,
-                                    orElse: () => state.addresses.first,
-                                  );
-                                  Navigator.of(context).pop(
-                                    AddressData(
-                                      label: _labelOf(address),
-                                      lat: address.latitude ?? 0.0,
-                                      lng: address.longitude ?? 0.0,
-                                    ),
-                                  );
-                                },
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: keyboard),
+            child: BlocBuilder<DeliveryAddressBloc, DeliveryAddressState>(
+              builder: (context, state) {
+                return Column(
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12),
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: cs.outline,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
-                ],
-              );
-            },
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.lg,
+                        vertical: DonySpacing.md,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            '🗺️  Adresse de livraison',
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            tooltip: 'Fermer',
+                            icon: const DonyIcon('x'),
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: IconButton.styleFrom(
+                              backgroundColor: cs.surfaceContainerHighest,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // ── Champ de recherche (toujours visible) ─────────────
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        0,
+                        DonySpacing.lg,
+                        DonySpacing.md,
+                      ),
+                      child: _SearchField(
+                        controller: _searchCtrl,
+                        focusNode: _searchFocus,
+                        loading: _searching || _resolving,
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    // ── Corps ─────────────────────────────────────────────
+                    Expanded(
+                      child: _isSearchMode
+                          ? _buildSuggestions(scrollController, cs, tt)
+                          : _buildDefault(scrollController, state, cs, tt),
+                    ),
+                    // ── Bouton confirmer (hors mode recherche) ────────────
+                    if (!_isSearchMode)
+                      SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            DonySpacing.lg,
+                            DonySpacing.sm,
+                            DonySpacing.lg,
+                            DonySpacing.md,
+                          ),
+                          child: DonyButton(
+                            label: 'Confirmer cette adresse',
+                            onPressed: state.addresses.isEmpty
+                                ? null
+                                : () {
+                                    final address = state.addresses.firstWhere(
+                                      _isSelected,
+                                      orElse: () => state.addresses.first,
+                                    );
+                                    Navigator.of(context).pop(
+                                      AddressData(
+                                        label: _labelOf(address),
+                                        lat: address.latitude ?? 0.0,
+                                        lng: address.longitude ?? 0.0,
+                                      ),
+                                    );
+                                  },
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
@@ -400,7 +444,10 @@ class _DeliveryAddressPickerSheetState
 
   // ── Liste des suggestions (mode recherche) ──────────────────────────────
   Widget _buildSuggestions(
-      ScrollController controller, ColorScheme cs, TextTheme tt) {
+    ScrollController controller,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
     if (_searching && _suggestions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -410,6 +457,14 @@ class _DeliveryAddressPickerSheetState
         color: cs.warning,
         title: 'Connexion requise',
         subtitle: 'Vérifiez votre connexion pour rechercher une adresse.',
+      );
+    }
+    if (_error) {
+      return _EmptyState(
+        icon: 'circle-alert',
+        color: cs.error,
+        title: 'Erreur',
+        subtitle: 'Impossible de rechercher une adresse. Réessayez.',
       );
     }
     if (_suggestions.isEmpty) {
@@ -424,8 +479,9 @@ class _DeliveryAddressPickerSheetState
     return ListView.separated(
       controller: controller,
       padding: EdgeInsets.only(
-          top: DonySpacing.sm,
-          bottom: MediaQuery.paddingOf(context).bottom + DonySpacing.lg),
+        top: DonySpacing.sm,
+        bottom: MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
+      ),
       itemCount: _suggestions.length,
       separatorBuilder: (_, _) =>
           const Divider(height: 1, indent: 64, endIndent: 20),
@@ -442,16 +498,20 @@ class _DeliveryAddressPickerSheetState
             ),
             child: DonyIcon('map-pin', size: 18, color: cs.secondary),
           ),
-          title: Text(s.mainText,
-              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
+          title: Text(
+            s.mainText,
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           subtitle: s.secondaryText.isEmpty
               ? null
-              : Text(s.secondaryText,
+              : Text(
+                  s.secondaryText,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
+                  overflow: TextOverflow.ellipsis,
+                ),
           trailing: DonyIcon('chevron-right', color: cs.onSurfaceVariant),
         );
       },
@@ -459,8 +519,12 @@ class _DeliveryAddressPickerSheetState
   }
 
   // ── Vue par défaut (adresses + GPS + ajouter) ───────────────────────────
-  Widget _buildDefault(ScrollController controller, DeliveryAddressState state,
-      ColorScheme cs, TextTheme tt) {
+  Widget _buildDefault(
+    ScrollController controller,
+    DeliveryAddressState state,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
     if (state.status == DeliveryAddressStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -474,10 +538,18 @@ class _DeliveryAddressPickerSheetState
         if (state.addresses.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, DonySpacing.md, DonySpacing.lg, 4),
-            child: Text('MES ADRESSES ENREGISTRÉES',
-                style: tt.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant, letterSpacing: 0.08)),
+              DonySpacing.lg,
+              DonySpacing.md,
+              DonySpacing.lg,
+              4,
+            ),
+            child: Text(
+              'MES ADRESSES ENREGISTRÉES',
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                letterSpacing: 0.08,
+              ),
+            ),
           ),
           ...state.addresses.map((address) {
             return _DeliveryAddressRow(
@@ -499,10 +571,14 @@ class _DeliveryAddressPickerSheetState
             ),
             child: const DonyIcon('plus'),
           ),
-          title: Text('Ajouter une adresse',
-              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-          subtitle: Text('Enregistrer pour la prochaine fois',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+          title: Text(
+            'Ajouter une adresse',
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            'Enregistrer pour la prochaine fois',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
           onTap: () async {
             Navigator.of(context).pop();
             // ignore: use_build_context_synchronously
@@ -542,11 +618,12 @@ class _SearchField extends StatelessWidget {
         fillColor: cs.surfaceContainerHighest,
         prefixIcon: Padding(
           padding: const EdgeInsets.only(
-              left: DonySpacing.md, right: DonySpacing.sm),
+            left: DonySpacing.md,
+            right: DonySpacing.sm,
+          ),
           child: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
         ),
-        prefixIconConstraints:
-            const BoxConstraints(minWidth: 40),
+        prefixIconConstraints: const BoxConstraints(minWidth: 40),
         suffixIcon: loading
             ? Padding(
                 padding: const EdgeInsets.all(DonySpacing.md),
@@ -554,16 +631,18 @@ class _SearchField extends StatelessWidget {
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: cs.secondary),
+                    strokeWidth: 2,
+                    color: cs.secondary,
+                  ),
                 ),
               )
             : controller.text.isNotEmpty
-                ? IconButton(
-                  tooltip: 'Fermer',
-                    icon: const DonyIcon('x', size: 16),
-                    onPressed: () => controller.clear(),
-                  )
-                : null,
+            ? IconButton(
+                tooltip: 'Fermer',
+                icon: const DonyIcon('x', size: 16),
+                onPressed: () => controller.clear(),
+              )
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
           borderSide: BorderSide.none,
@@ -602,9 +681,13 @@ class _GpsTile extends StatelessWidget {
         ),
         child: DonyIcon('locate-fixed', size: 18, color: cs.secondary),
       ),
-      title: Text('Utiliser ma position actuelle',
-          style: tt.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600, color: cs.secondary)),
+      title: Text(
+        'Utiliser ma position actuelle',
+        style: tt.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: cs.secondary,
+        ),
+      ),
     );
   }
 }
@@ -637,12 +720,16 @@ class _EmptyState extends StatelessWidget {
           children: [
             DonyIcon(icon, size: 40, color: color),
             const SizedBox(height: DonySpacing.md),
-            Text(title,
-                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              title,
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: DonySpacing.xs),
-            Text(subtitle,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                textAlign: TextAlign.center),
+            Text(
+              subtitle,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
             if (action != null) ...[
               const SizedBox(height: DonySpacing.md),
               action!,
@@ -684,14 +771,18 @@ class _DeliveryAddressRow extends StatelessWidget {
               : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
-        child: DonyIcon('house',
-            color: isSelected ? activeColor : cs.onSurfaceVariant),
+        child: DonyIcon(
+          'house',
+          color: isSelected ? activeColor : cs.onSurfaceVariant,
+        ),
       ),
       title: Row(
         children: [
           Expanded(
-            child: Text(address.label,
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+            child: Text(
+              address.label,
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
           if (address.isDefault)
             Container(
@@ -700,9 +791,13 @@ class _DeliveryAddressRow extends StatelessWidget {
                 color: activeColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(99),
               ),
-              child: Text('Par défaut',
-                  style: tt.labelSmall?.copyWith(
-                      color: activeColor, fontWeight: FontWeight.w600)),
+              child: Text(
+                'Par défaut',
+                style: tt.labelSmall?.copyWith(
+                  color: activeColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
         ],
       ),
@@ -721,8 +816,10 @@ class _DeliveryAddressRow extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected ? activeColor : Colors.transparent,
-          border:
-              Border.all(color: isSelected ? activeColor : cs.outline, width: 2),
+          border: Border.all(
+            color: isSelected ? activeColor : cs.outline,
+            width: 2,
+          ),
         ),
         child: isSelected
             ? const DonyIcon('check', color: Colors.white, size: 12)
