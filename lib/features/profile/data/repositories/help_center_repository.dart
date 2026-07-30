@@ -5,6 +5,8 @@ import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
+enum HelpCenterRepositoryFailure { fetch, parse }
+
 final class HelpCenterRepository {
   HelpCenterRepository(
     this._source, {
@@ -17,8 +19,12 @@ final class HelpCenterRepository {
   final Future<String> Function() _fallbackJsonLoader;
   final UrlLauncherPlatform _urlLauncher;
   HelpCenterConfig _lastValid = HelpCenterConfig.empty;
+  HelpCenterRepositoryFailure? _lastFailure;
+
+  HelpCenterRepositoryFailure? get lastFailure => _lastFailure;
 
   Future<HelpCenterConfig> load() async {
+    _lastFailure = null;
     HelpCenterConfig? activated;
     try {
       activated = _parse(_source.activatedJson);
@@ -38,18 +44,26 @@ final class HelpCenterRepository {
       // Le fallback ne doit jamais empêcher l’ouverture du centre d’aide.
     }
 
+    _lastFailure = HelpCenterRepositoryFailure.parse;
     return _lastValid;
   }
 
   Future<HelpCenterConfig> refresh() async {
+    _lastFailure = null;
     try {
       final fetched = await _source.fetchAndActivate();
-      final config = fetched == null ? null : _parse(fetched);
+      if (fetched == null) {
+        _lastFailure = HelpCenterRepositoryFailure.fetch;
+        return _lastValid;
+      }
+      final config = _parse(fetched);
       if (config != null) {
         return _remember(config);
       }
+      _lastFailure = HelpCenterRepositoryFailure.parse;
     } catch (_) {
       // La dernière configuration valide reste utilisable hors ligne.
+      _lastFailure = HelpCenterRepositoryFailure.fetch;
     }
 
     return _lastValid;

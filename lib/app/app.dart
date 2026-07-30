@@ -24,6 +24,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -218,6 +219,10 @@ class _DonyAppState extends State<DonyApp> {
                     ),
                     BlocProvider<StripeAccountBloc>(
                       create: (_) => getIt<StripeAccountBloc>(),
+                    ),
+                    BlocProvider<HelpCenterBloc>(
+                      create: (_) => getIt<HelpCenterBloc>()
+                        ..add(const HelpCenterLoadRequested()),
                     ),
                     // Singletons partagés — alimentent le point d'attention de
                     // l'onglet Activités (bottom nav) même hors du hub.

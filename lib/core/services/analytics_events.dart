@@ -112,6 +112,14 @@ abstract final class AnalyticsEvents {
   static const faqContactRequested = 'faq_contact_requested';
   static const supportEmailComposerOpened = 'support_email_composer_opened';
   static const supportContactFailed = 'support_contact_failed';
+  static const helpCenterOpened = 'help_center_opened';
+  static const helpTutorialOpened = 'help_tutorial_opened';
+  static const helpTutorialPlayStarted = 'help_tutorial_play_started';
+  static const helpTutorialCompleted = 'help_tutorial_completed';
+  static const helpTutorialExternalOpened = 'help_tutorial_external_opened';
+  static const helpSocialLinkOpened = 'help_social_link_opened';
+  static const helpYoutubeSubscribeTapped = 'help_youtube_subscribe_tapped';
+  static const helpConfigLoadFailed = 'help_config_load_failed';
 
   // Referral
   static const referralShared = 'referral_shared';
