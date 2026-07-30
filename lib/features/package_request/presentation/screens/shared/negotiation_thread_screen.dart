@@ -10,6 +10,8 @@ import 'package:dony/features/package_request/presentation/widgets/thread/thread
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_cta_bar.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/trip_detail_bottom_sheet.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -86,7 +88,8 @@ class _ThreadView extends StatelessWidget {
           appBar: _buildAppBar(context, thread),
           body: thread == null
               ? const Center(
-                  child: CircularProgressIndicator(color: DonyColors.primary))
+                  child: CircularProgressIndicator(color: DonyColors.primary),
+                )
               : _LoadedView(
                   thread: thread,
                   viewerUserId: viewerUserId,
@@ -106,7 +109,12 @@ class _ThreadView extends StatelessWidget {
       automaticallyImplyLeading: false,
       titleSpacing: 0,
       title: Padding(
-        padding: const EdgeInsets.fromLTRB(DonySpacing.base, 0, DonySpacing.sm, 0),
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.base,
+          0,
+          DonySpacing.sm,
+          0,
+        ),
         child: Row(
           children: [
             DonyAppBarBackButton(
@@ -119,15 +127,18 @@ class _ThreadView extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm + 2),
             if (thread != null) ...[
               Expanded(
-                child: _PartnerTitle(thread: thread, viewerUserId: viewerUserId),
+                child: _PartnerTitle(
+                  thread: thread,
+                  viewerUserId: viewerUserId,
+                ),
               ),
             ] else ...[
               Text(
                 'Négociation',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                ),
               ),
             ],
           ],
@@ -176,8 +187,7 @@ class _ThreadView extends StatelessWidget {
     return switch (thread.status) {
       NegotiationThreadStatus.open ||
       NegotiationThreadStatus.awaitingTrip ||
-      NegotiationThreadStatus.awaitingPayment =>
-        true,
+      NegotiationThreadStatus.awaitingPayment => true,
       _ => false,
     };
   }
@@ -194,9 +204,9 @@ class _ThreadView extends StatelessWidget {
       variant: DonyDialogVariant.destructive,
     );
     if (confirmed == true && context.mounted) {
-      context
-          .read<NegotiationBloc>()
-          .add(NegotiationCancelRequested(threadId: thread.id));
+      context.read<NegotiationBloc>().add(
+        NegotiationCancelRequested(threadId: thread.id),
+      );
     }
   }
 }
@@ -220,7 +230,9 @@ class _PartnerTitle extends StatelessWidget {
         : (thread.travelerName ?? 'Voyageur');
     final double? rating = iAmTraveler ? null : thread.travelerRating;
     final int? trips = iAmTraveler ? null : thread.travelerTripsCount;
-    final String? photoUrl = iAmTraveler ? thread.senderPhotoUrl : thread.travelerPhotoUrl;
+    final String? photoUrl = iAmTraveler
+        ? thread.senderPhotoUrl
+        : thread.travelerPhotoUrl;
 
     String meta = '';
     if (rating != null) {
@@ -335,26 +347,36 @@ class _LoadedViewState extends State<_LoadedView> {
     final actionInProgress = widget.actionInProgress;
 
     final variant = ThreadStatusVariant.fromThread(thread.status);
-    final isLastFromOther = thread.messages.isNotEmpty &&
+    final isLastFromOther =
+        thread.messages.isNotEmpty &&
         thread.messages.last.fromUserId != viewerUserId;
 
     return Column(
       children: [
         ThreadHeroCard(
-          thread: thread,
-          statusVariant: variant,
-          isTraveler: viewerUserId == thread.travelerId,
-        )
+              thread: thread,
+              statusVariant: variant,
+              isTraveler: viewerUserId == thread.travelerId,
+            )
             .animate()
             .fadeIn(duration: 220.ms)
             .slideY(begin: -0.04, curve: Curves.easeOutCubic),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(
+            DonySpacing.base,
+            DonySpacing.sm,
+            DonySpacing.base,
+            0,
+          ),
+          child: ContextualTutorialCard(context: TutorialContext.negotiation),
+        ),
         Expanded(
           child: RefreshIndicator(
             color: DonyColors.primary,
             onRefresh: () async {
-              context
-                  .read<NegotiationBloc>()
-                  .add(NegotiationFetchRequested(thread.id));
+              context.read<NegotiationBloc>().add(
+                NegotiationFetchRequested(thread.id),
+              );
             },
             child: ListView.builder(
               controller: _scrollController,
@@ -370,17 +392,18 @@ class _LoadedViewState extends State<_LoadedView> {
                 final m = thread.messages[i];
                 final mine = m.fromUserId == viewerUserId;
                 final isLast = i == thread.messages.length - 1;
-                final shouldHighlight = isLast &&
+                final shouldHighlight =
+                    isLast &&
                     isLastFromOther &&
                     thread.status == NegotiationThreadStatus.open &&
                     _isProposalOrCounter(m.kind);
                 return ThreadMessageBubble(
-                  message: m,
-                  mine: mine,
-                  highlight: shouldHighlight,
-                  isTraveler: viewerUserId == thread.travelerId,
-                  grossPriceEur: thread.grossPriceEur,
-                )
+                      message: m,
+                      mine: mine,
+                      highlight: shouldHighlight,
+                      isTraveler: viewerUserId == thread.travelerId,
+                      grossPriceEur: thread.grossPriceEur,
+                    )
                     .animate()
                     .fadeIn(duration: 200.ms, delay: (40 * i).ms)
                     .slideY(begin: 0.05);
@@ -396,12 +419,13 @@ class _LoadedViewState extends State<_LoadedView> {
               trip: thread.linkedTrip!,
               isSender: viewerUserId != thread.travelerId,
               // Refus uniquement possible avant paiement
-              onRefuse: thread.status ==
-                      NegotiationThreadStatus.awaitingPayment
-                  ? (reason) => context
-                      .read<NegotiationBloc>()
-                      .add(NegotiationRefuseTripRequested(
-                          threadId: thread.id, reason: reason))
+              onRefuse: thread.status == NegotiationThreadStatus.awaitingPayment
+                  ? (reason) => context.read<NegotiationBloc>().add(
+                      NegotiationRefuseTripRequested(
+                        threadId: thread.id,
+                        reason: reason,
+                      ),
+                    )
                   : null,
             ),
           ),

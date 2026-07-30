@@ -23,7 +23,8 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart' show BidPaymentMethod;
+import 'package:dony/features/matching/data/models/bid_model.dart'
+    show BidPaymentMethod;
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/core/models/connect_account_status.dart';
@@ -40,6 +41,9 @@ import 'package:dony/features/payments/cash/data/repositories/commission_method_
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -52,10 +56,49 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/mock_analytics_backend.dart';
+
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+const _tripPublishHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "trip_publish_basics",
+      "title": "Publier un trajet",
+      "description": "Les étapes pour proposer votre espace bagage.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["tripPublish"]
+    }
+  ]
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
+
 // ── Mock BLoCs ────────────────────────────────────────────────────────────────
 
-class _MockCitySearchBloc
-    extends MockBloc<CitySearchEvent, CitySearchState>
+class _MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
 
 class _MockAnnouncementBloc
@@ -74,8 +117,7 @@ class _MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
 
-class _MockNegotiationBloc
-    extends MockBloc<NegotiationEvent, NegotiationState>
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
 class _MockWalletRepository extends Mock implements WalletRepository {}
@@ -101,7 +143,8 @@ class _MockContentCategoryRepository extends Mock
 
 class _FakeAnnouncementEvent extends Fake implements AnnouncementEvent {}
 
-class _FakeCommissionMethodEvent extends Fake implements CommissionMethodEvent {}
+class _FakeCommissionMethodEvent extends Fake
+    implements CommissionMethodEvent {}
 
 class _FakeCitySearchEvent extends Fake implements CitySearchEvent {}
 
@@ -119,11 +162,11 @@ _MockStripeAccountBloc _makeStripeBloc() {
 /// baseline for every existing test in this file (publishing must not be
 /// blocked unless a test explicitly opts into a non-verified user).
 UserModel _makeUser({String kycStatus = 'VERIFIED'}) => UserModel(
-      id: 'user-test-1',
-      roles: const ['TRAVELER'],
-      kycStatus: kycStatus,
-      status: 'ACTIVE',
-    );
+  id: 'user-test-1',
+  roles: const ['TRAVELER'],
+  kycStatus: kycStatus,
+  status: 'ACTIVE',
+);
 
 /// Creates a `MockAuthBloc`. Defaults to a KYC-verified authenticated user so
 /// the publish gate added in Task 5 doesn't intercept pre-existing tests.
@@ -148,7 +191,11 @@ _MockKycBloc _makeKycBloc() {
 /// not create its own `AuthBloc` — mirrors production, where `AuthBloc` is
 /// provided ambient at the app root). [authState] lets tests opt into a
 /// non-verified user to exercise the KYC publish gate (Task 5).
-Widget _wrapWithRouter(Widget child, {AuthState? authState}) {
+Widget _wrapWithRouter(
+  Widget child, {
+  AuthState? authState,
+  String helpConfigJson = _emptyHelpConfigJson,
+}) {
   final router = GoRouter(
     initialLocation: '/trips/create',
     routes: [
@@ -159,8 +206,23 @@ Widget _wrapWithRouter(Widget child, {AuthState? authState}) {
             BlocProvider<StripeAccountBloc>.value(value: _makeStripeBloc()),
             BlocProvider<AuthBloc>.value(value: _makeAuthBloc(authState)),
             BlocProvider<KycBloc>.value(value: _makeKycBloc()),
+            BlocProvider<HelpCenterBloc>(
+              create: (_) => HelpCenterBloc(
+                HelpCenterRepository(
+                  _StaticHelpCenterSource(helpConfigJson),
+                  fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                ),
+                makeDisabledAnalytics(MockAnalyticsBackend()),
+              )..add(const HelpCenterLoadRequested()),
+            ),
           ],
           child: child,
+        ),
+      ),
+      GoRoute(
+        path: '/profile/help/tutorial/:tutorialId',
+        builder: (_, state) => Scaffold(
+          body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
         ),
       ),
       // Extra route so GoRouter can navigate back on context.pop()
@@ -200,27 +262,24 @@ Widget _wrapWithRouter(Widget child, {AuthState? authState}) {
     ],
   );
 
-  return MaterialApp.router(
-    routerConfig: router,
-    theme: AppTheme.light(),
-  );
+  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
 }
 
 /// Returns a minimal `AnnouncementModel` suitable for edit-mode tests.
 AnnouncementModel _makeAnnouncement() => AnnouncementModel(
-      id: 'ann-test-1',
-      travelerId: 'trav-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8, 1),
-      availableKg: 10.0,
-      totalKg: 23.0,
-      pricePerKg: 8.0,
-      status: 'ACTIVE',
-      bidsCount: 0,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+  id: 'ann-test-1',
+  travelerId: 'trav-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8, 1),
+  availableKg: 10.0,
+  totalKg: 23.0,
+  pricePerKg: 8.0,
+  status: 'ACTIVE',
+  bidsCount: 0,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+);
 
 /// Returns a complete `AnnouncementModel` that passes ALL step-0 validation:
 /// • departure city, arrival city, departure date
@@ -229,44 +288,52 @@ AnnouncementModel _makeAnnouncement() => AnnouncementModel(
 /// • departureTime + arrivalTime (covers TimeOfDay parsing in initState)
 /// • acceptedContentTypes + refusedTypes (covers content-type init code)
 AnnouncementModel _makeFullAnnouncement() => AnnouncementModel(
-      id: 'ann-full-1',
-      travelerId: 'trav-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8, 1),
-      // 22:00 departure → handoverEnd 18:00 is safely before departure
-      departureTime: '22:00',
-      arrivalTime: '10:30',
-      availableKg: 10.0,
-      totalKg: 23.0,
-      pricePerKg: 8.0,
-      status: 'ACTIVE',
-      bidsCount: 0,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-      handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
-      pickupAddress: const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
-      deliveryAddress: const AddressData(label: 'Dakar Centre', lat: 14.716, lng: -17.467),
-      transportMode: TransportMode.plane,
-      acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
-      acceptedContentTypes: const ['Vêtements', 'Médicaments'],
-      refusedTypes: const ['Produits dangereux'],
-    );
+  id: 'ann-full-1',
+  travelerId: 'trav-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8, 1),
+  // 22:00 departure → handoverEnd 18:00 is safely before departure
+  departureTime: '22:00',
+  arrivalTime: '10:30',
+  availableKg: 10.0,
+  totalKg: 23.0,
+  pricePerKg: 8.0,
+  status: 'ACTIVE',
+  bidsCount: 0,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+  handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
+  handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+  pickupAddress: const AddressData(
+    label: 'Tour Eiffel',
+    lat: 48.858,
+    lng: 2.294,
+  ),
+  deliveryAddress: const AddressData(
+    label: 'Dakar Centre',
+    lat: 14.716,
+    lng: -17.467,
+  ),
+  transportMode: TransportMode.plane,
+  acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+  acceptedContentTypes: const ['Vêtements', 'Médicaments'],
+  refusedTypes: const ['Produits dangereux'],
+);
 
 /// Returns a minimal `LockedTripContext` suitable for locked-mode tests.
 LockedTripContext _makeLockContext() => LockedTripContext(
-      threadId: 'thread-1',
-      packageRequestId: 'req-1',
-      departureCity: 'Lyon',
-      arrivalCity: 'Abidjan',
-      desiredDate: DateTime(2026, 9, 1),
-      dateToleranceDays: 5,
-      weightKg: 5.0,
-      transportMode: TransportMode.plane,
-      agreedPriceEur: 50.0,
-      paymentMethod: PaymentMethod.stripe,
-    );
+  threadId: 'thread-1',
+  packageRequestId: 'req-1',
+  departureCity: 'Lyon',
+  arrivalCity: 'Abidjan',
+  desiredDate: DateTime(2026, 9, 1),
+  dateToleranceDays: 5,
+  weightKg: 5.0,
+  transportMode: TransportMode.plane,
+  agreedPriceEur: 50.0,
+  paymentMethod: PaymentMethod.stripe,
+);
 
 /// Creates a pre-configured `NegotiationBloc` mock.
 _MockNegotiationBloc _makeNegotiationBloc() {
@@ -293,31 +360,28 @@ void main() {
     registerFallbackValue(const TripTemplateLoaded());
     registerFallbackValue(const StripeAccountStatusLoaded());
     registerFallbackValue(const NegotiationFetchRequested('fallback-thread'));
-    registerFallbackValue(NegotiationCreateDedicatedTripRequested(
-      threadId: 'fallback-thread',
-      departureDate: DateTime(2026, 1, 1),
-      pickupAddress: const {},
-      deliveryAddress: const {},
-      paymentMethod: PaymentMethod.stripe,
-    ));
+    registerFallbackValue(
+      NegotiationCreateDedicatedTripRequested(
+        threadId: 'fallback-thread',
+        departureDate: DateTime(2026, 1, 1),
+        pickupAddress: const {},
+        deliveryAddress: const {},
+        paymentMethod: PaymentMethod.stripe,
+      ),
+    );
 
     // AnalyticsService — called from CreateTripScreen.initState via getIt
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = _MockAnalyticsService();
       when(
-        () => analytics.logEvent(
-          any(),
-          properties: any(named: 'properties'),
-        ),
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
       ).thenAnswer((_) async {});
       getIt.registerSingleton<AnalyticsService>(analytics);
     }
 
     // PriceGridRepository — passed when constructing AnnouncementFormBloc
     if (!getIt.isRegistered<PriceGridRepository>()) {
-      getIt.registerSingleton<PriceGridRepository>(
-        _MockPriceGridRepository(),
-      );
+      getIt.registerSingleton<PriceGridRepository>(_MockPriceGridRepository());
     }
 
     // IContentCategoryRepository — _TripFormContentState.initState calls
@@ -407,19 +471,18 @@ void main() {
   // ── Group: AppBar titles ──────────────────────────────────────────────────────
 
   group('CreateTripScreen — AppBar titles', () {
-    testWidgets(
-      'titre "Publier un trajet" en mode création (args == null)',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('titre "Publier un trajet" en mode création (args == null)', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        expect(find.text('Publier un trajet'), findsOneWidget);
-      },
-    );
+      expect(find.text('Publier un trajet'), findsOneWidget);
+    });
 
     testWidgets(
       'titre "Modifier le trajet" en mode édition (args.announcement != null)',
@@ -436,58 +499,48 @@ void main() {
       },
     );
 
-    testWidgets(
-      'titre "Créer le trajet pour cette demande" en mode locked',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('titre "Créer le trajet pour cette demande" en mode locked', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        final args = CreateTripArgs(
-          lockContext: _makeLockContext(),
-          negotiationBloc: _makeNegotiationBloc(),
-        );
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(
+        lockContext: _makeLockContext(),
+        negotiationBloc: _makeNegotiationBloc(),
+      );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        expect(
-          find.text('Créer le trajet pour cette demande'),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(find.text('Créer le trajet pour cette demande'), findsOneWidget);
+    });
   });
 
   // ── Group: Bottom navigation bar ─────────────────────────────────────────────
 
   group('CreateTripScreen — Bottom navigation bar', () {
-    testWidgets(
-      'bouton "Continuer" présent à l\'étape 0',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('bouton "Continuer" présent à l\'étape 0', (tester) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        expect(find.text('Continuer'), findsOneWidget);
-      },
-    );
+      expect(find.text('Continuer'), findsOneWidget);
+    });
 
-    testWidgets(
-      'bouton retour (DonyAppBarBackButton) présent',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('bouton retour (DonyAppBarBackButton) présent', (tester) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        expect(find.byType(DonyAppBarBackButton), findsOneWidget);
-      },
-    );
+      expect(find.byType(DonyAppBarBackButton), findsOneWidget);
+    });
 
     testWidgets(
       'bouton "Continuer" désactivé quand les champs obligatoires sont vides (mode création)',
@@ -529,77 +582,103 @@ void main() {
         expect(find.text('Continuer'), findsOneWidget);
         final btns = tester.widgetList<DonyButton>(find.byType(DonyButton));
         final continueBtn = btns.firstWhere((b) => b.label == 'Continuer');
-        expect(continueBtn.onPressed, isNotNull,
-            reason: 'Continuer doit être actif en mode édition (champs pré-remplis)');
-      },
-    );
-
-    testWidgets(
-      'mode création: bouton "Retour" absent à l\'étape 0',
-      (tester) async {
-        setupViewport(tester);
-
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
+        expect(
+          continueBtn.onPressed,
+          isNotNull,
+          reason:
+              'Continuer doit être actif en mode édition (champs pré-remplis)',
         );
-
-        // At step 0, "Retour" should not be rendered
-        expect(find.text('Retour'), findsNothing);
       },
     );
+
+    testWidgets('mode création: bouton "Retour" absent à l\'étape 0', (
+      tester,
+    ) async {
+      setupViewport(tester);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      // At step 0, "Retour" should not be rendered
+      expect(find.text('Retour'), findsNothing);
+    });
   });
 
   // ── Group: Form structure ─────────────────────────────────────────────────────
 
   group('CreateTripScreen — Form structure', () {
+    testWidgets('stepper header est présent à l\'étape 0', (tester) async {
+      setupViewport(tester);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      expect(find.byType(CaStepperHeader), findsOneWidget);
+    });
+
     testWidgets(
-      'stepper header est présent à l\'étape 0',
+      'carte tutoriel contextuelle affichée avant la première étape et '
+      'navigue vers le tutoriel au tap',
       (tester) async {
         setupViewport(tester);
 
         await _pumpAndDrain(
           tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
+          _wrapWithRouter(
+            const CreateTripScreen(args: null),
+            helpConfigJson: _tripPublishHelpConfigJson,
+          ),
         );
+        await tester.pump(const Duration(milliseconds: 400));
 
-        expect(find.byType(CaStepperHeader), findsOneWidget);
+        final cardTop = tester
+            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
+            .dy;
+        final stepperTop = tester.getTopLeft(find.byType(CaStepperHeader)).dy;
+        expect(cardTop, lessThan(stepperTop));
+
+        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('TutorialStub:trip_publish_basics'), findsOneWidget);
       },
     );
 
-    testWidgets(
-      'section fenêtre de remise est visible à l\'étape 0',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('section fenêtre de remise est visible à l\'étape 0', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        // Step 0 contains the handover window section with these list tiles
-        expect(find.text('Début de remise'), findsOneWidget);
-        expect(find.text('Fin de remise'), findsOneWidget);
-      },
-    );
+      // Step 0 contains the handover window section with these list tiles
+      expect(find.text('Début de remise'), findsOneWidget);
+      expect(find.text('Fin de remise'), findsOneWidget);
+    });
 
-    testWidgets(
-      'mode locked: bannière "Trajet dédié à la demande" affichée',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('mode locked: bannière "Trajet dédié à la demande" affichée', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        final args = CreateTripArgs(
-          lockContext: _makeLockContext(),
-          negotiationBloc: _makeNegotiationBloc(),
-        );
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(
+        lockContext: _makeLockContext(),
+        negotiationBloc: _makeNegotiationBloc(),
+      );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        expect(find.text('Trajet dédié à la demande'), findsOneWidget);
-      },
-    );
+      expect(find.text('Trajet dédié à la demande'), findsOneWidget);
+    });
   });
 
   // ── Group: Step navigation (requires full announcement) ──────────────────────
@@ -629,83 +708,84 @@ void main() {
       },
     );
 
-    testWidgets(
-      '"Enregistrer" visible au step 2 en mode édition',
-      (tester) async {
-        // Use a wider viewport — step-2 (PrixConditionsStep) has payment-method
-        // chips that overflow on narrow 390pt screens.
-        tester.view.physicalSize = const Size(800, 1024);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
+    testWidgets('"Enregistrer" visible au step 2 en mode édition', (
+      tester,
+    ) async {
+      // Use a wider viewport — step-2 (PrixConditionsStep) has payment-method
+      // chips that overflow on narrow 390pt screens.
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
 
-        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        // Advance to step 1
-        await tester.tap(find.text('Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Advance to step 1
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        // Advance to step 2
-        await tester.tap(find.text('Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Advance to step 2
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        // Step 2 edit mode: "Enregistrer" appears
-        expect(find.text('Enregistrer'), findsOneWidget);
-        expect(find.text('Retour'), findsOneWidget);
-      },
-    );
+      // Step 2 edit mode: "Enregistrer" appears
+      expect(find.text('Enregistrer'), findsOneWidget);
+      expect(find.text('Retour'), findsOneWidget);
+    });
 
-    testWidgets(
-      'custom pricePerKg (not in presets) initialise le champ custom',
-      (tester) async {
-        // pricePerKg: 9.5 → NOT in kPriceOptions [5,6,7,8] → custom price branch.
-        // Covers: lines 557-558 (custom init), 481-482 (_isPriceValid path).
-        setupViewport(tester);
+    testWidgets('custom pricePerKg (not in presets) initialise le champ custom', (
+      tester,
+    ) async {
+      // pricePerKg: 9.5 → NOT in kPriceOptions [5,6,7,8] → custom price branch.
+      // Covers: lines 557-558 (custom init), 481-482 (_isPriceValid path).
+      setupViewport(tester);
 
-        // Use price NOT in kPriceOptions = [5.0, 6.0, 7.0, 8.0]
-        final ann = AnnouncementModel(
-          id: 'ann-custom-price',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 1),
-          departureTime: '22:00',
-          arrivalTime: '10:30',
-          availableKg: 10.0,
-          totalKg: 23.0,
-          pricePerKg: 9.5, // NOT in preset list
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-          handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-          handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
-          pickupAddress:
-              const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
-          deliveryAddress: const AddressData(
-            label: 'Dakar Centre',
-            lat: 14.716,
-            lng: -17.467,
-          ),
-          transportMode: TransportMode.plane,
-          acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          acceptedContentTypes: const ['Vêtements'],
-          refusedTypes: const [],
-        );
+      // Use price NOT in kPriceOptions = [5.0, 6.0, 7.0, 8.0]
+      final ann = AnnouncementModel(
+        id: 'ann-custom-price',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8, 1),
+        departureTime: '22:00',
+        arrivalTime: '10:30',
+        availableKg: 10.0,
+        totalKg: 23.0,
+        pricePerKg: 9.5, // NOT in preset list
+        status: 'ACTIVE',
+        bidsCount: 0,
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
+        handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+        pickupAddress: const AddressData(
+          label: 'Tour Eiffel',
+          lat: 48.858,
+          lng: 2.294,
+        ),
+        deliveryAddress: const AddressData(
+          label: 'Dakar Centre',
+          lat: 14.716,
+          lng: -17.467,
+        ),
+        transportMode: TransportMode.plane,
+        acceptedPaymentMethods: {BidPaymentMethod.stripe},
+        acceptedContentTypes: const ['Vêtements'],
+        refusedTypes: const [],
+      );
 
-        final args = CreateTripArgs(announcement: ann);
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: ann);
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        // Screen renders in edit mode — verify the title confirms edit mode.
-        expect(find.text('Modifier le trajet'), findsOneWidget);
-      },
-    );
+      // Screen renders in edit mode — verify the title confirms edit mode.
+      expect(find.text('Modifier le trajet'), findsOneWidget);
+    });
 
     testWidgets(
       'description non-nulle pré-remplie (branch description != null)',
@@ -747,63 +827,57 @@ void main() {
       },
     );
 
-    testWidgets(
-      '"Retour" au step 2 navigue vers step 1',
-      (tester) async {
-        // Covers the Retour onPressed lambda at step 2 (edit mode, lines 272-273).
-        tester.view.physicalSize = const Size(800, 1024);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
+    testWidgets('"Retour" au step 2 navigue vers step 1', (tester) async {
+      // Covers the Retour onPressed lambda at step 2 (edit mode, lines 272-273).
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
 
-        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        // Advance to step 2
-        await tester.tap(find.text('Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
-        await tester.tap(find.text('Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Advance to step 2
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        expect(find.text('Enregistrer'), findsOneWidget);
+      expect(find.text('Enregistrer'), findsOneWidget);
 
-        // Tap Retour → back to step 1
-        await tester.tap(find.text('Retour'));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Tap Retour → back to step 1
+      await tester.tap(find.text('Retour'));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        // Step 1 again
-        expect(find.text('Continuer'), findsOneWidget);
-        expect(find.text('Enregistrer'), findsNothing);
-      },
-    );
+      // Step 1 again
+      expect(find.text('Continuer'), findsOneWidget);
+      expect(find.text('Enregistrer'), findsNothing);
+    });
 
-    testWidgets(
-      '"Retour" au step 1 navigue vers step 0',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('"Retour" au step 1 navigue vers step 0', (tester) async {
+      setupViewport(tester);
 
-        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        // Advance to step 1
-        await tester.tap(find.text('Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Advance to step 1
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        expect(find.text('Retour'), findsOneWidget);
+      expect(find.text('Retour'), findsOneWidget);
 
-        // Tap Retour → back to step 0
-        await tester.tap(find.text('Retour'));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Tap Retour → back to step 0
+      await tester.tap(find.text('Retour'));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        // Step 0 again: no Retour
-        expect(find.text('Retour'), findsNothing);
-      },
-    );
+      // Step 0 again: no Retour
+      expect(find.text('Retour'), findsNothing);
+    });
   });
 
   // ── Group: Template suggestion bar + _applyTemplate ──────────────────────────
@@ -834,8 +908,7 @@ void main() {
             templates: [_mockTemplate],
           ),
         );
-        when(() => b.stream)
-            .thenAnswer((_) => const Stream.empty());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
         return b;
       });
     });
@@ -847,59 +920,53 @@ void main() {
       getIt.registerFactory<TripTemplateBloc>(() {
         final b = _MockTripTemplateBloc();
         when(() => b.state).thenReturn(const TripTemplateState());
-        when(() => b.stream)
-            .thenAnswer((_) => const Stream.empty());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
         return b;
       });
     });
 
-    testWidgets(
-      'template chip visible au step 0 en mode création',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('template chip visible au step 0 en mode création', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        // The template bar shows the chip
-        expect(
-          find.text('Paris → Dakar · 8€/kg'),
-          findsOneWidget,
-        );
-      },
-    );
+      // The template bar shows the chip
+      expect(find.text('Paris → Dakar · 8€/kg'), findsOneWidget);
+    });
 
-    testWidgets(
-      'tap template chip → _applyTemplate applique les valeurs',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('tap template chip → _applyTemplate applique les valeurs', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        expect(find.byType(ActionChip), findsOneWidget);
+      expect(find.byType(ActionChip), findsOneWidget);
 
-        // Tap the chip → _applyTemplate(t) called.
-        // _applyTemplate shows a DonySnackbar (SnackBar with ~4s auto-dismiss)
-        // → drain all pending timers to avoid the 'timer still pending' assertion.
-        await tester.tap(find.byType(ActionChip));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Tap the chip → _applyTemplate(t) called.
+      // _applyTemplate shows a DonySnackbar (SnackBar with ~4s auto-dismiss)
+      // → drain all pending timers to avoid the 'timer still pending' assertion.
+      await tester.tap(find.byType(ActionChip));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        // Screen still present (no navigation triggered)
-        expect(find.byType(CreateTripScreen), findsOneWidget);
+      // Screen still present (no navigation triggered)
+      expect(find.byType(CreateTripScreen), findsOneWidget);
 
-        // _applyTemplate shows DonySnackbar with 'appliqué' in the message.
-        expect(find.textContaining('appliqué'), findsOneWidget);
+      // _applyTemplate shows DonySnackbar with 'appliqué' in the message.
+      expect(find.textContaining('appliqué'), findsOneWidget);
 
-        // Drain the SnackBar auto-dismiss timer (~4 s default) so the widget
-        // tree can be disposed cleanly at end of test.
-        await tester.pump(const Duration(seconds: 5));
-      },
-    );
+      // Drain the SnackBar auto-dismiss timer (~4 s default) so the widget
+      // tree can be disposed cleanly at end of test.
+      await tester.pump(const Duration(seconds: 5));
+    });
   });
 
   // ── Group: Handover window error display ──────────────────────────────────────
@@ -926,7 +993,13 @@ void main() {
           createdAt: DateTime(2026, 1, 1),
           updatedAt: DateTime(2026, 1, 1),
           handoverWindowStart: DateTime(2026, 8, 1, 20, 0),
-          handoverWindowEnd: DateTime(2026, 8, 1, 23, 0), // after 22:00 departure
+          handoverWindowEnd: DateTime(
+            2026,
+            8,
+            1,
+            23,
+            0,
+          ), // after 22:00 departure
           transportMode: TransportMode.plane,
           acceptedPaymentMethods: {BidPaymentMethod.stripe},
           acceptedContentTypes: const ['Vêtements'],
@@ -940,10 +1013,7 @@ void main() {
         );
 
         // Error message displayed — "avant le départ (22:00)"
-        expect(
-          find.textContaining('avant le départ'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('avant le départ'), findsOneWidget);
       },
     );
   });
@@ -951,36 +1021,35 @@ void main() {
   // ── Group: _submit() via Enregistrer ─────────────────────────────────────────
 
   group('CreateTripScreen — _submit() via Enregistrer (mode édition)', () {
-    testWidgets(
-      '"Enregistrer" au step 2 appelle _submit() — happy path',
-      (tester) async {
-        // Wide viewport: avoids overflow in step-2 PrixConditionsStep
-        tester.view.physicalSize = const Size(800, 1024);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
+    testWidgets('"Enregistrer" au step 2 appelle _submit() — happy path', (
+      tester,
+    ) async {
+      // Wide viewport: avoids overflow in step-2 PrixConditionsStep
+      tester.view.physicalSize = const Size(800, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
 
-        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        // Navigate to step 2
-        await tester.tap(find.text('Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
-        await tester.tap(find.text('Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Navigate to step 2
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        expect(find.text('Enregistrer'), findsOneWidget);
+      expect(find.text('Enregistrer'), findsOneWidget);
 
-        // Tap Enregistrer → _submit() → AnnouncementBloc.add(UpdateRequested)
-        await tester.tap(find.byKey(const Key('create-announcement-submit')));
-        await tester.pump(const Duration(milliseconds: 600));
+      // Tap Enregistrer → _submit() → AnnouncementBloc.add(UpdateRequested)
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        // Screen still present (mock bloc doesn't emit AnnouncementUpdated)
-        expect(find.byType(CreateTripScreen), findsOneWidget);
-      },
-    );
+      // Screen still present (mock bloc doesn't emit AnnouncementUpdated)
+      expect(find.byType(CreateTripScreen), findsOneWidget);
+    });
   });
 
   // ── Group: Task 5 — publication sans Stripe + gate KYC ───────────────────────
@@ -994,8 +1063,9 @@ void main() {
     setUp(() {
       announcementBloc = _MockAnnouncementBloc();
       when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-      when(() => announcementBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => announcementBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
       if (getIt.isRegistered<AnnouncementBloc>()) {
         getIt.unregister<AnnouncementBloc>();
       }
@@ -1018,7 +1088,10 @@ void main() {
     /// `AnnouncementModel` complet. `_wrapWithRouter`'s `_makeStripeBloc()`
     /// reste sur `StripeAccountInitial()` (Stripe non configuré) — le
     /// comportement par défaut de tout ce fichier de tests.
-    Future<void> navigateToStep2(WidgetTester tester, {AuthState? authState}) async {
+    Future<void> navigateToStep2(
+      WidgetTester tester, {
+      AuthState? authState,
+    }) async {
       tester.view.physicalSize = const Size(800, 1024);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1043,7 +1116,9 @@ void main() {
         await tester.tap(find.byKey(const Key('create-announcement-submit')));
         await tester.pump(const Duration(milliseconds: 600));
 
-        verify(() => announcementBloc.add(any(
+        verify(
+          () => announcementBloc.add(
+            any(
               that: predicate<AnnouncementEvent>(
                 (e) =>
                     e is AnnouncementUpdateRequested &&
@@ -1051,7 +1126,9 @@ void main() {
                     !e.acceptedPaymentMethods.contains('STRIPE'),
                 'AnnouncementUpdateRequested sans STRIPE, avec CASH forcé',
               ),
-            ))).called(1);
+            ),
+          ),
+        ).called(1);
       },
     );
 
@@ -1082,12 +1159,16 @@ void main() {
         await tester.tap(find.byKey(const Key('create-announcement-submit')));
         await tester.pump(const Duration(milliseconds: 600));
 
-        verify(() => announcementBloc.add(any(
+        verify(
+          () => announcementBloc.add(
+            any(
               that: predicate<AnnouncementEvent>(
                 (e) => e is AnnouncementUpdateRequested,
                 'AnnouncementUpdateRequested dispatché',
               ),
-            ))).called(1);
+            ),
+          ),
+        ).called(1);
       },
     );
   });
@@ -1100,70 +1181,74 @@ void main() {
   // branches sont couvertes : la position relative à 100 %, l'absence de
   // débordement à 200 %.
 
-  group('CreateTripScreen — bannière Stripe non configuré (bascule Row/Column)', () {
-    Future<void> navigateToStep2NotConfigured(WidgetTester tester) async {
-      // Viewport large : les chips de moyens de paiement de l'étape 2
-      // débordent sur un écran étroit à 100 % déjà (bug préexistant, hors
-      // sujet ici) — les tests existants de ce fichier utilisent la même
-      // largeur pour l'isoler.
-      tester.view.physicalSize = const Size(800, 1024);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+  group(
+    'CreateTripScreen — bannière Stripe non configuré (bascule Row/Column)',
+    () {
+      Future<void> navigateToStep2NotConfigured(WidgetTester tester) async {
+        // Viewport large : les chips de moyens de paiement de l'étape 2
+        // débordent sur un écran étroit à 100 % déjà (bug préexistant, hors
+        // sujet ici) — les tests existants de ce fichier utilisent la même
+        // largeur pour l'isoler.
+        tester.view.physicalSize = const Size(800, 1024);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
 
-      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
-      await tester.tap(find.text('Continuer'));
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.tap(find.text('Continuer'));
-      await tester.pump(const Duration(milliseconds: 600));
-      expect(find.text('Activer les paiements par carte'), findsOneWidget);
-    }
-
-    testWidgets(
-      'à 100 %, le CTA reste sur la même ligne que le texte (disposition '
-      "d'origine, celle d'avant ce lot)",
-      (tester) async {
-        await navigateToStep2NotConfigured(tester);
-
-        // Le texte d'explication et le CTA sont les deux widgets comparés
-        // (pas l'icône 'circle-check' : elle apparaît deux fois sur cet
-        // écran, aussi dans l'en-tête « Ce que j'accepte » plus bas dans le
-        // formulaire — find.byWidgetPredicate serait ambigu). Sur une même
-        // ligne (Row, crossAxisAlignment au centre par défaut), leurs
-        // centres verticaux sont proches. Empilés (Column), le CTA serait
-        // nettement plus bas — au moins une hauteur de texte plus
-        // l'espacement entre les deux lignes.
-        final textY = tester
-            .getCenter(find.textContaining('Publiez en espèces'))
-            .dy;
-        final ctaY = tester
-            .getCenter(find.byKey(const Key('activate-card-payments-cta')))
-            .dy;
-
-        expect(
-          (textY - ctaY).abs(),
-          lessThan(20),
-          reason: 'à 100 %, le CTA doit être sur la même ligne que le texte '
-              "d'explication, pas en dessous",
+        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+        await _pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
         );
-      },
-    );
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(find.text('Activer les paiements par carte'), findsOneWidget);
+      }
 
-    testWidgets(
-      'à 200 %, aucun débordement (bascule en disposition empilée)',
-      (tester) async {
-        tester.platformDispatcher.textScaleFactorTestValue = 2.0;
-        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      testWidgets(
+        'à 100 %, le CTA reste sur la même ligne que le texte (disposition '
+        "d'origine, celle d'avant ce lot)",
+        (tester) async {
+          await navigateToStep2NotConfigured(tester);
 
-        await navigateToStep2NotConfigured(tester);
+          // Le texte d'explication et le CTA sont les deux widgets comparés
+          // (pas l'icône 'circle-check' : elle apparaît deux fois sur cet
+          // écran, aussi dans l'en-tête « Ce que j'accepte » plus bas dans le
+          // formulaire — find.byWidgetPredicate serait ambigu). Sur une même
+          // ligne (Row, crossAxisAlignment au centre par défaut), leurs
+          // centres verticaux sont proches. Empilés (Column), le CTA serait
+          // nettement plus bas — au moins une hauteur de texte plus
+          // l'espacement entre les deux lignes.
+          final textY = tester
+              .getCenter(find.textContaining('Publiez en espèces'))
+              .dy;
+          final ctaY = tester
+              .getCenter(find.byKey(const Key('activate-card-payments-cta')))
+              .dy;
 
-        expect(tester.takeException(), isNull);
-      },
-    );
-  });
+          expect(
+            (textY - ctaY).abs(),
+            lessThan(20),
+            reason:
+                'à 100 %, le CTA doit être sur la même ligne que le texte '
+                "d'explication, pas en dessous",
+          );
+        },
+      );
+
+      testWidgets(
+        'à 200 %, aucun débordement (bascule en disposition empilée)',
+        (tester) async {
+          tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+          await navigateToStep2NotConfigured(tester);
+
+          expect(tester.takeException(), isNull);
+        },
+      );
+    },
+  );
 
   // ── Group: pricingMode MIXED → BlocListener ────────────────────────────────
   // PricingMode listener tested via unit test of _TripFormContentState.
@@ -1174,8 +1259,7 @@ void main() {
     late StreamController<AnnouncementState> annStreamCtrl;
 
     setUp(() {
-      annStreamCtrl =
-          StreamController<AnnouncementState>.broadcast();
+      annStreamCtrl = StreamController<AnnouncementState>.broadcast();
       // Replace GetIt factory with one that returns a controlled mock
       if (getIt.isRegistered<AnnouncementBloc>()) {
         getIt.unregister<AnnouncementBloc>();
@@ -1183,8 +1267,7 @@ void main() {
       getIt.registerFactory<AnnouncementBloc>(() {
         final b = _MockAnnouncementBloc();
         when(() => b.state).thenReturn(AnnouncementInitial());
-        when(() => b.stream)
-            .thenAnswer((_) => annStreamCtrl.stream);
+        when(() => b.stream).thenAnswer((_) => annStreamCtrl.stream);
         return b;
       });
     });
@@ -1198,8 +1281,7 @@ void main() {
       getIt.registerFactory<AnnouncementBloc>(() {
         final b = _MockAnnouncementBloc();
         when(() => b.state).thenReturn(AnnouncementInitial());
-        when(() => b.stream)
-            .thenAnswer((_) => const Stream.empty());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
         return b;
       });
     });
@@ -1226,8 +1308,21 @@ void main() {
             ),
             GoRoute(
               path: '/trips/create',
-              builder: (_, __) => BlocProvider<StripeAccountBloc>.value(
-                value: _makeStripeBloc(),
+              builder: (_, __) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
                 child: const CreateTripScreen(args: null),
               ),
             ),
@@ -1282,8 +1377,21 @@ void main() {
             ),
             GoRoute(
               path: '/trips/create',
-              builder: (_, __) => BlocProvider<StripeAccountBloc>.value(
-                value: _makeStripeBloc(),
+              builder: (_, __) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
                 child: CreateTripScreen(
                   args: CreateTripArgs(announcement: _makeAnnouncement()),
                 ),
@@ -1345,8 +1453,21 @@ void main() {
             ),
             GoRoute(
               path: '/trips/create',
-              builder: (_, __) => BlocProvider<StripeAccountBloc>.value(
-                value: _makeStripeBloc(),
+              builder: (_, __) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<StripeAccountBloc>.value(
+                    value: _makeStripeBloc(),
+                  ),
+                  BlocProvider<HelpCenterBloc>(
+                    create: (_) => HelpCenterBloc(
+                      HelpCenterRepository(
+                        const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                        fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                      ),
+                      makeDisabledAnalytics(MockAnalyticsBackend()),
+                    )..add(const HelpCenterLoadRequested()),
+                  ),
+                ],
                 child: const CreateTripScreen(args: null),
               ),
             ),
@@ -1391,90 +1512,90 @@ void main() {
       },
     );
 
-    testWidgets(
-      'AnnouncementError — ErrorPresenter appelé (snackbar affiché)',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('AnnouncementError — ErrorPresenter appelé (snackbar affiché)', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        // Emit AnnouncementError — listener calls ErrorPresenter.show
-        annStreamCtrl.add(
-          AnnouncementError(NetworkException('Erreur réseau')),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 600));
+      // Emit AnnouncementError — listener calls ErrorPresenter.show
+      annStreamCtrl.add(AnnouncementError(NetworkException('Erreur réseau')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
 
-        // BlocListener fires ErrorPresenter.show → DonySnackbar → SnackBar visible
-        await tester.pump(); // laisser le BlocListener réagir
-        expect(find.byType(SnackBar), findsOneWidget);
-      },
-    );
+      // BlocListener fires ErrorPresenter.show → DonySnackbar → SnackBar visible
+      await tester.pump(); // laisser le BlocListener réagir
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
   });
 
   // ── Group: Navigation ─────────────────────────────────────────────────────────
 
   group('CreateTripScreen — Navigation', () {
-    testWidgets(
-      'tapping le bouton retour pops the route',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('tapping le bouton retour pops the route', (tester) async {
+      setupViewport(tester);
 
-        var didPop = false;
+      var didPop = false;
 
-        final router = GoRouter(
-          initialLocation: '/',
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => Scaffold(
-                body: Builder(
-                  builder: (ctx) => ElevatedButton(
-                    onPressed: () => ctx.push('/trips/create'),
-                    child: const Text('open'),
-                  ),
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => Scaffold(
+              body: Builder(
+                builder: (ctx) => ElevatedButton(
+                  onPressed: () => ctx.push('/trips/create'),
+                  child: const Text('open'),
                 ),
               ),
             ),
-            GoRoute(
-              path: '/trips/create',
-              builder: (_, __) => BlocProvider<StripeAccountBloc>.value(
-                value: _makeStripeBloc(),
-                child: const CreateTripScreen(args: null),
-              ),
-            ),
-          ],
-          observers: [
-            _PopObserver(onPop: () => didPop = true),
-          ],
-        );
-
-        await tester.pumpWidget(
-          MaterialApp.router(
-            routerConfig: router,
-            theme: AppTheme.light(),
           ),
-        );
-        await tester.pump();
+          GoRoute(
+            path: '/trips/create',
+            builder: (_, __) => MultiBlocProvider(
+              providers: [
+                BlocProvider<StripeAccountBloc>.value(value: _makeStripeBloc()),
+                BlocProvider<HelpCenterBloc>(
+                  create: (_) => HelpCenterBloc(
+                    HelpCenterRepository(
+                      const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                      fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                    ),
+                    makeDisabledAnalytics(MockAnalyticsBackend()),
+                  )..add(const HelpCenterLoadRequested()),
+                ),
+              ],
+              child: const CreateTripScreen(args: null),
+            ),
+          ),
+        ],
+        observers: [_PopObserver(onPop: () => didPop = true)],
+      );
 
-        // Navigate to CreateTripScreen.
-        // pumpAndSettle drains the GoRouter transition AND all flutter_animate
-        // one-shot timers (none are repeating so settle always occurs).
-        await tester.tap(find.text('open'));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.pump();
 
-        expect(find.byType(DonyAppBarBackButton), findsOneWidget);
+      // Navigate to CreateTripScreen.
+      // pumpAndSettle drains the GoRouter transition AND all flutter_animate
+      // one-shot timers (none are repeating so settle always occurs).
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
 
-        // Tap the back button — should pop.
-        await tester.tap(find.byType(DonyAppBarBackButton));
-        await tester.pumpAndSettle();
+      expect(find.byType(DonyAppBarBackButton), findsOneWidget);
 
-        expect(didPop, isTrue);
-      },
-    );
+      // Tap the back button — should pop.
+      await tester.tap(find.byType(DonyAppBarBackButton));
+      await tester.pumpAndSettle();
+
+      expect(didPop, isTrue);
+    });
   });
 
   // ── Group: Fenêtre de remise — rendu et validation inline ────────────────────
@@ -1484,20 +1605,19 @@ void main() {
   // est un reliquat de nommage, ce ne sont pas des bottom sheets.
 
   group('CreateTripScreen — Fenêtre de remise (rendu)', () {
-    testWidgets(
-      'les deux rows début/fin sont affichées en mode création',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('les deux rows début/fin sont affichées en mode création', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
 
-        expect(find.byKey(const Key('sheet-handover-start-row')), findsOneWidget);
-        expect(find.byKey(const Key('sheet-handover-end-row')), findsOneWidget);
-      },
-    );
+      expect(find.byKey(const Key('sheet-handover-start-row')), findsOneWidget);
+      expect(find.byKey(const Key('sheet-handover-end-row')), findsOneWidget);
+    });
 
     testWidgets(
       'mode création : les deux rows affichent "Choisir" (aucune valeur)',
@@ -1561,7 +1681,9 @@ void main() {
 
         await _pumpAndDrain(
           tester,
-          _wrapWithRouter(CreateTripScreen(args: CreateTripArgs(announcement: ann))),
+          _wrapWithRouter(
+            CreateTripScreen(args: CreateTripArgs(announcement: ann)),
+          ),
         );
 
         expect(find.byKey(const Key('sheet-handover-error')), findsOneWidget);
@@ -1572,20 +1694,19 @@ void main() {
       },
     );
 
-    testWidgets(
-      'fenêtre valide : aucun message d\'erreur inline',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('fenêtre valide : aucun message d\'erreur inline', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
-        expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
-      },
-    );
+      expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
+    });
   });
 
   // ── Group: Fenêtre de remise — garde au submit ───────────────────────────────
@@ -1598,8 +1719,9 @@ void main() {
     setUp(() {
       announcementBloc = _MockAnnouncementBloc();
       when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-      when(() => announcementBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => announcementBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
       when(() => announcementBloc.add(any())).thenReturn(null);
       if (getIt.isRegistered<AnnouncementBloc>()) {
         getIt.unregister<AnnouncementBloc>();
@@ -1663,10 +1785,16 @@ void main() {
           bidsCount: 0,
           createdAt: DateTime(2026, 1, 1),
           updatedAt: DateTime(2026, 1, 1),
-          pickupAddress:
-              const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
+          pickupAddress: const AddressData(
+            label: 'Tour Eiffel',
+            lat: 48.858,
+            lng: 2.294,
+          ),
           deliveryAddress: const AddressData(
-              label: 'Dakar Centre', lat: 14.716, lng: -17.467),
+            label: 'Dakar Centre',
+            lat: 14.716,
+            lng: -17.467,
+          ),
           transportMode: TransportMode.plane,
           acceptedPaymentMethods: {BidPaymentMethod.stripe},
           acceptedContentTypes: const ['Vêtements'],
@@ -1695,42 +1823,42 @@ void main() {
 
         expect(find.text('Enregistrer'), findsNothing);
         verifyNever(
-          () => announcementBloc
-              .add(any(that: isA<AnnouncementUpdateRequested>())),
+          () => announcementBloc.add(
+            any(that: isA<AnnouncementUpdateRequested>()),
+          ),
         );
       },
     );
 
-    testWidgets(
-      'submit en édition forwarde la fenêtre de remise au bloc',
-      (tester) async {
-        final ann = _makeFullAnnouncement();
+    testWidgets('submit en édition forwarde la fenêtre de remise au bloc', (
+      tester,
+    ) async {
+      final ann = _makeFullAnnouncement();
 
-        await navigateToStep2(tester, ann);
+      await navigateToStep2(tester, ann);
 
-        await tester.tap(find.byKey(const Key('create-announcement-submit')));
-        await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(find.byKey(const Key('create-announcement-submit')));
+      await tester.pump(const Duration(milliseconds: 600));
 
-        expect(find.text('Fenêtre de remise obligatoire'), findsNothing);
-        verify(
-          () => announcementBloc.add(
-            any(
-              that: isA<AnnouncementUpdateRequested>()
-                  .having(
-                    (e) => e.handoverWindowStart,
-                    'handoverWindowStart',
-                    ann.handoverWindowStart,
-                  )
-                  .having(
-                    (e) => e.handoverWindowEnd,
-                    'handoverWindowEnd',
-                    ann.handoverWindowEnd,
-                  ),
-            ),
+      expect(find.text('Fenêtre de remise obligatoire'), findsNothing);
+      verify(
+        () => announcementBloc.add(
+          any(
+            that: isA<AnnouncementUpdateRequested>()
+                .having(
+                  (e) => e.handoverWindowStart,
+                  'handoverWindowStart',
+                  ann.handoverWindowStart,
+                )
+                .having(
+                  (e) => e.handoverWindowEnd,
+                  'handoverWindowEnd',
+                  ann.handoverWindowEnd,
+                ),
           ),
-        ).called(1);
-      },
-    );
+        ),
+      ).called(1);
+    });
   });
 
   // ── Group: Toggle Espèces et encart commission ───────────────────────────────
@@ -1829,25 +1957,24 @@ void main() {
       },
     );
 
-    testWidgets(
-      'Stripe non configuré : Espèces est forcé ON et verrouillé',
-      (tester) async {
-        registerStripeBloc(onboardingComplete: false);
-        await navigateToStep2(tester);
+    testWidgets('Stripe non configuré : Espèces est forcé ON et verrouillé', (
+      tester,
+    ) async {
+      registerStripeBloc(onboardingComplete: false);
+      await navigateToStep2(tester);
 
-        final cashSwitch = find.byKey(const Key('payment-method-cash'));
-        expect(cashSwitch, findsOneWidget);
+      final cashSwitch = find.byKey(const Key('payment-method-cash'));
+      expect(cashSwitch, findsOneWidget);
 
-        // Sans Stripe, CASH est la seule méthode possible : la ligne est
-        // affichée à ON et non désactivable (onChanged == null).
-        final tile = tester.widget<SwitchListTile>(cashSwitch);
-        expect(tile.value, isTrue);
-        expect(tile.onChanged, isNull);
+      // Sans Stripe, CASH est la seule méthode possible : la ligne est
+      // affichée à ON et non désactivable (onChanged == null).
+      final tile = tester.widget<SwitchListTile>(cashSwitch);
+      expect(tile.value, isTrue);
+      expect(tile.onChanged, isNull);
 
-        // L'encart commission reste visible puisque CASH est actif.
-        expect(find.byType(CashCommissionNotice), findsOneWidget);
-      },
-    );
+      // L'encart commission reste visible puisque CASH est actif.
+      expect(find.byType(CashCommissionNotice), findsOneWidget);
+    });
   });
 
   // ── Group: gating des champs obligatoires ────────────────────────────────────
@@ -1856,38 +1983,43 @@ void main() {
     /// Annonce complète, moins les champs passés à null.
     AnnouncementModel makeAnnouncement({
       String? departureTime = '22:00',
-      AddressData? pickupAddress =
-          const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
-      AddressData? deliveryAddress =
-          const AddressData(label: 'Dakar Centre', lat: 14.716, lng: -17.467),
+      AddressData? pickupAddress = const AddressData(
+        label: 'Tour Eiffel',
+        lat: 48.858,
+        lng: 2.294,
+      ),
+      AddressData? deliveryAddress = const AddressData(
+        label: 'Dakar Centre',
+        lat: 14.716,
+        lng: -17.467,
+      ),
       TimeOfDay? arrivalTime,
-    }) =>
-        AnnouncementModel(
-          id: 'ann-gating',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 1),
-          departureTime: departureTime,
-          arrivalTime: arrivalTime == null
-              ? null
-              : '${arrivalTime.hour.toString().padLeft(2, '0')}:${arrivalTime.minute.toString().padLeft(2, '0')}',
-          availableKg: 10.0,
-          totalKg: 23.0,
-          pricePerKg: 8.0,
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-          handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-          handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
-          pickupAddress: pickupAddress,
-          deliveryAddress: deliveryAddress,
-          transportMode: TransportMode.plane,
-          acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          acceptedContentTypes: const ['Vêtements'],
-          refusedTypes: const [],
-        );
+    }) => AnnouncementModel(
+      id: 'ann-gating',
+      travelerId: 'trav-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 8, 1),
+      departureTime: departureTime,
+      arrivalTime: arrivalTime == null
+          ? null
+          : '${arrivalTime.hour.toString().padLeft(2, '0')}:${arrivalTime.minute.toString().padLeft(2, '0')}',
+      availableKg: 10.0,
+      totalKg: 23.0,
+      pricePerKg: 8.0,
+      status: 'ACTIVE',
+      bidsCount: 0,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+      handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
+      handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+      pickupAddress: pickupAddress,
+      deliveryAddress: deliveryAddress,
+      transportMode: TransportMode.plane,
+      acceptedPaymentMethods: {BidPaymentMethod.stripe},
+      acceptedContentTypes: const ['Vêtements'],
+      refusedTypes: const [],
+    );
 
     Future<void> pump(WidgetTester tester, AnnouncementModel? ann) async {
       tester.view.physicalSize = const Size(800, 1024);
@@ -1920,15 +2052,14 @@ void main() {
       },
     );
 
-    testWidgets(
-      'avec heure de départ, "Continuer" est actif à l\'étape 0',
-      (tester) async {
-        await pump(tester, makeAnnouncement());
+    testWidgets('avec heure de départ, "Continuer" est actif à l\'étape 0', (
+      tester,
+    ) async {
+      await pump(tester, makeAnnouncement());
 
-        final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
-        expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
-      },
-    );
+      final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+      expect(tester.widget<DonyButton>(continueBtn).onPressed, isNotNull);
+    });
 
     // ── Un formulaire vierge ne s'ouvre pas en rouge ──────────────────────────
 
@@ -2098,7 +2229,6 @@ void main() {
         expect(find.byType(CreateTripScreen), findsOneWidget);
       },
     );
-
   });
 
   // ── Group: Fix task — payment-method block routing (dedicated-trip flow) ──
@@ -2115,8 +2245,9 @@ void main() {
       negoStreamCtrl = StreamController<NegotiationState>.broadcast();
       negotiationBloc = _MockNegotiationBloc();
       when(() => negotiationBloc.state).thenReturn(const NegotiationInitial());
-      when(() => negotiationBloc.stream)
-          .thenAnswer((_) => negoStreamCtrl.stream);
+      when(
+        () => negotiationBloc.stream,
+      ).thenAnswer((_) => negoStreamCtrl.stream);
       when(() => negotiationBloc.add(any())).thenReturn(null);
 
       // WalletRepository / CommissionMethodRepository are intentionally left
@@ -2153,14 +2284,20 @@ void main() {
         announcement: _makeFullAnnouncement(),
         negotiationBloc: negotiationBloc,
       );
-      await _pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(CreateTripScreen(args: args)),
+      );
 
       await tester.tap(find.text('Continuer'));
       await tester.pump(const Duration(milliseconds: 600));
       await tester.tap(find.text('Continuer'));
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.byKey(const Key('create-dedicated-trip-submit')), findsOneWidget);
+      expect(
+        find.byKey(const Key('create-dedicated-trip-submit')),
+        findsOneWidget,
+      );
       await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
       await tester.pump();
     }
@@ -2171,14 +2308,21 @@ void main() {
       (tester) async {
         await navigateLockedToStep2AndSubmit(tester);
 
-        negoStreamCtrl.add(const NegotiationError(ValidationException(
-          'Card capability required',
-          code: 'payment-method/card-capability-required',
-        )));
+        negoStreamCtrl.add(
+          const NegotiationError(
+            ValidationException(
+              'Card capability required',
+              code: 'payment-method/card-capability-required',
+            ),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('Paiement carte requis'), findsOneWidget);
-        expect(find.byKey(const Key('activate-card-payment-cta')), findsOneWidget);
+        expect(
+          find.byKey(const Key('activate-card-payment-cta')),
+          findsOneWidget,
+        );
         expect(find.byType(SnackBar), findsNothing);
       },
     );
@@ -2188,10 +2332,14 @@ void main() {
       (tester) async {
         await navigateLockedToStep2AndSubmit(tester);
 
-        negoStreamCtrl.add(const NegotiationError(ValidationException(
-          'Card capability required',
-          code: 'payment-method/card-capability-required',
-        )));
+        negoStreamCtrl.add(
+          const NegotiationError(
+            ValidationException(
+              'Card capability required',
+              code: 'payment-method/card-capability-required',
+            ),
+          ),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Activer le paiement carte'));
@@ -2207,10 +2355,14 @@ void main() {
       (tester) async {
         await navigateLockedToStep2AndSubmit(tester);
 
-        negoStreamCtrl.add(const NegotiationError(ValidationException(
-          'Some unrelated business error',
-          code: 'some/other-code',
-        )));
+        negoStreamCtrl.add(
+          const NegotiationError(
+            ValidationException(
+              'Some unrelated business error',
+              code: 'some/other-code',
+            ),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('Paiement carte requis'), findsNothing);
@@ -2227,10 +2379,14 @@ void main() {
       (tester) async {
         await navigateLockedToStep2AndSubmit(tester);
 
-        negoStreamCtrl.add(const NegotiationError(ValidationException(
-          'Cash funds required',
-          code: 'payment-method/cash-funds-required',
-        )));
+        negoStreamCtrl.add(
+          const NegotiationError(
+            ValidationException(
+              'Cash funds required',
+              code: 'payment-method/cash-funds-required',
+            ),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('Solde insuffisant'), findsOneWidget);
@@ -2262,15 +2418,25 @@ void main() {
       (tester) async {
         await navigateLockedToStep2AndSubmit(tester);
 
-        negoStreamCtrl.add(const NegotiationError(ValidationException(
-          'No payment method available',
-          code: 'payment-method/none-available',
-        )));
+        negoStreamCtrl.add(
+          const NegotiationError(
+            ValidationException(
+              'No payment method available',
+              code: 'payment-method/none-available',
+            ),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
-        expect(find.byKey(const Key('activate-card-payment-cta')), findsOneWidget);
-        expect(find.byKey(const Key('unlock-cash-payment-cta')), findsOneWidget);
+        expect(
+          find.byKey(const Key('activate-card-payment-cta')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('unlock-cash-payment-cta')),
+          findsOneWidget,
+        );
         expect(find.byType(SnackBar), findsNothing);
       },
     );

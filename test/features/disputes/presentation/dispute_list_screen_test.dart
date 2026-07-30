@@ -5,6 +5,9 @@ import 'package:dony/features/disputes/bloc/dispute_list_event.dart';
 import 'package:dony/features/disputes/bloc/dispute_list_state.dart';
 import 'package:dony/features/disputes/data/models/dispute_model.dart';
 import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,8 +15,48 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/mock_analytics_backend.dart';
+
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+const _disputeHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "dispute_open",
+      "title": "Ouvrir un litige",
+      "description": "Comprendre quand et comment contester une remise.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["dispute"]
+    }
+  ]
+}
+''';
+
 class _MockBloc extends MockBloc<DisputeListEvent, DisputeListState>
     implements DisputeListBloc {}
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
 
 DisputeModel _dispute({
   String status = 'OPEN',
@@ -43,7 +86,10 @@ DisputeModel _dispute({
 
 late _MockBloc bloc;
 
-Widget _harness({DisputeListState? state}) {
+Widget _harness({
+  DisputeListState? state,
+  String helpConfigJson = _emptyHelpConfigJson,
+}) {
   bloc = _MockBloc();
   whenListen(
     bloc,
@@ -55,8 +101,19 @@ Widget _harness({DisputeListState? state}) {
     routes: [
       GoRoute(
         path: '/disputes',
-        builder: (_, __) => BlocProvider<DisputeListBloc>.value(
-          value: bloc,
+        builder: (_, __) => MultiBlocProvider(
+          providers: [
+            BlocProvider<DisputeListBloc>.value(value: bloc),
+            BlocProvider<HelpCenterBloc>(
+              create: (_) => HelpCenterBloc(
+                HelpCenterRepository(
+                  _StaticHelpCenterSource(helpConfigJson),
+                  fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                ),
+                makeDisabledAnalytics(MockAnalyticsBackend()),
+              )..add(const HelpCenterLoadRequested()),
+            ),
+          ],
           child: const DisputeListScreen(),
         ),
       ),
@@ -67,6 +124,12 @@ Widget _harness({DisputeListState? state}) {
       GoRoute(
         path: '/profile/help/contact',
         builder: (_, __) => const Scaffold(body: Text('SupportStub')),
+      ),
+      GoRoute(
+        path: '/profile/help/tutorial/:tutorialId',
+        builder: (_, state) => Scaffold(
+          body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
+        ),
       ),
     ],
   );
@@ -128,6 +191,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('SupportStub'), findsOneWidget);
   });
+
+  testWidgets(
+    'affiche la carte tutoriel litige au-dessus de la liste et navigue au tap',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(
+          state: DisputeListLoaded([_dispute()]),
+          helpConfigJson: _disputeHelpConfigJson,
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
+
+      await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('TutorialStub:dispute_open'), findsOneWidget);
+    },
+  );
 
   testWidgets('erreur → Réessayer redispatch', (tester) async {
     await tester.pumpWidget(

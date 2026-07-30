@@ -23,6 +23,8 @@ import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -235,6 +237,10 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         const SizedBox(height: DonySpacing.md),
                         _IntroCard(onDismiss: _dismissIntro),
                       ],
+                      const SizedBox(height: DonySpacing.md),
+                      const ContextualTutorialCard(
+                        context: TutorialContext.activities,
+                      ),
                       const SizedBox(height: DonySpacing.base),
                       _ActionRow(
                         onPublishTrip: () => _open(

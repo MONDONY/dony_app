@@ -20,12 +20,55 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/mock_analytics_backend.dart';
+
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+const _activitiesHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "activities_intro",
+      "title": "Découvrir l'espace Activités",
+      "description": "Suivre vos trajets, envois et négociations au même endroit.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["activities"]
+    }
+  ]
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -79,6 +122,7 @@ Future<void> _pump(
   TravelerBidsState? travelerBidsState,
   NegotiationListState? negoState,
   PackageRequestState? packageRequestState,
+  String helpConfigJson = _emptyHelpConfigJson,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -90,11 +134,7 @@ Future<void> _pump(
   when(() => repo.getTripsSummary(period: any(named: 'period'))).thenAnswer(
     (_) async =>
         summary ??
-        const TripsSummaryModel(
-          activeTrips: 6,
-          kgSold: 0,
-          revenue: 0,
-        ),
+        const TripsSummaryModel(activeTrips: 6, kgSold: 0, revenue: 0),
   );
 
   final bidBloc = _MockBidBloc();
@@ -122,8 +162,9 @@ Future<void> _pump(
   when(() => nego.state).thenReturn(negoState ?? NegotiationListState());
 
   final packageRequests = _MockPackageRequestBloc();
-  when(() => packageRequests.state)
-      .thenReturn(packageRequestState ?? PackageRequestState());
+  when(
+    () => packageRequests.state,
+  ).thenReturn(packageRequestState ?? PackageRequestState());
 
   final summaryCubit = TripsSummaryCubit(repo);
 
@@ -150,6 +191,15 @@ Future<void> _pump(
             BlocProvider<StatsPeriodCubit>(create: (_) => StatsPeriodCubit()),
             BlocProvider<NegotiationListBloc>.value(value: nego),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
+            BlocProvider<HelpCenterBloc>(
+              create: (_) => HelpCenterBloc(
+                HelpCenterRepository(
+                  _StaticHelpCenterSource(helpConfigJson),
+                  fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                ),
+                makeDisabledAnalytics(MockAnalyticsBackend()),
+              )..add(const HelpCenterLoadRequested()),
+            ),
           ],
           child: const ActivitesHubScreenTesting(),
         ),
@@ -168,6 +218,12 @@ Future<void> _pump(
       route('/trip-templates', 'Modèles'),
       route('/profile/addresses', 'Adresses'),
       route('/profile/recipients', 'Destinataires'),
+      GoRoute(
+        path: '/profile/help/tutorial/:tutorialId',
+        builder: (_, state) => Scaffold(
+          body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
+        ),
+      ),
     ],
   );
 
@@ -318,9 +374,7 @@ void main() {
       await expectNavigation(tester, 'Demandes reçues', '/demandes');
     });
 
-    testWidgets('Discussions de prix → liste des négociations', (
-      tester,
-    ) async {
+    testWidgets('Discussions de prix → liste des négociations', (tester) async {
       await expectNavigation(tester, 'Discussions de prix', '/negotiations');
     });
 
@@ -492,5 +546,47 @@ void main() {
 
       expect(find.textContaining('voyageurs de confiance'), findsNothing);
     });
+
+    testWidgets(
+      'la carte tutoriel apparaît après l\'introduction et navigue au tap',
+      (tester) async {
+        introDismissed(value: false);
+
+        await _pump(tester, helpConfigJson: _activitiesHelpConfigJson);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        final introTop = tester
+            .getTopLeft(find.textContaining('voyageurs de confiance'))
+            .dy;
+        final cardTop = tester
+            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
+            .dy;
+        expect(cardTop, greaterThan(introTop));
+
+        await tester.ensureVisible(
+          find.text('Besoin d\'aide ? Voir le tutoriel'),
+        );
+        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('TutorialStub:activities_intro'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'la carte tutoriel reste présente même quand l\'introduction est fermée',
+      (tester) async {
+        introDismissed(value: true);
+
+        await _pump(tester, helpConfigJson: _activitiesHelpConfigJson);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
+      },
+    );
   });
 }

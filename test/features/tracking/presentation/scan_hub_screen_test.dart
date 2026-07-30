@@ -3,6 +3,9 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +16,46 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+
+import '../../../helpers/mock_analytics_backend.dart';
+
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+const _qrHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": [
+    {
+      "id": "qr_handover",
+      "title": "Remise et retrait par QR",
+      "description": "Scanner au départ, en transit et à l'arrivée.",
+      "youtubeVideoId": "dQw4w9WgXcQ",
+      "order": 1,
+      "active": true,
+      "contexts": ["qrHandover"]
+    }
+  ]
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
 
 class _MockScanHubCubit extends MockCubit<ScanHubState>
     implements ScanHubCubit {}
@@ -34,10 +77,13 @@ class _FakePathProviderPlatform extends PathProviderPlatform {
   @override
   Future<String?> getExternalStoragePath() async => '.dart_tool/test_hive';
   @override
-  Future<List<String>?> getExternalCachePaths() async => ['.dart_tool/test_hive'];
+  Future<List<String>?> getExternalCachePaths() async => [
+    '.dart_tool/test_hive',
+  ];
   @override
-  Future<List<String>?> getExternalStoragePaths({StorageDirectory? type}) async =>
-      ['.dart_tool/test_hive'];
+  Future<List<String>?> getExternalStoragePaths({
+    StorageDirectory? type,
+  }) async => ['.dart_tool/test_hive'];
   @override
   Future<String?> getDownloadsPath() async => '.dart_tool/test_hive';
 }
@@ -58,21 +104,35 @@ AnnouncementModel _trip(String id, {String status = 'IN_PROGRESS'}) =>
     );
 
 BidModel _bid(String id, String status, {String? recipientName}) => BidModel(
-      id: id,
-      announcementId: 'trip-1',
-      senderId: 's',
-      status: status,
-      recipientName: recipientName,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+  id: id,
+  announcementId: 'trip-1',
+  senderId: 's',
+  status: status,
+  recipientName: recipientName,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+);
 
-GoRouter _router(ScanHubCubit cubit) => GoRouter(
+GoRouter _router(
+  ScanHubCubit cubit, {
+  String helpConfigJson = _emptyHelpConfigJson,
+}) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (_, __) => BlocProvider<ScanHubCubit>.value(
-        value: cubit,
+      builder: (_, __) => MultiBlocProvider(
+        providers: [
+          BlocProvider<ScanHubCubit>.value(value: cubit),
+          BlocProvider<HelpCenterBloc>(
+            create: (_) => HelpCenterBloc(
+              HelpCenterRepository(
+                _StaticHelpCenterSource(helpConfigJson),
+                fallbackJsonLoader: () async => _emptyHelpConfigJson,
+              ),
+              makeDisabledAnalytics(MockAnalyticsBackend()),
+            )..add(const HelpCenterLoadRequested()),
+          ),
+        ],
         child: const ScanHubView(),
       ),
     ),
@@ -93,11 +153,21 @@ GoRouter _router(ScanHubCubit cubit) => GoRouter(
       builder: (_, state) =>
           Scaffold(body: Text('bid-${state.pathParameters['id']}')),
     ),
+    GoRoute(
+      path: '/profile/help/tutorial/:tutorialId',
+      builder: (_, state) => Scaffold(
+        body: Text('TutorialStub:${state.pathParameters['tutorialId']}'),
+      ),
+    ),
   ],
 );
 
-Widget _wrap(ScanHubCubit cubit) =>
-    MaterialApp.router(routerConfig: _router(cubit));
+Widget _wrap(
+  ScanHubCubit cubit, {
+  String helpConfigJson = _emptyHelpConfigJson,
+}) => MaterialApp.router(
+  routerConfig: _router(cubit, helpConfigJson: helpConfigJson),
+);
 
 void main() {
   late _MockScanHubCubit cubit;
@@ -211,11 +281,13 @@ void main() {
     ) async {
       final tripA = _trip('trip-a');
       final tripB = _trip('trip-b');
-      when(() => cubit.state).thenReturn(loadedState(
-        trips: [tripA, tripB],
-        selectedTripId: 'trip-a',
-        bidsByTrip: {'trip-a': [], 'trip-b': []},
-      ));
+      when(() => cubit.state).thenReturn(
+        loadedState(
+          trips: [tripA, tripB],
+          selectedTripId: 'trip-a',
+          bidsByTrip: {'trip-a': [], 'trip-b': []},
+        ),
+      );
       await tester.pumpWidget(_wrap(cubit));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('trip_switcher')), findsOneWidget);
@@ -231,61 +303,103 @@ void main() {
 
   group('liste des colis', () {
     testWidgets('affiche une ligne par colis avec son nom', (tester) async {
-      when(() => cubit.state).thenReturn(loadedState(
-        bidsByTrip: {
-          'trip-1': [_bid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye')],
-        },
-      ));
+      when(() => cubit.state).thenReturn(
+        loadedState(
+          bidsByTrip: {
+            'trip-1': [_bid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye')],
+          },
+        ),
+      );
       await tester.pumpWidget(_wrap(cubit));
       await tester.pumpAndSettle();
       expect(find.textContaining('Awa Ndiaye'), findsOneWidget);
     });
 
-    testWidgets('tap sur la ligne (hors bouton Scan) navigue vers la fiche colis', (
-      tester,
-    ) async {
-      when(() => cubit.state).thenReturn(loadedState(
-        bidsByTrip: {
-          'trip-1': [_bid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye')],
-        },
-      ));
-      await tester.pumpWidget(_wrap(cubit));
-      await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('Awa Ndiaye'));
-      await tester.pumpAndSettle();
-      expect(find.text('bid-bid-1'), findsOneWidget);
-    });
+    testWidgets(
+      'tap sur la ligne (hors bouton Scan) navigue vers la fiche colis',
+      (tester) async {
+        when(() => cubit.state).thenReturn(
+          loadedState(
+            bidsByTrip: {
+              'trip-1': [
+                _bid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye'),
+              ],
+            },
+          ),
+        );
+        await tester.pumpWidget(_wrap(cubit));
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('Awa Ndiaye'));
+        await tester.pumpAndSettle();
+        expect(find.text('bid-bid-1'), findsOneWidget);
+      },
+    );
 
-    testWidgets('tap Scan sur une ligne route vers identify avec l\'étape déduite', (
-      tester,
-    ) async {
-      when(() => cubit.state).thenReturn(loadedState(
-        bidsByTrip: {
-          'trip-1': [_bid('bid-1', 'HANDED_OVER', recipientName: 'Awa Ndiaye')],
-        },
-      ));
-      await tester.pumpWidget(_wrap(cubit));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Scan'));
-      await tester.pumpAndSettle();
-      expect(find.text('identify'), findsOneWidget);
-    });
+    testWidgets(
+      'tap Scan sur une ligne route vers identify avec l\'étape déduite',
+      (tester) async {
+        when(() => cubit.state).thenReturn(
+          loadedState(
+            bidsByTrip: {
+              'trip-1': [
+                _bid('bid-1', 'HANDED_OVER', recipientName: 'Awa Ndiaye'),
+              ],
+            },
+          ),
+        );
+        await tester.pumpWidget(_wrap(cubit));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Scan'));
+        await tester.pumpAndSettle();
+        expect(find.text('identify'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'les points de progression reflètent colisStepProgress (HANDED_OVER '
       '→ départ scanné, transit/arrivée non)',
       (tester) async {
-        when(() => cubit.state).thenReturn(loadedState(
-          bidsByTrip: {
-            'trip-1': [_bid('bid-1', 'HANDED_OVER', recipientName: 'Awa Ndiaye')],
-          },
-        ));
+        when(() => cubit.state).thenReturn(
+          loadedState(
+            bidsByTrip: {
+              'trip-1': [
+                _bid('bid-1', 'HANDED_OVER', recipientName: 'Awa Ndiaye'),
+              ],
+            },
+          ),
+        );
         await tester.pumpWidget(_wrap(cubit));
         await tester.pumpAndSettle();
         // HANDED_OVER → colisStepProgress = (depart: true, transit: false,
         // arrivee: false) : 1 point rempli, 2 points restants.
         expect(find.byKey(const Key('step_dot_done')), findsOneWidget);
         expect(find.byKey(const Key('step_dot_todo')), findsNWidgets(2));
+      },
+    );
+  });
+
+  group('carte tutoriel contextuelle', () {
+    testWidgets(
+      'affiche la carte sous l\'explication QR et navigue vers le tutoriel au tap',
+      (tester) async {
+        when(() => cubit.state).thenReturn(loadedState());
+        await tester.pumpWidget(
+          _wrap(cubit, helpConfigJson: _qrHelpConfigJson),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        final etapesTop = tester.getTopLeft(find.text('LECTURE RAPIDE')).dy;
+        final cardTop = tester
+            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
+            .dy;
+        expect(cardTop, greaterThan(etapesTop));
+
+        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('TutorialStub:qr_handover'), findsOneWidget);
       },
     );
   });
@@ -310,11 +424,13 @@ void main() {
     testWidgets(
       'visible et tap navigue vers /tracking/offline-queue quand un scan du trajet actif est en attente',
       (tester) async {
-        when(() => cubit.state).thenReturn(loadedState(
-          bidsByTrip: {
-            'trip-1': [_bid('bid-1', 'ACCEPTED')],
-          },
-        ));
+        when(() => cubit.state).thenReturn(
+          loadedState(
+            bidsByTrip: {
+              'trip-1': [_bid('bid-1', 'ACCEPTED')],
+            },
+          ),
+        );
         // Écriture disque Hive réelle → doit tourner dans la vraie zone async
         // (runAsync), sinon l'horloge fake du testWidgets ne complète jamais
         // l'I/O et le test hang jusqu'au timeout de 10 min.
@@ -339,11 +455,13 @@ void main() {
     testWidgets(
       'absent quand la queue offline ne contient que des colis d\'un autre trajet',
       (tester) async {
-        when(() => cubit.state).thenReturn(loadedState(
-          bidsByTrip: {
-            'trip-1': [_bid('bid-1', 'ACCEPTED')],
-          },
-        ));
+        when(() => cubit.state).thenReturn(
+          loadedState(
+            bidsByTrip: {
+              'trip-1': [_bid('bid-1', 'ACCEPTED')],
+            },
+          ),
+        );
         // Écriture disque Hive réelle → runAsync (cf. test précédent), sinon
         // hang du testWidgets sous horloge fake.
         await tester.runAsync(() async {
@@ -367,11 +485,13 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    when(() => cubit.state).thenReturn(loadedState(
-      bidsByTrip: {
-        'trip-1': [_bid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye')],
-      },
-    ));
+    when(() => cubit.state).thenReturn(
+      loadedState(
+        bidsByTrip: {
+          'trip-1': [_bid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye')],
+        },
+      ),
+    );
     await tester.pumpWidget(_wrap(cubit));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
