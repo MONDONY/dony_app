@@ -32,6 +32,16 @@ const _configJson = '''
 ''';
 
 void main() {
+  test('appRouter enregistre la route tutoriel réelle', () {
+    final route = appRouter.configuration.routes
+        .whereType<GoRoute>()
+        .singleWhere(
+          (route) => route.path == '/profile/help/tutorial/:tutorialId',
+        );
+
+    expect(route.builder, isNotNull);
+  });
+
   testWidgets(
     'la route de production transmet tutorialId sans dépendre de extra',
     (tester) async {
@@ -85,14 +95,20 @@ void main() {
 }
 
 final class _RoutePlayerSession implements HelpTutorialPlayerSession {
-  final _events = StreamController<HelpTutorialPlayerEvent>.broadcast();
+  _RoutePlayerSession() {
+    scheduleMicrotask(() => _events.add(HelpTutorialPlayerEvent.ready));
+  }
+
+  final _events = StreamController<HelpTutorialPlayerEvent>.broadcast(
+    sync: true,
+  );
 
   @override
   Stream<HelpTutorialPlayerEvent> get events => _events.stream;
 
   @override
-  Widget buildInline({required Widget Function(Widget player) frameBuilder}) {
-    return frameBuilder(
+  Widget buildScaffold({required Widget Function(Widget player) pageBuilder}) {
+    return pageBuilder(
       const ColoredBox(key: Key('route-player'), color: Colors.black),
     );
   }

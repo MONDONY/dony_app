@@ -3,57 +3,14 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/screens/help_tutorial_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+
+export 'package:dony/features/profile/presentation/screens/help_tutorial_player.dart';
 
 const _youtubeWatchHost = 'www.youtube.com';
-const _youtubePrivacyEnhancedOrigin = 'https://www.youtube-nocookie.com';
-
-enum HelpTutorialPlayerEvent { playing, ended, error }
-
-@immutable
-final class HelpTutorialPlayerConfiguration {
-  const HelpTutorialPlayerConfiguration({
-    required this.videoId,
-    this.autoPlay = false,
-    this.showControls = true,
-    this.showFullscreenButton = true,
-    this.enableCaption = true,
-    this.strictRelatedVideos = true,
-    this.privacyEnhanced = true,
-    this.aspectRatio = 16 / 9,
-  });
-
-  final String videoId;
-  final bool autoPlay;
-  final bool showControls;
-  final bool showFullscreenButton;
-  final bool enableCaption;
-  final bool strictRelatedVideos;
-  final bool privacyEnhanced;
-  final double aspectRatio;
-}
-
-abstract interface class HelpTutorialPlayerSession {
-  Stream<HelpTutorialPlayerEvent> get events;
-
-  Widget buildInline({required Widget Function(Widget player) frameBuilder});
-
-  Future<void> close();
-}
-
-typedef HelpTutorialPlayerSessionFactory =
-    HelpTutorialPlayerSession Function(
-      HelpTutorialPlayerConfiguration configuration,
-    );
-
-HelpTutorialPlayerSession createYoutubeTutorialPlayerSession(
-  HelpTutorialPlayerConfiguration configuration,
-) {
-  return _YoutubeTutorialPlayerSession(configuration);
-}
 
 class HelpTutorialScreen extends StatelessWidget {
   const HelpTutorialScreen({
@@ -75,26 +32,29 @@ class HelpTutorialScreen extends StatelessWidget {
           _ => null,
         };
         final tutorial = config?.tutorialById(tutorialId);
-        final body = switch ((state, tutorial)) {
+        return switch ((state, tutorial)) {
           (HelpCenterInitial() || HelpCenterLoading(), _) =>
-            const DonyEmptyState(type: DonyEmptyStateType.loading, title: ''),
-          (_, null) => const DonyEmptyState(
-            title: 'Tutoriel introuvable',
-            description: 'Ce tutoriel n’est plus disponible.',
-            iconAsset: 'circle-help',
+            const DonyPageScaffold(
+              title: 'Tutoriel vidéo',
+              scrollable: false,
+              body: DonyEmptyState(type: DonyEmptyStateType.loading, title: ''),
+            ),
+          (_, null) => const DonyPageScaffold(
+            title: 'Tutoriel vidéo',
+            scrollable: false,
+            body: DonyEmptyState(
+              title: 'Tutoriel introuvable',
+              description: 'Ce tutoriel n’est plus disponible.',
+              iconAsset: 'circle-help',
+            ),
           ),
-          (_, final tutorial?) => _HelpTutorialContent(
+          (_, final tutorial?) => _HelpTutorialExperience(
+            key: ValueKey(tutorial.id),
             tutorial: tutorial,
             youtubeChannelUrl: config?.youtubeChannelUrl,
-            playerSessionFactory: playerSessionFactory,
+            sessionFactory: playerSessionFactory,
           ),
         };
-
-        return DonyPageScaffold(
-          title: 'Tutoriel vidéo',
-          scrollable: tutorial != null,
-          body: body,
-        );
       },
     );
   }
@@ -104,12 +64,12 @@ class _HelpTutorialContent extends StatelessWidget {
   const _HelpTutorialContent({
     required this.tutorial,
     required this.youtubeChannelUrl,
-    required this.playerSessionFactory,
+    required this.playerArea,
   });
 
   final HelpTutorial tutorial;
   final Uri? youtubeChannelUrl;
-  final HelpTutorialPlayerSessionFactory playerSessionFactory;
+  final Widget playerArea;
 
   @override
   Widget build(BuildContext context) {
@@ -162,31 +122,7 @@ class _HelpTutorialContent extends StatelessWidget {
             .fadeIn(duration: DonyDuration.slow, curve: DonyCurve.enter)
             .slideY(begin: 0.04, end: 0, curve: DonyCurve.enter),
         const SizedBox(height: DonySpacing.xl),
-        _HelpTutorialPlayerHost(
-          key: ValueKey(tutorial.id),
-          tutorial: tutorial,
-          sessionFactory: playerSessionFactory,
-          onStarted: () => context.read<HelpCenterBloc>().add(
-            HelpTutorialPlaybackRequested(
-              tutorialId: tutorial.id,
-              action: HelpPlaybackAction.started,
-            ),
-          ),
-          onCompleted: () => context.read<HelpCenterBloc>().add(
-            HelpTutorialPlaybackRequested(
-              tutorialId: tutorial.id,
-              action: HelpPlaybackAction.completed,
-            ),
-          ),
-          onOpenExternal: () => context.read<HelpCenterBloc>().add(
-            HelpExternalOpenRequested.tutorial(
-              uri: Uri.https(_youtubeWatchHost, '/watch', {
-                'v': tutorial.youtubeVideoId,
-              }),
-              tutorialId: tutorial.id,
-            ),
-          ),
-        ),
+        playerArea,
         if (youtubeChannelUrl case final channelUrl?) ...[
           const SizedBox(height: DonySpacing.xl),
           DonyButton(
@@ -208,28 +144,24 @@ class _HelpTutorialContent extends StatelessWidget {
 
 enum _PlayerViewStatus { ready, loading, error }
 
-class _HelpTutorialPlayerHost extends StatefulWidget {
-  const _HelpTutorialPlayerHost({
+class _HelpTutorialExperience extends StatefulWidget {
+  const _HelpTutorialExperience({
     super.key,
     required this.tutorial,
+    required this.youtubeChannelUrl,
     required this.sessionFactory,
-    required this.onStarted,
-    required this.onCompleted,
-    required this.onOpenExternal,
   });
 
   final HelpTutorial tutorial;
+  final Uri? youtubeChannelUrl;
   final HelpTutorialPlayerSessionFactory sessionFactory;
-  final VoidCallback onStarted;
-  final VoidCallback onCompleted;
-  final VoidCallback onOpenExternal;
 
   @override
-  State<_HelpTutorialPlayerHost> createState() =>
-      _HelpTutorialPlayerHostState();
+  State<_HelpTutorialExperience> createState() =>
+      _HelpTutorialExperienceState();
 }
 
-class _HelpTutorialPlayerHostState extends State<_HelpTutorialPlayerHost> {
+class _HelpTutorialExperienceState extends State<_HelpTutorialExperience> {
   final _statusController = StreamController<_PlayerViewStatus>.broadcast(
     sync: true,
   );
@@ -251,7 +183,7 @@ class _HelpTutorialPlayerHostState extends State<_HelpTutorialPlayerHost> {
   }
 
   @override
-  void didUpdateWidget(_HelpTutorialPlayerHost oldWidget) {
+  void didUpdateWidget(_HelpTutorialExperience oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.tutorial.youtubeVideoId != widget.tutorial.youtubeVideoId) {
       _startedReported = false;
@@ -266,9 +198,13 @@ class _HelpTutorialPlayerHostState extends State<_HelpTutorialPlayerHost> {
       _session = session;
       _eventSubscription = session.events.listen(
         _onPlayerEvent,
-        onError: (_) => _emitStatus(_PlayerViewStatus.error),
+        onError: (_, _) => _handlePlayerFailure(),
+        onDone: () {
+          if (_session != null) {
+            _handlePlayerFailure();
+          }
+        },
       );
-      _emitStatus(_PlayerViewStatus.ready);
     } catch (_) {
       _emitStatus(_PlayerViewStatus.error);
     }
@@ -276,19 +212,42 @@ class _HelpTutorialPlayerHostState extends State<_HelpTutorialPlayerHost> {
 
   void _onPlayerEvent(HelpTutorialPlayerEvent event) {
     switch (event) {
+      case HelpTutorialPlayerEvent.ready:
+        _emitStatus(_PlayerViewStatus.ready);
       case HelpTutorialPlayerEvent.playing:
+        if (_currentStatus == _PlayerViewStatus.loading) {
+          _emitStatus(_PlayerViewStatus.ready);
+        }
         if (!_startedReported) {
           _startedReported = true;
-          widget.onStarted();
+          context.read<HelpCenterBloc>().add(
+            HelpTutorialPlaybackRequested(
+              tutorialId: widget.tutorial.id,
+              action: HelpPlaybackAction.started,
+            ),
+          );
         }
       case HelpTutorialPlayerEvent.ended:
         if (!_completedReported) {
           _completedReported = true;
-          widget.onCompleted();
+          context.read<HelpCenterBloc>().add(
+            HelpTutorialPlaybackRequested(
+              tutorialId: widget.tutorial.id,
+              action: HelpPlaybackAction.completed,
+            ),
+          );
         }
       case HelpTutorialPlayerEvent.error:
-        _emitStatus(_PlayerViewStatus.error);
+        _handlePlayerFailure();
     }
+  }
+
+  void _handlePlayerFailure() {
+    if (_currentStatus == _PlayerViewStatus.error && _session == null) {
+      return;
+    }
+    _releaseCurrentSession();
+    _emitStatus(_PlayerViewStatus.error);
   }
 
   void _emitStatus(_PlayerViewStatus status) {
@@ -338,45 +297,83 @@ class _HelpTutorialPlayerHostState extends State<_HelpTutorialPlayerHost> {
       stream: _statusController.stream,
       initialData: _currentStatus,
       builder: (context, snapshot) {
-        return AnimatedSwitcher(
-          duration: DonyDuration.base,
-          switchInCurve: DonyCurve.enter,
-          switchOutCurve: DonyCurve.exit,
-          child: switch (snapshot.data ?? _currentStatus) {
-            _PlayerViewStatus.ready => _buildPlayer(context),
-            _PlayerViewStatus.loading => _buildLoading(context),
-            _PlayerViewStatus.error => _PlayerErrorCard(
-              onRetry: _restart,
-              onOpenExternal: widget.onOpenExternal,
-            ),
-          },
+        final status = snapshot.data ?? _currentStatus;
+        final session = _session;
+        if (session == null) {
+          return _buildPage(context, status: status);
+        }
+        return session.buildScaffold(
+          pageBuilder: (player) =>
+              _buildPage(context, status: status, player: player),
         );
       },
     );
   }
 
-  Widget _buildPlayer(BuildContext context) {
-    final session = _session;
-    if (session == null) {
-      return _buildLoading(context);
-    }
-    final cs = Theme.of(context).colorScheme;
-    final configuration = _configuration;
-
-    return KeyedSubtree(
-      key: const ValueKey('help-tutorial-player-ready'),
-      child: session.buildInline(
-        frameBuilder: (player) => AspectRatio(
-          key: const Key('help-tutorial-player-aspect-ratio'),
-          aspectRatio: configuration.aspectRatio,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border.all(color: cs.outline),
-              borderRadius: BorderRadius.circular(DonyRadius.card),
+  Widget _buildPage(
+    BuildContext context, {
+    required _PlayerViewStatus status,
+    Widget? player,
+  }) {
+    return DonyPageScaffold(
+      title: 'Tutoriel vidéo',
+      body: _HelpTutorialContent(
+        tutorial: widget.tutorial,
+        youtubeChannelUrl: widget.youtubeChannelUrl,
+        playerArea: AnimatedSwitcher(
+          duration: DonyDuration.base,
+          switchInCurve: DonyCurve.enter,
+          switchOutCurve: DonyCurve.exit,
+          child: switch (status) {
+            _PlayerViewStatus.error => _PlayerErrorCard(
+              onRetry: _restart,
+              onOpenExternal: _openExternal,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              child: player,
+            _PlayerViewStatus.loading || _PlayerViewStatus.ready =>
+              _buildPlayerFrame(context, player: player, status: status),
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayerFrame(
+    BuildContext context, {
+    required Widget? player,
+    required _PlayerViewStatus status,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      key: const ValueKey('help-tutorial-player-frame'),
+      container: true,
+      label: 'Lecteur vidéo : ${widget.tutorial.title}',
+      child: AspectRatio(
+        key: const Key('help-tutorial-player-aspect-ratio'),
+        aspectRatio: _configuration.aspectRatio,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            border: Border.all(color: cs.outline),
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ?player,
+                if (status == _PlayerViewStatus.loading)
+                  ColoredBox(
+                    key: const ValueKey('help-tutorial-player-loading'),
+                    color: cs.surfaceContainerHighest,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: cs.primary,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -384,19 +381,13 @@ class _HelpTutorialPlayerHostState extends State<_HelpTutorialPlayerHost> {
     );
   }
 
-  Widget _buildLoading(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return AspectRatio(
-      key: const ValueKey('help-tutorial-player-loading'),
-      aspectRatio: _configuration.aspectRatio,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-        ),
-        child: Center(
-          child: CircularProgressIndicator(color: cs.primary, strokeWidth: 2),
-        ),
+  void _openExternal() {
+    context.read<HelpCenterBloc>().add(
+      HelpExternalOpenRequested.tutorial(
+        uri: Uri.https(_youtubeWatchHost, '/watch', {
+          'v': widget.tutorial.youtubeVideoId,
+        }),
+        tutorialId: widget.tutorial.id,
       ),
     );
   }
@@ -461,65 +452,4 @@ class _PlayerErrorCard extends StatelessWidget {
       ),
     );
   }
-}
-
-final class _YoutubeTutorialPlayerSession implements HelpTutorialPlayerSession {
-  _YoutubeTutorialPlayerSession(this.configuration)
-    : _controller = YoutubePlayerController.fromVideoId(
-        videoId: configuration.videoId,
-        autoPlay: configuration.autoPlay,
-        params: YoutubePlayerParams(
-          showControls: configuration.showControls,
-          showFullscreenButton: configuration.showFullscreenButton,
-          enableCaption: configuration.enableCaption,
-          strictRelatedVideos: configuration.strictRelatedVideos,
-          captionLanguage: 'fr',
-          interfaceLanguage: 'fr',
-          origin: configuration.privacyEnhanced
-              ? _youtubePrivacyEnhancedOrigin
-              : 'https://www.youtube.com',
-        ),
-      ) {
-    events = _controller.stream
-        .map(_toPlayerEvent)
-        .where((event) => event != null)
-        .cast<HelpTutorialPlayerEvent>()
-        .distinct();
-  }
-
-  final HelpTutorialPlayerConfiguration configuration;
-  final YoutubePlayerController _controller;
-  @override
-  late final Stream<HelpTutorialPlayerEvent> events;
-  bool _closed = false;
-
-  @override
-  Widget buildInline({required Widget Function(Widget player) frameBuilder}) {
-    return YoutubePlayerScaffold(
-      controller: _controller,
-      aspectRatio: configuration.aspectRatio,
-      backgroundColor: Colors.black,
-      builder: (context, player) => frameBuilder(player),
-    );
-  }
-
-  @override
-  Future<void> close() async {
-    if (_closed) {
-      return;
-    }
-    _closed = true;
-    await _controller.close();
-  }
-}
-
-HelpTutorialPlayerEvent? _toPlayerEvent(YoutubePlayerValue value) {
-  if (value.hasError) {
-    return HelpTutorialPlayerEvent.error;
-  }
-  return switch (value.playerState) {
-    PlayerState.playing => HelpTutorialPlayerEvent.playing,
-    PlayerState.ended => HelpTutorialPlayerEvent.ended,
-    _ => null,
-  };
 }
