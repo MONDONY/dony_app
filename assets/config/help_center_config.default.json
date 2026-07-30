@@ -102,6 +102,42 @@
       "order": 9,
       "active": true,
       "contexts": ["dispute"]
+    },
+    {
+      "id": "tuto_alertes_corridor",
+      "title": "Créer une alerte corridor",
+      "description": "Être prévenu automatiquement dès qu'un trajet ou un colis apparaît sur ton corridor.",
+      "youtubeVideoId": "OPf0YbXqDm0",
+      "order": 10,
+      "active": true,
+      "contexts": ["corridorAlerts"]
+    },
+    {
+      "id": "tuto_modeles_trajet",
+      "title": "Créer un modèle de trajet",
+      "description": "Publier tes trajets récurrents en quelques secondes grâce aux modèles.",
+      "youtubeVideoId": "JGwWNGJdvx8",
+      "order": 11,
+      "active": true,
+      "contexts": ["tripTemplates"]
+    },
+    {
+      "id": "tuto_destinataires",
+      "title": "Gérer mes destinataires",
+      "description": "Enregistrer tes proches pour envoyer un colis en un seul tap.",
+      "youtubeVideoId": "3JZ_D3ELwOQ",
+      "order": 12,
+      "active": true,
+      "contexts": ["recipients"]
+    },
+    {
+      "id": "tuto_demandes_recues",
+      "title": "Gérer les demandes reçues",
+      "description": "Accepter ou refuser une demande d'expéditeur sur l'un de tes trajets.",
+      "youtubeVideoId": "CevxZvSJLk8",
+      "order": 13,
+      "active": true,
+      "contexts": ["receivedRequests"]
     }
   ]
 }

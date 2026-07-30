@@ -168,4 +168,8 @@ String _sourceName(TutorialContext? source) => switch (source) {
   TutorialContext.qrHandover => 'qr_handover',
   TutorialContext.tracking => 'tracking',
   TutorialContext.dispute => 'dispute',
+  TutorialContext.corridorAlerts => 'corridor_alerts',
+  TutorialContext.tripTemplates => 'trip_templates',
+  TutorialContext.recipients => 'recipients',
+  TutorialContext.receivedRequests => 'received_requests',
 };

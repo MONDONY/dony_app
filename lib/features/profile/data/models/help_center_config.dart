@@ -14,6 +14,10 @@ enum TutorialContext {
   qrHandover,
   tracking,
   dispute,
+  corridorAlerts,
+  tripTemplates,
+  recipients,
+  receivedRequests,
 }
 
 final class SocialLink extends Equatable {

@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/profile/data/models/help_center_config.dart';
+import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/data/recipient_filter.dart';
@@ -59,80 +61,98 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
           onPressed: () => _addRecipient(fabCtx),
         ),
       ),
-      body: BlocBuilder<RecipientBloc, RecipientState>(
-        builder: (context, state) {
-          if (state.status == RecipientStatus.loading &&
-              state.recipients.isEmpty) {
-            return const DonyEmptyState(
-              type: DonyEmptyStateType.loading,
-              title: '',
-            );
-          }
-          if (state.status == RecipientStatus.error &&
-              state.recipients.isEmpty) {
-            return DonyEmptyState(
-              mascotte: DonyMascotteType.erreurLegere,
-              type: DonyEmptyStateType.error,
-              iconAsset: 'circle-alert',
-              title: 'Erreur de chargement',
-              description: state.error ?? 'Une erreur est survenue.',
-              actionLabel: 'Réessayer',
-              onAction: () =>
-                  context.read<RecipientBloc>().add(const RecipientLoaded()),
-            );
-          }
-          if (state.recipients.isEmpty) {
-            return DonyEmptyState(
-              mascotte: DonyMascotteType.assis,
-              title: 'Aucun destinataire enregistré',
-              description:
-                  'Ajoute tes proches en Afrique pour envoyer en 1 tap.',
-              actionLabel: 'Ajouter mon premier destinataire',
-              onAction: () => _addRecipient(context),
-            );
-          }
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              0,
+              DonySpacing.lg,
+              DonySpacing.sm,
+            ),
+            child: ContextualTutorialCard(context: TutorialContext.recipients),
+          ),
+          Expanded(
+            child: BlocBuilder<RecipientBloc, RecipientState>(
+              builder: (context, state) {
+                if (state.status == RecipientStatus.loading &&
+                    state.recipients.isEmpty) {
+                  return const DonyEmptyState(
+                    type: DonyEmptyStateType.loading,
+                    title: '',
+                  );
+                }
+                if (state.status == RecipientStatus.error &&
+                    state.recipients.isEmpty) {
+                  return DonyEmptyState(
+                    mascotte: DonyMascotteType.erreurLegere,
+                    type: DonyEmptyStateType.error,
+                    iconAsset: 'circle-alert',
+                    title: 'Erreur de chargement',
+                    description: state.error ?? 'Une erreur est survenue.',
+                    actionLabel: 'Réessayer',
+                    onAction: () => context.read<RecipientBloc>().add(
+                      const RecipientLoaded(),
+                    ),
+                  );
+                }
+                if (state.recipients.isEmpty) {
+                  return DonyEmptyState(
+                    mascotte: DonyMascotteType.assis,
+                    title: 'Aucun destinataire enregistré',
+                    description:
+                        'Ajoute tes proches en Afrique pour envoyer en 1 tap.',
+                    actionLabel: 'Ajouter mon premier destinataire',
+                    onAction: () => _addRecipient(context),
+                  );
+                }
 
-          final filtered =
-              filterRecipients(state.recipients, _searchCtrl.text);
+                final filtered = filterRecipients(
+                  state.recipients,
+                  _searchCtrl.text,
+                );
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.md,
-                  DonySpacing.lg,
-                  0,
-                ),
-                child: _SearchField(controller: _searchCtrl),
-              ),
-              Expanded(
-                child: filtered.isEmpty
-                    ? const DonyEmptyState(
-                        mascotte: DonyMascotteType.assis,
-                        title: 'Aucun résultat',
-                        description:
-                            'Aucun destinataire ne correspond à ta recherche.',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.only(
-                          top: DonySpacing.sm,
-                          bottom: DonySpacing.huge,
-                        ),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => Divider(
-                          height: 1,
-                          thickness: 1,
-                          indent: DonySpacing.lg + 44 + DonySpacing.md,
-                          color: cs.outline.withValues(alpha: 0.5),
-                        ),
-                        itemBuilder: (context, i) =>
-                            _RecipientTile(recipient: filtered[i]),
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.md,
+                        DonySpacing.lg,
+                        0,
                       ),
-              ),
-            ],
-          );
-        },
+                      child: _SearchField(controller: _searchCtrl),
+                    ),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? const DonyEmptyState(
+                              mascotte: DonyMascotteType.assis,
+                              title: 'Aucun résultat',
+                              description:
+                                  'Aucun destinataire ne correspond à ta recherche.',
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.only(
+                                top: DonySpacing.sm,
+                                bottom: DonySpacing.huge,
+                              ),
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, __) => Divider(
+                                height: 1,
+                                thickness: 1,
+                                indent: DonySpacing.lg + 44 + DonySpacing.md,
+                                color: cs.outline.withValues(alpha: 0.5),
+                              ),
+                              itemBuilder: (context, i) =>
+                                  _RecipientTile(recipient: filtered[i]),
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -158,13 +178,15 @@ class _SearchField extends StatelessWidget {
         fillColor: cs.surfaceContainerHighest,
         prefixIcon: Padding(
           padding: const EdgeInsets.only(
-              left: DonySpacing.md, right: DonySpacing.sm),
+            left: DonySpacing.md,
+            right: DonySpacing.sm,
+          ),
           child: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
         ),
         prefixIconConstraints: const BoxConstraints(minWidth: 40),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
-              tooltip: 'Effacer la recherche',
+                tooltip: 'Effacer la recherche',
                 icon: const DonyIcon('x', size: 16),
                 onPressed: () => controller.clear(),
               )
@@ -209,8 +231,9 @@ class _RecipientTile extends StatelessWidget {
 
     return InkWell(
       onTap: () async {
-        final changed =
-            await context.push<bool>('/profile/recipients/${recipient.id}');
+        final changed = await context.push<bool>(
+          '/profile/recipients/${recipient.id}',
+        );
         if ((changed ?? false) && context.mounted) {
           context.read<RecipientBloc>().add(const RecipientLoaded());
         }
@@ -234,8 +257,9 @@ class _RecipientTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           recipient.fullName,
-                          style: tt.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -253,8 +277,7 @@ class _RecipientTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       recipient.relationship!,
-                      style:
-                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                   const SizedBox(height: 4),
@@ -352,14 +375,16 @@ class _KebabMenu extends StatelessWidget {
       onSelected: (action) async {
         switch (action) {
           case _RecipientAction.edit:
-            final changed = await context.push<bool>('/profile/recipients/${recipient.id}');
+            final changed = await context.push<bool>(
+              '/profile/recipients/${recipient.id}',
+            );
             if ((changed ?? false) && context.mounted) {
               context.read<RecipientBloc>().add(const RecipientLoaded());
             }
           case _RecipientAction.setDefault:
-            context
-                .read<RecipientBloc>()
-                .add(RecipientDefaultSet(recipient.id));
+            context.read<RecipientBloc>().add(
+              RecipientDefaultSet(recipient.id),
+            );
           case _RecipientAction.delete:
             final confirmed = await DonyDialog.show(
               context,
@@ -372,9 +397,7 @@ class _KebabMenu extends StatelessWidget {
               cancelLabel: 'Annuler',
             );
             if ((confirmed ?? false) && context.mounted) {
-              context
-                  .read<RecipientBloc>()
-                  .add(RecipientDeleted(recipient.id));
+              context.read<RecipientBloc>().add(RecipientDeleted(recipient.id));
             }
         }
       },
@@ -404,8 +427,11 @@ class _KebabMenu extends StatelessWidget {
           value: _RecipientAction.delete,
           child: Row(
             children: [
-              DonyIcon('trash-2',
-                  size: 18, color: Theme.of(context).colorScheme.error),
+              DonyIcon(
+                'trash-2',
+                size: 18,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(width: DonySpacing.sm),
               Text(
                 'Supprimer',

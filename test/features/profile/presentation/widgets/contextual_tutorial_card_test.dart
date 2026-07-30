@@ -1,5 +1,7 @@
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
@@ -9,9 +11,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
+
+class _MockHiveService extends Mock implements HiveService {}
+
+class _MockBox extends Mock implements Box {}
 
 const _emptyConfigJson = '''
 {
@@ -195,6 +202,119 @@ void main() {
         'source': 'negotiation',
       }),
     ).called(1);
+  });
+
+  group('fermeture de la carte', () {
+    testWidgets(
+      'le X la masque sans naviguer, même sans HiveService enregistré',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            context: TutorialContext.negotiation,
+            configJson: _negotiationConfigJson,
+          ),
+        );
+        await _settleCard(tester);
+
+        await tester.tap(
+          find.byKey(const Key('contextual-tutorial-card-dismiss')),
+        );
+        await tester.pump();
+
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+        expect(find.text('TutorialStub:negotiation_basics'), findsNothing);
+      },
+    );
+
+    group('avec HiveService', () {
+      late _MockHiveService hive;
+      late _MockBox box;
+
+      setUp(() {
+        box = _MockBox();
+        when(() => box.put(any<String>(), any<bool>())).thenAnswer(
+          (_) async {},
+        );
+        when(
+          () => box.get(
+            '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
+            defaultValue: any<Object?>(named: 'defaultValue'),
+          ),
+        ).thenReturn(false);
+        hive = _MockHiveService();
+        when(() => hive.userPrefs).thenReturn(box);
+        getIt.registerLazySingleton<HiveService>(() => hive);
+      });
+
+      tearDown(() => getIt.reset());
+
+      testWidgets('le X persiste la fermeture dans Hive', (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            context: TutorialContext.negotiation,
+            configJson: _negotiationConfigJson,
+          ),
+        );
+        await _settleCard(tester);
+
+        await tester.tap(
+          find.byKey(const Key('contextual-tutorial-card-dismiss')),
+        );
+        await tester.pump();
+
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+        verify(
+          () => box.put(
+            '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
+            true,
+          ),
+        ).called(1);
+      });
+
+      testWidgets('ouvrir le tutoriel (tap sur la carte) ne la ferme pas', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _wrap(
+            context: TutorialContext.negotiation,
+            configJson: _negotiationConfigJson,
+          ),
+        );
+        await _settleCard(tester);
+
+        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('TutorialStub:negotiation_basics'), findsOneWidget);
+        verifyNever(
+          () => box.put(
+            '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
+            true,
+          ),
+        );
+      });
+
+      testWidgets('reste masquée si déjà fermée précédemment (Hive)', (
+        tester,
+      ) async {
+        when(
+          () => box.get(
+            '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
+            defaultValue: any<Object?>(named: 'defaultValue'),
+          ),
+        ).thenReturn(true);
+
+        await tester.pumpWidget(
+          _wrap(
+            context: TutorialContext.negotiation,
+            configJson: _negotiationConfigJson,
+          ),
+        );
+        await _settleCard(tester);
+
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+      });
+    });
   });
 }
 

@@ -1,4 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/profile/bloc/help_center_bloc.dart';
+import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
+import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
@@ -9,10 +12,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/mock_analytics_backend.dart';
+
 class MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
 class FakeRecipientEvent extends Fake implements RecipientEvent {}
+
+// ContextualTutorialCard (contexte recipients) lit HelpCenterBloc via
+// context.select : sans ce provider, context.select lève
+// ProviderNotFoundException dès le premier pump.
+const _emptyHelpConfigJson = '''
+{
+  "schemaVersion": 1,
+  "socialLinks": [],
+  "tutorials": []
+}
+''';
+
+class _StaticHelpCenterSource implements HelpCenterConfigSource {
+  const _StaticHelpCenterSource(this.json);
+
+  final String json;
+
+  @override
+  String get activatedJson => json;
+
+  @override
+  Future<String?> fetchAndActivate() async => json;
+}
 
 const _r1 = Recipient(
   id: 'r-1',
@@ -47,35 +75,39 @@ const _r4Default = Recipient(
   isDefault: true,
 );
 
-Widget _wrap(RecipientBloc bloc) => BlocProvider<RecipientBloc>.value(
-      value: bloc,
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const RecipientsScreen(),
-            ),
-            GoRoute(
-              path: '/profile/recipients/new',
-              builder: (_, __) => const Scaffold(body: Text('New Recipient')),
-            ),
-            GoRoute(
-              path: '/profile/recipients/:id',
-              builder: (_, __) =>
-                  const Scaffold(body: Text('Edit Recipient')),
-            ),
-          ],
-        ),
+Widget _wrap(RecipientBloc bloc) => BlocProvider<HelpCenterBloc>(
+  create: (_) => HelpCenterBloc(
+    HelpCenterRepository(
+      const _StaticHelpCenterSource(_emptyHelpConfigJson),
+      fallbackJsonLoader: () async => _emptyHelpConfigJson,
+    ),
+    makeDisabledAnalytics(MockAnalyticsBackend()),
+  )..add(const HelpCenterLoadRequested()),
+  child: BlocProvider<RecipientBloc>.value(
+    value: bloc,
+    child: MaterialApp.router(
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(path: '/', builder: (_, __) => const RecipientsScreen()),
+          GoRoute(
+            path: '/profile/recipients/new',
+            builder: (_, __) => const Scaffold(body: Text('New Recipient')),
+          ),
+          GoRoute(
+            path: '/profile/recipients/:id',
+            builder: (_, __) => const Scaffold(body: Text('Edit Recipient')),
+          ),
+        ],
       ),
-    );
+    ),
+  ),
+);
 
 /// The kebab menu's `_RecipientAction` enum is private to the screen's
 /// library, so it can't be referenced from this test file as a generic
 /// type argument. `is PopupMenuButton` (no type argument) matches any
 /// `PopupMenuButton<T>` instance at runtime, so we find it this way instead.
-final Finder _kebabFinder =
-    find.byWidgetPredicate((w) => w is PopupMenuButton);
+final Finder _kebabFinder = find.byWidgetPredicate((w) => w is PopupMenuButton);
 
 void main() {
   late MockRecipientBloc bloc;
@@ -88,18 +120,18 @@ void main() {
   });
 
   testWidgets('shows loading state', (tester) async {
-    when(() => bloc.state).thenReturn(
-      const RecipientState(status: RecipientStatus.loading),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const RecipientState(status: RecipientStatus.loading));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(RecipientsScreen), findsOneWidget);
   });
 
   testWidgets('shows empty state when no recipients', (tester) async {
-    when(() => bloc.state).thenReturn(
-      const RecipientState(status: RecipientStatus.success),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const RecipientState(status: RecipientStatus.success));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.textContaining('Aucun destinataire'), findsOneWidget);
@@ -145,7 +177,9 @@ void main() {
   });
 
   group('search', () {
-    testWidgets('shows search field even with 3 or fewer recipients', (tester) async {
+    testWidgets('shows search field even with 3 or fewer recipients', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -157,7 +191,9 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('shows search field when more than 3 recipients', (tester) async {
+    testWidgets('shows search field when more than 3 recipients', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -190,7 +226,9 @@ void main() {
       expect(find.text('Moussa Traoré'), findsNothing);
     });
 
-    testWidgets('shows empty state when search query matches nothing', (tester) async {
+    testWidgets('shows empty state when search query matches nothing', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -215,7 +253,9 @@ void main() {
   });
 
   group('default badge', () {
-    testWidgets('shows "Par défaut" badge only on the default recipient', (tester) async {
+    testWidgets('shows "Par défaut" badge only on the default recipient', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -254,7 +294,9 @@ void main() {
       expect(find.text('Ajouter'), findsOneWidget);
     });
 
-    testWidgets('tapping the FAB navigates and reloads on return', (tester) async {
+    testWidgets('tapping the FAB navigates and reloads on return', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(
         const RecipientState(
           status: RecipientStatus.success,
@@ -286,7 +328,9 @@ void main() {
       };
     }
 
-    testWidgets('shows "Définir par défaut" for a non-default recipient', (tester) async {
+    testWidgets('shows "Définir par défaut" for a non-default recipient', (
+      tester,
+    ) async {
       final original = FlutterError.onError;
       suppressMenuOverflow(original);
       addTearDown(() => FlutterError.onError = original);
@@ -306,50 +350,63 @@ void main() {
       expect(find.text('Définir par défaut'), findsOneWidget);
     });
 
-    testWidgets('hides "Définir par défaut" for the already-default recipient', (tester) async {
-      final original = FlutterError.onError;
-      suppressMenuOverflow(original);
-      addTearDown(() => FlutterError.onError = original);
+    testWidgets(
+      'hides "Définir par défaut" for the already-default recipient',
+      (tester) async {
+        final original = FlutterError.onError;
+        suppressMenuOverflow(original);
+        addTearDown(() => FlutterError.onError = original);
 
-      when(() => bloc.state).thenReturn(
-        const RecipientState(
-          status: RecipientStatus.success,
-          recipients: [_r4Default],
-        ),
-      );
-      await tester.pumpWidget(_wrap(bloc));
-      await tester.pump(const Duration(milliseconds: 600));
+        when(() => bloc.state).thenReturn(
+          const RecipientState(
+            status: RecipientStatus.success,
+            recipients: [_r4Default],
+          ),
+        );
+        await tester.pumpWidget(_wrap(bloc));
+        await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(_kebabFinder);
-      await tester.pumpAndSettle();
+        await tester.tap(_kebabFinder);
+        await tester.pumpAndSettle();
 
-      expect(find.text('Définir par défaut'), findsNothing);
-    });
+        expect(find.text('Définir par défaut'), findsNothing);
+      },
+    );
 
-    testWidgets('dispatches RecipientDefaultSet with the recipient id when tapped', (tester) async {
-      final original = FlutterError.onError;
-      suppressMenuOverflow(original);
-      addTearDown(() => FlutterError.onError = original);
+    testWidgets(
+      'dispatches RecipientDefaultSet with the recipient id when tapped',
+      (tester) async {
+        final original = FlutterError.onError;
+        suppressMenuOverflow(original);
+        addTearDown(() => FlutterError.onError = original);
 
-      when(() => bloc.state).thenReturn(
-        const RecipientState(
-          status: RecipientStatus.success,
-          recipients: [_r1],
-        ),
-      );
-      await tester.pumpWidget(_wrap(bloc));
-      await tester.pump(const Duration(milliseconds: 600));
+        when(() => bloc.state).thenReturn(
+          const RecipientState(
+            status: RecipientStatus.success,
+            recipients: [_r1],
+          ),
+        );
+        await tester.pumpWidget(_wrap(bloc));
+        await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(_kebabFinder);
-      await tester.pumpAndSettle();
+        await tester.tap(_kebabFinder);
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Définir par défaut'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Définir par défaut'));
+        await tester.pumpAndSettle();
 
-      verify(() => bloc.add(any(
-            that: isA<RecipientDefaultSet>()
-                .having((e) => e.id, 'id', _r1.id),
-          ))).called(1);
-    });
+        verify(
+          () => bloc.add(
+            any(
+              that: isA<RecipientDefaultSet>().having(
+                (e) => e.id,
+                'id',
+                _r1.id,
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
   });
 }

@@ -20,6 +20,12 @@ class HiveService {
   // Carte d'introduction du hub Activités, fermée manuellement (X).
   static const String kHubIntroDismissed = 'hub_intro_dismissed';
 
+  // Préfixe des clés de fermeture des ContextualTutorialCard, une par
+  // tutoriel (id concaténé). Fermée par tap sur la carte (ouverture) comme
+  // par le bouton X (sans ouvrir) — les deux masquent définitivement.
+  static const String kContextualTutorialDismissedPrefix =
+      'contextual_tutorial_dismissed_';
+
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode         = 'theme_mode';       // 'system' | 'light' | 'dark'
   static const String kLanguageCode      = 'language_code';    // 'fr' | 'en'
