@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:equatable/equatable.dart';
 
 enum SocialNetwork { whatsapp, facebook, instagram, tiktok, youtube }
@@ -37,9 +39,9 @@ final class HelpTutorial extends Equatable {
     required this.youtubeVideoId,
     required this.order,
     required this.active,
-    required this.contexts,
+    required List<TutorialContext> contexts,
     this.durationLabel,
-  });
+  }) : _contexts = contexts;
 
   final String id;
   final String title;
@@ -47,7 +49,9 @@ final class HelpTutorial extends Equatable {
   final String youtubeVideoId;
   final int order;
   final bool active;
-  final List<TutorialContext> contexts;
+  final List<TutorialContext> _contexts;
+
+  List<TutorialContext> get contexts => UnmodifiableListView(_contexts);
   final String? durationLabel;
 
   @override
@@ -58,7 +62,7 @@ final class HelpTutorial extends Equatable {
     youtubeVideoId,
     order,
     active,
-    contexts,
+    _contexts,
     durationLabel,
   ];
 }
@@ -66,10 +70,11 @@ final class HelpTutorial extends Equatable {
 final class HelpCenterConfig extends Equatable {
   const HelpCenterConfig({
     required this.schemaVersion,
-    required this.socialLinks,
-    required this.tutorials,
+    required List<SocialLink> socialLinks,
+    required List<HelpTutorial> tutorials,
     this.youtubeChannelUrl,
-  });
+  }) : _socialLinks = socialLinks,
+       _tutorials = tutorials;
 
   static const empty = HelpCenterConfig(
     schemaVersion: 1,
@@ -78,23 +83,33 @@ final class HelpCenterConfig extends Equatable {
   );
 
   final int schemaVersion;
-  final List<SocialLink> socialLinks;
-  final List<HelpTutorial> tutorials;
+  final List<SocialLink> _socialLinks;
+  final List<HelpTutorial> _tutorials;
   final Uri? youtubeChannelUrl;
+
+  List<SocialLink> get socialLinks => UnmodifiableListView(_socialLinks);
+  List<HelpTutorial> get tutorials => UnmodifiableListView(_tutorials);
 
   factory HelpCenterConfig.fromJson(Map<String, dynamic> json) {
     if (json['schemaVersion'] != 1) {
       throw const FormatException('unsupported_schema');
     }
 
-    final tutorials = parseValidTutorials(json['tutorials'])
+    final tutorials = _parseValidTutorials(json['tutorials'])
       ..sort((a, b) => a.order.compareTo(b.order));
+
+    Uri? youtubeChannelUrl;
+    try {
+      youtubeChannelUrl = _parseHttpsUri(json['youtubeChannelUrl']);
+    } on FormatException {
+      // Le canal est optionnel : un lien invalide ne doit pas masquer le catalogue.
+    }
 
     return HelpCenterConfig(
       schemaVersion: 1,
-      socialLinks: parseValidSocialLinks(json['socialLinks']),
+      socialLinks: _parseValidSocialLinks(json['socialLinks']),
       tutorials: tutorials,
-      youtubeChannelUrl: parseHttpsUri(json['youtubeChannelUrl']),
+      youtubeChannelUrl: youtubeChannelUrl,
     );
   }
 
@@ -125,7 +140,7 @@ final class HelpCenterConfig extends Equatable {
   ];
 }
 
-List<SocialLink> parseValidSocialLinks(Object? value) {
+List<SocialLink> _parseValidSocialLinks(Object? value) {
   if (value is! List) {
     return [];
   }
@@ -145,7 +160,7 @@ List<SocialLink> parseValidSocialLinks(Object? value) {
   return links;
 }
 
-List<HelpTutorial> parseValidTutorials(Object? value) {
+List<HelpTutorial> _parseValidTutorials(Object? value) {
   if (value is! List) {
     return [];
   }
@@ -165,7 +180,7 @@ List<HelpTutorial> parseValidTutorials(Object? value) {
   return tutorials;
 }
 
-Uri? parseHttpsUri(Object? value) {
+Uri? _parseHttpsUri(Object? value) {
   if (value == null) {
     return null;
   }
@@ -183,7 +198,7 @@ Uri? parseHttpsUri(Object? value) {
 SocialLink _parseSocialLink(Object? value) {
   final json = _asJsonObject(value);
   final network = _socialNetworkFromJson(json['network']);
-  final url = parseHttpsUri(json['url']);
+  final url = _parseHttpsUri(json['url']);
   final active = json['active'];
   if (url == null || active is! bool) {
     throw const FormatException('invalid_social_link');

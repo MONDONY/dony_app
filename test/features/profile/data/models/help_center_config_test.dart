@@ -26,7 +26,7 @@ void main() {
 
   group('HelpCenterConfig', () {
     test('parse une configuration complète et trie les tutoriels', () {
-      final config = HelpCenterConfig.fromJson({
+      final config = HelpCenterConfig.fromJson(const {
         'schemaVersion': 1,
         'youtubeChannelUrl': 'https://www.youtube.com/@yadony',
         'socialLinks': [
@@ -63,13 +63,13 @@ void main() {
 
     test('rejette une version de schéma non prise en charge', () {
       expect(
-        () => HelpCenterConfig.fromJson({'schemaVersion': 2}),
+        () => HelpCenterConfig.fromJson(const {'schemaVersion': 2}),
         throwsA(isA<FormatException>()),
       );
     });
 
     test('ignore une entrée sociale invalide sans perdre le catalogue', () {
-      final config = HelpCenterConfig.fromJson({
+      final config = HelpCenterConfig.fromJson(const {
         'schemaVersion': 1,
         'youtubeChannelUrl': 'https://www.youtube.com/@yadony',
         'socialLinks': [
@@ -88,6 +88,20 @@ void main() {
       ]);
       expect(config.tutorials, isNotEmpty);
     });
+
+    test(
+      'ignore une URL de chaîne YouTube invalide sans perdre les tutoriels',
+      () {
+        final config = HelpCenterConfig.fromJson(const {
+          'schemaVersion': 1,
+          'youtubeChannelUrl': 'http://www.youtube.com/@yadony',
+          'tutorials': validTutorialsJson,
+        });
+
+        expect(config.youtubeChannelUrl, isNull);
+        expect(config.tutorials, isNotEmpty);
+      },
+    );
 
     test('ignore un tutoriel avec un identifiant vidéo invalide', () {
       final config = HelpCenterConfig.fromJson({
@@ -120,7 +134,7 @@ void main() {
         'tutorials': [
           {
             ...validTutorialsJson.first,
-            'contexts': ['unknown'],
+            'contexts': const ['unknown'],
           },
           validTutorialsJson.last,
         ],
