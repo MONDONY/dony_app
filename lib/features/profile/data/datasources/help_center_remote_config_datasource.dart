@@ -8,12 +8,47 @@ abstract interface class HelpCenterConfigSource {
   Future<String?> fetchAndActivate();
 }
 
+abstract interface class HelpCenterRemoteConfigClient {
+  String getString(String key);
+
+  Future<void> setConfigSettings(RemoteConfigSettings settings);
+
+  Future<void> setDefaults(Map<String, dynamic> values);
+
+  Future<bool> fetchAndActivate();
+}
+
+final class FirebaseHelpCenterRemoteConfigClient
+    implements HelpCenterRemoteConfigClient {
+  FirebaseHelpCenterRemoteConfigClient(this._remoteConfig);
+
+  final FirebaseRemoteConfig _remoteConfig;
+
+  @override
+  Future<bool> fetchAndActivate() => _remoteConfig.fetchAndActivate();
+
+  @override
+  String getString(String key) => _remoteConfig.getString(key);
+
+  @override
+  Future<void> setConfigSettings(RemoteConfigSettings settings) {
+    return _remoteConfig.setConfigSettings(settings);
+  }
+
+  @override
+  Future<void> setDefaults(Map<String, dynamic> values) {
+    return _remoteConfig.setDefaults(values);
+  }
+}
+
 final class HelpCenterRemoteConfigDatasource implements HelpCenterConfigSource {
   HelpCenterRemoteConfigDatasource({
-    FirebaseRemoteConfig? remoteConfig,
+    HelpCenterRemoteConfigClient? remoteConfig,
     Future<String> Function()? fallbackJsonLoader,
     bool? isDevelopment,
-  }) : _remoteConfig = remoteConfig ?? FirebaseRemoteConfig.instance,
+  }) : _remoteConfig =
+           remoteConfig ??
+           FirebaseHelpCenterRemoteConfigClient(FirebaseRemoteConfig.instance),
        _fallbackJsonLoader = fallbackJsonLoader ?? _loadFallbackJson,
        _isDevelopment = isDevelopment ?? kDebugMode;
 
@@ -21,7 +56,7 @@ final class HelpCenterRemoteConfigDatasource implements HelpCenterConfigSource {
   static const fallbackAssetPath =
       'assets/config/help_center_config.default.json';
 
-  final FirebaseRemoteConfig _remoteConfig;
+  final HelpCenterRemoteConfigClient _remoteConfig;
   final Future<String> Function() _fallbackJsonLoader;
   final bool _isDevelopment;
   bool _isConfigured = false;

@@ -13,9 +13,6 @@ final class HelpCenterRepository {
   }) : _fallbackJsonLoader = fallbackJsonLoader ?? _loadFallbackJson,
        _urlLauncher = urlLauncher ?? UrlLauncherPlatform.instance;
 
-  static const _fallbackAssetPath =
-      'assets/config/help_center_config.default.json';
-
   final HelpCenterConfigSource _source;
   final Future<String> Function() _fallbackJsonLoader;
   final UrlLauncherPlatform _urlLauncher;
@@ -97,6 +94,8 @@ final class HelpCenterRepository {
   }
 
   static Future<String> _loadFallbackJson() {
-    return rootBundle.loadString(_fallbackAssetPath);
+    return rootBundle.loadString(
+      HelpCenterRemoteConfigDatasource.fallbackAssetPath,
+    );
   }
 }

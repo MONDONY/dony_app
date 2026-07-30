@@ -29,7 +29,7 @@ void main() {
   group('HelpCenterRepository', () {
     test('load parse la configuration activée', () async {
       final repository = HelpCenterRepository(
-        _FakeHelpCenterConfigSource(activatedJson: _validConfigJson),
+        _FakeHelpCenterConfigSource(_validConfigJson),
         fallbackJsonLoader: () async => _invalidConfigJson,
       );
 
@@ -42,7 +42,7 @@ void main() {
       'load utilise l’asset de secours quand la valeur activée est vide',
       () async {
         final repository = HelpCenterRepository(
-          _FakeHelpCenterConfigSource(activatedJson: ''),
+          _FakeHelpCenterConfigSource(''),
           fallbackJsonLoader: () async => _validConfigJson,
         );
 
@@ -55,9 +55,8 @@ void main() {
     test(
       'load utilise l’asset de secours quand la lecture activée échoue',
       () async {
-        final source = _FakeHelpCenterConfigSource(
-          activatedJson: _invalidConfigJson,
-        )..activatedError = StateError('remote config unavailable');
+        final source = _FakeHelpCenterConfigSource(_invalidConfigJson)
+          ..activatedError = StateError('remote config unavailable');
         final repository = HelpCenterRepository(
           source,
           fallbackJsonLoader: () async => _validConfigJson,
@@ -73,7 +72,7 @@ void main() {
       'refresh retourne et mémorise une nouvelle configuration valide',
       () async {
         final source = _FakeHelpCenterConfigSource(
-          activatedJson: '',
+          '',
           fetchedJson: _validConfigJson,
         );
         final repository = HelpCenterRepository(
@@ -93,9 +92,8 @@ void main() {
     test(
       'refresh conserve la dernière configuration valide après une erreur',
       () async {
-        final source = _FakeHelpCenterConfigSource(
-          activatedJson: _validConfigJson,
-        )..fetchError = StateError('offline');
+        final source = _FakeHelpCenterConfigSource(_validConfigJson)
+          ..fetchError = StateError('offline');
         final repository = HelpCenterRepository(
           source,
           fallbackJsonLoader: () async => _invalidConfigJson,
@@ -112,7 +110,7 @@ void main() {
       'refresh conserve la dernière configuration valide après un JSON invalide',
       () async {
         final source = _FakeHelpCenterConfigSource(
-          activatedJson: _validConfigJson,
+          _validConfigJson,
           fetchedJson: _invalidConfigJson,
         );
         final repository = HelpCenterRepository(
@@ -130,7 +128,7 @@ void main() {
     test('openExternal refuse un schéma non HTTPS', () async {
       final launcher = _FakeUrlLauncherPlatform();
       final repository = HelpCenterRepository(
-        _FakeHelpCenterConfigSource(activatedJson: _validConfigJson),
+        _FakeHelpCenterConfigSource(_validConfigJson),
         fallbackJsonLoader: () async => _invalidConfigJson,
         urlLauncher: launcher,
       );
@@ -148,7 +146,7 @@ void main() {
       () async {
         final launcher = _FakeUrlLauncherPlatform();
         final repository = HelpCenterRepository(
-          _FakeHelpCenterConfigSource(activatedJson: _validConfigJson),
+          _FakeHelpCenterConfigSource(_validConfigJson),
           fallbackJsonLoader: () async => _invalidConfigJson,
           urlLauncher: launcher,
         );
@@ -169,7 +167,7 @@ void main() {
 }
 
 final class _FakeHelpCenterConfigSource implements HelpCenterConfigSource {
-  _FakeHelpCenterConfigSource({required this._activatedJson, this.fetchedJson});
+  _FakeHelpCenterConfigSource(this._activatedJson, {this.fetchedJson});
 
   final String _activatedJson;
   String? fetchedJson;
