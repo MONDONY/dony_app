@@ -745,6 +745,39 @@ void main() {
     );
 
     testWidgets(
+      'masque intentionnellement la carte tutoriel en mode carousel Près de '
+      'moi (comme le contrôle de recherche lui-même)',
+      (tester) async {
+        GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+        await tester.pumpWidget(
+          _buildHome(
+            announcementState: AnnouncementSearchLoaded([_makeAnn()]),
+            helpConfigJson: _searchHelpConfigJson,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        // Avant activation : la carte est présente (mode liste/sheet).
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
+
+        // Activation de « Près de moi » → bascule sur le carousel : le
+        // contrôle de recherche (barre corridor du top overlay) s'efface
+        // lui-même (opacity 0 / IgnorePointer) pour laisser la place à la
+        // carte plein écran. La carte tutoriel, ancrée dans le même sheet
+        // que la barre corridor, disparaît pour la même raison — ce n'est
+        // pas une régression, elle réapparaît dès qu'on repasse en liste.
+        await tester.tap(find.byKey(const Key('near-me-fab')));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(NearMeCarousel), findsOneWidget);
+        expect(find.byType(DraggableScrollableSheet), findsNothing);
+        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+      },
+    );
+
+    testWidgets(
       'régression : initState dispatche BidMyListAutoRefreshRequested '
       '(jamais BidMyListRequested qui écraserait l\'état partagé)',
       (tester) async {
