@@ -7,6 +7,16 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 
 enum HelpCenterRepositoryFailure { fetch, parse }
 
+final class HelpCenterRepositoryResult {
+  const HelpCenterRepositoryResult({
+    required this.config,
+    this.failure,
+  });
+
+  final HelpCenterConfig config;
+  final HelpCenterRepositoryFailure? failure;
+}
+
 final class HelpCenterRepository {
   HelpCenterRepository(
     this._source, {
@@ -19,12 +29,11 @@ final class HelpCenterRepository {
   final Future<String> Function() _fallbackJsonLoader;
   final UrlLauncherPlatform _urlLauncher;
   HelpCenterConfig _lastValid = HelpCenterConfig.empty;
-  HelpCenterRepositoryFailure? _lastFailure;
+  Future<void> _operationTail = Future.value();
 
-  HelpCenterRepositoryFailure? get lastFailure => _lastFailure;
+  Future<HelpCenterRepositoryResult> load() => _serialize(_load);
 
-  Future<HelpCenterConfig> load() async {
-    _lastFailure = null;
+  Future<HelpCenterRepositoryResult> _load() async {
     HelpCenterConfig? activated;
     try {
       activated = _parse(_source.activatedJson);
@@ -32,41 +41,50 @@ final class HelpCenterRepository {
       // Une source défaillante ne doit pas empêcher l’utilisation du fallback.
     }
     if (activated != null) {
-      return _remember(activated);
+      return _success(activated);
     }
 
     try {
       final fallback = _parse(await _fallbackJsonLoader());
       if (fallback != null) {
-        return _remember(fallback);
+        return _success(fallback);
       }
     } catch (_) {
       // Le fallback ne doit jamais empêcher l’ouverture du centre d’aide.
     }
 
-    _lastFailure = HelpCenterRepositoryFailure.parse;
-    return _lastValid;
+    return HelpCenterRepositoryResult(
+      config: _lastValid,
+      failure: HelpCenterRepositoryFailure.parse,
+    );
   }
 
-  Future<HelpCenterConfig> refresh() async {
-    _lastFailure = null;
+  Future<HelpCenterRepositoryResult> refresh() => _serialize(_refresh);
+
+  Future<HelpCenterRepositoryResult> _refresh() async {
     try {
       final fetched = await _source.fetchAndActivate();
       if (fetched == null) {
-        _lastFailure = HelpCenterRepositoryFailure.fetch;
-        return _lastValid;
+        return HelpCenterRepositoryResult(
+          config: _lastValid,
+          failure: HelpCenterRepositoryFailure.fetch,
+        );
       }
       final config = _parse(fetched);
       if (config != null) {
-        return _remember(config);
+        return _success(config);
       }
-      _lastFailure = HelpCenterRepositoryFailure.parse;
+      return HelpCenterRepositoryResult(
+        config: _lastValid,
+        failure: HelpCenterRepositoryFailure.parse,
+      );
     } catch (_) {
       // La dernière configuration valide reste utilisable hors ligne.
-      _lastFailure = HelpCenterRepositoryFailure.fetch;
+      return HelpCenterRepositoryResult(
+        config: _lastValid,
+        failure: HelpCenterRepositoryFailure.fetch,
+      );
     }
-
-    return _lastValid;
   }
 
   Future<bool> openExternal(Uri uri) async {
@@ -84,9 +102,20 @@ final class HelpCenterRepository {
     }
   }
 
-  HelpCenterConfig _remember(HelpCenterConfig config) {
+  HelpCenterRepositoryResult _success(HelpCenterConfig config) {
     _lastValid = config;
-    return config;
+    return HelpCenterRepositoryResult(config: config);
+  }
+
+  Future<HelpCenterRepositoryResult> _serialize(
+    Future<HelpCenterRepositoryResult> Function() operation,
+  ) {
+    final result = _operationTail.then((_) => operation());
+    _operationTail = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return result;
   }
 
   HelpCenterConfig? _parse(String value) {

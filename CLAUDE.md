@@ -360,6 +360,14 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `return_code_entry_opened` | ReturnEntrySheet.show() — voyageur ouvre la saisie du code de retour (propriété `status`) |
 | `return_confirmed` | CancellationBloc._onReturnConfirm() — voyageur confirme la restitution du colis (D7) |
 | `upgrade_to_pro_started` | UpgradeToProScreen.initState |
+| `help_center_opened` | HelpCenterBloc._onOpenRequested — ouverture réelle du hub, distincte du préchargement global |
+| `help_tutorial_opened` | HelpCenterBloc._onTutorialOpenRequested (propriétés contrôlées `tutorial_id`, `source`) |
+| `help_tutorial_play_started` | HelpCenterBloc._onPlaybackRequested — lecture démarrée (propriété `tutorial_id`) |
+| `help_tutorial_completed` | HelpCenterBloc._onPlaybackRequested — lecture terminée (propriété `tutorial_id`) |
+| `help_tutorial_external_opened` | HelpCenterBloc._onExternalOpenRequested — ouverture YouTube externe réussie (propriété `tutorial_id`) |
+| `help_social_link_opened` | HelpCenterBloc._onExternalOpenRequested — réseau social ouvert (propriété enum `network`) |
+| `help_youtube_subscribe_tapped` | HelpCenterBloc._onExternalOpenRequested — chaîne YouTube ouverte (propriété contrôlée `source`) |
+| `help_config_load_failed` | HelpCenterBloc._emitFailure — échec non bloquant (propriété fermée `reason`: `fetch`/`parse`/`launch`) |
 | `referral_shared` | ReferralBloc._onShared() |
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `phone_visibility_toggled` | PrivacySettingsBloc._onToggleHidePhone — bascule « Masquer mon numéro » confirmée par le serveur (propriété `hidden`) |

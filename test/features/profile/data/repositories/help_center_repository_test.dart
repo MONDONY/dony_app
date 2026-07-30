@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,9 +35,10 @@ void main() {
         fallbackJsonLoader: () async => _invalidConfigJson,
       );
 
-      final config = await repository.load();
+      final result = await repository.load();
 
-      expect(config.tutorials.single.id, 'payment-basics');
+      expect(result.config.tutorials.single.id, 'payment-basics');
+      expect(result.failure, isNull);
     });
 
     test(
@@ -46,9 +49,10 @@ void main() {
           fallbackJsonLoader: () async => _validConfigJson,
         );
 
-        final config = await repository.load();
+        final result = await repository.load();
 
-        expect(config.tutorials.single.title, 'Payer un envoi');
+        expect(result.config.tutorials.single.title, 'Payer un envoi');
+        expect(result.failure, isNull);
       },
     );
 
@@ -62,9 +66,10 @@ void main() {
           fallbackJsonLoader: () async => _validConfigJson,
         );
 
-        final config = await repository.load();
+        final result = await repository.load();
 
-        expect(config.tutorials.single.id, 'payment-basics');
+        expect(result.config.tutorials.single.id, 'payment-basics');
+        expect(result.failure, isNull);
       },
     );
 
@@ -84,8 +89,10 @@ void main() {
         source.fetchError = StateError('offline');
         final retained = await repository.refresh();
 
-        expect(refreshed.tutorials.single.id, 'payment-basics');
-        expect(retained, refreshed);
+        expect(refreshed.config.tutorials.single.id, 'payment-basics');
+        expect(refreshed.failure, isNull);
+        expect(retained.config, refreshed.config);
+        expect(retained.failure, HelpCenterRepositoryFailure.fetch);
       },
     );
 
@@ -102,7 +109,8 @@ void main() {
 
         final refreshed = await repository.refresh();
 
-        expect(refreshed, loaded);
+        expect(refreshed.config, loaded.config);
+        expect(refreshed.failure, HelpCenterRepositoryFailure.fetch);
       },
     );
 
@@ -121,7 +129,56 @@ void main() {
 
         final refreshed = await repository.refresh();
 
-        expect(refreshed, loaded);
+        expect(refreshed.config, loaded.config);
+        expect(refreshed.failure, HelpCenterRepositoryFailure.parse);
+      },
+    );
+
+    test(
+      'refresh séquentialise deux appels et associe chaque résultat à sa requête',
+      () async {
+        final first = Completer<String?>();
+        final second = Completer<String?>();
+        final source = _FakeHelpCenterConfigSource(
+          _validConfigJson,
+          fetchedResults: [first.future, second.future],
+        );
+        final repository = HelpCenterRepository(
+          source,
+          fallbackJsonLoader: () async => _invalidConfigJson,
+        );
+
+        final firstResult = repository.refresh();
+        final secondResult = repository.refresh();
+        try {
+          await source.firstFetchStarted.future;
+          await Future<void>.delayed(Duration.zero);
+
+          expect(source.secondFetchStarted.isCompleted, isFalse);
+          expect(source.fetchCallCount, 1);
+
+          first.complete(_invalidConfigJson);
+          await source.secondFetchStarted.future;
+          expect(source.fetchCallCount, 2);
+
+          second.complete(_validConfigJson);
+
+          expect(
+            (await firstResult).failure,
+            HelpCenterRepositoryFailure.parse,
+          );
+          final successful = await secondResult;
+          expect(successful.failure, isNull);
+          expect(successful.config.tutorials.single.id, 'payment-basics');
+        } finally {
+          if (!first.isCompleted) {
+            first.complete(_invalidConfigJson);
+          }
+          if (!second.isCompleted) {
+            second.complete(_validConfigJson);
+          }
+          await Future.wait([firstResult, secondResult]);
+        }
       },
     );
 
@@ -167,12 +224,20 @@ void main() {
 }
 
 final class _FakeHelpCenterConfigSource implements HelpCenterConfigSource {
-  _FakeHelpCenterConfigSource(this._activatedJson, {this.fetchedJson});
+  _FakeHelpCenterConfigSource(
+    this._activatedJson, {
+    this.fetchedJson,
+    this.fetchedResults,
+  });
 
   final String _activatedJson;
   String? fetchedJson;
+  final List<Future<String?>>? fetchedResults;
   Object? activatedError;
   Object? fetchError;
+  int fetchCallCount = 0;
+  final firstFetchStarted = Completer<void>();
+  final secondFetchStarted = Completer<void>();
 
   @override
   String get activatedJson {
@@ -186,6 +251,15 @@ final class _FakeHelpCenterConfigSource implements HelpCenterConfigSource {
   Future<String?> fetchAndActivate() async {
     if (fetchError case final error?) {
       throw error;
+    }
+    final callIndex = fetchCallCount++;
+    if (callIndex == 0 && !firstFetchStarted.isCompleted) {
+      firstFetchStarted.complete();
+    } else if (callIndex == 1 && !secondFetchStarted.isCompleted) {
+      secondFetchStarted.complete();
+    }
+    if (fetchedResults case final results?) {
+      return results[callIndex];
     }
     return fetchedJson;
   }

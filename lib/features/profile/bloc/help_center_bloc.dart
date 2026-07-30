@@ -13,7 +13,10 @@ part 'help_center_state.dart';
 final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
   HelpCenterBloc(this._repository, this._analytics)
     : super(const HelpCenterInitial()) {
-    on<HelpCenterLoadRequested>(_onLoadRequested);
+    on<HelpCenterLoadRequested>(
+      _onLoadRequested,
+      transformer: _sequential(),
+    );
     on<HelpCenterOpenRequested>(_onOpenRequested);
     on<HelpTutorialOpenRequested>(_onTutorialOpenRequested);
     on<HelpTutorialPlaybackRequested>(_onPlaybackRequested);
@@ -22,17 +25,18 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
 
   final HelpCenterRepository _repository;
   final AnalyticsService _analytics;
+  HelpCenterConfig _stableConfig = HelpCenterConfig.empty;
 
   Future<void> _onLoadRequested(
     HelpCenterLoadRequested event,
     Emitter<HelpCenterState> emit,
   ) async {
-    final previousConfig = _currentConfig;
+    final previousConfig = _stableConfig;
     emit(const HelpCenterLoading());
 
-    HelpCenterConfig cachedConfig;
+    HelpCenterRepositoryResult loadResult;
     try {
-      cachedConfig = await _repository.load();
+      loadResult = await _repository.load();
     } on FormatException {
       _emitFailure('parse', previousConfig, emit);
       return;
@@ -41,11 +45,13 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
       return;
     }
 
+    final cachedConfig = loadResult.config;
+    _stableConfig = cachedConfig;
     emit(HelpCenterSuccess(cachedConfig, isRefreshing: true));
 
-    HelpCenterConfig refreshedConfig;
+    HelpCenterRepositoryResult refreshResult;
     try {
-      refreshedConfig = await _repository.refresh();
+      refreshResult = await _repository.refresh();
     } on FormatException {
       _emitFailure('parse', cachedConfig, emit);
       return;
@@ -54,11 +60,13 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
       return;
     }
 
-    final failure = _repository.lastFailure;
+    final failure = refreshResult.failure;
     if (failure != null) {
       _emitFailure(failure.name, cachedConfig, emit);
       return;
     }
+    final refreshedConfig = refreshResult.config;
+    _stableConfig = refreshedConfig;
     emit(HelpCenterSuccess(refreshedConfig));
   }
 
@@ -88,6 +96,8 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
     HelpTutorialPlaybackRequested event,
     Emitter<HelpCenterState> emit,
   ) {
+    // Chaque intention explicite est tracée. Le lecteur de la Task 5
+    // déduplique ses callbacks par cycle de vie avant de les envoyer au BLoC.
     final analyticsEvent = switch (event.action) {
       HelpPlaybackAction.started => AnalyticsEvents.helpTutorialPlayStarted,
       HelpPlaybackAction.completed => AnalyticsEvents.helpTutorialCompleted,
@@ -104,9 +114,10 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
     HelpExternalOpenRequested event,
     Emitter<HelpCenterState> emit,
   ) async {
+    final stableConfig = _stableConfig;
     final opened = await _repository.openExternal(event.uri);
     if (!opened) {
-      _emitFailure('launch', _currentConfig, emit);
+      _emitFailure('launch', stableConfig, emit);
       return;
     }
 
@@ -127,12 +138,6 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
     unawaited(_analytics.logEvent(analyticsEvent, properties: properties));
   }
 
-  HelpCenterConfig get _currentConfig => switch (state) {
-    HelpCenterSuccess(:final config) ||
-    HelpCenterError(:final config) => config,
-    _ => HelpCenterConfig.empty,
-  };
-
   void _emitFailure(
     String reason,
     HelpCenterConfig config,
@@ -146,6 +151,10 @@ final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
       ),
     );
   }
+}
+
+EventTransformer<Event> _sequential<Event>() {
+  return (events, mapper) => events.asyncExpand(mapper);
 }
 
 String _sourceName(TutorialContext? source) => switch (source) {

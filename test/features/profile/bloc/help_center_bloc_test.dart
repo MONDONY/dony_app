@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -215,7 +217,7 @@ void main() {
     },
   );
 
-  test('trace une seule fois le démarrage et la fin d’un tutoriel', () async {
+  test('trace le démarrage et la fin explicitement demandés', () async {
     final bloc = HelpCenterBloc(_repository(), analytics);
 
     bloc
@@ -245,6 +247,35 @@ void main() {
     ).called(1);
     await bloc.close();
   });
+
+  test(
+    'transmet chaque intention playback répétée au tracking sans dédupliquer',
+    () async {
+      final bloc = HelpCenterBloc(_repository(), analytics);
+
+      bloc
+        ..add(
+          const HelpTutorialPlaybackRequested(
+            tutorialId: 'payment',
+            action: HelpPlaybackAction.started,
+          ),
+        )
+        ..add(
+          const HelpTutorialPlaybackRequested(
+            tutorialId: 'payment',
+            action: HelpPlaybackAction.started,
+          ),
+        );
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => backend.capture(AnalyticsEvents.helpTutorialPlayStarted, {
+          'tutorial_id': 'payment',
+        }),
+      ).called(2);
+      await bloc.close();
+    },
+  );
 
   test('ouvre et trace chacun des réseaux sociaux sans PII', () async {
     final launcher = _FakeLauncher();
@@ -345,15 +376,114 @@ void main() {
       );
     },
   );
+
+  test('séquentialise deux chargements concurrents', () async {
+    final first = Completer<String?>();
+    final second = Completer<String?>();
+    final source = _ControlledSource(
+      activatedJson: _cachedJson,
+      fetchedResults: [first.future, second.future],
+    );
+    final bloc = HelpCenterBloc(_repository(source: source), analytics);
+
+    try {
+      bloc
+        ..add(const HelpCenterLoadRequested())
+        ..add(const HelpCenterLoadRequested());
+      await source.firstFetchStarted.future;
+      await Future<void>.delayed(Duration.zero);
+
+      expect(source.secondFetchStarted.isCompleted, isFalse);
+      expect(source.fetchCallCount, 1);
+
+      first.complete(_remoteJson);
+      await source.secondFetchStarted.future;
+      expect(source.fetchCallCount, 2);
+
+      second.complete(_remoteJson);
+    } finally {
+      if (!first.isCompleted) {
+        first.complete(_remoteJson);
+      }
+      if (!second.isCompleted) {
+        second.complete(_remoteJson);
+      }
+      await bloc.close();
+    }
+  });
+
+  test(
+    'conserve la configuration stable si launch échoue pendant un chargement',
+    () async {
+      final blockedFallback = Completer<String>();
+      addTearDown(() {
+        if (!blockedFallback.isCompleted) {
+          blockedFallback.complete(_cachedJson);
+        }
+      });
+      var fallbackCalls = 0;
+      final source = _ControlledSource(
+        activatedJson: '',
+        fetchedResults: [
+          Future.value(_remoteJson),
+          Future.value(_remoteJson),
+        ],
+      );
+      final bloc = HelpCenterBloc(
+        _repository(
+          source: source,
+          launcher: _FakeLauncher(result: false),
+          fallbackJsonLoader: () {
+            fallbackCalls++;
+            return fallbackCalls == 1
+                ? Future.value(_cachedJson)
+                : blockedFallback.future;
+          },
+        ),
+        analytics,
+      );
+
+      final initialLoad = bloc.stream.firstWhere(
+        (state) =>
+            state is HelpCenterSuccess &&
+            !state.isRefreshing &&
+            state.config.tutorials.single.id == 'remote',
+      );
+      bloc.add(const HelpCenterLoadRequested());
+      await initialLoad;
+
+      final loading =
+          bloc.stream.firstWhere((state) => state is HelpCenterLoading);
+      bloc.add(const HelpCenterLoadRequested());
+      await loading;
+
+      final launchError = bloc.stream.firstWhere(
+        (state) => state is HelpCenterError && state.reason == 'launch',
+      );
+      bloc.add(
+        HelpExternalOpenRequested.youtubeSubscription(
+          uri: Uri.parse('https://www.youtube.com/@yadony'),
+          source: null,
+        ),
+      );
+
+      final error = await launchError as HelpCenterError;
+      expect(error.config.tutorials.single.id, 'remote');
+
+      blockedFallback.complete(_cachedJson);
+      await bloc.close();
+    },
+  );
 }
 
 HelpCenterRepository _repository({
-  _FakeSource? source,
+  HelpCenterConfigSource? source,
   _FakeLauncher? launcher,
+  Future<String> Function()? fallbackJsonLoader,
 }) {
   return HelpCenterRepository(
     source ?? _FakeSource(_cachedJson, fetchedJson: _remoteJson),
-    fallbackJsonLoader: () async => _cachedJson,
+    fallbackJsonLoader: fallbackJsonLoader ?? () async => _cachedJson,
     urlLauncher: launcher,
   );
 }
@@ -367,6 +497,31 @@ final class _FakeSource implements HelpCenterConfigSource {
 
   @override
   Future<String?> fetchAndActivate() async => fetchedJson;
+}
+
+final class _ControlledSource implements HelpCenterConfigSource {
+  _ControlledSource({
+    required this.activatedJson,
+    required this.fetchedResults,
+  });
+
+  @override
+  final String activatedJson;
+  final List<Future<String?>> fetchedResults;
+  int fetchCallCount = 0;
+  final firstFetchStarted = Completer<void>();
+  final secondFetchStarted = Completer<void>();
+
+  @override
+  Future<String?> fetchAndActivate() {
+    final callIndex = fetchCallCount++;
+    if (callIndex == 0) {
+      firstFetchStarted.complete();
+    } else if (callIndex == 1) {
+      secondFetchStarted.complete();
+    }
+    return fetchedResults[callIndex];
+  }
 }
 
 final class _FakeLauncher extends UrlLauncherPlatform {

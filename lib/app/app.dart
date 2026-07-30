@@ -221,6 +221,7 @@ class _DonyAppState extends State<DonyApp> {
                       create: (_) => getIt<StripeAccountBloc>(),
                     ),
                     BlocProvider<HelpCenterBloc>(
+                      lazy: false,
                       create: (_) => getIt<HelpCenterBloc>()
                         ..add(const HelpCenterLoadRequested()),
                     ),
