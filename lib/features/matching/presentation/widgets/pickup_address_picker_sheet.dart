@@ -46,6 +46,9 @@ class PickupAddressPickerSheet extends StatefulWidget {
 
 class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
   String? _selectedId;
+  // Sélection issue de la recherche, du GPS ou d'une adresse récente : ne
+  // ferme jamais le sheet toute seule, seul le bouton « Confirmer » le fait.
+  AddressData? _selectedAdHoc;
 
   // ── Recherche inline ───────────────────────────────────────────────────
   final _searchCtrl = TextEditingController();
@@ -155,9 +158,14 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       final addr = await _service.resolvePlace(s.placeId, token);
       _sessionToken = null;
       _sessionTokenAt = null;
-      unawaited(_recents.add(addr));
+      await _recents.add(addr);
       if (!mounted) return;
-      Navigator.of(context).pop(addr);
+      // Pré-sélection uniquement : le sheet reste ouvert, seul le bouton
+      // « Confirmer cette adresse » referme et renvoie le résultat.
+      _selectedAdHoc = addr;
+      _selectedId = null;
+      _resolving = false;
+      _searchCtrl.clear();
     } catch (_) {
       _sessionToken = null;
       _sessionTokenAt = null;
@@ -240,17 +248,23 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       return;
     }
     if (addr != null) {
-      unawaited(_recents.add(addr));
+      await _recents.add(addr);
     }
-    Navigator.of(context).pop(
-      addr ??
+    if (!mounted) return;
+    // Pré-sélection uniquement : le sheet reste ouvert, seul le bouton
+    // « Confirmer cette adresse » referme et renvoie le résultat.
+    setState(() {
+      _selectedAdHoc =
+          addr ??
           AddressData(
             label:
                 'Position GPS (${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)})',
             lat: position.latitude,
             lng: position.longitude,
-          ),
-    );
+          );
+      _selectedId = null;
+      _resolving = false;
+    });
   }
 
   void _showInfoSheet({
@@ -347,6 +361,9 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
   ].where((s) => s.isNotEmpty).join(', ');
 
   bool _isSelected(PickupAddress a) {
+    // Une sélection recherche/GPS/récente prime : aucune adresse enregistrée
+    // ne doit apparaître cochée en même temps.
+    if (_selectedAdHoc != null) return false;
     if (_selectedId != null) return _selectedId == a.id;
     final current = widget.current;
     if (current != null) return _labelOf(a) == current.label;
@@ -449,9 +466,15 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
                           ),
                           child: DonyButton(
                             label: 'Confirmer cette adresse',
-                            onPressed: state.addresses.isEmpty
+                            onPressed:
+                                (_selectedAdHoc == null &&
+                                    state.addresses.isEmpty)
                                 ? null
                                 : () {
+                                    if (_selectedAdHoc != null) {
+                                      Navigator.of(context).pop(_selectedAdHoc);
+                                      return;
+                                    }
                                     final address = state.addresses.firstWhere(
                                       _isSelected,
                                       orElse: () => state.addresses.first,
@@ -564,6 +587,10 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       return const Center(child: CircularProgressIndicator());
     }
     final recents = _recents.getAll();
+    // Sélection GPS brute (pas de vraie adresse résolue) : ni enregistrée ni
+    // dans les récentes, il faut son propre aperçu pour rester visible.
+    final adHocIsRawGps =
+        _selectedAdHoc != null && !recents.contains(_selectedAdHoc);
     return ListView(
       controller: controller,
       padding: const EdgeInsets.only(bottom: DonySpacing.sm),
@@ -571,6 +598,16 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
         // GPS — accès rapide tout en haut
         _GpsTile(onTap: _onGps),
         const Divider(indent: 20, endIndent: 20, height: 1),
+        if (adHocIsRawGps) ...[
+          _RecentAddressRow(
+            address: _selectedAdHoc!,
+            color: cs.primary,
+            icon: 'locate-fixed',
+            selected: true,
+            onTap: () {},
+          ),
+          const Divider(indent: 20, endIndent: 20),
+        ],
         if (recents.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -591,7 +628,11 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
             (address) => _RecentAddressRow(
               address: address,
               color: cs.primary,
-              onTap: () => Navigator.of(context).pop(address),
+              selected: address == _selectedAdHoc,
+              onTap: () => setState(() {
+                _selectedAdHoc = address;
+                _selectedId = null;
+              }),
             ),
           ),
           const Divider(indent: 20, endIndent: 20),
@@ -617,7 +658,10 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
               address: address,
               isSelected: _isSelected(address),
               activeColor: cs.primary,
-              onTap: () => setState(() => _selectedId = address.id),
+              onTap: () => setState(() {
+                _selectedId = address.id;
+                _selectedAdHoc = null;
+              }),
             );
           }),
           const Divider(indent: 20, endIndent: 20),
@@ -808,11 +852,15 @@ class _RecentAddressRow extends StatelessWidget {
     required this.address,
     required this.color,
     required this.onTap,
+    this.icon = 'history',
+    this.selected = false,
   });
 
   final AddressData address;
   final Color color;
   final VoidCallback onTap;
+  final String icon;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -825,14 +873,17 @@ class _RecentAddressRow extends StatelessWidget {
     ].whereType<String>().where((s) => s.isNotEmpty).join(', ');
     return ListTile(
       onTap: onTap,
+      tileColor: selected ? color.withValues(alpha: 0.05) : null,
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
+          color: selected
+              ? color.withValues(alpha: 0.12)
+              : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(DonyRadius.md),
         ),
-        child: DonyIcon('history', size: 18, color: color),
+        child: DonyIcon(icon, size: 18, color: color),
       ),
       title: Text(
         address.label,
@@ -848,6 +899,18 @@ class _RecentAddressRow extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+      trailing: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: selected ? color : Colors.transparent,
+          border: Border.all(color: selected ? color : cs.outline, width: 2),
+        ),
+        child: selected
+            ? const DonyIcon('check', color: Colors.white, size: 12)
+            : null,
+      ),
     );
   }
 }

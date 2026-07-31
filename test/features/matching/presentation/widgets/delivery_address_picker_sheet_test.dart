@@ -246,15 +246,16 @@ void main() {
         expect(find.text('RECHERCHES RÉCENTES'), findsOneWidget);
         expect(find.text('10 Rue de Rivoli, Paris'), findsOneWidget);
 
-        // Pas de pumpAndSettle : le tap déclenche Navigator.pop() sur l'unique
-        // route du harness de test (pas de route parente à dépiler), ce qui
-        // bubble indéfiniment et bloque pumpAndSettle. Un pump borné suffit
-        // pour vérifier qu'aucun appel réseau n'a été déclenché.
         await tester.tap(find.text('10 Rue de Rivoli, Paris'));
         await tester.pump();
 
         verifyNever(() => service.resolvePlace(any(), any()));
         verifyNever(() => service.search(any(), any()));
+
+        // La sélection est une simple pré-sélection : le sheet reste ouvert,
+        // seul le bouton « Confirmer cette adresse » referme le sheet.
+        expect(find.text('RECHERCHES RÉCENTES'), findsOneWidget);
+        expect(find.text('Confirmer cette adresse'), findsOneWidget);
       },
     );
   });
