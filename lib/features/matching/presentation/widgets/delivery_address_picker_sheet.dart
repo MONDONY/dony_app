@@ -4,6 +4,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/services/recent_addresses_store.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
@@ -52,6 +54,10 @@ class _DeliveryAddressPickerSheetState
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
   final _service = getIt<AddressAutocompleteService>();
+  final _recents = RecentAddressesStore(
+    getIt<HiveService>(),
+    'recent_delivery_addresses',
+  );
   Timer? _debounce;
   List<AddressSuggestion> _suggestions = [];
   bool _searching = false;
@@ -152,6 +158,7 @@ class _DeliveryAddressPickerSheetState
       final addr = await _service.resolvePlace(s.placeId, token);
       _sessionToken = null;
       _sessionTokenAt = null;
+      unawaited(_recents.add(addr));
       if (!mounted) return;
       Navigator.of(context).pop(addr);
     } catch (_) {
@@ -234,6 +241,9 @@ class _DeliveryAddressPickerSheetState
       setState(() => _resolving = false);
       _showInfoSheet(reverseGeocodeFailed: true);
       return;
+    }
+    if (addr != null) {
+      unawaited(_recents.add(addr));
     }
     Navigator.of(context).pop(
       addr ??
@@ -552,6 +562,7 @@ class _DeliveryAddressPickerSheetState
     if (state.status == DeliveryAddressStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    final recents = _recents.getAll();
     return ListView(
       controller: controller,
       padding: const EdgeInsets.only(bottom: DonySpacing.sm),
@@ -559,6 +570,31 @@ class _DeliveryAddressPickerSheetState
         // GPS — accès rapide tout en haut
         _GpsTile(onTap: _onGps),
         const Divider(indent: 20, endIndent: 20, height: 1),
+        if (recents.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.md,
+              DonySpacing.lg,
+              4,
+            ),
+            child: Text(
+              'RECHERCHES RÉCENTES',
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                letterSpacing: 0.08,
+              ),
+            ),
+          ),
+          ...recents.map(
+            (address) => _RecentAddressRow(
+              address: address,
+              color: cs.secondary,
+              onTap: () => Navigator.of(context).pop(address),
+            ),
+          ),
+          const Divider(indent: 20, endIndent: 20),
+        ],
         if (state.addresses.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -761,6 +797,56 @@ class _EmptyState extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Ligne « adresse récente » (cache local, aucun appel API) ───────────────
+class _RecentAddressRow extends StatelessWidget {
+  const _RecentAddressRow({
+    required this.address,
+    required this.color,
+    required this.onTap,
+  });
+
+  final AddressData address;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final subtitle = [
+      address.street,
+      address.postalCode,
+      address.city,
+    ].whereType<String>().where((s) => s.isNotEmpty).join(', ');
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+        child: DonyIcon('history', size: 18, color: color),
+      ),
+      title: Text(
+        address.label,
+        style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: subtitle.isEmpty
+          ? null
+          : Text(
+              subtitle,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
     );
   }
 }

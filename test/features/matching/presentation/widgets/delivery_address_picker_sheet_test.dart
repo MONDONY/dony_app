@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
@@ -13,6 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -39,9 +43,10 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const LocationSettings());
+    Hive.init(Directory.systemTemp.createTempSync('hive_test_').path);
   });
 
-  setUp(() {
+  setUp(() async {
     bloc = _MockDeliveryAddressBloc();
     when(() => bloc.state).thenReturn(
       const DeliveryAddressState(status: DeliveryAddressStatus.success),
@@ -49,6 +54,10 @@ void main() {
 
     service = _MockAddressAutocompleteService();
     getIt.registerLazySingleton<AddressAutocompleteService>(() => service);
+
+    final prefsBox = await Hive.openBox(HiveService.userPrefsBox);
+    await prefsBox.clear();
+    getIt.registerLazySingleton<HiveService>(() => HiveService());
 
     geolocator = _MockGeolocatorPlatform();
     GeolocatorPlatform.instance = geolocator;
@@ -205,6 +214,47 @@ void main() {
         verify(() => service.reverseGeocode(any(), any())).called(3);
         expect(find.text('Adresse introuvable'), findsOneWidget);
         expect(find.textContaining('Position GPS'), findsNothing);
+      },
+    );
+  });
+
+  group('adresses récentes — cache local', () {
+    testWidgets(
+      'une adresse mise en cache s\'affiche et se sélectionne sans appel API',
+      (tester) async {
+        // tester.runAsync() est obligatoire : une écriture Hive réelle
+        // (dart:io) appelée directement dans le corps de testWidgets hang
+        // sous l'horloge fake-async du binding de test (déjà vu sur Scan &
+        // Suivi — cf. mémoire projet_scan_suivi_redesign).
+        await tester.runAsync(() async {
+          final prefsBox = Hive.box(HiveService.userPrefsBox);
+          await prefsBox.put('recent_delivery_addresses', [
+            {
+              'label': '10 Rue de Rivoli, Paris',
+              'lat': 48.8566,
+              'lng': 2.3522,
+              'street': null,
+              'city': 'Paris',
+              'postalCode': '75001',
+              'country': 'FR',
+            },
+          ]);
+        });
+
+        await pump(tester);
+
+        expect(find.text('RECHERCHES RÉCENTES'), findsOneWidget);
+        expect(find.text('10 Rue de Rivoli, Paris'), findsOneWidget);
+
+        // Pas de pumpAndSettle : le tap déclenche Navigator.pop() sur l'unique
+        // route du harness de test (pas de route parente à dépiler), ce qui
+        // bubble indéfiniment et bloque pumpAndSettle. Un pump borné suffit
+        // pour vérifier qu'aucun appel réseau n'a été déclenché.
+        await tester.tap(find.text('10 Rue de Rivoli, Paris'));
+        await tester.pump();
+
+        verifyNever(() => service.resolvePlace(any(), any()));
+        verifyNever(() => service.search(any(), any()));
       },
     );
   });
