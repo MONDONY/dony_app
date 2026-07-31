@@ -7,6 +7,8 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/pickup_address_picker_sheet.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:flutter/material.dart';
@@ -66,7 +68,7 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(WidgetTester tester, {AddressData? current}) async {
     tester.view.physicalSize = const Size(900, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -76,7 +78,7 @@ void main() {
         home: Scaffold(
           body: BlocProvider<PickupAddressBloc>.value(
             value: bloc,
-            child: const PickupAddressPickerSheet(),
+            child: PickupAddressPickerSheet(current: current),
           ),
         ),
       ),
@@ -254,6 +256,34 @@ void main() {
         // seul le bouton « Confirmer cette adresse » referme le sheet.
         expect(find.text('RECHERCHES RÉCENTES'), findsOneWidget);
         expect(find.text('Confirmer cette adresse'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'la réouverture avec une adresse récente déjà confirmée la montre '
+      'cochée sans action, pour ne pas se retromper',
+      (tester) async {
+        const previouslyChosen = AddressData(
+          label: '10 Rue de Rivoli, Paris',
+          lat: 48.8566,
+          lng: 2.3522,
+          city: 'Paris',
+          postalCode: '75001',
+          country: 'FR',
+        );
+        await tester.runAsync(() async {
+          final prefsBox = Hive.box(HiveService.userPrefsBox);
+          await prefsBox.put('recent_pickup_addresses', [
+            previouslyChosen.toJson(),
+          ]);
+        });
+
+        await pump(tester, current: previouslyChosen);
+
+        expect(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check'),
+          findsOneWidget,
+        );
       },
     );
   });

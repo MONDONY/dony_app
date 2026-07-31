@@ -359,10 +359,26 @@ class _DeliveryAddressPickerSheetState
   String _labelOf(DeliveryAddress a) =>
       [a.label, if (a.street != null) a.street!, a.city].join(', ');
 
-  bool _isSelected(DeliveryAddress a) {
+  // La sélection à l'écran (recherche/GPS/récente/enregistrée choisie
+  // explicitement) prime sur widget.current. Tant que rien n'a été retapé
+  // dans ce sheet, widget.current (l'adresse déjà confirmée avant réouverture)
+  // fait foi — y compris quand ce n'était pas une adresse enregistrée, pour
+  // que l'utilisateur voie ce qu'il avait choisi et ne se retrompe pas.
+  AddressData? _resolveEffectiveAdHoc(DeliveryAddressState state) {
+    if (_selectedAdHoc != null) return _selectedAdHoc;
+    if (_selectedId != null) return null;
+    final current = widget.current;
+    if (current == null) return null;
+    final matchesSaved = state.addresses.any(
+      (a) => _labelOf(a) == current.label,
+    );
+    return matchesSaved ? null : current;
+  }
+
+  bool _isSelected(DeliveryAddress a, AddressData? effectiveAdHoc) {
     // Une sélection recherche/GPS/récente prime : aucune adresse enregistrée
     // ne doit apparaître cochée en même temps.
-    if (_selectedAdHoc != null) return false;
+    if (effectiveAdHoc != null) return false;
     if (_selectedId != null) return _selectedId == a.id;
     final current = widget.current;
     if (current != null) return _labelOf(a) == current.label;
@@ -391,6 +407,7 @@ class _DeliveryAddressPickerSheetState
             padding: EdgeInsets.only(bottom: keyboard),
             child: BlocBuilder<DeliveryAddressBloc, DeliveryAddressState>(
               builder: (context, state) {
+                final effectiveAdHoc = _resolveEffectiveAdHoc(state);
                 return Column(
                   children: [
                     // Handle
@@ -450,7 +467,13 @@ class _DeliveryAddressPickerSheetState
                     Expanded(
                       child: _isSearchMode
                           ? _buildSuggestions(scrollController, cs, tt)
-                          : _buildDefault(scrollController, state, cs, tt),
+                          : _buildDefault(
+                              scrollController,
+                              state,
+                              cs,
+                              tt,
+                              effectiveAdHoc,
+                            ),
                     ),
                     // ── Bouton confirmer (hors mode recherche) ────────────
                     if (!_isSearchMode)
@@ -466,16 +489,16 @@ class _DeliveryAddressPickerSheetState
                           child: DonyButton(
                             label: 'Confirmer cette adresse',
                             onPressed:
-                                (_selectedAdHoc == null &&
+                                (effectiveAdHoc == null &&
                                     state.addresses.isEmpty)
                                 ? null
                                 : () {
-                                    if (_selectedAdHoc != null) {
-                                      Navigator.of(context).pop(_selectedAdHoc);
+                                    if (effectiveAdHoc != null) {
+                                      Navigator.of(context).pop(effectiveAdHoc);
                                       return;
                                     }
                                     final address = state.addresses.firstWhere(
-                                      _isSelected,
+                                      (a) => _isSelected(a, effectiveAdHoc),
                                       orElse: () => state.addresses.first,
                                     );
                                     Navigator.of(context).pop(
@@ -581,15 +604,17 @@ class _DeliveryAddressPickerSheetState
     DeliveryAddressState state,
     ColorScheme cs,
     TextTheme tt,
+    AddressData? effectiveAdHoc,
   ) {
     if (state.status == DeliveryAddressStatus.loading) {
       return const Center(child: CircularProgressIndicator());
     }
     final recents = _recents.getAll();
-    // Sélection GPS brute (pas de vraie adresse résolue) : ni enregistrée ni
-    // dans les récentes, il faut son propre aperçu pour rester visible.
-    final adHocIsRawGps =
-        _selectedAdHoc != null && !recents.contains(_selectedAdHoc);
+    // Sélection sans correspondance (position GPS brute, ou adresse récente
+    // évincée du cache 3 places) : ni enregistrée ni dans les récentes, il
+    // lui faut son propre aperçu pour rester visible et éviter de se retromper.
+    final adHocNotInList =
+        effectiveAdHoc != null && !recents.contains(effectiveAdHoc);
     return ListView(
       controller: controller,
       padding: const EdgeInsets.only(bottom: DonySpacing.sm),
@@ -597,11 +622,13 @@ class _DeliveryAddressPickerSheetState
         // GPS — accès rapide tout en haut
         _GpsTile(onTap: _onGps),
         const Divider(indent: 20, endIndent: 20, height: 1),
-        if (adHocIsRawGps) ...[
+        if (adHocNotInList) ...[
           _RecentAddressRow(
-            address: _selectedAdHoc!,
+            address: effectiveAdHoc,
             color: cs.secondary,
-            icon: 'locate-fixed',
+            icon: effectiveAdHoc.label.startsWith('Position GPS (')
+                ? 'locate-fixed'
+                : 'map-pin',
             selected: true,
             onTap: () {},
           ),
@@ -627,7 +654,7 @@ class _DeliveryAddressPickerSheetState
             (address) => _RecentAddressRow(
               address: address,
               color: cs.secondary,
-              selected: address == _selectedAdHoc,
+              selected: address == effectiveAdHoc,
               onTap: () => setState(() {
                 _selectedAdHoc = address;
                 _selectedId = null;
@@ -655,7 +682,7 @@ class _DeliveryAddressPickerSheetState
           ...state.addresses.map((address) {
             return _DeliveryAddressRow(
               address: address,
-              isSelected: _isSelected(address),
+              isSelected: _isSelected(address, effectiveAdHoc),
               activeColor: cs.secondary,
               onTap: () => setState(() {
                 _selectedId = address.id;
