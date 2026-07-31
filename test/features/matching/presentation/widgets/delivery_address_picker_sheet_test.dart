@@ -165,5 +165,47 @@ void main() {
         expect(find.text('Réessayer'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'reverseGeocode échoue à chaque tentative → « Adresse introuvable », '
+      'jamais de repli sur les coordonnées brutes',
+      (tester) async {
+        when(
+          () => geolocator.isLocationServiceEnabled(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => geolocator.checkPermission(),
+        ).thenAnswer((_) async => LocationPermission.always);
+        when(
+          () => geolocator.getCurrentPosition(
+            locationSettings: any(named: 'locationSettings'),
+          ),
+        ).thenAnswer(
+          (_) async => Position(
+            latitude: 48.8566,
+            longitude: 2.3522,
+            timestamp: DateTime.now(),
+            accuracy: 5,
+            altitude: 0,
+            altitudeAccuracy: 0,
+            heading: 0,
+            headingAccuracy: 0,
+            speed: 0,
+            speedAccuracy: 0,
+          ),
+        );
+        when(
+          () => service.reverseGeocode(any(), any()),
+        ).thenThrow(Exception('502 bad gateway'));
+
+        await pump(tester);
+        await tester.tap(find.text('Utiliser ma position actuelle'));
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+
+        verify(() => service.reverseGeocode(any(), any())).called(3);
+        expect(find.text('Adresse introuvable'), findsOneWidget);
+        expect(find.textContaining('Position GPS'), findsNothing);
+      },
+    );
   });
 }

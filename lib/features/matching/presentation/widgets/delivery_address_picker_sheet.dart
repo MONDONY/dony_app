@@ -209,15 +209,32 @@ class _DeliveryAddressPickerSheetState
       return;
     }
     final position = pos;
+    // 3 tentatives avant d'abandonner : un rate-limit ou un raté réseau
+    // ponctuel ne doit jamais se traduire par des coordonnées brutes à la
+    // place de la vraie adresse — seul un vrai 404 Google (reverseGeocode
+    // renvoie null sans exception) justifie ce repli.
     AddressData? addr;
-    try {
-      addr = await _service
-          .reverseGeocode(position.latitude, position.longitude)
-          .timeout(const Duration(seconds: 12));
-    } catch (_) {
-      addr = null;
+    var failed = false;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        addr = await _service
+            .reverseGeocode(position.latitude, position.longitude)
+            .timeout(const Duration(seconds: 12));
+        failed = false;
+        break;
+      } catch (_) {
+        failed = true;
+        if (attempt < 2) {
+          await Future.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+        }
+      }
     }
     if (!mounted) return;
+    if (failed) {
+      setState(() => _resolving = false);
+      _showInfoSheet(reverseGeocodeFailed: true);
+      return;
+    }
     Navigator.of(context).pop(
       addr ??
           AddressData(
@@ -233,6 +250,7 @@ class _DeliveryAddressPickerSheetState
     bool permanent = false,
     bool gpsDisabled = false,
     bool positionUnavailable = false,
+    bool reverseGeocodeFailed = false,
   }) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
@@ -269,6 +287,8 @@ class _DeliveryAddressPickerSheetState
                   ? 'GPS désactivé'
                   : positionUnavailable
                   ? 'Position indisponible'
+                  : reverseGeocodeFailed
+                  ? 'Adresse introuvable'
                   : permanent
                   ? 'Localisation définitivement refusée'
                   : 'Localisation refusée',
@@ -281,6 +301,8 @@ class _DeliveryAddressPickerSheetState
                   ? 'Activez la géolocalisation dans vos paramètres système.'
                   : positionUnavailable
                   ? 'Impossible de récupérer votre position pour le moment. Réessayez.'
+                  : reverseGeocodeFailed
+                  ? 'Impossible de convertir votre position en adresse. Réessayez.'
                   : 'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
@@ -291,14 +313,16 @@ class _DeliveryAddressPickerSheetState
               child: FilledButton(
                 onPressed: () {
                   Navigator.pop(ctx);
-                  if (positionUnavailable) {
+                  if (positionUnavailable || reverseGeocodeFailed) {
                     _onGps();
                   } else {
                     Geolocator.openAppSettings();
                   }
                 },
                 child: Text(
-                  positionUnavailable ? 'Réessayer' : 'Ouvrir les paramètres',
+                  positionUnavailable || reverseGeocodeFailed
+                      ? 'Réessayer'
+                      : 'Ouvrir les paramètres',
                 ),
               ),
             ),
