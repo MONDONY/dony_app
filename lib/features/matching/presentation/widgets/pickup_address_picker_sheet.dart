@@ -68,12 +68,35 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
   String? _sessionToken;
   DateTime? _sessionTokenAt;
 
-  bool get _isSearchMode => _searchCtrl.text.trim().isNotEmpty;
+  // true seulement pendant une recherche active par l'utilisateur — pas
+  // simplement parce que le champ contient du texte (il affiche aussi le
+  // label de l'adresse sélectionnée, hors recherche).
+  bool _isSearchMode = false;
+  // Empêche _onSearchChanged de réagir quand on remplit le champ par code
+  // (sélection) au lieu d'une saisie utilisateur.
+  bool _suppressSearchListener = false;
 
   @override
   void initState() {
     super.initState();
+    final current = widget.current;
+    if (current != null) {
+      _searchCtrl.text = current.label;
+      _lastQuery = current.label;
+    }
     _searchCtrl.addListener(_onSearchChanged);
+  }
+
+  // Affiche `label` dans le champ (sélection courante) sans déclencher de
+  // nouvelle recherche ni repasser en mode recherche.
+  void _setDisplayedLabel(String label) {
+    _suppressSearchListener = true;
+    _searchCtrl.value = TextEditingValue(
+      text: label,
+      selection: TextSelection.collapsed(offset: label.length),
+    );
+    _lastQuery = label;
+    _suppressSearchListener = false;
   }
 
   @override
@@ -97,6 +120,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
   }
 
   void _onSearchChanged() {
+    if (_suppressSearchListener) return;
     final text = _searchCtrl.text;
     if (text == _lastQuery) return;
     _lastQuery = text;
@@ -105,6 +129,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       _sessionToken = null;
       _sessionTokenAt = null;
       setState(() {
+        _isSearchMode = false;
         _suggestions = [];
         _offline = false;
         _error = false;
@@ -112,7 +137,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       });
       return;
     }
-    setState(() {}); // bascule en mode recherche
+    setState(() => _isSearchMode = true);
     _debounce = Timer(const Duration(milliseconds: 300), () => _fetch(text));
   }
 
@@ -161,11 +186,18 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       await _recents.add(addr);
       if (!mounted) return;
       // Pré-sélection uniquement : le sheet reste ouvert, seul le bouton
-      // « Confirmer cette adresse » referme et renvoie le résultat.
-      _selectedAdHoc = addr;
-      _selectedId = null;
-      _resolving = false;
-      _searchCtrl.clear();
+      // « Confirmer cette adresse » referme et renvoie le résultat. Le champ
+      // garde le label choisi au lieu de se vider.
+      _setDisplayedLabel(addr.label);
+      setState(() {
+        _selectedAdHoc = addr;
+        _selectedId = null;
+        _resolving = false;
+        _isSearchMode = false;
+        _suggestions = [];
+        _offline = false;
+        _error = false;
+      });
     } catch (_) {
       _sessionToken = null;
       _sessionTokenAt = null;
@@ -251,17 +283,20 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       await _recents.add(addr);
     }
     if (!mounted) return;
+    final resolved =
+        addr ??
+        AddressData(
+          label:
+              'Position GPS (${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)})',
+          lat: position.latitude,
+          lng: position.longitude,
+        );
     // Pré-sélection uniquement : le sheet reste ouvert, seul le bouton
-    // « Confirmer cette adresse » referme et renvoie le résultat.
+    // « Confirmer cette adresse » referme et renvoie le résultat. Le champ
+    // affiche le label obtenu.
+    _setDisplayedLabel(resolved.label);
     setState(() {
-      _selectedAdHoc =
-          addr ??
-          AddressData(
-            label:
-                'Position GPS (${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)})',
-            lat: position.latitude,
-            lng: position.longitude,
-          );
+      _selectedAdHoc = resolved;
       _selectedId = null;
       _resolving = false;
     });
@@ -656,10 +691,13 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
               address: address,
               color: cs.primary,
               selected: address == effectiveAdHoc,
-              onTap: () => setState(() {
-                _selectedAdHoc = address;
-                _selectedId = null;
-              }),
+              onTap: () {
+                _setDisplayedLabel(address.label);
+                setState(() {
+                  _selectedAdHoc = address;
+                  _selectedId = null;
+                });
+              },
             ),
           ),
           const Divider(indent: 20, endIndent: 20),
@@ -685,10 +723,13 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
               address: address,
               isSelected: _isSelected(address, effectiveAdHoc),
               activeColor: cs.primary,
-              onTap: () => setState(() {
-                _selectedId = address.id;
-                _selectedAdHoc = null;
-              }),
+              onTap: () {
+                _setDisplayedLabel(_labelOf(address));
+                setState(() {
+                  _selectedId = address.id;
+                  _selectedAdHoc = null;
+                });
+              },
             );
           }),
           const Divider(indent: 20, endIndent: 20),
