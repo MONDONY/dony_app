@@ -298,4 +298,92 @@ void main() {
     expect(c.state.radiusKm, 25);
     expect(c.state.centerLabel, 'Paris');
   });
+
+  // ── Corridor : villes vidées et interverties ──────────────────────────────
+  // Ces trois méthodes s'appuient sur la sentinelle `_unset` de `copyWith`
+  // pour écrire un `null` explicite. Sans ces tests, une sentinelle mal
+  // câblée laisserait la ville en place au lieu de l'effacer, en silence.
+
+  test('clearDeparture vide la ville et son code pays, sans toucher arrivée',
+      () {
+    final c = CorridorAlertFormCubit(repo, analytics);
+    c.setDeparture('Paris', 'FR');
+    c.setArrival('Dakar', 'SN');
+
+    c.clearDeparture();
+
+    expect(c.state.departureCity, isNull);
+    expect(c.state.departureCountryCode, isNull);
+    expect(c.state.arrivalCity, 'Dakar');
+    expect(c.state.arrivalCountryCode, 'SN');
+    expect(c.state.isValid, isFalse);
+  });
+
+  test('clearArrival vide la ville et son code pays, sans toucher départ', () {
+    final c = CorridorAlertFormCubit(repo, analytics);
+    c.setDeparture('Paris', 'FR');
+    c.setArrival('Dakar', 'SN');
+
+    c.clearArrival();
+
+    expect(c.state.arrivalCity, isNull);
+    expect(c.state.arrivalCountryCode, isNull);
+    expect(c.state.departureCity, 'Paris');
+    expect(c.state.departureCountryCode, 'FR');
+  });
+
+  test('clearDeparture préserve les autres champs du formulaire', () {
+    // Garde-fou de la refonte : l'ancienne implémentation ré-énumérait les 15
+    // champs du constructeur, un champ oublié était remis à zéro en silence.
+    final c = CorridorAlertFormCubit(repo, analytics);
+    c.setDeparture('Paris', 'FR');
+    c.setArrival('Dakar', 'SN');
+    c.setMinWeight(5);
+    c.setCategories(['docs']);
+
+    c.clearDeparture();
+
+    expect(c.state.minWeightKg, 5);
+    expect(c.state.contentCategories, ['docs']);
+  });
+
+  test('swapCorridor intervertit villes et codes pays', () {
+    final c = CorridorAlertFormCubit(repo, analytics);
+    c.setDeparture('Paris', 'FR');
+    c.setArrival('Dakar', 'SN');
+
+    c.swapCorridor();
+
+    expect(c.state.departureCity, 'Dakar');
+    expect(c.state.departureCountryCode, 'SN');
+    expect(c.state.arrivalCity, 'Paris');
+    expect(c.state.arrivalCountryCode, 'FR');
+  });
+
+  test('swapCorridor avec une seule ville renseignée la déplace vraiment', () {
+    // Le cas qui imposait un null explicite : sans lui, `valeur ?? this.valeur`
+    // aurait conservé « Paris » au départ en plus de l'écrire à l'arrivée.
+    final c = CorridorAlertFormCubit(repo, analytics);
+    c.setDeparture('Paris', 'FR');
+
+    c.swapCorridor();
+
+    expect(c.state.departureCity, isNull);
+    expect(c.state.departureCountryCode, isNull);
+    expect(c.state.arrivalCity, 'Paris');
+    expect(c.state.arrivalCountryCode, 'FR');
+  });
+
+  test('toggleCategory ajoute puis retire une catégorie', () {
+    final c = CorridorAlertFormCubit(repo, analytics);
+
+    c.toggleCategory('docs');
+    expect(c.state.contentCategories, ['docs']);
+
+    c.toggleCategory('vetements');
+    expect(c.state.contentCategories, ['docs', 'vetements']);
+
+    c.toggleCategory('docs');
+    expect(c.state.contentCategories, ['vetements']);
+  });
 }
