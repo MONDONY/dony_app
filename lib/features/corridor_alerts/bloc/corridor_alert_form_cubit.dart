@@ -58,10 +58,10 @@ class CorridorAlertFormState extends Equatable {
   static const _unset = Object();
 
   CorridorAlertFormState copyWith({
-    String? departureCity,
-    String? arrivalCity,
-    String? departureCountryCode,
-    String? arrivalCountryCode,
+    Object? departureCity = _unset,
+    Object? arrivalCity = _unset,
+    Object? departureCountryCode = _unset,
+    Object? arrivalCountryCode = _unset,
     Object? dateFrom = _unset,
     Object? dateTo = _unset,
     Object? minWeightKg = _unset,
@@ -75,11 +75,18 @@ class CorridorAlertFormState extends Equatable {
     Object? centerLabel = _unset,
   }) =>
       CorridorAlertFormState(
-        departureCity: departureCity ?? this.departureCity,
-        arrivalCity: arrivalCity ?? this.arrivalCity,
-        departureCountryCode:
-            departureCountryCode ?? this.departureCountryCode,
-        arrivalCountryCode: arrivalCountryCode ?? this.arrivalCountryCode,
+        departureCity: identical(departureCity, _unset)
+            ? this.departureCity
+            : departureCity as String?,
+        arrivalCity: identical(arrivalCity, _unset)
+            ? this.arrivalCity
+            : arrivalCity as String?,
+        departureCountryCode: identical(departureCountryCode, _unset)
+            ? this.departureCountryCode
+            : departureCountryCode as String?,
+        arrivalCountryCode: identical(arrivalCountryCode, _unset)
+            ? this.arrivalCountryCode
+            : arrivalCountryCode as String?,
         dateFrom: identical(dateFrom, _unset)
             ? this.dateFrom
             : dateFrom as DateTime?,
@@ -105,35 +112,6 @@ class CorridorAlertFormState extends Equatable {
         centerLabel: identical(centerLabel, _unset)
             ? this.centerLabel
             : centerLabel as String?,
-      );
-
-  /// Remplace le corridor (ville + code pays des deux champs) en un seul
-  /// appel. Contrairement à [copyWith], dont les paramètres suivent la
-  /// convention `valeur ?? this.valeur`, accepte explicitement `null` pour
-  /// vider un champ — nécessaire pour l'échange départ/arrivée quand l'un
-  /// des deux est encore vide.
-  CorridorAlertFormState withCorridor({
-    required String? departureCity,
-    required String? arrivalCity,
-    required String? departureCountryCode,
-    required String? arrivalCountryCode,
-  }) =>
-      CorridorAlertFormState(
-        departureCity: departureCity,
-        arrivalCity: arrivalCity,
-        departureCountryCode: departureCountryCode,
-        arrivalCountryCode: arrivalCountryCode,
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-        minWeightKg: minWeightKg,
-        contentCategories: contentCategories,
-        status: status,
-        errorMessage: errorMessage,
-        direction: direction,
-        centerLat: centerLat,
-        centerLng: centerLng,
-        radiusKm: radiusKm,
-        centerLabel: centerLabel,
       );
 
   @override
@@ -197,22 +175,18 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
         arrivalCountryCode: countryCode,
       ));
 
-  void clearDeparture() => emit(state.withCorridor(
+  void clearDeparture() => emit(state.copyWith(
         departureCity: null,
-        arrivalCity: state.arrivalCity,
         departureCountryCode: null,
-        arrivalCountryCode: state.arrivalCountryCode,
       ));
 
-  void clearArrival() => emit(state.withCorridor(
-        departureCity: state.departureCity,
+  void clearArrival() => emit(state.copyWith(
         arrivalCity: null,
-        departureCountryCode: state.departureCountryCode,
         arrivalCountryCode: null,
       ));
 
   /// Échange départ et arrivée (ville + code pays).
-  void swapCorridor() => emit(state.withCorridor(
+  void swapCorridor() => emit(state.copyWith(
         departureCity: state.arrivalCity,
         arrivalCity: state.departureCity,
         departureCountryCode: state.arrivalCountryCode,

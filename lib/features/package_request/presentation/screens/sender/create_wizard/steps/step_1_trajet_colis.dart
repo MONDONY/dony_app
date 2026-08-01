@@ -109,6 +109,16 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     return 'Les voyageurs partant du $from au $to pourront répondre.';
   }
 
+  void _setDeparture(String? city) {
+    _departureCity = city;
+    _sync(markTouched: true);
+  }
+
+  void _setArrival(String? city) {
+    _arrivalCity = city;
+    _sync(markTouched: true);
+  }
+
   void _swapCities() {
     final departure = _departureCity;
     _departureCity = _arrivalCity;
@@ -183,22 +193,10 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
               departureError: _touched ? _departureError : null,
               arrivalError: _touched ? _arrivalError : null,
               onSwap: _swapCities,
-              onDepartureSelected: (city) {
-                _departureCity = city.name;
-                _sync(markTouched: true);
-              },
-              onDepartureCleared: () {
-                _departureCity = null;
-                _sync(markTouched: true);
-              },
-              onArrivalSelected: (city) {
-                _arrivalCity = city.name;
-                _sync(markTouched: true);
-              },
-              onArrivalCleared: () {
-                _arrivalCity = null;
-                _sync(markTouched: true);
-              },
+              onDepartureSelected: (city) => _setDeparture(city.name),
+              onDepartureCleared: () => _setDeparture(null),
+              onArrivalSelected: (city) => _setArrival(city.name),
+              onArrivalCleared: () => _setArrival(null),
             ),
             const SizedBox(height: DonySpacing.base),
 

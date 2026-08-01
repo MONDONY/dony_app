@@ -8,15 +8,20 @@ import 'package:flutter/material.dart';
 /// Utilise [InputDecoration.label] (RichText) plutôt que [InputDecoration.labelText]
 /// afin d'appliquer `cs.error` uniquement à l'astérisque tout en conservant
 /// la couleur de label par défaut pour le reste du texte.
+/// [style] remplace le style de label par défaut, pour les champs qui ne
+/// passent pas par `InputDecorationTheme` (label statique posé au-dessus de la
+/// valeur). L'astérisque garde `cs.error` dans tous les cas.
 Widget? buildRequiredLabel(
   BuildContext context,
   String? label, {
   required bool isRequired,
+  TextStyle? style,
 }) {
   if (label == null || !isRequired) {
     return null;
   }
-  final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle ??
+  final labelStyle = style ??
+      Theme.of(context).inputDecorationTheme.labelStyle ??
       Theme.of(context).textTheme.bodyMedium;
   return Text.rich(
     TextSpan(

@@ -332,34 +332,17 @@ class HomeSearchFilters {
     return n;
   }
 
-  /// Échange départ et arrivée. Distinct de [copyWith] : ses paramètres
-  /// suivent la convention `valeur ?? this.valeur`, incapable d'écrire un
-  /// `null` explicite (ex. arrivée vide) sans passer par un drapeau `clear*`
-  /// dédié — inutile ici puisque les deux champs changent toujours ensemble.
-  HomeSearchFilters swapCorridor() => HomeSearchFilters(
-        departureCity: arrivalCity,
-        arrivalCity: departureCity,
-        datePreset: datePreset,
-        customDate: customDate,
-        urgentOnly: urgentOnly,
-        nearMeActive: nearMeActive,
-        nearMeRadiusKm: nearMeRadiusKm,
-        userLat: userLat,
-        userLng: userLng,
-        maxPricePerKg: maxPricePerKg,
-        weightMin: weightMin,
-        weightMax: weightMax,
-        kiloProOnly: kiloProOnly,
-        minRating: minRating,
-        weekendOnly: weekendOnly,
-        transportMode: transportMode,
-        kycVerifiedOnly: kycVerifiedOnly,
-        contentType: contentType,
-        urgencyFilter: urgencyFilter,
-        maxWeight: maxWeight,
-        parcelSize: parcelSize,
-        matchingMyTrips: matchingMyTrips,
-      );
+  /// Échange départ et arrivée.
+  ///
+  /// Passe par [copyWith] plutôt que par le constructeur : ré-énumérer les
+  /// champs ici ferait qu'un filtre ajouté plus tard à la classe serait
+  /// silencieusement remis à sa valeur par défaut à chaque interversion, sans
+  /// erreur de compilation. Le premier `copyWith` vide le corridor (les
+  /// paramètres suivent la convention `valeur ?? this.valeur`, incapables
+  /// d'écrire un `null` explicite), le second réinjecte les villes croisées —
+  /// une ville nulle le reste donc bien.
+  HomeSearchFilters swapCorridor() => copyWith(clearCorridor: true)
+      .copyWith(departureCity: arrivalCity, arrivalCity: departureCity);
 
   /// Les drapeaux `clearXxx` permettent de remettre un champ à null, ce qu'un
   /// paramètre optionnel seul ne sait pas exprimer.

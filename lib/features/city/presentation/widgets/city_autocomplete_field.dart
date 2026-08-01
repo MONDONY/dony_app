@@ -56,6 +56,9 @@ class CityAutocompleteField extends StatefulWidget {
   ///
   /// Optionnel, `null` par défaut : les appelants qui ne le fournissent pas
   /// gardent exactement le rendu historique.
+  ///
+  /// **Ignoré en variant [CityFieldVariant.connected]** : le message y est
+  /// rendu par le parent sous la carte, voir `CityCorridorFields`.
   final String? errorText;
 
   final String label;
@@ -120,16 +123,19 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   /// Remonte le changement d'état de la liste au parent, en différé : le calcul
   /// se fait pendant le build (voir [_buildSuggestions]), et prévenir un parent
   /// qui se reconstruit en réaction déclencherait un setState pendant le build.
-  Widget _trackSuggestions(bool visible, Widget child) {
-    if (_suggestionsVisible != visible) {
-      _suggestionsVisible = visible;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          widget.onSuggestionsVisibilityChanged?.call(visible);
-        }
-      });
+  ///
+  /// Le drapeau bascule avant la planification : au plus un rappel par
+  /// transition réelle, jamais d'accumulation.
+  void _notifySuggestions(bool visible) {
+    if (_suggestionsVisible == visible) {
+      return;
     }
-    return child;
+    _suggestionsVisible = visible;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.onSuggestionsVisibilityChanged?.call(visible);
+      }
+    });
   }
 
   @override
@@ -277,37 +283,39 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   /// visible au-dessus d'une valeur en gros/gras — pensé pour être posé dans
   /// la carte « billet » partagée `CityCorridorFields` (style compagnie
   /// aérienne : rangée départ/arrivée, drapeau en [valueSuffix]).
+  ///
+  /// N'affiche pas [errorText] : dans cette variante le message est rendu par
+  /// le parent, **sous** la carte. L'afficher ici allongerait la rangée en
+  /// erreur, et les deux rangées doivent rester de hauteur égale (voir
+  /// [_connectedValueHeight]).
   Widget _buildConnectedField(BuildContext context, ColorScheme cs) {
     final tt = Theme.of(context).textTheme;
+    final labelStyle = tt.labelSmall?.copyWith(
+      color: cs.onSurfaceVariant,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.3,
+    );
+    final label = widget.label.toUpperCase();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text.rich(
-          TextSpan(
-            text: widget.label.toUpperCase(),
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-            ),
-            children: widget.requiredLabel
-                ? [
-                    TextSpan(
-                      text: ' *',
-                      style: TextStyle(color: cs.error),
-                    ),
-                  ]
-                : null,
-          ),
-        ),
+        buildRequiredLabel(
+              context,
+              label,
+              isRequired: widget.requiredLabel,
+              style: labelStyle,
+            ) ??
+            Text(label, style: labelStyle),
         // Hauteur figée : un champ rempli embarque le drapeau et le bouton
         // « x », un champ vide seulement du texte — sans ça la rangée remplie
         // est ~18 dp plus haute et la couture entre départ et arrivée n'est
         // plus au centre vertical de la carte, où `CityCorridorFields` pose
-        // son bouton d'interversion.
+        // son bouton d'interversion. Mise à l'échelle avec la taille de texte
+        // choisie par l'utilisateur (réglages d'accessibilité), sinon la
+        // valeur est rognée dès les grands crans.
         SizedBox(
-          height: _connectedValueHeight,
+          height: MediaQuery.textScalerOf(context).scale(_connectedValueHeight),
           child: TextField(
             key: widget.fieldKey,
             controller: _controller,
@@ -328,7 +336,6 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
               contentPadding: const EdgeInsets.only(top: 3),
               hintText: 'Choisir une ville',
               hintStyle: tt.headlineMedium?.copyWith(
@@ -336,8 +343,6 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
                 fontWeight: FontWeight.w600,
                 color: cs.onSurfaceVariant,
               ),
-              errorText: widget.errorText,
-              errorStyle: const TextStyle(height: 0.01, fontSize: 0),
               suffix: widget.valueSuffix,
               suffixIcon: _buildClearButton(cs),
               suffixIconConstraints: const BoxConstraints(
@@ -348,14 +353,6 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
             onChanged: _onChanged,
           ),
         ),
-        if (widget.errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: DonySpacing.xs),
-            child: Text(
-              widget.errorText!,
-              style: tt.bodySmall?.copyWith(color: cs.error),
-            ),
-          ),
       ],
     );
   }
@@ -366,37 +363,103 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   /// et on repasse sur les résultats serveur du [CitySearchBloc].
   Widget _buildSuggestions(BuildContext context) {
     final role = widget.recentRole;
-    final recents = role == null
-        ? const <CityModel>[]
-        : getIt<RecentCityStore>().read(role);
-    final showRecents =
-        _focusNode.hasFocus && _controller.text.isEmpty && recents.isNotEmpty;
-    if (showRecents) {
-      return _trackSuggestions(
-        true,
-        _RecentCityList(cities: recents, onTap: _onCitySelected),
-      );
+    // Le rôle et le focus se testent avant de lire le magasin : hors focus ou
+    // dès la première lettre tapée, la liste des récents n'est jamais affichée
+    // et la décoder à chaque build serait du travail jeté.
+    final recents =
+        role != null && _focusNode.hasFocus && _controller.text.isEmpty
+            ? getIt<RecentCityStore>().read(role)
+            : const <CityModel>[];
+    if (recents.isNotEmpty) {
+      _notifySuggestions(true);
+      return _RecentCityList(cities: recents, onTap: _onCitySelected);
     }
     final cs = Theme.of(context).colorScheme;
     return BlocBuilder<CitySearchBloc, CitySearchState>(
       builder: (ctx, state) {
-        if (state is CitySearchLoading) {
-          return _trackSuggestions(
-            true,
-            Padding(
+        final Widget? suggestions = switch (state) {
+          CitySearchLoading() => Padding(
               padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
               child: LinearProgressIndicator(color: cs.primary),
             ),
-          );
-        }
-        if (state is CitySearchLoaded && state.cities.isNotEmpty) {
-          return _trackSuggestions(
-            true,
-            _ResultList(cities: state.cities, onTap: _onCitySelected),
-          );
-        }
-        return _trackSuggestions(false, const SizedBox.shrink());
+          CitySearchLoaded(:final cities) when cities.isNotEmpty =>
+            _ResultList(cities: cities, onTap: _onCitySelected),
+          _ => null,
+        };
+        // Visibilité dérivée du rendu, pas ré-affirmée à chaque branche : une
+        // branche ajoutée plus tard ne peut pas oublier de la mettre à jour.
+        _notifySuggestions(suggestions != null);
+        return suggestions ?? const SizedBox.shrink();
       },
+    );
+  }
+}
+
+/// Coque commune aux deux listes de suggestions (récents et résultats
+/// serveur) : elles doivent rester visuellement indiscernables, une seule
+/// décoration garantit qu'un ajustement les touche toutes les deux.
+class _SuggestionPanel extends StatelessWidget {
+  const _SuggestionPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(top: DonySpacing.xs),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.outline),
+        boxShadow: [
+          BoxShadow(color: cs.shadow, blurRadius: 8, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Ligne « ville + pays » d'une liste de suggestions. Seule l'icône de tête
+/// distingue un récent (horloge) d'un résultat serveur (repère).
+class _CitySuggestionTile extends StatelessWidget {
+  const _CitySuggestionTile({
+    required this.city,
+    required this.leading,
+    required this.onTap,
+  });
+
+  final CityModel city;
+  final Widget leading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        dense: true,
+        leading: leading,
+        title: Text(
+          city.name,
+          style: tt.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: cs.onSurface,
+          ),
+        ),
+        subtitle: Text(
+          city.countryName,
+          style: tt.bodyMedium?.copyWith(
+            fontSize: 12,
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+        onTap: onTap,
+      ),
     );
   }
 }
@@ -411,20 +474,7 @@ class _RecentCityList extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return Container(
-      margin: const EdgeInsets.only(top: DonySpacing.xs),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.outline),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return _SuggestionPanel(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,32 +492,10 @@ class _RecentCityList extends StatelessWidget {
             ),
           ),
           for (final city in cities)
-            Material(
-              type: MaterialType.transparency,
-              child: ListTile(
-                dense: true,
-                leading: DonyIcon(
-                  'history',
-                  size: 18,
-                  color: cs.onSurfaceVariant,
-                ),
-                title: Text(
-                  city.name,
-                  style: tt.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
-                  ),
-                ),
-                subtitle: Text(
-                  city.countryName,
-                  style: tt.bodyMedium?.copyWith(
-                    fontSize: 12,
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () => onTap(city),
-              ),
+            _CitySuggestionTile(
+              city: city,
+              leading: DonyIcon('history', size: 18, color: cs.onSurfaceVariant),
+              onTap: () => onTap(city),
             ),
         ],
       ),
@@ -487,20 +515,7 @@ class _ResultList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(top: DonySpacing.xs),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.outline),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return _SuggestionPanel(
       // ConstrainedBox borne la hauteur à ~4 items — au-delà la liste scrolle.
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: _maxHeight),
@@ -510,28 +525,10 @@ class _ResultList extends StatelessWidget {
           separatorBuilder: (_, __) => Divider(height: 1, color: cs.outline),
           itemBuilder: (ctx, i) {
             final city = cities[i];
-            return Material(
-              type: MaterialType.transparency,
-              child: ListTile(
-                dense: true,
-                leading: Icon(DonyIcons.mapPin, color: cs.primary, size: 20),
-                title: Text(
-                  city.name,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: cs.onSurface,
-                  ),
-                ),
-                subtitle: Text(
-                  city.countryName,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 12,
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () => onTap(city),
-              ),
+            return _CitySuggestionTile(
+              city: city,
+              leading: Icon(DonyIcons.mapPin, color: cs.primary, size: 20),
+              onTap: () => onTap(city),
             ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.05);
           },
         ),

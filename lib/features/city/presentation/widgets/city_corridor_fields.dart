@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/data/recent_city_store.dart';
@@ -21,13 +22,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// interne. Ville en gros/gras + drapeau du pays, et bouton d'interversion
 /// rond posé sur la couture entre les deux rangées, contre le bord droit.
 ///
+/// Le bouton est centré verticalement sur la carte, ce qui **suppose les deux
+/// rangées de hauteur égale** : d'où la hauteur figée de la ligne de valeur
+/// côté champ, et le rendu des messages d'erreur sous la carte plutôt que
+/// dans la rangée fautive (qui deviendrait plus haute que l'autre).
+///
 /// Ce bouton est un overlay ([Stack]) : il est donc **masqué dès qu'une liste
 /// de suggestions s'ouvre**. Sans ça, la carte grandit, le bouton centré
 /// glisse au milieu de la liste et intercepte le tap destiné à une suggestion
-/// (constaté en test : 9 échecs « découverte croisée »). Les deux rangées
-/// ayant une structure identique, la couture est exactement au centre vertical
-/// de la carte tant qu'aucune suggestion n'est ouverte — d'où le centrage
-/// simple par [Positioned] plein hauteur.
+/// (constaté en test : 9 échecs « découverte croisée »).
 class CityCorridorFields extends StatefulWidget {
   const CityCorridorFields({
     super.key,
@@ -65,9 +68,9 @@ class CityCorridorFields extends StatefulWidget {
   /// obligatoire pour soumettre le formulaire (création de trajet, modèle…).
   final bool requiredLabels;
 
-  /// Messages de champ obligatoire non renseigné, affichés sous la valeur
-  /// concernée. `null` = aucun message (cas des écrans de recherche, où le
-  /// corridor est facultatif).
+  /// Messages de champ obligatoire non renseigné, affichés sous la carte.
+  /// `null` = aucun message (cas des écrans de recherche, où le corridor est
+  /// facultatif).
   final String? departureError;
   final String? arrivalError;
 
@@ -82,101 +85,132 @@ class CityCorridorFields extends StatefulWidget {
 }
 
 class _CityCorridorFieldsState extends State<CityCorridorFields> {
-  bool _departureSuggestions = false;
-  bool _arrivalSuggestions = false;
+  /// Rôles dont la liste de suggestions est ouverte. Un ensemble plutôt que
+  /// deux booléens : la seule question posée est « y en a-t-il au moins une ».
+  final _openSuggestions = <CityFieldRole>{};
 
-  bool get _showSwap => !_departureSuggestions && !_arrivalSuggestions;
+  /// Piloté hors `setState` : masquer un bouton de 44 dp ne doit pas
+  /// reconstruire toute la carte (donc les deux champs, leurs décorations et
+  /// leurs listes) une frame sur deux pendant la saisie.
+  final _showSwap = ValueNotifier<bool>(true);
 
   /// Espace réservé à droite dans chaque rangée pour que la valeur et le
   /// bouton « x » ne passent jamais sous le bouton rond superposé.
   static const double _swapInset = 12;
-  static const double _rowRightPadding = kDonyMinTapTarget + _swapInset;
+  static const EdgeInsets _rowPadding = EdgeInsets.fromLTRB(
+    DonySpacing.base,
+    DonySpacing.sm,
+    kDonyMinTapTarget + _swapInset,
+    DonySpacing.sm,
+  );
 
-  void _onDepartureSuggestions(bool visible) {
-    if (_departureSuggestions != visible) {
-      setState(() => _departureSuggestions = visible);
+  void _onSuggestions(CityFieldRole role, {required bool visible}) {
+    final changed = visible
+        ? _openSuggestions.add(role)
+        : _openSuggestions.remove(role);
+    if (changed) {
+      _showSwap.value = _openSuggestions.isEmpty;
     }
   }
 
-  void _onArrivalSuggestions(bool visible) {
-    if (_arrivalSuggestions != visible) {
-      setState(() => _arrivalSuggestions = visible);
-    }
+  @override
+  void dispose() {
+    _showSwap.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Stack(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _TicketRow(
-                background: cs.surface,
-                rightPadding: _rowRightPadding,
-                child: BlocProvider(
-                  create: (_) =>
-                      widget.departureCityBloc ?? getIt<CitySearchBloc>(),
-                  child: CityAutocompleteField(
-                    fieldKey: widget.departureFieldKey,
-                    label: 'Départ',
-                    requiredLabel: widget.requiredLabels,
-                    initialValue: widget.departureValue,
-                    variant: CityFieldVariant.connected,
-                    recentRole: CityFieldRole.departure,
-                    valueSuffix: _flagSuffix(widget.departureValue),
-                    errorText: widget.departureError,
-                    onSuggestionsVisibilityChanged: _onDepartureSuggestions,
-                    onSelected: widget.onDepartureSelected,
-                    onCleared: widget.onDepartureCleared,
-                  ),
-                ),
+        Stack(
+          children: [
+            Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                border: Border.all(color: cs.outline),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: cs.surfaceWarm,
-                  border: Border(top: BorderSide(color: cs.outline)),
-                ),
-                child: _TicketRow(
-                  background: Colors.transparent,
-                  rightPadding: _rowRightPadding,
-                  child: BlocProvider(
-                    create: (_) =>
-                        widget.arrivalCityBloc ?? getIt<CitySearchBloc>(),
-                    child: CityAutocompleteField(
-                      fieldKey: widget.arrivalFieldKey,
-                      label: 'Arrivée',
-                      requiredLabel: widget.requiredLabels,
-                      initialValue: widget.arrivalValue,
-                      variant: CityFieldVariant.connected,
-                      recentRole: CityFieldRole.arrival,
-                      valueSuffix: _flagSuffix(widget.arrivalValue),
-                      errorText: widget.arrivalError,
-                      onSuggestionsVisibilityChanged: _onArrivalSuggestions,
-                      onSelected: widget.onArrivalSelected,
-                      onCleared: widget.onArrivalCleared,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: _rowPadding,
+                    child: BlocProvider(
+                      create: (_) =>
+                          widget.departureCityBloc ?? getIt<CitySearchBloc>(),
+                      child: CityAutocompleteField(
+                        fieldKey: widget.departureFieldKey,
+                        label: 'Départ',
+                        requiredLabel: widget.requiredLabels,
+                        initialValue: widget.departureValue,
+                        variant: CityFieldVariant.connected,
+                        recentRole: CityFieldRole.departure,
+                        valueSuffix: _flagSuffix(widget.departureValue),
+                        onSuggestionsVisibilityChanged: (visible) =>
+                            _onSuggestions(
+                              CityFieldRole.departure,
+                              visible: visible,
+                            ),
+                        onSelected: widget.onDepartureSelected,
+                        onCleared: widget.onDepartureCleared,
+                      ),
                     ),
                   ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cs.surfaceWarm,
+                      border: Border(top: BorderSide(color: cs.outline)),
+                    ),
+                    padding: _rowPadding,
+                    child: BlocProvider(
+                      create: (_) =>
+                          widget.arrivalCityBloc ?? getIt<CitySearchBloc>(),
+                      child: CityAutocompleteField(
+                        fieldKey: widget.arrivalFieldKey,
+                        label: 'Arrivée',
+                        requiredLabel: widget.requiredLabels,
+                        initialValue: widget.arrivalValue,
+                        variant: CityFieldVariant.connected,
+                        recentRole: CityFieldRole.arrival,
+                        valueSuffix: _flagSuffix(widget.arrivalValue),
+                        onSuggestionsVisibilityChanged: (visible) =>
+                            _onSuggestions(
+                              CityFieldRole.arrival,
+                              visible: visible,
+                            ),
+                        onSelected: widget.onArrivalSelected,
+                        onCleared: widget.onArrivalCleared,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 0,
+              bottom: 0,
+              right: _swapInset,
+              child: Center(
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _showSwap,
+                  builder: (context, visible, child) =>
+                      visible ? child! : const SizedBox.shrink(),
+                  child: CitySwapButton(onTap: widget.onSwap),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        if (_showSwap)
-          Positioned(
-            top: 0,
-            bottom: 0,
-            right: _swapInset,
-            child: Center(child: CitySwapButton(onTap: widget.onSwap)),
-          ),
+        // Sous la carte, pas dans la rangée fautive : un message inséré dans
+        // une seule des deux rangées la rendrait plus haute que l'autre et
+        // décalerait le bouton d'interversion de la couture.
+        DonyFieldError(message: widget.departureError),
+        DonyFieldError(message: widget.arrivalError),
       ],
     );
   }
@@ -194,32 +228,7 @@ class _CityCorridorFieldsState extends State<CityCorridorFields> {
     }
     return Padding(
       padding: const EdgeInsets.only(left: 6),
-      child: Text(flag, style: const TextStyle(fontSize: 18)),
-    );
-  }
-}
-
-/// Rangée pleine largeur d'une carte billet : padding généreux uniforme, et
-/// une marge droite élargie pour laisser passer le bouton d'interversion.
-class _TicketRow extends StatelessWidget {
-  const _TicketRow({
-    required this.background,
-    required this.rightPadding,
-    required this.child,
-  });
-
-  final Color background;
-  final double rightPadding;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: background,
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.base, DonySpacing.sm, rightPadding, DonySpacing.sm,
-      ),
-      child: child,
+      child: DonyEmoji(flag, size: 18, semanticLabel: city),
     );
   }
 }

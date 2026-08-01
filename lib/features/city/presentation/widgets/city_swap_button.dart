@@ -6,14 +6,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 /// champ arrivée se côtoient — la logique d'échange appartient à l'appelant
 /// ([CityCorridorFields] ou tout écran qui pose ses propres champs.
 class CitySwapButton extends StatefulWidget {
-  const CitySwapButton({
-    super.key,
-    required this.onTap,
-    this.tooltip = 'Interchanger départ et arrivée',
-  });
+  const CitySwapButton({super.key, required this.onTap});
 
   final VoidCallback onTap;
-  final String tooltip;
 
   @override
   State<CitySwapButton> createState() => _CitySwapButtonState();
@@ -34,7 +29,7 @@ class _CitySwapButtonState extends State<CitySwapButton> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Tooltip(
-      message: widget.tooltip,
+      message: 'Interchanger départ et arrivée',
       child: InkWell(
         key: const Key('swap-corridor-cities'),
         onTap: _handleTap,
