@@ -15,6 +15,8 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/mock_recent_city_store.dart';
+
 class MockFormCubit extends MockCubit<CorridorAlertFormState>
     implements CorridorAlertFormCubit {}
 
@@ -90,7 +92,10 @@ Future<void> _pumpSheet(
 }
 
 void main() {
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() {
+    initializeDateFormatting('fr');
+    registerCityFallbackValues();
+  });
 
   setUp(() {
     // Le formulaire charge le catalogue de types de contenu via getIt —
@@ -100,6 +105,7 @@ void main() {
     GetIt.I.registerFactory<IContentCategoryRepository>(
       () => _FakeContentCategoryRepository(),
     );
+    registerFakeRecentCityStore();
   });
 
   tearDown(() => GetIt.I.reset());

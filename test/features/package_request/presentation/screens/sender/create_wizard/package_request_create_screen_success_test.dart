@@ -21,6 +21,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../../helpers/mock_analytics_backend.dart';
+import '../../../../../../helpers/mock_recent_city_store.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -108,6 +109,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
     registerFallbackValue(TransportMode.plane);
+    registerCityFallbackValues();
   });
 
   setUp(() {
@@ -174,6 +176,7 @@ void main() {
     getIt.registerFactory<CitySearchBloc>(
       () => CitySearchBloc(_MockCityRepo()),
     );
+    registerFakeRecentCityStore();
   });
 
   tearDown(() {
@@ -186,6 +189,7 @@ void main() {
     if (getIt.isRegistered<CitySearchBloc>()) {
       getIt.unregister<CitySearchBloc>();
     }
+    unregisterFakeRecentCityStore();
   });
 
   Widget buildHarness({String helpConfigJson = _emptyHelpConfigJson}) {

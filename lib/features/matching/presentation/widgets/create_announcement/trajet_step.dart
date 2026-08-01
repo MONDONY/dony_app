@@ -3,18 +3,16 @@
 // de comportement.
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
-import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 /// Corps de l'étape 0 (Trajet + Mode de transport) du formulaire de création
@@ -103,6 +101,24 @@ class TrajetStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: _buildWidgets(context, tt, cs),
     );
+  }
+
+  /// Interversion départ/arrivée. Widget sans état propre : les notifiers
+  /// portés par le parent sont la seule source de vérité, un simple échange
+  /// de leurs valeurs suffit à propager le changement (déjà écoutés par le
+  /// `ListenableBuilder` de [_buildWidgets]).
+  void _swapCities() {
+    final city = departureCityNotifier.value;
+    departureCityNotifier.value = arrivalCityNotifier.value;
+    arrivalCityNotifier.value = city;
+
+    final depCode = departureCountryCodeNotifier;
+    final arrCode = arrivalCountryCodeNotifier;
+    if (depCode != null && arrCode != null) {
+      final code = depCode.value;
+      depCode.value = arrCode.value;
+      arrCode.value = code;
+    }
   }
 
   /// Formate la date et les heures du corridor pour l'aperçu.
@@ -216,39 +232,63 @@ class TrajetStep extends StatelessWidget {
         builder: (context, _) {
           return Column(
             children: [
-              // ── Ville de départ * ───────────────────────────────────────
-              // CityAutocompleteField utilise le même InputDecoration (via
-              // le thème) que DonyTextField — uniformité visuelle garantie.
-              // L'autocomplétion (suggestions inline) est préservée.
-              // requiredLabel: true → astérisque rouge via InputDecoration.label.
-              lockCorridor
-                  ? DonyTextField.tappable(
-                      key: const Key('departureCityField'),
-                      label: 'Ville de départ',
-                      value: departureCityNotifier.value,
-                      prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
-                      trailing: DonyIcon('lock',
-                          size: 16, color: cs.onSurfaceVariant),
-                      onTap: () {},
-                    )
-                  : BlocProvider(
-                      create: (_) =>
-                          departureCityBloc ?? getIt<CitySearchBloc>(),
-                      child: CityAutocompleteField(
-                        label: 'Ville de départ',
-                        fieldKey: const Key('departureCityField'),
-                        initialValue: departureCityNotifier.value,
-                        prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
-                        requiredLabel: true,
-                        errorText: departureCityError,
-                        onSelected: (CityModel city) {
-                          // Code pays d'abord : le listener du city notifier
-                          // (sync vers le form bloc) lit la valeur courante.
-                          departureCountryCodeNotifier?.value = city.countryCode;
-                          departureCityNotifier.value = city.name;
-                        },
-                      ),
-                    ),
+              // ── Corridor départ → arrivée ───────────────────────────────
+              // Même carte « billet » que la recherche et les alertes : les
+              // deux villes se lisent d'un bloc, avec le bouton
+              // d'interversion posé sur la couture. « Heure de départ » suit
+              // le corridor au lieu de s'intercaler entre les deux villes,
+              // qui doivent rester adjacentes pour que la carte ait un sens.
+              if (lockCorridor) ...[
+                DonyTextField.tappable(
+                  key: const Key('departureCityField'),
+                  label: 'Ville de départ',
+                  value: departureCityNotifier.value,
+                  prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
+                  trailing:
+                      DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
+                  onTap: () {},
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                DonyTextField.tappable(
+                  key: const Key('arrivalCityField'),
+                  label: 'Ville d\'arrivée',
+                  value: arrivalCityNotifier.value,
+                  prefixWidget: const DonyEmoji.planeLanding(size: 20),
+                  trailing:
+                      DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
+                  onTap: () {},
+                ),
+              ] else
+                CityCorridorFields(
+                  departureValue: departureCityNotifier.value,
+                  arrivalValue: arrivalCityNotifier.value,
+                  departureFieldKey: const Key('departureCityField'),
+                  arrivalFieldKey: const Key('arrivalCityField'),
+                  requiredLabels: true,
+                  departureError: departureCityError,
+                  arrivalError: arrivalCityError,
+                  departureCityBloc: departureCityBloc,
+                  arrivalCityBloc: arrivalCityBloc,
+                  onDepartureSelected: (CityModel city) {
+                    // Code pays d'abord : le listener du city notifier (sync
+                    // vers le form bloc) lit la valeur courante.
+                    departureCountryCodeNotifier?.value = city.countryCode;
+                    departureCityNotifier.value = city.name;
+                  },
+                  onArrivalSelected: (CityModel city) {
+                    arrivalCountryCodeNotifier?.value = city.countryCode;
+                    arrivalCityNotifier.value = city.name;
+                  },
+                  onDepartureCleared: () {
+                    departureCityNotifier.value = null;
+                    departureCountryCodeNotifier?.value = null;
+                  },
+                  onArrivalCleared: () {
+                    arrivalCityNotifier.value = null;
+                    arrivalCountryCodeNotifier?.value = null;
+                  },
+                  onSwap: _swapCities,
+                ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure de départ (obligatoire, D1) — DonyTextField.tappable ───
               DonyTextField.tappable(
@@ -269,34 +309,6 @@ class TrajetStep extends StatelessWidget {
                 errorText: departureTimeError,
                 onTap: () => onSelectDepartureTime(),
               ),
-              const SizedBox(height: DonySpacing.sm),
-              // ── Ville d'arrivée * ───────────────────────────────────────
-              lockCorridor
-                  ? DonyTextField.tappable(
-                      key: const Key('arrivalCityField'),
-                      label: 'Ville d\'arrivée',
-                      value: arrivalCityNotifier.value,
-                      prefixWidget: const DonyEmoji.planeLanding(size: 20),
-                      trailing: DonyIcon('lock',
-                          size: 16, color: cs.onSurfaceVariant),
-                      onTap: () {},
-                    )
-                  : BlocProvider(
-                      create: (_) =>
-                          arrivalCityBloc ?? getIt<CitySearchBloc>(),
-                      child: CityAutocompleteField(
-                        label: 'Ville d\'arrivée',
-                        fieldKey: const Key('arrivalCityField'),
-                        initialValue: arrivalCityNotifier.value,
-                        prefixIcon: const DonyEmoji.planeLanding(size: 20),
-                        requiredLabel: true,
-                        errorText: arrivalCityError,
-                        onSelected: (CityModel city) {
-                          arrivalCountryCodeNotifier?.value = city.countryCode;
-                          arrivalCityNotifier.value = city.name;
-                        },
-                      ),
-                    ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
               DonyTextField.tappable(

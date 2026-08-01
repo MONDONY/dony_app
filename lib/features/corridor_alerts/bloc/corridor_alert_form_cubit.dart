@@ -107,6 +107,35 @@ class CorridorAlertFormState extends Equatable {
             : centerLabel as String?,
       );
 
+  /// Remplace le corridor (ville + code pays des deux champs) en un seul
+  /// appel. Contrairement à [copyWith], dont les paramètres suivent la
+  /// convention `valeur ?? this.valeur`, accepte explicitement `null` pour
+  /// vider un champ — nécessaire pour l'échange départ/arrivée quand l'un
+  /// des deux est encore vide.
+  CorridorAlertFormState withCorridor({
+    required String? departureCity,
+    required String? arrivalCity,
+    required String? departureCountryCode,
+    required String? arrivalCountryCode,
+  }) =>
+      CorridorAlertFormState(
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureCountryCode: departureCountryCode,
+        arrivalCountryCode: arrivalCountryCode,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        minWeightKg: minWeightKg,
+        contentCategories: contentCategories,
+        status: status,
+        errorMessage: errorMessage,
+        direction: direction,
+        centerLat: centerLat,
+        centerLng: centerLng,
+        radiusKm: radiusKm,
+        centerLabel: centerLabel,
+      );
+
   @override
   List<Object?> get props => [
         departureCity,
@@ -166,6 +195,28 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
   void setArrival(String city, String? countryCode) => emit(state.copyWith(
         arrivalCity: city,
         arrivalCountryCode: countryCode,
+      ));
+
+  void clearDeparture() => emit(state.withCorridor(
+        departureCity: null,
+        arrivalCity: state.arrivalCity,
+        departureCountryCode: null,
+        arrivalCountryCode: state.arrivalCountryCode,
+      ));
+
+  void clearArrival() => emit(state.withCorridor(
+        departureCity: state.departureCity,
+        arrivalCity: null,
+        departureCountryCode: state.departureCountryCode,
+        arrivalCountryCode: null,
+      ));
+
+  /// Échange départ et arrivée (ville + code pays).
+  void swapCorridor() => emit(state.withCorridor(
+        departureCity: state.arrivalCity,
+        arrivalCity: state.departureCity,
+        departureCountryCode: state.arrivalCountryCode,
+        arrivalCountryCode: state.departureCountryCode,
       ));
 
   void setDateWindow(DateTime from, DateTime to) =>

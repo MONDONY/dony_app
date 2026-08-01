@@ -31,6 +31,11 @@ class HiveService {
   static const String kLanguageCode      = 'language_code';    // 'fr' | 'en'
   static const String kFavDestinations   = 'fav_destinations'; // List<String> ex: ['SN','CI']
 
+  // 3 dernières villes sélectionnées par champ, affichées au focus avant
+  // frappe (voir RecentCityStore). List<Map> sérialisation CityModel.toJson().
+  static const String kRecentDepartureCities = 'recent_departure_cities';
+  static const String kRecentArrivalCities   = 'recent_arrival_cities';
+
   // ── Préférences métier ───────────────────────────────────────────────────
   static const String kWeightUnit              = 'weight_unit';               // 'kg' | 'lbs'
   static const String kCurrencyCode            = 'currency_code';             // 'EUR' | 'XOF' | 'XAF'

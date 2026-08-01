@@ -21,5 +21,13 @@ class CityModel {
         lng: (json['lng'] as num).toDouble(),
       );
 
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'countryCode': countryCode,
+        'countryName': countryName,
+        'lat': lat,
+        'lng': lng,
+      };
+
   String get displayLabel => '$name, $countryName';
 }

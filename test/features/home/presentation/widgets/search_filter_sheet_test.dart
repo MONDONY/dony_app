@@ -33,6 +33,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/mock_recent_city_store.dart';
+
 class _MockCityRepository extends Mock implements CityRepository {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
@@ -42,7 +44,10 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 
 void main() {
   // La date personnalisée s'affiche via DateFormat('d MMM', 'fr').
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() {
+    initializeDateFormatting('fr');
+    registerCityFallbackValues();
+  });
 
   // Résultat de `SearchFilterSheet.show` : `valide` distingue « pas encore
   // fermée » de « fermée sans valider », les deux donnant `resultat == null`.
@@ -68,6 +73,8 @@ void main() {
     getIt.registerFactory<IContentCategoryRepository>(
       () => _FakeContentCategoryRepository(),
     );
+
+    registerFakeRecentCityStore();
   });
 
   tearDown(() {
@@ -77,6 +84,7 @@ void main() {
     if (getIt.isRegistered<IContentCategoryRepository>()) {
       getIt.unregister<IContentCategoryRepository>();
     }
+    unregisterFakeRecentCityStore();
   });
 
   /// [activeTrips] : trajets actifs de l'utilisateur. Au-dessus de zéro, la
@@ -228,15 +236,15 @@ void main() {
   testWidgets('le bloc commun est présent dans les deux modes', (tester) async {
     await ouvrir(tester, mode: SearchMode.trips);
     expect(find.byType(CommonFilterBlock), findsOneWidget);
-    expect(find.text('Ville de départ'), findsOneWidget);
-    expect(find.text("Ville d'arrivée"), findsOneWidget);
+    expect(find.text('DÉPART'), findsOneWidget);
+    expect(find.text('ARRIVÉE'), findsOneWidget);
 
     await fermer(tester);
 
     await ouvrir(tester, mode: SearchMode.parcels);
     expect(find.byType(CommonFilterBlock), findsOneWidget);
-    expect(find.text('Ville de départ'), findsOneWidget);
-    expect(find.text("Ville d'arrivée"), findsOneWidget);
+    expect(find.text('DÉPART'), findsOneWidget);
+    expect(find.text('ARRIVÉE'), findsOneWidget);
   });
 
   testWidgets('le corridor initial est pré-rempli dans les deux modes',

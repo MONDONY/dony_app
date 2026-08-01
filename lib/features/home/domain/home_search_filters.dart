@@ -332,6 +332,35 @@ class HomeSearchFilters {
     return n;
   }
 
+  /// Échange départ et arrivée. Distinct de [copyWith] : ses paramètres
+  /// suivent la convention `valeur ?? this.valeur`, incapable d'écrire un
+  /// `null` explicite (ex. arrivée vide) sans passer par un drapeau `clear*`
+  /// dédié — inutile ici puisque les deux champs changent toujours ensemble.
+  HomeSearchFilters swapCorridor() => HomeSearchFilters(
+        departureCity: arrivalCity,
+        arrivalCity: departureCity,
+        datePreset: datePreset,
+        customDate: customDate,
+        urgentOnly: urgentOnly,
+        nearMeActive: nearMeActive,
+        nearMeRadiusKm: nearMeRadiusKm,
+        userLat: userLat,
+        userLng: userLng,
+        maxPricePerKg: maxPricePerKg,
+        weightMin: weightMin,
+        weightMax: weightMax,
+        kiloProOnly: kiloProOnly,
+        minRating: minRating,
+        weekendOnly: weekendOnly,
+        transportMode: transportMode,
+        kycVerifiedOnly: kycVerifiedOnly,
+        contentType: contentType,
+        urgencyFilter: urgencyFilter,
+        maxWeight: maxWeight,
+        parcelSize: parcelSize,
+        matchingMyTrips: matchingMyTrips,
+      );
+
   /// Les drapeaux `clearXxx` permettent de remettre un champ à null, ce qu'un
   /// paramètre optionnel seul ne sait pas exprimer.
   HomeSearchFilters copyWith({

@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../../helpers/mock_recent_city_store.dart';
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
@@ -24,6 +25,8 @@ void main() {
   late _MockPackageRepo packageRepo;
   late _MockCityRepo cityRepo;
 
+  setUpAll(registerCityFallbackValues);
+
   setUp(() {
     packageRepo = _MockPackageRepo();
     cityRepo = _MockCityRepo();
@@ -31,12 +34,14 @@ void main() {
       GetIt.I.unregister<CitySearchBloc>();
     }
     GetIt.I.registerFactory<CitySearchBloc>(() => CitySearchBloc(cityRepo));
+    registerFakeRecentCityStore();
   });
 
   tearDown(() async {
     if (GetIt.I.isRegistered<CitySearchBloc>()) {
       GetIt.I.unregister<CitySearchBloc>();
     }
+    unregisterFakeRecentCityStore();
   });
 
   Widget wrap(Widget child) => MaterialApp(

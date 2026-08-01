@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/mock_recent_city_store.dart';
+
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
 
@@ -59,6 +61,7 @@ Widget _buildWithValues({
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
+    registerCityFallbackValues();
   });
 
   late MockCitySearchBloc departureCityBloc;
@@ -69,11 +72,13 @@ void main() {
     arrivalCityBloc = MockCitySearchBloc();
     when(() => departureCityBloc.state).thenReturn(const CitySearchInitial());
     when(() => arrivalCityBloc.state).thenReturn(const CitySearchInitial());
+    registerFakeRecentCityStore();
   });
 
   tearDown(() {
     departureCityBloc.close();
     arrivalCityBloc.close();
+    unregisterFakeRecentCityStore();
   });
 
   group('Corridor preview', () {

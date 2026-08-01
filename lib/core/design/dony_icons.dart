@@ -43,6 +43,7 @@ class DonyIcons {
   static const IconData minus = Icons.remove_rounded;
   static const IconData publish = Icons.rocket_launch_rounded;
   static const IconData confirmed = Icons.verified_rounded;
+  static const IconData swapVertical = Icons.swap_vert_rounded;
 
   // Modes de transport
   static const IconData transportPlane = Icons.flight_rounded;
