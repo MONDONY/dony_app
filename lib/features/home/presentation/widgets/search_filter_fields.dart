@@ -8,18 +8,14 @@
 // implémentation, consommée par les deux feuilles.
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
-import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 // ── Bloc commun aux deux modes ────────────────────────────────────────────────
@@ -95,34 +91,18 @@ class CommonFilterBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          children: [
-            BlocProvider(
-              create: (_) => getIt<CitySearchBloc>(),
-              child: CityAutocompleteField(
-                fieldKey: const Key('filter-departure-city'),
-                label: 'Ville de départ',
-                initialValue: value.departureCity,
-                prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
-                onSelected: (CityModel city) =>
-                    onChanged(value.copyWith(departureCity: city.name)),
-                onCleared: _clearDeparture,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            BlocProvider(
-              create: (_) => getIt<CitySearchBloc>(),
-              child: CityAutocompleteField(
-                fieldKey: const Key('filter-arrival-city'),
-                label: "Ville d'arrivée",
-                initialValue: value.arrivalCity,
-                prefixIcon: const DonyEmoji.planeLanding(size: 20),
-                onSelected: (CityModel city) =>
-                    onChanged(value.copyWith(arrivalCity: city.name)),
-                onCleared: _clearArrival,
-              ),
-            ),
-          ],
+        CityCorridorFields(
+          departureValue: value.departureCity,
+          arrivalValue: value.arrivalCity,
+          departureFieldKey: const Key('filter-departure-city'),
+          arrivalFieldKey: const Key('filter-arrival-city'),
+          onDepartureSelected: (CityModel city) =>
+              onChanged(value.copyWith(departureCity: city.name)),
+          onArrivalSelected: (CityModel city) =>
+              onChanged(value.copyWith(arrivalCity: city.name)),
+          onDepartureCleared: _clearDeparture,
+          onArrivalCleared: _clearArrival,
+          onSwap: () => onChanged(value.swapCorridor()),
         ).animate().fadeIn(duration: 250.ms),
         const SizedBox(height: DonySpacing.base),
         Text(

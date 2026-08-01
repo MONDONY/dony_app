@@ -332,6 +332,18 @@ class HomeSearchFilters {
     return n;
   }
 
+  /// Échange départ et arrivée.
+  ///
+  /// Passe par [copyWith] plutôt que par le constructeur : ré-énumérer les
+  /// champs ici ferait qu'un filtre ajouté plus tard à la classe serait
+  /// silencieusement remis à sa valeur par défaut à chaque interversion, sans
+  /// erreur de compilation. Le premier `copyWith` vide le corridor (les
+  /// paramètres suivent la convention `valeur ?? this.valeur`, incapables
+  /// d'écrire un `null` explicite), le second réinjecte les villes croisées —
+  /// une ville nulle le reste donc bien.
+  HomeSearchFilters swapCorridor() => copyWith(clearCorridor: true)
+      .copyWith(departureCity: arrivalCity, arrivalCity: departureCity);
+
   /// Les drapeaux `clearXxx` permettent de remettre un champ à null, ce qu'un
   /// paramètre optionnel seul ne sait pas exprimer.
   HomeSearchFilters copyWith({

@@ -52,6 +52,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../../../helpers/mock_analytics_backend.dart';
+import '../../../helpers/mock_recent_city_store.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -648,6 +649,7 @@ void main() {
     registerFallbackValue(_FakeAnnouncementEvent());
     registerFallbackValue(const SearchFiltersChanged());
     registerFallbackValue(StatsPeriod.thirtyDays);
+    registerCityFallbackValues();
   });
 
   setUp(() {
@@ -684,6 +686,7 @@ void main() {
     getIt.registerFactory<IContentCategoryRepository>(
       () => _FakeContentCategoryRepository(),
     );
+    registerFakeRecentCityStore();
 
     // Résumé d'activité par défaut : deux trajets actifs. Les tests qui
     // s'intéressent au cas « aucun trajet » passent `activeTrips: 0` à

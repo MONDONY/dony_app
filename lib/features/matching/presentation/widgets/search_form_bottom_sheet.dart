@@ -2,10 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
-import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
-import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
@@ -14,7 +12,6 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SearchFormBottomSheet {
   static Future<SearchParams?> show(
@@ -205,6 +202,12 @@ class _SearchFormContentState extends State<_SearchFormContent> {
     ));
   }
 
+  void _swapCities() {
+    final departure = _departureCityNotifier.value;
+    _departureCityNotifier.value = _arrivalCityNotifier.value;
+    _arrivalCityNotifier.value = departure;
+  }
+
   void _reset() {
     _departureCityNotifier.value = null;
     _arrivalCityNotifier.value = null;
@@ -261,36 +264,20 @@ class _SearchFormContentState extends State<_SearchFormContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Corridor ────────────────────────────────────────────────────
-            Column(
-              children: [
-                BlocProvider(
-                  create: (_) => getIt<CitySearchBloc>(),
-                  child: CityAutocompleteField(
-                    fieldKey: const Key('search-form-departure-city'),
-                    label: 'Ville de départ',
-                    initialValue: _departureCityNotifier.value,
-                    prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
-                    onSelected: (CityModel city) {
-                      _departureCityNotifier.value = city.name;
-                    },
-                    onCleared: () => _departureCityNotifier.value = null,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                BlocProvider(
-                  create: (_) => getIt<CitySearchBloc>(),
-                  child: CityAutocompleteField(
-                    fieldKey: const Key('search-form-arrival-city'),
-                    label: 'Ville d\'arrivée',
-                    initialValue: _arrivalCityNotifier.value,
-                    prefixIcon: const DonyEmoji.planeLanding(size: 20),
-                    onSelected: (CityModel city) {
-                      _arrivalCityNotifier.value = city.name;
-                    },
-                    onCleared: () => _arrivalCityNotifier.value = null,
-                  ),
-                ),
-              ],
+            CityCorridorFields(
+              departureValue: _departureCityNotifier.value,
+              arrivalValue: _arrivalCityNotifier.value,
+              departureFieldKey: const Key('search-form-departure-city'),
+              arrivalFieldKey: const Key('search-form-arrival-city'),
+              onDepartureSelected: (CityModel city) {
+                _departureCityNotifier.value = city.name;
+              },
+              onArrivalSelected: (CityModel city) {
+                _arrivalCityNotifier.value = city.name;
+              },
+              onDepartureCleared: () => _departureCityNotifier.value = null,
+              onArrivalCleared: () => _arrivalCityNotifier.value = null,
+              onSwap: _swapCities,
             ).animate().fadeIn(duration: 250.ms),
             const SizedBox(height: DonySpacing.base),
 

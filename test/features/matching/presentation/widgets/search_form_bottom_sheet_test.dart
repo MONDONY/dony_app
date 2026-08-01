@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/mock_recent_city_store.dart';
+
 class _MockCityRepository extends Mock implements CityRepository {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
@@ -49,6 +51,8 @@ Future<void> _openSheet(
 }
 
 void main() {
+  setUpAll(registerCityFallbackValues);
+
   setUp(() {
     final cityRepo = _MockCityRepository();
     when(() => cityRepo.searchCities(any())).thenAnswer((_) async => []);
@@ -65,6 +69,8 @@ void main() {
     getIt.registerFactory<IContentCategoryRepository>(
       () => _FakeContentCategoryRepository(),
     );
+
+    registerFakeRecentCityStore();
   });
 
   tearDown(() {
@@ -74,6 +80,7 @@ void main() {
     if (getIt.isRegistered<IContentCategoryRepository>()) {
       getIt.unregister<IContentCategoryRepository>();
     }
+    unregisterFakeRecentCityStore();
   });
 
   testWidgets(

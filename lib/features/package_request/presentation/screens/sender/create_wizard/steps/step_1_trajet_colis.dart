@@ -1,9 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/city/bloc/city_search_bloc.dart';
-import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -111,6 +109,23 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     return 'Les voyageurs partant du $from au $to pourront répondre.';
   }
 
+  void _setDeparture(String? city) {
+    _departureCity = city;
+    _sync(markTouched: true);
+  }
+
+  void _setArrival(String? city) {
+    _arrivalCity = city;
+    _sync(markTouched: true);
+  }
+
+  void _swapCities() {
+    final departure = _departureCity;
+    _departureCity = _arrivalCity;
+    _arrivalCity = departure;
+    _sync(markTouched: true);
+  }
+
   void submit() {
     // Backstop : « Continuer » est déjà grisé tant que l'étape est incomplète.
     // On révèle quand même les messages, au cas où ce chemin redeviendrait
@@ -167,32 +182,21 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             ),
             const SizedBox(height: DonySpacing.lg),
 
-            // ── Route card (départ + arrivée) ──────────────────────────────
-            _RouteCard(
-              departureField: BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: CityAutocompleteField(
-                  label: '',
-                  initialValue: _departureCity,
-                  onSelected: (city) {
-                    _departureCity = city.name;
-                    _sync(markTouched: true);
-                  },
-                  errorText: _touched ? _departureError : null,
-                ),
-              ),
-              arrivalField: BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: CityAutocompleteField(
-                  label: '',
-                  initialValue: _arrivalCity,
-                  onSelected: (city) {
-                    _arrivalCity = city.name;
-                    _sync(markTouched: true);
-                  },
-                  errorText: _touched ? _arrivalError : null,
-                ),
-              ),
+            // ── Corridor départ → arrivée ──────────────────────────────────
+            // Carte « billet » partagée avec la recherche et « Publier un
+            // trajet » : un seul rendu du corridor dans toute l'app.
+            CityCorridorFields(
+              departureValue: _departureCity,
+              arrivalValue: _arrivalCity,
+              departureFieldKey: const Key('step1-departure-city'),
+              arrivalFieldKey: const Key('step1-arrival-city'),
+              departureError: _touched ? _departureError : null,
+              arrivalError: _touched ? _arrivalError : null,
+              onSwap: _swapCities,
+              onDepartureSelected: (city) => _setDeparture(city.name),
+              onDepartureCleared: () => _setDeparture(null),
+              onArrivalSelected: (city) => _setArrival(city.name),
+              onArrivalCleared: () => _setArrival(null),
             ),
             const SizedBox(height: DonySpacing.base),
 
@@ -345,128 +349,6 @@ class _LockedAirplaneBlock extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─── Route Card ──────────────────────────────────────────────────────────────
-
-class _RouteCard extends StatelessWidget {
-  const _RouteCard({
-    required this.departureField,
-    required this.arrivalField,
-  });
-
-  final Widget departureField;
-  final Widget arrivalField;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: [
-          BoxShadow(
-            color: DonyColors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      // Column simple — pas de Row+stretch, pas de hauteur infinie
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(color: cs.primary, width: 4),
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.md, DonySpacing.md, DonySpacing.md, DonySpacing.sm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _CityHeader(
-                  label: 'DÉPART',
-                  iconAsset: 'locate-fixed',
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                departureField,
-              ],
-            ),
-          ),
-          Divider(height: 1, thickness: 1, color: cs.outline),
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  width: 4,
-                ),
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.md, DonySpacing.sm, DonySpacing.md, DonySpacing.md,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _CityHeader(
-                  label: 'ARRIVÉE',
-                  iconAsset: 'map-pin',
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                arrivalField,
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CityHeader extends StatelessWidget {
-  const _CityHeader({required this.label, required this.iconAsset});
-
-  final String label;
-  final String iconAsset;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            borderRadius: BorderRadius.circular(DonyRadius.sm),
-          ),
-          child: Center(
-            child: DonyIcon(iconAsset, size: 14, color: cs.primary),
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        Text(
-          label,
-          style: tt.labelSmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.8,
-            fontSize: 10,
-          ),
-        ),
-      ],
     );
   }
 }

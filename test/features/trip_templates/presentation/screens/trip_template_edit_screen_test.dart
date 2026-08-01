@@ -20,6 +20,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/mock_recent_city_store.dart';
+
 class _MockTripTemplateBloc
     extends MockBloc<TripTemplateEvent, TripTemplateState>
     implements TripTemplateBloc {}
@@ -50,6 +52,8 @@ Widget _wrap(Widget child, TripTemplateBloc bloc) {
 void main() {
   late _MockTripTemplateBloc bloc;
 
+  setUpAll(registerCityFallbackValues);
+
   setUp(() {
     bloc = _MockTripTemplateBloc();
     when(() => bloc.state).thenReturn(const TripTemplateState());
@@ -70,6 +74,8 @@ void main() {
     getIt.registerFactory<IContentCategoryRepository>(
       () => _FakeContentCategoryRepository(),
     );
+
+    registerFakeRecentCityStore();
   });
 
   tearDown(() {
@@ -79,6 +85,7 @@ void main() {
     if (getIt.isRegistered<IContentCategoryRepository>()) {
       getIt.unregister<IContentCategoryRepository>();
     }
+    unregisterFakeRecentCityStore();
   });
 
   testWidgets(

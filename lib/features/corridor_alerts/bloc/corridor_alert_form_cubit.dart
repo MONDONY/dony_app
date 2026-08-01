@@ -58,10 +58,10 @@ class CorridorAlertFormState extends Equatable {
   static const _unset = Object();
 
   CorridorAlertFormState copyWith({
-    String? departureCity,
-    String? arrivalCity,
-    String? departureCountryCode,
-    String? arrivalCountryCode,
+    Object? departureCity = _unset,
+    Object? arrivalCity = _unset,
+    Object? departureCountryCode = _unset,
+    Object? arrivalCountryCode = _unset,
     Object? dateFrom = _unset,
     Object? dateTo = _unset,
     Object? minWeightKg = _unset,
@@ -75,11 +75,18 @@ class CorridorAlertFormState extends Equatable {
     Object? centerLabel = _unset,
   }) =>
       CorridorAlertFormState(
-        departureCity: departureCity ?? this.departureCity,
-        arrivalCity: arrivalCity ?? this.arrivalCity,
-        departureCountryCode:
-            departureCountryCode ?? this.departureCountryCode,
-        arrivalCountryCode: arrivalCountryCode ?? this.arrivalCountryCode,
+        departureCity: identical(departureCity, _unset)
+            ? this.departureCity
+            : departureCity as String?,
+        arrivalCity: identical(arrivalCity, _unset)
+            ? this.arrivalCity
+            : arrivalCity as String?,
+        departureCountryCode: identical(departureCountryCode, _unset)
+            ? this.departureCountryCode
+            : departureCountryCode as String?,
+        arrivalCountryCode: identical(arrivalCountryCode, _unset)
+            ? this.arrivalCountryCode
+            : arrivalCountryCode as String?,
         dateFrom: identical(dateFrom, _unset)
             ? this.dateFrom
             : dateFrom as DateTime?,
@@ -166,6 +173,24 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
   void setArrival(String city, String? countryCode) => emit(state.copyWith(
         arrivalCity: city,
         arrivalCountryCode: countryCode,
+      ));
+
+  void clearDeparture() => emit(state.copyWith(
+        departureCity: null,
+        departureCountryCode: null,
+      ));
+
+  void clearArrival() => emit(state.copyWith(
+        arrivalCity: null,
+        arrivalCountryCode: null,
+      ));
+
+  /// Échange départ et arrivée (ville + code pays).
+  void swapCorridor() => emit(state.copyWith(
+        departureCity: state.arrivalCity,
+        arrivalCity: state.departureCity,
+        departureCountryCode: state.arrivalCountryCode,
+        arrivalCountryCode: state.departureCountryCode,
       ));
 
   void setDateWindow(DateTime from, DateTime to) =>

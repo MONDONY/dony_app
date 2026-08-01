@@ -16,12 +16,15 @@ import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../../helpers/mock_recent_city_store.dart';
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
@@ -46,9 +49,11 @@ const _abidjan = CityModel(
 Widget _buildSubject({
   required MockCitySearchBloc departureCityBloc,
   required MockCitySearchBloc arrivalCityBloc,
+  String? departureCity,
+  String? arrivalCity,
 }) {
-  final departureCityNotifier = ValueNotifier<String?>(null);
-  final arrivalCityNotifier = ValueNotifier<String?>(null);
+  final departureCityNotifier = ValueNotifier<String?>(departureCity);
+  final arrivalCityNotifier = ValueNotifier<String?>(arrivalCity);
   final departureDateNotifier = ValueNotifier<DateTime?>(null);
   final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
@@ -79,7 +84,10 @@ void main() {
   late MockCitySearchBloc departureCityBloc;
   late MockCitySearchBloc arrivalCityBloc;
 
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() {
+    initializeDateFormatting('fr');
+    registerCityFallbackValues();
+  });
 
   setUp(() {
     departureCityBloc = MockCitySearchBloc();
@@ -88,11 +96,14 @@ void main() {
     // État initial par défaut
     when(() => departureCityBloc.state).thenReturn(const CitySearchInitial());
     when(() => arrivalCityBloc.state).thenReturn(const CitySearchInitial());
+
+    registerFakeRecentCityStore();
   });
 
   tearDown(() {
     departureCityBloc.close();
     arrivalCityBloc.close();
+    unregisterFakeRecentCityStore();
   });
 
   group('M4 — Uniformité visuelle champs heure/date', () {
@@ -411,31 +422,40 @@ void main() {
   // ---------------------------------------------------------------------------
   group('P3/P4 — Couleurs sémantiques icônes départ/arrivée', () {
     testWidgets(
-      'champ ville d\'arrivée affiche l\'emoji atterrissage 🛬',
+      'le corridor est rendu par la carte billet partagée CityCorridorFields',
       (tester) async {
-        // Les prefixIcon des champs ville (CityAutocompleteField) utilisent
-        // désormais l'emoji décollage/atterrissage (DonyEmoji) au lieu d'un Icon
-        // teinté. L'emoji n'est pas teintable : on vérifie sa présence.
+        // Les deux villes ne sont plus deux champs isolés à emoji
+        // décollage/atterrissage : elles partagent la carte « billet »
+        // commune à la recherche et aux alertes, labels courts en capitales.
         await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        expect(find.text('🛬'), findsOneWidget);
+        expect(find.byType(CityCorridorFields), findsOneWidget);
+        // `textContaining` et non `text` : le corridor est obligatoire ici,
+        // donc le label porte l'astérisque (« DÉPART * »).
+        expect(find.textContaining('DÉPART'), findsOneWidget);
+        expect(find.textContaining('ARRIVÉE'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'champ ville de départ affiche l\'emoji décollage 🛫',
+      'chaque ville sélectionnée affiche le drapeau de son pays',
       (tester) async {
+        // Le drapeau remplace l'ancien emoji avion : il porte une information
+        // (le pays), là où 🛫/🛬 ne faisait que redire le rôle du champ.
         await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
+          departureCity: 'Paris',
+          arrivalCity: 'Abidjan',
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        expect(find.text('🛫'), findsOneWidget);
+        expect(find.text('🇫🇷'), findsOneWidget);
+        expect(find.text('🇨🇮'), findsOneWidget);
       },
     );
 

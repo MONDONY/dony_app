@@ -29,6 +29,7 @@ import 'package:dony/features/recipients/data/datasources/recipient_datasource.d
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
 import 'package:dony/features/city/data/city_datasource.dart';
 import 'package:dony/features/city/data/city_repository.dart';
+import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 import 'package:dony/features/config/data/config_repository.dart';
@@ -660,6 +661,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CitySearchBloc>(
     () => CitySearchBloc(getIt<CityRepository>()),
+  );
+  getIt.registerLazySingleton<RecentCityStore>(
+    () => RecentCityStore(getIt<HiveService>()),
   );
 
   // Address book — Pickup Addresses

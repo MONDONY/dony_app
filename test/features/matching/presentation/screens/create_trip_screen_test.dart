@@ -14,6 +14,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
+import 'package:dony/features/city/data/recent_city_store.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
@@ -57,6 +58,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../../helpers/mock_recent_city_store.dart';
 
 const _emptyHelpConfigJson = '''
 {
@@ -432,6 +434,13 @@ void main() {
         when(() => b.stream).thenAnswer((_) => const Stream.empty());
         return b;
       });
+    }
+
+    // RecentCityStore — CityAutocompleteField(recentRole:) lit/écrit ce store
+    // à chaque frame, y compris en dehors des champs ville actifs.
+    registerCityFallbackValues();
+    if (!getIt.isRegistered<RecentCityStore>()) {
+      registerFakeRecentCityStore();
     }
 
     // StripeAccountBloc factory — CreateTripScreen.build() always creates its

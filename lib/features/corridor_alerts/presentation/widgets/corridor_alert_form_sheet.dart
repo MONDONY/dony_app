@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/city/bloc/city_search_bloc.dart';
-import 'package:dony/features/city/data/city_model.dart';
-import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
@@ -132,30 +130,27 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
           ),
           const SizedBox(height: DonySpacing.lg),
         ],
-        BlocProvider(
-          create: (_) => getIt<CitySearchBloc>(),
-          child: CityAutocompleteField(
-            label: 'Ville de départ',
-            fieldKey: const Key('alertDepartureCityField'),
-            initialValue: state.departureCity,
-            requiredLabel: true,
-            onSelected: (CityModel c) {
-              setState(() => _departureLatLng = LatLng(c.lat, c.lng));
-              cubit.setDeparture(c.name, c.countryCode);
-            },
-          ),
-        ),
-        const SizedBox(height: DonySpacing.md),
-        BlocProvider(
-          create: (_) => getIt<CitySearchBloc>(),
-          child: CityAutocompleteField(
-            label: 'Ville d\'arrivée',
-            fieldKey: const Key('alertArrivalCityField'),
-            initialValue: state.arrivalCity,
-            requiredLabel: true,
-            onSelected: (CityModel c) =>
-                cubit.setArrival(c.name, c.countryCode),
-          ),
+        CityCorridorFields(
+          departureValue: state.departureCity,
+          arrivalValue: state.arrivalCity,
+          departureFieldKey: const Key('alertDepartureCityField'),
+          arrivalFieldKey: const Key('alertArrivalCityField'),
+          requiredLabels: true,
+          onDepartureSelected: (c) {
+            setState(() => _departureLatLng = LatLng(c.lat, c.lng));
+            cubit.setDeparture(c.name, c.countryCode);
+          },
+          onArrivalSelected: (c) => cubit.setArrival(c.name, c.countryCode),
+          onDepartureCleared: cubit.clearDeparture,
+          onArrivalCleared: cubit.clearArrival,
+          onSwap: () {
+            // `_departureLatLng` ne suivait que l'ancien champ départ : après
+            // l'échange il désignerait la mauvaise ville pour le centre par
+            // défaut de la zone de remise. On l'efface plutôt que de le
+            // trahir ; le picker retombe sur son centre par défaut.
+            setState(() => _departureLatLng = null);
+            cubit.swapCorridor();
+          },
         ),
         const SizedBox(height: DonySpacing.lg),
         // Weight and categories — only for colis direction

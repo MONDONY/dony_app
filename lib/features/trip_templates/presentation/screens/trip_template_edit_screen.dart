@@ -2,12 +2,9 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/city/bloc/city_search_bloc.dart';
-import 'package:dony/features/city/data/city_model.dart';
-import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -195,28 +192,23 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               // ── TRAJET ──────────────────────────────────────────────────
               const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
               const SizedBox(height: DonySpacing.sm),
-              BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: CityAutocompleteField(
-                  label: 'Ville de départ',
-                  requiredLabel: true,
-                  prefixIcon: const DonyEmoji.planeTakeoff(size: 20),
-                  initialValue: _departureCity,
-                  onSelected: (CityModel city) =>
-                      setState(() => _departureCity = city.name),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: CityAutocompleteField(
-                  label: "Ville d'arrivée",
-                  requiredLabel: true,
-                  prefixIcon: const DonyEmoji.planeLanding(size: 20),
-                  initialValue: _arrivalCity,
-                  onSelected: (CityModel city) =>
-                      setState(() => _arrivalCity = city.name),
-                ),
+              CityCorridorFields(
+                departureValue: _departureCity,
+                arrivalValue: _arrivalCity,
+                departureFieldKey: const Key('trip-template-departure-city'),
+                arrivalFieldKey: const Key('trip-template-arrival-city'),
+                requiredLabels: true,
+                onDepartureSelected: (city) =>
+                    setState(() => _departureCity = city.name),
+                onArrivalSelected: (city) =>
+                    setState(() => _arrivalCity = city.name),
+                onDepartureCleared: () => setState(() => _departureCity = null),
+                onArrivalCleared: () => setState(() => _arrivalCity = null),
+                onSwap: () => setState(() {
+                  final departure = _departureCity;
+                  _departureCity = _arrivalCity;
+                  _arrivalCity = departure;
+                }),
               ),
               const SizedBox(height: DonySpacing.xxl),
 
