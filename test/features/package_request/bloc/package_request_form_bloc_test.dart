@@ -429,4 +429,22 @@ void main() {
       ),
     ],
   );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    // Régression : le champ prix effacé (retour à null) restait bloqué sur
+    // l'ancienne valeur — copyWith(totalBudgetEur: null) retombait sur
+    // this.totalBudgetEur via `??`, laissant le bouton "Publier" actif alors
+    // que le champ était vide à l'écran.
+    'total budget cleared (null) after being set actually clears it',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(totalBudgetEur: 39.20),
+    act: (b) => b.add(const PackageRequestTotalBudgetChanged(null)),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.totalBudgetEur,
+        'totalBudgetEur',
+        isNull,
+      ),
+    ],
+  );
 }

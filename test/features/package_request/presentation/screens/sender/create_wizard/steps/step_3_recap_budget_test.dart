@@ -163,6 +163,60 @@ void main() {
       },
     );
 
+    testWidgets(
+      'prix ferme puis montant saisi : le bouton se dégrise',
+      (tester) async {
+        // Régression : le bouton restait grisé après saisie du prix car
+        // canContinueNotifier n'était resynchronisé qu'au toggle de mode,
+        // jamais à la frappe dans le champ prix.
+        final canContinue = ValueNotifier<bool>(true);
+        addTearDown(canContinue.dispose);
+
+        await tester.pumpWidget(
+          wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('price-mode-fixed')));
+        await tester.pumpAndSettle();
+        expect(canContinue.value, isFalse);
+
+        await tester.enterText(find.byType(TextFormField).first, '32');
+        await tester.pumpAndSettle();
+
+        expect(canContinue.value, isTrue);
+      },
+    );
+
+    testWidgets(
+      'prix tapé puis effacé : le bouton se regrise et l\'erreur revient',
+      (tester) async {
+        // Régression : effacer le prix ne remettait pas totalBudgetEur à
+        // null côté bloc (copyWith `??`), donc le bouton restait actif et
+        // l'erreur restait masquée malgré un champ visuellement vide.
+        final canContinue = ValueNotifier<bool>(true);
+        addTearDown(canContinue.dispose);
+
+        await tester.pumpWidget(
+          wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('price-mode-fixed')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextFormField).first, '40');
+        await tester.pumpAndSettle();
+        expect(canContinue.value, isTrue);
+
+        await tester.enterText(find.byType(TextFormField).first, '');
+        await tester.pumpAndSettle();
+
+        expect(canContinue.value, isFalse);
+        expect(find.byKey(const Key('budget-error')), findsOneWidget);
+      },
+    );
+
     testWidgets('la suite de la publication est annoncée', (tester) async {
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
       await tester.pump();

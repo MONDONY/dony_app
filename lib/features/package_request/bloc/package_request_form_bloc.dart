@@ -36,7 +36,10 @@ class PackageRequestFormBloc
     );
     on<PackageRequestPaymentMethodToggled>(_onPaymentMethodToggled);
     on<PackageRequestTotalBudgetChanged>(
-      (e, emit) => emit(state.copyWith(totalBudgetEur: e.value)),
+      (e, emit) => emit(state.copyWith(
+        totalBudgetEur: e.value,
+        clearTotalBudgetEur: e.value == null,
+      )),
     );
   }
 

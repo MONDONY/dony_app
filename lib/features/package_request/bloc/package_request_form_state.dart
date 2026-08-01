@@ -78,6 +78,10 @@ class PackageRequestFormState extends Equatable {
     bool? negotiable,
     Set<PaymentMethod>? acceptedPaymentMethods,
     double? totalBudgetEur,
+    // Le pattern `champ ?? this.champ` ne peut pas ramener un nullable à
+    // null (un budget effacé retomberait sur l'ancien) — ce flag porte
+    // l'intention explicite d'effacement pour ce seul champ.
+    bool clearTotalBudgetEur = false,
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
     PackageRequest? createdRequest,
@@ -100,7 +104,8 @@ class PackageRequestFormState extends Equatable {
     negotiable: negotiable ?? this.negotiable,
     acceptedPaymentMethods:
         acceptedPaymentMethods ?? this.acceptedPaymentMethods,
-    totalBudgetEur: totalBudgetEur ?? this.totalBudgetEur,
+    totalBudgetEur:
+        clearTotalBudgetEur ? null : (totalBudgetEur ?? this.totalBudgetEur),
     submissionStatus: submissionStatus ?? this.submissionStatus,
     errorMessage: errorMessage ?? this.errorMessage,
     createdRequest: createdRequest ?? this.createdRequest,

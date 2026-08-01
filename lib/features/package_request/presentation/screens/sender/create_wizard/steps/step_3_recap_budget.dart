@@ -89,6 +89,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
 
     return BlocBuilder<PackageRequestFormBloc, PackageRequestFormState>(
       builder: (context, state) {
+        // Rejoue la synchro du bouton sticky à chaque changement d'état
+        // (prix, mode, etc.) — le seul appel dans initState/toggle ratait
+        // le cas "prix tapé après avoir choisi le mode ferme".
+        WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
             DonySpacing.lg,
