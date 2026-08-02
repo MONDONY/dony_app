@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -64,10 +66,15 @@ class _PackageRequestDetailScreenState
     }
   }
 
-  Future<void> _runAction(Future<void> Function() action) async {
+  /// Retourne `true` si `action` a réussi (et l'écran a rechargé), `false`
+  /// si elle a levé — l'appelant conditionne sur ce résultat toute suite qui
+  /// suppose le succès (ex: fermer l'écran après annulation).
+  Future<bool> _runAction(Future<void> Function() action) async {
     setState(() => _actionInFlight = true);
+    var success = false;
     try {
       await action();
+      success = true;
       if (mounted) await _load();
     } catch (e) {
       if (mounted) {
@@ -80,32 +87,62 @@ class _PackageRequestDetailScreenState
     } finally {
       if (mounted) setState(() => _actionInFlight = false);
     }
+    return success;
   }
 
   Future<void> _edit() async {
-    final changed = await PackageRequestCreateWizard.showEditing(context, _request!);
+    final changed = await PackageRequestCreateWizard.showEditing(
+      context,
+      _request!,
+    );
     if ((changed ?? false) && mounted) await _load();
   }
 
-  Future<void> _publish() =>
-      _runAction(() => getIt<PackageRequestRepository>().publish(widget.requestId));
+  Future<void> _publish() async {
+    final success = await _runAction(
+      () => getIt<PackageRequestRepository>().publish(widget.requestId),
+    );
+    if (success) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.packageRequestPublished,
+        ),
+      );
+    }
+  }
 
-  Future<void> _unpublish() =>
-      _runAction(() => getIt<PackageRequestRepository>().unpublish(widget.requestId));
+  Future<void> _unpublish() async {
+    final success = await _runAction(
+      () => getIt<PackageRequestRepository>().unpublish(widget.requestId),
+    );
+    if (success) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.packageRequestUnpublished,
+        ),
+      );
+    }
+  }
 
   Future<void> _cancel() async {
     final confirmed = await DonyDialog.show(
       context,
       title: 'Annuler cette demande ?',
-      message: 'Cette action est irréversible. Les voyageurs ne pourront '
+      message:
+          'Cette action est irréversible. Les voyageurs ne pourront '
           'plus y répondre.',
       confirmLabel: 'Annuler la demande',
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-x',
     );
     if (confirmed != true || !mounted) return;
-    await _runAction(() => getIt<PackageRequestRepository>().cancel(widget.requestId));
-    if (mounted) context.pop();
+    final success = await _runAction(
+      () => getIt<PackageRequestRepository>().cancel(widget.requestId),
+    );
+    // Ne ferme l'écran que si l'annulation a réellement abouti — sinon
+    // l'utilisateur verrait le snackbar d'erreur pendant que l'écran se
+    // ferme, en croyant l'annulation faite alors qu'elle a échoué.
+    if (success && mounted) context.pop();
   }
 
   @override
@@ -214,10 +251,15 @@ class _SheetFrameState extends State<_SheetFrame> {
     }
   }
 
-  Future<void> _runAction(Future<void> Function() action) async {
+  /// Retourne `true` si `action` a réussi (et la sheet a rechargé), `false`
+  /// si elle a levé — l'appelant conditionne sur ce résultat toute suite qui
+  /// suppose le succès (ex: fermer la sheet après annulation).
+  Future<bool> _runAction(Future<void> Function() action) async {
     setState(() => _actionInFlight = true);
+    var success = false;
     try {
       await action();
+      success = true;
       if (mounted) await _load();
     } catch (e) {
       if (mounted) {
@@ -230,26 +272,62 @@ class _SheetFrameState extends State<_SheetFrame> {
     } finally {
       if (mounted) setState(() => _actionInFlight = false);
     }
+    return success;
   }
 
   Future<void> _edit() async {
-    final changed = await PackageRequestCreateWizard.showEditing(context, _request!);
+    final changed = await PackageRequestCreateWizard.showEditing(
+      context,
+      _request!,
+    );
     if ((changed ?? false) && mounted) await _load();
+  }
+
+  Future<void> _publish() async {
+    final success = await _runAction(
+      () => getIt<PackageRequestRepository>().publish(widget.requestId),
+    );
+    if (success) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.packageRequestPublished,
+        ),
+      );
+    }
+  }
+
+  Future<void> _unpublish() async {
+    final success = await _runAction(
+      () => getIt<PackageRequestRepository>().unpublish(widget.requestId),
+    );
+    if (success) {
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.packageRequestUnpublished,
+        ),
+      );
+    }
   }
 
   Future<void> _cancel() async {
     final confirmed = await DonyDialog.show(
       context,
       title: 'Annuler cette demande ?',
-      message: 'Cette action est irréversible. Les voyageurs ne pourront '
+      message:
+          'Cette action est irréversible. Les voyageurs ne pourront '
           'plus y répondre.',
       confirmLabel: 'Annuler la demande',
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-x',
     );
     if (confirmed != true || !mounted) return;
-    await _runAction(() => getIt<PackageRequestRepository>().cancel(widget.requestId));
-    if (mounted) Navigator.of(context, rootNavigator: true).pop();
+    final success = await _runAction(
+      () => getIt<PackageRequestRepository>().cancel(widget.requestId),
+    );
+    // Ne ferme la sheet que si l'annulation a réellement abouti — sinon
+    // l'utilisateur verrait le snackbar d'erreur pendant que la sheet se
+    // ferme, en croyant l'annulation faite alors qu'elle a échoué.
+    if (success && mounted) Navigator.of(context, rootNavigator: true).pop();
   }
 
   @override
@@ -263,7 +341,9 @@ class _SheetFrameState extends State<_SheetFrame> {
       height: mq.size.height * 0.92,
       decoration: BoxDecoration(
         color: cs.surfaceWarm,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -280,7 +360,12 @@ class _SheetFrameState extends State<_SheetFrame> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.base, 0),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.sm,
+              DonySpacing.base,
+              0,
+            ),
             child: Row(
               children: [
                 Expanded(child: Text('Ma demande', style: tt.headlineSmall)),
@@ -288,7 +373,9 @@ class _SheetFrameState extends State<_SheetFrame> {
                   tooltip: 'Fermer',
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const DonyIcon('x', size: 20),
-                  style: IconButton.styleFrom(foregroundColor: cs.onSurfaceVariant),
+                  style: IconButton.styleFrom(
+                    foregroundColor: cs.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -303,16 +390,18 @@ class _SheetFrameState extends State<_SheetFrame> {
                 ? const SizedBox.shrink()
                 : SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
-                        DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.xl + bottomInset),
+                      DonySpacing.lg,
+                      0,
+                      DonySpacing.lg,
+                      DonySpacing.xl + bottomInset,
+                    ),
                     child: PackageRequestDetailBody(
                       request: _request!,
                       threads: _threads,
                       actionInFlight: _actionInFlight,
                       onEdit: _edit,
-                      onPublish: () => _runAction(
-                          () => getIt<PackageRequestRepository>().publish(widget.requestId)),
-                      onUnpublish: () => _runAction(
-                          () => getIt<PackageRequestRepository>().unpublish(widget.requestId)),
+                      onPublish: _publish,
+                      onUnpublish: _unpublish,
                       onCancel: _cancel,
                     ),
                   ),
@@ -336,7 +425,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const DonyIcon('circle-alert', size: 48, color: DonyColors.danger500),
+            const DonyIcon(
+              'circle-alert',
+              size: 48,
+              color: DonyColors.danger500,
+            ),
             const SizedBox(height: DonySpacing.base),
             Text(
               message,

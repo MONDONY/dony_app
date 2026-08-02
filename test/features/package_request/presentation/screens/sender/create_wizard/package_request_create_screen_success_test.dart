@@ -372,23 +372,23 @@ void main() {
   /// nommés à chaque nouveau cas `saveAsDraft`.
   Future<PackageRequest> Function() createCall({required bool saveAsDraft}) =>
       () => repo.create(
-            departureCity: any(named: 'departureCity'),
-            arrivalCity: any(named: 'arrivalCity'),
-            desiredDate: any(named: 'desiredDate'),
-            dateToleranceDays: any(named: 'dateToleranceDays'),
-            weightKg: any(named: 'weightKg'),
-            parcelSize: any(named: 'parcelSize'),
-            transportMode: any(named: 'transportMode'),
-            categories: any(named: 'categories'),
-            negotiable: any(named: 'negotiable'),
-            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
-            totalBudgetEur: any(named: 'totalBudgetEur'),
-            description: any(named: 'description'),
-            photoKeys: any(named: 'photoKeys'),
-            pickupNeighborhood: any(named: 'pickupNeighborhood'),
-            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
-            saveAsDraft: saveAsDraft,
-          );
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        desiredDate: any(named: 'desiredDate'),
+        dateToleranceDays: any(named: 'dateToleranceDays'),
+        weightKg: any(named: 'weightKg'),
+        parcelSize: any(named: 'parcelSize'),
+        transportMode: any(named: 'transportMode'),
+        categories: any(named: 'categories'),
+        negotiable: any(named: 'negotiable'),
+        acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+        totalBudgetEur: any(named: 'totalBudgetEur'),
+        description: any(named: 'description'),
+        photoKeys: any(named: 'photoKeys'),
+        pickupNeighborhood: any(named: 'pickupNeighborhood'),
+        deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+        saveAsDraft: saveAsDraft,
+      );
 
   testWidgets('carte tutoriel contextuelle affichée avant la première étape et '
       'navigue vers le tutoriel au tap', (tester) async {
@@ -464,6 +464,26 @@ void main() {
     },
   );
 
+  testWidgets(
+    'édition : CTA « Voir ma demande » ferme le wizard SANS repousser un '
+    'second écran détail (régression : le retour au caller par pop(true) '
+    'doublonnait avec un router.push vers la même demande)',
+    (tester) async {
+      await driveToSuccess(tester, editing: true);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+
+      await tester.tap(find.text('Voir ma demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsNothing);
+      expect(find.byType(PackageRequestCreateScreen), findsNothing);
+      // pop(true) suffit : on retrouve l'appelant (ici le launcher du
+      // harness), jamais une route détail poussée par-dessus.
+      expect(find.text('Détail pr-edit-1'), findsNothing);
+      expect(find.byKey(const Key('open-edit')), findsOneWidget);
+    },
+  );
+
   testWidgets('bouton fermer (X) par défaut ramène vers /home', (tester) async {
     await driveToSuccess(tester);
     expect(find.byType(DonySuccessScreen), findsOneWidget);
@@ -532,57 +552,53 @@ void main() {
     },
   );
 
-  testWidgets(
-    'enregistrer en brouillon depuis l\'aperçu (saveAsDraft: true)',
-    (tester) async {
-      await driveToStep3(tester);
+  testWidgets('enregistrer en brouillon depuis l\'aperçu (saveAsDraft: true)', (
+    tester,
+  ) async {
+    await driveToStep3(tester);
 
-      await tester.tap(find.text('Aperçu'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Aperçu'));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('preview-save-draft')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('preview-save-draft')));
+    await tester.pumpAndSettle();
 
-      verify(createCall(saveAsDraft: true)).called(1);
-      verifyNever(createCall(saveAsDraft: false));
+    verify(createCall(saveAsDraft: true)).called(1);
+    verifyNever(createCall(saveAsDraft: false));
 
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Brouillon enregistré !'), findsOneWidget);
-    },
-  );
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Brouillon enregistré !'), findsOneWidget);
+  });
 
-  testWidgets(
-    'limite de brouillons atteinte affiche le dialogue et propose de '
-    'passer en PRO',
-    (tester) async {
-      // Écrase le stub saveAsDraft:true du setUp (qui répond fakeDraftRequest)
-      // pour ce test seulement — même instance de repo, dernier stub gagne.
-      when(createCall(saveAsDraft: true)).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/package-requests'),
-          error: const ForbiddenException(
-            'Limite de 1 brouillon(s) atteinte.',
-            'draft-limit-reached',
-          ),
+  testWidgets('limite de brouillons atteinte affiche le dialogue et propose de '
+      'passer en PRO', (tester) async {
+    // Écrase le stub saveAsDraft:true du setUp (qui répond fakeDraftRequest)
+    // pour ce test seulement — même instance de repo, dernier stub gagne.
+    when(createCall(saveAsDraft: true)).thenThrow(
+      DioException(
+        requestOptions: RequestOptions(path: '/package-requests'),
+        error: const ForbiddenException(
+          'Limite de 1 brouillon(s) atteinte.',
+          'draft-limit-reached',
         ),
-      );
+      ),
+    );
 
-      await driveToStep3(tester);
+    await driveToStep3(tester);
 
-      await tester.tap(find.text('Aperçu'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Aperçu'));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('preview-save-draft')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('preview-save-draft')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Limite de brouillons atteinte'), findsOneWidget);
-      expect(find.text('Limite de 1 brouillon(s) atteinte.'), findsOneWidget);
-      expect(find.byType(DonySuccessScreen), findsNothing);
+    expect(find.text('Limite de brouillons atteinte'), findsOneWidget);
+    expect(find.text('Limite de 1 brouillon(s) atteinte.'), findsOneWidget);
+    expect(find.byType(DonySuccessScreen), findsNothing);
 
-      await tester.tap(find.text('Passer en PRO'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Passer en PRO'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('UpgradeToProStub'), findsOneWidget);
-    },
-  );
+    expect(find.text('UpgradeToProStub'), findsOneWidget);
+  });
 }

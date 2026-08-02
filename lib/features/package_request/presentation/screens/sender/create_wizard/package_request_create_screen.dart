@@ -49,7 +49,10 @@ abstract final class PackageRequestCreateWizard {
 
   /// Édition depuis « Ma demande » — retourne `true` si la demande a été
   /// modifiée, pour que l'appelant sache s'il doit recharger.
-  static Future<bool?> showEditing(BuildContext context, PackageRequest request) async {
+  static Future<bool?> showEditing(
+    BuildContext context,
+    PackageRequest request,
+  ) async {
     if (requiresEditWarning(request)) {
       final confirmed = await DonyDialog.show(
         context,
@@ -111,23 +114,23 @@ class _PackageRequestCreateScreenState
   /// qu'après avoir renseigné l'étape 1. Le formulaire est donc déjà « sale »
   /// avant qu'une photo puisse exister.
   String _signatureOf(PackageRequestFormState s) => [
-        s.departureCity,
-        s.arrivalCity,
-        s.desiredDate,
-        s.dateToleranceDays,
-        s.transportMode,
-        s.weightKg,
-        s.parcelSize,
-        (s.categories.toList()..sort()).join(','),
-        s.description,
-        s.targetPriceEur,
-        s.photoUrl,
-        s.pickupNeighborhood,
-        s.deliveryNeighborhood,
-        s.negotiable,
-        (s.acceptedPaymentMethods.map((e) => e.name).toList()..sort()).join(','),
-        s.totalBudgetEur,
-      ].join('|');
+    s.departureCity,
+    s.arrivalCity,
+    s.desiredDate,
+    s.dateToleranceDays,
+    s.transportMode,
+    s.weightKg,
+    s.parcelSize,
+    (s.categories.toList()..sort()).join(','),
+    s.description,
+    s.targetPriceEur,
+    s.photoUrl,
+    s.pickupNeighborhood,
+    s.deliveryNeighborhood,
+    s.negotiable,
+    (s.acceptedPaymentMethods.map((e) => e.name).toList()..sort()).join(','),
+    s.totalBudgetEur,
+  ].join('|');
 
   /// Vrai si quelque chose a été saisi, dans le bloc ou dans l'étape courante.
   ///
@@ -135,8 +138,7 @@ class _PackageRequestCreateScreenState
   /// fier au seul état du bloc laisserait filer une étape 1 en cours de
   /// remplissage.
   bool _isDirty(PackageRequestFormState state) {
-    if (_initialSignature != null &&
-        _signatureOf(state) != _initialSignature) {
+    if (_initialSignature != null && _signatureOf(state) != _initialSignature) {
       return true;
     }
     return _step1Key.currentState?.hasUnsubmittedInput ?? false;
@@ -176,8 +178,7 @@ class _PackageRequestCreateScreenState
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) =>
-              getIt<PackageRequestFormBloc>(param1: widget.initial),
+          create: (_) => getIt<PackageRequestFormBloc>(param1: widget.initial),
         ),
         BlocProvider(
           create: (_) {
@@ -196,61 +197,65 @@ class _PackageRequestCreateScreenState
     );
   }
 
-  void _onStateChange(
-    BuildContext context,
-    PackageRequestFormState state,
-  ) {
+  void _onStateChange(BuildContext context, PackageRequestFormState state) {
     if (state.submissionStatus == FormSubmissionStatus.success &&
         state.createdRequest != null) {
       final isEditing = state.isEditing;
       final isDraft =
           state.createdRequest!.status == PackageRequestStatus.draft;
       final requestId = state.createdRequest!.id;
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (routeContext) => DonySuccessScreen(
-          mascotteType: DonyMascotteType.succes,
-          title: isDraft
-              ? 'Brouillon enregistré !'
-              : isEditing
-                  ? 'Demande modifiée !'
-                  : 'Demande publiée !',
-          subtitle: isDraft
-              ? 'Tu pourras la publier quand tu le souhaites.'
-              : isEditing
-                  ? 'Tes modifications sont en ligne.'
-                  : 'Les voyageurs sont notifiés. Tu recevras des offres '
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (routeContext) => DonySuccessScreen(
+            mascotteType: DonyMascotteType.succes,
+            title: isDraft
+                ? 'Brouillon enregistré !'
+                : isEditing
+                ? 'Demande modifiée !'
+                : 'Demande publiée !',
+            subtitle: isDraft
+                ? 'Tu pourras la publier quand tu le souhaites.'
+                : isEditing
+                ? 'Tes modifications sont en ligne.'
+                : 'Les voyageurs sont notifiés. Tu recevras des offres '
                       'très vite.',
-          ctaLabel: isDraft ? 'Voir mon brouillon' : 'Voir ma demande',
-          onCta: () {
-            // Le contexte de la route succès (routeContext) reste monté
-            // sous le Navigator racine après le pop ci-dessous — on capture
-            // donc le GoRouter AVANT de popper, pour éviter « Looking up a
-            // deactivated widget's ancestor is unsafe » (même classe de bug
-            // que le fix bid-payé, feb86b71).
-            final router = GoRouter.of(routeContext);
-            Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
-            if (isEditing) {
-              // showEditing() attend un bool : signale au caller (« Ma
-              // demande ») qu'un changement a eu lieu, pour qu'il recharge.
-              context.pop(true);
-            } else {
-              context.pop(); // ferme le wizard — aucune valeur attendue par
-              // les autres appelants (context.push<void>(...), refresh
-              // inconditionnel après l'await, jamais gaté sur la valeur du pop)
-            }
-            router.push('/package-requests/$requestId');
-          },
-          // Pas d'onClose custom : aucun appelant ne gate son refresh sur la
-          // valeur du pop (my_package_requests_screen, envoyer_hub_screen et
-          // package_request_public_detail_screen rafraîchissent tous de
-          // façon inconditionnelle après l'await) — le comportement par
-          // défaut (X → go('/home')) est donc sûr, comme pour
-          // create_trip_screen.
-          analyticsContext: isDraft
-              ? 'package_request_draft_saved'
-              : 'package_request_published',
+            ctaLabel: isDraft ? 'Voir mon brouillon' : 'Voir ma demande',
+            onCta: () {
+              // Le contexte de la route succès (routeContext) reste monté
+              // sous le Navigator racine après le pop ci-dessous — on capture
+              // donc le GoRouter AVANT de popper, pour éviter « Looking up a
+              // deactivated widget's ancestor is unsafe » (même classe de bug
+              // que le fix bid-payé, feb86b71).
+              final router = GoRouter.of(routeContext);
+              Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
+              if (isEditing) {
+                // Édition : l'appelant (showEditing() depuis « Ma demande »,
+                // ou tout autre appelant de show(context, initial: ...)) est
+                // déjà sur/au-dessus de la demande concernée et se recharge
+                // après l'await — ne pas repousser une nouvelle route détail
+                // par-dessus, ça doublonnerait la pile de navigation (le même
+                // détail deux fois, ou un détail plein écran par-dessus une
+                // sheet restée ouverte).
+                context.pop(true);
+              } else {
+                context.pop(); // ferme le wizard — aucune valeur attendue par
+                // les autres appelants (context.push<void>(...), refresh
+                // inconditionnel après l'await, jamais gaté sur la valeur du pop)
+                router.push('/package-requests/$requestId');
+              }
+            },
+            // Pas d'onClose custom : aucun appelant ne gate son refresh sur la
+            // valeur du pop (my_package_requests_screen, envoyer_hub_screen et
+            // package_request_public_detail_screen rafraîchissent tous de
+            // façon inconditionnelle après l'await) — le comportement par
+            // défaut (X → go('/home')) est donc sûr, comme pour
+            // create_trip_screen.
+            analyticsContext: isDraft
+                ? 'package_request_draft_saved'
+                : 'package_request_published',
+          ),
         ),
-      ));
+      );
     } else if (state.submissionStatus == FormSubmissionStatus.error &&
         state.draftLimitMessage != null) {
       unawaited(_handleDraftLimitReached(context, state.draftLimitMessage!));
@@ -278,10 +283,7 @@ class _PackageRequestCreateScreenState
     }
   }
 
-  Widget _buildScaffold(
-    BuildContext context,
-    PackageRequestFormState state,
-  ) {
+  Widget _buildScaffold(BuildContext context, PackageRequestFormState state) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -315,9 +317,9 @@ class _PackageRequestCreateScreenState
           leading: DonyAppBarBackButton(
             onBack: () {
               if (state.currentStep > 0) {
-                context
-                    .read<PackageRequestFormBloc>()
-                    .add(const FormStepBack());
+                context.read<PackageRequestFormBloc>().add(
+                  const FormStepBack(),
+                );
               } else {
                 unawaited(_handleExitRequest(state));
               }
@@ -368,30 +370,34 @@ class _PackageRequestCreateScreenState
         ),
         body: switch (state.currentStep) {
           0 => Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    DonySpacing.base,
-                    DonySpacing.sm,
-                    DonySpacing.base,
-                    0,
-                  ),
-                  child: ContextualTutorialCard(
-                    context: TutorialContext.requestPublish,
-                  ),
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  DonySpacing.base,
+                  DonySpacing.sm,
+                  DonySpacing.base,
+                  0,
                 ),
-                Expanded(
-                  child: Step1TrajetColis(
-                    key: _step1Key,
-                    canContinueNotifier: _canContinueNotifier,
-                  ),
+                child: ContextualTutorialCard(
+                  context: TutorialContext.requestPublish,
                 ),
-              ],
-            ),
+              ),
+              Expanded(
+                child: Step1TrajetColis(
+                  key: _step1Key,
+                  canContinueNotifier: _canContinueNotifier,
+                ),
+              ),
+            ],
+          ),
           1 => Step2Details(
-              key: _step2Key, canContinueNotifier: _canContinueNotifier),
+            key: _step2Key,
+            canContinueNotifier: _canContinueNotifier,
+          ),
           _ => Step3RecapBudget(
-              key: _step3Key, canContinueNotifier: _canContinueNotifier),
+            key: _step3Key,
+            canContinueNotifier: _canContinueNotifier,
+          ),
         },
         bottomNavigationBar: _StickyCta(
           canContinueNotifier: _canContinueNotifier,
@@ -493,9 +499,9 @@ class _StickyCta extends StatelessWidget {
                     variant: DonyButtonVariant.secondary,
                     onPressed: isSubmitting
                         ? null
-                        : () => context
-                            .read<PackageRequestFormBloc>()
-                            .add(const FormStepBack()),
+                        : () => context.read<PackageRequestFormBloc>().add(
+                            const FormStepBack(),
+                          ),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
@@ -509,8 +515,9 @@ class _StickyCta extends StatelessWidget {
                           ? 'Aperçu'
                           : 'Continuer',
                       iconRightAsset: 'arrow-right',
-                      onPressed:
-                          (isSubmitting || !canContinue) ? null : onPressed,
+                      onPressed: (isSubmitting || !canContinue)
+                          ? null
+                          : onPressed,
                       isLoading: isSubmitting,
                     ),
                   ),

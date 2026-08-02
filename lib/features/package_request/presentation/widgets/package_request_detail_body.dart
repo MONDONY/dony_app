@@ -341,9 +341,7 @@ class _OfferTile extends StatelessWidget {
           color: isPrimary ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
           border: Border.all(
-            color: isPrimary
-                ? cs.primary.withValues(alpha: 0.25)
-                : cs.outline,
+            color: isPrimary ? cs.primary.withValues(alpha: 0.25) : cs.outline,
           ),
         ),
         child: Row(

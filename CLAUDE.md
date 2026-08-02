@@ -329,6 +329,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
 | `package_request_created` | PackageRequestFormBloc |
 | `package_request_updated` | PackageRequestFormBloc._onStep3() (mode édition) |
+| `package_request_published` | PackageRequestDetailScreen._publish() / PackageRequestDetailBottomSheet._publish() — tuile « Publier » de la grille propriétaire (brouillon → OPEN) |
+| `package_request_unpublished` | PackageRequestDetailScreen._unpublish() / PackageRequestDetailBottomSheet._unpublish() — tuile « Dépublier » de la grille propriétaire (OPEN → brouillon) |
 | `package_request_photo_added` | PackageRequestPhotosCubit.add() — photo colis uploadée au wizard |
 | `package_request_photo_removed` | PackageRequestPhotosCubit.remove() — photo retirée avant publication |
 | `package_request_detail_opened` | PackageRequestPublicDetailScreen.initState — ouverture du détail plein écran |
