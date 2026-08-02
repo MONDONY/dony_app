@@ -48,30 +48,25 @@ class NegotiationListState extends Equatable {
 
   /// Threads still open (any turn) — alimente la pastille de la carte
   /// « Discussions de prix » : elle reste tant que la négociation est ouverte.
-  int get activeCount => threads.where(_isOpen).length;
+  int get activeCount => threads.where((t) => t.status.isActive).length;
 
   /// Threads ouverts où c'est à l'utilisateur de jouer — alimente le point de
   /// l'onglet Activités : il ne s'allume que quand une action est attendue de
   /// lui (pas quand on attend la partie adverse).
-  int get actionableCount => threads.where((t) => _isOpen(t) && t.isMyTurn).length;
-
-  static bool _isOpen(NegotiationThread t) =>
-      t.status == NegotiationThreadStatus.open ||
-      t.status == NegotiationThreadStatus.awaitingTrip ||
-      t.status == NegotiationThreadStatus.awaitingPayment;
+  int get actionableCount =>
+      threads.where((t) => t.status.isActive && t.isMyTurn).length;
 
   NegotiationListState copyWith({
     NegotiationListStatus? status,
     List<NegotiationThread>? threads,
     String? errorMessage,
     DateTime? fetchedAt,
-  }) =>
-      NegotiationListState(
-        status: status ?? this.status,
-        threads: threads ?? this.threads,
-        errorMessage: errorMessage ?? this.errorMessage,
-        fetchedAt: fetchedAt ?? this.fetchedAt,
-      );
+  }) => NegotiationListState(
+    status: status ?? this.status,
+    threads: threads ?? this.threads,
+    errorMessage: errorMessage ?? this.errorMessage,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
 
   @override
   List<Object?> get props => [status, threads, errorMessage, fetchedAt];
@@ -93,16 +88,20 @@ class NegotiationListBloc
     emit(state.copyWith(status: NegotiationListStatus.loading));
     try {
       final threads = await _repository.findMine();
-      emit(state.copyWith(
-        status: NegotiationListStatus.loaded,
-        threads: threads,
-        fetchedAt: DateTime.now(),
-      ));
+      emit(
+        state.copyWith(
+          status: NegotiationListStatus.loaded,
+          threads: threads,
+          fetchedAt: DateTime.now(),
+        ),
+      );
     } catch (err) {
-      emit(state.copyWith(
-        status: NegotiationListStatus.error,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: NegotiationListStatus.error,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 
@@ -113,16 +112,20 @@ class NegotiationListBloc
   ) async {
     try {
       final threads = await _repository.findMine();
-      emit(state.copyWith(
-        status: NegotiationListStatus.loaded,
-        threads: threads,
-        fetchedAt: DateTime.now(),
-      ));
+      emit(
+        state.copyWith(
+          status: NegotiationListStatus.loaded,
+          threads: threads,
+          fetchedAt: DateTime.now(),
+        ),
+      );
     } catch (err) {
-      emit(state.copyWith(
-        status: NegotiationListStatus.error,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: NegotiationListStatus.error,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 }

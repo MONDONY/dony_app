@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -39,6 +40,20 @@ PackageRequest _fakeRequest({
   categories: const ['Vêtements'],
   status: status,
   createdAt: DateTime(2026, 1, 1),
+);
+
+NegotiationThread _terminalThread() => NegotiationThread(
+  id: 'thread-1',
+  packageRequestId: 'pr-1',
+  travelerId: 'traveler-1',
+  travelerTravelDate: DateTime(2026, 8, 15),
+  travelerAvailableKg: 10,
+  status: NegotiationThreadStatus.rejected,
+  currentPriceEur: 25,
+  roundsCount: 1,
+  lastActivityAt: DateTime(2026, 8, 1),
+  createdAt: DateTime(2026, 8, 1),
+  messages: const [],
 );
 
 Widget _buildApp({required String requestId}) {
@@ -163,6 +178,25 @@ void main() {
     expect(find.text('Ma demande'), findsOneWidget);
     // The corridor text should appear somewhere
     expect(find.textContaining('Paris'), findsWidgets);
+  });
+
+  testWidgets('les négociations terminées ne comptent plus comme offres', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+    when(
+      () => repo.listThreadsForRequest('pr-1'),
+    ).thenAnswer((_) async => [_terminalThread()]);
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 OFFRE'), findsNothing);
+    expect(find.text('OFFRES REÇUES'), findsNothing);
+    expect(find.text('Aucune offre pour l\'instant'), findsOneWidget);
   });
 
   testWidgets('shows Annuler tile when status is open', (tester) async {

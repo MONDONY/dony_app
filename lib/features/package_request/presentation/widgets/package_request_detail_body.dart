@@ -36,10 +36,11 @@ class PackageRequestDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeThreads = threads.where((t) => t.status.isActive).toList();
     return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _HeroCard(request: request, threadsCount: threads.length),
+            _HeroCard(request: request, threadsCount: activeThreads.length),
             const SizedBox(height: DonySpacing.base),
             IgnorePointer(
               ignoring: actionInFlight,
@@ -47,7 +48,7 @@ class PackageRequestDetailBody extends StatelessWidget {
                 opacity: actionInFlight ? 0.5 : 1,
                 child: RequestOwnerActionGrid(
                   request: request,
-                  hasOffers: threads.isNotEmpty,
+                  hasOffers: activeThreads.isNotEmpty,
                   onEdit: onEdit,
                   onPublish: onPublish,
                   onUnpublish: onUnpublish,
@@ -56,7 +57,7 @@ class PackageRequestDetailBody extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DonySpacing.xl),
-            _OffersSection(threads: threads, request: request),
+            _OffersSection(threads: activeThreads, request: request),
           ],
         )
         .animate()

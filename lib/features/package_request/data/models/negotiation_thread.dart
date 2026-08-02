@@ -18,6 +18,11 @@ enum NegotiationThreadStatus {
 
   static NegotiationThreadStatus fromJson(String s) =>
       NegotiationThreadStatus.values.firstWhere((e) => e.wireName == s);
+
+  bool get isActive =>
+      this == NegotiationThreadStatus.open ||
+      this == NegotiationThreadStatus.awaitingTrip ||
+      this == NegotiationThreadStatus.awaitingPayment;
 }
 
 class NegotiationThread extends Equatable {
@@ -67,7 +72,7 @@ class NegotiationThread extends Equatable {
   final String? travelerAnnouncementId;
   final DateTime travelerTravelDate;
   final double travelerAvailableKg;
-  final String? travelerCapacityUnit;    // "SUITCASE_23KG" | "KG_FREE" | ...
+  final String? travelerCapacityUnit; // "SUITCASE_23KG" | "KG_FREE" | ...
   final NegotiationThreadStatus status;
   final double currentPriceEur;
   final int roundsCount;
@@ -118,75 +123,103 @@ class NegotiationThread extends Equatable {
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
-  factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
-        id: json['id'] as String,
-        packageRequestId: json['packageRequestId'] as String,
-        travelerId: json['travelerId'] as String,
-        travelerAnnouncementId: json['travelerAnnouncementId'] as String?,
-        travelerTravelDate: DateTime.parse(json['travelerTravelDate'] as String),
-        travelerAvailableKg: (json['travelerAvailableKg'] as num).toDouble(),
-        travelerCapacityUnit: json['travelerCapacityUnit'] as String?,
-        status: NegotiationThreadStatus.fromJson(json['status'] as String),
-        currentPriceEur: (json['currentPriceEur'] as num).toDouble(),
-        roundsCount: json['roundsCount'] as int,
-        lastActivityAt: DateTime.parse(json['lastActivityAt'] as String),
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        messages: (json['messages'] as List<dynamic>?)
-                ?.map((e) => NegotiationMessage.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            const [],
-        grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
-        paymentMethod: json['paymentMethod'] != null
-            ? PaymentMethod.fromWire(json['paymentMethod'] as String)
-            : null,
-        paymentIntentClientSecret: json['paymentIntentClientSecret'] as String?,
-        travelerName: json['travelerName'] as String?,
-        travelerRating: (json['travelerRating'] as num?)?.toDouble(),
-        travelerTripsCount: json['travelerTripsCount'] as int?,
-        travelerPhotoUrl: json['travelerPhotoUrl'] as String?,
-        departureCity: json['departureCity'] as String?,
-        arrivalCity: json['arrivalCity'] as String?,
-        weightKg: (json['weightKg'] as num?)?.toDouble(),
-        senderName: json['senderName'] as String?,
-        isMyTurn: json['isMyTurn'] as bool? ?? false,
-        canAccept: json['canAccept'] as bool? ?? false,
-        canCounter: json['canCounter'] as bool? ?? false,
-        roundsRemaining: json['roundsRemaining'] as int? ?? 0,
-        linkedTrip: json['linkedTrip'] != null
-            ? LinkedTripSummary.fromJson(json['linkedTrip'] as Map<String, dynamic>)
-            : null,
-        materializedBidId: json['materializedBidId'] as String?,
-        senderPhotoUrl: json['senderPhotoUrl'] as String?,
-        cashCommissionAvailable: json['cashCommissionAvailable'] as bool? ?? true,
-        // Resilient parse: an unknown wire value here must not fail the whole
-        // thread parse (unlike the global PaymentMethod.fromWire/setFromJson,
-        // left untouched — used elsewhere where the full list is expected to
-        // always be recognized). Skips only the offending entry.
-        availablePaymentMethods: json['availablePaymentMethods'] != null
-            ? (json['availablePaymentMethods'] as List<dynamic>)
-                .map((e) {
-                  try {
-                    return PaymentMethod.fromWire(e as String);
-                  } catch (_) {
-                    return null;
-                  }
-                })
-                .whereType<PaymentMethod>()
-                .toSet()
-            : null,
-        canNudge: json['canNudge'] as bool? ?? false,
-      );
+  factory NegotiationThread.fromJson(
+    Map<String, dynamic> json,
+  ) => NegotiationThread(
+    id: json['id'] as String,
+    packageRequestId: json['packageRequestId'] as String,
+    travelerId: json['travelerId'] as String,
+    travelerAnnouncementId: json['travelerAnnouncementId'] as String?,
+    travelerTravelDate: DateTime.parse(json['travelerTravelDate'] as String),
+    travelerAvailableKg: (json['travelerAvailableKg'] as num).toDouble(),
+    travelerCapacityUnit: json['travelerCapacityUnit'] as String?,
+    status: NegotiationThreadStatus.fromJson(json['status'] as String),
+    currentPriceEur: (json['currentPriceEur'] as num).toDouble(),
+    roundsCount: json['roundsCount'] as int,
+    lastActivityAt: DateTime.parse(json['lastActivityAt'] as String),
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    messages:
+        (json['messages'] as List<dynamic>?)
+            ?.map((e) => NegotiationMessage.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        const [],
+    grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
+    paymentMethod: json['paymentMethod'] != null
+        ? PaymentMethod.fromWire(json['paymentMethod'] as String)
+        : null,
+    paymentIntentClientSecret: json['paymentIntentClientSecret'] as String?,
+    travelerName: json['travelerName'] as String?,
+    travelerRating: (json['travelerRating'] as num?)?.toDouble(),
+    travelerTripsCount: json['travelerTripsCount'] as int?,
+    travelerPhotoUrl: json['travelerPhotoUrl'] as String?,
+    departureCity: json['departureCity'] as String?,
+    arrivalCity: json['arrivalCity'] as String?,
+    weightKg: (json['weightKg'] as num?)?.toDouble(),
+    senderName: json['senderName'] as String?,
+    isMyTurn: json['isMyTurn'] as bool? ?? false,
+    canAccept: json['canAccept'] as bool? ?? false,
+    canCounter: json['canCounter'] as bool? ?? false,
+    roundsRemaining: json['roundsRemaining'] as int? ?? 0,
+    linkedTrip: json['linkedTrip'] != null
+        ? LinkedTripSummary.fromJson(json['linkedTrip'] as Map<String, dynamic>)
+        : null,
+    materializedBidId: json['materializedBidId'] as String?,
+    senderPhotoUrl: json['senderPhotoUrl'] as String?,
+    cashCommissionAvailable: json['cashCommissionAvailable'] as bool? ?? true,
+    // Resilient parse: an unknown wire value here must not fail the whole
+    // thread parse (unlike the global PaymentMethod.fromWire/setFromJson,
+    // left untouched — used elsewhere where the full list is expected to
+    // always be recognized). Skips only the offending entry.
+    availablePaymentMethods: json['availablePaymentMethods'] != null
+        ? (json['availablePaymentMethods'] as List<dynamic>)
+              .map((e) {
+                try {
+                  return PaymentMethod.fromWire(e as String);
+                } catch (_) {
+                  return null;
+                }
+              })
+              .whereType<PaymentMethod>()
+              .toSet()
+        : null,
+    canNudge: json['canNudge'] as bool? ?? false,
+  );
 
   @override
   List<Object?> get props => [
-        id, packageRequestId, travelerId, travelerAnnouncementId,
-        travelerTravelDate, travelerAvailableKg, travelerCapacityUnit,
-        status, currentPriceEur, roundsCount, lastActivityAt, createdAt,
-        messages, grossPriceEur, paymentMethod, paymentIntentClientSecret,
-        travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
-        departureCity, arrivalCity, weightKg, senderName,
-        isMyTurn, canAccept, canCounter, roundsRemaining,
-        linkedTrip, materializedBidId, senderPhotoUrl, cashCommissionAvailable,
-        availablePaymentMethods, canNudge,
-      ];
+    id,
+    packageRequestId,
+    travelerId,
+    travelerAnnouncementId,
+    travelerTravelDate,
+    travelerAvailableKg,
+    travelerCapacityUnit,
+    status,
+    currentPriceEur,
+    roundsCount,
+    lastActivityAt,
+    createdAt,
+    messages,
+    grossPriceEur,
+    paymentMethod,
+    paymentIntentClientSecret,
+    travelerName,
+    travelerRating,
+    travelerTripsCount,
+    travelerPhotoUrl,
+    departureCity,
+    arrivalCity,
+    weightKg,
+    senderName,
+    isMyTurn,
+    canAccept,
+    canCounter,
+    roundsRemaining,
+    linkedTrip,
+    materializedBidId,
+    senderPhotoUrl,
+    cashCommissionAvailable,
+    availablePaymentMethods,
+    canNudge,
+  ];
 }
