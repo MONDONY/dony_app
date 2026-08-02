@@ -27,6 +27,7 @@ class PackageRequestFormState extends Equatable {
     this.totalBudgetEur,
     this.submissionStatus = FormSubmissionStatus.idle,
     this.errorMessage,
+    this.draftLimitMessage,
     this.createdRequest,
     this.editingRequestId,
   });
@@ -53,6 +54,7 @@ class PackageRequestFormState extends Equatable {
   final double? totalBudgetEur;
   final FormSubmissionStatus submissionStatus;
   final String? errorMessage;
+  final String? draftLimitMessage;
   final PackageRequest? createdRequest;
 
   /// Non-null en mode édition : id de la demande modifiée (sinon création).
@@ -84,6 +86,10 @@ class PackageRequestFormState extends Equatable {
     bool clearTotalBudgetEur = false,
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
+    String? draftLimitMessage,
+    // Même pattern que clearTotalBudgetEur : un message de limite affiché
+    // une fois doit pouvoir être effacé, pas seulement remplacé.
+    bool clearDraftLimitMessage = false,
     PackageRequest? createdRequest,
     String? editingRequestId,
   }) => PackageRequestFormState(
@@ -108,6 +114,9 @@ class PackageRequestFormState extends Equatable {
         clearTotalBudgetEur ? null : (totalBudgetEur ?? this.totalBudgetEur),
     submissionStatus: submissionStatus ?? this.submissionStatus,
     errorMessage: errorMessage ?? this.errorMessage,
+    draftLimitMessage: clearDraftLimitMessage
+        ? null
+        : (draftLimitMessage ?? this.draftLimitMessage),
     createdRequest: createdRequest ?? this.createdRequest,
     editingRequestId: editingRequestId ?? this.editingRequestId,
   );
@@ -133,6 +142,7 @@ class PackageRequestFormState extends Equatable {
     totalBudgetEur,
     submissionStatus,
     errorMessage,
+    draftLimitMessage,
     createdRequest,
     editingRequestId,
   ];

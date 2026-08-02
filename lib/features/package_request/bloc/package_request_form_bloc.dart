@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/error/app_exception.dart';
 import '../../../core/services/analytics_events.dart';
 import '../../../core/services/analytics_service.dart';
 import '../data/models/package_request.dart';
@@ -162,6 +163,7 @@ class PackageRequestFormBloc
           // au chemin edition juste au-dessus.
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
+          saveAsDraft: e.saveAsDraft,
         );
       }
       emit(
@@ -185,12 +187,22 @@ class PackageRequestFormBloc
         ),
       );
     } catch (err) {
-      emit(
-        state.copyWith(
-          submissionStatus: FormSubmissionStatus.error,
-          errorMessage: err.toString(),
-        ),
-      );
+      final error = unwrapDioError(err);
+      if (error is ForbiddenException && error.code == 'draft-limit-reached') {
+        emit(
+          state.copyWith(
+            submissionStatus: FormSubmissionStatus.error,
+            draftLimitMessage: error.message,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            submissionStatus: FormSubmissionStatus.error,
+            errorMessage: error.message,
+          ),
+        );
+      }
     }
   }
 
