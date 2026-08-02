@@ -8,7 +8,8 @@ Widget packageStatusChip(BuildContext context, PackageRequestStatus status) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
   final (String label, Color bg, Color fg) = switch (status) {
-    PackageRequestStatus.draft => ('Brouillon', DonyColors.neutral100, cs.warning),
+    PackageRequestStatus.draft =>
+      ('Brouillon', cs.surfaceContainerHighest, cs.onSurfaceVariant),
     PackageRequestStatus.open => ('Ouverte', cs.successLight, cs.success),
     PackageRequestStatus.negotiating =>
       ('En négociation', cs.warningLight, cs.warning),
