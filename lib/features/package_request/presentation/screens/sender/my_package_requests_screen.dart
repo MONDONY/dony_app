@@ -568,6 +568,11 @@ class _StatusBadge extends StatelessWidget {
   final PackageRequestStatus status;
 
   ({Color bg, Color fg, String label}) get _config => switch (status) {
+    PackageRequestStatus.draft => (
+      bg: DonyColors.neutral100,
+      fg: DonyColors.neutral500,
+      label: 'BROUILLON',
+    ),
     PackageRequestStatus.open => (
       bg: DonyColors.success50,
       fg: DonyColors.success500,

@@ -12,6 +12,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_step_indicator.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_preview_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/foundation.dart';
@@ -181,16 +182,24 @@ class _PackageRequestCreateScreenState
     if (state.submissionStatus == FormSubmissionStatus.success &&
         state.createdRequest != null) {
       final isEditing = state.isEditing;
+      final isDraft =
+          state.createdRequest!.status == PackageRequestStatus.draft;
       final requestId = state.createdRequest!.id;
       Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (routeContext) => DonySuccessScreen(
           mascotteType: DonyMascotteType.succes,
-          title: isEditing ? 'Demande modifiée !' : 'Demande publiée !',
-          subtitle: isEditing
-              ? 'Tes modifications sont en ligne.'
-              : 'Les voyageurs sont notifiés. Tu recevras des offres '
-                  'très vite.',
-          ctaLabel: 'Voir ma demande',
+          title: isDraft
+              ? 'Brouillon enregistré !'
+              : isEditing
+                  ? 'Demande modifiée !'
+                  : 'Demande publiée !',
+          subtitle: isDraft
+              ? 'Tu pourras la publier quand tu le souhaites.'
+              : isEditing
+                  ? 'Tes modifications sont en ligne.'
+                  : 'Les voyageurs sont notifiés. Tu recevras des offres '
+                      'très vite.',
+          ctaLabel: isDraft ? 'Voir mon brouillon' : 'Voir ma demande',
           onCta: () {
             // Le contexte de la route succès (routeContext) reste monté
             // sous le Navigator racine après le pop ci-dessous — on capture
@@ -210,14 +219,35 @@ class _PackageRequestCreateScreenState
           // façon inconditionnelle après l'await) — le comportement par
           // défaut (X → go('/home')) est donc sûr, comme pour
           // create_trip_screen.
-          analyticsContext: 'package_request_published',
+          analyticsContext: isDraft
+              ? 'package_request_draft_saved'
+              : 'package_request_published',
         ),
       ));
+    } else if (state.submissionStatus == FormSubmissionStatus.error &&
+        state.draftLimitMessage != null) {
+      unawaited(_handleDraftLimitReached(context, state.draftLimitMessage!));
     } else if (state.submissionStatus == FormSubmissionStatus.error) {
       ErrorPresenter.show(
         context,
         state.errorMessage ?? 'Erreur lors de la création',
       );
+    }
+  }
+
+  Future<void> _handleDraftLimitReached(
+    BuildContext context,
+    String message,
+  ) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Limite de brouillons atteinte',
+      message: message,
+      confirmLabel: 'Passer en PRO',
+      cancelLabel: 'Plus tard',
+    );
+    if (confirmed == true && context.mounted) {
+      unawaited(context.push('/profile/upgrade-to-pro'));
     }
   }
 
@@ -354,7 +384,18 @@ class _PackageRequestCreateScreenState
       case 1:
         _step2Key.currentState?.submit();
       default:
-        _step3Key.currentState?.submit();
+        PackageRequestPreviewSheet.show(
+          context,
+          formState: state,
+          onConfirm: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            _step3Key.currentState?.submit();
+          },
+          onSaveDraft: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            _step3Key.currentState?.submit(saveAsDraft: true);
+          },
+        );
     }
   }
 }
@@ -438,9 +479,9 @@ class _StickyCta extends StatelessWidget {
                       label: isSubmitting
                           ? 'Publication…'
                           : isFinalStep
-                          ? 'Publier ma demande'
+                          ? 'Aperçu'
                           : 'Continuer',
-                      iconRightAsset: isFinalStep ? 'send' : 'arrow-right',
+                      iconRightAsset: 'arrow-right',
                       onPressed:
                           (isSubmitting || !canContinue) ? null : onPressed,
                       isLoading: isSubmitting,

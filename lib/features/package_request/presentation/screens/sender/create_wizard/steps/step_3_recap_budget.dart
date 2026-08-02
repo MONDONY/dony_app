@@ -60,15 +60,17 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     super.dispose();
   }
 
-  void submit() {
+  void submit({bool saveAsDraft = false}) {
     if (!_formKey.currentState!.validate()) {
       return;
     }
     // Prix ferme (non négociable) → un budget est obligatoire. Cette garde était
     // portée par le bouton inline (désormais retiré) ; la CTA sticky du wizard ne
     // la vérifie pas, donc on la rejoue ici.
+    // Le budget n'est obligatoire qu'en prix ferme publié ; un brouillon
+    // peut être enregistré sans prix, il sera exigé à la publication.
     final state = context.read<PackageRequestFormBloc>().state;
-    if (!state.negotiable && state.totalBudgetEur == null) {
+    if (!saveAsDraft && !state.negotiable && state.totalBudgetEur == null) {
       // Backstop : le bouton « Publier » est déjà grisé dans ce cas.
       _sync();
       return;
@@ -78,6 +80,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
           FormStep3Submitted(
             // touched=false (aucune photo manipulée) → null = conserver en édition.
             photoKeys: photosCubit.touched ? photosCubit.readyKeys : null,
+            saveAsDraft: saveAsDraft,
           ),
         );
   }
