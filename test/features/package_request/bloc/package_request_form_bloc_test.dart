@@ -656,6 +656,98 @@ void main() {
     },
   );
 
+  final editDraftRequest = PackageRequest(
+    id: 'r-draft-edit',
+    senderId: 's-1',
+    departureCity: 'Lyon',
+    arrivalCity: 'Bamako',
+    desiredDate: DateTime(2026, 7, 20),
+    dateToleranceDays: 3,
+    weightKg: 8,
+    parcelSize: ParcelSize.medium,
+    transportMode: TransportMode.plane,
+    categories: const ['Vêtements'],
+    status: PackageRequestStatus.draft,
+    createdAt: DateTime(2026, 5, 10),
+    negotiable: false,
+    targetPriceEur: 50.0,
+    acceptedPaymentMethods: const {PaymentMethod.stripe, PaymentMethod.cash},
+  );
+
+  final publishedEditRequest = PackageRequest(
+    id: 'r-draft-edit',
+    senderId: 's-1',
+    departureCity: 'Lyon',
+    arrivalCity: 'Bamako',
+    desiredDate: DateTime(2026, 7, 20),
+    dateToleranceDays: 3,
+    weightKg: 8,
+    parcelSize: ParcelSize.medium,
+    transportMode: TransportMode.plane,
+    categories: const ['Vêtements'],
+    status: PackageRequestStatus.open,
+    createdAt: DateTime(2026, 5, 10),
+    negotiable: false,
+    targetPriceEur: 50.0,
+    acceptedPaymentMethods: const {PaymentMethod.stripe, PaymentMethod.cash},
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'publier un brouillon édité appelle update puis publish',
+    build: () {
+      when(
+        () => repo.update(
+          any(),
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoUrl: any(named: 'photoUrl'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+        ),
+      ).thenAnswer((_) async => editDraftRequest);
+      when(
+        () => repo.publish('r-draft-edit'),
+      ).thenAnswer((_) async => publishedEditRequest);
+      return PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editDraftRequest,
+      );
+    },
+    act: (bloc) => bloc.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.submissionStatus,
+        'status',
+        FormSubmissionStatus.submitting,
+      ),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'status',
+            FormSubmissionStatus.success,
+          )
+          .having(
+            (s) => s.createdRequest?.status,
+            'createdRequest.status',
+            PackageRequestStatus.open,
+          ),
+    ],
+    verify: (_) {
+      verify(() => repo.publish('r-draft-edit')).called(1);
+    },
+  );
+
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'repo throws → Error state',
     build: () {

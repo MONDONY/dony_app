@@ -184,9 +184,9 @@ class PackageRequestFormBloc
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           saveAsDraft: e.saveAsDraft,
         );
-        if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {
-          saved = await _repository.publish(saved.id);
-        }
+      }
+      if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {
+        saved = await _repository.publish(saved.id);
       }
       emit(
         state.copyWith(
