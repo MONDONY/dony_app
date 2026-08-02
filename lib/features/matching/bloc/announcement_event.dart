@@ -58,6 +58,11 @@ class AnnouncementPublishRequested extends AnnouncementEvent {
   AnnouncementPublishRequested(this.id);
 }
 
+class AnnouncementUnpublishRequested extends AnnouncementEvent {
+  final String id;
+  AnnouncementUnpublishRequested(this.id);
+}
+
 class AnnouncementListRequested extends AnnouncementEvent {}
 
 class AnnouncementDetailRequested extends AnnouncementEvent {

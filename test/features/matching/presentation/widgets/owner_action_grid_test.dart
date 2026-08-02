@@ -149,6 +149,7 @@ void main() {
         isOwner: true);
 
     expect(find.text('Modifier'), findsOneWidget);
+    expect(find.text('Dépublier'), findsOneWidget);
     expect(find.text('Supprimer'), findsOneWidget);
     expect(find.text('Annuler'), findsNothing);
     // Modifier actif → pas de tooltip de désactivation.
@@ -166,6 +167,7 @@ void main() {
 
     expect(find.byTooltip("Modifiable tant qu'aucune demande"), findsOneWidget);
     expect(find.text('Annuler'), findsOneWidget);
+    expect(find.text('Dépublier'), findsNothing);
     expect(find.text('Supprimer'), findsNothing);
   });
 

@@ -424,10 +424,13 @@ class _PackageRequestCreateScreenState
             Navigator.of(context, rootNavigator: true).pop();
             _step3Key.currentState?.submit();
           },
-          onSaveDraft: () {
-            Navigator.of(context, rootNavigator: true).pop();
-            _step3Key.currentState?.submit(saveAsDraft: true);
-          },
+          onSaveDraft: widget.initial == null ||
+                  widget.initial!.status == PackageRequestStatus.draft
+              ? () {
+                  Navigator.of(context, rootNavigator: true).pop();
+                  _step3Key.currentState?.submit(saveAsDraft: true);
+                }
+              : null,
         );
     }
   }

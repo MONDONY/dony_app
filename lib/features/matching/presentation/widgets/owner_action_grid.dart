@@ -84,6 +84,27 @@ class OwnerActionGrid extends StatelessWidget {
             AnnouncementPublishRequested(a.id),
           ),
         ),
+      if (isActive && (a.bidsCount ?? 0) == 0)
+        _tile(
+          iconAsset: 'eye-off',
+          label: 'Dépublier',
+          accent: cs.onSurface,
+          onTap: () async {
+            final confirmed = await DonyDialog.show(
+              context,
+              title: 'Dépublier ce trajet ?',
+              message:
+                  'Le trajet ne sera plus visible et restera dans vos brouillons.',
+              confirmLabel: 'Dépublier',
+              iconAsset: 'eye-off',
+            );
+            if (confirmed == true && context.mounted) {
+              context.read<AnnouncementBloc>().add(
+                AnnouncementUnpublishRequested(a.id),
+              );
+            }
+          },
+        ),
       // ── Demandes → écran « À traiter » ; désactivé si rien en attente ──
       _tile(
         iconAsset: 'package',

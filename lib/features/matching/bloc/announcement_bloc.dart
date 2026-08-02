@@ -19,6 +19,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   AnnouncementBloc(this._repository, this._hive, this._analytics) : super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementPublishRequested>(_onPublishRequested);
+    on<AnnouncementUnpublishRequested>(_onUnpublishRequested);
     on<AnnouncementListRequested>(_onListRequested);
     on<AnnouncementDetailRequested>(_onDetailRequested);
     on<AnnouncementUpdateRequested>(_onUpdateRequested);
@@ -115,6 +116,20 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else {
         emit(AnnouncementError(error));
       }
+    }
+  }
+
+  Future<void> _onUnpublishRequested(
+    AnnouncementUnpublishRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.unpublishAnnouncement(event.id);
+      emit(AnnouncementUpdated(announcement));
+    } catch (e) {
+      emit(AnnouncementError(unwrapDioError(e)));
     }
   }
 

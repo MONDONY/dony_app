@@ -656,6 +656,36 @@ void main() {
     );
   });
 
+  group('AnnouncementUnpublishRequested', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'dépublication réussie → [Loading, AnnouncementUpdated]',
+      build: () {
+        when(() => mockRepo.unpublishAnnouncement('a1'))
+            .thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementUnpublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementUpdated>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur dépublication → [Loading, AnnouncementError]',
+      build: () {
+        when(() => mockRepo.unpublishAnnouncement('a1'))
+            .thenThrow(Exception('Server error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementUnpublishRequested('a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementError>(),
+      ],
+    );
+  });
+
   // ─── AnnouncementListRequested ────────────────────────────────────────────────
 
   group('AnnouncementListRequested', () {
