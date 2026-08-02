@@ -140,7 +140,7 @@ class PackageRequestFormBloc
     );
     try {
       final editingId = state.editingRequestId;
-      final PackageRequest saved;
+      PackageRequest saved;
       if (editingId != null) {
         saved = await _repository.update(
           editingId,
@@ -184,6 +184,9 @@ class PackageRequestFormBloc
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           saveAsDraft: e.saveAsDraft,
         );
+        if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {
+          saved = await _repository.publish(saved.id);
+        }
       }
       emit(
         state.copyWith(

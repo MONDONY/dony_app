@@ -51,6 +51,21 @@ void main() {
     createdAt: DateTime(2026, 5, 10),
   );
 
+  final fakeDraftRequest = PackageRequest(
+    id: 'r-1',
+    senderId: 's-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    desiredDate: DateTime(2026, 6, 15),
+    dateToleranceDays: 2,
+    weightKg: 5,
+    parcelSize: ParcelSize.small,
+    transportMode: TransportMode.plane,
+    categories: const ['Vêtements'],
+    status: PackageRequestStatus.draft,
+    createdAt: DateTime(2026, 5, 10),
+  );
+
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'step 1 → step 2 transitions update currentStep',
     build: () => makeBloc(repo),
@@ -283,6 +298,78 @@ void main() {
         ),
       ).captured;
       expect(captured.single, isFalse);
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'publier publie automatiquement si la creation revient en DRAFT',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenAnswer((_) async => fakeDraftRequest);
+      when(() => repo.publish('r-1')).thenAnswer((_) async => fakeRequest);
+      return makeBloc(repo);
+    },
+    seed: () => draftValidSeed,
+    act: (b) => b.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.submissionStatus,
+        'submissionStatus',
+        FormSubmissionStatus.submitting,
+      ),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.success,
+          )
+          .having(
+            (s) => s.createdRequest?.status,
+            'createdRequest.status',
+            PackageRequestStatus.open,
+          ),
+    ],
+    verify: (_) {
+      final captured = verify(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: captureAny(named: 'saveAsDraft'),
+        ),
+      ).captured;
+      expect(captured.single, isFalse);
+      verify(() => repo.publish('r-1')).called(1);
     },
   );
 
