@@ -119,7 +119,7 @@ void main() {
     expect(find.textContaining('Paris'), findsWidgets);
   });
 
-  testWidgets('shows Annuler button when status is open', (tester) async {
+  testWidgets('shows Annuler tile when status is open', (tester) async {
     when(
       () => repo.getById('pr-1'),
     ).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.open));
@@ -128,7 +128,7 @@ void main() {
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Annuler la demande'), findsOneWidget);
+    expect(find.text('Annuler'), findsOneWidget);
   });
 
   testWidgets('aucun CTA « Compléter les détails » pour une demande acceptée', (
@@ -145,7 +145,29 @@ void main() {
     // Détails + paiement se font dans le fil de négo : plus de CTA ici une fois
     // la demande acceptée (elle vit désormais dans l'onglet Envois).
     expect(find.textContaining('Compléter'), findsNothing);
-    expect(find.text('Annuler la demande'), findsNothing);
+    expect(find.text('Annuler'), findsNothing);
+  });
+
+  testWidgets('draft request shows Publier tile', (tester) async {
+    when(() => repo.getById('pr-1')).thenAnswer(
+      (_) async => _fakeRequest(status: PackageRequestStatus.draft),
+    );
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Publier'), findsOneWidget);
+  });
+
+  testWidgets('AppBar has no more overflow menu', (tester) async {
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.more_horiz), findsNothing);
   });
 
   testWidgets('retry button reloads data after error', (tester) async {

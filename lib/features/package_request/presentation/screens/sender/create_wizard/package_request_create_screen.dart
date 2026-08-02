@@ -46,6 +46,27 @@ abstract final class PackageRequestCreateWizard {
     }
     await context.push<void>('/package-requests/new', extra: initial);
   }
+
+  /// Édition depuis « Ma demande » — retourne `true` si la demande a été
+  /// modifiée, pour que l'appelant sache s'il doit recharger.
+  static Future<bool?> showEditing(BuildContext context, PackageRequest request) async {
+    if (requiresEditWarning(request)) {
+      final confirmed = await DonyDialog.show(
+        context,
+        title: 'Modifier votre demande ?',
+        message:
+            'Des voyageurs négocient actuellement cette demande. La '
+            'modifier annulera toutes les offres en cours. Ils devront vous '
+            'reproposer un trajet.',
+        confirmLabel: 'Modifier quand même',
+        cancelLabel: 'Annuler',
+        variant: DonyDialogVariant.destructive,
+        icon: Icons.warning_amber_rounded,
+      );
+      if (confirmed != true || !context.mounted) return null;
+    }
+    return context.push<bool>('/package-requests/new', extra: request);
+  }
 }
 
 // ─── Screen ─────────────────────────────────────────────────────────────────
@@ -208,9 +229,15 @@ class _PackageRequestCreateScreenState
             // que le fix bid-payé, feb86b71).
             final router = GoRouter.of(routeContext);
             Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
-            context.pop(); // ferme le wizard — aucune valeur attendue par
-            // les appelants (context.push<void>(...), refresh inconditionnel
-            // après l'await, jamais gaté sur la valeur du pop)
+            if (isEditing) {
+              // showEditing() attend un bool : signale au caller (« Ma
+              // demande ») qu'un changement a eu lieu, pour qu'il recharge.
+              context.pop(true);
+            } else {
+              context.pop(); // ferme le wizard — aucune valeur attendue par
+              // les autres appelants (context.push<void>(...), refresh
+              // inconditionnel après l'await, jamais gaté sur la valeur du pop)
+            }
             router.push('/package-requests/$requestId');
           },
           // Pas d'onClose custom : aucun appelant ne gate son refresh sur la
