@@ -1110,7 +1110,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     // publier/modifier un trajet nécessite une identité vérifiée. Si ce n'est
     // pas le cas, on ouvre l'onboarding KYC au lieu d'appeler l'API.
     final user = context.read<AuthBloc>().state.currentUser;
-    if (user != null && !user.isKycVerified) {
+    if (!saveAsDraft && user != null && !user.isKycVerified) {
       unawaited(KycOnboardingBottomSheet.show(context));
       return;
     }

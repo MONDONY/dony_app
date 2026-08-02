@@ -65,6 +65,7 @@ class FormStep3Submitted extends PackageRequestFormEvent {
     this.photoKeys,
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
+    this.saveAsDraft = false,
   });
   final double? targetPriceEur;
 
@@ -73,11 +74,16 @@ class FormStep3Submitted extends PackageRequestFormEvent {
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
 
+  /// true → POST avec saveAsDraft. Ignoré en édition : un brouillon édité
+  /// reste un brouillon côté backend, aucun signal à envoyer.
+  final bool saveAsDraft;
+
   @override
   List<Object?> get props => [
     targetPriceEur,
     pickupNeighborhood,
     deliveryNeighborhood,
+    saveAsDraft,
   ];
 }
 

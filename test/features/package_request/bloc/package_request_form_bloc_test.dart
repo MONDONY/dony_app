@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
@@ -46,6 +48,21 @@ void main() {
     transportMode: TransportMode.plane,
     categories: const ['Vêtements'],
     status: PackageRequestStatus.open,
+    createdAt: DateTime(2026, 5, 10),
+  );
+
+  final fakeDraftRequest = PackageRequest(
+    id: 'r-1',
+    senderId: 's-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    desiredDate: DateTime(2026, 6, 15),
+    dateToleranceDays: 2,
+    weightKg: 5,
+    parcelSize: ParcelSize.small,
+    transportMode: TransportMode.plane,
+    categories: const ['Vêtements'],
+    status: PackageRequestStatus.draft,
     createdAt: DateTime(2026, 5, 10),
   );
 
@@ -164,6 +181,351 @@ void main() {
         ),
       ).called(1);
     },
+  );
+
+  // ── Brouillons (saveAsDraft) ────────────────────────────────────────────────
+  final draftValidSeed = PackageRequestFormState(
+    currentStep: 2,
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    desiredDate: DateTime(2026, 6, 15),
+    dateToleranceDays: 2,
+    transportMode: TransportMode.plane,
+    weightKg: 5,
+    parcelSize: ParcelSize.small,
+    categories: const ['Vêtements'],
+    totalBudgetEur: 25,
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'FormStep3Submitted(saveAsDraft: true) creates with saveAsDraft:true',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenAnswer((_) async => fakeRequest);
+      return makeBloc(repo);
+    },
+    seed: () => draftValidSeed,
+    act: (b) => b.add(const FormStep3Submitted(saveAsDraft: true)),
+    verify: (b) {
+      final captured = verify(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: captureAny(named: 'saveAsDraft'),
+        ),
+      ).captured;
+      expect(captured.single, isTrue);
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'FormStep3Submitted() without saveAsDraft creates with saveAsDraft:false',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenAnswer((_) async => fakeRequest);
+      return makeBloc(repo);
+    },
+    seed: () => draftValidSeed,
+    act: (b) => b.add(const FormStep3Submitted()),
+    verify: (b) {
+      final captured = verify(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: captureAny(named: 'saveAsDraft'),
+        ),
+      ).captured;
+      expect(captured.single, isFalse);
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'publier publie automatiquement si la creation revient en DRAFT',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenAnswer((_) async => fakeDraftRequest);
+      when(() => repo.publish('r-1')).thenAnswer((_) async => fakeRequest);
+      return makeBloc(repo);
+    },
+    seed: () => draftValidSeed,
+    act: (b) => b.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.submissionStatus,
+        'submissionStatus',
+        FormSubmissionStatus.submitting,
+      ),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.success,
+          )
+          .having(
+            (s) => s.createdRequest?.status,
+            'createdRequest.status',
+            PackageRequestStatus.open,
+          ),
+    ],
+    verify: (_) {
+      final captured = verify(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: captureAny(named: 'saveAsDraft'),
+        ),
+      ).captured;
+      expect(captured.single, isFalse);
+      verify(() => repo.publish('r-1')).called(1);
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'FormStep3Submitted sans budget ne crée pas la demande',
+    build: () => makeBloc(repo),
+    seed: () => draftValidSeed.copyWith(clearTotalBudgetEur: true),
+    act: (b) => b.add(const FormStep3Submitted(saveAsDraft: true)),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.error,
+          )
+          .having(
+            (s) => s.errorMessage,
+            'errorMessage',
+            'Indique un budget pour continuer',
+          )
+          .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull),
+    ],
+    verify: (_) {
+      verifyNever(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      );
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'draft-limit-reached (403) sets draftLimitMessage, not the generic errorMessage',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/package-requests'),
+          error: const ForbiddenException(
+            'Limite de 1 brouillon(s) atteinte.',
+            'draft-limit-reached',
+          ),
+        ),
+      );
+      return makeBloc(repo);
+    },
+    seed: () => draftValidSeed,
+    act: (b) => b.add(const FormStep3Submitted(saveAsDraft: true)),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.submissionStatus,
+        'submissionStatus',
+        FormSubmissionStatus.submitting,
+      ),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.error,
+          )
+          .having(
+            (s) => s.draftLimitMessage,
+            'draftLimitMessage',
+            'Limite de 1 brouillon(s) atteinte.',
+          )
+          .having((s) => s.errorMessage, 'errorMessage', isNull),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    // Régression : une tentative précédente ayant buté sur draft-limit-reached
+    // laissait draftLimitMessage figé sur son ancien message ; une nouvelle
+    // tentative échouant pour une raison différente (générique) devait quand
+    // même en repartir propre, sans quoi les deux messages coexistent avec
+    // des valeurs contradictoires dans le même state.
+    'new submission after a previous draft-limit error clears the stale draftLimitMessage',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenThrow(Exception('boom'));
+      return makeBloc(repo);
+    },
+    // État déjà porteur d'un draftLimitMessage périmé, comme après un 1er
+    // échec draft-limit-reached lors d'une tentative précédente.
+    seed: () => draftValidSeed.copyWith(
+      submissionStatus: FormSubmissionStatus.error,
+      draftLimitMessage: 'Limite de 1 brouillon(s) atteinte.',
+    ),
+    act: (b) => b.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.submitting,
+          )
+          .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.error,
+          )
+          .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull)
+          .having((s) => s.errorMessage, 'errorMessage', isNotNull),
+    ],
   );
 
   // ── Mode édition ────────────────────────────────────────────────────────────
@@ -294,6 +656,98 @@ void main() {
     },
   );
 
+  final editDraftRequest = PackageRequest(
+    id: 'r-draft-edit',
+    senderId: 's-1',
+    departureCity: 'Lyon',
+    arrivalCity: 'Bamako',
+    desiredDate: DateTime(2026, 7, 20),
+    dateToleranceDays: 3,
+    weightKg: 8,
+    parcelSize: ParcelSize.medium,
+    transportMode: TransportMode.plane,
+    categories: const ['Vêtements'],
+    status: PackageRequestStatus.draft,
+    createdAt: DateTime(2026, 5, 10),
+    negotiable: false,
+    targetPriceEur: 50.0,
+    acceptedPaymentMethods: const {PaymentMethod.stripe, PaymentMethod.cash},
+  );
+
+  final publishedEditRequest = PackageRequest(
+    id: 'r-draft-edit',
+    senderId: 's-1',
+    departureCity: 'Lyon',
+    arrivalCity: 'Bamako',
+    desiredDate: DateTime(2026, 7, 20),
+    dateToleranceDays: 3,
+    weightKg: 8,
+    parcelSize: ParcelSize.medium,
+    transportMode: TransportMode.plane,
+    categories: const ['Vêtements'],
+    status: PackageRequestStatus.open,
+    createdAt: DateTime(2026, 5, 10),
+    negotiable: false,
+    targetPriceEur: 50.0,
+    acceptedPaymentMethods: const {PaymentMethod.stripe, PaymentMethod.cash},
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'publier un brouillon édité appelle update puis publish',
+    build: () {
+      when(
+        () => repo.update(
+          any(),
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoUrl: any(named: 'photoUrl'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+        ),
+      ).thenAnswer((_) async => editDraftRequest);
+      when(
+        () => repo.publish('r-draft-edit'),
+      ).thenAnswer((_) async => publishedEditRequest);
+      return PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editDraftRequest,
+      );
+    },
+    act: (bloc) => bloc.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.submissionStatus,
+        'status',
+        FormSubmissionStatus.submitting,
+      ),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'status',
+            FormSubmissionStatus.success,
+          )
+          .having(
+            (s) => s.createdRequest?.status,
+            'createdRequest.status',
+            PackageRequestStatus.open,
+          ),
+    ],
+    verify: (_) {
+      verify(() => repo.publish('r-draft-edit')).called(1);
+    },
+  );
+
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'repo throws → Error state',
     build: () {
@@ -335,8 +789,9 @@ void main() {
           categories: const ['Vêtements'],
         ),
       )
+      ..add(const PackageRequestTotalBudgetChanged(25))
       ..add(const FormStep3Submitted()),
-    skip: 3,
+    skip: 4,
     expect: () => [
       isA<PackageRequestFormState>().having(
         (s) => s.submissionStatus,
@@ -426,6 +881,24 @@ void main() {
         (s) => s.totalBudgetEur,
         'totalBudgetEur',
         closeTo(39.20, 0.001),
+      ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    // Régression : le champ prix effacé (retour à null) restait bloqué sur
+    // l'ancienne valeur — copyWith(totalBudgetEur: null) retombait sur
+    // this.totalBudgetEur via `??`, laissant le bouton "Publier" actif alors
+    // que le champ était vide à l'écran.
+    'total budget cleared (null) after being set actually clears it',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(totalBudgetEur: 39.20),
+    act: (b) => b.add(const PackageRequestTotalBudgetChanged(null)),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.totalBudgetEur,
+        'totalBudgetEur',
+        isNull,
       ),
     ],
   );

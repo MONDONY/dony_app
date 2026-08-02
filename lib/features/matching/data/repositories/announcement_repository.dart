@@ -61,6 +61,9 @@ class AnnouncementRepository {
   Future<AnnouncementModel> publishAnnouncement(String id) =>
       _remoteDatasource.publishAnnouncement(id);
 
+  Future<AnnouncementModel> unpublishAnnouncement(String id) =>
+      _remoteDatasource.unpublishAnnouncement(id);
+
   Future<({List<AnnouncementModel> announcements, int totalElements})>
   getMyAnnouncements() async {
     return _remoteDatasource.getMyAnnouncements();

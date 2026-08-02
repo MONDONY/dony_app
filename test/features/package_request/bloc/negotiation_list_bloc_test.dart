@@ -7,19 +7,24 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockRepo extends Mock implements NegotiationRepository {}
 
-NegotiationThread _fakeThread(String id) => NegotiationThread(
-      id: id,
-      packageRequestId: 'pr-1',
-      travelerId: 'traveler-001',
-      travelerTravelDate: DateTime(2026, 8, 1),
-      travelerAvailableKg: 10,
-      status: NegotiationThreadStatus.open,
-      currentPriceEur: 25,
-      roundsCount: 1,
-      lastActivityAt: DateTime(2026, 6, 1),
-      createdAt: DateTime(2026, 6, 1),
-      messages: const [],
-    );
+NegotiationThread _fakeThread(
+  String id, {
+  String packageRequestId = 'pr-1',
+  bool hasUnread = false,
+}) => NegotiationThread(
+  id: id,
+  packageRequestId: packageRequestId,
+  travelerId: 'traveler-001',
+  travelerTravelDate: DateTime(2026, 8, 1),
+  travelerAvailableKg: 10,
+  status: NegotiationThreadStatus.open,
+  currentPriceEur: 25,
+  roundsCount: 1,
+  lastActivityAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6, 1),
+  messages: const [],
+  hasUnread: hasUnread,
+);
 
 void main() {
   late _MockRepo repo;
@@ -31,19 +36,26 @@ void main() {
   blocTest<NegotiationListBloc, NegotiationListState>(
     'NegotiationListFetchRequested emits loading then loaded',
     build: () {
-      when(() => repo.findMine())
-          .thenAnswer((_) async => [_fakeThread('t-1'), _fakeThread('t-2')]);
+      when(
+        () => repo.findMine(),
+      ).thenAnswer((_) async => [_fakeThread('t-1'), _fakeThread('t-2')]);
       return NegotiationListBloc(repo);
     },
     act: (bloc) => bloc.add(const NegotiationListFetchRequested()),
     expect: () => [
-      isA<NegotiationListState>()
-          .having((s) => s.status, 'status', NegotiationListStatus.loading),
+      isA<NegotiationListState>().having(
+        (s) => s.status,
+        'status',
+        NegotiationListStatus.loading,
+      ),
       isA<NegotiationListState>()
           .having((s) => s.status, 'status', NegotiationListStatus.loaded)
           .having((s) => s.threads.length, 'threads.length', 2)
           .having(
-              (s) => s.fetchedAt.isAfter(DateTime(2000)), 'fetchedAt fresh', true),
+            (s) => s.fetchedAt.isAfter(DateTime(2000)),
+            'fetchedAt fresh',
+            true,
+          ),
     ],
   );
 
@@ -55,8 +67,11 @@ void main() {
     },
     act: (bloc) => bloc.add(const NegotiationListFetchRequested()),
     expect: () => [
-      isA<NegotiationListState>()
-          .having((s) => s.status, 'status', NegotiationListStatus.loading),
+      isA<NegotiationListState>().having(
+        (s) => s.status,
+        'status',
+        NegotiationListStatus.loading,
+      ),
       isA<NegotiationListState>()
           .having((s) => s.status, 'status', NegotiationListStatus.error)
           .having((s) => s.errorMessage, 'errorMessage', isNotNull),
@@ -68,8 +83,9 @@ void main() {
   blocTest<NegotiationListBloc, NegotiationListState>(
     'NegotiationListRefreshRequested does NOT emit loading — keeps existing threads visible',
     build: () {
-      when(() => repo.findMine())
-          .thenAnswer((_) async => [_fakeThread('t-new')]);
+      when(
+        () => repo.findMine(),
+      ).thenAnswer((_) async => [_fakeThread('t-new')]);
       return NegotiationListBloc(repo);
     },
     seed: () => NegotiationListState(
@@ -84,7 +100,10 @@ void main() {
           .having((s) => s.threads.length, 'threads.length', 1)
           .having((s) => s.threads.first.id, 'thread id', 't-new')
           .having(
-              (s) => s.fetchedAt.isAfter(DateTime(2000)), 'fetchedAt fresh', true),
+            (s) => s.fetchedAt.isAfter(DateTime(2000)),
+            'fetchedAt fresh',
+            true,
+          ),
     ],
     verify: (_) => verify(() => repo.findMine()).called(1),
   );
@@ -113,14 +132,14 @@ void main() {
     final state = NegotiationListState(
       status: NegotiationListStatus.loaded,
       threads: [
-        _fakeThread('t1'),                                       // open → counted
+        _fakeThread('t1'), // open → counted
         NegotiationThread(
           id: 't2',
           packageRequestId: 'pr-1',
           travelerId: 'traveler-001',
           travelerTravelDate: DateTime(2026, 8, 1),
           travelerAvailableKg: 10,
-          status: NegotiationThreadStatus.accepted,              // terminal → not counted
+          status: NegotiationThreadStatus.accepted, // terminal → not counted
           currentPriceEur: 25,
           roundsCount: 1,
           lastActivityAt: DateTime(2026, 6, 1),
@@ -176,4 +195,25 @@ void main() {
     // …mais l'onglet ne s'allume que pour celui où l'utilisateur doit jouer.
     expect(state.actionableCount, 1);
   });
+
+  test(
+    'unreadCountForRequests compte seulement les fils non lus concernés',
+    () {
+      final unread = _fakeThread(
+        'unread',
+        packageRequestId: 'mine',
+        hasUnread: true,
+      );
+      final read = _fakeThread('read', packageRequestId: 'mine');
+      final other = _fakeThread(
+        'other',
+        packageRequestId: 'other-request',
+        hasUnread: true,
+      );
+
+      final state = NegotiationListState(threads: [unread, read, other]);
+
+      expect(state.unreadCountForRequests({'mine'}), 1);
+    },
+  );
 }

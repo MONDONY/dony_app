@@ -35,10 +35,7 @@ void main() {
     test(
       'catégorie',
       () => expect(
-        requestMatchesQuery(
-          _req(catLabel: 'Documents & administratif'),
-          'doc',
-        ),
+        requestMatchesQuery(_req(catLabel: 'Documents & administratif'), 'doc'),
         isTrue,
       ),
     );
@@ -60,6 +57,9 @@ void main() {
         isSearchRequest(_req(status: PackageRequestStatus.cancelled)),
         isTrue,
       );
+    });
+    test('draft = visible dans Mes demandes propriétaire', () {
+      expect(isSearchRequest(_req(status: PackageRequestStatus.draft)), isTrue);
     });
     test('accepted / completed = parties dans Envois', () {
       expect(
@@ -97,6 +97,14 @@ void main() {
         const RequestFilterState(preset: RequestQuickFilter.closed),
       );
       expect(r.single.arrivalCity, 'Douala');
+    });
+    test('preset draft = brouillons uniquement', () {
+      final r = applyRequestFilters([
+        ...all,
+        _req(arrivee: 'Bamako', status: PackageRequestStatus.draft),
+      ], const RequestFilterState(preset: RequestQuickFilter.draft));
+      expect(r.map((e) => e.status).toSet(), {PackageRequestStatus.draft});
+      expect(r.single.arrivalCity, 'Bamako');
     });
     test('recherche + preset (ET)', () {
       final r = applyRequestFilters(

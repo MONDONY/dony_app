@@ -118,6 +118,7 @@ class PackageRequestRepository {
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
     List<String>? photoKeys,
+    bool saveAsDraft = false,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests',
@@ -142,6 +143,7 @@ class PackageRequestRepository {
         if (deliveryNeighborhood != null)
           'deliveryNeighborhood': deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
+        'saveAsDraft': saveAsDraft,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -227,6 +229,26 @@ class PackageRequestRepository {
     await _apiClient.dio.delete<void>('/package-requests/$id');
   }
 
+  /// Publie un brouillon (DRAFT → OPEN). Rejoue les mêmes contrôles que la
+  /// création (KYC, corridor, date, quota) ; 403 `draft-limit-reached` n'a
+  /// pas cours ici, seul `publish` de trajet le porte.
+  Future<PackageRequest> publish(String id) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/package-requests/$id/publish',
+    );
+    return PackageRequest.fromJson(response.data!);
+  }
+
+  /// Retire une demande de la circulation sans l'annuler (OPEN → DRAFT).
+  /// 409 `request/has-offers` si un voyageur a déjà répondu, 403
+  /// `draft-limit-reached` si le quota de brouillons est déjà atteint.
+  Future<PackageRequest> unpublish(String id) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/package-requests/$id/unpublish',
+    );
+    return PackageRequest.fromJson(response.data!);
+  }
+
   /// Signale une demande (modération). reason = code court (SCAM, PROHIBITED…).
   Future<void> report(
     String id, {
@@ -263,8 +285,9 @@ class PackageRequestRepository {
   /// Demandes colis scorées pour les trajets actifs du voyageur connecté.
   /// Déjà triées par matchScore décroissant côté serveur.
   Future<List<MatchingRequestModel>> findMatchingRequests() async {
-    final response = await _apiClient.dio
-        .get<List<dynamic>>('/travelers/me/matching-requests');
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/travelers/me/matching-requests',
+    );
     return (response.data ?? <dynamic>[])
         .map((e) => MatchingRequestModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -273,8 +296,9 @@ class PackageRequestRepository {
   /// État du toggle « notifier quand un colis matche un de mes trajets »
   /// (cloche de l'écran « Colis sur mes trajets »). Défaut serveur = activé.
   Future<bool> getPackageMatchAlert() async {
-    final response = await _apiClient.dio
-        .get<Map<String, dynamic>>('/notifications/package-match-alert');
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/notifications/package-match-alert',
+    );
     return (response.data?['enabled'] as bool?) ?? true;
   }
 

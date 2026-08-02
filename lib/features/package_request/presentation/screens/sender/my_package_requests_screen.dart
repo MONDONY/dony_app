@@ -52,6 +52,16 @@ class MyPackageRequestsBody extends StatelessWidget {
   }
 }
 
+int _statusPriority(PackageRequestStatus status) => switch (status) {
+  PackageRequestStatus.draft => 0,
+  PackageRequestStatus.negotiating => 1,
+  PackageRequestStatus.open => 2,
+  PackageRequestStatus.accepted => 3,
+  PackageRequestStatus.completed => 4,
+  PackageRequestStatus.expired => 5,
+  PackageRequestStatus.cancelled => 6,
+};
+
 // ── List content ──────────────────────────────────────────────────────────────
 
 class _ListContent extends StatefulWidget {
@@ -150,7 +160,15 @@ class _ListContentState extends State<_ListContent> {
                       r.status == PackageRequestStatus.cancelled,
                 )
                 .length;
-            final filtered = applyRequestFilters(state.requests, filter);
+            final draftCount = visible
+                .where((r) => r.status == PackageRequestStatus.draft)
+                .length;
+            final filtered = applyRequestFilters(state.requests, filter)
+              ..sort(
+                (a, b) => _statusPriority(
+                  a.status,
+                ).compareTo(_statusPriority(b.status)),
+              );
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,6 +196,7 @@ class _ListContentState extends State<_ListContent> {
                   openCount: openCount,
                   closedCount: closedCount,
                   negotiatingCount: negotiatingCount,
+                  draftCount: draftCount,
                   onChanged: (p) =>
                       context.read<RequestFilterCubit>().setPreset(p),
                 ),
@@ -260,12 +279,14 @@ class _FilterRow extends StatelessWidget {
     required this.total,
     required this.openCount,
     required this.closedCount,
+    required this.draftCount,
     required this.onChanged,
     this.negotiatingCount = 0,
   });
 
   final RequestQuickFilter current;
   final int total, openCount, closedCount;
+  final int draftCount;
   final ValueChanged<RequestQuickFilter> onChanged;
   final int negotiatingCount;
 
@@ -283,34 +304,51 @@ class _FilterRow extends StatelessWidget {
         color: cs.surface,
         border: Border(bottom: BorderSide(color: cs.outline)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _FilterChip(
-              label: 'Toutes ($total)',
-              active: current == RequestQuickFilter.all,
-              onTap: () => onChanged(RequestQuickFilter.all),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 112,
+              child: _FilterChip(
+                label: 'Toutes ($total)',
+                active: current == RequestQuickFilter.all,
+                onTap: () => onChanged(RequestQuickFilter.all),
+              ),
             ),
-          ),
-          const SizedBox(width: DonySpacing.xs + 2),
-          Expanded(
-            child: _FilterChip(
-              label: 'Ouvertes ($openCount)',
-              active: current == RequestQuickFilter.open,
-              hasNew: negotiatingCount > 0 &&
-                  current != RequestQuickFilter.open,
-              onTap: () => onChanged(RequestQuickFilter.open),
+            const SizedBox(width: DonySpacing.xs + 2),
+            SizedBox(
+              width: 120,
+              child: _FilterChip(
+                label: 'Ouvertes ($openCount)',
+                active: current == RequestQuickFilter.open,
+                hasNew:
+                    negotiatingCount > 0 && current != RequestQuickFilter.open,
+                onTap: () => onChanged(RequestQuickFilter.open),
+              ),
             ),
-          ),
-          const SizedBox(width: DonySpacing.xs + 2),
-          Expanded(
-            child: _FilterChip(
-              label: 'Terminées ($closedCount)',
-              active: current == RequestQuickFilter.closed,
-              onTap: () => onChanged(RequestQuickFilter.closed),
+            const SizedBox(width: DonySpacing.xs + 2),
+            SizedBox(
+              width: 128,
+              child: _FilterChip(
+                label: 'Terminées ($closedCount)',
+                active: current == RequestQuickFilter.closed,
+                onTap: () => onChanged(RequestQuickFilter.closed),
+              ),
             ),
-          ),
-        ],
+            if (draftCount > 0) ...[
+              const SizedBox(width: DonySpacing.xs + 2),
+              SizedBox(
+                width: 132,
+                child: _FilterChip(
+                  label: 'Brouillons ($draftCount)',
+                  active: current == RequestQuickFilter.draft,
+                  onTap: () => onChanged(RequestQuickFilter.draft),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -346,29 +384,32 @@ class _FilterChip extends StatelessWidget {
           ),
         ),
         child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: active ? Colors.white : cs.onSurfaceVariant,
-                ),
-              ),
-              if (hasNew) ...[
-                const SizedBox(width: 5),
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: const BoxDecoration(
-                    color: DonyColors.danger500,
-                    shape: BoxShape.circle,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: active ? Colors.white : cs.onSurfaceVariant,
                   ),
                 ),
+                if (hasNew) ...[
+                  const SizedBox(width: 5),
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: DonyColors.danger500,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -391,6 +432,7 @@ class _FilterEmptyState extends StatelessWidget {
       label = switch (preset) {
         RequestQuickFilter.open => 'Aucune demande ouverte',
         RequestQuickFilter.closed => 'Aucune demande terminée',
+        RequestQuickFilter.draft => 'Aucun brouillon',
         RequestQuickFilter.all => 'Aucune demande',
       };
     }
@@ -423,6 +465,7 @@ class _RequestCard extends StatelessWidget {
   final PackageRequest request;
 
   Color _accentColor(ColorScheme cs) => switch (request.status) {
+    PackageRequestStatus.draft => DonyColors.neutral500,
     PackageRequestStatus.open => cs.primary,
     PackageRequestStatus.negotiating => DonyColors.warning500,
     PackageRequestStatus.accepted => DonyColors.success500,
@@ -568,6 +611,11 @@ class _StatusBadge extends StatelessWidget {
   final PackageRequestStatus status;
 
   ({Color bg, Color fg, String label}) get _config => switch (status) {
+    PackageRequestStatus.draft => (
+      bg: DonyColors.neutral100,
+      fg: DonyColors.neutral500,
+      label: 'BROUILLON',
+    ),
     PackageRequestStatus.open => (
       bg: DonyColors.success50,
       fg: DonyColors.success500,

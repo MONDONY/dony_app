@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -38,6 +39,10 @@ class _MockBidAcceptanceBloc
 class _MockPackageRequestBloc
     extends MockBloc<PackageRequestEvent, PackageRequestState>
     implements PackageRequestBloc {}
+
+class _MockNegotiationListBloc
+    extends MockBloc<NegotiationListEvent, NegotiationListState>
+    implements NegotiationListBloc {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -76,7 +81,7 @@ class _StaticHelpCenterSource implements HelpCenterConfigSource {
 
 late List<String> visited;
 
-Future<void> _pump(
+Future<_MockPackageRequestBloc> _pump(
   WidgetTester tester, {
   required TravelerBidsState travelerBidsState,
 }) async {
@@ -94,6 +99,8 @@ Future<void> _pump(
   when(() => acceptance.state).thenReturn(acs.BidAcceptanceInitial());
   final packageRequests = _MockPackageRequestBloc();
   when(() => packageRequests.state).thenReturn(PackageRequestState());
+  final negotiations = _MockNegotiationListBloc();
+  when(() => negotiations.state).thenReturn(NegotiationListState());
 
   final router = GoRouter(
     initialLocation: '/',
@@ -106,6 +113,7 @@ Future<void> _pump(
             BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<BidAcceptanceBloc>.value(value: acceptance),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
+            BlocProvider<NegotiationListBloc>.value(value: negotiations),
             BlocProvider<HelpCenterBloc>(
               create: (_) => HelpCenterBloc(
                 HelpCenterRepository(
@@ -135,6 +143,7 @@ Future<void> _pump(
   // Draine les timers d'animation (flutter_animate dans l'empty state / les
   // cartes) : sans ça le binding échoue sur un timer encore en vol.
   await tester.pump(const Duration(seconds: 1));
+  return packageRequests;
 }
 
 void main() {
@@ -166,6 +175,15 @@ void main() {
 
     expect(find.text('Reçues'), findsOneWidget);
     expect(find.text('Envoyées'), findsOneWidget);
+  });
+
+  testWidgets('rafraîchit le badge Envoyées dès l’ouverture', (tester) async {
+    final packageRequests = await _pump(
+      tester,
+      travelerBidsState: loaded(const []),
+    );
+
+    verify(() => packageRequests.add(const RefreshMyRequests())).called(1);
   });
 
   testWidgets('le badge « à traiter » s\'affiche sur Reçues', (tester) async {

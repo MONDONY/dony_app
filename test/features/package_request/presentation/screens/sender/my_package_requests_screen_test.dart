@@ -302,6 +302,59 @@ void main() {
       },
     );
 
+    testWidgets('affiche le chip Brouillons si une demande draft existe', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [
+            dakarRequest,
+            _request(arrivalCity: 'Bamako', status: PackageRequestStatus.draft),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Brouillons (1)'), findsOneWidget);
+      await tester.tap(find.text('Brouillons (1)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Paris → Bamako'), findsOneWidget);
+      expect(find.text('BROUILLON'), findsOneWidget);
+      expect(find.text('Paris → Dakar'), findsNothing);
+    });
+
+    testWidgets('masque le chip Brouillons quand aucun draft', (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Brouillons'), findsNothing);
+    });
+
+    testWidgets('trie les brouillons avant les demandes ouvertes', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [
+            dakarRequest,
+            _request(arrivalCity: 'Bamako', status: PackageRequestStatus.draft),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      final draftTop = tester.getTopLeft(find.text('Paris → Bamako')).dy;
+      final openTop = tester.getTopLeft(find.text('Paris → Dakar')).dy;
+      expect(draftTop, lessThan(openTop));
+    });
+
     testWidgets(
       'recherche sans correspondance affiche l\'état vide de recherche',
       (tester) async {

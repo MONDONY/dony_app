@@ -138,10 +138,8 @@ void main() {
     );
 
     testWidgets(
-      'prix ferme sans montant : publication bloquée, et annoncée comme telle',
+      'budget indicatif sans montant : publication bloquée, et annoncée comme telle',
       (tester) async {
-        // Le budget était annoncé « optionnel » puis refusé au clic sur
-        // « Publier ». La règle est maintenant portée par le choix.
         final canContinue = ValueNotifier<bool>(true);
         addTearDown(canContinue.dispose);
 
@@ -150,15 +148,57 @@ void main() {
         );
         await tester.pump();
 
-        // Par défaut « J'ouvre aux offres » : rien n'est requis.
-        expect(canContinue.value, isTrue);
-        expect(find.text('Budget indicatif (optionnel)'), findsOneWidget);
+        expect(canContinue.value, isFalse);
+        expect(find.text('Budget indicatif'), findsOneWidget);
+        expect(find.text('Budget indicatif (optionnel)'), findsNothing);
+        expect(find.byKey(const Key('budget-error')), findsOneWidget);
+      },
+    );
 
-        await tester.tap(find.byKey(const Key('price-mode-fixed')));
+    testWidgets('budget indicatif saisi : le bouton se dégrise', (
+      tester,
+    ) async {
+      // Régression : le bouton restait grisé après saisie du budget car
+      // canContinueNotifier n'était resynchronisé qu'au toggle de mode,
+      // jamais à la frappe dans le champ.
+      final canContinue = ValueNotifier<bool>(true);
+      addTearDown(canContinue.dispose);
+
+      await tester.pumpWidget(
+        wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+      );
+      await tester.pump();
+
+      expect(canContinue.value, isFalse);
+
+      await tester.enterText(find.byType(TextFormField).first, '32');
+      await tester.pumpAndSettle();
+
+      expect(canContinue.value, isTrue);
+    });
+
+    testWidgets(
+      'budget tapé puis effacé : le bouton se regrise et l\'erreur revient',
+      (tester) async {
+        // Régression : effacer le budget ne remettait pas totalBudgetEur à
+        // null côté bloc (copyWith `??`), donc le bouton restait actif et
+        // l'erreur restait masquée malgré un champ visuellement vide.
+        final canContinue = ValueNotifier<bool>(true);
+        addTearDown(canContinue.dispose);
+
+        await tester.pumpWidget(
+          wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+        );
+        await tester.pump();
+
+        await tester.enterText(find.byType(TextFormField).first, '40');
+        await tester.pumpAndSettle();
+        expect(canContinue.value, isTrue);
+
+        await tester.enterText(find.byType(TextFormField).first, '');
         await tester.pumpAndSettle();
 
         expect(canContinue.value, isFalse);
-        expect(find.text('Ton prix'), findsOneWidget);
         expect(find.byKey(const Key('budget-error')), findsOneWidget);
       },
     );
@@ -171,6 +211,5 @@ void main() {
         findsOneWidget,
       );
     });
-
   });
 }

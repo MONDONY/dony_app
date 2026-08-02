@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/error/app_exception.dart';
 import '../../../core/services/analytics_events.dart';
 import '../../../core/services/analytics_service.dart';
 import '../data/models/package_request.dart';
@@ -36,7 +37,12 @@ class PackageRequestFormBloc
     );
     on<PackageRequestPaymentMethodToggled>(_onPaymentMethodToggled);
     on<PackageRequestTotalBudgetChanged>(
-      (e, emit) => emit(state.copyWith(totalBudgetEur: e.value)),
+      (e, emit) => emit(
+        state.copyWith(
+          totalBudgetEur: e.value,
+          clearTotalBudgetEur: e.value == null,
+        ),
+      ),
     );
   }
 
@@ -107,17 +113,34 @@ class PackageRequestFormBloc
     FormStep3Submitted e,
     Emitter<PackageRequestFormState> emit,
   ) async {
+    final totalBudgetEur = state.totalBudgetEur ?? e.targetPriceEur;
+    if (totalBudgetEur == null) {
+      emit(
+        state.copyWith(
+          submissionStatus: FormSubmissionStatus.error,
+          errorMessage: 'Indique un budget pour continuer',
+          clearDraftLimitMessage: true,
+        ),
+      );
+      return;
+    }
+
     emit(
       state.copyWith(
         submissionStatus: FormSubmissionStatus.submitting,
-        targetPriceEur: e.targetPriceEur,
+        targetPriceEur: totalBudgetEur,
         pickupNeighborhood: e.pickupNeighborhood,
         deliveryNeighborhood: e.deliveryNeighborhood,
+        // Chaque nouvelle tentative repart d'un message de limite propre :
+        // sinon un draftLimitMessage périmé d'une tentative précédente peut
+        // survivre à côté d'un nouvel errorMessage générique posé par le
+        // catch ci-dessous.
+        clearDraftLimitMessage: true,
       ),
     );
     try {
       final editingId = state.editingRequestId;
-      final PackageRequest saved;
+      PackageRequest saved;
       if (editingId != null) {
         saved = await _repository.update(
           editingId,
@@ -131,7 +154,7 @@ class PackageRequestFormBloc
           transportMode: state.transportMode!,
           negotiable: state.negotiable,
           acceptedPaymentMethods: state.acceptedPaymentMethods,
-          totalBudgetEur: state.totalBudgetEur ?? e.targetPriceEur,
+          totalBudgetEur: totalBudgetEur,
           description: state.description,
           // null → conserver les photos existantes ; liste → remplacer l'ensemble.
           photoKeys: e.photoKeys,
@@ -150,7 +173,7 @@ class PackageRequestFormBloc
           transportMode: state.transportMode!,
           negotiable: state.negotiable,
           acceptedPaymentMethods: state.acceptedPaymentMethods,
-          totalBudgetEur: state.totalBudgetEur ?? e.targetPriceEur,
+          totalBudgetEur: totalBudgetEur,
           description: state.description,
           photoKeys: e.photoKeys,
           // Lu depuis l'etat, pas depuis l'event : le lieu de remise est saisi
@@ -159,7 +182,11 @@ class PackageRequestFormBloc
           // au chemin edition juste au-dessus.
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
+          saveAsDraft: e.saveAsDraft,
         );
+      }
+      if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {
+        saved = await _repository.publish(saved.id);
       }
       emit(
         state.copyWith(
@@ -182,12 +209,22 @@ class PackageRequestFormBloc
         ),
       );
     } catch (err) {
-      emit(
-        state.copyWith(
-          submissionStatus: FormSubmissionStatus.error,
-          errorMessage: err.toString(),
-        ),
-      );
+      final error = unwrapDioError(err);
+      if (error is ForbiddenException && error.code == 'draft-limit-reached') {
+        emit(
+          state.copyWith(
+            submissionStatus: FormSubmissionStatus.error,
+            draftLimitMessage: error.message,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            submissionStatus: FormSubmissionStatus.error,
+            errorMessage: error.message,
+          ),
+        );
+      }
     }
   }
 
