@@ -76,7 +76,7 @@ class _StaticHelpCenterSource implements HelpCenterConfigSource {
 
 late List<String> visited;
 
-Future<void> _pump(
+Future<_MockPackageRequestBloc> _pump(
   WidgetTester tester, {
   required TravelerBidsState travelerBidsState,
 }) async {
@@ -135,6 +135,7 @@ Future<void> _pump(
   // Draine les timers d'animation (flutter_animate dans l'empty state / les
   // cartes) : sans ça le binding échoue sur un timer encore en vol.
   await tester.pump(const Duration(seconds: 1));
+  return packageRequests;
 }
 
 void main() {
@@ -166,6 +167,15 @@ void main() {
 
     expect(find.text('Reçues'), findsOneWidget);
     expect(find.text('Envoyées'), findsOneWidget);
+  });
+
+  testWidgets('rafraîchit le badge Envoyées dès l’ouverture', (tester) async {
+    final packageRequests = await _pump(
+      tester,
+      travelerBidsState: loaded(const []),
+    );
+
+    verify(() => packageRequests.add(const RefreshMyRequests())).called(1);
   });
 
   testWidgets('le badge « à traiter » s\'affiche sur Reçues', (tester) async {

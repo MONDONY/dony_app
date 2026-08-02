@@ -87,15 +87,13 @@ class _DemandesView extends StatefulWidget {
 class _DemandesViewState extends State<_DemandesView> {
   DemandesTab _tab = DemandesTab.recues;
 
-  /// Le volet « Envoyées » est chargé à sa première ouverture : un utilisateur
-  /// qui reste sur « Reçues » ne paie pas la requête.
-  bool _envoyeesLoaded = false;
+  @override
+  void initState() {
+    super.initState();
+    context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+  }
 
   void _selectTab(DemandesTab tab) {
-    if (tab == DemandesTab.envoyees && !_envoyeesLoaded) {
-      _envoyeesLoaded = true;
-      context.read<PackageRequestBloc>().add(const FetchMyRequests());
-    }
     setState(() => _tab = tab);
   }
 
