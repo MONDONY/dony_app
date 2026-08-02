@@ -117,6 +117,11 @@ class PackageRequestFormBloc
         targetPriceEur: e.targetPriceEur,
         pickupNeighborhood: e.pickupNeighborhood,
         deliveryNeighborhood: e.deliveryNeighborhood,
+        // Chaque nouvelle tentative repart d'un message de limite propre :
+        // sinon un draftLimitMessage périmé d'une tentative précédente peut
+        // survivre à côté d'un nouvel errorMessage générique posé par le
+        // catch ci-dessous.
+        clearDraftLimitMessage: true,
       ),
     );
     try {

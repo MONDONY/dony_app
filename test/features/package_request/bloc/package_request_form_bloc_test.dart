@@ -341,6 +341,62 @@ void main() {
     ],
   );
 
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    // Régression : une tentative précédente ayant buté sur draft-limit-reached
+    // laissait draftLimitMessage figé sur son ancien message ; une nouvelle
+    // tentative échouant pour une raison différente (générique) devait quand
+    // même en repartir propre, sans quoi les deux messages coexistent avec
+    // des valeurs contradictoires dans le même state.
+    'new submission after a previous draft-limit error clears the stale draftLimitMessage',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenThrow(Exception('boom'));
+      return makeBloc(repo);
+    },
+    // État déjà porteur d'un draftLimitMessage périmé, comme après un 1er
+    // échec draft-limit-reached lors d'une tentative précédente.
+    seed: () => draftValidSeed.copyWith(
+      submissionStatus: FormSubmissionStatus.error,
+      draftLimitMessage: 'Limite de 1 brouillon(s) atteinte.',
+    ),
+    act: (b) => b.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.submitting,
+          )
+          .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.error,
+          )
+          .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull)
+          .having((s) => s.errorMessage, 'errorMessage', isNotNull),
+    ],
+  );
+
   // ── Mode édition ────────────────────────────────────────────────────────────
   final editRequest = PackageRequest(
     id: 'r-edit',
