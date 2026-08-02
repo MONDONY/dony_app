@@ -20,6 +20,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
@@ -62,6 +63,7 @@ class DemandesScreen extends StatelessWidget {
         // Singleton partagé : le volet « Envoyées » déclenche son propre
         // chargement quand il est réellement affiché.
         BlocProvider.value(value: getIt<PackageRequestBloc>()),
+        BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
       child: const _DemandesView(),
     );
@@ -91,6 +93,9 @@ class _DemandesViewState extends State<_DemandesView> {
   void initState() {
     super.initState();
     context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+    context.read<NegotiationListBloc>().add(
+      const NegotiationListRefreshRequested(),
+    );
   }
 
   void _selectTab(DemandesTab tab) {
@@ -137,16 +142,21 @@ class _DemandesViewState extends State<_DemandesView> {
                 // négociation : une discussion de prix attend l'expéditeur.
                 return BlocBuilder<PackageRequestBloc, PackageRequestState>(
                   builder: (context, prState) {
-                    final negotiating = prState.requests
-                        .where(
-                          (r) => r.status == PackageRequestStatus.negotiating,
-                        )
-                        .length;
-                    return _RoleSegmented(
-                      selected: _tab,
-                      recuesBadge: pending,
-                      envoyeesBadge: negotiating,
-                      onSelect: _selectTab,
+                    final requestIds = prState.requests
+                        .map((request) => request.id)
+                        .toSet();
+                    return BlocBuilder<
+                      NegotiationListBloc,
+                      NegotiationListState
+                    >(
+                      builder: (context, negotiationState) => _RoleSegmented(
+                        selected: _tab,
+                        recuesBadge: pending,
+                        envoyeesBadge: negotiationState.unreadCountForRequests(
+                          requestIds,
+                        ),
+                        onSelect: _selectTab,
+                      ),
                     );
                   },
                 );

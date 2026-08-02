@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -38,6 +39,10 @@ class _MockBidAcceptanceBloc
 class _MockPackageRequestBloc
     extends MockBloc<PackageRequestEvent, PackageRequestState>
     implements PackageRequestBloc {}
+
+class _MockNegotiationListBloc
+    extends MockBloc<NegotiationListEvent, NegotiationListState>
+    implements NegotiationListBloc {}
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
@@ -94,6 +99,8 @@ Future<_MockPackageRequestBloc> _pump(
   when(() => acceptance.state).thenReturn(acs.BidAcceptanceInitial());
   final packageRequests = _MockPackageRequestBloc();
   when(() => packageRequests.state).thenReturn(PackageRequestState());
+  final negotiations = _MockNegotiationListBloc();
+  when(() => negotiations.state).thenReturn(NegotiationListState());
 
   final router = GoRouter(
     initialLocation: '/',
@@ -106,6 +113,7 @@ Future<_MockPackageRequestBloc> _pump(
             BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<BidAcceptanceBloc>.value(value: acceptance),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
+            BlocProvider<NegotiationListBloc>.value(value: negotiations),
             BlocProvider<HelpCenterBloc>(
               create: (_) => HelpCenterBloc(
                 HelpCenterRepository(

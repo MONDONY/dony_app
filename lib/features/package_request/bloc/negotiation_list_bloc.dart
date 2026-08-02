@@ -56,6 +56,13 @@ class NegotiationListState extends Equatable {
   int get actionableCount =>
       threads.where((t) => t.status.isActive && t.isMyTurn).length;
 
+  int unreadCountForRequests(Set<String> requestIds) => threads
+      .where(
+        (thread) =>
+            requestIds.contains(thread.packageRequestId) && thread.hasUnread,
+      )
+      .length;
+
   NegotiationListState copyWith({
     NegotiationListStatus? status,
     List<NegotiationThread>? threads,

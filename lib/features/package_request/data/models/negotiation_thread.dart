@@ -64,6 +64,7 @@ class NegotiationThread extends Equatable {
     this.cashCommissionAvailable = true,
     this.availablePaymentMethods,
     this.canNudge = false,
+    this.hasUnread = false,
   });
 
   final String id;
@@ -120,6 +121,8 @@ class NegotiationThread extends Equatable {
   /// Vrai si l'utilisateur courant peut envoyer une relance (nudge) sur ce
   /// thread, calculé côté serveur.
   final bool canNudge;
+
+  final bool hasUnread;
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
@@ -183,6 +186,7 @@ class NegotiationThread extends Equatable {
               .toSet()
         : null,
     canNudge: json['canNudge'] as bool? ?? false,
+    hasUnread: json['hasUnread'] as bool? ?? false,
   );
 
   @override
@@ -221,5 +225,6 @@ class NegotiationThread extends Equatable {
     cashCommissionAvailable,
     availablePaymentMethods,
     canNudge,
+    hasUnread,
   ];
 }
