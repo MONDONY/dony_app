@@ -76,18 +76,29 @@ void main() {
     await tester.pumpWidget(wrap(fixtureRequest(status: PackageRequestStatus.negotiating)));
     expect(find.text('Publier'), findsNothing);
     expect(find.text('Dépublier'), findsNothing);
-    final tile = tester.widget<InkWell>(find.ancestor(
+    final editTile = tester.widget<InkWell>(find.ancestor(
       of: find.text('Modifier'),
       matching: find.byType(InkWell),
     ));
-    expect(tile.onTap, isNotNull);
+    expect(editTile.onTap, isNotNull);
+    final cancelTile = tester.widget<InkWell>(find.ancestor(
+      of: find.text('Annuler'),
+      matching: find.byType(InkWell),
+    ));
+    expect(cancelTile.onTap, isNotNull);
   });
 
-  testWidgets('acceptée : ni Publier, ni Dépublier, ni Annuler', (tester) async {
+  testWidgets('acceptée : ni Publier, ni Dépublier, ni Annuler, Modifier grisé',
+      (tester) async {
     await tester.pumpWidget(wrap(fixtureRequest(status: PackageRequestStatus.accepted)));
     expect(find.text('Publier'), findsNothing);
     expect(find.text('Dépublier'), findsNothing);
     expect(find.text('Annuler'), findsNothing);
+    final editTile = tester.widget<InkWell>(find.ancestor(
+      of: find.text('Modifier'),
+      matching: find.byType(InkWell),
+    ));
+    expect(editTile.onTap, isNull);
   });
 
   testWidgets('tap sur Publier appelle onPublish', (tester) async {
