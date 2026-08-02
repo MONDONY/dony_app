@@ -166,7 +166,7 @@ void main() {
     );
 
     test(
-      'create() without saveAsDraft omits the field (comportement historique)',
+      'create() without saveAsDraft sends saveAsDraft:false in body',
       () async {
         Map<String, dynamic>? capturedBody;
         when(
@@ -194,7 +194,7 @@ void main() {
         );
 
         expect(capturedBody, isNotNull);
-        expect(capturedBody!.containsKey('saveAsDraft'), false);
+        expect(capturedBody!['saveAsDraft'], false);
       },
     );
   });
@@ -424,45 +424,48 @@ void main() {
 
       await repo.search(urgent: true);
 
-      final captured = verify(
-        () => mockDio.get<Map<String, dynamic>>(
-          '/package-requests',
-          queryParameters: captureAny(named: 'queryParameters'),
-        ),
-      ).captured.single as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockDio.get<Map<String, dynamic>>(
+                  '/package-requests',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
       expect(captured['urgent'], true);
     });
 
     test(
-        'omits urgent param when urgent is false or null (never sends urgent=false)',
-        () async {
-      when(
-        () => mockDio.get<Map<String, dynamic>>(
-          '/package-requests',
-          queryParameters: any(named: 'queryParameters'),
-        ),
-      ).thenAnswer(
-        (_) async => _ok({
-          'content': <dynamic>[],
-          'totalElements': 0,
-          'number': 0,
-          'size': 20,
-        }, '/package-requests'),
-      );
+      'omits urgent param when urgent is false or null (never sends urgent=false)',
+      () async {
+        when(
+          () => mockDio.get<Map<String, dynamic>>(
+            '/package-requests',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => _ok({
+            'content': <dynamic>[],
+            'totalElements': 0,
+            'number': 0,
+            'size': 20,
+          }, '/package-requests'),
+        );
 
-      await repo.search(urgent: false);
-      await repo.search();
+        await repo.search(urgent: false);
+        await repo.search();
 
-      final calls = verify(
-        () => mockDio.get<Map<String, dynamic>>(
-          '/package-requests',
-          queryParameters: captureAny(named: 'queryParameters'),
-        ),
-      ).captured;
-      for (final c in calls) {
-        expect((c as Map<String, dynamic>).containsKey('urgent'), isFalse);
-      }
-    });
+        final calls = verify(
+          () => mockDio.get<Map<String, dynamic>>(
+            '/package-requests',
+            queryParameters: captureAny(named: 'queryParameters'),
+          ),
+        ).captured;
+        for (final c in calls) {
+          expect((c as Map<String, dynamic>).containsKey('urgent'), isFalse);
+        }
+      },
+    );
 
     test('envoie matchingMyTrips=true quand la pastille est active', () async {
       when(
@@ -481,48 +484,52 @@ void main() {
 
       await repo.search(matchingMyTrips: true);
 
-      final captured = verify(
-        () => mockDio.get<Map<String, dynamic>>(
-          '/package-requests',
-          queryParameters: captureAny(named: 'queryParameters'),
-        ),
-      ).captured.single as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockDio.get<Map<String, dynamic>>(
+                  '/package-requests',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
       expect(captured['matchingMyTrips'], true);
     });
 
     test(
-        'n\'envoie jamais matchingMyTrips=false : le paramètre est absent quand '
-        'la pastille est inactive', () async {
-      when(
-        () => mockDio.get<Map<String, dynamic>>(
-          '/package-requests',
-          queryParameters: any(named: 'queryParameters'),
-        ),
-      ).thenAnswer(
-        (_) async => _ok({
-          'content': <dynamic>[],
-          'totalElements': 0,
-          'number': 0,
-          'size': 20,
-        }, '/package-requests'),
-      );
-
-      await repo.search(matchingMyTrips: false);
-      await repo.search();
-
-      final calls = verify(
-        () => mockDio.get<Map<String, dynamic>>(
-          '/package-requests',
-          queryParameters: captureAny(named: 'queryParameters'),
-        ),
-      ).captured;
-      for (final c in calls) {
-        expect(
-          (c as Map<String, dynamic>).containsKey('matchingMyTrips'),
-          isFalse,
+      'n\'envoie jamais matchingMyTrips=false : le paramètre est absent quand '
+      'la pastille est inactive',
+      () async {
+        when(
+          () => mockDio.get<Map<String, dynamic>>(
+            '/package-requests',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => _ok({
+            'content': <dynamic>[],
+            'totalElements': 0,
+            'number': 0,
+            'size': 20,
+          }, '/package-requests'),
         );
-      }
-    });
+
+        await repo.search(matchingMyTrips: false);
+        await repo.search();
+
+        final calls = verify(
+          () => mockDio.get<Map<String, dynamic>>(
+            '/package-requests',
+            queryParameters: captureAny(named: 'queryParameters'),
+          ),
+        ).captured;
+        for (final c in calls) {
+          expect(
+            (c as Map<String, dynamic>).containsKey('matchingMyTrips'),
+            isFalse,
+          );
+        }
+      },
+    );
   });
 
   group('photoKeys', () {

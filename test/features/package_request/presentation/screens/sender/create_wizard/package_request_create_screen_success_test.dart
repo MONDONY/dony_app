@@ -391,6 +391,27 @@ void main() {
         saveAsDraft: saveAsDraft,
       );
 
+  List<dynamic> captureSaveAsDraftCalls() => verify(
+    () => repo.create(
+      departureCity: any(named: 'departureCity'),
+      arrivalCity: any(named: 'arrivalCity'),
+      desiredDate: any(named: 'desiredDate'),
+      dateToleranceDays: any(named: 'dateToleranceDays'),
+      weightKg: any(named: 'weightKg'),
+      parcelSize: any(named: 'parcelSize'),
+      transportMode: any(named: 'transportMode'),
+      categories: any(named: 'categories'),
+      negotiable: any(named: 'negotiable'),
+      acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+      totalBudgetEur: any(named: 'totalBudgetEur'),
+      description: any(named: 'description'),
+      photoKeys: any(named: 'photoKeys'),
+      pickupNeighborhood: any(named: 'pickupNeighborhood'),
+      deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+      saveAsDraft: captureAny(named: 'saveAsDraft'),
+    ),
+  ).captured;
+
   testWidgets('carte tutoriel contextuelle affichée avant la première étape et '
       'navigue vers le tutoriel au tap', (tester) async {
     await tester.pumpWidget(
@@ -545,7 +566,7 @@ void main() {
       await tester.tap(find.byKey(const Key('preview-publish')));
       await tester.pumpAndSettle();
 
-      verify(createCall(saveAsDraft: false)).called(1);
+      expect(captureSaveAsDraftCalls(), [false]);
       verifyNever(createCall(saveAsDraft: true));
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
@@ -564,7 +585,7 @@ void main() {
     await tester.tap(find.byKey(const Key('preview-save-draft')));
     await tester.pumpAndSettle();
 
-    verify(createCall(saveAsDraft: true)).called(1);
+    expect(captureSaveAsDraftCalls(), [true]);
     verifyNever(createCall(saveAsDraft: false));
 
     expect(find.byType(DonySuccessScreen), findsOneWidget);

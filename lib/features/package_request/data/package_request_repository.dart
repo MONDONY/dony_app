@@ -143,7 +143,7 @@ class PackageRequestRepository {
         if (deliveryNeighborhood != null)
           'deliveryNeighborhood': deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
-        if (saveAsDraft) 'saveAsDraft': true,
+        'saveAsDraft': saveAsDraft,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -285,8 +285,9 @@ class PackageRequestRepository {
   /// Demandes colis scorées pour les trajets actifs du voyageur connecté.
   /// Déjà triées par matchScore décroissant côté serveur.
   Future<List<MatchingRequestModel>> findMatchingRequests() async {
-    final response = await _apiClient.dio
-        .get<List<dynamic>>('/travelers/me/matching-requests');
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/travelers/me/matching-requests',
+    );
     return (response.data ?? <dynamic>[])
         .map((e) => MatchingRequestModel.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -295,8 +296,9 @@ class PackageRequestRepository {
   /// État du toggle « notifier quand un colis matche un de mes trajets »
   /// (cloche de l'écran « Colis sur mes trajets »). Défaut serveur = activé.
   Future<bool> getPackageMatchAlert() async {
-    final response = await _apiClient.dio
-        .get<Map<String, dynamic>>('/notifications/package-match-alert');
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/notifications/package-match-alert',
+    );
     return (response.data?['enabled'] as bool?) ?? true;
   }
 
