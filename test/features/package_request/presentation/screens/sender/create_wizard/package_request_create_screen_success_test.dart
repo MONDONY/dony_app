@@ -363,7 +363,8 @@ void main() {
           parcelSize: ParcelSize.medium,
           categories: ['Vêtements'],
         ),
-      );
+      )
+      ..add(const PackageRequestTotalBudgetChanged(25));
     await tester.pumpAndSettle();
   }
 

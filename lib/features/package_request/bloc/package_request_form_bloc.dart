@@ -37,10 +37,12 @@ class PackageRequestFormBloc
     );
     on<PackageRequestPaymentMethodToggled>(_onPaymentMethodToggled);
     on<PackageRequestTotalBudgetChanged>(
-      (e, emit) => emit(state.copyWith(
-        totalBudgetEur: e.value,
-        clearTotalBudgetEur: e.value == null,
-      )),
+      (e, emit) => emit(
+        state.copyWith(
+          totalBudgetEur: e.value,
+          clearTotalBudgetEur: e.value == null,
+        ),
+      ),
     );
   }
 
@@ -111,10 +113,22 @@ class PackageRequestFormBloc
     FormStep3Submitted e,
     Emitter<PackageRequestFormState> emit,
   ) async {
+    final totalBudgetEur = state.totalBudgetEur ?? e.targetPriceEur;
+    if (totalBudgetEur == null) {
+      emit(
+        state.copyWith(
+          submissionStatus: FormSubmissionStatus.error,
+          errorMessage: 'Indique un budget pour continuer',
+          clearDraftLimitMessage: true,
+        ),
+      );
+      return;
+    }
+
     emit(
       state.copyWith(
         submissionStatus: FormSubmissionStatus.submitting,
-        targetPriceEur: e.targetPriceEur,
+        targetPriceEur: totalBudgetEur,
         pickupNeighborhood: e.pickupNeighborhood,
         deliveryNeighborhood: e.deliveryNeighborhood,
         // Chaque nouvelle tentative repart d'un message de limite propre :
@@ -140,7 +154,7 @@ class PackageRequestFormBloc
           transportMode: state.transportMode!,
           negotiable: state.negotiable,
           acceptedPaymentMethods: state.acceptedPaymentMethods,
-          totalBudgetEur: state.totalBudgetEur ?? e.targetPriceEur,
+          totalBudgetEur: totalBudgetEur,
           description: state.description,
           // null → conserver les photos existantes ; liste → remplacer l'ensemble.
           photoKeys: e.photoKeys,
@@ -159,7 +173,7 @@ class PackageRequestFormBloc
           transportMode: state.transportMode!,
           negotiable: state.negotiable,
           acceptedPaymentMethods: state.acceptedPaymentMethods,
-          totalBudgetEur: state.totalBudgetEur ?? e.targetPriceEur,
+          totalBudgetEur: totalBudgetEur,
           description: state.description,
           photoKeys: e.photoKeys,
           // Lu depuis l'etat, pas depuis l'event : le lieu de remise est saisi

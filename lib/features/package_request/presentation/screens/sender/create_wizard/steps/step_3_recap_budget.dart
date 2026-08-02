@@ -13,9 +13,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Étape 3 / 3 — Budget & photo (match maquette `v3/expéditeur_publie`).
 ///
-/// Layout : titre "Budget & photo" · récap (beige) · photo (optionnelle) ·
-/// budget total · aperçu net voyageur · toggle négociable ·
-/// modes de paiement · mention CGU au-dessus du CTA.
+/// Layout : titre "Budget" · récap · choix du mode de prix · budget requis ·
+/// aperçu net voyageur · modes de paiement · mention CGU au-dessus du CTA.
 class Step3RecapBudget extends StatefulWidget {
   const Step3RecapBudget({super.key, this.canContinueNotifier});
 
@@ -36,22 +35,19 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     // Pré-remplissage (édition / retour à l'étape) du budget brut depuis l'état.
     final b = context.read<PackageRequestFormBloc>().state.totalBudgetEur;
     if (b != null) {
-      _budgetCtrl.text =
-          b == b.roundToDouble() ? b.toInt().toString() : b.toStringAsFixed(2);
+      _budgetCtrl.text = b == b.roundToDouble()
+          ? b.toInt().toString()
+          : b.toStringAsFixed(2);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _sync();
     });
   }
 
-  /// Le budget n'est requis que si l'expéditeur a choisi un prix ferme.
-  /// La règle est portée par le choix lui-même, donc le bouton peut la
-  /// refléter au lieu de la révéler après le clic.
   void _sync() {
     if (!mounted) return;
     final s = context.read<PackageRequestFormBloc>().state;
-    widget.canContinueNotifier?.value =
-        s.negotiable || s.totalBudgetEur != null;
+    widget.canContinueNotifier?.value = s.totalBudgetEur != null;
   }
 
   @override
@@ -64,25 +60,20 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    // Prix ferme (non négociable) → un budget est obligatoire. Cette garde était
-    // portée par le bouton inline (désormais retiré) ; la CTA sticky du wizard ne
-    // la vérifie pas, donc on la rejoue ici.
-    // Le budget n'est obligatoire qu'en prix ferme publié ; un brouillon
-    // peut être enregistré sans prix, il sera exigé à la publication.
     final state = context.read<PackageRequestFormBloc>().state;
-    if (!saveAsDraft && !state.negotiable && state.totalBudgetEur == null) {
-      // Backstop : le bouton « Publier » est déjà grisé dans ce cas.
+    if (state.totalBudgetEur == null) {
+      // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas.
       _sync();
       return;
     }
     final photosCubit = context.read<PackageRequestPhotosCubit>();
     context.read<PackageRequestFormBloc>().add(
-          FormStep3Submitted(
-            // touched=false (aucune photo manipulée) → null = conserver en édition.
-            photoKeys: photosCubit.touched ? photosCubit.readyKeys : null,
-            saveAsDraft: saveAsDraft,
-          ),
-        );
+      FormStep3Submitted(
+        // touched=false (aucune photo manipulée) → null = conserver en édition.
+        photoKeys: photosCubit.touched ? photosCubit.readyKeys : null,
+        saveAsDraft: saveAsDraft,
+      ),
+    );
   }
 
   @override
@@ -118,7 +109,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Vérifie ta demande, puis choisis comment fixer le prix.',
+                  'Vérifie ta demande, puis indique le budget à montrer aux voyageurs.',
                   style: tt.bodyMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.4,
@@ -140,35 +131,32 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 _PriceModeChoice(
                   negotiable: state.negotiable,
                   onChanged: (v) {
-                    context
-                        .read<PackageRequestFormBloc>()
-                        .add(PackageRequestNegotiableToggled(v));
-                    WidgetsBinding.instance
-                        .addPostFrameCallback((_) => _sync());
+                    context.read<PackageRequestFormBloc>().add(
+                      PackageRequestNegotiableToggled(v),
+                    );
+                    WidgetsBinding.instance.addPostFrameCallback(
+                      (_) => _sync(),
+                    );
                   },
                 ),
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Budget ─────────────────────────────────────────────────
-                _FieldLabel(
-                  state.negotiable
-                      ? 'Budget indicatif (optionnel)'
-                      : 'Ton prix',
-                ),
+                _FieldLabel(state.negotiable ? 'Budget indicatif' : 'Ton prix'),
                 const SizedBox(height: DonySpacing.xs),
                 _BudgetTotalInput(controller: _budgetCtrl),
                 Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
                   child: Text(
                     state.negotiable
-                        ? 'Donner un ordre d\'idée attire plus d\'offres, sans t\'engager.'
+                        ? 'Donne un ordre d\'idée pour attirer plus d\'offres, sans t\'engager.'
                         : 'Les voyageurs verront ce montant et pourront l\'accepter tel quel.',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
                 DonyFieldError(
-                  message: (!state.negotiable && state.totalBudgetEur == null)
-                      ? 'Indique ton prix pour pouvoir publier'
+                  message: state.totalBudgetEur == null
+                      ? 'Indique un budget pour continuer'
                       : null,
                   textKey: const Key('budget-error'),
                 ),
@@ -183,9 +171,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 // ── Modes de paiement ──────────────────────────────────────
                 const _FieldLabel('Paiement accepté'),
                 const SizedBox(height: DonySpacing.sm),
-                _PaymentMethodChips(
-                  selected: state.acceptedPaymentMethods,
-                ),
+                _PaymentMethodChips(selected: state.acceptedPaymentMethods),
                 const SizedBox(height: DonySpacing.base),
 
                 // L'écran s'arrêtait sur la mention CGU, qui répond à une
@@ -237,10 +223,10 @@ class _FieldLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 14,
-          ),
+        fontWeight: FontWeight.w700,
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 14,
+      ),
     );
   }
 }
@@ -259,9 +245,7 @@ class _BudgetTotalInput extends StatelessWidget {
       key: const Key('total-budget-input'),
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
-      ],
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 22,
@@ -301,12 +285,12 @@ class _BudgetTotalInput extends StatelessWidget {
       onChanged: (text) {
         final value = double.tryParse(text.replaceAll(',', '.'));
         context.read<PackageRequestFormBloc>().add(
-              PackageRequestTotalBudgetChanged(value),
-            );
+          PackageRequestTotalBudgetChanged(value),
+        );
       },
       validator: (v) {
         if (v == null || v.trim().isEmpty) {
-          return null;
+          return 'Indique un budget';
         }
         final d = double.tryParse(v.replaceAll(',', '.'));
         if (d == null || d < 0 || d > 500) {
@@ -359,7 +343,6 @@ class _NetPreview extends StatelessWidget {
 
 // ─── Negotiable toggle ────────────────────────────────────────────────────────
 
-
 // ─── Payment method chips ─────────────────────────────────────────────────────
 
 class _PaymentMethodChips extends StatelessWidget {
@@ -385,8 +368,8 @@ class _PaymentMethodChips extends StatelessWidget {
         return GestureDetector(
           onTap: () {
             context.read<PackageRequestFormBloc>().add(
-                  PackageRequestPaymentMethodToggled(method),
-                );
+              PackageRequestPaymentMethodToggled(method),
+            );
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),

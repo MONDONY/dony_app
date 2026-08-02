@@ -179,6 +179,7 @@ void main() {
     weightKg: 5,
     parcelSize: ParcelSize.small,
     categories: const ['Vêtements'],
+    totalBudgetEur: 25,
   );
 
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
@@ -282,6 +283,49 @@ void main() {
         ),
       ).captured;
       expect(captured.single, isFalse);
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'FormStep3Submitted sans budget ne crée pas la demande',
+    build: () => makeBloc(repo),
+    seed: () => draftValidSeed.copyWith(clearTotalBudgetEur: true),
+    act: (b) => b.add(const FormStep3Submitted(saveAsDraft: true)),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.error,
+          )
+          .having(
+            (s) => s.errorMessage,
+            'errorMessage',
+            'Indique un budget pour continuer',
+          )
+          .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull),
+    ],
+    verify: (_) {
+      verifyNever(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      );
     },
   );
 
@@ -566,8 +610,9 @@ void main() {
           categories: const ['Vêtements'],
         ),
       )
+      ..add(const PackageRequestTotalBudgetChanged(25))
       ..add(const FormStep3Submitted()),
-    skip: 3,
+    skip: 4,
     expect: () => [
       isA<PackageRequestFormState>().having(
         (s) => s.submissionStatus,
