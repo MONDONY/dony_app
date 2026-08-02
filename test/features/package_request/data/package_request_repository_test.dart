@@ -130,6 +130,115 @@ void main() {
     );
   });
 
+  group('saveAsDraft', () {
+    test(
+      'create() with saveAsDraft=true sends saveAsDraft:true in body',
+      () async {
+        Map<String, dynamic>? capturedBody;
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/package-requests',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedBody =
+              invocation.namedArguments[#data] as Map<String, dynamic>;
+          return _ok(_prJson, '/package-requests');
+        });
+
+        await repo.create(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          weightKg: 5.0,
+          parcelSize: ParcelSize.small,
+          transportMode: TransportMode.plane,
+          categories: const ['Vêtements'],
+          negotiable: true,
+          acceptedPaymentMethods: {PaymentMethod.stripe},
+          saveAsDraft: true,
+        );
+
+        expect(capturedBody, isNotNull);
+        expect(capturedBody!['saveAsDraft'], true);
+      },
+    );
+
+    test(
+      'create() without saveAsDraft omits the field (comportement historique)',
+      () async {
+        Map<String, dynamic>? capturedBody;
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/package-requests',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedBody =
+              invocation.namedArguments[#data] as Map<String, dynamic>;
+          return _ok(_prJson, '/package-requests');
+        });
+
+        await repo.create(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          weightKg: 5.0,
+          parcelSize: ParcelSize.small,
+          transportMode: TransportMode.plane,
+          categories: const ['Vêtements'],
+          negotiable: true,
+          acceptedPaymentMethods: {PaymentMethod.stripe},
+        );
+
+        expect(capturedBody, isNotNull);
+        expect(capturedBody!.containsKey('saveAsDraft'), false);
+      },
+    );
+  });
+
+  group('publish', () {
+    test(
+      'posts to /package-requests/{id}/publish and parses response',
+      () async {
+        final openJson = <String, dynamic>{..._prJson, 'status': 'OPEN'};
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/package-requests/pr-1/publish',
+          ),
+        ).thenAnswer(
+          (_) async => _ok(openJson, '/package-requests/pr-1/publish'),
+        );
+
+        final result = await repo.publish('pr-1');
+
+        expect(result.status, PackageRequestStatus.open);
+      },
+    );
+  });
+
+  group('unpublish', () {
+    test(
+      'posts to /package-requests/{id}/unpublish and parses response',
+      () async {
+        final draftJson = <String, dynamic>{..._prJson, 'status': 'DRAFT'};
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/package-requests/pr-1/unpublish',
+          ),
+        ).thenAnswer(
+          (_) async => _ok(draftJson, '/package-requests/pr-1/unpublish'),
+        );
+
+        final result = await repo.unpublish('pr-1');
+
+        expect(result.status, PackageRequestStatus.draft);
+      },
+    );
+  });
+
   group('findMine', () {
     test('GETs /package-requests/me and returns paginated results', () async {
       when(

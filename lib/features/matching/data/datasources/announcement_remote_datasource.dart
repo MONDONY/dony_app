@@ -72,6 +72,11 @@ class AnnouncementRemoteDatasource {
     return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<AnnouncementModel> unpublishAnnouncement(String id) async {
+    final response = await _apiClient.dio.post('/announcements/$id/unpublish');
+    return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<({List<AnnouncementModel> announcements, int totalElements})>
   getMyAnnouncements() async {
     const pageSize = 50;

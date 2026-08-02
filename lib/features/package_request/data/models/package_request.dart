@@ -5,6 +5,7 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
 
 enum PackageRequestStatus {
+  draft('DRAFT'),
   open('OPEN'),
   negotiating('NEGOTIATING'),
   accepted('ACCEPTED'),

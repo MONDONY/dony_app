@@ -237,6 +237,21 @@ void main() {
     });
   });
 
+  // ── unpublishAnnouncement ────────────────────────────────────────────────────
+
+  group('unpublishAnnouncement', () {
+    test('POSTs to /announcements/{id}/unpublish and returns AnnouncementModel',
+        () async {
+      when(() => mockDio.post('/announcements/ann-001/unpublish')).thenAnswer(
+          (_) async => _ok(_announcementJson, '/announcements/ann-001/unpublish'));
+
+      final result = await datasource.unpublishAnnouncement('ann-001');
+
+      expect(result.id, 'ann-001');
+      verify(() => mockDio.post('/announcements/ann-001/unpublish')).called(1);
+    });
+  });
+
   // ── searchAnnouncements ──────────────────────────────────────────────────────
 
   group('searchAnnouncements', () {

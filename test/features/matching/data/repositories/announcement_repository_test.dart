@@ -168,6 +168,17 @@ void main() {
     verify(() => mockDs.publishAnnouncement('a1')).called(1);
   });
 
+  test('unpublishAnnouncement délègue au datasource', () async {
+    final testAnnouncement = _ann();
+    when(() => mockDs.unpublishAnnouncement('a1'))
+        .thenAnswer((_) async => testAnnouncement);
+
+    final result = await repo.unpublishAnnouncement('a1');
+
+    expect(result, same(testAnnouncement));
+    verify(() => mockDs.unpublishAnnouncement('a1')).called(1);
+  });
+
   test('getMyAnnouncements delegates correctly', () async {
     when(() => mockDs.getMyAnnouncements())
         .thenAnswer((_) async => (announcements: [_ann()], totalElements: 1));
