@@ -3,7 +3,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-enum RequestQuickFilter { all, open, closed }
+enum RequestQuickFilter { all, open, closed, draft }
 
 class RequestFilterState extends Equatable {
   final String query;
@@ -46,6 +46,7 @@ bool requestMatchesPreset(PackageRequest r, RequestQuickFilter preset) =>
       RequestQuickFilter.closed =>
         r.status == PackageRequestStatus.expired ||
             r.status == PackageRequestStatus.cancelled,
+      RequestQuickFilter.draft => r.status == PackageRequestStatus.draft,
     };
 
 List<PackageRequest> applyRequestFilters(
