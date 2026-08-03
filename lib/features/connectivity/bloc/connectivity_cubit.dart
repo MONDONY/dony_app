@@ -34,10 +34,11 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
 
   Future<void> _init() async {
     final hasConnection = await _repository.hasConnection();
-    if (!hasConnection) {
-      emit(state.copyWith(status: ConnectivityStatus.offline));
-    } else {
+    if (hasConnection) {
       _ensureProbeInterval(healthyProbeInterval);
+    } else {
+      emit(state.copyWith(status: ConnectivityStatus.offline));
+      _ensureProbeInterval(degradedProbeInterval);
     }
     _connectivitySub =
         _repository.onHasConnectionChanged.listen(_onDeviceConnectivityChanged);
@@ -45,12 +46,12 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
 
   void _onDeviceConnectivityChanged(bool hasConnection) {
     if (!hasConnection) {
-      _cancelProbe();
       _reconnectedFlashTimer?.cancel();
       emit(state.copyWith(
         status: ConnectivityStatus.offline,
         justReconnected: false,
       ));
+      _ensureProbeInterval(degradedProbeInterval);
       return;
     }
     // Le device signale une connexion active — reste à vérifier qu'elle est
@@ -58,9 +59,34 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
     checkNow();
   }
 
-  /// Une itération de la sonde de réactivité API. Publique : appelée par le
-  /// Timer interne comme par les tests.
+  /// Une itération de la sonde : re-vérifie la connectivité device PUIS la
+  /// réactivité API. Publique : appelée par le Timer interne comme par les
+  /// tests.
+  ///
+  /// Re-vérifier la connectivité device ici (et pas seulement réagir au
+  /// stream [onHasConnectionChanged]) est nécessaire : `connectivity_plus`
+  /// ne pousse un événement qu'au moment d'un changement réel, jamais pour
+  /// confirmer l'état courant. Si le tout premier appel de [_init] tombe sur
+  /// un faux négatif (race connue au cold-start Android — l'OS n'a pas
+  /// encore fini de résoudre l'état réseau), et que la connexion ne change
+  /// plus jamais après, le bandeau restait bloqué en offline pour toujours
+  /// puisque plus aucun événement ne survient pour le corriger. La sonde
+  /// périodique (déclenchée même en offline, cf. [_ensureProbeInterval]
+  /// appelé ci-dessous) rejoue ce même check toutes les [degradedProbeInterval]
+  /// et se corrige donc d'elle-même.
   Future<void> checkNow() async {
+    final hasConnection = await _repository.hasConnection();
+    if (!hasConnection) {
+      if (state.status != ConnectivityStatus.offline) {
+        emit(state.copyWith(
+          status: ConnectivityStatus.offline,
+          justReconnected: false,
+        ));
+      }
+      _ensureProbeInterval(degradedProbeInterval);
+      return;
+    }
+
     final responsive = await _repository.isApiResponsive();
 
     if (responsive) {
@@ -101,12 +127,6 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
     _currentProbeInterval = interval;
     _probeTimer?.cancel();
     _probeTimer = Timer.periodic(interval, (_) => checkNow());
-  }
-
-  void _cancelProbe() {
-    _probeTimer?.cancel();
-    _probeTimer = null;
-    _currentProbeInterval = null;
   }
 
   @override
