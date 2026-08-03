@@ -469,9 +469,9 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
             return NavigationDecision.prevent;
           }
           // Return/refresh URL Stripe : matché par le path pour couvrir tous
-          // les hôtes réels (dony.store, api-staging.dony.store/api/v1/…,
-          // legacy dony.app) — un startsWith sur un seul domaine ratait
-          // l'interception et laissait la webview charger une page morte.
+          // les hôtes réels (yadony.com, api-staging.yadony.com/api/v1/…,
+          // legacy dony.store/dony.app) — un startsWith sur un seul domaine
+          // ratait l'interception et laissait la webview charger une page morte.
           final path = uri.path;
           if (path.endsWith('/payments/onboarding/return') ||
               path.endsWith('/payments/onboarding/refresh')) {

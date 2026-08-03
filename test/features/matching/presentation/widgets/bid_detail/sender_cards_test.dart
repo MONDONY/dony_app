@@ -515,18 +515,18 @@ void main() {
 
   // ── trackingPublicUrl ─────────────────────────────────────────────────────
   group('trackingPublicUrl', () {
-    test('returns default base https://track.dony.store with token appended', () {
+    test('returns default base https://track.yadony.com with token appended', () {
       // TRACKING_PUBLIC_URL env var not set in test → default value used.
       expect(
         trackingPublicUrl('abc-token-123'),
-        equals('https://track.dony.store/abc-token-123'),
+        equals('https://track.yadony.com/abc-token-123'),
       );
     });
 
     test('token with slashes is preserved as-is', () {
       expect(
         trackingPublicUrl('tok/2026/xyz'),
-        equals('https://track.dony.store/tok/2026/xyz'),
+        equals('https://track.yadony.com/tok/2026/xyz'),
       );
     });
   });
