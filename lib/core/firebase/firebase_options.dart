@@ -1,10 +1,18 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
+
+const _projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+const _messagingSenderId = String.fromEnvironment(
+  'FIREBASE_MESSAGING_SENDER_ID',
+);
+const _storageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+const _androidApiKey = String.fromEnvironment('FIREBASE_ANDROID_API_KEY');
+const _androidAppId = String.fromEnvironment('FIREBASE_ANDROID_APP_ID');
+const _iosApiKey = String.fromEnvironment('FIREBASE_IOS_API_KEY');
+const _iosAppId = String.fromEnvironment('FIREBASE_IOS_APP_ID');
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    if (kIsWeb) return web;
     return switch (defaultTargetPlatform) {
       TargetPlatform.android => android,
       TargetPlatform.iOS => ios,
@@ -14,29 +22,20 @@ class DefaultFirebaseOptions {
     };
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCqLzqpzH_MKjsplBie4Xdi0xSsTWtNB-k',
-    appId: '1:449263493159:web:5f905b06af4f322f086e02',
-    messagingSenderId: '449263493159',
-    projectId: 'dony-36cb2',
-    authDomain: 'dony-36cb2.firebaseapp.com',
-    storageBucket: 'dony-36cb2.firebasestorage.app',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCqLzqpzH_MKjsplBie4Xdi0xSsTWtNB-k',
-    appId: '1:449263493159:android:5f905b06af4f322f086e02',
-    messagingSenderId: '449263493159',
-    projectId: 'dony-36cb2',
-    storageBucket: 'dony-36cb2.firebasestorage.app',
+    apiKey: _androidApiKey,
+    appId: _androidAppId,
+    messagingSenderId: _messagingSenderId,
+    projectId: _projectId,
+    storageBucket: _storageBucket,
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDD5_F3BrPcYqo2G5xorNh26L1PePUoYoA',
-    appId: '1:449263493159:ios:8be187aef0c0f8b2086e02',
-    messagingSenderId: '449263493159',
-    projectId: 'dony-36cb2',
-    storageBucket: 'dony-36cb2.firebasestorage.app',
-    iosBundleId: 'com.dony.dony',
+    apiKey: _iosApiKey,
+    appId: _iosAppId,
+    messagingSenderId: _messagingSenderId,
+    projectId: _projectId,
+    storageBucket: _storageBucket,
+    iosBundleId: 'com.yadony.yadony',
   );
 }

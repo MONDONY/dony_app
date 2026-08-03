@@ -14,7 +14,7 @@ import 'package:share_plus/share_plus.dart';
 String trackingPublicUrl(String token) {
   const base = String.fromEnvironment(
     'TRACKING_PUBLIC_URL',
-    defaultValue: 'https://track.dony.store',
+    defaultValue: 'https://track.yadony.com',
   );
   return '$base/$token';
 }
