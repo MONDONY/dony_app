@@ -368,43 +368,54 @@ class _PackageRequestCreateScreenState
             ),
           ),
         ),
-        body: switch (state.currentStep) {
-          0 => Column(
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(
-                  DonySpacing.base,
-                  DonySpacing.sm,
-                  DonySpacing.base,
-                  0,
+        resizeToAvoidBottomInset: true,
+        // La CTA sticky est dans `body` (pas `bottomNavigationBar`) : Flutter
+        // ne remonte pas fiablement `bottomNavigationBar` au-dessus du
+        // clavier, ce qui la cachait derrière sur les steps avec champs texte
+        // (poids, prix, description). Même fix que phone_auth_screen.dart.
+        body: Column(
+          children: [
+            Expanded(
+              child: switch (state.currentStep) {
+                0 => Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        DonySpacing.base,
+                        DonySpacing.sm,
+                        DonySpacing.base,
+                        0,
+                      ),
+                      child: ContextualTutorialCard(
+                        context: TutorialContext.requestPublish,
+                      ),
+                    ),
+                    Expanded(
+                      child: Step1TrajetColis(
+                        key: _step1Key,
+                        canContinueNotifier: _canContinueNotifier,
+                      ),
+                    ),
+                  ],
                 ),
-                child: ContextualTutorialCard(
-                  context: TutorialContext.requestPublish,
-                ),
-              ),
-              Expanded(
-                child: Step1TrajetColis(
-                  key: _step1Key,
+                1 => Step2Details(
+                  key: _step2Key,
                   canContinueNotifier: _canContinueNotifier,
                 ),
-              ),
-            ],
-          ),
-          1 => Step2Details(
-            key: _step2Key,
-            canContinueNotifier: _canContinueNotifier,
-          ),
-          _ => Step3RecapBudget(
-            key: _step3Key,
-            canContinueNotifier: _canContinueNotifier,
-          ),
-        },
-        bottomNavigationBar: _StickyCta(
-          canContinueNotifier: _canContinueNotifier,
-          currentStep: state.currentStep,
-          isSubmitting:
-              state.submissionStatus == FormSubmissionStatus.submitting,
-          onPressed: () => _onCtaPressed(context, state),
+                _ => Step3RecapBudget(
+                  key: _step3Key,
+                  canContinueNotifier: _canContinueNotifier,
+                ),
+              },
+            ),
+            _StickyCta(
+              canContinueNotifier: _canContinueNotifier,
+              currentStep: state.currentStep,
+              isSubmitting:
+                  state.submissionStatus == FormSubmissionStatus.submitting,
+              onPressed: () => _onCtaPressed(context, state),
+            ),
+          ],
         ),
       ),
     );

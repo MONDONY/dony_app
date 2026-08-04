@@ -231,9 +231,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         final isSaving = isLoading && _saving;
 
         return Scaffold(
+          resizeToAvoidBottomInset: true,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: const DonyAppBar(title: 'Modifier le profil'),
-          body: SingleChildScrollView(
+          // Bouton "Enregistrer" dans `body` (pas `bottomNavigationBar`) :
+          // Flutter ne remonte pas fiablement `bottomNavigationBar` au-dessus
+          // du clavier, ce qui le cachait derrière avec 5 champs texte sur cet
+          // écran. Même fix que phone_auth_screen.dart.
+          body: Column(children: [
+          Expanded(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
               DonySpacing.xl,
@@ -469,7 +476,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ],
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
           ),
-          bottomNavigationBar: SafeArea(
+          ),
+          SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
@@ -484,6 +492,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
           ),
+          ]),
         );
       },
     );
