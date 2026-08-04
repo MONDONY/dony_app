@@ -101,44 +101,55 @@ class _CancellationScreenState extends State<CancellationScreen> {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         appBar: const DonyAppBar(title: 'Annuler le trajet'),
+        // `_BottomBar` est dans `body` (pas `bottomNavigationBar`) : Flutter ne
+        // remonte pas fiablement `bottomNavigationBar` au-dessus du clavier,
+        // ce qui le cachait derrière quand le champ "Précisez..." était focus.
+        // Même fix que phone_auth_screen.dart / otp_verification_screen.dart.
         body: Builder(builder: (context) {
           final h = DonyLayout.hPadding(context);
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, 100),
-            child: DonyLayout.constrained(
-              context,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _WarningBanner(cs: cs, tt: tt),
-                  const SizedBox(height: DonySpacing.xl),
-                  Text(
-                    'Raison de l\'annulation',
-                    style: tt.titleMedium?.copyWith(color: cs.onSurface),
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.xl),
+                  child: DonyLayout.constrained(
+                    context,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _WarningBanner(cs: cs, tt: tt),
+                        const SizedBox(height: DonySpacing.xl),
+                        Text(
+                          'Raison de l\'annulation',
+                          style: tt.titleMedium?.copyWith(color: cs.onSurface),
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                        DonyRadioGroup<String>(
+                          value: _selectedReason,
+                          onChanged: (v) => setState(() => _selectedReason = v),
+                          options: _reasons
+                              .map((r) => DonyRadioOption(value: r, label: r))
+                              .toList(),
+                        ),
+                        if (_selectedReason == 'Autre') ...[
+                          const SizedBox(height: DonySpacing.md),
+                          DonyTextField(
+                            controller: _otherCtrl,
+                            label: 'Précisez...',
+                            hint: 'Décrivez votre raison',
+                          ),
+                        ],
+                      ],
+                    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   ),
-                  const SizedBox(height: DonySpacing.md),
-                  DonyRadioGroup<String>(
-                    value: _selectedReason,
-                    onChanged: (v) => setState(() => _selectedReason = v),
-                    options: _reasons
-                        .map((r) => DonyRadioOption(value: r, label: r))
-                        .toList(),
-                  ),
-                  if (_selectedReason == 'Autre') ...[
-                    const SizedBox(height: DonySpacing.md),
-                    DonyTextField(
-                      controller: _otherCtrl,
-                      label: 'Précisez...',
-                      hint: 'Décrivez votre raison',
-                    ),
-                  ],
-                ],
-              ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-            ),
+                ),
+              ),
+              _BottomBar(onConfirm: () => _confirm(context)),
+            ],
           );
         }),
-        bottomNavigationBar: _BottomBar(onConfirm: () => _confirm(context)),
       ),
     );
   }

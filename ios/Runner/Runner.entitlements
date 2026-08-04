@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.developer.in-app-payments</key>
 	<array>
-		<string>merchant.app.dony</string>
+		<string>merchant.app.yadony</string>
 	</array>
 </dict>
 </plist>

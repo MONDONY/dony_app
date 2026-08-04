@@ -652,35 +652,47 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 child: Divider(height: 1, color: cs.outlineVariant),
               ),
             ),
-            body: MultiBlocListener(
-              listeners: [
-                BlocListener<BidBloc, BidState>(listener: _onBidState),
-                BlocListener<PaymentBloc, PaymentState>(
-                  listener: _onPaymentState,
+            resizeToAvoidBottomInset: true,
+            // La CTA sticky est dans `body` (pas `bottomNavigationBar`) :
+            // Flutter ne remonte pas fiablement `bottomNavigationBar`
+            // au-dessus du clavier, ce qui la cachait derrière sur ce
+            // formulaire (description, destinataire...). Même fix que
+            // phone_auth_screen.dart.
+            body: Column(
+              children: [
+                Expanded(
+                  child: MultiBlocListener(
+                    listeners: [
+                      BlocListener<BidBloc, BidState>(listener: _onBidState),
+                      BlocListener<PaymentBloc, PaymentState>(
+                        listener: _onPaymentState,
+                      ),
+                    ],
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.xl,
+                        DonySpacing.lg,
+                        DonySpacing.xxl,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                        child: step == _FormStep.paymentPicker
+                            ? _buildPickerStep(context)
+                            : _buildFormStep(context),
+                      ),
+                    ),
+                  ),
+                ),
+                _StickyBottom(
+                  btnConfigNotifier: _btnConfigNotifier,
+                  bidBloc: _bidBloc,
                 ),
               ],
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.xl,
-                  DonySpacing.lg,
-                  DonySpacing.xxl,
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
-                  child: step == _FormStep.paymentPicker
-                      ? _buildPickerStep(context)
-                      : _buildFormStep(context),
-                ),
-              ),
-            ),
-            bottomNavigationBar: _StickyBottom(
-              btnConfigNotifier: _btnConfigNotifier,
-              bidBloc: _bidBloc,
             ),
           ),
         );

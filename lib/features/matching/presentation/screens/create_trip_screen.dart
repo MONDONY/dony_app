@@ -213,7 +213,15 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 : (isEdit ? 'Modifier le trajet' : 'Publier un trajet'),
           ),
         ),
-        body: SingleChildScrollView(
+        resizeToAvoidBottomInset: true,
+        // Bouton sticky dans `body` (pas `bottomNavigationBar`) : Flutter ne
+        // remonte pas fiablement `bottomNavigationBar` au-dessus du clavier,
+        // ce qui le cachait derrière sur PrixConditionsStep (champs prix /
+        // conditions). Même fix que phone_auth_screen.dart.
+        body: Column(
+          children: [
+          Expanded(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(DonySpacing.base),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -236,8 +244,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ),
             ],
           ),
-        ),
-        bottomNavigationBar: SafeArea(
+          ),
+          ),
+          SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: DonySpacing.base,
@@ -421,7 +430,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             ),
           ),
         ),
+          ],
         ),
+      ),
       ),
     );
   }
