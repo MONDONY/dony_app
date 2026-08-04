@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/bloc/deletion_eligibility_cubit.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -14,12 +15,20 @@ class MockAccountDeletionBloc
     extends MockBloc<AccountDeletionEvent, AccountDeletionState>
     implements AccountDeletionBloc {}
 
+class MockDeletionEligibilityCubit extends MockCubit<DeletionEligibilityState>
+    implements DeletionEligibilityCubit {}
+
 void main() {
   late MockAccountDeletionBloc mockBloc;
+  late MockDeletionEligibilityCubit mockEligibilityCubit;
 
   setUp(() {
     mockBloc = MockAccountDeletionBloc();
     when(() => mockBloc.state).thenReturn(const AccountDeletionInitial());
+    mockEligibilityCubit = MockDeletionEligibilityCubit();
+    when(() => mockEligibilityCubit.state)
+        .thenReturn(const DeletionEligibilityState(isLoading: false));
+    when(() => mockEligibilityCubit.check()).thenAnswer((_) async {});
   });
 
   Widget buildWidget() => MaterialApp(
@@ -28,7 +37,10 @@ void main() {
           child: Builder(
             builder: (context) => Scaffold(
               body: ElevatedButton(
-                onPressed: () => DeleteAccountBottomSheet.show(context),
+                onPressed: () => DeleteAccountBottomSheet.show(
+                  context,
+                  eligibilityCubit: mockEligibilityCubit,
+                ),
                 child: const Text('Open'),
               ),
             ),
@@ -228,5 +240,52 @@ void main() {
     expect(find.text('Suppression impossible pour l\'instant'), findsOneWidget);
 
     await controller.close();
+  });
+
+  testWidgets(
+      'suppression bloquée (escrow) → bouton grisé et message affiché à côté',
+      (tester) async {
+    when(() => mockEligibilityCubit.state).thenReturn(
+      const DeletionEligibilityState(
+        isLoading: false,
+        blockedReasonMessage:
+            'Vous avez un envoi en cours de livraison, avec des fonds '
+            'bloqués en séquestre. Vous pourrez supprimer votre compte dès '
+            'que la livraison sera confirmée.',
+      ),
+    );
+
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // Le message explicatif est affiché.
+    expect(
+      find.textContaining('fonds bloqués en séquestre'),
+      findsOneWidget,
+    );
+
+    // Même en sélectionnant un mode, le bouton reste désactivé.
+    await tester.tap(find.text('Supprimer définitivement'));
+    await tester.pumpAndSettle();
+
+    final submitInkWells = tester
+        .widgetList<InkWell>(
+          find.descendant(
+            of: find.widgetWithText(DonyButton, 'Continuer →'),
+            matching: find.byType(InkWell),
+          ),
+        )
+        .toList();
+    expect(submitInkWells.every((w) => w.onTap == null), isTrue);
+  });
+
+  testWidgets('éligible → pas de message de blocage affiché', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('séquestre'), findsNothing);
+    expect(find.textContaining('wallet'), findsNothing);
   });
 }
