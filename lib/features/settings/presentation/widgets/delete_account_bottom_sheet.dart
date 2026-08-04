@@ -124,10 +124,7 @@ class _DeleteAccountBottomSheetState
                 'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil.',
           );
         } else if (state is AccountDeletionError && state.isEscrowBlocked) {
-          showDialog(
-            context: context,
-            builder: (_) => const EscrowBlockDialog(),
-          );
+          EscrowBlockDialog.show(context);
         } else if (state is AccountDeletionError) {
           ErrorPresenter.show(context, state.error);
         }

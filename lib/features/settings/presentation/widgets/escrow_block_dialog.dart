@@ -1,35 +1,27 @@
-import 'package:flutter/material.dart';
+import 'package:dony/core/design/widgets/dony_dialog.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-class EscrowBlockDialog extends StatelessWidget {
-  const EscrowBlockDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return AlertDialog(
-      title: Text(
-        'Paiement en cours',
-        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-      ),
-      content: Text(
-        'Vous avez un paiement en cours (fonds bloqués). La suppression sera possible une fois la livraison confirmée.',
-        style: tt.bodyMedium,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(),
-          child: const Text('Fermer'),
-        ),
-        FilledButton(
-          onPressed: () {
-            context.pop();
-            context.go('/announcements');
-          },
-          child: const Text('Voir mes envois'),
-        ),
-      ],
+/// Averti l'utilisateur que la suppression est bloquée par un envoi dont les
+/// fonds sont encore en séquestre, avec un raccourci direct vers ses envois.
+///
+/// Utilise le style standardisé [DonyDialog] (icône, texte explicite) au lieu
+/// d'un `AlertDialog` générique — l'ancien rendu ne se distinguait pas d'une
+/// erreur système et n'expliquait pas clairement la marche à suivre.
+abstract final class EscrowBlockDialog {
+  static Future<void> show(BuildContext context) async {
+    final goToShipments = await DonyDialog.show(
+      context,
+      title: 'Suppression impossible pour l\'instant',
+      message: 'Un de vos envois est en cours de livraison et ses fonds '
+          'sont bloqués en séquestre. Vous pourrez supprimer votre compte '
+          'dès que la livraison aura été confirmée.',
+      confirmLabel: 'Voir mes envois',
+      cancelLabel: 'Fermer',
+      iconAsset: 'lock',
     );
+    if (goToShipments == true && context.mounted) {
+      context.go('/announcements');
+    }
   }
 }

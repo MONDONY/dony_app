@@ -17,19 +17,6 @@ class ReactivateAccount extends AccountDeletionEvent {
   const ReactivateAccount();
 }
 
-class RequestOtpForImmediateDeletion extends AccountDeletionEvent {
-  const RequestOtpForImmediateDeletion();
-}
-
 class ConfirmImmediateDeletion extends AccountDeletionEvent {
-  final String verificationId;
-  final String smsCode;
-
-  const ConfirmImmediateDeletion({
-    required this.verificationId,
-    required this.smsCode,
-  });
-
-  @override
-  List<Object?> get props => [verificationId, smsCode];
+  const ConfirmImmediateDeletion();
 }

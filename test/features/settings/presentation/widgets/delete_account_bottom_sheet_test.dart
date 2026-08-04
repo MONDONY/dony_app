@@ -3,19 +3,12 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
-import 'package:dony/features/settings/data/account_deletion_repository.dart';
-import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-class MockAccountDeletionRepository extends Mock
-    implements AccountDeletionRepository {}
-
-class MockFirebasePhoneReauth extends Mock implements FirebasePhoneReauth {}
 
 class MockAccountDeletionBloc
     extends MockBloc<AccountDeletionEvent, AccountDeletionState>
@@ -231,8 +224,8 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    // EscrowBlockDialog should appear
-    expect(find.byType(AlertDialog), findsOneWidget);
+    // EscrowBlockDialog (DonyDialog) should appear
+    expect(find.text('Suppression impossible pour l\'instant'), findsOneWidget);
 
     await controller.close();
   });
