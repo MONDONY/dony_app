@@ -56,6 +56,20 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   StreamSubscription<void>? _fcmSub;
   bool _ratingPromptShown = false;
+  DateTime? _lastHomeRefreshAt;
+  DateTime? _lastMessagesRefreshAt;
+
+  // En dessous de ce délai, retaper un onglet ne redéclenche pas son refresh
+  // réseau : un va-et-vient rapide entre Accueil/Activités/Messages tirait
+  // sans throttle une salve par onglet (BidBloc, EnvoisRefreshNotifier,
+  // ConversationListBloc), ce qui épuisait le rate-limit nginx en quelques
+  // allers-retours et faisait échouer les chargements en cours partout à la
+  // fois. Même principe que le throttle de ActivitesHubScreen._loadAll.
+  static const _minTabReloadInterval = Duration(seconds: 3);
+
+  bool _shouldThrottle(DateTime? lastRefreshAt) =>
+      lastRefreshAt != null &&
+      DateTime.now().difference(lastRefreshAt) < _minTabReloadInterval;
 
   /// Nom d'écran PostHog par onglet du shell. Les branches du
   /// StatefulShellRoute tournent sur leur propre Navigator que le
@@ -96,21 +110,23 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
     }
-    if (index == 0) {
+    if (index == 0 && !_shouldThrottle(_lastHomeRefreshAt)) {
       // Accueil : la liste des bids de l'expéditeur est mise en cache au premier
       // montage (home reste vivant dans le nav shell). Si un voyageur refuse une
       // demande à distance, le cache reste sur « en attente ». Force un refresh à
       // chaque (ré)sélection de l'onglet pour refléter le vrai statut.
+      _lastHomeRefreshAt = DateTime.now();
       context.read<BidBloc>().add(
         const BidMyListAutoRefreshRequested(force: true),
       );
     }
-    if (index == 3) {
+    if (index == 3 && !_shouldThrottle(_lastMessagesRefreshAt)) {
       // Messages : ConversationListScreen ne charge qu'au premier montage
       // (StatefulNavigationShell garde l'écran vivant en IndexedStack) — sans
       // ce refresh, les nouveaux messages/conversations reçus pendant qu'on
       // était sur un autre onglet restent invisibles tant qu'on ne fait pas
       // un pull-to-refresh manuel.
+      _lastMessagesRefreshAt = DateTime.now();
       getIt<ConversationListBloc>().add(const ConversationsLoadRequested());
     }
     widget.navigationShell.goBranch(

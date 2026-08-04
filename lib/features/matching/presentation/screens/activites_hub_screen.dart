@@ -94,6 +94,15 @@ class _ActivitesHubView extends StatefulWidget {
 class _ActivitesHubViewState extends State<_ActivitesHubView> {
   late final EnvoisRefreshNotifier _refreshNotifier;
   late bool _showIntro;
+  DateTime? _lastLoadAt;
+
+  // En dessous de ce délai, un retour sur l'onglet ne redéclenche pas les 5
+  // requêtes concurrentes de _loadAll() : à chaque va-et-vient rapide entre
+  // onglets, ce hub retirait tout au complet côté serveur, ce qui épuisait
+  // le rate-limit nginx (burst api_general) en quelques allers-retours et
+  // faisait échouer les chargements en cours. Le pull-to-refresh explicite
+  // (_onRefresh) contourne volontairement ce throttle.
+  static const _minReloadInterval = Duration(seconds: 3);
 
   @override
   void initState() {
@@ -137,10 +146,19 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   }
 
   void _onTabRefreshRequested() {
-    if (mounted) _loadAll();
+    if (!mounted) {
+      return;
+    }
+    final lastLoadAt = _lastLoadAt;
+    if (lastLoadAt != null &&
+        DateTime.now().difference(lastLoadAt) < _minReloadInterval) {
+      return;
+    }
+    _loadAll();
   }
 
   void _loadAll() {
+    _lastLoadAt = DateTime.now();
     final period = context.read<StatsPeriodCubit>().state;
     unawaited(context.read<TripsSummaryCubit>().load(period: period));
     context.read<TravelerBidsBloc>().add(

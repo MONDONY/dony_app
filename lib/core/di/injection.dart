@@ -78,7 +78,10 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
+import 'package:dony/features/connectivity/data/connectivity_repository.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
@@ -203,6 +206,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       deviceIdService: getIt<DeviceIdService>(),
     ),
   );
+
+  // Bandeau de statut réseau global (cf. app.dart) — singleton : un seul
+  // flux de vérité pour toute l'app, comme AccessibilityBloc/AppPreferencesBloc.
+  getIt.registerLazySingleton<ConnectivityRepository>(
+    () => ConnectivityRepository(Connectivity(), getIt<ApiClient>().dio),
+  );
+  getIt.registerLazySingleton<ConnectivityCubit>(
+    () => ConnectivityCubit(getIt<ConnectivityRepository>()),
+    dispose: (c) => c.close(),
+  );
+
   getIt.registerLazySingleton<NotificationRemoteDatasource>(
     () => NotificationRemoteDatasource(getIt<ApiClient>()),
   );

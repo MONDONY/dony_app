@@ -137,6 +137,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     AnnouncementListRequested event,
     Emitter<AnnouncementState> emit,
   ) async {
+    // Anti-course : cet event a plusieurs déclencheurs (retour au premier
+    // plan, changement d'onglet, pull-to-refresh, bouton « Réessayer »...).
+    // Sans cette garde, deux appels concurrents émettaient chacun leur
+    // résultat — celui qui répondait en DERNIER l'emportait, pas forcément
+    // le plus récent déclenché, ce qui pouvait afficher une erreur périmée
+    // par-dessus des données fraîches (ou l'inverse) selon la latence
+    // réseau du moment. Même principe que _onCreateRequested ci-dessus.
+    if (state is AnnouncementLoading) return;
     emit(AnnouncementLoading());
     try {
       final result = await _repository.getMyAnnouncements();

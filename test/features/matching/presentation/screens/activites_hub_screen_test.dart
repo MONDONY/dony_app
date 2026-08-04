@@ -115,6 +115,10 @@ BidModel _bid(String id, String status) => BidModel(
 /// Routes atteintes pendant le test, dans l'ordre.
 late List<String> visited;
 
+/// Exposé pour vérifier le nombre de rechargements déclenchés par
+/// [EnvoisRefreshNotifier] (throttle anti-rafale).
+late _MockTravelerBidsBloc _travelerBidsBlocUnderTest;
+
 Future<void> _pump(
   WidgetTester tester, {
   TripsSummaryModel? summary,
@@ -157,6 +161,7 @@ Future<void> _pump(
           filter: TravelerBidFilter.aTraiter,
         ),
   );
+  _travelerBidsBlocUnderTest = travelerBids;
 
   final nego = _MockNegotiationListBloc();
   when(() => nego.state).thenReturn(negoState ?? NegotiationListState());
@@ -427,6 +432,37 @@ void main() {
         '/profile/recipients',
       );
     });
+  });
+
+  group('throttle de rechargement', () {
+    testWidgets(
+      'deux demandes de rafraîchissement rapprochées ne redéclenchent '
+      'qu\'un seul rechargement (anti-rafale rate-limit)',
+      (tester) async {
+        await _pump(tester);
+        // Un appel au montage (initState._loadAll).
+        verify(
+          () => _travelerBidsBlocUnderTest.add(
+            const TravelerBidsRequested(force: true),
+          ),
+        ).called(1);
+
+        final notifier = getIt<EnvoisRefreshNotifier>();
+        notifier.requestRefresh();
+        await tester.pump();
+        notifier.requestRefresh();
+        await tester.pump();
+
+        // Les deux demandes arrivent moins de 3s après le chargement initial
+        // (celui du montage) : le throttle les absorbe intégralement, aucun
+        // rechargement supplémentaire n'est déclenché.
+        verifyNever(
+          () => _travelerBidsBlocUnderTest.add(
+            const TravelerBidsRequested(force: true),
+          ),
+        );
+      },
+    );
   });
 
   group('rangée d\'actions', () {

@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/metrics_interceptor.dart';
+import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -70,6 +71,12 @@ class ApiClient {
     if (kProfileMode || kDebugMode) {
       _dio.interceptors.add(MetricsInterceptor(MetricsInterceptor.globalCollector));
     }
+
+    // Ajouté en dernier : dans le sens onError (inverse de l'ajout), c'est le
+    // premier à voir l'erreur brute — avant que _AuthInterceptor ne la
+    // convertisse en RateLimitException — donc le mieux placé pour retenter
+    // la requête d'origine avant que quiconque en aval ne l'affiche à l'utilisateur.
+    _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio));
   }
 
   late final Dio _dio;

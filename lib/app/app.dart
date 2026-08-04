@@ -8,6 +8,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
+import 'package:dony/features/connectivity/presentation/widgets/connectivity_banner.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -155,6 +157,9 @@ class _DonyAppState extends State<DonyApp> {
           ),
           BlocProvider<AccessibilityBloc>.value(
             value: getIt<AccessibilityBloc>(),
+          ),
+          BlocProvider<ConnectivityCubit>.value(
+            value: getIt<ConnectivityCubit>(),
           ),
         ],
         child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
@@ -306,8 +311,18 @@ class _DonyAppState extends State<DonyApp> {
                               // présenter le bottom sheet de consentement
                               // analytics + brancher identify/reset sur le
                               // cycle d'authentification.
-                              child: AnalyticsConsentGate(
-                                child: child ?? const SizedBox.shrink(),
+                              child: Column(
+                                children: [
+                                  // Bandeau réseau global : au-dessus de
+                                  // TOUTE route (shell ou pushée), jamais
+                                  // seulement les onglets du shell.
+                                  const ConnectivityBanner(),
+                                  Expanded(
+                                    child: AnalyticsConsentGate(
+                                      child: child ?? const SizedBox.shrink(),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );

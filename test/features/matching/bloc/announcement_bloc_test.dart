@@ -735,6 +735,23 @@ void main() {
         isA<AnnouncementError>(),
       ],
     );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'ignore un nouveau dispatch tant qu\'un chargement est déjà en cours '
+      '(anti-course : évite qu\'un appel concurrent en retard n\'écrase le '
+      'résultat le plus récent — cf. AnnouncementCreateRequested)',
+      build: () {
+        when(() => mockRepo.getMyAnnouncements())
+            .thenAnswer((_) async => (announcements: <AnnouncementModel>[], totalElements: 0));
+        return buildBloc();
+      },
+      seed: () => AnnouncementLoading(),
+      act: (bloc) => bloc.add(AnnouncementListRequested()),
+      expect: () => [],
+      verify: (_) {
+        verifyNever(() => mockRepo.getMyAnnouncements());
+      },
+    );
   });
 
   // ─── AnnouncementDetailRequested ──────────────────────────────────────────────
