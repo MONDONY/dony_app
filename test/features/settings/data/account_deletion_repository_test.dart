@@ -20,6 +20,51 @@ void main() {
     repo = AccountDeletionRepository(mockClient);
   });
 
+  group('checkEligibility', () {
+    test('canDelete=true, blockedReasonCode=null quand rien ne bloque', () async {
+      when(() => mockDio.get<dynamic>('/auth/me/deletion-eligibility'))
+          .thenAnswer((_) async => Response(
+                requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
+                statusCode: 200,
+                data: {'canDelete': true, 'blockedReasonCode': null},
+              ));
+
+      final result = await repo.checkEligibility();
+
+      expect(result.canDelete, isTrue);
+      expect(result.blockedReasonCode, isNull);
+    });
+
+    test('canDelete=false avec blockedReasonCode quand bloqué', () async {
+      when(() => mockDio.get<dynamic>('/auth/me/deletion-eligibility'))
+          .thenAnswer((_) async => Response(
+                requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
+                statusCode: 200,
+                data: {'canDelete': false, 'blockedReasonCode': 'active-transactions'},
+              ));
+
+      final result = await repo.checkEligibility();
+
+      expect(result.canDelete, isFalse);
+      expect(result.blockedReasonCode, 'active-transactions');
+    });
+
+    test('throws AppException on network error', () async {
+      when(() => mockDio.get<dynamic>('/auth/me/deletion-eligibility')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
+          error: const NetworkException('Network error'),
+          type: DioExceptionType.unknown,
+        ),
+      );
+
+      await expectLater(
+        repo.checkEligibility(),
+        throwsA(isA<AppException>()),
+      );
+    });
+  });
+
   group('requestDeletion', () {
     test('completes when DELETE /auth/me returns 204', () async {
       when(() => mockDio.delete<dynamic>('/auth/me'))
