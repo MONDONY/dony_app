@@ -1,8 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
-import 'package:dony/features/settings/presentation/widgets/delete_otp_sheet.dart';
+import 'package:dony/features/settings/presentation/widgets/escrow_block_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,7 +32,7 @@ class DeleteConfirmationSheet extends StatefulWidget {
         builder: (context, checked, child) =>
             BlocBuilder<AccountDeletionBloc, AccountDeletionState>(
           builder: (ctx, state) => DonyButton(
-            label: 'Envoyer le code SMS',
+            label: 'Supprimer définitivement',
             variant: DonyButtonVariant.destructive,
             isLoading: state is AccountDeletionLoading,
             onPressed: !checked || state is AccountDeletionLoading
@@ -59,9 +61,7 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
   }
 
   void _confirm() {
-    context
-        .read<AccountDeletionBloc>()
-        .add(const RequestOtpForImmediateDeletion());
+    context.read<AccountDeletionBloc>().add(const ConfirmImmediateDeletion());
   }
 
   @override
@@ -71,15 +71,13 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
 
     return BlocListener<AccountDeletionBloc, AccountDeletionState>(
       listener: (context, state) {
-        if (state is DeletionOtpSent) {
-          final deletionBloc = context.read<AccountDeletionBloc>();
+        if (state is AccountDeletionImmediate) {
+          final authBloc = context.read<AuthBloc>();
           Navigator.of(context, rootNavigator: true).pop();
-          DeleteOtpSheet.show(
-            context,
-            deletionBloc,
-            verificationId: state.verificationId,
-            phoneHint: state.phoneHint,
-          );
+          authBloc.add(const AuthLogoutRequested());
+        } else if (state is AccountDeletionError && state.isEscrowBlocked) {
+          Navigator.of(context, rootNavigator: true).pop();
+          EscrowBlockDialog.show(context);
         } else if (state is AccountDeletionError) {
           ErrorPresenter.show(context, state.error);
         }

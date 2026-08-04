@@ -11,10 +11,7 @@ Widget _wrap() => MaterialApp.router(
             builder: (_, __) => Scaffold(
               body: Builder(
                 builder: (ctx) => TextButton(
-                  onPressed: () => showDialog(
-                    context: ctx,
-                    builder: (_) => const EscrowBlockDialog(),
-                  ),
+                  onPressed: () => EscrowBlockDialog.show(ctx),
                   child: const Text('Open'),
                 ),
               ),
@@ -34,8 +31,8 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paiement en cours'), findsOneWidget);
-    expect(find.textContaining('fonds bloqués'), findsOneWidget);
+    expect(find.text('Suppression impossible pour l\'instant'), findsOneWidget);
+    expect(find.textContaining('fonds'), findsOneWidget);
   });
 
   testWidgets('Fermer button closes the dialog', (tester) async {
@@ -46,7 +43,7 @@ void main() {
     await tester.tap(find.text('Fermer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Paiement en cours'), findsNothing);
+    expect(find.text('Suppression impossible pour l\'instant'), findsNothing);
   });
 
   testWidgets('Voir mes envois button closes dialog and navigates', (tester) async {

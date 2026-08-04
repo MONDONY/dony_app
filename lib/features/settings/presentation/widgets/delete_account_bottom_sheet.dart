@@ -1,8 +1,11 @@
 // dony_app/lib/features/settings/presentation/widgets/delete_account_bottom_sheet.dart
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/bloc/deletion_eligibility_cubit.dart';
+import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_confirmation_sheet.dart';
 import 'package:dony/features/settings/presentation/widgets/escrow_block_dialog.dart';
 import 'package:flutter/material.dart';
@@ -18,56 +21,43 @@ class DeleteAccountBottomSheet extends StatefulWidget {
     this.onSubmitReady,
   });
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(
+    BuildContext context, {
+    DeletionEligibilityCubit? eligibilityCubit,
+  }) {
     final deletionBloc = context.read<AccountDeletionBloc>();
+    final cubit = eligibilityCubit ??
+        DeletionEligibilityCubit(getIt<AccountDeletionRepository>());
+    cubit.check();
     final modeNotifier = ValueNotifier<DeleteMode?>(null);
     VoidCallback? submit;
 
     return DonyBottomSheet.show(
       context,
       title: 'Supprimer mon compte',
-      wrapper: (child) =>
-          BlocProvider.value(value: deletionBloc, child: child),
-      stickyBottom: ValueListenableBuilder<DeleteMode?>(
-        valueListenable: modeNotifier,
-        builder: (_, mode, __) =>
-            BlocBuilder<AccountDeletionBloc, AccountDeletionState>(
-          builder: (ctx, state) => Row(
-            children: [
-              Expanded(
-                child: DonyButton(
-                  label: 'Annuler',
-                  variant: DonyButtonVariant.ghost,
-                  onPressed: () =>
-                      Navigator.of(context, rootNavigator: true).pop(),
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(
-                flex: 2,
-                child: DonyButton(
-                  label: mode == DeleteMode.hard
-                      ? 'Continuer →'
-                      : 'Confirmer la pause',
-                  variant: mode == DeleteMode.hard
-                      ? DonyButtonVariant.destructive
-                      : DonyButtonVariant.primary,
-                  isLoading: state is AccountDeletionLoading,
-                  onPressed:
-                      mode == null || state is AccountDeletionLoading
-                          ? null
-                          : () => submit?.call(),
-                ),
-              ),
-            ],
-          ),
-        ),
+      wrapper: (child) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: deletionBloc),
+          BlocProvider.value(value: cubit),
+        ],
+        child: child,
+      ),
+      stickyBottom: _DeleteActions(
+        modeNotifier: modeNotifier,
+        onSubmit: () => submit?.call(),
       ),
       child: DeleteAccountBottomSheet(
         modeNotifier: modeNotifier,
         onSubmitReady: (fn) => submit = fn,
       ),
-    ).whenComplete(modeNotifier.dispose);
+    ).whenComplete(() {
+      modeNotifier.dispose();
+      // Ne ferme que le cubit créé ici — un cubit injecté (tests) reste géré
+      // par son propriétaire.
+      if (eligibilityCubit == null) {
+        cubit.close();
+      }
+    });
   }
 
   @override
@@ -124,10 +114,7 @@ class _DeleteAccountBottomSheetState
                 'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil.',
           );
         } else if (state is AccountDeletionError && state.isEscrowBlocked) {
-          showDialog(
-            context: context,
-            builder: (_) => const EscrowBlockDialog(),
-          );
+          EscrowBlockDialog.show(context);
         } else if (state is AccountDeletionError) {
           ErrorPresenter.show(context, state.error);
         }
@@ -172,6 +159,76 @@ class _DeleteAccountBottomSheetState
           const SizedBox(height: DonySpacing.xl),
         ],
       ),
+    );
+  }
+}
+
+/// Barre d'actions collée en bas de la sheet : motif de blocage éventuel +
+/// boutons Annuler / valider.
+class _DeleteActions extends StatelessWidget {
+  final ValueNotifier<DeleteMode?> modeNotifier;
+  final VoidCallback onSubmit;
+
+  const _DeleteActions({required this.modeNotifier, required this.onSubmit});
+
+  @override
+  Widget build(BuildContext context) {
+    final eligibility = context.watch<DeletionEligibilityCubit>().state;
+    final isSubmitting =
+        context.watch<AccountDeletionBloc>().state is AccountDeletionLoading;
+    final blockedReason = eligibility.blockedReasonMessage;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Bloqué par le backend (escrow actif, solde wallet...) : on l'explique
+        // ICI, à côté du bouton, plutôt que de laisser l'utilisateur tenter
+        // puis échouer.
+        if (blockedReason != null) ...[
+          DonyStatusBanner(
+            type: DonyStatusBannerType.error,
+            iconAsset: 'lock',
+            message: blockedReason,
+          ),
+          const SizedBox(height: DonySpacing.sm),
+        ],
+        ValueListenableBuilder<DeleteMode?>(
+          valueListenable: modeNotifier,
+          builder: (context, mode, _) {
+            final isHard = mode == DeleteMode.hard;
+            return Row(
+              children: [
+                Expanded(
+                  child: DonyButton(
+                    label: 'Annuler',
+                    variant: DonyButtonVariant.ghost,
+                    onPressed: () =>
+                        Navigator.of(context, rootNavigator: true).pop(),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  flex: 2,
+                  child: DonyButton(
+                    label: isHard ? 'Continuer →' : 'Confirmer la pause',
+                    variant: isHard
+                        ? DonyButtonVariant.destructive
+                        : DonyButtonVariant.primary,
+                    isLoading: isSubmitting,
+                    onPressed: mode == null ||
+                            isSubmitting ||
+                            eligibility.isLoading ||
+                            !eligibility.canDelete
+                        ? null
+                        : onSubmit,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 }

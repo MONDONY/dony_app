@@ -220,37 +220,12 @@ void main() {
       expect(a.props, isEmpty);
     });
 
-    test('RequestOtpForImmediateDeletion == RequestOtpForImmediateDeletion',
+    test('ConfirmImmediateDeletion == ConfirmImmediateDeletion (calls props)',
         () {
-      const a = RequestOtpForImmediateDeletion();
-      const b = RequestOtpForImmediateDeletion();
+      const a = ConfirmImmediateDeletion();
+      const b = ConfirmImmediateDeletion();
       expect(a, equals(b));
       expect(a.props, isEmpty);
-    });
-
-    test('ConfirmImmediateDeletion props are correct', () {
-      const a = ConfirmImmediateDeletion(
-        verificationId: 'vid',
-        smsCode: '123456',
-      );
-      const b = ConfirmImmediateDeletion(
-        verificationId: 'vid',
-        smsCode: '123456',
-      );
-      expect(a, equals(b));
-      expect(a.props, equals(['vid', '123456']));
-    });
-
-    test('ConfirmImmediateDeletion with different codes are not equal', () {
-      const a = ConfirmImmediateDeletion(
-        verificationId: 'vid',
-        smsCode: '111111',
-      );
-      const b = ConfirmImmediateDeletion(
-        verificationId: 'vid',
-        smsCode: '222222',
-      );
-      expect(a, isNot(equals(b)));
     });
   });
 }
