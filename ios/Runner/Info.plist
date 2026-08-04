@@ -12,6 +12,12 @@
 		</dict>
 		<key>GMSApiKey</key>
 		<string>$(GOOGLE_MAPS_API_KEY)</string>
+		<key>GIDClientID</key>
+		<string>917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25.apps.googleusercontent.com</string>
+		<!-- Évite la question "chiffrement ?" à chaque upload App Store Connect :
+		     l'app n'utilise que TLS standard (HTTPS/Stripe SDK), exempté. -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 		<!-- PostHog : init manuelle en Dart → désactive l'auto-init natif. -->
 		<key>com.posthog.posthog.AUTO_INIT</key>
 		<false/>
@@ -83,6 +89,12 @@
 		<false/>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
+		<!-- Jamais demandée en pratique (aucun appel requestAlwaysAuthorization dans le
+		     code) : présente uniquement parce que le SDK Google Maps référence l'API
+		     Always, ce qu'Apple détecte au scan binaire même si le code ne l'appelle
+		     jamais. -->
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
@@ -113,6 +125,16 @@
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>app-1-917070267063-ios-a7b83be04a9e3c19684332</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>google-sign-in</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25</string>
 				</array>
 			</dict>
 		</array>
