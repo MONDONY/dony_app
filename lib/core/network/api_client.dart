@@ -14,8 +14,16 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 // PEM certificate for production TLS pinning.
 // Populated at build time via --dart-define-from-file=env.prod.json:
 //   "TLS_CERT_PEM": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
-// How to obtain: openssl s_client -connect api.dony.app:443 -servername api.dony.app \
-//                  </dev/null 2>/dev/null | openssl x509 -outform PEM
+//
+// Pin the INTERMEDIATE CA certificate, not the leaf: Let's Encrypt leaf certs
+// rotate every ~90 days, which would silently break every release build past
+// the pin's expiry. The intermediate is stable far longer. Cert #0 below is
+// the leaf, cert #1 is the intermediate — use #1:
+//   openssl s_client -connect <domaine API prod>:443 -servername <domaine API prod> \
+//     -showcerts </dev/null 2>/dev/null | awk '/BEGIN CERT/{n++} n==2'
+//
+// Re-run this (and update env.prod.json) whenever the intermediate itself
+// rotates — check by comparing its output against the currently pinned value.
 // Leave empty in env.dev.json — pinning is always skipped in debug mode.
 const _tlsCertPem = String.fromEnvironment('TLS_CERT_PEM');
 
