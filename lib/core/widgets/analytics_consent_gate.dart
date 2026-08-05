@@ -6,9 +6,10 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/gdpr_helper.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 /// Branche le tracking sur le cycle de vie d'authentification et met à jour
 /// le pays détecté par GPS à chaque connexion.
@@ -17,6 +18,11 @@ import 'package:hive/hive.dart';
 ///   + tranche le consentement analytics (cf. [GdprHelper.resolveConsentAction]) :
 ///   zone RGPD (ou pays indéterminé) → écran de consentement ; zone hors RGPD
 ///   → consentement accordé automatiquement, sans écran.
+/// - Consentement accordé en cours de session (écran RGPD, sheet, réglages,
+///   ou l'auto-octroi ci-dessus) → ré-identifie l'utilisateur courant. Sans
+///   ça, `identify()` ne tirerait qu'au login Firebase (une fois par
+///   lancement d'app) : un consentement donné après coup resterait rattaché
+///   à un `distinct_id` anonyme jusqu'au prochain redémarrage.
 /// - Logout → [AnalyticsService.reset]
 class AnalyticsConsentGate extends StatefulWidget {
   const AnalyticsConsentGate({required this.child, super.key});
@@ -29,6 +35,7 @@ class AnalyticsConsentGate extends StatefulWidget {
 
 class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   StreamSubscription<User?>? _authSub;
+  late final ValueListenable<Box> _consentListenable;
 
   AnalyticsService get _analytics => getIt<AnalyticsService>();
 
@@ -36,6 +43,11 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   void initState() {
     super.initState();
     _authSub = FirebaseAuth.instance.authStateChanges().listen(_onAuthChanged);
+
+    _consentListenable = getIt<HiveService>().userPrefs.listenable(
+      keys: [HiveService.kAnalyticsConsent],
+    );
+    _consentListenable.addListener(_onConsentChanged);
 
     // authStateChanges() est un broadcast stream : si l'utilisateur est déjà
     // connecté au mount, le stream ne rejoue pas l'état courant.
@@ -49,7 +61,19 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   @override
   void dispose() {
     _authSub?.cancel();
+    _consentListenable.removeListener(_onConsentChanged);
     super.dispose();
+  }
+
+  /// Ré-identifie l'utilisateur courant dès que le consentement passe à
+  /// `true`, peu importe le chemin (écran RGPD, sheet, réglages, auto-octroi
+  /// hors RGPD). Pas d'effet sur un octroi `false` (déconnexion du tracking,
+  /// rien à identifier).
+  void _onConsentChanged() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && _analytics.isEnabled) {
+      unawaited(_analytics.identify(user.uid));
+    }
   }
 
   void _onAuthChanged(User? user) {
