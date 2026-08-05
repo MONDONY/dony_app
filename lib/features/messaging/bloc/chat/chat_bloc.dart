@@ -62,9 +62,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (!event.isReadOnly) {
       _deletedSub = _firestoreRepo
           .conversationDeletedStream(event.firestoreConversationId)
-          .listen((deleted) {
-        if (deleted && !isClosed) add(const _DeletedByOtherParty());
-      });
+          .listen(
+        (deleted) {
+          if (deleted && !isClosed) add(const _DeletedByOtherParty());
+        },
+        onError: (_) {
+          // Session invalidée entre-temps (ex: signOut concurrent) — pas d'état d'erreur bloquant.
+        },
+      );
     }
 
     await emit.forEach<List<MessageModel>>(
