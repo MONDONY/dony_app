@@ -31,12 +31,15 @@ void main() {
           expect(GdprHelper.requiresConsent(countryCode: entry.key), isTrue);
         });
 
-        test('${entry.value} minuscule (${entry.key.toLowerCase()}) → true', () {
-          expect(
-            GdprHelper.requiresConsent(countryCode: entry.key.toLowerCase()),
-            isTrue,
-          );
-        });
+        test(
+          '${entry.value} minuscule (${entry.key.toLowerCase()}) → true',
+          () {
+            expect(
+              GdprHelper.requiresConsent(countryCode: entry.key.toLowerCase()),
+              isTrue,
+            );
+          },
+        );
       }
 
       final nonGdprCountries = {
@@ -65,21 +68,24 @@ void main() {
       });
 
       test('pays RGPD stocké dans Hive → true', () {
-        when(() => mockBox.get(HiveService.kDetectedCountryCode))
-            .thenReturn('FR');
+        when(
+          () => mockBox.get(HiveService.kDetectedCountryCode),
+        ).thenReturn('FR');
         expect(GdprHelper.requiresConsent(prefs: mockBox), isTrue);
       });
 
       test('pays non-RGPD stocké dans Hive → false', () {
-        when(() => mockBox.get(HiveService.kDetectedCountryCode))
-            .thenReturn('SN');
+        when(
+          () => mockBox.get(HiveService.kDetectedCountryCode),
+        ).thenReturn('SN');
         expect(GdprHelper.requiresConsent(prefs: mockBox), isFalse);
       });
 
       test('countryCode direct a priorité sur Hive', () {
         // Hive dit SN (Sénégal) mais on force FR → doit retourner true
-        when(() => mockBox.get(HiveService.kDetectedCountryCode))
-            .thenReturn('SN');
+        when(
+          () => mockBox.get(HiveService.kDetectedCountryCode),
+        ).thenReturn('SN');
         expect(
           GdprHelper.requiresConsent(countryCode: 'FR', prefs: mockBox),
           isTrue,
@@ -88,14 +94,16 @@ void main() {
 
       test('Hive a priorité sur la locale du device quand renseigné', () {
         // Hive dit FR (pays RGPD) → true même si locale device = fr_SN
-        when(() => mockBox.get(HiveService.kDetectedCountryCode))
-            .thenReturn('FR');
+        when(
+          () => mockBox.get(HiveService.kDetectedCountryCode),
+        ).thenReturn('FR');
         expect(GdprHelper.requiresConsent(prefs: mockBox), isTrue);
       });
 
       test('Hive vide → fallback sur locale device (ne doit pas crasher)', () {
-        when(() => mockBox.get(HiveService.kDetectedCountryCode))
-            .thenReturn(null);
+        when(
+          () => mockBox.get(HiveService.kDetectedCountryCode),
+        ).thenReturn(null);
         expect(GdprHelper.requiresConsent(prefs: mockBox), isA<bool>());
       });
     });
@@ -108,6 +116,63 @@ void main() {
       test('null sans prefs → utilise locale device (ne doit pas crasher)', () {
         expect(GdprHelper.requiresConsent(), isA<bool>());
       });
+    });
+  });
+
+  group('GdprHelper.resolveConsentAction', () {
+    test('pas configuré → none, même sans réponse et en zone RGPD', () {
+      expect(
+        GdprHelper.resolveConsentAction(
+          isConfigured: false,
+          hasAnswered: false,
+          requiresConsent: true,
+        ),
+        AnalyticsConsentAction.none,
+      );
+    });
+
+    test('déjà répondu → none, même en zone RGPD', () {
+      expect(
+        GdprHelper.resolveConsentAction(
+          isConfigured: true,
+          hasAnswered: true,
+          requiresConsent: true,
+        ),
+        AnalyticsConsentAction.none,
+      );
+    });
+
+    test('configuré + pas répondu + zone RGPD → askConsent', () {
+      expect(
+        GdprHelper.resolveConsentAction(
+          isConfigured: true,
+          hasAnswered: false,
+          requiresConsent: true,
+        ),
+        AnalyticsConsentAction.askConsent,
+      );
+    });
+
+    test('configuré + pas répondu + hors RGPD → autoGrantNonGdpr', () {
+      expect(
+        GdprHelper.resolveConsentAction(
+          isConfigured: true,
+          hasAnswered: false,
+          requiresConsent: false,
+        ),
+        AnalyticsConsentAction.autoGrantNonGdpr,
+      );
+    });
+
+    test('pas configuré + hors RGPD → none (rien à accorder avant setup)', () {
+      expect(
+        GdprHelper.resolveConsentAction(
+          isConfigured: false,
+          hasAnswered: false,
+          requiresConsent: false,
+        ),
+        AnalyticsConsentAction.none,
+      );
     });
   });
 }

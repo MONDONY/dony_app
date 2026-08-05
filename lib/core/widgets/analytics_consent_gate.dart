@@ -8,16 +8,16 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hive/hive.dart';
 
 /// Branche le tracking sur le cycle de vie d'authentification et met à jour
 /// le pays détecté par GPS à chaque connexion.
 ///
 /// - Login  → [AnalyticsService.identify] + détection pays GPS (si permission)
+///   + tranche le consentement analytics (cf. [GdprHelper.resolveConsentAction]) :
+///   zone RGPD (ou pays indéterminé) → écran de consentement ; zone hors RGPD
+///   → consentement accordé automatiquement, sans écran.
 /// - Logout → [AnalyticsService.reset]
-///
-/// Si le GPS révèle que l'utilisateur est dans un pays RGPD et que le
-/// consentement n'a pas encore été recueilli, redirige vers l'écran de
-/// consentement analytics.
 class AnalyticsConsentGate extends StatefulWidget {
   const AnalyticsConsentGate({required this.child, super.key});
 
@@ -61,23 +61,43 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   }
 
   /// Sur login : identifie l'utilisateur, réconcilie le consentement avec le
-  /// backend (source de vérité) PUIS lance la détection pays GPS. La sync doit
-  /// précéder le GPS : un utilisateur réinstallé ayant déjà consenti côté
-  /// backend voit `hasAnswered` redevenir `true` et n'est donc pas redemandé.
+  /// backend (source de vérité), raffine le pays via GPS si possible, PUIS
+  /// tranche le consentement. La sync doit précéder tout le reste : un
+  /// utilisateur réinstallé ayant déjà consenti côté backend voit
+  /// `hasAnswered` redevenir `true` et n'est donc pas redemandé.
   Future<void> _onLogin(User user) async {
     unawaited(_analytics.identify(user.uid));
     await _analytics.syncFromBackend();
     if (!mounted) return;
-    await _updateCountryFromGps();
+
+    final prefs = getIt<HiveService>().userPrefs;
+    await _refineCountryFromGps(prefs);
+    if (!mounted) return;
+
+    final action = GdprHelper.resolveConsentAction(
+      isConfigured: _analytics.isConfigured,
+      hasAnswered: _analytics.hasAnswered,
+      requiresConsent: GdprHelper.requiresConsent(prefs: prefs),
+    );
+
+    switch (action) {
+      case AnalyticsConsentAction.askConsent:
+        appRouter.go('/auth/analytics-consent');
+      case AnalyticsConsentAction.autoGrantNonGdpr:
+        await _analytics.setConsent(granted: true, source: 'auto_non_gdpr');
+      case AnalyticsConsentAction.none:
+        break;
+    }
   }
 
-  /// Tente de raffiner le pays de l'utilisateur via GPS.
+  /// Tente de raffiner le pays de l'utilisateur via GPS (best-effort).
   ///
   /// Ne demande PAS la permission — utilise uniquement la permission déjà
-  /// accordée par l'utilisateur (ex: lors du scan QR).
-  /// Si le pays détecté est RGPD et que le consentement n'a pas été
-  /// recueilli, redirige vers l'écran de consentement.
-  Future<void> _updateCountryFromGps() async {
+  /// accordée par l'utilisateur (ex: lors du scan QR). Sans permission ou en
+  /// cas d'échec, [GdprHelper.requiresConsent] retombe sur la locale device :
+  /// la décision de consentement ne dépend donc jamais de la disponibilité du
+  /// GPS.
+  Future<void> _refineCountryFromGps(Box prefs) async {
     try {
       final permission = await Geolocator.checkPermission();
       if (permission != LocationPermission.always &&
@@ -90,14 +110,7 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
         ),
       );
 
-      final prefs = getIt<HiveService>().userPrefs;
       await GdprHelper.updateFromPosition(position, prefs);
-
-      if (_analytics.isConfigured &&
-          !_analytics.hasAnswered &&
-          GdprHelper.requiresConsent(prefs: prefs)) {
-        appRouter.go('/auth/analytics-consent');
-      }
     } catch (_) {
       // Non-fatal : la détection locale (device locale) reste active.
     }

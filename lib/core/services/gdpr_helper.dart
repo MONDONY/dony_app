@@ -5,6 +5,21 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 
+/// Action à effectuer pour le consentement analytics d'un utilisateur, une
+/// fois son pays connu (cf. [GdprHelper.requiresConsent]).
+enum AnalyticsConsentAction {
+  /// Rien à faire : service pas configuré, ou consentement déjà répondu.
+  none,
+
+  /// Zone RGPD (ou pays indéterminé) sans réponse → demander explicitement
+  /// via l'écran de consentement.
+  askConsent,
+
+  /// Zone hors RGPD sans réponse → consentement accordé automatiquement,
+  /// aucune confirmation utilisateur requise hors UE/EEE/UK/Suisse.
+  autoGrantNonGdpr,
+}
+
 /// Détermine si le pays de l'utilisateur est soumis au RGPD
 /// (UE + EEE + Royaume-Uni + Suisse).
 ///
@@ -34,12 +49,29 @@ abstract final class GdprHelper {
   ///   Si absent, utilise uniquement la locale du device.
   static bool requiresConsent({String? countryCode, Box? prefs}) {
     final storedCode = prefs?.get(HiveService.kDetectedCountryCode) as String?;
-    final code = (countryCode ?? storedCode ??
-            PlatformDispatcher.instance.locale.countryCode ??
-            '')
-        .toUpperCase();
+    final code =
+        (countryCode ??
+                storedCode ??
+                PlatformDispatcher.instance.locale.countryCode ??
+                '')
+            .toUpperCase();
     if (code.isEmpty) return true;
     return _gdprCountries.contains(code);
+  }
+
+  /// Détermine l'action de consentement à effectuer au login.
+  ///
+  /// Pure : ne dépend d'aucun GPS/Firebase, [requiresConsent] doit déjà avoir
+  /// été évalué en amont (GPS si dispo, sinon locale device).
+  static AnalyticsConsentAction resolveConsentAction({
+    required bool isConfigured,
+    required bool hasAnswered,
+    required bool requiresConsent,
+  }) {
+    if (!isConfigured || hasAnswered) return AnalyticsConsentAction.none;
+    return requiresConsent
+        ? AnalyticsConsentAction.askConsent
+        : AnalyticsConsentAction.autoGrantNonGdpr;
   }
 
   /// Détermine le pays à partir d'une position GPS et le stocke dans Hive.
