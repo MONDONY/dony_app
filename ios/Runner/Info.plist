@@ -1,154 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-	<dict>
-		<!-- ATS : autorise le HTTP en clair vers le réseau LOCAL uniquement
-		     (backend dev sur 192.168.x / .local). N'affaiblit pas l'ATS pour les
-		     hôtes publics → la prod en https reste protégée. -->
-		<key>NSAppTransportSecurity</key>
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Yadony</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Yadony</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
 		<dict>
-			<key>NSAllowsLocalNetworking</key>
-			<true/>
-		</dict>
-		<key>GMSApiKey</key>
-		<string>$(GOOGLE_MAPS_API_KEY)</string>
-		<key>GIDClientID</key>
-		<string>917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25.apps.googleusercontent.com</string>
-		<!-- Évite la question "chiffrement ?" à chaque upload App Store Connect :
-		     l'app n'utilise que TLS standard (HTTPS/Stripe SDK), exempté. -->
-		<key>ITSAppUsesNonExemptEncryption</key>
-		<false/>
-		<!-- PostHog : init manuelle en Dart → désactive l'auto-init natif. -->
-		<key>com.posthog.posthog.AUTO_INIT</key>
-		<false/>
-		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true/>
-		<key>CFBundleDevelopmentRegion</key>
-		<string>$(DEVELOPMENT_LANGUAGE)</string>
-		<key>CFBundleDisplayName</key>
-		<string>Yadony</string>
-		<key>CFBundleExecutable</key>
-		<string>$(EXECUTABLE_NAME)</string>
-		<key>CFBundleIdentifier</key>
-		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-		<key>CFBundleInfoDictionaryVersion</key>
-		<string>6.0</string>
-		<key>CFBundleName</key>
-		<string>Yadony</string>
-		<key>CFBundlePackageType</key>
-		<string>APPL</string>
-		<key>CFBundleShortVersionString</key>
-		<string>$(FLUTTER_BUILD_NAME)</string>
-		<key>CFBundleSignature</key>
-		<string>????</string>
-		<key>CFBundleVersion</key>
-		<string>$(FLUTTER_BUILD_NUMBER)</string>
-		<key>LSRequiresIPhoneOS</key>
-		<true/>
-		<key>UIApplicationSceneManifest</key>
-		<dict>
-			<key>UIApplicationSupportsMultipleScenes</key>
-			<false/>
-			<key>UISceneConfigurations</key>
-			<dict>
-				<key>UIWindowSceneSessionRoleApplication</key>
-				<array>
-					<dict>
-						<key>UISceneClassName</key>
-						<string>UIWindowScene</string>
-						<key>UISceneConfigurationName</key>
-						<string>flutter</string>
-						<key>UISceneDelegateClassName</key>
-						<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-						<key>UISceneStoryboardFile</key>
-						<string>Main</string>
-					</dict>
-				</array>
-			</dict>
-		</dict>
-		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true/>
-		<key>UILaunchStoryboardName</key>
-		<string>LaunchScreen</string>
-		<key>UIMainStoryboardFile</key>
-		<string>Main</string>
-		<key>UISupportedInterfaceOrientations</key>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
-		</array>
-		<key>UISupportedInterfaceOrientations~ipad</key>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationPortraitUpsideDown</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
-		</array>
-		<key>UIStatusBarHidden</key>
-		<false/>
-		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
-		<!-- Jamais demandée en pratique (aucun appel requestAlwaysAuthorization dans le
-		     code) : présente uniquement parce que le SDK Google Maps référence l'API
-		     Always, ce qu'Apple détecte au scan binaire même si le code ne l'appelle
-		     jamais. -->
-		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
-		<key>NSCameraUsageDescription</key>
-		<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
-		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Yadony accède à tes photos pour joindre des images de colis.</string>
-		<!-- Écriture en galerie : « Enregistrer » sur le QR code d'un colis. Sans cette
-		     clé, iOS termine l'app au moment de la sauvegarde. -->
-		<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>Yadony enregistre le QR code de ton colis dans tes photos pour que tu puisses le retrouver hors ligne.</string>
-		<key>NSFaceIDUsageDescription</key>
-		<string>Yadony utilise Face ID pour sécuriser tes paiements.</string>
-		<key>CFBundleURLTypes</key>
-		<array>
-			<dict>
-				<key>CFBundleTypeRole</key>
-				<string>Editor</string>
-				<key>CFBundleURLName</key>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>dony</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
 				<string>dony</string>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>dony</string>
-				</array>
-			</dict>
-			<dict>
-				<key>CFBundleTypeRole</key>
-				<string>Editor</string>
-				<key>CFBundleURLName</key>
-				<string>firebase-phone-auth</string>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>app-1-917070267063-ios-a7b83be04a9e3c19684332</string>
-				</array>
-			</dict>
-			<dict>
-				<key>CFBundleTypeRole</key>
-				<string>Editor</string>
-				<key>CFBundleURLName</key>
-				<string>google-sign-in</string>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>com.googleusercontent.apps.917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25</string>
-				</array>
-			</dict>
-		</array>
-		<!-- Depuis iOS 9, canOpenURL() renvoie false pour tout schéma non déclaré ici.
-		     Sans cette liste, canLaunchUrl() échoue et rien ne s'ouvre, même quand
-		     l'app cible existe. Équivalent iOS du bloc <queries> du AndroidManifest.
-		     tel: composeur (appel d'une contrepartie)
-		     mailto: client mail (contact support, compte Stripe rejeté)
-		     https: navigateur (pages légales, onboarding Stripe, mobile money) -->
-		<key>LSApplicationQueriesSchemes</key>
-		<array>
-			<string>tel</string>
-			<string>mailto</string>
-			<string>https</string>
-		</array>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>firebase-phone-auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-917070267063-ios-a7b83be04a9e3c19684332</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>google-sign-in</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GIDClientID</key>
+	<string>917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25.apps.googleusercontent.com</string>
+	<key>GMSApiKey</key>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>mailto</string>
+		<string>https</string>
+	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Yadony utilise Face ID pour sécuriser tes paiements.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Yadony enregistre le QR code de ton colis dans tes photos pour que tu puisses le retrouver hors ligne.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Yadony accède à tes photos pour joindre des images de colis.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>com.posthog.posthog.AUTO_INIT</key>
+	<false/>
+</dict>
 </plist>
