@@ -23,7 +23,10 @@ class PrivacySettingsScreen extends StatelessWidget {
   /// dont l'identité n'a pas été vérifiée : on demande une confirmation explicite
   /// avant de l'appliquer. Réactiver la protection ne demande rien, c'est le sens
   /// prudent.
-  Future<void> _onContactKycOnlyChanged(BuildContext context, bool value) async {
+  Future<void> _onContactKycOnlyChanged(
+    BuildContext context,
+    bool value,
+  ) async {
     final bloc = context.read<PrivacySettingsBloc>();
     if (!value) {
       final accepted = await UnverifiedContactWarningSheet.show(context);
@@ -48,10 +51,7 @@ class PrivacySettingsScreen extends StatelessWidget {
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(
-          'Confidentialité',
-          style: tt.headlineLarge,
-        ),
+        title: Text('Confidentialité', style: tt.headlineLarge),
         centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -69,8 +69,7 @@ class PrivacySettingsScreen extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          final loaded =
-              state is PrivacySettingsLoaded ? state : null;
+          final loaded = state is PrivacySettingsLoaded ? state : null;
           final isLoading = state is PrivacySettingsLoading;
 
           return SingleChildScrollView(
@@ -119,9 +118,9 @@ class PrivacySettingsScreen extends StatelessWidget {
                       value: loaded?.hidePhoneNumber ?? false,
                       onChanged: isLoading
                           ? null
-                          : (v) => context
-                              .read<PrivacySettingsBloc>()
-                              .add(HidePhoneNumberToggled(v)),
+                          : (v) => context.read<PrivacySettingsBloc>().add(
+                              HidePhoneNumberToggled(v),
+                            ),
                     ),
                   ],
                 ),
@@ -154,10 +153,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ],
-            )
-                .animate()
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
           );
         },
       ),
@@ -212,11 +208,11 @@ class _ProtectedNumberBanner extends StatelessWidget {
                 Text(
                   phoneHidden
                       ? "Ton numéro n'est communiqué à personne, même une fois "
-                          "l'accord conclu. Tes partenaires te joignent par la "
-                          'messagerie Yadony, et tu peux toujours appeler le leur.'
+                            "l'accord conclu. Tes partenaires te joignent par la "
+                            'messagerie Yadony, et tu peux toujours appeler le leur.'
                       : "Personne ne voit ton numéro tant qu'une offre n'est pas "
-                          "acceptée. Une fois l'accord conclu, toi et ton "
-                          'partenaire échangez vos numéros pour organiser la remise.',
+                            "acceptée. Une fois l'accord conclu, toi et ton "
+                            'partenaire échangez vos numéros pour organiser la remise.',
                   style: tt.bodySmall?.copyWith(
                     color: Colors.white.withOpacity(0.85),
                     fontSize: 12,
@@ -343,11 +339,7 @@ class _SettingsToggleRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          Switch(
-            value: value,
-            activeColor: activeColor,
-            onChanged: onChanged,
-          ),
+          Switch(value: value, activeColor: activeColor, onChanged: onChanged),
         ],
       ),
     );
@@ -380,8 +372,9 @@ class _AnalyticsConsentCard extends StatelessWidget {
     final hive = getIt<HiveService>();
 
     return ValueListenableBuilder<Box>(
-      valueListenable:
-          hive.listenUserPrefs(keys: const [HiveService.kAnalyticsConsent]),
+      valueListenable: hive.listenUserPrefs(
+        keys: const [HiveService.kAnalyticsConsent],
+      ),
       builder: (context, box, _) {
         final enabled = box.get(HiveService.kAnalyticsConsent) == true;
 
@@ -391,16 +384,25 @@ class _AnalyticsConsentCard extends StatelessWidget {
               emoji: '📊',
               emojiBackground: const Color(0xFFEAF1FF),
               title: "Statistiques d'utilisation",
-              subtitle: "Mesure anonyme de l'usage pour améliorer l'app. "
+              subtitle:
+                  "Mesure anonyme de l'usage pour améliorer l'app. "
                   'Jamais tes paiements ni ton identité.',
               value: enabled,
-              onChanged: (v) {
-                getIt<AnalyticsService>()
-                    .setConsent(granted: v, source: 'settings');
-                unawaited(getIt<AnalyticsService>().logEvent(
-                  AnalyticsEvents.analyticsConsentChanged,
-                  properties: {'granted': v},
-                ));
+              onChanged: (v) async {
+                // await requis : setConsent() active/désactive le SDK natif
+                // PostHog de façon asynchrone (pont plateforme). Sans await,
+                // le logEvent() ci-dessous peut s'exécuter avant que le SDK
+                // soit réellement (dés)activé et être silencieusement ignoré.
+                await getIt<AnalyticsService>().setConsent(
+                  granted: v,
+                  source: 'settings',
+                );
+                unawaited(
+                  getIt<AnalyticsService>().logEvent(
+                    AnalyticsEvents.analyticsConsentChanged,
+                    properties: {'granted': v},
+                  ),
+                );
               },
             ),
           ],
