@@ -15,6 +15,7 @@ class ConversationListBloc
   final FirestoreChatRepository _firestoreRepo;
 
   StreamSubscription<Map<String, int>>? _unreadSub;
+  StreamSubscription<User?>? _authSub;
   List<ConversationModel>? _loaded;
   List<ConversationModel> _archived = [];
 
@@ -31,6 +32,20 @@ class ConversationListBloc
     on<ConversationFilterChanged>(_onFilterChanged);
     on<ConversationArchiveRequested>(_onArchive);
     on<ConversationUnarchiveRequested>(_onUnarchive);
+
+    // Ce Bloc est un singleton GetIt (jamais fermé via BlocProvider.value) :
+    // sans ce listener, _unreadSub survit à un signOut() et Firestore renvoie
+    // permission-denied dès qu'il tente de lire userMeta/{ancien-uid}.
+    try {
+      _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+        if (user == null) {
+          unawaited(_unreadSub?.cancel());
+          _unreadSub = null;
+        }
+      });
+    } catch (_) {
+      // Firebase not available (e.g. in tests) — skip auth-state subscription
+    }
   }
 
   Future<void> _onLoad(
@@ -74,7 +89,12 @@ class ConversationListBloc
 
         _unreadSub = _firestoreRepo
             .perConversationUnreadStream(uid)
-            .listen((map) => add(ConversationsUnreadUpdated(map)));
+            .listen(
+              (map) => add(ConversationsUnreadUpdated(map)),
+              onError: (_) {
+                // Session invalidée entre-temps (ex: signOut concurrent) — pas d'état d'erreur bloquant.
+              },
+            );
       }
     } catch (_) {
       // Firebase not available (e.g. in tests) — skip stream subscription
@@ -210,6 +230,7 @@ class ConversationListBloc
   @override
   Future<void> close() {
     _unreadSub?.cancel();
+    _authSub?.cancel();
     return super.close();
   }
 }
