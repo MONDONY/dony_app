@@ -143,16 +143,14 @@ class AuthRegisterWithEmailRequested extends AuthEvent {
 }
 
 class AuthAddPhoneFromProfileRequested extends AuthEvent {
-  final String verificationId;
-  final String smsCode;
   final String phoneNumber;
+  final String code;
   const AuthAddPhoneFromProfileRequested({
-    required this.verificationId,
-    required this.smsCode,
     required this.phoneNumber,
+    required this.code,
   });
   @override
-  List<Object?> get props => [verificationId, smsCode, phoneNumber];
+  List<Object?> get props => [phoneNumber, code];
 }
 
 class AuthAddEmailFromProfileRequested extends AuthEvent {
