@@ -124,11 +124,18 @@ class FirestoreChatRepository {
     // vérification du numéro de téléphone) fait planter le stream en
     // permission-denied côté Firestore — non rattrapé, ça remonte jusqu'à
     // PlatformDispatcher.onError (crash fatal Sentry FLUTTER-3).
+    //
+    // Filtré sur ce seul code : avaler toute erreur masquerait aussi de vrais
+    // bugs (parsing, réseau) sans laisser de trace — seul permission-denied
+    // est un état transitoire attendu ici.
     return _firestore
         .collection('userMeta')
         .doc(currentUserUid)
         .snapshots()
-        .handleError((_) {})
+        .handleError(
+          (_) {},
+          test: (e) => e is FirebaseException && e.code == 'permission-denied',
+        )
         .map((doc) {
           final data = doc.data();
           if (data == null) return 0;

@@ -47,6 +47,33 @@ void main() {
     expect(events, isEmpty);
   });
 
+  test('totalUnreadStream rethrows a non-permission-denied error instead of '
+      'silently swallowing it', () async {
+    // Le filtre ne doit avaler QUE permission-denied — toute autre erreur
+    // (bug de parsing, panne réseau) doit rester visible plutôt que
+    // disparaître en silence.
+    final mockFirestore = MockFirebaseFirestore();
+    final mockCollection = MockCollectionReference();
+    final mockDoc = MockDocumentReference();
+
+    when(() => mockFirestore.collection('userMeta')).thenReturn(mockCollection);
+    when(() => mockCollection.doc('uid-1')).thenReturn(mockDoc);
+    when(() => mockDoc.snapshots()).thenAnswer(
+      (_) => Stream.error(
+        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+      ),
+    );
+
+    final repoWithMockedFailure = FirestoreChatRepository(mockFirestore);
+
+    await expectLater(
+      repoWithMockedFailure.totalUnreadStream('uid-1'),
+      emitsError(
+        isA<FirebaseException>().having((e) => e.code, 'code', 'unavailable'),
+      ),
+    );
+  });
+
   test('totalUnreadStream emits 0 when no userMeta doc', () async {
     final result = await repo.totalUnreadStream('uid-1').first;
     expect(result, 0);
