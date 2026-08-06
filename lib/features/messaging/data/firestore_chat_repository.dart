@@ -13,9 +13,11 @@ class FirestoreChatRepository {
         .orderBy('sentAt', descending: true)
         .limit(50)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => MessageModel.fromFirestore(doc.id, doc.data()))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => MessageModel.fromFirestore(doc.id, doc.data()))
+              .toList(),
+        );
   }
 
   Future<void> sendTextMessage({
@@ -28,13 +30,13 @@ class FirestoreChatRepository {
         .doc(firestoreConversationId)
         .collection('messages')
         .add({
-      'senderId': senderFirebaseUid,
-      'body': body,
-      'imageUrl': null,
-      'type': 'TEXT',
-      'sentAt': DateTime.now().toUtc().toIso8601String(),
-      'readAt': null,
-    });
+          'senderId': senderFirebaseUid,
+          'body': body,
+          'imageUrl': null,
+          'type': 'TEXT',
+          'sentAt': DateTime.now().toUtc().toIso8601String(),
+          'readAt': null,
+        });
   }
 
   Future<void> sendImageMessage({
@@ -47,13 +49,13 @@ class FirestoreChatRepository {
         .doc(firestoreConversationId)
         .collection('messages')
         .add({
-      'senderId': senderFirebaseUid,
-      'body': null,
-      'imageUrl': imageUrl,
-      'type': 'IMAGE',
-      'sentAt': DateTime.now().toUtc().toIso8601String(),
-      'readAt': null,
-    });
+          'senderId': senderFirebaseUid,
+          'body': null,
+          'imageUrl': imageUrl,
+          'type': 'IMAGE',
+          'sentAt': DateTime.now().toUtc().toIso8601String(),
+          'readAt': null,
+        });
   }
 
   Future<void> sendLocationMessage({
@@ -67,15 +69,15 @@ class FirestoreChatRepository {
         .doc(firestoreConversationId)
         .collection('messages')
         .add({
-      'senderId': senderFirebaseUid,
-      'body': null,
-      'imageUrl': null,
-      'type': 'LOCATION',
-      'latitude': latitude,
-      'longitude': longitude,
-      'sentAt': DateTime.now().toUtc().toIso8601String(),
-      'readAt': null,
-    });
+          'senderId': senderFirebaseUid,
+          'body': null,
+          'imageUrl': null,
+          'type': 'LOCATION',
+          'latitude': latitude,
+          'longitude': longitude,
+          'sentAt': DateTime.now().toUtc().toIso8601String(),
+          'readAt': null,
+        });
   }
 
   /// Marks all messages from the other participant as read by setting [readAt].
@@ -93,14 +95,19 @@ class FirestoreChatRepository {
         .get();
 
     final unread = snap.docs
-        .where((d) =>
-            d.data()['senderId'] != currentUserUid && d.data()['readAt'] == null)
+        .where(
+          (d) =>
+              d.data()['senderId'] != currentUserUid &&
+              d.data()['readAt'] == null,
+        )
         .toList();
     if (unread.isEmpty) return;
 
     final batch = _firestore.batch();
     for (final doc in unread) {
-      batch.update(doc.reference, {'readAt': DateTime.now().toUtc().toIso8601String()});
+      batch.update(doc.reference, {
+        'readAt': DateTime.now().toUtc().toIso8601String(),
+      });
     }
     await batch.commit();
   }
@@ -110,21 +117,29 @@ class FirestoreChatRepository {
     // the stored `totalUnreadMessages` aggregate. The aggregate can drift
     // (e.g. when a conversation is deleted while still holding unread
     // messages), so summing the source-of-truth fields self-heals the badge.
+    //
+    // handleError : seul consommateur (badge Messages de main_shell.dart), pas
+    // de garde équivalent au onError de perConversationUnreadStream côté
+    // appelant. Sans lui, un token Auth pas encore propagé (ex: pendant la
+    // vérification du numéro de téléphone) fait planter le stream en
+    // permission-denied côté Firestore — non rattrapé, ça remonte jusqu'à
+    // PlatformDispatcher.onError (crash fatal Sentry FLUTTER-3).
     return _firestore
         .collection('userMeta')
         .doc(currentUserUid)
         .snapshots()
+        .handleError((_) {})
         .map((doc) {
-      final data = doc.data();
-      if (data == null) return 0;
-      var total = 0;
-      for (final entry in data.entries) {
-        if (!entry.key.startsWith('unread_')) continue;
-        final value = entry.value;
-        if (value is num && value > 0) total += value.toInt();
-      }
-      return total;
-    });
+          final data = doc.data();
+          if (data == null) return 0;
+          var total = 0;
+          for (final entry in data.entries) {
+            if (!entry.key.startsWith('unread_')) continue;
+            final value = entry.value;
+            if (value is num && value > 0) total += value.toInt();
+          }
+          return total;
+        });
   }
 
   Stream<Map<String, int>> perConversationUnreadStream(String currentUserUid) {
@@ -137,12 +152,16 @@ class FirestoreChatRepository {
           final data = doc.data()!;
           return Map.fromEntries(
             data.entries
-                .where((e) =>
-                    e.key.startsWith('unread_') && (e.value as int? ?? 0) > 0)
-                .map((e) => MapEntry(
-                      e.key.replaceFirst('unread_', ''),
-                      (e.value as num).toInt(),
-                    )),
+                .where(
+                  (e) =>
+                      e.key.startsWith('unread_') && (e.value as int? ?? 0) > 0,
+                )
+                .map(
+                  (e) => MapEntry(
+                    e.key.replaceFirst('unread_', ''),
+                    (e.value as num).toInt(),
+                  ),
+                ),
           );
         });
   }
@@ -187,14 +206,15 @@ class FirestoreChatRepository {
   }
 
   Future<void> markConversationRead(
-      String firestoreConvId, String currentUserUid) async {
+    String firestoreConvId,
+    String currentUserUid,
+  ) async {
     final doc = await _firestore
         .collection('userMeta')
         .doc(currentUserUid)
         .get();
 
-    final currentCount =
-        (doc.data()?['unread_$firestoreConvId'] as int?) ?? 0;
+    final currentCount = (doc.data()?['unread_$firestoreConvId'] as int?) ?? 0;
     if (currentCount <= 0) return;
 
     await _firestore.collection('userMeta').doc(currentUserUid).update({
