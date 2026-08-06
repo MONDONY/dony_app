@@ -4,21 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ErrorCatalog — ValidationException', () {
-    test('avec violations → message liste les messages de champ (regression)', () {
-      const error = ValidationException(
-        'Validation failed',
-        errors: {
-          'availableKg': ["La capacité doit être d'au moins 1 kg"],
-          'pricePerKg': ['Le prix ne peut pas être négatif'],
-        },
-      );
+    test(
+      'avec violations → message liste les messages de champ (regression)',
+      () {
+        const error = ValidationException(
+          'Validation failed',
+          errors: {
+            'availableKg': ["La capacité doit être d'au moins 1 kg"],
+            'pricePerKg': ['Le prix ne peut pas être négatif'],
+          },
+        );
 
-      final p = ErrorCatalog.lookup(error);
+        final p = ErrorCatalog.lookup(error);
 
-      expect(p.title, 'Données invalides');
-      expect(p.message, contains("La capacité doit être d'au moins 1 kg"));
-      expect(p.message, contains('Le prix ne peut pas être négatif'));
-    });
+        expect(p.title, 'Données invalides');
+        expect(p.message, contains("La capacité doit être d'au moins 1 kg"));
+        expect(p.message, contains('Le prix ne peut pas être négatif'));
+      },
+    );
 
     test('sans violations → message générique', () {
       const error = ValidationException('Validation failed');
@@ -44,8 +47,9 @@ void main() {
     // l'utilisateur ne comprenait pas qu'il s'agissait du quota mensuel.
     test('code dédié → message clair « Passer en PRO » (warning)', () {
       const error = ForbiddenException(
-          'Vous avez atteint votre limite de 2 annonces ce mois-ci.',
-          'pro-limit-reached');
+        'Vous avez atteint votre limite de 2 annonces ce mois-ci.',
+        'pro-limit-reached',
+      );
 
       final p = ErrorCatalog.lookup(error);
 
@@ -84,6 +88,44 @@ void main() {
         code: 'negotiation/commission-charge-failed',
       );
       expect(ErrorCatalog.isKnown(error), isTrue);
+    });
+  });
+
+  group('ErrorCatalog — firebase-* (connexion par numéro)', () {
+    // RÉGRESSION : AuthBloc._friendlyFirebaseError générait des codes
+    // ('code-expired', 'code-incorrect', 'too-many-attempts') identiques à
+    // ceux déjà utilisés par la confirmation de livraison — un OTP expiré
+    // affichait « Demande à l'expéditeur d'en générer un nouveau », un
+    // message trompeur en plein flux de connexion. Les codes Firebase sont
+    // maintenant préfixés `firebase-` et n'entrent plus en collision.
+    test('firebase-code-expired reste distinct du code-expired livraison', () {
+      const firebaseError = NetworkException(
+        'peu importe',
+        code: 'firebase-code-expired',
+      );
+      const deliveryError = NetworkException(
+        'peu importe',
+        code: 'code-expired',
+      );
+
+      final firebasePresentation = ErrorCatalog.lookup(firebaseError);
+      final deliveryPresentation = ErrorCatalog.lookup(deliveryError);
+
+      expect(firebasePresentation.message, contains('nouveau code'));
+      expect(deliveryPresentation.message, contains('expéditeur'));
+      expect(firebasePresentation.message, isNot(contains('expéditeur')));
+    });
+
+    test('code Firebase générique inconnu → entrée dédiée, pas "Erreur '
+        'réseau"', () {
+      const error = NetworkException(
+        'peu importe',
+        code: 'firebase-auth-error',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, isNot('Erreur réseau'));
     });
   });
 }

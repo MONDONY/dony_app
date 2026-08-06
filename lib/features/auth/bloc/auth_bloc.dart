@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 typedef AppleSignInCallback =
@@ -122,9 +123,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         unawaited(
           _analytics?.logEvent(
             AnalyticsEvents.loginFailed,
-            properties: {
-              'error_type': statusCode?.toString() ?? 'network',
-            },
+            properties: {'error_type': statusCode?.toString() ?? 'network'},
           ),
         );
       }
@@ -608,26 +607,59 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
+  // Codes préfixés `firebase-` pour ne jamais entrer en collision avec les
+  // codes homonymes d'autres features (ex: `code-expired`/`code-incorrect`
+  // existent déjà dans ErrorCatalog pour les codes de confirmation de
+  // livraison — un OTP expiré affichait leur message "vérifie auprès de
+  // l'expéditeur", trompeur en plein flux de connexion).
   AppException _friendlyFirebaseError(FirebaseAuthException e) {
+    // Sentry seul récipiendaire du code brut Firebase : ErrorCatalog ne
+    // l'affiche jamais tel quel (fallback générique "Erreur réseau"), donc
+    // sans ce breadcrumb aucune télémétrie ne permet de savoir quel code
+    // Firebase a réellement échoué en prod (ex: app-not-authorized,
+    // network-request-failed, internal-error).
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        category: 'auth',
+        type: 'error',
+        level: SentryLevel.warning,
+        message: 'FirebaseAuthException',
+        data: {'code': e.code, 'message': e.message ?? ''},
+      ),
+    );
     final (message, code) = switch (e.code) {
       'invalid-phone-number' => (
         'Numéro de téléphone invalide',
-        'invalid-phone-number',
+        'firebase-invalid-phone-number',
       ),
       'invalid-verification-code' => (
         'Code de vérification incorrect',
-        'code-incorrect',
+        'firebase-code-incorrect',
       ),
       'code-expired' => (
         'Le code a expiré. Demandez un nouveau code.',
-        'code-expired',
+        'firebase-code-expired',
       ),
       'too-many-requests' => (
         'Trop de tentatives. Réessayez plus tard.',
-        'too-many-attempts',
+        'firebase-too-many-attempts',
       ),
-      'session-expired' => ('Session expirée. Recommencez.', 'session-expired'),
-      _ => (e.message ?? 'Erreur d\'authentification', 'firebase-auth-error'),
+      'session-expired' => (
+        'Session expirée. Recommencez.',
+        'firebase-session-expired',
+      ),
+      'network-request-failed' => (
+        'Impossible de joindre les serveurs Google. Vérifie ta connexion.',
+        'firebase-network-request-failed',
+      ),
+      'app-not-authorized' || 'missing-client-identifier' => (
+        'Vérification de l\'application impossible. Réinstalle l\'app depuis TestFlight/le Store.',
+        'firebase-app-verification-failed',
+      ),
+      _ => (
+        e.message ?? 'Erreur d\'authentification (${e.code})',
+        'firebase-auth-error',
+      ),
     };
     return NetworkException(message, code: code);
   }

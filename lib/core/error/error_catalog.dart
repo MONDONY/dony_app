@@ -69,6 +69,62 @@ abstract final class ErrorCatalog {
       icon: Icons.gpp_bad_rounded,
     ),
 
+    // ─── Connexion par numéro (Firebase Auth) ──────────────────────────
+    // Codes propres à AuthBloc._friendlyFirebaseError, préfixés `firebase-`
+    // pour ne jamais collisionner avec les codes homonymes d'autres features
+    // (ex: `code-expired`/`code-incorrect` existent déjà plus bas pour les
+    // codes de confirmation de livraison).
+    'firebase-invalid-phone-number': ErrorPresentation(
+      title: 'Numéro invalide',
+      message: 'Vérifie le numéro saisi et réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'firebase-code-incorrect': ErrorPresentation(
+      title: 'Code incorrect',
+      message: 'Le code de vérification saisi est incorrect.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.password_rounded,
+    ),
+    'firebase-code-expired': ErrorPresentation(
+      title: 'Code expiré',
+      message: 'Ce code a expiré. Demande un nouveau code.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.timer_off_rounded,
+    ),
+    'firebase-too-many-attempts': ErrorPresentation(
+      title: 'Trop de tentatives',
+      message: 'Trop de tentatives. Réessaie dans quelques minutes.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'firebase-session-expired': ErrorPresentation(
+      title: 'Session expirée',
+      message: 'Ta session a expiré. Recommence la connexion.',
+      severity: ErrorSeverity.error,
+      icon: Icons.lock_reset_rounded,
+    ),
+    'firebase-network-request-failed': ErrorPresentation(
+      title: 'Erreur réseau',
+      message:
+          'Impossible de joindre les serveurs Google. Vérifie ta connexion.',
+      severity: ErrorSeverity.error,
+      icon: Icons.wifi_off_rounded,
+    ),
+    'firebase-app-verification-failed': ErrorPresentation(
+      title: 'Vérification impossible',
+      message:
+          'La vérification de l\'application a échoué. Réinstalle l\'app depuis TestFlight ou le Store puis réessaie.',
+      severity: ErrorSeverity.error,
+      icon: Icons.gpp_maybe_rounded,
+    ),
+    'firebase-auth-error': ErrorPresentation(
+      title: 'Erreur de connexion',
+      message: 'La connexion a échoué. Réessaie dans un instant.',
+      severity: ErrorSeverity.error,
+      icon: Icons.error_outline_rounded,
+    ),
+
     // ─── Annonces / trajets ──────────────────────────────────────────
     'announcement-not-found': ErrorPresentation(
       title: 'Trajet introuvable',
@@ -104,7 +160,8 @@ abstract final class ErrorCatalog {
     ),
     'publishing-suspended': ErrorPresentation(
       title: 'Publication suspendue',
-      message: 'La publication est suspendue sur ton compte. Contacte le support.',
+      message:
+          'La publication est suspendue sur ton compte. Contacte le support.',
       severity: ErrorSeverity.critical,
       icon: Icons.gpp_bad_rounded,
     ),
@@ -133,14 +190,16 @@ abstract final class ErrorCatalog {
     // est la seule issue pour cet expéditeur.
     'contact-kyc-required': ErrorPresentation(
       title: 'Profil vérifié requis',
-      message: 'Ce voyageur ne reçoit que des profils vérifiés. '
+      message:
+          'Ce voyageur ne reçoit que des profils vérifiés. '
           'Vérifie ton identité pour lui envoyer une demande.',
       severity: ErrorSeverity.warning,
       icon: Icons.badge_outlined,
     ),
     'bid-not-accepted': ErrorPresentation(
       title: 'Demande non acceptée',
-      message: 'Cette demande doit être acceptée par le voyageur avant cette étape.',
+      message:
+          'Cette demande doit être acceptée par le voyageur avant cette étape.',
       severity: ErrorSeverity.warning,
       icon: Icons.pending_actions_rounded,
     ),
@@ -181,7 +240,8 @@ abstract final class ErrorCatalog {
     ),
     'code-expired': ErrorPresentation(
       title: 'Code expiré',
-      message: 'Ce code a expiré. Demande à l\'expéditeur d\'en générer un nouveau.',
+      message:
+          'Ce code a expiré. Demande à l\'expéditeur d\'en générer un nouveau.',
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
@@ -207,7 +267,8 @@ abstract final class ErrorCatalog {
     ),
     'invalid-timestamp': ErrorPresentation(
       title: 'Horodatage invalide',
-      message: 'L\'horodatage de la lecture est incohérent. Réessaie une fois en ligne.',
+      message:
+          'L\'horodatage de la lecture est incohérent. Réessaie une fois en ligne.',
       severity: ErrorSeverity.warning,
       icon: Icons.access_time_rounded,
     ),
@@ -301,19 +362,22 @@ abstract final class ErrorCatalog {
     // ─── Email OTP ───────────────────────────────────────────────────
     'otp-invalid': ErrorPresentation(
       title: 'Code invalide',
-      message: 'Le code saisi est incorrect ou a déjà été utilisé. Vérifie le code reçu par email.',
+      message:
+          'Le code saisi est incorrect ou a déjà été utilisé. Vérifie le code reçu par email.',
       severity: ErrorSeverity.warning,
       icon: Icons.mark_email_unread_outlined,
     ),
     'otp-expired': ErrorPresentation(
       title: 'Code expiré',
-      message: 'Ce code a expiré. Reviens en arrière et demande un nouveau code.',
+      message:
+          'Ce code a expiré. Reviens en arrière et demande un nouveau code.',
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
     'otp-attempts-exceeded': ErrorPresentation(
       title: 'Trop de tentatives',
-      message: 'Trop d\'essais incorrects. Reviens en arrière et demande un nouveau code.',
+      message:
+          'Trop d\'essais incorrects. Reviens en arrière et demande un nouveau code.',
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
@@ -325,7 +389,8 @@ abstract final class ErrorCatalog {
     ),
     'rate-limit': ErrorPresentation(
       title: 'Trop de tentatives',
-      message: 'Tu as demandé trop de codes. Attends 5 minutes avant de réessayer.',
+      message:
+          'Tu as demandé trop de codes. Attends 5 minutes avant de réessayer.',
       severity: ErrorSeverity.warning,
       icon: Icons.speed_rounded,
     ),
@@ -396,7 +461,8 @@ abstract final class ErrorCatalog {
     ),
     'TIMEOUT': ErrorPresentation(
       title: 'Le serveur met du temps',
-      message: 'La requête a pris trop de temps. Réessaie dans quelques secondes.',
+      message:
+          'La requête a pris trop de temps. Réessaie dans quelques secondes.',
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_disabled_rounded,
     ),
@@ -500,7 +566,8 @@ abstract final class ErrorCatalog {
 
   static const ErrorPresentation _storageGeneric = ErrorPresentation(
     title: 'Stockage indisponible',
-    message: 'Impossible d\'accéder au stockage local. Redémarre l\'application.',
+    message:
+        'Impossible d\'accéder au stockage local. Redémarre l\'application.',
     severity: ErrorSeverity.error,
     icon: Icons.sd_storage_outlined,
   );
@@ -514,7 +581,8 @@ abstract final class ErrorCatalog {
 
   static const ErrorPresentation _generic = ErrorPresentation(
     title: 'Une erreur est survenue',
-    message: 'Réessaie dans un instant. Si le problème persiste, contacte le support.',
+    message:
+        'Réessaie dans un instant. Si le problème persiste, contacte le support.',
     severity: ErrorSeverity.error,
     icon: Icons.error_outline_rounded,
   );
