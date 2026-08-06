@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -13,7 +14,6 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 typedef AppleSignInCallback =
@@ -613,19 +613,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // livraison — un OTP expiré affichait leur message "vérifie auprès de
   // l'expéditeur", trompeur en plein flux de connexion).
   AppException _friendlyFirebaseError(FirebaseAuthException e) {
-    // Sentry seul récipiendaire du code brut Firebase : ErrorCatalog ne
-    // l'affiche jamais tel quel (fallback générique "Erreur réseau"), donc
-    // sans ce breadcrumb aucune télémétrie ne permet de savoir quel code
-    // Firebase a réellement échoué en prod (ex: app-not-authorized,
-    // network-request-failed, internal-error).
-    Sentry.addBreadcrumb(
-      Breadcrumb(
-        category: 'auth',
-        type: 'error',
-        level: SentryLevel.warning,
-        message: 'FirebaseAuthException',
-        data: {'code': e.code, 'message': e.message ?? ''},
-      ),
+    // AppLog.error() capture l'exception brute comme event Sentry (pas
+    // seulement un breadcrumb, qui ne s'attache qu'à un event déjà capturé
+    // et ne remonte jamais seul) : ErrorCatalog n'affiche jamais le code
+    // Firebase tel quel (fallback générique "Erreur réseau"), donc sans ça
+    // aucune télémétrie ne permet de savoir quel code a réellement échoué en
+    // prod (ex: app-not-authorized, network-request-failed, internal-error).
+    AppLog.error(
+      'FirebaseAuthException lors de verifyPhoneNumber/signInWithCredential',
+      error: e,
+      data: {'firebase_code': e.code},
     );
     final (message, code) = switch (e.code) {
       'invalid-phone-number' => (
