@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -61,10 +62,25 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
       routerConfig: GoRouter(
         routes: [
           GoRoute(path: '/', builder: (context, _) => child),
+          GoRoute(
+            path: '/profile/edit/email',
+            builder: (context, _) => const Scaffold(body: Text('EditEmailScreen')),
+          ),
+          GoRoute(
+            path: '/profile/edit/phone',
+            builder: (context, _) => const Scaffold(body: Text('EditPhoneScreen')),
+          ),
         ],
       ),
     ),
   );
+}
+
+/// Bascule l'écran en mode édition — tap sur le bouton du bas quand il dit
+/// encore « Modifier ».
+Future<void> _enterEditMode(WidgetTester tester) async {
+  await tester.tap(find.widgetWithText(DonyButton, 'Modifier'));
+  await tester.pumpAndSettle();
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -79,111 +95,248 @@ void main() {
 
   setUp(() {
     mockAuthBloc = MockAuthBloc();
+    setSmsAuthEnabled(kSmsAuthEnabledDefault);
   });
 
   tearDown(() {
     mockAuthBloc.close();
+    setSmsAuthEnabled(kSmsAuthEnabledDefault);
   });
 
-  // ── Test 1 : rendu de base — champs + bouton sticky ───────────────────────
+  // ── Mode vue (par défaut à l'ouverture) ───────────────────────────────────
 
-  testWidgets('EditProfileScreen rend les champs + bouton sticky', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      mockAuthBloc,
-      const Stream.empty(),
-      initialState: AuthAuthenticated(_senderUser),
+  group('mode vue (par défaut)', () {
+    testWidgets('affiche les infos en lecture et le bouton "Modifier"', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_senderUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Modifier le profil'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Modifier'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Enregistrer'), findsNothing);
+
+      // Nom affiché comme titre, pas de champ de saisie.
+      expect(find.text('Ibrahima Diallo'), findsOneWidget);
+      expect(find.byType(EditableText), findsNothing);
+
+      // Email en lecture, pas de badge "Modifier"/"Ajouter" hors édition.
+      expect(find.text('ibra@test.com'), findsOneWidget);
+      expect(find.text('Modifier'), findsOneWidget); // le seul, sur le bouton sticky
+    });
+
+    testWidgets('affiche bio, ville et date de naissance en texte simple', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_senderUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Expéditeur depuis 2022.'), findsOneWidget);
+      expect(find.text('Paris'), findsOneWidget);
+      expect(find.text('15/06/1990'), findsOneWidget);
+    });
+
+    testWidgets('voyageur voit langues et transport en texte simple', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_travelerUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PRÉFÉRENCES'), findsOneWidget);
+      expect(find.text('Français, Wolof'), findsOneWidget);
+      expect(find.text('Avion'), findsOneWidget);
+      // Pas de chips sélectionnables hors édition.
+      expect(find.byType(FilterChip), findsNothing);
+    });
+
+    testWidgets('non-voyageur ne voit pas la section Préférences', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_senderUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PRÉFÉRENCES'), findsNothing);
+    });
+
+    testWidgets(
+      'masque la ligne TÉLÉPHONE tant que le SMS OTP backend n\'est pas confirmé',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: AuthAuthenticated(_senderUser),
+        );
+
+        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+
+        expect(find.text('TÉLÉPHONE'), findsNothing);
+      },
     );
-
-    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Modifier le profil'), findsOneWidget);
-    // _SectionLabel renders toUpperCase
-    expect(find.text('À PROPOS'), findsOneWidget);
-    expect(find.widgetWithText(DonyButton, 'Enregistrer'), findsOneWidget);
-    // Sticky button must NOT be inside the scrollable content
-    // (it should be in bottomNavigationBar, not inside SingleChildScrollView)
-    final scrollView = find.byType(SingleChildScrollView);
-    expect(scrollView, findsOneWidget);
-    final buttonInScroll = find.descendant(
-      of: scrollView,
-      matching: find.widgetWithText(DonyButton, 'Enregistrer'),
-    );
-    expect(buttonInScroll, findsNothing);
   });
 
-  // ── Test 2 : voyageur voit "Préférences" / langues ────────────────────────
+  // ── Bascule vue → édition ─────────────────────────────────────────────────
 
-  testWidgets('voyageur voit la section Préférences avec les langues', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      mockAuthBloc,
-      const Stream.empty(),
-      initialState: const AuthAuthenticated(_travelerUser),
-    );
+  group('bascule vue → édition', () {
+    testWidgets('tap "Modifier" affiche les champs et le bouton "Enregistrer"', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_senderUser),
+      );
 
-    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+      await _enterEditMode(tester);
 
-    // _SectionLabel renders toUpperCase
-    expect(find.text('PRÉFÉRENCES'), findsOneWidget);
-    expect(find.text('Langues parlées'), findsOneWidget);
-    expect(find.text('Mode de transport'), findsOneWidget);
-    // Language chips should be present
-    expect(find.text('Français'), findsOneWidget);
-    expect(find.text('Wolof'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Enregistrer'), findsOneWidget);
+      expect(find.widgetWithText(DonyButton, 'Modifier'), findsNothing);
+      // Le nom devient deux champs de saisie.
+      expect(find.text('Ibrahima Diallo'), findsNothing);
+
+      final editableTexts = tester
+          .widgetList<EditableText>(find.byType(EditableText))
+          .map((e) => e.controller.text)
+          .toList();
+      expect(editableTexts, contains('Ibrahima'));
+      expect(editableTexts, contains('Diallo'));
+      expect(editableTexts, contains('Paris'));
+      expect(editableTexts, contains('Expéditeur depuis 2022.'));
+      // L'email n'est JAMAIS un champ de saisie, même en édition.
+      expect(editableTexts, isNot(contains('ibra@test.com')));
+    });
+
+    testWidgets('voyageur voit les chips langues + sélecteur transport en édition', (
+      tester,
+    ) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(_travelerUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+      await _enterEditMode(tester);
+
+      expect(find.byType(FilterChip), findsWidgets);
+      final chip = tester.widget<FilterChip>(
+        find.ancestor(
+          of: find.text('Français'),
+          matching: find.byType(FilterChip),
+        ),
+      );
+      expect(chip.selected, isTrue);
+    });
   });
 
-  // ── Test 3 : non-voyageur ne voit PAS "Préférences" ──────────────────────
+  // ── Email et téléphone : toujours à part, jamais de saisie directe ────────
 
-  testWidgets('non-voyageur ne voit pas la section Préférences', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      mockAuthBloc,
-      const Stream.empty(),
-      initialState: AuthAuthenticated(_senderUser),
+  group('email et téléphone — écran OTP dédié', () {
+    testWidgets(
+      'ligne EMAIL en édition affiche un badge "Modifier" et pousse vers /profile/edit/email',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: AuthAuthenticated(_senderUser),
+        );
+
+        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+        await _enterEditMode(tester);
+
+        expect(find.text('ibra@test.com'), findsOneWidget);
+        expect(find.text('Modifier'), findsWidgets); // badge email (+ éventuellement autre)
+
+        await tester.ensureVisible(find.text('ibra@test.com'));
+        await tester.tap(find.text('ibra@test.com'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('EditEmailScreen'), findsOneWidget);
+      },
     );
 
-    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-    await tester.pumpAndSettle();
+    testWidgets(
+      'ligne TÉLÉPHONE visible en édition seulement si le SMS OTP est actif, pousse vers /profile/edit/phone',
+      (tester) async {
+        setSmsAuthEnabled(true);
+        final userWithPhone = _senderUser.copyWith(phoneNumber: '+221701234567');
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: AuthAuthenticated(userWithPhone),
+        );
 
-    expect(find.text('PRÉFÉRENCES'), findsNothing);
-    expect(find.text('Langues parlées'), findsNothing);
-    expect(find.text('Mode de transport'), findsNothing);
-  });
+        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+        await _enterEditMode(tester);
 
-  // ── Test 4 : pré-remplit les champs depuis AuthAuthenticated ──────────────
+        expect(find.text('TÉLÉPHONE'), findsOneWidget);
+        expect(find.text('+221701234567'), findsOneWidget);
 
-  testWidgets('pré-remplit les champs depuis AuthAuthenticated', (
-    tester,
-  ) async {
-    whenListen<AuthState>(
-      mockAuthBloc,
-      const Stream.empty(),
-      initialState: AuthAuthenticated(_senderUser),
+        await tester.ensureVisible(find.text('+221701234567'));
+        await tester.tap(find.text('+221701234567'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('EditPhoneScreen'), findsOneWidget);
+      },
     );
 
-    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-    await tester.pumpAndSettle();
+    testWidgets(
+      'badge "Ajouter" (pas "Modifier") quand l\'email est absent',
+      (tester) async {
+        final userNoEmail = UserModel(
+          id: 'u-no-email',
+          firstName: 'Ibrahima',
+          lastName: 'Diallo',
+          roles: const ['SENDER'],
+          kycStatus: 'NOT_STARTED',
+          status: 'ACTIVE',
+        );
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: AuthAuthenticated(userNoEmail),
+        );
 
-    final editableTexts = tester
-        .widgetList<EditableText>(find.byType(EditableText))
-        .map((e) => e.controller.text)
-        .toList();
+        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+        await _enterEditMode(tester);
 
-    expect(editableTexts, contains('Ibrahima'));
-    expect(editableTexts, contains('Diallo'));
-    expect(editableTexts, contains('ibra@test.com'));
-    expect(editableTexts, contains('Paris'));
-    expect(editableTexts, contains('Expéditeur depuis 2022.'));
-    expect(find.text('15/06/1990'), findsOneWidget);
+        expect(find.text('Non ajouté'), findsOneWidget);
+        expect(find.text('Ajouter'), findsOneWidget);
+      },
+    );
   });
 
-  // ── Test 5 : dispatche AuthUpdateProfileRequested au tap Enregistrer ──────
+  // ── Test : dispatche AuthUpdateProfileRequested au tap Enregistrer ────────
 
   testWidgets('dispatche AuthUpdateProfileRequested au tap sur Enregistrer', (
     tester,
@@ -196,6 +349,7 @@ void main() {
 
     await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
     await tester.pumpAndSettle();
+    await _enterEditMode(tester);
 
     await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
     await tester.pump();
@@ -205,7 +359,7 @@ void main() {
     ).called(1);
   });
 
-  // ── Test 6 : AuthProfileUpdated seul (sans save) ne pop PAS ─────────────
+  // ── AuthProfileUpdated seul (sans save) ne pop PAS ────────────────────────
   //
   // Avatar upload also produces AuthProfileUpdated. The screen must stay open.
 
@@ -249,7 +403,7 @@ void main() {
     },
   );
 
-  // ── Test 6b : pop(true) sur AuthProfileUpdated après un save ─────────────
+  // ── pop(true) sur AuthProfileUpdated après un save ────────────────────────
 
   testWidgets('pops (retourne) après AuthProfileUpdated suite à un save', (
     tester,
@@ -286,7 +440,8 @@ void main() {
     unawaited(router.push('/edit'));
     await tester.pumpAndSettle();
 
-    // Tap "Enregistrer" — sets _saving = true.
+    // Bascule en édition, puis tap "Enregistrer" — sets _saving = true.
+    await _enterEditMode(tester);
     await tester.tap(find.widgetWithText(DonyButton, 'Enregistrer'));
     await tester.pump();
 
@@ -300,7 +455,7 @@ void main() {
     await controller.close();
   });
 
-  // ── Test 7 : AuthLoading hors sauvegarde (upload photo) ──────────────────
+  // ── AuthLoading hors sauvegarde (upload photo) ────────────────────────────
 
   testWidgets(
       'pendant un AuthLoading hors save (upload photo), le bouton est désactivé sans spinner',
@@ -326,7 +481,7 @@ void main() {
     }
   });
 
-  // ── Test 8 : tap avatar dispatche AuthAvatarUploadRequested ──────────────
+  // ── Tap avatar dispatche AuthAvatarUploadRequested ────────────────────────
 
   testWidgets(
     'tap sur l\'avatar dispatche AuthAvatarUploadRequested avec le path du fichier',
@@ -375,6 +530,50 @@ void main() {
           any(that: isA<AuthAvatarUploadRequested>()),
         ),
       ).called(1);
+    },
+  );
+
+  // ── Jauge de complétion ───────────────────────────────────────────────────
+
+  testWidgets(
+    'masque la jauge de complétion quand prénom+nom+email sont remplis',
+    (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_senderUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Profil complet'), findsNothing);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'affiche la jauge avec le bon pourcentage quand le profil est incomplet',
+    (tester) async {
+      const incompleteUser = UserModel(
+        id: 'user-incomplete',
+        firstName: 'Ibrahima',
+        roles: ['SENDER'],
+        kycStatus: 'NOT_STARTED',
+        status: 'ACTIVE',
+      );
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(incompleteUser),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Profil complet'), findsOneWidget);
+      expect(find.text('33%'), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
     },
   );
 }

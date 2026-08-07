@@ -635,12 +635,9 @@ class ProfileCompletionBanner extends StatelessWidget {
     const total = UserModel.profileTotalSteps;
 
     final missing = <String>[];
-    if (!(user.firstName?.isNotEmpty ?? false) &&
-        !(user.lastName?.isNotEmpty ?? false)) {
-      missing.add('Votre nom');
-    }
-    if (user.birthDate == null) missing.add('Date de naissance');
-    if (!(user.city?.isNotEmpty ?? false)) missing.add("Lieu d'habitation");
+    if (!(user.firstName?.isNotEmpty ?? false)) missing.add('Prénom');
+    if (!(user.lastName?.isNotEmpty ?? false)) missing.add('Nom');
+    if (!(user.email?.isNotEmpty ?? false)) missing.add('Email');
 
     return GestureDetector(
       onTap: onTap,

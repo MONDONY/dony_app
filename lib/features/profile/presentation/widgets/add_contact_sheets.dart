@@ -15,6 +15,103 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 enum _ContactStep { input, otp }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// EditPhoneScreen / EditEmailScreen — écrans plein écran, même flow OTP que les
+// sheets ci-dessous. Le numéro et l'email exigent une preuve de possession
+// (code reçu par SMS/email) : contrairement aux autres champs de « Modifier le
+// profil », ils ne peuvent jamais être des champs de saisie libre au milieu
+// d'un formulaire — d'où un écran dédié, poussé au tap sur leur ligne.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class EditPhoneScreen extends StatelessWidget {
+  const EditPhoneScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final stepNotifier = ValueNotifier(_ContactStep.input);
+    VoidCallback? submit;
+
+    return Scaffold(
+      appBar: const DonyAppBar(title: 'Modifier le numéro'),
+      body: Column(
+        children: [
+          Expanded(
+            child: _AddPhoneContent(
+              codes: AddPhoneSheet._codes,
+              onSubmitReady: (fn) => submit = fn,
+              stepNotifier: stepNotifier,
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.sm,
+                DonySpacing.lg,
+                DonySpacing.base,
+              ),
+              child: ValueListenableBuilder<_ContactStep>(
+                valueListenable: stepNotifier,
+                builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
+                  builder: (ctx, state) => DonyButton(
+                    label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
+                    isLoading: state is AuthLoading,
+                    onPressed: state is AuthLoading ? null : () => submit?.call(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class EditEmailScreen extends StatelessWidget {
+  const EditEmailScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final stepNotifier = ValueNotifier(_ContactStep.input);
+    VoidCallback? submit;
+
+    return Scaffold(
+      appBar: const DonyAppBar(title: "Modifier l'email"),
+      body: Column(
+        children: [
+          Expanded(
+            child: _AddEmailContent(
+              onSubmitReady: (fn) => submit = fn,
+              stepNotifier: stepNotifier,
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.sm,
+                DonySpacing.lg,
+                DonySpacing.base,
+              ),
+              child: ValueListenableBuilder<_ContactStep>(
+                valueListenable: stepNotifier,
+                builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
+                  builder: (ctx, state) => DonyButton(
+                    label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
+                    isLoading: state is AuthLoading,
+                    onPressed: state is AuthLoading ? null : () => submit?.call(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // AddPhoneSheet — ajouter / mettre à jour le numéro depuis le profil
 // ─────────────────────────────────────────────────────────────────────────────
 

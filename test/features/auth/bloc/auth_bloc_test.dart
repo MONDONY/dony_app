@@ -177,12 +177,11 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
-      'session Firebase rejetée (401) → signOut + AuthInitial (pas d\'écran bloquant)',
+      '401 sur le check initial → AuthError SANS signOut (peut être transitoire, cold start backend)',
       build: () {
         final mockUser = MockUser();
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
-        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/auth/me'),
@@ -195,9 +194,33 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthCheckRequested()),
-      expect: () => [isA<AuthLoading>(), isA<AuthInitial>()],
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
       verify: (_) {
-        verify(() => mockFirebaseAuth.signOut()).called(1);
+        verifyNever(() => mockFirebaseAuth.signOut());
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      '403 sur le check initial → AuthError SANS signOut (peut être transitoire, cold start backend)',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
+        when(() => mockUser.phoneNumber).thenReturn('+33612345678');
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/me'),
+              statusCode: 403,
+            ),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthCheckRequested()),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verifyNever(() => mockFirebaseAuth.signOut());
       },
     );
   });

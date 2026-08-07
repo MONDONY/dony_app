@@ -195,12 +195,12 @@ void main() {
     // ─── isProfileComplete ────────────────────────────────────────────────────
 
     group('isProfileComplete', () {
-      test('tous les champs remplis → true', () {
-        final user = UserModel(
+      test('prénom + nom + email remplis → true', () {
+        const user = UserModel(
           id: 'u1',
           firstName: 'Amadou',
-          birthDate: DateTime(1990, 5, 15),
-          city: 'Paris',
+          lastName: 'Diallo',
+          email: 'amadou@example.com',
           roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
@@ -208,23 +208,26 @@ void main() {
         expect(user.isProfileComplete, isTrue);
       });
 
-      test('city manquante → false', () {
-        final user = UserModel(
-          id: 'u1',
-          firstName: 'Amadou',
-          birthDate: DateTime(1990, 5, 15),
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.isProfileComplete, isFalse);
-      });
-
-      test('birthDate manquante → false', () {
+      test('date de naissance et ville absentes → toujours true (plus requis)', () {
         const user = UserModel(
           id: 'u1',
           firstName: 'Amadou',
-          city: 'Paris',
+          lastName: 'Diallo',
+          email: 'amadou@example.com',
+          roles: [],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.birthDate, isNull);
+        expect(user.city, isNull);
+        expect(user.isProfileComplete, isTrue);
+      });
+
+      test('email manquant → false', () {
+        const user = UserModel(
+          id: 'u1',
+          firstName: 'Amadou',
+          lastName: 'Diallo',
           roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
@@ -232,11 +235,23 @@ void main() {
         expect(user.isProfileComplete, isFalse);
       });
 
-      test('nom manquant → false', () {
-        final user = UserModel(
+      test('nom de famille manquant → false', () {
+        const user = UserModel(
           id: 'u1',
-          birthDate: DateTime(1990, 5, 15),
-          city: 'Paris',
+          firstName: 'Amadou',
+          email: 'amadou@example.com',
+          roles: [],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.isProfileComplete, isFalse);
+      });
+
+      test('prénom manquant → false', () {
+        const user = UserModel(
+          id: 'u1',
+          lastName: 'Diallo',
+          email: 'amadou@example.com',
           roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
@@ -258,7 +273,7 @@ void main() {
         expect(user.profileCompletionSteps, 0);
       });
 
-      test('nom seulement → 1 étape', () {
+      test('prénom seulement → 1 étape', () {
         const user = UserModel(
           id: 'u1',
           firstName: 'Amadou',
@@ -269,12 +284,12 @@ void main() {
         expect(user.profileCompletionSteps, 1);
       });
 
-      test('tous les champs → 3 étapes', () {
-        final user = UserModel(
+      test('prénom + nom + email → 3 étapes', () {
+        const user = UserModel(
           id: 'u1',
           firstName: 'Amadou',
-          birthDate: DateTime(1990, 5, 15),
-          city: 'Paris',
+          lastName: 'Diallo',
+          email: 'amadou@example.com',
           roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',

@@ -119,7 +119,7 @@ Widget _buildTestHarness({
         child: const ProfileScreen(),
       ),
     ),
-    GoRoute(path: '/auth/phone', builder: (_, _) => stub('AuthPhone')),
+    GoRoute(path: '/auth/method', builder: (_, _) => stub('AuthMethod')),
     GoRoute(path: '/settings', builder: (_, _) => stub('Settings')),
     GoRoute(path: '/profile/public', builder: (_, _) => stub('PublicProfile')),
     GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
@@ -534,7 +534,7 @@ void main() {
   // ── Cycle de vie de la session ──────────────────────────────────────────────
 
   group('Session', () {
-    testWidgets('AuthInitial renvoie vers /auth/phone', (tester) async {
+    testWidgets('AuthInitial renvoie vers /auth/method', (tester) async {
       whenListen<AuthState>(
         authBloc,
         Stream.value(const AuthInitial()),
@@ -557,7 +557,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('AuthPhone'), findsOneWidget);
+      expect(find.text('AuthMethod'), findsOneWidget);
     });
 
     testWidgets('AuthProfileUpdated rafraîchit le nom affiché', (tester) async {

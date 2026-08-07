@@ -1,4 +1,3 @@
-import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -62,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthInitial || state is AuthAccountDeleted) {
-              context.go('/auth/phone');
+              context.go('/auth/method');
             }
           },
         ),
@@ -97,28 +96,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final cs = Theme.of(context).colorScheme;
                 final topPad = MediaQuery.of(context).padding.top;
 
-                // Tant que le SMS OTP backend n'est pas confirmé, personne ne
-                // peut plus ajouter/vérifier de numéro : le retirer du calcul
-                // (numérateur ET dénominateur), sinon aucun profil ne pourrait
-                // jamais atteindre 100 %.
-                final phoneAuthEnabled = smsAuthEnabledListenable.value;
-                int completionSteps = user?.profileCompletionSteps ?? 0;
-                if (phoneAuthEnabled && user?.phoneNumber?.isNotEmpty == true) {
-                  completionSteps++;
-                }
-                if (user?.email?.isNotEmpty == true) completionSteps++;
-                if (user?.isKycVerified == true) completionSteps++;
-                final totalCompletionSteps =
-                    UserModel.profileTotalSteps + (phoneAuthEnabled ? 3 : 2);
-                final profileCompletionPercent = user != null
-                    ? completionSteps / totalCompletionSteps
-                    : 0.0;
-                final isProfileComplete = profileCompletionPercent >= 1.0;
+                // La jauge de complétion a quitté ce header pour l'écran
+                // « Modifier le profil » — la hauteur de repli n'a donc plus
+                // jamais à compter avec sa section (toujours absente ici).
                 final fallbackHeight =
-                    topPad +
-                    56.0 +
-                    _kContentHeight -
-                    (isProfileComplete ? _kProgressBarSectionHeight : 0.0);
+                    topPad + 56.0 + _kContentHeight - _kProgressBarSectionHeight;
                 // La hauteur mesurée inclut topPad (ProfileHeader le pose
                 // en padding). Or SliverAppBar ré-ajoute topPad par-dessus
                 // expandedHeight → l'extent vaudrait header+topPad et
@@ -139,7 +121,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   phoneNumber: user?.phoneNumber,
                   email: user?.email,
                   city: user?.city,
-                  profileCompletionPercent: profileCompletionPercent,
                   onEditProfile: () => context.push('/profile/edit'),
                   topPadding: topPad,
                 );
@@ -376,8 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final confirmed = await DonyDialog.show(
             context,
             title: 'Se déconnecter ?',
-            message: 'Vous devrez saisir à nouveau votre numéro pour '
-                'vous reconnecter.',
+            message: 'Vous devrez vous reconnecter pour continuer.',
             confirmLabel: 'Se déconnecter',
             variant: DonyDialogVariant.destructive,
             iconAsset: 'circle-alert',

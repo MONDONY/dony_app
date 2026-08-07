@@ -130,6 +130,7 @@ import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
 import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
+import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -940,6 +941,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/edit',
       builder: (context, state) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: '/profile/edit/email',
+      builder: (context, state) => const EditEmailScreen(),
+    ),
+    GoRoute(
+      path: '/profile/edit/phone',
+      builder: (context, state) => const EditPhoneScreen(),
     ),
 
     // ── Upgrade PRO (hors shell) ──────────────────────────────────────

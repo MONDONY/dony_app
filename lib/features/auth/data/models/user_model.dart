@@ -208,20 +208,21 @@ class UserModel extends Equatable {
     return a;
   }
 
+  // Prénom, nom et email : les trois seuls champs qui déterminent un profil
+  // "complet". Date de naissance et ville restent éditables mais ne bloquent
+  // plus rien — ce sont des informations secondaires, pas des prérequis.
   bool get isProfileComplete {
-    final hasName =
-        (firstName?.isNotEmpty ?? false) || (lastName?.isNotEmpty ?? false);
-    return hasName && birthDate != null && (city?.isNotEmpty ?? false);
+    return (firstName?.isNotEmpty ?? false) &&
+        (lastName?.isNotEmpty ?? false) &&
+        (email?.isNotEmpty ?? false);
   }
 
   // Number of required profile fields completed (max = profileTotalSteps).
   int get profileCompletionSteps {
     int steps = 0;
-    if ((firstName?.isNotEmpty ?? false) || (lastName?.isNotEmpty ?? false)) {
-      steps++;
-    }
-    if (birthDate != null) steps++;
-    if (city?.isNotEmpty ?? false) steps++;
+    if (firstName?.isNotEmpty ?? false) steps++;
+    if (lastName?.isNotEmpty ?? false) steps++;
+    if (email?.isNotEmpty ?? false) steps++;
     return steps;
   }
 

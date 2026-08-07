@@ -15,7 +15,6 @@ class ProfileHeader extends StatelessWidget {
     this.phoneNumber,
     this.email,
     this.city,
-    this.profileCompletionPercent = 0.0,
     this.onEditProfile,
     this.topPadding,
   });
@@ -29,7 +28,6 @@ class ProfileHeader extends StatelessWidget {
   final String? phoneNumber;
   final String? email;
   final String? city;
-  final double profileCompletionPercent;
   final VoidCallback? onEditProfile;
 
   /// Padding haut (zone status bar) — passé explicitement pour que la sonde de
@@ -137,15 +135,6 @@ class ProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-
-          // ── Barre de complétion — masquée à 100% ──────────────────────
-          if (profileCompletionPercent < 1.0) ...[
-            const SizedBox(height: DonySpacing.md),
-            _ProgressBar(
-              percent: profileCompletionPercent,
-              isPro: isProAccount,
-            ),
-          ],
         ],
       ),
     );
@@ -289,57 +278,6 @@ class _Chip extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Barre de progression ──────────────────────────────────────────────────────
-
-class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({required this.percent, required this.isPro});
-
-  final double percent;
-  final bool isPro;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final pct = percent.clamp(0.0, 1.0);
-    final isComplete = pct >= 1.0;
-    final barColor = isPro ? DonyColors.starGold : cs.primary;
-    final pctLabel = isComplete ? '100% ✓' : '${(pct * 100).round()}%';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Profil complet',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const Spacer(),
-            Text(
-              pctLabel,
-              style: tt.labelSmall?.copyWith(
-                color: barColor,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          child: LinearProgressIndicator(
-            value: pct,
-            backgroundColor: cs.outline.withValues(alpha: 0.25),
-            valueColor: AlwaysStoppedAnimation<Color>(barColor),
-            minHeight: 5,
-          ),
-        ),
-      ],
     );
   }
 }
