@@ -399,7 +399,6 @@ void main() {
 
   group('Statut KYC dans la section MON COMPTE', () {
     for (final kyc in [
-      ('VERIFIED', 'Vérifié'),
       ('REJECTED', 'Réessayer'),
       ('PENDING', 'En cours'),
       ('NOT_STARTED', 'Vérifier'),
@@ -427,6 +426,24 @@ void main() {
         expect(find.text(kyc.$2), findsWidgets);
       });
     }
+
+    testWidgets('VERIFIED retire la ligne « Documents d\'identité »', (
+      tester,
+    ) async {
+      await pumpWith(
+        tester,
+        const UserModel(
+          id: 'kyc-user',
+          firstName: 'Kyc',
+          lastName: 'User',
+          roles: ['TRAVELER', 'SENDER'],
+          kycStatus: 'VERIFIED',
+          status: 'ACTIVE',
+        ),
+      );
+
+      expect(find.text('Documents d\'identité'), findsNothing);
+    });
   });
 
   // ── Bannières et suppression de compte ──────────────────────────────────────
