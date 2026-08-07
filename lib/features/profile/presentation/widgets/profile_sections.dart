@@ -37,20 +37,40 @@ class ProfileAccountSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final showKyc = user?.kycStatus != 'VERIFIED';
+    final hasEmail = user?.email != null && user!.email!.isNotEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ProfileSectionLabel(label: 'MON COMPTE', cs: cs),
-        ProfileListSection(tiles: [kycTile(context, user)]),
-        const SizedBox(height: DonySpacing.sm),
-        _ContactSecuritySection(
-          phoneNumber: user?.phoneNumber,
-          email: user?.email,
-          onPhoneTap: () => AddPhoneSheet.show(context),
-          onEmailTap: () => AddEmailSheet.show(context),
-        ),
-      ],
+    // Une fois vérifié ou renseigné, chaque élément quitte « Mon compte » —
+    // rien à vérifier deux fois, la section ne sert qu'aux actions restantes.
+    return ValueListenableBuilder<bool>(
+      valueListenable: smsAuthEnabledListenable,
+      builder: (_, phoneEnabled, _) {
+        final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
+        final showPhoneRow = phoneEnabled && !hasPhone;
+        final showEmailRow = !hasEmail;
+
+        if (!showKyc && !showPhoneRow && !showEmailRow) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ProfileSectionLabel(label: 'MON COMPTE', cs: cs),
+            if (showKyc) ...[
+              ProfileListSection(tiles: [kycTile(context, user)]),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+            if (showPhoneRow || showEmailRow)
+              _ContactSecuritySection(
+                showPhoneRow: showPhoneRow,
+                showEmailRow: showEmailRow,
+                onPhoneTap: () => AddPhoneSheet.show(context),
+                onEmailTap: () => AddEmailSheet.show(context),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -334,77 +354,60 @@ class ProfileHelpSection extends StatelessWidget {
 
 class _ContactSecuritySection extends StatelessWidget {
   const _ContactSecuritySection({
-    required this.phoneNumber,
-    required this.email,
+    required this.showPhoneRow,
+    required this.showEmailRow,
     required this.onPhoneTap,
     required this.onEmailTap,
   });
 
-  final String? phoneNumber;
-  final String? email;
+  final bool showPhoneRow;
+  final bool showEmailRow;
   final VoidCallback onPhoneTap;
   final VoidCallback onEmailTap;
 
   @override
   Widget build(BuildContext context) {
-    final hasEmail = email != null && email!.isNotEmpty;
     final cs = Theme.of(context).colorScheme;
 
-    // Le SMS OTP est en phase de test (essai Twilio) : tant que le backend ne
-    // confirme pas app.sms.enabled=true, la vérification par téléphone est
-    // masquée ici comme sur l'écran de connexion, pour éviter un flux qui
-    // n'aboutit jamais.
-    return ValueListenableBuilder<bool>(
-      valueListenable: smsAuthEnabledListenable,
-      builder: (_, phoneEnabled, __) {
-        final hasPhone = phoneNumber != null && phoneNumber!.isNotEmpty;
-
-        return DonyCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              if (phoneEnabled)
-                _ContactRow(
-                  iconAsset: 'phone',
-                  iconBg: cs.primaryContainer,
-                  iconColor: cs.primary,
-                  typeLabel: 'TÉLÉPHONE',
-                  value: hasPhone ? phoneNumber! : 'Non ajouté',
-                  isEmpty: !hasPhone,
-                  isVerified: hasPhone,
-                  isFirst: true,
-                  isLast: false,
-                  onTap: onPhoneTap,
-                ),
-              _ContactRow(
-                iconAsset: 'at-sign',
-                iconBg: cs.successLight,
-                iconColor: cs.success,
-                typeLabel: 'E-MAIL',
-                value: hasEmail ? email! : 'Non ajouté',
-                isEmpty: !hasEmail,
-                isVerified: hasEmail,
-                isFirst: !phoneEnabled,
-                isLast: true,
-                onTap: onEmailTap,
-              ),
-            ],
-          ),
-        );
-      },
+    return DonyCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          if (showPhoneRow)
+            _ContactRow(
+              iconAsset: 'phone',
+              iconBg: cs.primaryContainer,
+              iconColor: cs.primary,
+              typeLabel: 'TÉLÉPHONE',
+              isFirst: true,
+              isLast: !showEmailRow,
+              onTap: onPhoneTap,
+            ),
+          if (showEmailRow)
+            _ContactRow(
+              iconAsset: 'at-sign',
+              iconBg: cs.successLight,
+              iconColor: cs.success,
+              typeLabel: 'E-MAIL',
+              isFirst: !showPhoneRow,
+              isLast: true,
+              onTap: onEmailTap,
+            ),
+        ],
+      ),
     );
   }
 }
 
+/// Ligne « à renseigner » — n'apparaît que pour un contact encore absent ou
+/// non vérifié : une fois rempli, la ligne quitte « Mon compte » entièrement,
+/// donc son seul état possible ici est « Non ajouté ».
 class _ContactRow extends StatelessWidget {
   const _ContactRow({
     required this.iconAsset,
     required this.iconBg,
     required this.iconColor,
     required this.typeLabel,
-    required this.value,
-    required this.isEmpty,
-    required this.isVerified,
     required this.isFirst,
     required this.isLast,
     required this.onTap,
@@ -414,9 +417,6 @@ class _ContactRow extends StatelessWidget {
   final Color iconBg;
   final Color iconColor;
   final String typeLabel;
-  final String value;
-  final bool isEmpty;
-  final bool isVerified;
   final bool isFirst;
   final bool isLast;
   final VoidCallback onTap;
@@ -467,24 +467,19 @@ class _ContactRow extends StatelessWidget {
                       ),
                       const SizedBox(height: DonySpacing.xxs),
                       Text(
-                        value,
+                        'Non ajouté',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.bodyMedium?.copyWith(
-                          color: isEmpty ? cs.onSurfaceVariant : cs.onSurface,
-                          fontWeight: isEmpty
-                              ? FontWeight.w400
-                              : FontWeight.w600,
-                          fontStyle: isEmpty
-                              ? FontStyle.italic
-                              : FontStyle.normal,
+                          color: cs.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
-                _StatusBadge(isVerified: isVerified),
+                const _StatusBadge(),
               ],
             ),
           ),
@@ -496,15 +491,14 @@ class _ContactRow extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.isVerified});
-  final bool isVerified;
+  const _StatusBadge();
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bg = isVerified ? cs.successLight : cs.primaryContainer;
-    final fg = isVerified ? cs.success : cs.primary;
-    final label = isVerified ? '✓ Vérifié' : '+ Ajouter';
+    final bg = cs.primaryContainer;
+    final fg = cs.primary;
+    const label = '+ Ajouter';
 
     return Container(
       padding: const EdgeInsets.symmetric(
