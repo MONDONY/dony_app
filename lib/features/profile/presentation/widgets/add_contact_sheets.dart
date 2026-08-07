@@ -84,7 +84,6 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   final List<FocusNode> _otpFocus = List.generate(6, (_) => FocusNode());
   String _dialCode = '+33';
   String _pendingPhone = '';
-  String? _verificationId;
 
   @override
   void initState() {
@@ -118,14 +117,8 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   void _verifyOtp() {
     final code = _otpCtrl.map((c) => c.text).join();
     if (code.length != 6) return;
-    final verificationId = _verificationId;
-    if (verificationId == null) return;
     context.read<AuthBloc>().add(
-      AuthAddPhoneFromProfileRequested(
-        verificationId: verificationId,
-        smsCode: code,
-        phoneNumber: _pendingPhone,
-      ),
+      AuthAddPhoneFromProfileRequested(phoneNumber: _pendingPhone, code: code),
     );
   }
 
@@ -137,7 +130,6 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthOtpSent) {
-          _verificationId = state.verificationId;
           widget.stepNotifier.value = _ContactStep.otp;
           widget.onSubmitReady(_handleSubmit);
         } else if (state is AuthProfileUpdated) {

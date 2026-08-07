@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -39,6 +40,8 @@ Widget _buildHeader({
 
 void main() {
   group('ProfileHeader', () {
+    setUp(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
     testWidgets('shows display name', (tester) async {
       await tester.pumpWidget(_buildHeader());
       await tester.pump();
@@ -82,21 +85,32 @@ void main() {
       expect(find.text('Paris'), findsNothing);
     });
 
-    testWidgets('shows phone chip with "Tél. ✓" when phoneNumber provided', (
-      tester,
-    ) async {
+    testWidgets('shows phone chip with "Tél. ✓" when phoneNumber provided '
+        'and SMS OTP confirmé par le backend', (tester) async {
+      setSmsAuthEnabled(true);
       await tester.pumpWidget(_buildHeader(phoneNumber: '+33612345678'));
       await tester.pump();
       expect(find.text('Tél. ✓'), findsOneWidget);
     });
 
-    testWidgets('shows "Tél. manquant" chip when phoneNumber absent', (
-      tester,
-    ) async {
+    testWidgets('shows "Tél. manquant" chip when phoneNumber absent '
+        'et SMS OTP confirmé par le backend', (tester) async {
+      setSmsAuthEnabled(true);
       await tester.pumpWidget(_buildHeader());
       await tester.pump();
       expect(find.text('Tél. manquant'), findsOneWidget);
     });
+
+    testWidgets(
+      'masque le chip téléphone (✓ ou manquant) tant que le SMS OTP backend '
+      'n\'est pas confirmé, même avec un numéro',
+      (tester) async {
+        await tester.pumpWidget(_buildHeader(phoneNumber: '+33612345678'));
+        await tester.pump();
+        expect(find.text('Tél. ✓'), findsNothing);
+        expect(find.text('Tél. manquant'), findsNothing);
+      },
+    );
 
     testWidgets('shows "Email ✓" chip when email provided', (tester) async {
       await tester.pumpWidget(_buildHeader(email: 'test@example.com'));

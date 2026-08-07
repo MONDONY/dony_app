@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
@@ -113,6 +114,22 @@ void main() {
     registerFallbackValue(_FakeConversationOpenEvent());
     registerFallbackValue(_FakeContactRevealEvent());
   });
+
+  // Ce fichier teste exclusivement la fonctionnalité d'appel révélé par le
+  // serveur — indépendante du canal SMS OTP (auth). Le flag est donc activé
+  // par défaut ici pour isoler ces tests de sa valeur par défaut (false).
+  setUp(() => setSmsAuthEnabled(true));
+  tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+
+  testWidgets(
+    'pas de 📞 tant que le SMS OTP backend n\'est pas confirmé, même joignable',
+    (tester) async {
+      setSmsAuthEnabled(false);
+      await _pump(tester, _bid());
+      expect(_phoneIcon, findsNothing);
+      expect(_chatIcon, findsOneWidget);
+    },
+  );
 
   testWidgets('affiche le nom + 💬 + 📞 quand l\'expéditeur est joignable',
       (tester) async {

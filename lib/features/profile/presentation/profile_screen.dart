@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -96,13 +97,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final cs = Theme.of(context).colorScheme;
                 final topPad = MediaQuery.of(context).padding.top;
 
+                // Tant que le SMS OTP backend n'est pas confirmé, personne ne
+                // peut plus ajouter/vérifier de numéro : le retirer du calcul
+                // (numérateur ET dénominateur), sinon aucun profil ne pourrait
+                // jamais atteindre 100 %.
+                final phoneAuthEnabled = smsAuthEnabledListenable.value;
                 int completionSteps = user?.profileCompletionSteps ?? 0;
-                if (user?.phoneNumber?.isNotEmpty == true) {
+                if (phoneAuthEnabled && user?.phoneNumber?.isNotEmpty == true) {
                   completionSteps++;
                 }
                 if (user?.email?.isNotEmpty == true) completionSteps++;
                 if (user?.isKycVerified == true) completionSteps++;
-                const totalCompletionSteps = UserModel.profileTotalSteps + 3;
+                final totalCompletionSteps =
+                    UserModel.profileTotalSteps + (phoneAuthEnabled ? 3 : 2);
                 final profileCompletionPercent = user != null
                     ? completionSteps / totalCompletionSteps
                     : 0.0;

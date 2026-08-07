@@ -64,6 +64,27 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — sms-otp-disabled', () {
+    // Le backend renvoie 503 quand app.sms.enabled=false en prod alors que
+    // l'écran de connexion par téléphone reste accessible (build client
+    // périmé, deep link) — évite un "code envoyé" silencieux qui n'arrive
+    // jamais.
+    test('code dédié → message clair (warning)', () {
+      const error = ServerException('unavailable', 'sms-otp-disabled');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Indisponible');
+      expect(p.message, contains('téléphone'));
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('isKnown reconnaît le code', () {
+      const error = ServerException('unavailable', 'sms-otp-disabled');
+      expect(ErrorCatalog.isKnown(error), isTrue);
+    });
+  });
+
   group('ErrorCatalog — negotiation/commission-charge-failed', () {
     // Le backend renvoie un 422 (ValidationException) avec ce code quand la
     // commission n'a pas pu être prélevée au voyageur (wallet vide + carte

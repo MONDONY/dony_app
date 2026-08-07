@@ -125,6 +125,54 @@ abstract final class ErrorCatalog {
       icon: Icons.error_outline_rounded,
     ),
 
+    // Codes émis par le backend (POST /auth/sms-otp/*), préfixés `phone-otp-`
+    // pour ne jamais collisionner avec les codes homonymes de l'email OTP
+    // (`otp-invalid`/`otp-expired` plus bas) ni ceux de confirmation de
+    // livraison — un OTP téléphone expiré ne doit pas afficher un texte pensé
+    // pour un autre canal.
+    'phone-otp-invalid': ErrorPresentation(
+      title: 'Code incorrect',
+      message: 'Le code de vérification saisi est incorrect.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.password_rounded,
+    ),
+    'phone-otp-expired': ErrorPresentation(
+      title: 'Code expiré',
+      message: 'Ce code a expiré. Demande un nouveau code.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.timer_off_rounded,
+    ),
+    'phone-otp-attempts-exceeded': ErrorPresentation(
+      title: 'Trop de tentatives',
+      message: 'Trop de tentatives. Réessaie dans quelques minutes.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'phone-otp-rate-limit': ErrorPresentation(
+      title: 'Trop de demandes',
+      message: 'Trop de codes envoyés. Réessaie dans quelques minutes.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'phone-already-set': ErrorPresentation(
+      title: 'Numéro déjà défini',
+      message: 'Un numéro est déjà associé à ce compte.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'phone-already-exists': ErrorPresentation(
+      title: 'Numéro déjà utilisé',
+      message: 'Ce numéro est déjà associé à un autre compte.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'sms-otp-disabled': ErrorPresentation(
+      title: 'Indisponible',
+      message: 'La connexion par téléphone n\'est pas encore disponible.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+
     // ─── Annonces / trajets ──────────────────────────────────────────
     'announcement-not-found': ErrorPresentation(
       title: 'Trajet introuvable',

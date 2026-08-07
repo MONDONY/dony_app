@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -189,7 +190,8 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                         subtitle: [
                           if (_a.traveler!.totalTrips != null)
                             '${_a.traveler!.totalTrips} trajets',
-                          if (_a.traveler!.phoneNumber != null)
+                          if (smsAuthEnabledListenable.value &&
+                              _a.traveler!.phoneNumber != null)
                             _a.traveler!.phoneNumber!,
                         ].join(' · '),
                         rating: _a.traveler!.averageRating,

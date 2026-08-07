@@ -99,4 +99,33 @@ class AuthRemoteDatasource {
     );
     return UserModel.fromJson(response.data!);
   }
+
+  Future<void> sendPhoneOtp(String phoneNumber) async {
+    await _apiClient.dio.post<void>(
+      '/auth/sms-otp/send',
+      data: {'phoneNumber': phoneNumber},
+    );
+  }
+
+  Future<String> verifyPhoneOtp(String phoneNumber, String code) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/sms-otp/verify',
+      data: {'phoneNumber': phoneNumber, 'code': code},
+    );
+    return response.data!['customToken'] as String;
+  }
+
+  /// Rattache un numéro au compte connecté. Numéro et code partent ensemble :
+  /// le backend consomme l'OTP au moment d'écrire, donc la preuve de possession
+  /// est intrinsèque. Renvoie le profil à jour.
+  Future<UserModel> attachPhone({
+    required String phoneNumber,
+    required String code,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/sms-otp/attach',
+      data: {'phoneNumber': phoneNumber, 'code': code},
+    );
+    return UserModel.fromJson(response.data!);
+  }
 }

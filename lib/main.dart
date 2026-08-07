@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/app/app.dart';
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -142,6 +143,12 @@ Future<void> _bootstrap() async {
   // côté backend) : chargé une fois pour que le banner + la FAQ suivent
   // automatiquement. Non bloquant.
   unawaited(_loadReimbursementCap());
+
+  // Flag SMS OTP (SOURCE UNIQUE : app.sms.enabled côté backend) : chargé une
+  // fois pour que le bouton téléphone (auth) et la ligne téléphone (profil)
+  // suivent automatiquement. Repli sûr sur false (masqué) si le flag n'a pas
+  // encore été chargé ou en cas d'erreur — voir kSmsAuthEnabledDefault.
+  unawaited(_loadSmsEnabled());
 }
 
 Future<void> _loadDonyCommissionRate() async {
@@ -169,6 +176,14 @@ Future<void> _loadReimbursementCap() async {
     );
   } catch (_) {
     // Repli sur kDonyReimbursementCapDefault conservé — non bloquant.
+  }
+}
+
+Future<void> _loadSmsEnabled() async {
+  try {
+    setSmsAuthEnabled(await getIt<IConfigRepository>().getSmsEnabled());
+  } catch (_) {
+    // Repli sur kSmsAuthEnabledDefault (masqué) conservé — non bloquant.
   }
 }
 

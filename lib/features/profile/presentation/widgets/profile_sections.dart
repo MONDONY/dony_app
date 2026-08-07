@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
@@ -346,38 +347,51 @@ class _ContactSecuritySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasPhone = phoneNumber != null && phoneNumber!.isNotEmpty;
     final hasEmail = email != null && email!.isNotEmpty;
     final cs = Theme.of(context).colorScheme;
 
-    return DonyCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          _ContactRow(
-            iconAsset: 'phone',
-            iconBg: cs.primaryContainer,
-            iconColor: cs.primary,
-            typeLabel: 'TÉLÉPHONE',
-            value: hasPhone ? phoneNumber! : 'Non ajouté',
-            isEmpty: !hasPhone,
-            isVerified: hasPhone,
-            showDivider: true,
-            onTap: onPhoneTap,
+    // Le SMS OTP est en phase de test (essai Twilio) : tant que le backend ne
+    // confirme pas app.sms.enabled=true, la vérification par téléphone est
+    // masquée ici comme sur l'écran de connexion, pour éviter un flux qui
+    // n'aboutit jamais.
+    return ValueListenableBuilder<bool>(
+      valueListenable: smsAuthEnabledListenable,
+      builder: (_, phoneEnabled, __) {
+        final hasPhone = phoneNumber != null && phoneNumber!.isNotEmpty;
+
+        return DonyCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              if (phoneEnabled)
+                _ContactRow(
+                  iconAsset: 'phone',
+                  iconBg: cs.primaryContainer,
+                  iconColor: cs.primary,
+                  typeLabel: 'TÉLÉPHONE',
+                  value: hasPhone ? phoneNumber! : 'Non ajouté',
+                  isEmpty: !hasPhone,
+                  isVerified: hasPhone,
+                  isFirst: true,
+                  isLast: false,
+                  onTap: onPhoneTap,
+                ),
+              _ContactRow(
+                iconAsset: 'at-sign',
+                iconBg: cs.successLight,
+                iconColor: cs.success,
+                typeLabel: 'E-MAIL',
+                value: hasEmail ? email! : 'Non ajouté',
+                isEmpty: !hasEmail,
+                isVerified: hasEmail,
+                isFirst: !phoneEnabled,
+                isLast: true,
+                onTap: onEmailTap,
+              ),
+            ],
           ),
-          _ContactRow(
-            iconAsset: 'at-sign',
-            iconBg: cs.successLight,
-            iconColor: cs.success,
-            typeLabel: 'E-MAIL',
-            value: hasEmail ? email! : 'Non ajouté',
-            isEmpty: !hasEmail,
-            isVerified: hasEmail,
-            showDivider: false,
-            onTap: onEmailTap,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -391,7 +405,8 @@ class _ContactRow extends StatelessWidget {
     required this.value,
     required this.isEmpty,
     required this.isVerified,
-    required this.showDivider,
+    required this.isFirst,
+    required this.isLast,
     required this.onTap,
   });
 
@@ -402,7 +417,8 @@ class _ContactRow extends StatelessWidget {
   final String value;
   final bool isEmpty;
   final bool isVerified;
-  final bool showDivider;
+  final bool isFirst;
+  final bool isLast;
   final VoidCallback onTap;
 
   @override
@@ -414,13 +430,14 @@ class _ContactRow extends StatelessWidget {
       children: [
         InkWell(
           onTap: onTap,
-          borderRadius: showDivider
-              ? const BorderRadius.vertical(
-                  top: Radius.circular(DonyRadius.card),
-                )
-              : const BorderRadius.vertical(
-                  bottom: Radius.circular(DonyRadius.card),
-                ),
+          borderRadius: BorderRadius.vertical(
+            top: isFirst
+                ? const Radius.circular(DonyRadius.card)
+                : Radius.zero,
+            bottom: isLast
+                ? const Radius.circular(DonyRadius.card)
+                : Radius.zero,
+          ),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: DonySpacing.base,
@@ -472,7 +489,7 @@ class _ContactRow extends StatelessWidget {
             ),
           ),
         ),
-        if (showDivider) const Divider(height: 1, indent: DonySpacing.lg + 32),
+        if (!isLast) const Divider(height: 1, indent: DonySpacing.lg + 32),
       ],
     );
   }

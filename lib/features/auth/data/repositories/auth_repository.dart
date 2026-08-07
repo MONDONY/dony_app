@@ -46,4 +46,15 @@ class AuthRepository {
 
   Future<UserModel> registerWithEmail({required String email}) =>
       _datasource.registerWithEmail(email: email);
+
+  Future<void> sendPhoneOtp(String phoneNumber) =>
+      _datasource.sendPhoneOtp(phoneNumber);
+
+  Future<String> verifyPhoneOtp(String phoneNumber, String code) =>
+      _datasource.verifyPhoneOtp(phoneNumber, code);
+
+  Future<UserModel> attachPhone({
+    required String phoneNumber,
+    required String code,
+  }) => _datasource.attachPhone(phoneNumber: phoneNumber, code: code);
 }

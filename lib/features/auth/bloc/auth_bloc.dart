@@ -4,13 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/app_log.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
@@ -141,64 +139,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     _pendingPhoneNumber = event.phoneNumber;
-
-    // En debug, désactive la vérification d'app (APNs/reCAPTCHA) pour permettre
-    // l'usage des numéros de test Firebase sans clé APNs configurée sur le device.
-    if (kDebugMode) {
-      try {
-        await _firebaseAuth.setSettings(
-          appVerificationDisabledForTesting: true,
-        );
-      } catch (_) {}
+    try {
+      await _authRepository.sendPhoneOtp(event.phoneNumber);
+      emit(
+        AuthOtpSent(
+          verificationId: '',
+          phoneNumber: event.phoneNumber,
+          secondsLeft: 60,
+        ),
+      );
+      _otpTimer?.cancel();
+      _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!isClosed) add(const AuthOtpTimerTicked());
+      });
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
     }
-
-    final completer = Completer<void>();
-
-    await _firebaseAuth.verifyPhoneNumber(
-      phoneNumber: event.phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        // Auto-vérification Android
-        try {
-          await _firebaseAuth.signInWithCredential(credential);
-          if (!isClosed)
-            add(
-              AuthPhoneVerified(
-                verificationId: '',
-                smsCode: '',
-                autoVerified: true,
-              ),
-            );
-        } catch (e) {
-          if (!isClosed && !emit.isDone) emit(AuthError(_friendlyError(e)));
-        }
-        if (!completer.isCompleted) completer.complete();
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        if (!emit.isDone) emit(AuthError(_friendlyFirebaseError(e)));
-        if (!completer.isCompleted) completer.complete();
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        if (!emit.isDone) {
-          emit(
-            AuthOtpSent(
-              verificationId: verificationId,
-              phoneNumber: event.phoneNumber,
-              secondsLeft: 60,
-            ),
-          );
-          _otpTimer?.cancel();
-          _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-            if (!isClosed) add(const AuthOtpTimerTicked());
-          });
-        }
-        if (!completer.isCompleted) completer.complete();
-      },
-      codeAutoRetrievalTimeout: (_) {
-        if (!completer.isCompleted) completer.complete();
-      },
-    );
-
-    await completer.future;
   }
 
   // ─── Vérification OTP + détection compte existant ────────────────────────
@@ -215,14 +171,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      // 1. Connexion Firebase (sauf si auto-vérifié, déjà fait)
-      if (!event.autoVerified) {
-        final credential = PhoneAuthProvider.credential(
-          verificationId: event.verificationId,
-          smsCode: event.smsCode,
-        );
-        await _firebaseAuth.signInWithCredential(credential);
-      }
+      // 1. Vérification backend du code + échange contre un ID token Firebase
+      final customToken = await _authRepository.verifyPhoneOtp(
+        _pendingPhoneNumber ?? '',
+        event.smsCode,
+      );
+      await _firebaseAuth.signInWithCustomToken(customToken);
 
       // 2. Vérifier si l'utilisateur est déjà inscrit en backend
       try {
@@ -246,8 +200,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // En cas d'erreur inattendue → traiter comme nouveau compte
         emit(AuthOtpVerified(phoneNumber: _pendingPhoneNumber ?? ''));
       }
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(_friendlyFirebaseError(e)));
+    } on DioException catch (e) {
+      emit(AuthError(unwrapDioError(e)));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
@@ -518,29 +472,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: event.verificationId,
-        smsCode: event.smsCode,
-      );
-      // Link to existing Firebase account instead of replacing the session.
-      // Ignore errors when phone already belongs to another Firebase account:
-      // user proved ownership by correctly entering the OTP, so we still
-      // update the backend profile.
-      try {
-        await _firebaseAuth.currentUser?.linkWithCredential(credential);
-      } on FirebaseAuthException catch (e) {
-        if (e.code != 'provider-already-linked' &&
-            e.code != 'credential-already-in-use') {
-          rethrow;
-        }
-      }
-      // Update backend profile with the verified phone number
-      final updatedUser = await _authRepository.updateProfile(
+      // Un seul appel : le backend consomme l'OTP et écrit le numéro dans la même
+      // opération. Séparer vérification et écriture laissait la seconde invocable
+      // seule — on ne prouvait plus la possession du téléphone au moment d'écrire.
+      final updatedUser = await _authRepository.attachPhone(
         phoneNumber: event.phoneNumber,
+        code: event.code,
       );
       emit(AuthProfileUpdated(updatedUser));
-    } on FirebaseAuthException catch (e) {
-      emit(AuthError(_friendlyFirebaseError(e)));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
@@ -606,60 +545,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
-
-  // Codes préfixés `firebase-` pour ne jamais entrer en collision avec les
-  // codes homonymes d'autres features (ex: `code-expired`/`code-incorrect`
-  // existent déjà dans ErrorCatalog pour les codes de confirmation de
-  // livraison — un OTP expiré affichait leur message "vérifie auprès de
-  // l'expéditeur", trompeur en plein flux de connexion).
-  AppException _friendlyFirebaseError(FirebaseAuthException e) {
-    // AppLog.error() capture l'exception brute comme event Sentry (pas
-    // seulement un breadcrumb, qui ne s'attache qu'à un event déjà capturé
-    // et ne remonte jamais seul) : ErrorCatalog n'affiche jamais le code
-    // Firebase tel quel (fallback générique "Erreur réseau"), donc sans ça
-    // aucune télémétrie ne permet de savoir quel code a réellement échoué en
-    // prod (ex: app-not-authorized, network-request-failed, internal-error).
-    AppLog.error(
-      'FirebaseAuthException lors de verifyPhoneNumber/signInWithCredential',
-      error: e,
-      data: {'firebase_code': e.code},
-    );
-    final (message, code) = switch (e.code) {
-      'invalid-phone-number' => (
-        'Numéro de téléphone invalide',
-        'firebase-invalid-phone-number',
-      ),
-      'invalid-verification-code' => (
-        'Code de vérification incorrect',
-        'firebase-code-incorrect',
-      ),
-      'code-expired' => (
-        'Le code a expiré. Demandez un nouveau code.',
-        'firebase-code-expired',
-      ),
-      'too-many-requests' => (
-        'Trop de tentatives. Réessayez plus tard.',
-        'firebase-too-many-attempts',
-      ),
-      'session-expired' => (
-        'Session expirée. Recommencez.',
-        'firebase-session-expired',
-      ),
-      'network-request-failed' => (
-        'Impossible de joindre les serveurs Google. Vérifie ta connexion.',
-        'firebase-network-request-failed',
-      ),
-      'app-not-authorized' || 'missing-client-identifier' => (
-        'Vérification de l\'application impossible. Réinstalle l\'app depuis TestFlight/le Store.',
-        'firebase-app-verification-failed',
-      ),
-      _ => (
-        e.message ?? 'Erreur d\'authentification (${e.code})',
-        'firebase-auth-error',
-      ),
-    };
-    return NetworkException(message, code: code);
-  }
 
   AppException _friendlyError(Object e) {
     if (e is AppException) return e;

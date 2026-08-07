@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
@@ -34,7 +35,7 @@ class VoyageurContactCard extends StatelessWidget {
   /// Le serveur dit si le voyageur est joignable ; le numéro lui-même est
   /// demandé au tap. On masque en plus le bouton en fin de course.
   bool get _showPhoneButton {
-    if (!bid.travelerPhoneAvailable) {
+    if (!bid.travelerPhoneAvailable || !smsAuthEnabledListenable.value) {
       return false;
     }
     final s = bid.status;

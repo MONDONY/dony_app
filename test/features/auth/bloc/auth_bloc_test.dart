@@ -29,13 +29,9 @@ class MockUser extends Mock implements User {}
 
 class MockUserCredential extends Mock implements UserCredential {}
 
-class MockPhoneAuthCredential extends Mock implements PhoneAuthCredential {}
-
-// ─── Fake pour PhoneAuthCredential ────────────────────────────────────────────
+// ─── Fake pour AuthCredential (Google/Apple) ─────────────────────────────────
 
 class FakeAuthCredential extends Fake implements AuthCredential {}
-
-class FakePhoneAuthCredential extends Fake implements PhoneAuthCredential {}
 
 class FakeUserCredential extends Fake implements UserCredential {}
 
@@ -88,8 +84,6 @@ void main() {
 
   setUpAll(() async {
     registerFallbackValue(FakeAuthCredential());
-    registerFallbackValue(FakePhoneAuthCredential());
-    // Register fallbacks for verifyPhoneNumber named params
     registerFallbackValue(const Duration(seconds: 30));
     // Hive setup needed for OnboardingCompleted tests
     tempDir = await Directory.systemTemp.createTemp('hive_auth_bloc_test');
@@ -396,10 +390,13 @@ void main() {
 
   group('AuthPhoneVerified', () {
     blocTest<AuthBloc, AuthState>(
-      'compte existant → émet [Loading, AuthAuthenticated]',
+      'compte existant → vérifie le code côté backend puis émet [Loading, AuthAuthenticated]',
       build: () {
         when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
+          () => mockRepo.verifyPhoneOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_fake');
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
         ).thenAnswer((_) async => MockUserCredential());
         when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
         return buildBloc();
@@ -408,13 +405,19 @@ void main() {
         const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
       ),
       expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
+      verify: (_) {
+        verify(() => mockRepo.verifyPhoneOtp('', '123456')).called(1);
+      },
     );
 
     blocTest<AuthBloc, AuthState>(
       'nouveau numéro (404) → émet [Loading, AuthOtpVerified]',
       build: () {
         when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
+          () => mockRepo.verifyPhoneOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_fake');
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
         ).thenAnswer((_) async => MockUserCredential());
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
@@ -437,7 +440,10 @@ void main() {
       'erreur backend non-404 → émet [Loading, AuthError]',
       build: () {
         when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
+          () => mockRepo.verifyPhoneOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_fake');
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
         ).thenAnswer((_) async => MockUserCredential());
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
@@ -457,43 +463,29 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
-      'autoVerified=true contourne signInWithCredential',
+      'verifyPhoneOtp rejeté (code invalide côté backend) → émet [Loading, AuthError]',
       build: () {
-        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        const AuthPhoneVerified(
-          verificationId: '',
-          smsCode: '',
-          autoVerified: true,
-        ),
-      ),
-      expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
-      verify: (_) {
-        verifyNever(() => mockFirebaseAuth.signInWithCredential(any()));
-      },
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'FirebaseAuthException (code invalide) → émet AuthError localisé',
-      build: () {
-        when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
-        ).thenThrow(FirebaseAuthException(code: 'invalid-verification-code'));
+        when(() => mockRepo.verifyPhoneOtp(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
+            response: Response(
+              requestOptions: RequestOptions(
+                path: '/auth/sms-otp/verify',
+              ),
+              statusCode: 400,
+              data: {'code': 'phone-otp-invalid', 'detail': 'Code invalide'},
+            ),
+          ),
+        );
         return buildBloc();
       },
       act: (bloc) => bloc.add(
         const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '000000'),
       ),
-      expect: () => [
-        isA<AuthLoading>(),
-        predicate<AuthState>(
-          (s) =>
-              s is AuthError &&
-              s.error.message.contains('Code de vérification incorrect'),
-        ),
-      ],
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verifyNever(() => mockFirebaseAuth.signInWithCustomToken(any()));
+      },
     );
   });
 
@@ -504,7 +496,10 @@ void main() {
       'getProfile lance exception générique → émet AuthOtpVerified',
       build: () {
         when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
+          () => mockRepo.verifyPhoneOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_fake');
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
         ).thenAnswer((_) async => MockUserCredential());
         when(() => mockRepo.getProfile()).thenThrow(Exception('parse error'));
         return buildBloc();
@@ -516,10 +511,13 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
-      'signInWithCredential lance Exception générique → émet AuthError',
+      'signInWithCustomToken lance Exception générique → émet AuthError',
       build: () {
         when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
+          () => mockRepo.verifyPhoneOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_fake');
+        when(
+          () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
         ).thenThrow(Exception('unexpected sign-in error'));
         return buildBloc();
       },
@@ -527,85 +525,6 @@ void main() {
         const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
       ),
       expect: () => [isA<AuthLoading>(), isA<AuthError>()],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'FirebaseAuthException code-expired → message localisé',
-      build: () {
-        when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
-        ).thenThrow(FirebaseAuthException(code: 'code-expired'));
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '111111'),
-      ),
-      expect: () => [
-        isA<AuthLoading>(),
-        predicate<AuthState>(
-          (s) => s is AuthError && s.error.message.contains('expiré'),
-        ),
-      ],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'FirebaseAuthException too-many-requests → message localisé',
-      build: () {
-        when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
-        ).thenThrow(FirebaseAuthException(code: 'too-many-requests'));
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '111111'),
-      ),
-      expect: () => [
-        isA<AuthLoading>(),
-        predicate<AuthState>(
-          (s) => s is AuthError && s.error.message.contains('Trop'),
-        ),
-      ],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'FirebaseAuthException session-expired → message localisé',
-      build: () {
-        when(
-          () => mockFirebaseAuth.signInWithCredential(any()),
-        ).thenThrow(FirebaseAuthException(code: 'session-expired'));
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '111111'),
-      ),
-      expect: () => [
-        isA<AuthLoading>(),
-        predicate<AuthState>(
-          (s) => s is AuthError && s.error.message.contains('Session'),
-        ),
-      ],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'FirebaseAuthException code inconnu → message.message fallback',
-      build: () {
-        when(() => mockFirebaseAuth.signInWithCredential(any())).thenThrow(
-          FirebaseAuthException(
-            code: 'unknown-error',
-            message: 'Custom firebase error',
-          ),
-        );
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '111111'),
-      ),
-      expect: () => [
-        isA<AuthLoading>(),
-        predicate<AuthState>(
-          (s) => s is AuthError && s.error.message == 'Custom firebase error',
-        ),
-      ],
     );
   });
 
@@ -1051,6 +970,61 @@ void main() {
     );
   });
 
+  // ─── AuthAddPhoneFromProfileRequested ────────────────────────────────────────
+
+  group('AuthAddPhoneFromProfileRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'succès → un seul appel attachPhone (phoneNumber+code), émet AuthProfileUpdated',
+      build: () {
+        when(
+          () => mockRepo.attachPhone(
+            phoneNumber: '+221701234567',
+            code: '123456',
+          ),
+        ).thenAnswer((_) async => testUser);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddPhoneFromProfileRequested(
+          phoneNumber: '+221701234567',
+          code: '123456',
+        ),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthProfileUpdated>()],
+      verify: (_) {
+        // La vérification et l'écriture ne sont plus deux appels séparés
+        verify(
+          () => mockRepo.attachPhone(
+            phoneNumber: '+221701234567',
+            code: '123456',
+          ),
+        ).called(1);
+        verifyNever(() => mockRepo.verifyPhoneOtp(any(), any()));
+        verifyNever(() => mockFirebaseAuth.currentUser);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec backend (409 numéro déjà défini) → AuthError',
+      build: () {
+        when(
+          () => mockRepo.attachPhone(
+            phoneNumber: '+221701234567',
+            code: '123456',
+          ),
+        ).thenThrow(Exception('phone-already-set'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthAddPhoneFromProfileRequested(
+          phoneNumber: '+221701234567',
+          code: '123456',
+        ),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
   // ─── AuthRegisterWithEmailRequested ──────────────────────────────────────────
 
   group('AuthRegisterWithEmailRequested', () {
@@ -1325,140 +1299,61 @@ void main() {
     );
   });
 
-  // ─── AuthSendOtpRequested — verifyPhoneNumber callbacks ──────────────────────
+  // ─── AuthSendOtpRequested — envoi backend (Twilio/Africa's Talking) ──────────
 
   group('AuthSendOtpRequested', () {
-    // Helper to stub verifyPhoneNumber so it immediately calls codeSent
-    void stubVerifyCodeSent(
-      MockFirebaseAuth auth, {
-      String verificationId = 'test-vid',
-    }) {
-      when(
-        () => auth.verifyPhoneNumber(
-          phoneNumber: any(named: 'phoneNumber'),
-          verificationCompleted: any(named: 'verificationCompleted'),
-          verificationFailed: any(named: 'verificationFailed'),
-          codeSent: any(named: 'codeSent'),
-          codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
-          timeout: any(named: 'timeout'),
-          forceResendingToken: any(named: 'forceResendingToken'),
-          multiFactorSession: any(named: 'multiFactorSession'),
-          multiFactorInfo: any(named: 'multiFactorInfo'),
-          autoRetrievedSmsCodeForTesting: any(
-            named: 'autoRetrievedSmsCodeForTesting',
-          ),
-        ),
-      ).thenAnswer((invocation) async {
-        final codeSent = invocation.namedArguments[#codeSent] as PhoneCodeSent;
-        codeSent(verificationId, null);
-      });
-    }
-
-    void stubVerifyFailed(MockFirebaseAuth auth, FirebaseAuthException error) {
-      when(
-        () => auth.verifyPhoneNumber(
-          phoneNumber: any(named: 'phoneNumber'),
-          verificationCompleted: any(named: 'verificationCompleted'),
-          verificationFailed: any(named: 'verificationFailed'),
-          codeSent: any(named: 'codeSent'),
-          codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
-          timeout: any(named: 'timeout'),
-          forceResendingToken: any(named: 'forceResendingToken'),
-          multiFactorSession: any(named: 'multiFactorSession'),
-          multiFactorInfo: any(named: 'multiFactorInfo'),
-          autoRetrievedSmsCodeForTesting: any(
-            named: 'autoRetrievedSmsCodeForTesting',
-          ),
-        ),
-      ).thenAnswer((invocation) async {
-        final verificationFailed =
-            invocation.namedArguments[#verificationFailed]
-                as PhoneVerificationFailed;
-        verificationFailed(error);
-      });
-    }
-
     blocTest<AuthBloc, AuthState>(
-      'codeSent callback → émet [Loading, AuthOtpSent]',
+      'succès → émet [Loading, AuthOtpSent]',
       build: () {
-        stubVerifyCodeSent(mockFirebaseAuth);
+        when(
+          () => mockRepo.sendPhoneOtp('+33612345678'),
+        ).thenAnswer((_) async {});
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthSendOtpRequested('+33612345678')),
       expect: () => [
         const AuthLoading(),
         isA<AuthOtpSent>()
-            .having((s) => s.verificationId, 'verificationId', 'test-vid')
             .having((s) => s.phoneNumber, 'phoneNumber', '+33612345678')
             .having((s) => s.secondsLeft, 'secondsLeft', 60),
       ],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'verificationFailed → émet [Loading, AuthError] avec message localisé',
-      build: () {
-        stubVerifyFailed(
-          mockFirebaseAuth,
-          FirebaseAuthException(code: 'invalid-phone-number'),
-        );
-        return buildBloc();
+      verify: (_) {
+        verify(() => mockRepo.sendPhoneOtp('+33612345678')).called(1);
       },
-      act: (bloc) => bloc.add(const AuthSendOtpRequested('+33000')),
-      expect: () => [
-        const AuthLoading(),
-        predicate<AuthState>(
-          (s) =>
-              s is AuthError &&
-              s.error.message.contains('Numéro de téléphone invalide') &&
-              s.error.code == 'firebase-invalid-phone-number',
-        ),
-      ],
     );
 
     blocTest<AuthBloc, AuthState>(
-      'verificationFailed network-request-failed → code dédié, distinct des '
-      'codes homonymes de confirmation de livraison',
+      'rate-limit backend (429) → émet [Loading, AuthError]',
       build: () {
-        stubVerifyFailed(
-          mockFirebaseAuth,
-          FirebaseAuthException(code: 'network-request-failed'),
-        );
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(const AuthSendOtpRequested('+33612345678')),
-      expect: () => [
-        const AuthLoading(),
-        predicate<AuthState>(
-          (s) =>
-              s is AuthError &&
-              s.error.code == 'firebase-network-request-failed',
-        ),
-      ],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'verificationFailed avec un code Firebase inconnu → code générique '
-      'firebase-auth-error, message inclut le code brut',
-      build: () {
-        stubVerifyFailed(
-          mockFirebaseAuth,
-          FirebaseAuthException(
-            code: 'internal-error',
-            message: 'Something went wrong',
+        when(() => mockRepo.sendPhoneOtp(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/sms-otp/send'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/sms-otp/send'),
+              statusCode: 429,
+              data: {
+                'code': 'phone-otp-rate-limit',
+                'detail': 'Trop de tentatives',
+              },
+            ),
           ),
         );
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthSendOtpRequested('+33612345678')),
-      expect: () => [
-        const AuthLoading(),
-        predicate<AuthState>(
-          (s) =>
-              s is AuthError &&
-              s.error.code == 'firebase-auth-error' &&
-              s.error.message == 'Something went wrong',
-        ),
-      ],
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'exception générique → émet [Loading, AuthError]',
+      build: () {
+        when(
+          () => mockRepo.sendPhoneOtp(any()),
+        ).thenThrow(Exception('network error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthSendOtpRequested('+33612345678')),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
     );
 
     blocTest<AuthBloc, AuthState>(
@@ -1840,93 +1735,36 @@ void main() {
     );
   });
 
-  // ─── AuthSendOtpRequested — verifyPhoneNumber callbacks ──────────────────────
+  // ─── AuthSendOtpRequested — envoi backend (2e passe, cas complémentaires) ────
 
-  group('AuthSendOtpRequested', () {
-    // Helper to stub verifyPhoneNumber so it immediately calls codeSent
-    void stubVerifyCodeSent(
-      MockFirebaseAuth auth, {
-      String verificationId = 'test-vid',
-    }) {
-      when(
-        () => auth.verifyPhoneNumber(
-          phoneNumber: any(named: 'phoneNumber'),
-          verificationCompleted: any(named: 'verificationCompleted'),
-          verificationFailed: any(named: 'verificationFailed'),
-          codeSent: any(named: 'codeSent'),
-          codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
-          timeout: any(named: 'timeout'),
-          forceResendingToken: any(named: 'forceResendingToken'),
-          multiFactorSession: any(named: 'multiFactorSession'),
-          multiFactorInfo: any(named: 'multiFactorInfo'),
-          autoRetrievedSmsCodeForTesting: any(
-            named: 'autoRetrievedSmsCodeForTesting',
-          ),
-        ),
-      ).thenAnswer((invocation) async {
-        final codeSent = invocation.namedArguments[#codeSent] as PhoneCodeSent;
-        codeSent(verificationId, null);
-      });
-    }
-
-    void stubVerifyFailed(MockFirebaseAuth auth, FirebaseAuthException error) {
-      when(
-        () => auth.verifyPhoneNumber(
-          phoneNumber: any(named: 'phoneNumber'),
-          verificationCompleted: any(named: 'verificationCompleted'),
-          verificationFailed: any(named: 'verificationFailed'),
-          codeSent: any(named: 'codeSent'),
-          codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
-          timeout: any(named: 'timeout'),
-          forceResendingToken: any(named: 'forceResendingToken'),
-          multiFactorSession: any(named: 'multiFactorSession'),
-          multiFactorInfo: any(named: 'multiFactorInfo'),
-          autoRetrievedSmsCodeForTesting: any(
-            named: 'autoRetrievedSmsCodeForTesting',
-          ),
-        ),
-      ).thenAnswer((invocation) async {
-        final verificationFailed =
-            invocation.namedArguments[#verificationFailed]
-                as PhoneVerificationFailed;
-        verificationFailed(error);
-      });
-    }
-
+  group('AuthSendOtpRequested — cas complémentaires', () {
     blocTest<AuthBloc, AuthState>(
-      'codeSent callback → émet [Loading, AuthOtpSent]',
+      'succès → émet [Loading, AuthOtpSent] avec le bon numéro',
       build: () {
-        stubVerifyCodeSent(mockFirebaseAuth);
+        when(
+          () => mockRepo.sendPhoneOtp('+33612345678'),
+        ).thenAnswer((_) async {});
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthSendOtpRequested('+33612345678')),
       expect: () => [
         const AuthLoading(),
         isA<AuthOtpSent>()
-            .having((s) => s.verificationId, 'verificationId', 'test-vid')
             .having((s) => s.phoneNumber, 'phoneNumber', '+33612345678')
             .having((s) => s.secondsLeft, 'secondsLeft', 60),
       ],
     );
 
     blocTest<AuthBloc, AuthState>(
-      'verificationFailed → émet [Loading, AuthError] avec message localisé',
+      'échec backend → émet [Loading, AuthError]',
       build: () {
-        stubVerifyFailed(
-          mockFirebaseAuth,
-          FirebaseAuthException(code: 'invalid-phone-number'),
-        );
+        when(
+          () => mockRepo.sendPhoneOtp(any()),
+        ).thenThrow(Exception('invalid-phone-number'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthSendOtpRequested('+33000')),
-      expect: () => [
-        const AuthLoading(),
-        predicate<AuthState>(
-          (s) =>
-              s is AuthError &&
-              s.error.message.contains('Numéro de téléphone invalide'),
-        ),
-      ],
+      expect: () => [const AuthLoading(), isA<AuthError>()],
     );
   });
 

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
@@ -197,10 +198,15 @@ void main() {
   group('VoyageurContactCard', () {
     late _MockConversationOpenBloc bloc;
 
+    // Ce groupe teste exclusivement la fonctionnalité d'appel révélé par le
+    // serveur — indépendante du canal SMS OTP (auth). Le flag est donc activé
+    // par défaut ici pour isoler ces tests de sa valeur par défaut (false).
     setUp(() {
       bloc = _MockConversationOpenBloc();
       when(() => bloc.state).thenReturn(const ConversationOpenInitial());
+      setSmsAuthEnabled(true);
     });
+    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
     testWidgets('shows traveler name, rating and chat button', (tester) async {
       final bid = _bid(
@@ -235,6 +241,18 @@ void main() {
 
       expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
     });
+
+    testWidgets(
+      'hides phone button tant que le SMS OTP backend n\'est pas confirmé, même joignable',
+      (tester) async {
+        setSmsAuthEnabled(false);
+        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
+
+        await tester.pumpWidget(_hostVoyageur(bid, bloc));
+
+        expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+      },
+    );
 
     testWidgets('hides phone button when status is COMPLETED even with phone',
         (tester) async {
@@ -538,7 +556,9 @@ void main() {
     setUp(() {
       bloc = _MockConversationOpenBloc();
       when(() => bloc.state).thenReturn(const ConversationOpenInitial());
+      setSmsAuthEnabled(true);
     });
+    tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
     testWidgets(
       'canLaunchUrl returns false → le numéro est affiché et proposé à la copie',

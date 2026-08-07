@@ -157,6 +157,65 @@ void main() {
     });
   });
 
+  group('sendPhoneOtp', () {
+    test('calls POST /auth/sms-otp/send and completes', () async {
+      when(() => mockDio.post<void>(
+              '/auth/sms-otp/send',
+              data: any(named: 'data')))
+          .thenAnswer((_) async =>
+              Response(data: null, statusCode: 204, requestOptions: RequestOptions(path: '/auth/sms-otp/send')));
+
+      await expectLater(datasource.sendPhoneOtp('+221701234567'), completes);
+      verify(() => mockDio.post<void>(
+            '/auth/sms-otp/send',
+            data: {'phoneNumber': '+221701234567'},
+          )).called(1);
+    });
+  });
+
+  group('verifyPhoneOtp', () {
+    test('calls POST /auth/sms-otp/verify and returns customToken', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(
+              '/auth/sms-otp/verify',
+              data: any(named: 'data')))
+          .thenAnswer((_) async => Response(
+                data: {'customToken': 'fake_token_123'},
+                statusCode: 200,
+                requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
+              ));
+
+      final token = await datasource.verifyPhoneOtp('+221701234567', '123456');
+      expect(token, 'fake_token_123');
+      verify(() => mockDio.post<Map<String, dynamic>>(
+            '/auth/sms-otp/verify',
+            data: {'phoneNumber': '+221701234567', 'code': '123456'},
+          )).called(1);
+    });
+  });
+
+  group('attachPhone', () {
+    test('POST /auth/sms-otp/attach avec phoneNumber+code, renvoie le profil', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(
+              '/auth/sms-otp/attach',
+              data: any(named: 'data')))
+          .thenAnswer((_) async => Response(
+              data: _userJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(path: '/auth/sms-otp/attach')));
+
+      final result = await datasource.attachPhone(
+        phoneNumber: '+221701234567',
+        code: '123456',
+      );
+
+      expect(result.id, 'user-123');
+      verify(() => mockDio.post<Map<String, dynamic>>(
+            '/auth/sms-otp/attach',
+            data: {'phoneNumber': '+221701234567', 'code': '123456'},
+          )).called(1);
+    });
+  });
+
   group('registerWithEmail', () {
     test('returns UserModel on success', () async {
       when(() => mockDio.post<Map<String, dynamic>>(
