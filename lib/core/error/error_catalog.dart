@@ -166,6 +166,12 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.phone_disabled_rounded,
     ),
+    'sms-otp-disabled': ErrorPresentation(
+      title: 'Indisponible',
+      message: 'La connexion par téléphone n\'est pas encore disponible.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
 
     // ─── Annonces / trajets ──────────────────────────────────────────
     'announcement-not-found': ErrorPresentation(

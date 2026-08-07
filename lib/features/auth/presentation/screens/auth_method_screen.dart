@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -80,13 +81,24 @@ class AuthMethodScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 100.ms),
                   const SizedBox(height: DonySpacing.xxl),
-                  _PhoneCta(onTap: () => context.push('/auth/phone'))
-                      .animate()
-                      .fadeIn(delay: 140.ms)
-                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                  const SizedBox(height: DonySpacing.md),
-                  _OrDivider(),
-                  const SizedBox(height: DonySpacing.md),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: smsAuthEnabledListenable,
+                    builder: (_, phoneEnabled, __) {
+                      if (!phoneEnabled) return const SizedBox.shrink();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _PhoneCta(onTap: () => context.push('/auth/phone'))
+                              .animate()
+                              .fadeIn(delay: 140.ms)
+                              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                          const SizedBox(height: DonySpacing.md),
+                          _OrDivider(),
+                          const SizedBox(height: DonySpacing.md),
+                        ],
+                      );
+                    },
+                  ),
                   if (_showAppleButton) ...[
                     _SocialCta(
                           iconAsset: 'apple',

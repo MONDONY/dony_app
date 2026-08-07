@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -169,7 +170,10 @@ class _ChatScreenState extends State<ChatScreen> {
     final tt = Theme.of(context).textTheme;
     final conversation = widget.conversation;
     final participant = conversation.otherParticipant;
-    final canCall = participant.phoneAvailable;
+    // Le canal SMS OTP coupé n'empêche pas d'appeler (fonctionnalité
+    // indépendante), mais tant qu'il l'est le concept même de "numéro" reste
+    // masqué partout dans l'app — bouton retiré pour rester cohérent.
+    final canCall = participant.phoneAvailable && smsAuthEnabledListenable.value;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,

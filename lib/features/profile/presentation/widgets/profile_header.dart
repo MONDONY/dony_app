@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
@@ -199,46 +200,53 @@ class _ContactChips extends StatelessWidget {
     final hasPhone = phoneNumber != null && phoneNumber!.isNotEmpty;
     final hasEmail = email != null && email!.isNotEmpty;
 
-    return Wrap(
-      spacing: DonySpacing.xs,
-      runSpacing: DonySpacing.xs,
-      children: [
-        if (hasPhone)
-          const _Chip(
-            label: 'Tél. ✓',
-            iconAsset: 'phone',
-            bg: DonyColors.success50,
-            fg: DonyColors.success700,
-          )
-        else
-          const _Chip(
-            label: 'Tél. manquant',
-            iconAsset: 'phone',
-            bg: DonyColors.neutral100,
-            fg: DonyColors.neutral500,
-          ),
-        if (hasEmail)
-          const _Chip(
-            label: 'Email ✓',
-            iconAsset: 'mail',
-            bg: DonyColors.success50,
-            fg: DonyColors.success700,
-          )
-        else
-          const _Chip(
-            label: 'Email manquant',
-            iconAsset: 'mail',
-            bg: DonyColors.warning50,
-            fg: DonyColors.warning700,
-          ),
-        if (isKycVerified)
-          const _Chip(
-            label: 'Identité ✓',
-            iconAsset: 'shield-check',
-            bg: DonyColors.blue50,
-            fg: DonyColors.blue700,
-          ),
-      ],
+    return ValueListenableBuilder<bool>(
+      valueListenable: smsAuthEnabledListenable,
+      builder: (_, phoneAuthEnabled, __) => Wrap(
+        spacing: DonySpacing.xs,
+        runSpacing: DonySpacing.xs,
+        children: [
+          // Tant que le SMS OTP backend n'est pas confirmé, personne ne peut
+          // plus ajouter/vérifier de numéro : le chip "manquant" serait une
+          // relance permanente pour une action devenue impossible.
+          if (phoneAuthEnabled)
+            if (hasPhone)
+              const _Chip(
+                label: 'Tél. ✓',
+                iconAsset: 'phone',
+                bg: DonyColors.success50,
+                fg: DonyColors.success700,
+              )
+            else
+              const _Chip(
+                label: 'Tél. manquant',
+                iconAsset: 'phone',
+                bg: DonyColors.neutral100,
+                fg: DonyColors.neutral500,
+              ),
+          if (hasEmail)
+            const _Chip(
+              label: 'Email ✓',
+              iconAsset: 'mail',
+              bg: DonyColors.success50,
+              fg: DonyColors.success700,
+            )
+          else
+            const _Chip(
+              label: 'Email manquant',
+              iconAsset: 'mail',
+              bg: DonyColors.warning50,
+              fg: DonyColors.warning700,
+            ),
+          if (isKycVerified)
+            const _Chip(
+              label: 'Identité ✓',
+              iconAsset: 'shield-check',
+              bg: DonyColors.blue50,
+              fg: DonyColors.blue700,
+            ),
+        ],
+      ),
     );
   }
 }

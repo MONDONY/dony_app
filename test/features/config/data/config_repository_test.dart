@@ -117,6 +117,30 @@ void main() {
         throwsA(isA<DioException>()),
       );
     });
+
+    test('getSmsEnabled returns enabled flag from API response', () async {
+      when(() => mockDio.get('/config/sms-enabled')).thenAnswer(
+        (_) async => Response(
+          data: {'enabled': true},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/sms-enabled'),
+        ),
+      );
+
+      final enabled = await datasource.getSmsEnabled();
+      expect(enabled, true);
+    });
+
+    test('getSmsEnabled throws on network error', () async {
+      when(() => mockDio.get('/config/sms-enabled')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/sms-enabled'),
+          message: 'Network error',
+        ),
+      );
+
+      expect(() => datasource.getSmsEnabled(), throwsA(isA<DioException>()));
+    });
   });
 
   group('ConfigRepository', () {
@@ -199,6 +223,30 @@ void main() {
         () => repository.getReimbursementCap(),
         throwsA(isA<Exception>()),
       );
+    });
+
+    test('getSmsEnabled delegates to datasource', () async {
+      when(() => mockDio.get('/config/sms-enabled')).thenAnswer(
+        (_) async => Response(
+          data: {'enabled': false},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/sms-enabled'),
+        ),
+      );
+
+      final enabled = await repository.getSmsEnabled();
+      expect(enabled, false);
+    });
+
+    test('getSmsEnabled rethrows network exceptions', () async {
+      when(() => mockDio.get('/config/sms-enabled')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/sms-enabled'),
+          message: 'Server error',
+        ),
+      );
+
+      expect(() => repository.getSmsEnabled(), throwsA(isA<Exception>()));
     });
   });
 }
