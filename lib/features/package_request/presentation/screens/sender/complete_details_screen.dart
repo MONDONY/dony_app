@@ -243,7 +243,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 ),
                                 const SizedBox(height: DonySpacing.md),
                                 TextFormField(
-                                  textInputAction: TextInputAction.next,
+                                  textInputAction: TextInputAction.done,
                                   controller: _recipientCityCtrl,
                                   decoration: const InputDecoration(
                                     labelText: 'Ville / commune',

@@ -15,7 +15,6 @@ Widget _buildHeader({
   String? phoneNumber,
   String? email,
   String? city,
-  double profileCompletionPercent = 0.0,
   VoidCallback? onEditProfile,
 }) {
   return MaterialApp(
@@ -31,7 +30,6 @@ Widget _buildHeader({
         phoneNumber: phoneNumber,
         email: email,
         city: city,
-        profileCompletionPercent: profileCompletionPercent,
         onEditProfile: onEditProfile,
       ),
     ),
@@ -160,22 +158,15 @@ void main() {
       expect(find.text('Voyageur'), findsNothing);
     });
 
-    testWidgets('shows profile completion percentage', (tester) async {
-      await tester.pumpWidget(_buildHeader(profileCompletionPercent: 0.5));
-      await tester.pump();
-      expect(find.text('50%'), findsOneWidget);
-    });
-
-    testWidgets('hides completion bar when profile is complete', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_buildHeader(profileCompletionPercent: 1.0));
-      await tester.pump();
-      // À 100%, la barre de complétion est volontairement masquée
-      // (ProfileHeader : `if (profileCompletionPercent < 1.0)`).
-      expect(find.text('100% ✓'), findsNothing);
-      expect(find.text('100%'), findsNothing);
-    });
+    testWidgets(
+      'ne montre plus de barre de complétion (déplacée vers Modifier le profil)',
+      (tester) async {
+        await tester.pumpWidget(_buildHeader());
+        await tester.pump();
+        expect(find.text('Profil complet'), findsNothing);
+        expect(find.byType(LinearProgressIndicator), findsNothing);
+      },
+    );
 
     testWidgets('edit button calls onEditProfile when tapped', (tester) async {
       var tapped = false;

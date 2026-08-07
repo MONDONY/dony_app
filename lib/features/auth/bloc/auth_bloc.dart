@@ -100,23 +100,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // Firebase OK mais pas encore inscrit en backend
         _pendingPhoneNumber = firebaseUser.phoneNumber;
         emit(const AuthInitial());
-      } else if (statusCode == 401 || statusCode == 403) {
-        // Session Firebase rejetée par le backend (token périmé, ou compte
-        // absent/supprimé côté serveur). Ce n'est PAS une panne : on déconnecte
-        // proprement et on renvoie vers l'onboarding/login au lieu de bloquer
-        // l'utilisateur sur un écran d'erreur sans issue (« Réessayer » rebouclerait
-        // sur le même 401).
-        unawaited(_firebaseAuth.signOut());
-        _pendingPhoneNumber = firebaseUser.phoneNumber;
-        emit(const AuthInitial());
-        unawaited(
-          _analytics?.logEvent(
-            AnalyticsEvents.loginFailed,
-            properties: {'error_type': statusCode.toString()},
-          ),
-        );
       } else {
-        // Erreur réseau / 5xx transitoire → écran d'erreur avec réessai.
+        // 401/403/5xx/timeout sur ce tout premier appel authentifié → écran
+        // d'erreur avec réessai, SANS signOut(). Un 401/403 ici peut être
+        // transitoire (backend en cold start, vérification du token Firebase
+        // pas encore prête côté Admin SDK) et pas une vraie révocation —
+        // déclencher un signOut() sur ce seul signal forçait l'utilisateur à
+        // se reconnecter à chaque redémarrage pendant un cold start. Un
+        // logout réel ne doit venir que d'une action utilisateur explicite
+        // (AuthLogoutRequested) ou d'un signal serveur non ambigu.
         emit(AuthError(unwrapDioError(e)));
         unawaited(
           _analytics?.logEvent(
@@ -227,10 +219,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  // ─── Déconnexion → retour à /auth/phone ──────────────────────────────────
+  // ─── Déconnexion → retour à /auth/method ─────────────────────────────────
   //
-  // On déconnecte Firebase seulement. Le PIN est CONSERVÉ.
-  // Après re-authentification OTP :
+  // On déconnecte Firebase seulement. Le PIN est CONSERVÉ. AuthInitial
+  // renvoie vers le choix des méthodes de connexion (téléphone/email/
+  // Google/Apple), pas vers une méthode figée. Si l'utilisateur repasse
+  // par le téléphone :
   //   • numéro existant → AuthAuthenticated → /auth/local (PIN screen, même PIN)
   //   • numéro inconnu  → AuthOtpVerified   → OTP screen dispatche AuthRegisterRequested() (nouveau compte)
 

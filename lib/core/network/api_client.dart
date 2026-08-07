@@ -6,6 +6,7 @@ import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
+import 'package:dony/core/network/retry_on_transient_error_interceptor.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -77,6 +78,12 @@ class ApiClient {
     // convertisse en RateLimitException — donc le mieux placé pour retenter
     // la requête d'origine avant que quiconque en aval ne l'affiche à l'utilisateur.
     _dio.interceptors.add(RetryOnRateLimitInterceptor(_dio));
+
+    // Ajouté en tout dernier pour la même raison : voir l'erreur brute avant
+    // toute conversion, afin de retenter les GET sur timeout/erreur de
+    // connexion/5xx (cold-start backend) avant que _AuthInterceptor ne les
+    // transforme en AppException.
+    _dio.interceptors.add(RetryOnTransientErrorInterceptor(_dio));
   }
 
   late final Dio _dio;
