@@ -2108,60 +2108,67 @@ class _PriceBreakdown extends StatelessWidget {
           // à 200 % leur somme peut dépasser la largeur de la carte. Sur
           // une ligne quand ça tient (rendu identique à 100 %), le prix
           // passe sous le libellé sinon.
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            runSpacing: DonySpacing.xs,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Total', style: tt.titleLarge),
-                  // Le badge "Promo" ne s'affiche que si le code a réellement
-                  // fait baisser le prix — sinon (ex. WELCOME05 = taux déjà
-                  // par défaut) il annoncerait une remise qui n'existe pas.
-                  if (hasRealSavings) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5EE),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Promo',
-                        style: tt.labelSmall?.copyWith(
-                          color: const Color(0xFF16A34A),
-                          fontWeight: FontWeight.w700,
+          // SizedBox(width: double.infinity) : un Wrap seul ne s'étire pas
+          // à la largeur du parent (Column crossAxisAlignment.start), donc
+          // spaceBetween n'avait aucun espace libre à répartir et "Total"
+          // se retrouvait collé au prix.
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              runSpacing: DonySpacing.xs,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Total', style: tt.titleLarge),
+                    // Le badge "Promo" ne s'affiche que si le code a
+                    // réellement fait baisser le prix — sinon il
+                    // annoncerait une remise qui n'existe pas.
+                    if (hasRealSavings) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5EE),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Promo',
+                          style: tt.labelSmall?.copyWith(
+                            color: const Color(0xFF16A34A),
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (hasRealSavings) ...[
-                    Text(
-                      fmt.format(originalTotal),
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        decoration: TextDecoration.lineThrough,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (hasRealSavings) ...[
+                      Text(
+                        fmt.format(originalTotal),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          decoration: TextDecoration.lineThrough,
+                        ),
                       ),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      fmt.format(totalPrice),
+                      key: const Key('bid-total-amount'),
+                      style: tt.titleLarge?.copyWith(color: cs.primary),
                     ),
-                    const SizedBox(width: 6),
                   ],
-                  Text(
-                    fmt.format(totalPrice),
-                    key: const Key('bid-total-amount'),
-                    style: tt.titleLarge?.copyWith(color: cs.primary),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
