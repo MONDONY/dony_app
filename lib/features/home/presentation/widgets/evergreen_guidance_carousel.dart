@@ -212,7 +212,10 @@ class _EvergreenGuidanceCarouselState
               title: 'Comment ça marche ?',
               subtitle: tutorial.title,
               ctaLabel: 'Voir le tuto',
-              color: DonyColors.terra500,
+              // accent (terra600, 4.79:1) et non terra500 (3.46:1) : ce fill
+              // porte du texte blanc, terra500 n'atteint pas le seuil AA
+              // 4.5:1 (cf. color_tokens.dart:166-169).
+              color: DonyColors.accent,
               onTap: () => _onTutorialTap(context, tutorial),
             ),
         ];
