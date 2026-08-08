@@ -776,6 +776,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
       editing: params.editing,
       initialDirection: params.direction,
+      hiveService: getIt<HiveService>(),
     ),
   );
   // param1 = alertId (String), param2 = direction (AlertDirection) — matchs typés par direction.

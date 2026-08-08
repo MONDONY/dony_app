@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/services/analytics_events.dart';
 import '../../../core/services/analytics_service.dart';
+import '../../../core/storage/hive_service.dart';
 import '../data/corridor_alert_repository.dart';
 import '../data/models/alert_direction.dart';
 import '../data/models/corridor_alert_model.dart';
@@ -137,8 +138,10 @@ class CorridorAlertFormState extends Equatable {
 class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
   CorridorAlertFormCubit(this._repository, this._analytics,
       {CorridorAlertModel? editing,
-      AlertDirection initialDirection = AlertDirection.travelerWantsPackages})
+      AlertDirection initialDirection = AlertDirection.travelerWantsPackages,
+      HiveService? hiveService})
       : _editingId = editing?.id,
+        _hiveService = hiveService,
         super(
           editing == null
               ? CorridorAlertFormState(direction: initialDirection)
@@ -161,6 +164,7 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
 
   final CorridorAlertRepository _repository;
   final AnalyticsService _analytics;
+  final HiveService? _hiveService;
   final String? _editingId;
 
   bool get isEditing => _editingId != null;
@@ -272,6 +276,10 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
         await _repository.create(draft);
         unawaited(
             _analytics.logEvent(AnalyticsEvents.corridorAlertCreated));
+      }
+      final hive = _hiveService;
+      if (hive != null) {
+        unawaited(hive.userPrefs.put(HiveService.kHasActiveCorridorAlert, true));
       }
       emit(state.copyWith(status: CorridorAlertFormStatus.success));
     } catch (err) {

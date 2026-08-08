@@ -9,6 +9,12 @@ class HiveService {
   static const String kHasPublishedAsTraveler = 'has_published_as_traveler';
   static const String kHasPublishedAsSender = 'has_published_as_sender';
 
+  // Alerte corridor active : posé à la première création/édition réussie,
+  // jamais réinitialisé (même précédent que kHasPublishedAsTraveler/Sender).
+  // Sert uniquement à masquer la slide "Créer une alerte" du carousel
+  // evergreen de l'écran Recherche une fois l'action faite.
+  static const String kHasActiveCorridorAlert = 'has_active_corridor_alert';
+
   // Timestamp (ms epoch) de la première vue du banner expéditeur ; le banner
   // expire 5 min après cette première vue.
   static const String kSenderBannerFirstSeenAt = 'sender_banner_first_seen_at';

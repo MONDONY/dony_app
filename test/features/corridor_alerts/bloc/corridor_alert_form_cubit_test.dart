@@ -1,15 +1,21 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockRepo extends Mock implements CorridorAlertRepository {}
 
 class MockAnalytics extends Mock implements AnalyticsService {}
+
+class MockHiveService extends Mock implements HiveService {}
+
+class MockBox extends Mock implements Box {}
 
 CorridorAlertModel _created() => CorridorAlertModel(
       id: 'a1',
@@ -385,5 +391,65 @@ void main() {
 
     c.toggleCategory('docs');
     expect(c.state.contentCategories, ['vetements']);
+  });
+
+  group('kHasActiveCorridorAlert', () {
+    test('submit (create) réussi pose le flag si hiveService fourni', () async {
+      final hive = MockHiveService();
+      final box = MockBox();
+      when(() => hive.userPrefs).thenReturn(box);
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      when(() => repo.create(any())).thenAnswer((_) async => _created());
+
+      final c = CorridorAlertFormCubit(repo, analytics, hiveService: hive);
+      c.setDeparture('Paris', 'FR');
+      c.setArrival('Bamako', 'ML');
+      await c.submit();
+
+      verify(() => box.put(HiveService.kHasActiveCorridorAlert, true)).called(1);
+    });
+
+    test('submit (create) réussi sans hiveService ne lève pas d\'exception', () async {
+      when(() => repo.create(any())).thenAnswer((_) async => _created());
+
+      final c = CorridorAlertFormCubit(repo, analytics);
+      c.setDeparture('Paris', 'FR');
+      c.setArrival('Bamako', 'ML');
+      await c.submit();
+
+      expect(c.state.status, CorridorAlertFormStatus.success);
+    });
+
+    test('submit (edit) réussi pose aussi le flag', () async {
+      final hive = MockHiveService();
+      final box = MockBox();
+      when(() => hive.userPrefs).thenReturn(box);
+      when(() => box.put(any(), any())).thenAnswer((_) async {});
+      when(() => repo.update('a1', any())).thenAnswer((_) async => _created());
+
+      final c = CorridorAlertFormCubit(
+        repo,
+        analytics,
+        hiveService: hive,
+        editing: _created(),
+      );
+      await c.submit();
+
+      verify(() => box.put(HiveService.kHasActiveCorridorAlert, true)).called(1);
+    });
+
+    test('submit en erreur ne pose pas le flag', () async {
+      final hive = MockHiveService();
+      final box = MockBox();
+      when(() => hive.userPrefs).thenReturn(box);
+      when(() => repo.create(any())).thenThrow(Exception('422'));
+
+      final c = CorridorAlertFormCubit(repo, analytics, hiveService: hive);
+      c.setDeparture('Paris', 'FR');
+      c.setArrival('Bamako', 'ML');
+      await c.submit();
+
+      verifyNever(() => box.put(HiveService.kHasActiveCorridorAlert, true));
+    });
   });
 }
