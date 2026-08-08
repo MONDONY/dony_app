@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 
@@ -137,11 +138,17 @@ class NegotiationRepository {
 
   /// Sender initiates the Stripe escrow payment for an AWAITING_PAYMENT thread.
   /// Returns the Stripe clientSecret to confirm via PaymentSheet on Flutter side.
-  /// The thread is finalized to ACCEPTED async via webhook.
+  /// The thread is finalized to ACCEPTED async via webhook. [promoCode] optionnel :
+  /// s'il ne s'applique plus (expiré/épuisé entre l'aperçu et le paiement), le
+  /// backend retombe silencieusement sur le taux sans promo (jamais bloquant).
   Future<({String clientSecret, String paymentIntentId, double amountEur, List<String> paymentMethodTypes})>
-      initiatePayment(String id) async {
-    final response = await _apiClient.dio
-        .post<Map<String, dynamic>>('/negotiations/$id/initiate-payment');
+      initiatePayment(String id, {String? promoCode}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$id/initiate-payment',
+      queryParameters: promoCode != null && promoCode.isNotEmpty
+          ? {'promoCode': promoCode}
+          : null,
+    );
     final data = response.data!;
     return (
       clientSecret: data['clientSecret'] as String,
@@ -152,6 +159,18 @@ class NegotiationRepository {
               .toList() ??
           const [],
     );
+  }
+
+  /// Devis transparent avant paiement : net voyageur, commission Yadony (taux +
+  /// montant), total, et prévisualisation d'un code promo optionnel.
+  Future<NegotiationQuote> quote(String id, {String? promoCode}) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/negotiations/$id/quote',
+      queryParameters: promoCode != null && promoCode.isNotEmpty
+          ? {'promoCode': promoCode}
+          : null,
+    );
+    return NegotiationQuote.fromJson(response.data!);
   }
 
   /// Sender confirms payment (Stripe paymentIntentId or placeholder) for an

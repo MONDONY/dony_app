@@ -82,15 +82,22 @@ void main() {
       expect(find.byKey(const Key('add-category-btn')), findsNothing);
     });
 
-    testWidgets('multi-sélection via les raccourcis fréquents', (tester) async {
+    testWidgets('multi-sélection via le combo', (tester) async {
+      // Les raccourcis « Fréquents » ont été retirés : la multi-sélection
+      // passe uniquement par le combo, catalogue complet dont « Autre ».
+      tallViewport(tester);
       await tester.pumpWidget(wrap(const Step2Details()));
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('Vêtements & tissus'));
-      await tester.tap(find.text('Vêtements & tissus'));
+      await tester.tap(find.byKey(kField));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Documents & administratif'));
-      await tester.tap(find.text('Documents & administratif'));
+      await tester.tap(
+        find.byKey(const Key('package-content-item-Vêtements & tissus')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('package-content-item-Documents & administratif')),
+      );
       await tester.pumpAndSettle();
 
       // Les deux sélections coexistent : pas d'exclusivité.

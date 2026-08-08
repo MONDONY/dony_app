@@ -10,8 +10,6 @@ import 'package:dony/features/package_request/bloc/package_request_form_state.da
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
-    show OptionButton;
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
@@ -94,6 +92,14 @@ void main() {
   );
 
   group('Step2Details', () {
+    /// L'overlay du combo catégories se place sous le champ : dans un
+    /// viewport de 600 px il tombe hors écran et les taps n'atteignent rien.
+    void tallViewport(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1000, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+    }
+
     testWidgets('rend titre + sous-titre + labels de section', (tester) async {
       await tester.pumpWidget(wrap(const Step2Details()));
       expect(find.text('Décris ton colis'), findsOneWidget);
@@ -102,20 +108,12 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Poids approximatif'), findsOneWidget);
-      expect(find.text('Taille'), findsOneWidget);
+      // La taille n'est plus saisie manuellement (dérivée du poids) : la
+      // photo suffit à la montrer, cf. Step2DetailsState._sizeFromWeight.
+      expect(find.text('Taille'), findsNothing);
       // « Catégories » (liste dépliée) est devenu « Contenu » (autocomplétion).
       expect(find.text('Contenu'), findsOneWidget);
       expect(find.text('Catégories'), findsNothing);
-    });
-
-    testWidgets('rend 3 cards de taille (S/M/L)', (tester) async {
-      await tester.pumpWidget(wrap(const Step2Details()));
-      expect(find.text('S'), findsOneWidget);
-      expect(find.text('M'), findsOneWidget);
-      expect(find.text('L'), findsOneWidget);
-      expect(find.text('Sac'), findsOneWidget);
-      expect(find.text('Carton'), findsOneWidget);
-      expect(find.text('Valise'), findsOneWidget);
     });
 
     testWidgets(
@@ -127,9 +125,13 @@ void main() {
         await tester.pump();
 
         expect(find.byType(ContentCategoryComboBox), findsOneWidget);
-        // Seuls les raccourcis « Fréquents » restent en chips.
-        expect(find.text('Fréquents'), findsOneWidget);
-        expect(find.byType(OptionButton), findsNWidgets(4));
+        // « Autre » fait partie du catalogue proposé par le combo.
+        await tester.tap(find.byKey(const Key('package-content-field')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('package-content-item-Autre')),
+          findsOneWidget,
+        );
       },
     );
 
@@ -170,6 +172,7 @@ void main() {
     testWidgets('saisir une description → state.description après submit', (
       tester,
     ) async {
+      tallViewport(tester);
       final bloc = PackageRequestFormBloc(
         repo,
         analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
@@ -181,8 +184,11 @@ void main() {
         find.byKey(const Key('description-input')),
         'Colis fragile, vases en verre',
       );
-      await tester.ensureVisible(find.text('Vêtements & tissus'));
-      await tester.tap(find.text('Vêtements & tissus'));
+      await tester.tap(find.byKey(const Key('package-content-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('package-content-item-Vêtements & tissus')),
+      );
       await tester.pump();
       key.currentState!.submit();
       await tester.pump();
@@ -190,6 +196,7 @@ void main() {
     });
 
     testWidgets('description vide → null (non envoyée)', (tester) async {
+      tallViewport(tester);
       final bloc = PackageRequestFormBloc(
         repo,
         analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
@@ -197,8 +204,11 @@ void main() {
       final key = GlobalKey<Step2DetailsState>();
       await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
       await tester.enterText(find.byType(TextFormField).first, '5');
-      await tester.ensureVisible(find.text('Vêtements & tissus'));
-      await tester.tap(find.text('Vêtements & tissus'));
+      await tester.tap(find.byKey(const Key('package-content-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('package-content-item-Vêtements & tissus')),
+      );
       await tester.pump();
       key.currentState!.submit();
       await tester.pump();
@@ -214,5 +224,98 @@ void main() {
       await tester.pumpWidget(wrap(const Step2Details(), bloc: mockBloc));
       expect(find.text('Déjà écrit'), findsOneWidget);
     });
+
+    testWidgets('taille dérivée du poids (≤ 3 kg → small) au submit', (
+      tester,
+    ) async {
+      tallViewport(tester);
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key), bloc: mockBloc));
+      await tester.enterText(find.byType(TextFormField).first, '2');
+      await tester.tap(find.byKey(const Key('package-content-field')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('package-content-item-Vêtements & tissus')),
+      );
+      await tester.pump();
+      key.currentState!.submit();
+      await tester.pump();
+      verify(
+        () => mockBloc.add(
+          const FormStep2Submitted(
+            weightKg: 2,
+            parcelSize: ParcelSize.small,
+            categories: ['Vêtements & tissus'],
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets(
+      'sélectionner « Autre » propose une précision libre qui remplace la catégorie',
+      (tester) async {
+        tallViewport(tester);
+        final bloc = PackageRequestFormBloc(
+          repo,
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
+        final key = GlobalKey<Step2DetailsState>();
+        await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
+        await tester.enterText(find.byType(TextFormField).first, '5');
+        await tester.tap(find.byKey(const Key('package-content-field')));
+        await tester.pumpAndSettle();
+        // « Autre » est le dernier item du catalogue : scroller la liste
+        // interne du combo (tallViewport ne suffit pas, elle est clippée).
+        await tester.ensureVisible(
+          find.byKey(const Key('package-content-item-Autre')),
+        );
+        await tester.tap(find.byKey(const Key('package-content-item-Autre')));
+        await tester.pumpAndSettle();
+
+        // Le bottom sheet de précision s'ouvre automatiquement.
+        expect(find.text('Précise le contenu (optionnel)'), findsOneWidget);
+        await tester.enterText(
+          find.byKey(const Key('autre-detail-input')),
+          'Instruments de musique',
+        );
+        await tester.tap(find.text('Valider'));
+        await tester.pumpAndSettle();
+
+        key.currentState!.submit();
+        await tester.pump();
+        expect(bloc.state.categories, ['Instruments de musique']);
+      },
+    );
+
+    testWidgets(
+      '« Autre » sans précision saisie reste tel quel dans la sélection',
+      (tester) async {
+        tallViewport(tester);
+        final bloc = PackageRequestFormBloc(
+          repo,
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
+        final key = GlobalKey<Step2DetailsState>();
+        await tester.pumpWidget(wrap(Step2Details(key: key), bloc: bloc));
+        await tester.enterText(find.byType(TextFormField).first, '5');
+        await tester.tap(find.byKey(const Key('package-content-field')));
+        await tester.pumpAndSettle();
+        // « Autre » est le dernier item du catalogue : scroller la liste
+        // interne du combo (tallViewport ne suffit pas, elle est clippée).
+        await tester.ensureVisible(
+          find.byKey(const Key('package-content-item-Autre')),
+        );
+        await tester.tap(find.byKey(const Key('package-content-item-Autre')));
+        await tester.pumpAndSettle();
+
+        // Fermeture sans rien saisir (drag-to-dismiss simulé par un pop direct).
+        await tester.tapAt(const Offset(20, 20));
+        await tester.pumpAndSettle();
+
+        key.currentState!.submit();
+        await tester.pump();
+        expect(bloc.state.categories, ['Autre']);
+      },
+    );
   });
 }

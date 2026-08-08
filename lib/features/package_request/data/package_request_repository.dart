@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
+import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -119,6 +120,7 @@ class PackageRequestRepository {
     String? deliveryNeighborhood,
     List<String>? photoKeys,
     bool saveAsDraft = false,
+    String? promoCode,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests',
@@ -143,6 +145,7 @@ class PackageRequestRepository {
         if (deliveryNeighborhood != null)
           'deliveryNeighborhood': deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
+        if (promoCode != null) 'promoCode': promoCode,
         'saveAsDraft': saveAsDraft,
       },
     );
@@ -169,6 +172,7 @@ class PackageRequestRepository {
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
     List<String>? photoKeys,
+    String? promoCode,
   }) async {
     final response = await _apiClient.dio.put<Map<String, dynamic>>(
       '/package-requests/$id',
@@ -193,6 +197,7 @@ class PackageRequestRepository {
         if (deliveryNeighborhood != null)
           'deliveryNeighborhood': deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
+        if (promoCode != null) 'promoCode': promoCode,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -227,6 +232,20 @@ class PackageRequestRepository {
 
   Future<void> cancel(String id) async {
     await _apiClient.dio.delete<void>('/package-requests/$id');
+  }
+
+  /// Devis transparent pendant que l'expéditeur fixe son budget (étape 3) :
+  /// net voyageur, commission Yadony (taux + montant), et prévisualisation
+  /// d'un code promo optionnel — avant même qu'un voyageur/thread existe.
+  Future<NegotiationQuote> quote(double budgetEur, {String? promoCode}) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/package-requests/quote',
+      queryParameters: {
+        'budgetEur': budgetEur,
+        if (promoCode != null && promoCode.isNotEmpty) 'promoCode': promoCode,
+      },
+    );
+    return NegotiationQuote.fromJson(response.data!);
   }
 
   /// Publie un brouillon (DRAFT → OPEN). Rejoue les mêmes contrôles que la

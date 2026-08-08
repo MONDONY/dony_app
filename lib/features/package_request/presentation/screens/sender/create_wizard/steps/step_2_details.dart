@@ -8,8 +8,6 @@ import 'package:dony/features/content_categories/presentation/content_category_s
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
-    show OptionButton;
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,9 +15,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Étape 2 / 3 — Détails du colis.
 ///
-/// Layout : poids (big input) · taille (3 cards S/M/L) · catégories MULTIPLES
-/// (chips prédéfinies multi-sélection + chips libres supprimables + input
-/// toujours visible pour en ajouter, comme la création d'un trajet) · description.
+/// Layout : photos (CTA proéminent) · poids (big input) · catégories
+/// MULTIPLES (combobox catalogue + « Autre » avec précision libre en option)
+/// · description. La taille (S/M/L) n'est plus saisie manuellement : la photo
+/// suffit à la montrer, elle est dérivée du poids pour les filtres de
+/// recherche existants ([ParcelSize]).
 class Step2Details extends StatefulWidget {
   const Step2Details({super.key, this.canContinueNotifier});
 
@@ -36,7 +36,9 @@ class Step2DetailsState extends State<Step2Details> {
   final _customCatCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
 
-  ParcelSize _size = ParcelSize.medium;
+  /// Libellé catalogue de la catégorie « autre », affiché dans le combo et
+  /// intercepté à la sélection pour proposer une précision libre.
+  static const _kAutreLabel = 'Autre';
 
   /// Catégories prédéfinies cochées (libellés).
   final Set<String> _selectedCats = {};
@@ -50,19 +52,6 @@ class Step2DetailsState extends State<Step2Details> {
 
   /// Les messages rouges n'apparaissent qu'après une première interaction.
   bool _touched = false;
-
-  /// Les quatre catégories les plus courantes, gardées visibles pour ne pas
-  /// perdre la découverte que l'autocomplétion supprime.
-  static const _kQuickPickCodes = {
-    'DOCUMENTS',
-    'VETEMENTS',
-    'ALIMENTATION_SECHE',
-    'MEDICAMENTS_TRADITIONNELS',
-  };
-
-  List<ContentCategory> get _quickPicks => _predefined
-      .where((c) => _kQuickPickCodes.contains(c.code))
-      .toList(growable: false);
 
   bool get _isWeightValid {
     final raw = _weightCtrl.text.trim().replaceAll(',', '.');
@@ -86,6 +75,8 @@ class Step2DetailsState extends State<Step2Details> {
       setState(() => _catError = 'Maximum $_kMaxCategories catégories');
       return;
     }
+    final autreJustAdded =
+        labels.contains(_kAutreLabel) && !_allCategories.contains(_kAutreLabel);
     _selectedCats
       ..clear()
       ..addAll(labels.where(catalogLabels.contains));
@@ -93,6 +84,35 @@ class Step2DetailsState extends State<Step2Details> {
       ..clear()
       ..addAll(labels.where((l) => !catalogLabels.contains(l)));
     _catError = _allCategories.isEmpty ? 'Choisis au moins une catégorie' : null;
+    _sync(markTouched: true);
+    // « Autre » seul ne dit rien au voyageur : on propose tout de suite une
+    // précision libre, sans l'imposer (bottom sheet annulable).
+    if (autreJustAdded) {
+      unawaited(_promptAutreDetail());
+    }
+  }
+
+  /// Ouvre une saisie libre pour préciser « Autre » juste après sa sélection.
+  /// Si l'expéditeur renseigne un texte, il remplace « Autre » dans la
+  /// sélection (catégorie libre) ; sinon « Autre » reste tel quel.
+  Future<void> _promptAutreDetail() async {
+    VoidCallback? submitFn;
+    final result = await DonyBottomSheet.show<String>(
+      context,
+      title: 'Précise le contenu (optionnel)',
+      subtitle: 'Ça aide le voyageur à savoir ce qu\'il transporte.',
+      child: _AutrePrecisionField(onSubmitReady: (fn) => submitFn = fn),
+      stickyBottom: DonyButton(
+        label: 'Valider',
+        onPressed: () => submitFn?.call(),
+      ),
+    );
+    if (!mounted || result == null || result.isEmpty) return;
+    setState(() {
+      _selectedCats.remove(_kAutreLabel);
+      _customCats.add(result);
+      _catError = null;
+    });
     _sync(markTouched: true);
   }
 
@@ -103,12 +123,10 @@ class Step2DetailsState extends State<Step2Details> {
   /// plutôt que de risquer un 422 silencieux sur une sélection large.
   static const _kMaxCategories = 5;
 
-  /// Catégories prédéfinies (hors « Autre ») proposées en chips — seedées
-  /// synchrone avec le catalogue embarqué, puis remplacées par le catalogue
-  /// live du repository dès qu'il répond (repli hors ligne intégré).
-  List<ContentCategory> _predefined = fallbackCatalog
-      .where((c) => c.code != 'AUTRE')
-      .toList(growable: false);
+  /// Catégories prédéfinies (dont « Autre ») proposées dans le combo —
+  /// seedées synchrone avec le catalogue embarqué, puis remplacées par le
+  /// catalogue live du repository dès qu'il répond (repli hors ligne intégré).
+  List<ContentCategory> _predefined = fallbackCatalog;
 
   @override
   void initState() {
@@ -121,7 +139,6 @@ class Step2DetailsState extends State<Step2Details> {
           ? w.toInt().toString()
           : w.toString();
     }
-    if (s.parcelSize != null) _size = s.parcelSize!;
     final predefinedLabels = _predefined.map((c) => c.label).toSet();
     for (final cat in s.categories) {
       if (predefinedLabels.contains(cat)) {
@@ -146,9 +163,7 @@ class Step2DetailsState extends State<Step2Details> {
     final categories =
         await getIt<IContentCategoryRepository>().getCategories();
     if (!mounted) return;
-    setState(() {
-      _predefined = categories.where((c) => c.code != 'AUTRE').toList();
-    });
+    setState(() => _predefined = categories);
   }
 
   @override
@@ -159,28 +174,6 @@ class Step2DetailsState extends State<Step2Details> {
     _descriptionCtrl.dispose();
     super.dispose();
   }
-
-  bool get _atSelectionLimit => _allCategories.length >= _kMaxCategories;
-
-  void _toggleCat(String label) {
-    if (!_selectedCats.contains(label) && _atSelectionLimit) {
-      setState(() => _catError = 'Maximum $_kMaxCategories catégories');
-      return;
-    }
-    setState(() {
-      if (_selectedCats.contains(label)) {
-        _selectedCats.remove(label);
-      } else {
-        _selectedCats.add(label);
-      }
-      _catError = _allCategories.isEmpty
-          ? 'Choisis au moins une catégorie'
-          : null;
-    });
-    _sync(markTouched: true);
-  }
-
-
 
   List<String> get _allCategories => [..._selectedCats, ..._customCats];
 
@@ -200,11 +193,20 @@ class Step2DetailsState extends State<Step2Details> {
     context.read<PackageRequestFormBloc>().add(
       FormStep2Submitted(
         weightKg: w,
-        parcelSize: _size,
+        parcelSize: _sizeFromWeight(w),
         categories: cats,
         description: desc.isEmpty ? null : desc,
       ),
     );
+  }
+
+  /// La taille n'est plus saisie manuellement (la photo suffit à la montrer)
+  /// mais reste nécessaire au filtre « Taille » de la recherche — dérivée du
+  /// poids, seul signal encore disponible à cette étape.
+  ParcelSize _sizeFromWeight(double weightKg) {
+    if (weightKg <= 3) return ParcelSize.small;
+    if (weightKg <= 10) return ParcelSize.medium;
+    return ParcelSize.large;
   }
 
   @override
@@ -251,33 +253,11 @@ class Step2DetailsState extends State<Step2Details> {
             _WeightInput(controller: _weightCtrl),
             const SizedBox(height: DonySpacing.base),
 
-            // ── Taille ─────────────────────────────────────────────────────
-            _FieldLabel('Taille'),
-            const SizedBox(height: DonySpacing.sm),
-            Row(
-              children: ParcelSize.values
-                  .map(
-                    (s) => Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.xs / 2,
-                        ),
-                        child: _SizeCard(
-                          size: s,
-                          selected: s == _size,
-                          onTap: () => setState(() => _size = s),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: DonySpacing.base),
-
             // ── Contenu ────────────────────────────────────────────────────
             // Autocomplétion plutôt que liste dépliée : les onze catégories
             // occupaient ~900 px et repoussaient la description hors écran.
-            // Même composant que la création de trajet.
+            // Même composant que la création de trajet. « Autre » fait partie
+            // du catalogue : sa sélection déclenche une précision libre.
             _FieldLabel('Contenu'),
             const SizedBox(height: DonySpacing.xs),
             Text(
@@ -291,34 +271,6 @@ class Step2DetailsState extends State<Step2Details> {
               selected: _allCategories,
               onChanged: _onCategoriesChanged,
             ),
-            // L'autocomplétion fait disparaître la découverte : quelqu'un qui
-            // envoie pour la première fois ignore ce qui est acceptable. Ces
-            // raccourcis la rendent sans replier toute la liste.
-            if (_quickPicks.isNotEmpty) ...[
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                'Fréquents',
-                style: tt.labelMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.6,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              Wrap(
-                spacing: DonySpacing.sm,
-                runSpacing: DonySpacing.sm,
-                children: [
-                  for (final c in _quickPicks)
-                    OptionButton(
-                      label: c.label,
-                      emoji: c.emoji,
-                      selected: _selectedCats.contains(c.label),
-                      onTap: () => _toggleCat(c.label),
-                    ),
-                ],
-              ),
-            ],
             DonyFieldError(
               message: _touched ? _catError : null,
               textKey: const Key('categories-error'),
@@ -338,9 +290,47 @@ class Step2DetailsState extends State<Step2Details> {
 
 // ─── Atoms ──────────────────────────────────────────────────────────────────
 
-/// Input + bouton « + » toujours visible pour ajouter une catégorie libre.
+/// Champ de précision libre du bottom sheet « Autre ». Le controller est
+/// possédé par ce widget (pas par l'appelant) : le dispose intervient au
+/// démontage réel, après l'animation de fermeture du sheet — un dispose
+/// manuel juste après le pop plante l'EditableText encore en transition.
+class _AutrePrecisionField extends StatefulWidget {
+  const _AutrePrecisionField({required this.onSubmitReady});
+  final void Function(VoidCallback) onSubmitReady;
 
-/// Chip catégorie libre, supprimable via la croix.
+  @override
+  State<_AutrePrecisionField> createState() => _AutrePrecisionFieldState();
+}
+
+class _AutrePrecisionFieldState extends State<_AutrePrecisionField> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady(_submit);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.of(context, rootNavigator: true).pop(_ctrl.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyTextField(
+      key: const Key('autre-detail-input'),
+      controller: _ctrl,
+      hint: 'Ex. Instruments de musique',
+      autofocus: true,
+    );
+  }
+}
 
 class _DescriptionInput extends StatelessWidget {
   const _DescriptionInput({required this.controller});
@@ -448,67 +438,3 @@ class _WeightInput extends StatelessWidget {
   }
 }
 
-class _SizeCard extends StatelessWidget {
-  const _SizeCard({
-    required this.size,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final ParcelSize size;
-  final bool selected;
-  final VoidCallback onTap;
-
-  ({String emoji, String label, String hint}) get _meta => switch (size) {
-    ParcelSize.small => (emoji: '📦', label: 'S', hint: 'Sac'),
-    ParcelSize.medium => (emoji: '📫', label: 'M', hint: 'Carton'),
-    ParcelSize.large => (emoji: '🧳', label: 'L', hint: 'Valise'),
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final m = _meta;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(DonyRadius.md),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          vertical: DonySpacing.md,
-          horizontal: DonySpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Text(m.emoji, style: const TextStyle(fontSize: 22)),
-            const SizedBox(height: 2),
-            Text(
-              m.label,
-              style: tt.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: selected ? cs.primary : cs.onSurface,
-              ),
-            ),
-            Text(
-              m.hint,
-              style: tt.bodySmall?.copyWith(
-                fontSize: 11,
-                color: cs.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -36,7 +36,7 @@ enum PaymentMethod {
       case PaymentMethod.stripe:
         return 'Carte';
       case PaymentMethod.cash:
-        return 'Cash';
+        return 'Espèces';
       case PaymentMethod.wave:
         return 'Wave';
       case PaymentMethod.orangeMoney:

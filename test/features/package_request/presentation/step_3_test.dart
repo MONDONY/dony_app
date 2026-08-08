@@ -105,7 +105,7 @@ void main() {
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
       await tester.pumpAndSettle();
       expect(find.text('Carte'), findsOneWidget);
-      expect(find.text('Cash'), findsOneWidget);
+      expect(find.text('Espèces'), findsOneWidget);
       expect(find.text('Wave'), findsNothing);
       expect(find.text('Orange Money'), findsNothing);
     });
@@ -167,8 +167,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap the Cash chip
-      await tester.ensureVisible(find.text('Cash'));
-      await tester.tap(find.text('Cash'));
+      await tester.ensureVisible(find.text('Espèces'));
+      await tester.tap(find.text('Espèces'));
       await tester.pumpAndSettle();
 
       expect(bloc.state.acceptedPaymentMethods.contains(PaymentMethod.cash), isTrue);

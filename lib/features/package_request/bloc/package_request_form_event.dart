@@ -118,3 +118,13 @@ class PackageRequestTotalBudgetChanged extends PackageRequestFormEvent {
   @override
   List<Object?> get props => [value];
 }
+
+class PackageRequestPromoCodeChanged extends PackageRequestFormEvent {
+  const PackageRequestPromoCodeChanged(this.value);
+
+  /// null ou vide → efface le code (cf. copyWith(clearPromoCode: true)).
+  final String? value;
+
+  @override
+  List<Object?> get props => [value];
+}
