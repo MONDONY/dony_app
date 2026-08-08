@@ -7,6 +7,7 @@ import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.d
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/activate_card_payments_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
+import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
@@ -96,16 +97,10 @@ class ProfileMoneySection extends StatelessWidget {
         ActivateCardPaymentsCtaCard(stripeStatus: user?.stripeAccountStatus),
         if (user?.stripeAccountStatus != 'ONBOARDING_COMPLETE')
           const SizedBox(height: DonySpacing.sm),
+        const WalletBalanceCard(),
+        const SizedBox(height: DonySpacing.sm),
         ProfileListSection(
           tiles: [
-            DonyListTile(
-              iconAsset: 'wallet',
-              iconColor: cs.primary,
-              iconBgColor: cs.primaryContainer,
-              label: 'Mon portefeuille',
-              subtitle: 'Solde & recharges',
-              onTap: () => context.push('/payments/wallet'),
-            ),
             DonyListTile(
               iconAsset: 'piggy-bank',
               iconColor: cs.success,
