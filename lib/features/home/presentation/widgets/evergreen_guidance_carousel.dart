@@ -5,7 +5,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:flutter/material.dart';
@@ -105,7 +104,6 @@ class _EvergreenGuidanceCarouselState
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tutorialConfig = context.select<HelpCenterBloc, HelpCenterConfig>(
       (bloc) => switch (bloc.state) {
         HelpCenterSuccess(:final config) => config,
@@ -151,7 +149,11 @@ class _EvergreenGuidanceCarouselState
               subtitle:
                   'Rentabilise tes voyages en transportant des colis pour d’autres.',
               ctaLabel: 'Commencer',
-              color: cs.primary,
+              // Primitive fixe, pas cs.primary : en dark mode le ColorScheme
+              // recalibre ce token pour du texte/icônes sur fond sombre, pas
+              // pour un fill plein avec du texte blanc dessus (cf.
+              // app_theme.dart:143-151, même piège documenté pour cs.primary).
+              color: DonyColors.blue500,
               onTap: () => _onSlideTap(
                 context,
                 slideId: 'trip',
@@ -166,7 +168,7 @@ class _EvergreenGuidanceCarouselState
               subtitle:
                   'Trouve un voyageur qui emporte ton colis à destination.',
               ctaLabel: 'Rechercher',
-              color: cs.success,
+              color: DonyColors.success500,
               onTap: () => _onSlideTap(
                 context,
                 slideId: 'parcel',
@@ -181,7 +183,7 @@ class _EvergreenGuidanceCarouselState
               subtitle:
                   'Sois notifié dès qu’une annonce correspond à tes critères.',
               ctaLabel: 'Créer',
-              color: cs.warning,
+              color: DonyColors.warning500,
               onTap: () => _onSlideTap(
                 context,
                 slideId: 'alert',
@@ -196,7 +198,7 @@ class _EvergreenGuidanceCarouselState
               subtitle:
                   'Valide ton profil pour publier un trajet et réserver en toute confiance.',
               ctaLabel: 'Vérifier',
-              color: cs.info,
+              color: DonyColors.info500,
               onTap: () => _onSlideTap(
                 context,
                 slideId: 'kyc',
@@ -210,7 +212,7 @@ class _EvergreenGuidanceCarouselState
               title: 'Comment ça marche ?',
               subtitle: tutorial.title,
               ctaLabel: 'Voir le tuto',
-              color: cs.secondary,
+              color: DonyColors.terra500,
               onTap: () => _onTutorialTap(context, tutorial),
             ),
         ];
@@ -236,21 +238,9 @@ class _EvergreenGuidanceCarouselState
               if (slides.length > 1)
                 Padding(
                   padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(slides.length, (i) {
-                      final active = i == safeIndex;
-                      return AnimatedContainer(
-                        duration: DonyDuration.base,
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: active ? 16 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: active ? cs.onSurface : cs.outline,
-                          borderRadius: BorderRadius.circular(DonyRadius.full),
-                        ),
-                      );
-                    }),
+                  child: DonyStepIndicator(
+                    total: slides.length,
+                    current: safeIndex,
                   ),
                 ),
               SizedBox(
@@ -309,16 +299,12 @@ class _SlideCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            child: Center(
-              child: DonyIcon(data.icon, size: 26, color: Colors.white),
-            ),
+          DonyIconContainer(
+            iconAsset: data.icon,
+            size: DonyIconContainerSize.lg,
+            backgroundColor: Colors.white.withValues(alpha: 0.18),
+            iconColor: Colors.white,
+            borderRadius: DonyRadius.md,
           ),
           const SizedBox(width: DonySpacing.base),
           Expanded(
@@ -347,7 +333,8 @@ class _SlideCard extends StatelessWidget {
                   key: Key('guidance-slide-${data.id}-cta'),
                   onTap: data.onTap,
                   child: Container(
-                    constraints: const BoxConstraints(minHeight: 44),
+                    constraints:
+                        const BoxConstraints(minHeight: kDonyMinTapTarget),
                     padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.md,
                     ),

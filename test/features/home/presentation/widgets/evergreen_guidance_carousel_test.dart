@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -74,6 +75,7 @@ Widget _wrap({
   bool hasActiveCorridorAlert = true,
   bool tutorialDismissed = true,
   String helpConfigJson = _emptyHelpConfigJson,
+  bool disableAnimations = false,
 }) {
   final box = MockBox();
   when(() => hive.userPrefs).thenReturn(box);
@@ -98,10 +100,14 @@ Widget _wrap({
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => Scaffold(
-          body: EvergreenGuidanceCarousel(
-            hiveService: hive,
-            isKycVerified: isKycVerified,
+        builder: (context, __) => Scaffold(
+          body: MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(disableAnimations: disableAnimations),
+            child: EvergreenGuidanceCarousel(
+              hiveService: hive,
+              isKycVerified: isKycVerified,
+            ),
           ),
         ),
       ),
@@ -228,5 +234,33 @@ void main() {
     // la Row de dots n'est construite que si slides.length > 1.
     expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
     expect(find.byType(AnimatedContainer), findsNothing);
+  });
+
+  testWidgets(
+      'disableAnimations : le carousel ne tourne pas automatiquement après l\'intervalle',
+      (tester) async {
+    // 2 slides visibles (trip + parcel) pour que l'autoplay ait un intérêt à
+    // avancer, MediaQuery.disableAnimations à true (réglage d'accessibilité
+    // « réduire les animations » ou test) doit empêcher toute rotation.
+    await tester.pumpWidget(_wrap(
+      hive: hive,
+      hasPublishedTrip: false,
+      hasPublishedParcel: false,
+      disableAnimations: true,
+    ));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<DonyStepIndicator>(find.byType(DonyStepIndicator)).current,
+      0,
+    );
+
+    // Dépasse l'intervalle d'autoplay (4 s) sans laisser tester.pump déclencher
+    // pumpAndSettle, pour observer l'absence de rotation programmée.
+    await tester.pump(const Duration(seconds: 5));
+
+    expect(
+      tester.widget<DonyStepIndicator>(find.byType(DonyStepIndicator)).current,
+      0,
+    );
   });
 }
