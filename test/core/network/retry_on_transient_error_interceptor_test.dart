@@ -120,4 +120,20 @@ void main() {
     );
     expect(adapter.callCount, 1);
   });
+
+  test('GET avec skipTransientRetry : erreur transitoire → jamais retenté',
+      () async {
+    final d = buildDio([const _ConnError(), 200]);
+
+    await expectLater(
+      () => d.get<Map<String, dynamic>>(
+        '/x',
+        options: Options(extra: {'skipTransientRetry': true}),
+      ),
+      throwsA(isA<DioException>()),
+    );
+    // L'appelant gère son propre retry (ex. splash screen) — un seul appel
+    // réseau ici, pas de cumul avec la boucle de retry de l'appelant.
+    expect(adapter.callCount, 1);
+  });
 }

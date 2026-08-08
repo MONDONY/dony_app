@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -15,6 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -59,6 +62,8 @@ class _SplashScreenState extends State<SplashScreen> {
     const baseDelay = Duration(milliseconds: 600);
     const maxDelay = Duration(milliseconds: 2500);
 
+    Object? lastError;
+
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       if (!mounted) {
         return;
@@ -66,7 +71,13 @@ class _SplashScreenState extends State<SplashScreen> {
       try {
         final response = await getIt<ApiClient>().dio.get<Map<String, dynamic>>(
           '/actuator/health',
-          options: Options(extra: {'skipAuth': true}),
+          options: Options(
+            // Le splash gère déjà son propre retry avec backoff ci-dessous —
+            // sans ce flag, RetryOnTransientErrorInterceptor retente aussi en
+            // interne (jusqu'à 3×), ce qui cumule les deux boucles sans que
+            // l'une sache de l'autre et déséquilibre le budget de 6 tentatives.
+            extra: {'skipAuth': true, 'skipTransientRetry': true},
+          ),
         );
         final status = response.data?['status'] as String? ?? '';
         if (!mounted) {
@@ -76,8 +87,9 @@ class _SplashScreenState extends State<SplashScreen> {
           await _navigateNext();
           return;
         }
-      } catch (_) {
+      } catch (e) {
         // tentative échouée — on retente silencieusement
+        lastError = e;
       }
 
       // Pause avant la prochaine tentative (sauf sur la dernière)
@@ -87,7 +99,14 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     }
 
-    // Toutes les tentatives épuisées
+    // Toutes les tentatives épuisées — jusque-là totalement silencieux, on
+    // n'avait donc aucune donnée pour diagnostiquer ce cas en prod.
+    if (lastError != null) {
+      unawaited(Sentry.captureException(
+        lastError,
+        hint: Hint.withMap({'context': 'splash_health_check_exhausted'}),
+      ));
+    }
     if (mounted) {
       setState(() => _hasError = true);
     }
