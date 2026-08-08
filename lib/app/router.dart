@@ -1222,6 +1222,9 @@ final appRouter = GoRouter(
                       getIt<AnalyticsService>(),
                     )..add(const ReferralLoadRequested()),
                   ),
+                  BlocProvider(
+                    create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+                  ),
                 ],
                 child: const ProfileScreen(),
               ),

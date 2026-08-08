@@ -11,7 +11,10 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -37,6 +40,9 @@ class MockAnnouncementBloc
 
 class MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
     implements ReferralBloc {}
+
+class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
 
 // ── Fallback values ───────────────────────────────────────────────────────────
 
@@ -102,6 +108,7 @@ Widget _buildTestHarness({
   required MockBidBloc bidBloc,
   required MockAnnouncementBloc announcementBloc,
   required MockReferralBloc referralBloc,
+  required MockWalletBloc walletBloc,
 }) {
   Widget stub(String label) => Scaffold(body: Text(label));
 
@@ -115,6 +122,7 @@ Widget _buildTestHarness({
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
           BlocProvider<ReferralBloc>.value(value: referralBloc),
+          BlocProvider<WalletBloc>.value(value: walletBloc),
         ],
         child: const ProfileScreen(),
       ),
@@ -139,6 +147,10 @@ Widget _buildTestHarness({
       builder: (_, _) => stub('CommissionMethod'),
     ),
     GoRoute(path: '/payments/wallet', builder: (_, _) => stub('Wallet')),
+    GoRoute(
+      path: '/payments/wallet/topup/method',
+      builder: (_, _) => stub('TopupMethod'),
+    ),
     GoRoute(path: '/profile/referral', builder: (_, _) => stub('Referral')),
     GoRoute(
       path: '/profile/upgrade-to-pro',
@@ -201,6 +213,7 @@ void main() {
     registerFallbackValue(FakeBidEvent());
     registerFallbackValue(FakeAnnouncementEvent());
     registerFallbackValue(FakeReferralEvent());
+    registerFallbackValue(WalletLoadRequested());
   });
 
   late MockAuthBloc authBloc;
@@ -208,6 +221,7 @@ void main() {
   late MockBidBloc bidBloc;
   late MockAnnouncementBloc announcementBloc;
   late MockReferralBloc referralBloc;
+  late MockWalletBloc walletBloc;
 
   setUp(() {
     authBloc = MockAuthBloc();
@@ -215,6 +229,7 @@ void main() {
     bidBloc = MockBidBloc();
     announcementBloc = MockAnnouncementBloc();
     referralBloc = MockReferralBloc();
+    walletBloc = MockWalletBloc();
 
     whenListen<BidState>(
       bidBloc,
@@ -230,6 +245,13 @@ void main() {
       referralBloc,
       const Stream.empty(),
       initialState: const ReferralInitial(),
+    );
+    whenListen<WalletState>(
+      walletBloc,
+      const Stream.empty(),
+      initialState: WalletLoaded(
+        const WalletModel(balance: 45, currency: 'EUR', transactions: []),
+      ),
     );
   });
 
@@ -256,6 +278,7 @@ void main() {
         bidBloc: bidBloc,
         announcementBloc: announcementBloc,
         referralBloc: referralBloc,
+        walletBloc: walletBloc,
       ),
     );
     if (settle) {
@@ -325,8 +348,10 @@ void main() {
       testWidgets('${entry.key} : section ARGENT complète', (tester) async {
         await pumpWith(tester, entry.value);
 
+        await _scrollTo(tester, find.byType(WalletBalanceCard));
+        expect(find.byType(WalletBalanceCard), findsOneWidget, reason: 'Solde');
+
         for (final label in [
-          'Mon portefeuille',
           'Recevoir mes paiements',
           'Carte commission espèces',
           'Ma grille de prix',
@@ -376,7 +401,6 @@ void main() {
       ('Contacter le support', 'Contact'),
       ('Mes litiges', 'Disputes'),
       ('Mes abonnements', 'Subscriptions'),
-      ('Mon portefeuille', 'Wallet'),
       ('Recevoir mes paiements', 'PaymentsOnboarding'),
       ('Ma grille de prix', 'PriceGrid'),
       ('Mon profil public', 'PublicProfile'),
@@ -393,6 +417,30 @@ void main() {
         expect(find.text(nav.$2), findsOneWidget);
       });
     }
+
+    testWidgets('« Solde » (carte portefeuille) ouvre Wallet', (
+      tester,
+    ) async {
+      await pumpWith(tester, _dualRoleUser);
+      await _scrollTo(tester, find.byType(WalletBalanceCard));
+
+      await tester.tap(find.text('Solde'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Wallet'), findsOneWidget);
+    });
+
+    testWidgets('« Recharger » sur la carte portefeuille ouvre TopupMethod, '
+        'pas Wallet', (tester) async {
+      await pumpWith(tester, _dualRoleUser);
+      await _scrollTo(tester, find.byType(WalletBalanceCard));
+
+      await tester.tap(find.text('Recharger'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('TopupMethod'), findsOneWidget);
+      expect(find.text('Wallet'), findsNothing);
+    });
   });
 
   // ── KYC ─────────────────────────────────────────────────────────────────────
@@ -497,6 +545,7 @@ void main() {
           bidBloc: bidBloc,
           announcementBloc: announcementBloc,
           referralBloc: referralBloc,
+          walletBloc: walletBloc,
         ),
       );
       await tester.pump();
@@ -553,6 +602,7 @@ void main() {
           bidBloc: bidBloc,
           announcementBloc: announcementBloc,
           referralBloc: referralBloc,
+          walletBloc: walletBloc,
         ),
       );
       await tester.pumpAndSettle();
@@ -590,6 +640,7 @@ void main() {
           bidBloc: bidBloc,
           announcementBloc: announcementBloc,
           referralBloc: referralBloc,
+          walletBloc: walletBloc,
         ),
       );
       await tester.pump(const Duration(milliseconds: 600));
