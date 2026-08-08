@@ -166,6 +166,11 @@ abstract final class AnalyticsEvents {
   static const homeMatchingTripsFilterToggled =
       'home_matching_trips_filter_toggled';
 
+  /// Tap CTA d'une slide du carousel evergreen (écran Recherche).
+  /// Propriété `slide` : trip / parcel / alert / kyc / tutorial.
+  static const homeGuidanceCarouselCtaTapped =
+      'home_guidance_carousel_cta_tapped';
+
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 
