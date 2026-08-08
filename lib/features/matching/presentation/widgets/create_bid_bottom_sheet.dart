@@ -1053,20 +1053,22 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                     : 0.0;
                 final localTotal = kgDisplayLocal + gridTotal;
 
-                double kgLine = kgDisplayLocal;
-                double gridLine = gridTotal;
+                // Lignes NET (poids × prix/kg fixé par le voyageur, articles
+                // net) — cohérentes avec leur propre libellé : "2 kg × 8€"
+                // doit valoir 16€, pas le total commission incluse. La
+                // commission apparaît sur sa propre ligne juste après.
+                double kgLine =
+                    hasKgPricing ? weightKg * _pricePerKg : 0.0;
+                double gridLine =
+                    hasGridPricing ? gridTotal / donyCommissionMultiplier : 0.0;
                 double total = localTotal;
                 double? original;
                 bool promoApplied = false;
-                // Sans devis backend : dérivé du taux global courant
-                // (display = net × (1+taux) ⇒ commission = display × taux/(1+taux)).
                 double rate = donyCommissionRate;
-                double commissionEur =
-                    localTotal * (donyCommissionRate / (1 + donyCommissionRate));
+                double commissionEur = localTotal - (kgLine + gridLine);
                 if (quote != null) {
-                  final mult = 1 + quote.rate;
-                  kgLine = quote.kgNetEur * mult;
-                  gridLine = quote.gridNetEur * mult;
+                  kgLine = quote.kgNetEur;
+                  gridLine = quote.gridNetEur;
                   total = quote.totalEur;
                   promoApplied = quote.promoApplied;
                   original = promoApplied ? localTotal : null;
@@ -2115,7 +2117,10 @@ class _PriceBreakdown extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('Total', style: tt.titleLarge),
-                  if (promoApplied) ...[
+                  // Le badge "Promo" ne s'affiche que si le code a réellement
+                  // fait baisser le prix — sinon (ex. WELCOME05 = taux déjà
+                  // par défaut) il annoncerait une remise qui n'existe pas.
+                  if (hasRealSavings) ...[
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -2139,7 +2144,7 @@ class _PriceBreakdown extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  if (promoApplied && originalTotal != null) ...[
+                  if (hasRealSavings) ...[
                     Text(
                       fmt.format(originalTotal),
                       style: tt.bodySmall?.copyWith(

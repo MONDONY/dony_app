@@ -512,5 +512,40 @@ void main() {
     await _scrollTo(tester, find.text('Commission Yadony (12 %)'));
     expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
     expect(find.text('Réduction code promo'), findsNothing);
+
+    // Ni le badge "Promo" ni le prix barré ne doivent apparaître : sans
+    // eux, "16,80€ barré, 16,80€ final" faisait croire à une remise
+    // inexistante (capture utilisateur, WELCOME05 en prod).
+    expect(find.text('Promo'), findsNothing);
+    // Un seul "67,20" doit apparaître sur toute la carte de prix (le total
+    // final) — s'il y en avait deux, ce serait le prix barré dupliqué au
+    // même montant que le total.
+    await _scrollTo(tester, find.byKey(const Key('bid-total-amount')));
+    expect(find.textContaining('67,20'), findsOneWidget);
+  });
+
+  // ── 9. Ligne "kg × prix/kg" cohérente avec sa propre valeur ──────────────
+
+  testWidgets(
+      'ligne "X kg × Yprix€" affiche le NET (pas le total commission '
+      'incluse) — sinon 5 kg × 12€ affichait 67,20€ au lieu de 60€',
+      (tester) async {
+    await _openSheet(tester);
+
+    // Poids par défaut à l'ouverture = 5 kg (prix/kg net voyageur = 12€,
+    // fixture du fichier) — pas de promo : calcul 100 % local, 12 % de
+    // commission (taux pinné par ce fichier).
+    await _scrollTo(tester, find.text('5 kg × 12€'));
+    expect(find.text('5 kg × 12€'), findsOneWidget);
+    // La valeur de cette ligne doit être le NET (5×12=60€), pas le total
+    // commission incluse (67,20€).
+    expect(find.textContaining('60,00'), findsWidgets);
+
+    expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+    expect(find.textContaining('7,20'), findsWidgets);
+
+    final totalFinder = find.byKey(const Key('bid-total-amount'));
+    await _scrollTo(tester, totalFinder);
+    expect(tester.widget<Text>(totalFinder).data, contains('67,20'));
   });
 }
