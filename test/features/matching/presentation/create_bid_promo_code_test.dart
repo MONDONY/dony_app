@@ -81,7 +81,7 @@ const _promoQuote = BidQuoteResponse(
   commissionEur: 3.60,
   totalEur: 63.60,
   promoApplied: true,
-  promoLabel: 'Code WELCOME10 : 6 % de commission',
+  promoLabel: 'Code WELCOME10 : 6 % de réduction',
 );
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -287,7 +287,7 @@ void main() {
 
     // Le label de promo doit apparaître
     expect(
-      find.text('Code WELCOME10 : 6 % de commission'),
+      find.text('Code WELCOME10 : 6 % de réduction'),
       findsOneWidget,
     );
   });
@@ -388,7 +388,7 @@ void main() {
     await tester.pump();
     bidStream.add(BidQuoteLoaded(_promoQuote));
     await tester.pumpAndSettle();
-    expect(find.text('Code WELCOME10 : 6 % de commission'), findsOneWidget);
+    expect(find.text('Code WELCOME10 : 6 % de réduction'), findsOneWidget);
 
     // Deuxième code → erreur (remplace le succès)
     await tester.enterText(promoField, 'INVALID');
@@ -400,7 +400,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Code WELCOME10 : 6 % de commission'), findsNothing);
+    expect(find.text('Code WELCOME10 : 6 % de réduction'), findsNothing);
     expect(find.text('Code expiré'), findsOneWidget);
   });
 
@@ -420,16 +420,17 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
     await tester.pump();
 
-    // Devis serveur : net 60 € (5 kg × 12 €/kg), promo 6 % → total 63,60 €.
+    // Devis serveur : net 60 € (5 kg × 12 €/kg), commission de base 12 %
+    // affichée, promo → taux final 6 % → total 63,60 €.
     bidStream.add(BidQuoteLoaded(const BidQuoteResponse(
       netEur: 60.0,
       kgNetEur: 60.0,
       gridNetEur: 0.0,
-      rate: 0.06,
-      commissionEur: 3.60,
+      rate: 0.12,
+      commissionEur: 7.20,
       totalEur: 63.60,
       promoApplied: true,
-      promoLabel: 'Code WELCOME10 : 6 % de commission',
+      promoLabel: 'Code WELCOME10 : 6 % de réduction',
     )));
     await tester.pumpAndSettle();
 
@@ -440,5 +441,114 @@ void main() {
     expect(tester.widget<Text>(totalFinder).data, contains('63,60'));
     // L'ancien total (67,20 € = 60 × 1,12) est affiché barré.
     expect(find.textContaining('67,20'), findsOneWidget);
+  });
+
+  // ── 8. Détail commission + réduction ─────────────────────────────────────
+
+  testWidgets(
+      'promo à taux réduit → ligne commission ET ligne réduction affichées',
+      (tester) async {
+    await _openSheet(tester);
+    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+
+    final promoField = find.ancestor(
+      of: find.text('Ex: WELCOME10'),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(promoField, 'WELCOME10');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
+    await tester.pump();
+
+    // Le backend affiche toujours la commission au taux de BASE (12 %, non
+    // affecté par le promo) — seul le total reflète le taux final réduit
+    // (6 % = 12 % − 6 points de promo). Économie réelle affichée séparément :
+    // 3,60 € = 60 € net × (0,12 − 0,06).
+    bidStream.add(BidQuoteLoaded(const BidQuoteResponse(
+      netEur: 60.0,
+      kgNetEur: 60.0,
+      rate: 0.12,
+      commissionEur: 7.20,
+      totalEur: 63.60,
+      promoApplied: true,
+      promoLabel: 'Code WELCOME10 : 6 % de réduction',
+    )));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.text('Commission Yadony (12 %)'));
+    expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+    expect(find.text('Réduction code promo'), findsOneWidget);
+    // Espace insécable entre le montant et le symbole (NumberFormat fr_FR) :
+    // match partiel plutôt qu'une chaîne exacte fragile sur l'encodage.
+    expect(find.textContaining('3,60'), findsWidgets);
+  });
+
+  testWidgets(
+      'promo au même taux que le taux courant → aucune ligne de réduction '
+      '(pas de fausse économie affichée)', (tester) async {
+    await _openSheet(tester);
+    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+
+    final promoField = find.ancestor(
+      of: find.text('Ex: WELCOME10'),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(promoField, 'WELCOME05');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
+    await tester.pump();
+
+    // Le taux promo (12 %, pinné par ce fichier) égale le taux courant sans
+    // promo — c'est exactement le cas WELCOME05 en prod (5 % promo = 5 %
+    // taux global depuis le passage 12 %→5 %).
+    bidStream.add(BidQuoteLoaded(const BidQuoteResponse(
+      netEur: 60.0,
+      kgNetEur: 60.0,
+      rate: 0.12,
+      commissionEur: 7.20,
+      totalEur: 67.20,
+      promoApplied: true,
+      promoLabel: 'Code WELCOME05 : 0 % de réduction',
+    )));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.text('Commission Yadony (12 %)'));
+    expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+    expect(find.text('Réduction code promo'), findsNothing);
+
+    // Ni le badge "Promo" ni le prix barré ne doivent apparaître : sans
+    // eux, "16,80€ barré, 16,80€ final" faisait croire à une remise
+    // inexistante (capture utilisateur, WELCOME05 en prod).
+    expect(find.text('Promo'), findsNothing);
+    // Un seul "67,20" doit apparaître sur toute la carte de prix (le total
+    // final) — s'il y en avait deux, ce serait le prix barré dupliqué au
+    // même montant que le total.
+    await _scrollTo(tester, find.byKey(const Key('bid-total-amount')));
+    expect(find.textContaining('67,20'), findsOneWidget);
+  });
+
+  // ── 9. Ligne "kg × prix/kg" cohérente avec sa propre valeur ──────────────
+
+  testWidgets(
+      'ligne "X kg × Yprix€" affiche le NET (pas le total commission '
+      'incluse) — sinon 5 kg × 12€ affichait 67,20€ au lieu de 60€',
+      (tester) async {
+    await _openSheet(tester);
+
+    // Poids par défaut à l'ouverture = 5 kg (prix/kg net voyageur = 12€,
+    // fixture du fichier) — pas de promo : calcul 100 % local, 12 % de
+    // commission (taux pinné par ce fichier).
+    await _scrollTo(tester, find.text('5 kg × 12€'));
+    expect(find.text('5 kg × 12€'), findsOneWidget);
+    // La valeur de cette ligne doit être le NET (5×12=60€), pas le total
+    // commission incluse (67,20€).
+    expect(find.textContaining('60,00'), findsWidgets);
+
+    expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+    expect(find.textContaining('7,20'), findsWidgets);
+
+    final totalFinder = find.byKey(const Key('bid-total-amount'));
+    await _scrollTo(tester, totalFinder);
+    expect(tester.widget<Text>(totalFinder).data, contains('67,20'));
   });
 }

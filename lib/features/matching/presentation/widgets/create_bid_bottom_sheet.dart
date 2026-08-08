@@ -1053,18 +1053,27 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                     : 0.0;
                 final localTotal = kgDisplayLocal + gridTotal;
 
-                double kgLine = kgDisplayLocal;
-                double gridLine = gridTotal;
+                // Lignes NET (poids × prix/kg fixé par le voyageur, articles
+                // net) — cohérentes avec leur propre libellé : "2 kg × 8€"
+                // doit valoir 16€, pas le total commission incluse. La
+                // commission apparaît sur sa propre ligne juste après.
+                double kgLine =
+                    hasKgPricing ? weightKg * _pricePerKg : 0.0;
+                double gridLine =
+                    hasGridPricing ? gridTotal / donyCommissionMultiplier : 0.0;
                 double total = localTotal;
                 double? original;
                 bool promoApplied = false;
+                double rate = donyCommissionRate;
+                double commissionEur = localTotal - (kgLine + gridLine);
                 if (quote != null) {
-                  final mult = 1 + quote.rate;
-                  kgLine = quote.kgNetEur * mult;
-                  gridLine = quote.gridNetEur * mult;
+                  kgLine = quote.kgNetEur;
+                  gridLine = quote.gridNetEur;
                   total = quote.totalEur;
                   promoApplied = quote.promoApplied;
                   original = promoApplied ? localTotal : null;
+                  rate = quote.rate;
+                  commissionEur = quote.commissionEur;
                 }
                 if (total <= 0) return const SizedBox.shrink();
                 return _PriceBreakdown(
@@ -1075,6 +1084,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   totalPrice: total,
                   originalTotal: original,
                   promoApplied: promoApplied,
+                  commissionRate: rate,
+                  commissionEur: commissionEur,
                 );
               },
             ),
@@ -2014,6 +2025,8 @@ class _PriceBreakdown extends StatelessWidget {
     required this.kgDisplay,
     required this.gridDisplay,
     required this.totalPrice,
+    required this.commissionRate,
+    required this.commissionEur,
     this.originalTotal,
     this.promoApplied = false,
   });
@@ -2026,11 +2039,25 @@ class _PriceBreakdown extends StatelessWidget {
   final double? originalTotal;
   final bool promoApplied;
 
+  /// Taux de commission Yadony effectif sur ce devis (ex. 0,05 = 5 %).
+  final double commissionRate;
+
+  /// Montant de la commission Yadony en € (= net × [commissionRate]).
+  final double commissionEur;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+    // L'économie n'est réelle que si le taux promo est strictement inférieur
+    // au taux "sans promo" (originalTotal) — un code promo au même taux que
+    // le taux global courant (ex. WELCOME05 = 5 % = taux par défaut actuel)
+    // ne fait gagner rien, et l'afficher comme une remise serait trompeur.
+    final savings = (promoApplied && originalTotal != null)
+        ? originalTotal! - totalPrice
+        : 0.0;
+    final hasRealSavings = savings > 0.005;
 
     final lines = <Widget>[];
     if (weightKg > 0 && kgDisplay > 0) {
@@ -2042,6 +2069,19 @@ class _PriceBreakdown extends StatelessWidget {
     }
     if (gridDisplay > 0) {
       lines.add(_line(tt, 'Articles', fmt.format(gridDisplay)));
+    }
+    lines.add(_line(
+      tt,
+      'Commission Yadony (${_ratePercentLabel(commissionRate)} %)',
+      fmt.format(commissionEur),
+    ));
+    if (hasRealSavings) {
+      lines.add(_line(
+        tt,
+        'Réduction code promo',
+        '−${fmt.format(savings)}',
+        valueColor: const Color(0xFF16A34A),
+      ));
     }
 
     return Container(
@@ -2068,57 +2108,67 @@ class _PriceBreakdown extends StatelessWidget {
           // à 200 % leur somme peut dépasser la largeur de la carte. Sur
           // une ligne quand ça tient (rendu identique à 100 %), le prix
           // passe sous le libellé sinon.
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            runSpacing: DonySpacing.xs,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Total', style: tt.titleLarge),
-                  if (promoApplied) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5EE),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Promo',
-                        style: tt.labelSmall?.copyWith(
-                          color: const Color(0xFF16A34A),
-                          fontWeight: FontWeight.w700,
+          // SizedBox(width: double.infinity) : un Wrap seul ne s'étire pas
+          // à la largeur du parent (Column crossAxisAlignment.start), donc
+          // spaceBetween n'avait aucun espace libre à répartir et "Total"
+          // se retrouvait collé au prix.
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              runSpacing: DonySpacing.xs,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Total', style: tt.titleLarge),
+                    // Le badge "Promo" ne s'affiche que si le code a
+                    // réellement fait baisser le prix — sinon il
+                    // annoncerait une remise qui n'existe pas.
+                    if (hasRealSavings) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5EE),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Promo',
+                          style: tt.labelSmall?.copyWith(
+                            color: const Color(0xFF16A34A),
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (promoApplied && originalTotal != null) ...[
-                    Text(
-                      fmt.format(originalTotal),
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        decoration: TextDecoration.lineThrough,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (hasRealSavings) ...[
+                      Text(
+                        fmt.format(originalTotal),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          decoration: TextDecoration.lineThrough,
+                        ),
                       ),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      fmt.format(totalPrice),
+                      key: const Key('bid-total-amount'),
+                      style: tt.titleLarge?.copyWith(color: cs.primary),
                     ),
-                    const SizedBox(width: 6),
                   ],
-                  Text(
-                    fmt.format(totalPrice),
-                    key: const Key('bid-total-amount'),
-                    style: tt.titleLarge?.copyWith(color: cs.primary),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
@@ -2133,13 +2183,23 @@ class _PriceBreakdown extends StatelessWidget {
   // Expanded sur le libellé (variable, ex: "5.0 kg × 8.00€") plutôt qu'un
   // Row spaceBetween non contraint : à 200 % il passe à la ligne au lieu de
   // pousser le montant hors de la carte.
-  Widget _line(TextTheme tt, String label, String value) => Row(
+  Widget _line(TextTheme tt, String label, String value, {Color? valueColor}) =>
+      Row(
         children: [
           Expanded(child: Text(label, style: tt.bodyMedium)),
           const SizedBox(width: DonySpacing.sm),
-          Text(value, style: tt.titleMedium),
+          Text(value, style: tt.titleMedium?.copyWith(color: valueColor)),
         ],
       );
+
+  /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR
+  /// (ex. 0.05 → « 5 », 0.065 → « 6,5 »).
+  String _ratePercentLabel(double rate) {
+    final pct = rate * 100;
+    return pct % 1 == 0
+        ? pct.toStringAsFixed(0)
+        : pct.toStringAsFixed(1).replaceFirst('.', ',');
+  }
 }
 
 // ── Refused chip ───────────────────────────────────────────────────────────────
