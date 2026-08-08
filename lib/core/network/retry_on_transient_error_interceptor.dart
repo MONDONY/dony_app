@@ -38,8 +38,12 @@ class RetryOnTransientErrorInterceptor extends Interceptor {
         err.type == DioExceptionType.connectionError ||
         (statusCode != null && statusCode >= 500);
     final attempt = (err.requestOptions.extra[_attemptKey] as int?) ?? 0;
+    // Un appelant qui gère déjà son propre retry avec backoff (ex. le
+    // health-check du splash) passe ce flag pour éviter que les deux
+    // boucles de retry se cumulent sans le savoir l'une de l'autre.
+    final skipRetry = err.requestOptions.extra['skipTransientRetry'] == true;
 
-    if (method != 'GET' || !isTransient || attempt >= maxRetries) {
+    if (method != 'GET' || !isTransient || attempt >= maxRetries || skipRetry) {
       handler.next(err);
       return;
     }
