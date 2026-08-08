@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -69,8 +70,10 @@ class TalonTrackingStrip extends StatelessWidget {
               size: 20,
             ),
             tooltip: 'Partager',
-            onPressed: () =>
-                Share.share('Suivez mon colis Yadony #$trackingNumber'),
+            onPressed: () => Share.share(
+              'Suivez mon colis Yadony #$trackingNumber',
+              sharePositionOrigin: sharePositionOriginFor(context),
+            ),
           ),
         ],
       ),

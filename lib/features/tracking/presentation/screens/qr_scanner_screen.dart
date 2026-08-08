@@ -40,6 +40,15 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     super.dispose();
   }
 
+  // MobileScannerController.start() lève MobileScannerException si un
+  // précédent start() est encore en cours (value.isStarting) — value.isRunning
+  // est lui déjà géré en interne (no-op). Les 3 points de reprise du scan
+  // (fermeture de sheet) passent par ce garde-fou pour éviter la race.
+  void _resumeScanning() {
+    if (_scanner.value.isStarting) return;
+    _scanner.start();
+  }
+
   void _onDetect(BarcodeCapture capture) {
     if (_detectedNotifier.value) return;
     final raw = capture.barcodes.firstOrNull?.rawValue;
@@ -82,7 +91,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           bidId: bidId,
           onClose: () {
             _detectedNotifier.value = false;
-            _scanner.start();
+            _resumeScanning();
           },
           onDeliveryConfirmed: (confirmedBidId) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -337,7 +346,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   ? null
                   : () {
                       ctx.pop();
-                      _scanner.start();
+                      _resumeScanning();
                     },
               child: Text('Annuler',
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
@@ -388,7 +397,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         ),
       ),
     ).then((_) {
-      if (!_detectedNotifier.value) _scanner.start();
+      if (!_detectedNotifier.value) _resumeScanning();
     });
   }
 

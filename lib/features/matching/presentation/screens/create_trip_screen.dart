@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -1547,6 +1548,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                           '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
                           'avec de la place dans mes bagages !\n'
                           'Réserve tes kilos sur Yadony 📦',
+                          sharePositionOrigin: sharePositionOriginFor(routeContext),
                         )),
               ),
             ));

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
@@ -355,6 +356,7 @@ class _ShareButton extends StatelessWidget {
           ),
           onPressed: () => Share.share(
             'Salut ! Utilise mon code Yadony : ${info.code} et reçois ton 1er envoi avec 5€ de réduction. ${info.shareUrl}',
+            sharePositionOrigin: sharePositionOriginFor(context),
           ),
         ),
       ),

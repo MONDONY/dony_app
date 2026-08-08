@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
@@ -22,7 +23,7 @@ String trackingPublicUrl(String token) {
 /// Partage le lien de suivi du colis via le système natif.
 ///
 /// No-op si [bid.trackingToken] est null.
-Future<void> shareTrackingLink(BidModel bid) async {
+Future<void> shareTrackingLink(BidModel bid, {Rect? sharePositionOrigin}) async {
   final token = bid.trackingToken;
   if (token == null) {
     return;
@@ -36,6 +37,7 @@ Future<void> shareTrackingLink(BidModel bid) async {
   await Share.share(
     'Suivez votre colis Yadony en temps réel :\n$url',
     subject: 'Suivi de colis Yadony · ${bid.trackingNumber ?? ''}',
+    sharePositionOrigin: sharePositionOrigin,
   );
 }
 
@@ -81,7 +83,10 @@ class QuickActionsRow extends StatelessWidget {
               label: 'Partager le suivi',
               cs: cs,
               tt: tt,
-              onTap: () => shareTrackingLink(bid),
+              onTap: () => shareTrackingLink(
+                bid,
+                sharePositionOrigin: sharePositionOriginFor(context),
+              ),
             ),
           ),
         ],
