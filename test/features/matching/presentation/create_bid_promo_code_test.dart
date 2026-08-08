@@ -441,4 +441,76 @@ void main() {
     // L'ancien total (67,20 € = 60 × 1,12) est affiché barré.
     expect(find.textContaining('67,20'), findsOneWidget);
   });
+
+  // ── 8. Détail commission + réduction ─────────────────────────────────────
+
+  testWidgets(
+      'promo à taux réduit → ligne commission ET ligne réduction affichées',
+      (tester) async {
+    await _openSheet(tester);
+    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+
+    final promoField = find.ancestor(
+      of: find.text('Ex: WELCOME10'),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(promoField, 'WELCOME10');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
+    await tester.pump();
+
+    // Rate global du fichier = 12 % ; promo → 6 % : économie réelle de 3,60 €
+    // (60 € net × (0,12 − 0,06)), identique ici à la commission finale (60×0,06).
+    bidStream.add(BidQuoteLoaded(const BidQuoteResponse(
+      netEur: 60.0,
+      kgNetEur: 60.0,
+      rate: 0.06,
+      commissionEur: 3.60,
+      totalEur: 63.60,
+      promoApplied: true,
+      promoLabel: 'Code WELCOME10 : 6 % de commission',
+    )));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.text('Commission Yadony (6 %)'));
+    expect(find.text('Commission Yadony (6 %)'), findsOneWidget);
+    expect(find.text('Réduction code promo'), findsOneWidget);
+    // Espace insécable entre le montant et le symbole (NumberFormat fr_FR) :
+    // match partiel plutôt qu'une chaîne exacte fragile sur l'encodage.
+    expect(find.textContaining('3,60'), findsWidgets);
+  });
+
+  testWidgets(
+      'promo au même taux que le taux courant → aucune ligne de réduction '
+      '(pas de fausse économie affichée)', (tester) async {
+    await _openSheet(tester);
+    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+
+    final promoField = find.ancestor(
+      of: find.text('Ex: WELCOME10'),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(promoField, 'WELCOME05');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
+    await tester.pump();
+
+    // Le taux promo (12 %, pinné par ce fichier) égale le taux courant sans
+    // promo — c'est exactement le cas WELCOME05 en prod (5 % promo = 5 %
+    // taux global depuis le passage 12 %→5 %).
+    bidStream.add(BidQuoteLoaded(const BidQuoteResponse(
+      netEur: 60.0,
+      kgNetEur: 60.0,
+      rate: 0.12,
+      commissionEur: 7.20,
+      totalEur: 67.20,
+      promoApplied: true,
+      promoLabel: 'Code WELCOME05 : 12 % de commission',
+    )));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, find.text('Commission Yadony (12 %)'));
+    expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+    expect(find.text('Réduction code promo'), findsNothing);
+  });
 }

@@ -1058,6 +1058,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 double total = localTotal;
                 double? original;
                 bool promoApplied = false;
+                // Sans devis backend : dérivé du taux global courant
+                // (display = net × (1+taux) ⇒ commission = display × taux/(1+taux)).
+                double rate = donyCommissionRate;
+                double commissionEur =
+                    localTotal * (donyCommissionRate / (1 + donyCommissionRate));
                 if (quote != null) {
                   final mult = 1 + quote.rate;
                   kgLine = quote.kgNetEur * mult;
@@ -1065,6 +1070,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   total = quote.totalEur;
                   promoApplied = quote.promoApplied;
                   original = promoApplied ? localTotal : null;
+                  rate = quote.rate;
+                  commissionEur = quote.commissionEur;
                 }
                 if (total <= 0) return const SizedBox.shrink();
                 return _PriceBreakdown(
@@ -1075,6 +1082,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   totalPrice: total,
                   originalTotal: original,
                   promoApplied: promoApplied,
+                  commissionRate: rate,
+                  commissionEur: commissionEur,
                 );
               },
             ),
@@ -2014,6 +2023,8 @@ class _PriceBreakdown extends StatelessWidget {
     required this.kgDisplay,
     required this.gridDisplay,
     required this.totalPrice,
+    required this.commissionRate,
+    required this.commissionEur,
     this.originalTotal,
     this.promoApplied = false,
   });
@@ -2026,11 +2037,25 @@ class _PriceBreakdown extends StatelessWidget {
   final double? originalTotal;
   final bool promoApplied;
 
+  /// Taux de commission Yadony effectif sur ce devis (ex. 0,05 = 5 %).
+  final double commissionRate;
+
+  /// Montant de la commission Yadony en € (= net × [commissionRate]).
+  final double commissionEur;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+    // L'économie n'est réelle que si le taux promo est strictement inférieur
+    // au taux "sans promo" (originalTotal) — un code promo au même taux que
+    // le taux global courant (ex. WELCOME05 = 5 % = taux par défaut actuel)
+    // ne fait gagner rien, et l'afficher comme une remise serait trompeur.
+    final savings = (promoApplied && originalTotal != null)
+        ? originalTotal! - totalPrice
+        : 0.0;
+    final hasRealSavings = savings > 0.005;
 
     final lines = <Widget>[];
     if (weightKg > 0 && kgDisplay > 0) {
@@ -2042,6 +2067,19 @@ class _PriceBreakdown extends StatelessWidget {
     }
     if (gridDisplay > 0) {
       lines.add(_line(tt, 'Articles', fmt.format(gridDisplay)));
+    }
+    lines.add(_line(
+      tt,
+      'Commission Yadony (${_ratePercentLabel(commissionRate)} %)',
+      fmt.format(commissionEur),
+    ));
+    if (hasRealSavings) {
+      lines.add(_line(
+        tt,
+        'Réduction code promo',
+        '−${fmt.format(savings)}',
+        valueColor: const Color(0xFF16A34A),
+      ));
     }
 
     return Container(
@@ -2133,13 +2171,23 @@ class _PriceBreakdown extends StatelessWidget {
   // Expanded sur le libellé (variable, ex: "5.0 kg × 8.00€") plutôt qu'un
   // Row spaceBetween non contraint : à 200 % il passe à la ligne au lieu de
   // pousser le montant hors de la carte.
-  Widget _line(TextTheme tt, String label, String value) => Row(
+  Widget _line(TextTheme tt, String label, String value, {Color? valueColor}) =>
+      Row(
         children: [
           Expanded(child: Text(label, style: tt.bodyMedium)),
           const SizedBox(width: DonySpacing.sm),
-          Text(value, style: tt.titleMedium),
+          Text(value, style: tt.titleMedium?.copyWith(color: valueColor)),
         ],
       );
+
+  /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR
+  /// (ex. 0.05 → « 5 », 0.065 → « 6,5 »).
+  String _ratePercentLabel(double rate) {
+    final pct = rate * 100;
+    return pct % 1 == 0
+        ? pct.toStringAsFixed(0)
+        : pct.toStringAsFixed(1).replaceFirst('.', ',');
+  }
 }
 
 // ── Refused chip ───────────────────────────────────────────────────────────────
