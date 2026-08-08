@@ -25,6 +25,7 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -50,19 +51,11 @@ class _DonyAppState extends State<DonyApp> {
   StreamSubscription<Uri>? _deepLinkSub;
   final _appLinks = AppLinks();
 
-  // Onglets du shell principal : go() est nécessaire pour activer le bon onglet.
+  // go() est nécessaire pour activer le bon onglet du shell principal.
   // Toutes les autres routes utilisent push() pour empiler par-dessus l'état
   // courant et permettre au bouton retour de revenir à l'écran précédent.
-  static const _shellTabs = {
-    '/home',
-    '/announcements',
-    '/tracking',
-    '/messages',
-    '/profile',
-  };
-
   void _navigateToRoute(String route) {
-    if (_shellTabs.contains(route)) {
+    if (isShellTabRoute(route)) {
       appRouter.go(route);
     } else {
       appRouter.push(route);

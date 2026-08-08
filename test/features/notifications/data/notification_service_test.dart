@@ -261,8 +261,11 @@ void main() {
       expect(service.testRouteForMessage({'type': 'DISPUTE_OPENED', 'bidId': _bidId}), '/bids/$_bidId');
     });
 
-    test('TRIP_CANCELLED without cancellationId returns null', () {
-      expect(service.testRouteForMessage({'type': 'TRIP_CANCELLED'}), isNull);
+    test('TRIP_CANCELLED without any id falls back to shipments history', () {
+      expect(
+        service.testRouteForMessage({'type': 'TRIP_CANCELLED'}),
+        '/profile/shipments/history',
+      );
     });
 
     test('TRIP_CANCELLED with valid cancellationId routes to rematch screen', () {
@@ -276,13 +279,20 @@ void main() {
       );
     });
 
-    test('TRIP_CANCELLED with non-UUID cancellationId returns null', () {
+    test('TRIP_CANCELLED with non-UUID cancellationId falls back to shipments history', () {
       expect(
         service.testRouteForMessage({
           'type': 'TRIP_CANCELLED',
           'cancellationId': 'not-a-uuid',
         }),
-        isNull,
+        '/profile/shipments/history',
+      );
+    });
+
+    test('TRIP_CANCELLED with bidId only routes to bid detail', () {
+      expect(
+        service.testRouteForMessage({'type': 'TRIP_CANCELLED', 'bidId': _bidId}),
+        '/bids/$_bidId',
       );
     });
 

@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
+import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -226,57 +227,10 @@ class NotificationService {
     }
   }
 
-  static final _uuidRegex = RegExp(
-    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-    caseSensitive: false,
-  );
-  static bool _isUuid(String? v) => v != null && _uuidRegex.hasMatch(v);
-
-  /// Maps the FCM data `type` field to a GoRouter path.
-  /// IDs are validated as UUIDs before being embedded in routes to prevent
-  /// path traversal from crafted FCM payloads.
-  String? _routeForMessage(Map<String, dynamic> data) {
-    final type = data['type'] as String?;
-    final bidId = data['bidId'] as String?;
-    final announcementId = data['announcementId'] as String?;
-    final threadId = data['threadId'] as String?;
-    final requestId = data['requestId'] as String?;
-
-    return switch (type) {
-      // Voyageur → liste des offres sur son annonce
-      'BID_CREATED' when _isUuid(announcementId) => '/announcements/$announcementId/bids',
-      // Expéditeur → détail de son offre
-      'BID_ACCEPTED' when _isUuid(bidId)         => '/bids/$bidId',
-      // Offre refusée → alternatives rematch si le back en a trouvé
-      'BID_REJECTED' when _isUuid(data['cancellationId'] as String?) =>
-          '/cancellations/${data['cancellationId']}/rematch',
-      'BID_REJECTED' when _isUuid(bidId)         => '/bids/$bidId',
-      'HANDOVER_DEFINED' when _isUuid(bidId)     => '/bids/$bidId',
-      'DELIVERY_CONFIRMED' when _isUuid(bidId)   => '/bids/$bidId',
-      'PAYMENT_RELEASED' when _isUuid(bidId)     => '/bids/$bidId',
-      'DISPUTE_OPENED' when _isUuid(bidId)       => '/bids/$bidId',
-      // Négociation — les deux parties naviguent vers le thread
-      'negotiation_started' when _isUuid(threadId)           => '/negotiations/$threadId',
-      'negotiation_counter' when _isUuid(threadId)           => '/negotiations/$threadId',
-      'negotiation_awaiting_trip' when _isUuid(threadId)     => '/negotiations/$threadId',
-      'negotiation_awaiting_payment' when _isUuid(threadId)  => '/negotiations/$threadId',
-      'negotiation_expired' when _isUuid(threadId)           => '/negotiations/$threadId',
-      'request_accepted' when _isUuid(threadId)              => '/negotiations/$threadId',
-      // Voyageur abonné → détail de l'annonce publiée
-      'TRAVELER_NEW_ANNOUNCEMENT' when _isUuid(announcementId) => '/traveler/$announcementId',
-      // Expéditeur → détail du trajet qui matche son alerte
-      'CORRIDOR_ALERT' when _isUuid(announcementId) => '/traveler/$announcementId',
-      // Voyageur → détail du colis qui matche un de ses trajets
-      'PACKAGE_MATCH' when _isUuid(requestId) => '/package-requests/$requestId/public',
-      // Nouveau message → liste des conversations
-      'NEW_MESSAGE'                              => '/messages',
-      // Trajet annulé → alternatives rematch si le back en a trouvé
-      'TRIP_CANCELLED' when _isUuid(data['cancellationId'] as String?) =>
-          '/cancellations/${data['cancellationId']}/rematch',
-      'TRIP_CANCELLED'                           => null,
-      _                                          => null,
-    };
-  }
+  /// Maps the FCM data `type` field to a GoRouter path via the shared resolver
+  /// (also used by the in-app notification inbox, so both surfaces agree).
+  String? _routeForMessage(Map<String, dynamic> data) =>
+      resolveNotificationRoute(data['type'] as String?, data);
 
   void dispose() {
     _navigationController.close();

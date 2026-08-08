@@ -45,6 +45,7 @@ import 'package:dony/features/matching/presentation/screens/shipment_list_screen
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
+import 'package:dony/features/messaging/presentation/conversation_loader_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -675,14 +676,22 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/conversations/:id',
       builder: (context, state) {
-        final conversation = state.extra as ConversationModel;
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => getIt<ChatBloc>()),
-            // Le numéro n'est plus dans la conversation : il est demandé au tap.
-            BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
-          ],
-          child: ChatScreen(conversation: conversation),
+        // Navigation interne (liste, fiche bid) : le modèle complet arrive en
+        // extra. Depuis une notification (push ou boîte de réception), seul
+        // l'id est disponible → ConversationLoaderScreen le récupère par API.
+        if (state.extra is ConversationModel) {
+          final conversation = state.extra as ConversationModel;
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => getIt<ChatBloc>()),
+              // Le numéro n'est plus dans la conversation : il est demandé au tap.
+              BlocProvider(create: (_) => getIt<ContactRevealBloc>()),
+            ],
+            child: ChatScreen(conversation: conversation),
+          );
+        }
+        return ConversationLoaderScreen(
+          conversationId: state.pathParameters['id']!,
         );
       },
     ),
