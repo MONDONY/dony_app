@@ -17,6 +17,7 @@ NotificationModel _notif(String type, {Map<String, dynamic> data = const {}}) {
 void main() {
   group('routeForNotification', () {
     const annId = '123e4567-e89b-12d3-a456-426614174000';
+    const bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
     test('CORRIDOR_ALERT routes to the matching trip detail', () {
       expect(
@@ -55,22 +56,29 @@ void main() {
 
     test('BID_ACCEPTED routes to bid detail', () {
       expect(
-        routeForNotification(_notif('BID_ACCEPTED', data: {'bidId': 'b1'})),
-        '/bids/b1',
+        routeForNotification(_notif('BID_ACCEPTED', data: {'bidId': bidId})),
+        '/bids/$bidId',
+      );
+    });
+
+    test('BID_ACCEPTED with non-UUID bidId returns null', () {
+      expect(
+        routeForNotification(_notif('BID_ACCEPTED', data: {'bidId': '../../evil'})),
+        isNull,
       );
     });
 
     test('BID_REJECTED without cancellationId routes to bid detail', () {
       expect(
-        routeForNotification(_notif('BID_REJECTED', data: {'bidId': 'b1'})),
-        '/bids/b1',
+        routeForNotification(_notif('BID_REJECTED', data: {'bidId': bidId})),
+        '/bids/$bidId',
       );
     });
 
     test('BID_REJECTED with valid cancellationId routes to rematch screen', () {
       expect(
         routeForNotification(
-          _notif('BID_REJECTED', data: {'cancellationId': annId, 'bidId': 'b1'}),
+          _notif('BID_REJECTED', data: {'cancellationId': annId, 'bidId': bidId}),
         ),
         '/cancellations/$annId/rematch',
       );
@@ -79,9 +87,9 @@ void main() {
     test('BID_REJECTED with non-UUID cancellationId falls back to bid detail', () {
       expect(
         routeForNotification(
-          _notif('BID_REJECTED', data: {'cancellationId': '../../evil', 'bidId': 'b1'}),
+          _notif('BID_REJECTED', data: {'cancellationId': '../../evil', 'bidId': bidId}),
         ),
-        '/bids/b1',
+        '/bids/$bidId',
       );
     });
 
@@ -105,16 +113,26 @@ void main() {
       );
     });
 
-    test('TRIP_CANCELLED without cancellationId returns null', () {
-      expect(routeForNotification(_notif('TRIP_CANCELLED')), isNull);
+    test('TRIP_CANCELLED without any id falls back to shipments history', () {
+      expect(
+        routeForNotification(_notif('TRIP_CANCELLED')),
+        '/profile/shipments/history',
+      );
     });
 
-    test('TRIP_CANCELLED with non-UUID cancellationId returns null', () {
+    test('TRIP_CANCELLED with non-UUID cancellationId falls back to shipments history', () {
       expect(
         routeForNotification(
           _notif('TRIP_CANCELLED', data: {'cancellationId': 'not-a-uuid'}),
         ),
-        isNull,
+        '/profile/shipments/history',
+      );
+    });
+
+    test('TRIP_CANCELLED with bidId only routes to bid detail', () {
+      expect(
+        routeForNotification(_notif('TRIP_CANCELLED', data: {'bidId': bidId})),
+        '/bids/$bidId',
       );
     });
   });

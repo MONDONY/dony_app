@@ -5,45 +5,18 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
+import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-// IDs are validated as UUIDs before being embedded in routes to prevent
-// path traversal from crafted notification payloads.
-final RegExp _uuidRegex = RegExp(
-  r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-  caseSensitive: false,
-);
-bool _isUuid(String? v) => v != null && _uuidRegex.hasMatch(v);
-
-String? routeForNotification(NotificationModel n) {
-  final bidId = n.data['bidId'] as String?;
-  final announcementId = n.data['announcementId'] as String?;
-  final requestId = n.data['requestId'] as String?;
-  final cancellationId = n.data['cancellationId'] as String?;
-
-  return switch (n.type) {
-    'BID_CREATED' when announcementId != null => '/announcements/$announcementId/bids',
-    'BID_ACCEPTED' when bidId != null         => '/bids/$bidId',
-    // Offre refusée → alternatives rematch si le back en a trouvé
-    'BID_REJECTED' when _isUuid(cancellationId) => '/cancellations/$cancellationId/rematch',
-    'BID_REJECTED' when bidId != null         => '/bids/$bidId',
-    'HANDOVER_DEFINED' when bidId != null     => '/bids/$bidId',
-    'DELIVERY_CONFIRMED' when bidId != null   => '/bids/$bidId',
-    'PAYMENT_RELEASED' when bidId != null     => '/bids/$bidId',
-    'DISPUTE_OPENED' when bidId != null       => '/bids/$bidId',
-    // Expéditeur → détail du trajet qui matche son alerte corridor
-    'CORRIDOR_ALERT' when announcementId != null => '/traveler/$announcementId',
-    // Voyageur → détail du colis qui matche un de ses trajets
-    'PACKAGE_MATCH' when requestId != null => '/package-requests/$requestId/public',
-    // Trajet annulé → alternatives rematch si le back en a trouvé
-    'TRIP_CANCELLED' when _isUuid(cancellationId) => '/cancellations/$cancellationId/rematch',
-    _ => null,
-  };
-}
+/// Résout la route via le resolver partagé (aussi utilisé par le tap sur
+/// push), pour que la boîte de réception et les notifications push mènent
+/// toujours au même endroit pour un même type de notification.
+String? routeForNotification(NotificationModel n) =>
+    resolveNotificationRoute(n.type, n.data);
 
 void showNotificationBottomSheet(BuildContext context) {
   final bloc = context.read<NotificationBloc>();
@@ -201,10 +174,10 @@ class _NotificationList extends StatelessWidget {
                     final route = routeForNotification(notif);
                     if (route != null) {
                       Navigator.of(context, rootNavigator: true).pop();
-                      if (route.startsWith('/bids/')) {
-                        context.push(route);
-                      } else {
+                      if (isShellTabRoute(route)) {
                         context.go(route);
+                      } else {
+                        context.push(route);
                       }
                     }
                   },
