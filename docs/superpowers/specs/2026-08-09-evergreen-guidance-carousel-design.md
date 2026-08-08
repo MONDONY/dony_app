@@ -24,7 +24,7 @@ Remplacer `RoleGuidanceBanner` + `ContextualTutorialCard` (actuellement deux blo
 - Chaque slide = `_GuidanceSlide` interne : icône, titre, sous-titre, bouton CTA blanc sur fond couleur pleine (réutilise le style visuel `Container` + `DonyRadius.full`/large déjà utilisé par `RoleGuidanceBanner`).
 - 0 slide éligible → `SizedBox.shrink()` (carousel disparaît, pas de trou dans la sheet).
 - 1 seule slide éligible → affichage statique, pas de dots, pas de rotation.
-- Composant de présentation pur : reçoit ses booléens en entrée, aucune logique métier/réseau interne. Tap CTA → `context.push(route)` (GoRouter, jamais `Navigator.push`).
+- Le composant reçoit en entrée uniquement `HiveService hiveService` et `bool isKycVerified` (KYC vient du backend via `AuthBloc`, pas de Hive) ; il lit lui-même les 3 flags Hive (réactif via `ValueListenableBuilder`, même pattern que `RoleGuidanceBanner`) et l'état du tuto via `HelpCenterBloc` (même pattern que `ContextualTutorialCard`). Tap CTA → `context.push(route)` (GoRouter, jamais `Navigator.push`).
 
 ## Slides
 
@@ -36,23 +36,21 @@ Pas de filtrage par rôle : dans dony, un utilisateur a toujours les deux rôles
 | Envoyer un colis | vert | `/parcels/send-intro` | masquée si `HiveService.kHasPublishedAsSender` (flag existant, réutilisé) |
 | Créer une alerte corridor | orange/accent | `/corridor-alerts` | masquée si l'utilisateur a déjà ≥1 alerte active |
 | Vérifier mon identité | teal | `/kyc/verify` | masquée si KYC déjà vérifié |
-| Tuto — comprendre l'onglet Trajets/Colis | contenu actuel `ContextualTutorialCard` | pas de route, ouvre le tuto inline | **jamais masquée** — explique le fonctionnement du toggle, evergreen par nature |
+| Tuto — comprendre l'onglet Trajets/Colis | contenu actuel `ContextualTutorialCard` | pas de route, ouvre `/profile/help/tutorial/{id}` | masquée si aucun tutoriel `TutorialContext.search` n'est configuré côté remote config (`HelpCenterConfig.tutorialFor`), ou si l'utilisateur l'a déjà fermé via la croix historique de `ContextualTutorialCard` (`kContextualTutorialDismissedPrefix`, respectée pour ne pas re-imposer un contenu déjà explicitement écarté) |
 
 Aucun dismiss manuel (pas de croix). La disparition d'une slide est 100% pilotée par l'état applicatif (action faite → slide disparaît à la prochaine visite de l'écran). Les clés Hive `kTravelerBannerDismissed`, `kSenderBannerDismissed`, `senderBannerLifetime` deviennent du dead code à supprimer avec `RoleGuidanceBanner`.
 
 ## Flux de données
 
-- `home_screen.dart` calcule les booléens d'entrée et les passe au widget :
-  - `hasPublishedTrip` / `hasPublishedParcel` : flags Hive déjà lus ailleurs dans le fichier.
-  - `isKycVerified` : déjà disponible via le bloc auth/profil chargé au shell.
-  - `hasActiveCorridorAlert` : nouveau champ simple — flag Hive local mis à jour à la création d'une alerte, ou lecture du state déjà chargé par le bloc/repo alertes existant si disponible en mémoire. Pas de nouvel appel réseau bloquant pour l'affichage de la sheet.
-- Filtrage des slides une seule fois au `build()` → `List<_GuidanceSlide> visibleSlides`.
+- `home_screen.dart` passe seulement `hiveService: getIt<HiveService>()` et `isKycVerified: context.watch<AuthBloc>().state.currentUser?.isKycVerified ?? false` au widget — aucun autre calcul côté parent.
+- `hasPublishedTrip` / `hasPublishedParcel` : flags Hive existants (`kHasPublishedAsTraveler`/`kHasPublishedAsSender`), lus en interne par le widget.
+- `hasActiveCorridorAlert` : **nouveau flag Hive** `kHasActiveCorridorAlert`, posé par `CorridorAlertFormCubit.submit()` à la première création/édition réussie d'une alerte — jamais réinitialisé, même précédent que `kHasPublishedAsTraveler`/`Sender`. Pas de nouvel appel réseau : le carousel ne dépend d'aucun bloc alertes chargé ailleurs.
+- Filtrage des slides au `build()`, à l'intérieur d'un `ValueListenableBuilder<Box>` (réactif aux 3 flags) combiné à `context.select<HelpCenterBloc, HelpCenterConfig>` (réactif au tuto) → `List<_GuidanceSlideData> slides`.
 
 ## Gestion des erreurs
 
-- Composant purement présentation : pas d'état d'erreur réseau dédié.
-- Si `hasActiveCorridorAlert` dépend d'un bloc pas encore chargé au moment du build : la slide "Créer une alerte" reste **visible par défaut** (fail-open). Au pire une slide affichée en trop une fois, jamais de crash ni d'exception avalée.
-- `visibleSlides` vide → carousel disparaît complet sans logique conditionnelle supplémentaire côté parent.
+- Composant purement présentation : pas d'état d'erreur réseau dédié — les flags Hive sont toujours disponibles de façon synchrone (pas d'état de chargement à gérer, contrairement à un bloc réseau).
+- `slides` vide → carousel disparaît complet (`SizedBox.shrink()`) sans logique conditionnelle supplémentaire côté parent.
 
 ## Tests
 
