@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
@@ -107,8 +108,9 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 label: 'Partager le suivi',
                 subtitle: 'Envoyer le lien de suivi à l\'expéditeur',
                 onTap: () {
+                  final origin = sharePositionOriginFor(context);
                   context.pop();
-                  shareTrackingLink(bid);
+                  shareTrackingLink(bid, sharePositionOrigin: origin);
                 },
               ),
               const SizedBox(height: DonySpacing.sm),

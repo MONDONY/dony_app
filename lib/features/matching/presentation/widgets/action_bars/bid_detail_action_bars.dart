@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
@@ -605,8 +606,9 @@ class _SenderOptionsSheet extends StatelessWidget {
               label: 'Partager le suivi',
               subtitle: 'Envoyer le lien de suivi au destinataire',
               onTap: () {
+                final origin = sharePositionOriginFor(context);
                 context.pop();
-                shareTrackingLink(bid);
+                shareTrackingLink(bid, sharePositionOrigin: origin);
               },
             ),
             const SizedBox(height: DonySpacing.sm),

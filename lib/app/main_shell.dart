@@ -167,10 +167,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && mounted) {
-      context.read<StripeAccountBloc>().add(
-        const StripeAccountStatusRefreshed(),
-      );
+    if (state != AppLifecycleState.resumed || !mounted) return;
+    // Le bloc est un singleton DI : il peut être fermé (ex. logout) alors
+    // que ce shell est encore mounted — mounted seul ne protège pas contre
+    // ce cas, d'où le check isClosed avant le add().
+    final stripeBloc = context.read<StripeAccountBloc>();
+    if (!stripeBloc.isClosed) {
+      stripeBloc.add(const StripeAccountStatusRefreshed());
     }
   }
 

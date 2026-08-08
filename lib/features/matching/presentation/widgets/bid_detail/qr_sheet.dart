@@ -7,6 +7,7 @@ import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -245,6 +246,9 @@ class _QrSheetStickyBottom extends StatelessWidget {
 
   Future<void> _shareQrCode(BuildContext context, Uint8List imageBytes) async {
     sharing.value = true;
+    // Calculé avant tout await : sharePositionOriginFor lit le RenderBox
+    // du context, qui peut être démonté pendant les opérations async.
+    final origin = sharePositionOriginFor(context);
     try {
       final dir = await getTemporaryDirectory();
       final file = File(
@@ -255,6 +259,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
         [XFile(file.path, mimeType: 'image/png')],
         subject: 'QR du colis Yadony',
         text: 'QR à présenter ou à coller sur le colis.',
+        sharePositionOrigin: origin,
       );
       // Only log if the user actually shared (not dismissed)
       if (result.status != ShareResultStatus.dismissed) {

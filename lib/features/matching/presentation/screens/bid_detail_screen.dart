@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
@@ -478,7 +479,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         IconButton(
                           icon: DonyIcon('share-2', color: cs.onSurface),
                           tooltip: 'Partager le suivi',
-                          onPressed: () => shareTrackingLink(_bid),
+                          onPressed: () => shareTrackingLink(
+                            _bid,
+                            sharePositionOrigin: sharePositionOriginFor(context),
+                          ),
                         ),
                       if (isSender)
                         IconButton(
