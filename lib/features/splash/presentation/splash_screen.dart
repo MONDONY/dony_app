@@ -52,15 +52,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAndNavigate() async {
-    // 6 tentatives avec backoff croissant (600 ms → 2,5 s plafonné) plutôt que
-    // 3 × 1,5 s fixe (~4,5 s de budget total, trop court pour un vrai cold
-    // start réseau : radio cellulaire pas encore réveillée après fermeture
-    // complète de l'app, DNS/TLS à froid...). Budget total ~9 s d'attente
-    // entre tentatives, acceptable sur cet écran puisqu'il porte déjà une
-    // animation de chargement.
-    const maxAttempts = 6;
+    // 9 tentatives avec backoff croissant (600 ms → 3 s plafonné) : budget
+    // total ~18 s d'attente entre tentatives (doublé depuis la version à 6
+    // tentatives/~9 s, encore trop court pour certains cold starts réseau —
+    // radio cellulaire pas encore réveillée après fermeture complète de
+    // l'app, DNS/TLS à froid...). Acceptable sur cet écran puisqu'il porte
+    // déjà une animation de chargement plutôt qu'un écran figé.
+    const maxAttempts = 9;
     const baseDelay = Duration(milliseconds: 600);
-    const maxDelay = Duration(milliseconds: 2500);
+    const maxDelay = Duration(milliseconds: 3000);
 
     Object? lastError;
 
