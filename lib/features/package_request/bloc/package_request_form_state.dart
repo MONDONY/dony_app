@@ -25,6 +25,7 @@ class PackageRequestFormState extends Equatable {
     this.negotiable = true,
     this.acceptedPaymentMethods = const {PaymentMethod.stripe},
     this.totalBudgetEur,
+    this.promoCode,
     this.submissionStatus = FormSubmissionStatus.idle,
     this.errorMessage,
     this.draftLimitMessage,
@@ -52,6 +53,10 @@ class PackageRequestFormState extends Equatable {
   final bool negotiable;
   final Set<PaymentMethod> acceptedPaymentMethods;
   final double? totalBudgetEur;
+
+  /// Code promo saisi à la publication (brut) — appliqué automatiquement au
+  /// paiement, jamais resaisi plus tard (cf. AcceptOfferBottomSheet).
+  final String? promoCode;
   final FormSubmissionStatus submissionStatus;
   final String? errorMessage;
   final String? draftLimitMessage;
@@ -84,6 +89,8 @@ class PackageRequestFormState extends Equatable {
     // null (un budget effacé retomberait sur l'ancien) — ce flag porte
     // l'intention explicite d'effacement pour ce seul champ.
     bool clearTotalBudgetEur = false,
+    String? promoCode,
+    bool clearPromoCode = false,
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
     String? draftLimitMessage,
@@ -112,6 +119,7 @@ class PackageRequestFormState extends Equatable {
         acceptedPaymentMethods ?? this.acceptedPaymentMethods,
     totalBudgetEur:
         clearTotalBudgetEur ? null : (totalBudgetEur ?? this.totalBudgetEur),
+    promoCode: clearPromoCode ? null : (promoCode ?? this.promoCode),
     submissionStatus: submissionStatus ?? this.submissionStatus,
     errorMessage: errorMessage ?? this.errorMessage,
     draftLimitMessage: clearDraftLimitMessage
@@ -140,6 +148,7 @@ class PackageRequestFormState extends Equatable {
     negotiable,
     acceptedPaymentMethods,
     totalBudgetEur,
+    promoCode,
     submissionStatus,
     errorMessage,
     draftLimitMessage,

@@ -44,6 +44,14 @@ class PackageRequestFormBloc
         ),
       ),
     );
+    on<PackageRequestPromoCodeChanged>(
+      (e, emit) => emit(
+        state.copyWith(
+          promoCode: e.value,
+          clearPromoCode: e.value == null || e.value!.isEmpty,
+        ),
+      ),
+    );
   }
 
   final PackageRequestRepository _repository;
@@ -75,6 +83,7 @@ class PackageRequestFormBloc
           : r.acceptedPaymentMethods,
       totalBudgetEur: gross,
       targetPriceEur: gross,
+      promoCode: r.promoCode,
     );
   }
 
@@ -160,6 +169,7 @@ class PackageRequestFormBloc
           photoKeys: e.photoKeys,
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
+          promoCode: _blankToNull(state.promoCode),
         );
       } else {
         saved = await _repository.create(
@@ -183,6 +193,7 @@ class PackageRequestFormBloc
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           saveAsDraft: e.saveAsDraft,
+          promoCode: _blankToNull(state.promoCode),
         );
       }
       if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {

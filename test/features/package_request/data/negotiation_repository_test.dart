@@ -331,6 +331,75 @@ void main() {
       expect(result.amountEur, 45.0);
       expect(result.paymentMethodTypes, ['card', 'paypal']);
     });
+
+    test('sends promoCode as query param when provided', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/initiate-payment',
+          queryParameters: {'promoCode': 'WELCOME6'},
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'clientSecret': 'pi_test_secret',
+          'stripePaymentIntentId': 'pi_test_id',
+          'amount': 42.40,
+          'paymentMethodTypes': ['card'],
+        }, '/negotiations/th-1/initiate-payment'),
+      );
+
+      final result =
+          await repo.initiatePayment('th-1', promoCode: 'WELCOME6');
+      expect(result.amountEur, 42.40);
+    });
+  });
+
+  group('quote', () {
+    test('GETs /negotiations/:id/quote and returns NegotiationQuote',
+        () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/negotiations/th-1/quote',
+          queryParameters: null,
+        ),
+      ).thenAnswer((_) async => _ok({
+            'netEur': 40.0,
+            'rate': 0.05,
+            'commissionEur': 2.0,
+            'totalEur': 42.0,
+            'promoApplied': false,
+            'promoLabel': null,
+          }, '/negotiations/th-1/quote'));
+
+      final quote = await repo.quote('th-1');
+      expect(quote.netEur, 40.0);
+      expect(quote.rate, 0.05);
+      expect(quote.commissionEur, 2.0);
+      expect(quote.totalEur, 42.0);
+      expect(quote.promoApplied, false);
+      expect(quote.promoLabel, isNull);
+    });
+
+    test('sends promoCode as query param and reflects an applied promo',
+        () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/negotiations/th-1/quote',
+          queryParameters: {'promoCode': 'WELCOME6'},
+        ),
+      ).thenAnswer((_) async => _ok({
+            'netEur': 40.0,
+            'rate': 0.12,
+            'commissionEur': 4.80,
+            'totalEur': 42.40,
+            'promoApplied': true,
+            'promoLabel': 'Code WELCOME6 : 6 % de réduction',
+          }, '/negotiations/th-1/quote'));
+
+      final quote = await repo.quote('th-1', promoCode: 'WELCOME6');
+      expect(quote.promoApplied, true);
+      expect(quote.promoLabel, 'Code WELCOME6 : 6 % de réduction');
+      expect(quote.totalEur, 42.40);
+    });
   });
 
   group('checkout', () {

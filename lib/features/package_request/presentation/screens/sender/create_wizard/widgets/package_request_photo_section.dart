@@ -110,50 +110,110 @@ class PackageRequestPhotoSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: DonySpacing.sm),
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: [
-                for (final p in photos)
-                  _PhotoThumb(
-                    upload: p,
-                    onRemove: () => context
-                        .read<PackageRequestPhotosCubit>()
-                        .remove(p.localId),
-                    onTapFailed: () => DonySnackbar.show(
-                      context,
-                      message: p.error == null
-                          ? 'Échec de l\'upload de la photo'
-                          : 'Échec : ${p.error}',
-                      type: DonySnackbarType.error,
-                    ),
-                  ),
-                if (canAdd)
-                  Semantics(
-                    button: true,
-                    container: true,
-                    excludeSemantics: true,
-                    label: 'Ajouter une photo du colis',
-                    child: GestureDetector(
-                    key: const Key('pr-add-photo'),
-                    onTap: () => _showSourceSheet(context),
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        border: Border.all(color: cs.primary, width: 1.5),
+            // Vide : un seul CTA plein largeur — c'est la première chose que
+            // l'expéditeur doit remarquer sur cette étape, pas une case parmi
+            // d'autres qu'on peut manquer si on ne fait pas attention.
+            if (photos.isEmpty)
+              _AddPhotoCta(onTap: () => _showSourceSheet(context))
+            else
+              Wrap(
+                spacing: DonySpacing.sm,
+                runSpacing: DonySpacing.sm,
+                children: [
+                  for (final p in photos)
+                    _PhotoThumb(
+                      upload: p,
+                      onRemove: () => context
+                          .read<PackageRequestPhotosCubit>()
+                          .remove(p.localId),
+                      onTapFailed: () => DonySnackbar.show(
+                        context,
+                        message: p.error == null
+                            ? 'Échec de l\'upload de la photo'
+                            : 'Échec : ${p.error}',
+                        type: DonySnackbarType.error,
                       ),
-                      child: Icon(Icons.add_rounded, color: cs.primary),
                     ),
-                  )
-                  ),
-              ],
-            ),
+                  if (canAdd)
+                    Semantics(
+                      button: true,
+                      container: true,
+                      excludeSemantics: true,
+                      label: 'Ajouter une photo du colis',
+                      child: GestureDetector(
+                        key: const Key('pr-add-photo'),
+                        onTap: () => _showSourceSheet(context),
+                        child: Container(
+                          width: 88,
+                          height: 88,
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer,
+                            borderRadius: BorderRadius.circular(DonyRadius.md),
+                            border: Border.all(color: cs.primary, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.add_rounded,
+                            color: cs.primary,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
           ],
         );
       },
+    );
+  }
+}
+
+/// CTA plein largeur affiché tant qu'aucune photo n'est ajoutée — plus visible
+/// qu'une case de 64 px perdue au milieu de l'étape.
+class _AddPhotoCta extends StatelessWidget {
+  const _AddPhotoCta({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      label: 'Ajouter une photo du colis',
+      child: GestureDetector(
+        key: const Key('pr-add-photo'),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.primary, width: 2),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.add_a_photo_rounded, color: cs.primary, size: 30),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                'Ajouter une photo',
+                style: tt.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.primary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Fortement recommandé, rassure le voyageur',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

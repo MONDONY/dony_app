@@ -1,11 +1,15 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,16 +32,27 @@ class Step3RecapBudget extends StatefulWidget {
 class Step3RecapBudgetState extends State<Step3RecapBudget> {
   final _formKey = GlobalKey<FormState>();
   final _budgetCtrl = TextEditingController();
+  final _promoCtrl = TextEditingController();
+
+  // NegotiationQuote une fois chargé, String si le dernier essai de promo a
+  // échoué (message affiché inline), null tant qu'aucun devis serveur n'est
+  // arrivé (l'aperçu retombe alors sur l'estimation locale instantanée).
+  final _quoteNotifier = ValueNotifier<Object?>(null);
+  final _quoteLoadingNotifier = ValueNotifier<bool>(false);
 
   @override
   void initState() {
     super.initState();
     // Pré-remplissage (édition / retour à l'étape) du budget brut depuis l'état.
-    final b = context.read<PackageRequestFormBloc>().state.totalBudgetEur;
+    final s = context.read<PackageRequestFormBloc>().state;
+    final b = s.totalBudgetEur;
     if (b != null) {
       _budgetCtrl.text = b == b.roundToDouble()
           ? b.toInt().toString()
           : b.toStringAsFixed(2);
+    }
+    if (s.promoCode != null) {
+      _promoCtrl.text = s.promoCode!;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _sync();
@@ -50,9 +65,42 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     widget.canContinueNotifier?.value = s.totalBudgetEur != null;
   }
 
+  Future<void> _applyPromoCode() async {
+    final budget = context.read<PackageRequestFormBloc>().state.totalBudgetEur;
+    if (budget == null) return;
+    final code = _promoCtrl.text.trim();
+    _quoteLoadingNotifier.value = true;
+    try {
+      final quote = await getIt<PackageRequestRepository>()
+          .quote(budget, promoCode: code.isEmpty ? null : code);
+      _quoteNotifier.value = quote;
+      // Persisté dans l'état du formulaire dès validation réussie — envoyé à
+      // la publication, appliqué automatiquement au paiement (jamais resaisi,
+      // cf. AcceptOfferBottomSheet).
+      if (mounted) {
+        context
+            .read<PackageRequestFormBloc>()
+            .add(PackageRequestPromoCodeChanged(code.isEmpty ? null : code));
+      }
+    } catch (e) {
+      _quoteNotifier.value = code.isEmpty ? null : ErrorPresenter.resolve(e).message;
+    } finally {
+      _quoteLoadingNotifier.value = false;
+    }
+  }
+
+  /// Le budget a changé → l'aperçu (chargé pour l'ANCIEN montant) est périmé.
+  /// Retombe sur l'estimation locale instantanée jusqu'au prochain "Appliquer".
+  void _invalidateQuote() {
+    if (_quoteNotifier.value != null) _quoteNotifier.value = null;
+  }
+
   @override
   void dispose() {
     _budgetCtrl.dispose();
+    _promoCtrl.dispose();
+    _quoteNotifier.dispose();
+    _quoteLoadingNotifier.dispose();
     super.dispose();
   }
 
@@ -144,7 +192,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 // ── Budget ─────────────────────────────────────────────────
                 _FieldLabel(state.negotiable ? 'Budget indicatif' : 'Ton prix'),
                 const SizedBox(height: DonySpacing.xs),
-                _BudgetTotalInput(controller: _budgetCtrl),
+                _BudgetTotalInput(
+                  controller: _budgetCtrl,
+                  onBudgetChanged: _invalidateQuote,
+                ),
                 Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
                   child: Text(
@@ -161,15 +212,130 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   textKey: const Key('budget-error'),
                 ),
 
-                // ── Net voyageur preview ───────────────────────────────────
+                // ── Net voyageur : décomposition transparente ───────────────
                 if (state.totalBudgetEur != null) ...[
                   const SizedBox(height: DonySpacing.sm),
-                  _NetPreview(totalBudgetEur: state.totalBudgetEur!),
+                  ListenableBuilder(
+                    listenable: _quoteNotifier,
+                    builder: (context, _) {
+                      final quoteVal = _quoteNotifier.value;
+                      final quote =
+                          quoteVal is NegotiationQuote ? quoteVal : null;
+                      return _BudgetBreakdown(
+                        budgetEur: state.totalBudgetEur!,
+                        quote: quote,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: DonySpacing.base),
+
+                  // ── Code promo ────────────────────────────────────────────
+                  const _FieldLabel('Code promo (optionnel)'),
+                  const SizedBox(height: DonySpacing.sm),
+                  ListenableBuilder(
+                    listenable: Listenable.merge(
+                      [_quoteNotifier, _quoteLoadingNotifier],
+                    ),
+                    builder: (context, _) {
+                      final loading = _quoteLoadingNotifier.value;
+                      final quoteVal = _quoteNotifier.value;
+                      final quote =
+                          quoteVal is NegotiationQuote ? quoteVal : null;
+                      final promoError = quoteVal is String ? quoteVal : null;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  key: const Key('promo-code-input'),
+                                  controller: _promoCtrl,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  decoration: InputDecoration(
+                                    hintText: 'Ex: WELCOME10',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: DonySpacing.base,
+                                      vertical: DonySpacing.md,
+                                    ),
+                                    suffixIcon: loading
+                                        ? const Padding(
+                                            padding: EdgeInsets.all(12),
+                                            child: SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2),
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                                  onFieldSubmitted: (_) => _applyPromoCode(),
+                                ),
+                              ),
+                              const SizedBox(width: DonySpacing.sm),
+                              SizedBox(
+                                height: 52,
+                                width: 110,
+                                child: FilledButton(
+                                  key: const Key('apply-promo-code-btn'),
+                                  onPressed: loading ? null : _applyPromoCode,
+                                  child: const Text('Appliquer'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (quote != null && quote.promoApplied) ...[
+                            const SizedBox(height: DonySpacing.xs),
+                            Row(
+                              children: [
+                                const DonyIcon('circle-check',
+                                    size: 16, color: Color(0xFF16A34A)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    quote.promoLabel ?? 'Code appliqué',
+                                    style: tt.bodySmall?.copyWith(
+                                      color: const Color(0xFF16A34A),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (promoError != null) ...[
+                            const SizedBox(height: DonySpacing.xs),
+                            Row(
+                              children: [
+                                const DonyIcon('circle-alert',
+                                    size: 16, color: Color(0xFFE53935)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    promoError,
+                                    style: tt.bodySmall
+                                        ?.copyWith(color: const Color(0xFFE53935)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
                 ],
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Modes de paiement ──────────────────────────────────────
                 const _FieldLabel('Paiement accepté'),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  'Choisis comment tu pourras payer le voyageur.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
                 const SizedBox(height: DonySpacing.sm),
                 _PaymentMethodChips(selected: state.acceptedPaymentMethods),
                 const SizedBox(height: DonySpacing.base),
@@ -234,8 +400,11 @@ class _FieldLabel extends StatelessWidget {
 // ─── Budget total input ──────────────────────────────────────────────────────
 
 class _BudgetTotalInput extends StatelessWidget {
-  const _BudgetTotalInput({required this.controller});
+  const _BudgetTotalInput({required this.controller, this.onBudgetChanged});
   final TextEditingController controller;
+
+  /// Prévient le parent qu'un devis chargé précédemment est périmé.
+  final VoidCallback? onBudgetChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -287,6 +456,7 @@ class _BudgetTotalInput extends StatelessWidget {
         context.read<PackageRequestFormBloc>().add(
           PackageRequestTotalBudgetChanged(value),
         );
+        onBudgetChanged?.call();
       },
       validator: (v) {
         if (v == null || v.trim().isEmpty) {
@@ -304,40 +474,97 @@ class _BudgetTotalInput extends StatelessWidget {
 
 // ─── Net preview ─────────────────────────────────────────────────────────────
 
-class _NetPreview extends StatelessWidget {
-  const _NetPreview({required this.totalBudgetEur});
-  final double totalBudgetEur;
+/// Décomposition transparente du budget : la commission Yadony reste
+/// toujours affichée au taux de base (jamais faussée par le promo — même
+/// contrat que les autres devis de l'app), et c'est le net voyageur qui
+/// bouge quand un code promo est appliqué (le budget de l'expéditeur, lui,
+/// ne change pas : un promo rend son offre plus attractive à dépense égale,
+/// au lieu de réduire ce qu'il paie — cf. PackageRequestService.quote).
+class _BudgetBreakdown extends StatelessWidget {
+  const _BudgetBreakdown({required this.budgetEur, this.quote});
+
+  final double budgetEur;
+  final NegotiationQuote? quote;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final net = PriceDisplay.netFromGross(totalBudgetEur);
+
+    final rate = quote?.rate ?? PriceDisplay.previewRate;
+    final netBase = PriceDisplay.netFromGross(budgetEur);
+    final commissionEur = quote?.commissionEur ?? (budgetEur - netBase);
+    final net = quote?.netEur ?? netBase;
+    final promoApplied = quote?.promoApplied ?? false;
+    final boost = promoApplied ? net - netBase : 0.0;
+    final hasRealBoost = boost > 0.005;
+    final ratePct = _ratePercentLabel(rate);
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.sm,
-      ),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: cs.successLight,
         borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DonyIcon('info', size: 16, color: cs.success),
-          const SizedBox(width: DonySpacing.xs),
-          Expanded(
-            child: Text(
-              'Le voyageur touchera ${PriceDisplay.eur(net)}',
-              style: tt.bodySmall?.copyWith(
-                color: cs.success,
-                fontWeight: FontWeight.w600,
+          _line(tt, cs, 'Budget', PriceDisplay.eur(budgetEur)),
+          const SizedBox(height: DonySpacing.xs),
+          _line(tt, cs, 'Commission Yadony ($ratePct %)',
+              PriceDisplay.eur(commissionEur)),
+          if (hasRealBoost) ...[
+            const SizedBox(height: DonySpacing.xs),
+            _line(tt, cs, 'Grâce au code promo, le voyageur touche',
+                '+${PriceDisplay.eur(boost)}',
+                valueColor: cs.success),
+          ],
+          const SizedBox(height: DonySpacing.xs),
+          Divider(color: cs.success.withValues(alpha: 0.2)),
+          const SizedBox(height: DonySpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('Le voyageur touchera',
+                  style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success)),
+              Text(
+                PriceDisplay.eur(net),
+                style: tt.bodyMedium?.copyWith(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: cs.success,
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _line(TextTheme tt, ColorScheme cs, String label, String value,
+          {Color? valueColor}) =>
+      Row(
+        children: [
+          Expanded(
+              child: Text(label, style: tt.bodyMedium?.copyWith(color: cs.success))),
+          const SizedBox(width: DonySpacing.sm),
+          Text(value,
+              style: tt.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? cs.success,
+              )),
+        ],
+      );
+
+  /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR.
+  String _ratePercentLabel(double rate) {
+    final pct = rate * 100;
+    return pct % 1 == 0
+        ? pct.toStringAsFixed(0)
+        : pct.toStringAsFixed(1).replaceFirst('.', ',');
   }
 }
 
@@ -359,44 +586,68 @@ class _PaymentMethodChips extends StatelessWidget {
       ...PaymentMethod.selectable,
       ...selected.where((m) => !PaymentMethod.selectable.contains(m)),
     ];
-    return Wrap(
-      spacing: DonySpacing.sm,
-      runSpacing: DonySpacing.sm,
-      children: methods.map((method) {
-        final isSelected = selected.contains(method);
-        final label = method.displayLabel;
-        return GestureDetector(
-          onTap: () {
-            context.read<PackageRequestFormBloc>().add(
-              PackageRequestPaymentMethodToggled(method),
-            );
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            constraints: const BoxConstraints(minHeight: 44),
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: isSelected ? cs.primaryContainer : cs.surface,
-              borderRadius: BorderRadius.circular(DonyRadius.xl),
-              border: Border.all(
-                color: isSelected ? cs.primary : cs.outline,
-                width: isSelected ? 1.5 : 1.0,
+    // Carte dédiée + icônes + chips plus hauts : la version précédente était
+    // une simple ligne de pastilles fines, facile à survoler sans la remarquer.
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: methods.map((method) {
+          final isSelected = selected.contains(method);
+          return GestureDetector(
+            onTap: () {
+              context.read<PackageRequestFormBloc>().add(
+                PackageRequestPaymentMethodToggled(method),
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              constraints: const BoxConstraints(minHeight: 52),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.sm + 2,
+              ),
+              decoration: BoxDecoration(
+                color: isSelected ? cs.primaryContainer : cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.xl),
+                border: Border.all(
+                  color: isSelected ? cs.primary : cs.outline,
+                  width: isSelected ? 2 : 1.0,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    method.icon,
+                    size: 20,
+                    color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: DonySpacing.xs + 2),
+                  Text(
+                    method.displayLabel,
+                    style: tt.bodyMedium?.copyWith(
+                      color: isSelected ? cs.primary : cs.onSurface,
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    ),
+                  ),
+                  if (isSelected) ...[
+                    const SizedBox(width: DonySpacing.xs),
+                    DonyIcon('circle-check', size: 16, color: cs.primary),
+                  ],
+                ],
               ),
             ),
-            child: Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: isSelected ? cs.primary : cs.onSurfaceVariant,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }

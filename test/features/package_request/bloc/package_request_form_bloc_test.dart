@@ -902,4 +902,133 @@ void main() {
       ),
     ],
   );
+
+  // ── Code promo (étape 3) ────────────────────────────────────────────────────
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'PackageRequestPromoCodeChanged met à jour promoCode',
+    build: () => makeBloc(repo),
+    act: (b) => b.add(const PackageRequestPromoCodeChanged('WELCOME6')),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.promoCode,
+        'promoCode',
+        'WELCOME6',
+      ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'PackageRequestPromoCodeChanged(null) efface promoCode',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(promoCode: 'WELCOME6'),
+    act: (b) => b.add(const PackageRequestPromoCodeChanged(null)),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.promoCode,
+        'promoCode',
+        isNull,
+      ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'PackageRequestPromoCodeChanged(\'\') efface promoCode',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(promoCode: 'WELCOME6'),
+    act: (b) => b.add(const PackageRequestPromoCodeChanged('')),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.promoCode,
+        'promoCode',
+        isNull,
+      ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'submit avec promoCode renseigné → transmis à repo.create',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          promoCode: any(named: 'promoCode'),
+        ),
+      ).thenAnswer((_) async => fakeRequest);
+      return makeBloc(repo);
+    },
+    seed: () => draftValidSeed.copyWith(promoCode: 'WELCOME6'),
+    act: (bloc) => bloc.add(const FormStep3Submitted()),
+    skip: 1,
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.submissionStatus,
+        'submissionStatus',
+        FormSubmissionStatus.success,
+      ),
+    ],
+    verify: (_) {
+      verify(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          promoCode: 'WELCOME6',
+        ),
+      ).called(1);
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'mode édition : état initial pré-rempli avec le promoCode existant',
+    build: () => PackageRequestFormBloc(
+      repo,
+      analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      editing: PackageRequest(
+        id: 'r-edit',
+        senderId: 's-1',
+        departureCity: 'Lyon',
+        arrivalCity: 'Bamako',
+        desiredDate: DateTime(2026, 7, 20),
+        dateToleranceDays: 3,
+        weightKg: 8,
+        parcelSize: ParcelSize.medium,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        status: PackageRequestStatus.open,
+        createdAt: DateTime(2026, 5, 10),
+        promoCode: 'WELCOME6',
+      ),
+    ),
+    act: (_) {},
+    verify: (bloc) {
+      expect(bloc.state.promoCode, 'WELCOME6');
+    },
+  );
 }

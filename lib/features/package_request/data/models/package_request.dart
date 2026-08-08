@@ -45,6 +45,7 @@ class PackageRequest extends Equatable {
     this.acceptedPaymentMethods = const {},
     this.viewerThreadId,
     this.viewerThreadStatus,
+    this.promoCode,
   });
 
   final String id;
@@ -94,6 +95,9 @@ class PackageRequest extends Equatable {
   final String? viewerThreadId;
   final String? viewerThreadStatus;
 
+  /// Code promo saisi à la publication (brut, null si aucun) — pré-remplit l'édition.
+  final String? promoCode;
+
   /// Parse le tableau `photos` du wire en deux listes alignées (URLs
   /// présignées + clés S3) en un seul passage.
   static (List<String>, List<String>) _photosFromJson(List<dynamic>? raw) {
@@ -138,6 +142,7 @@ class PackageRequest extends Equatable {
       ),
       viewerThreadId: json['viewerThreadId'] as String?,
       viewerThreadStatus: json['viewerThreadStatus'] as String?,
+      promoCode: json['promoCode'] as String?,
     );
   }
 
@@ -166,5 +171,6 @@ class PackageRequest extends Equatable {
     acceptedPaymentMethods,
     viewerThreadId,
     viewerThreadStatus,
+    promoCode,
   ];
 }

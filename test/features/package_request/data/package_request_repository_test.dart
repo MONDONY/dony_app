@@ -621,6 +621,87 @@ void main() {
       expect(body!['photoKeys'], ['package_requests/s/9.jpg']);
     });
 
+    test('create sends promoCode when provided', () async {
+      Map<String, dynamic>? body;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        body = inv.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests');
+      });
+      await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+        promoCode: 'WELCOME6',
+      );
+      expect(body!['promoCode'], 'WELCOME6');
+    });
+
+    test('create omits promoCode when absent', () async {
+      Map<String, dynamic>? body;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        body = inv.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests');
+      });
+      await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+      );
+      expect(body!.containsKey('promoCode'), false);
+    });
+
+    test('update sends promoCode when provided', () async {
+      Map<String, dynamic>? body;
+      when(
+        () => mockDio.put<Map<String, dynamic>>(
+          '/package-requests/pr-1',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        body = inv.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests/pr-1');
+      });
+      await repo.update(
+        'pr-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+        promoCode: 'WELCOME6',
+      );
+      expect(body!['promoCode'], 'WELCOME6');
+    });
+
     test('uploadPhotoKey returns the S3 key', () async {
       final tmp = File(
         '${Directory.systemTemp.path}/dony_t_${DateTime.now().microsecondsSinceEpoch}.jpg',
@@ -681,6 +762,48 @@ void main() {
       });
       await repo.report('pr-1', reason: 'OTHER');
       expect(body!.containsKey('details'), false);
+    });
+  });
+
+  group('quote', () {
+    test('GETs /package-requests/quote and returns NegotiationQuote', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests/quote',
+          queryParameters: {'budgetEur': 40.0},
+        ),
+      ).thenAnswer((_) async => _ok({
+            'netEur': 38.10,
+            'rate': 0.05,
+            'commissionEur': 1.90,
+            'totalEur': 40.0,
+            'promoApplied': false,
+          }, '/package-requests/quote'));
+
+      final quote = await repo.quote(40.0);
+      expect(quote.netEur, 38.10);
+      expect(quote.promoApplied, false);
+    });
+
+    test('sends promoCode as query param and reflects the promo boost', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests/quote',
+          queryParameters: {'budgetEur': 40.0, 'promoCode': 'WELCOME6'},
+        ),
+      ).thenAnswer((_) async => _ok({
+            'netEur': 38.74,
+            'rate': 0.12,
+            'commissionEur': 4.29,
+            'totalEur': 40.0,
+            'promoApplied': true,
+            'promoLabel': 'Code WELCOME6 : 6 % de réduction',
+          }, '/package-requests/quote'));
+
+      final quote = await repo.quote(40.0, promoCode: 'WELCOME6');
+      expect(quote.promoApplied, true);
+      expect(quote.netEur, 38.74);
+      expect(quote.promoLabel, 'Code WELCOME6 : 6 % de réduction');
     });
   });
 

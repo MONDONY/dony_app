@@ -4,6 +4,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/accept_offer_bottom_sheet.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
@@ -108,31 +109,48 @@ void main() {
     expect(find.text('Tu reçois'), findsOneWidget);
   });
 
-  testWidgets('shows "Montant à régler" label for sender', (tester) async {
+  testWidgets('shows "Total à régler" label for sender', (tester) async {
     await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: false));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.text('Montant à régler'), findsOneWidget);
+    expect(find.text('Total à régler'), findsOneWidget);
   });
 
-  testWidgets('ne montre PAS le détail commission à l\'expéditeur (jamais le net)',
+  testWidgets('affiche le détail de la commission Yadony (%) à l\'expéditeur',
       (tester) async {
     await tester.pumpWidget(
       _buildApp(bloc: bloc, isTraveler: false, grossPriceEur: 39.20),
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('commission Yadony'), findsNothing);
+    expect(find.textContaining('Commission Yadony'), findsOneWidget);
+    expect(find.text('Net voyageur'), findsOneWidget);
   });
 
-  testWidgets('does NOT show commission breakdown for traveler',
+  testWidgets('affiche le détail de la commission Yadony (%) au voyageur',
       (tester) async {
     await tester.pumpWidget(
       _buildApp(bloc: bloc, isTraveler: true, grossPriceEur: 39.20),
     );
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('commission Yadony'), findsNothing);
+    expect(find.textContaining('Commission Yadony'), findsOneWidget);
+    expect(find.text('Prix payé par l\'expéditeur'), findsOneWidget);
+  });
+
+  testWidgets(
+      'code promo absent pour le voyageur et pour l\'accord de prix (pas encore de paiement)',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: true));
+    await tester.tap(find.byKey(const Key('open')));
+    await tester.pumpAndSettle();
+    expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
+
+    await tester.pumpWidget(
+        _buildApp(bloc: bloc, isTraveler: false, isCheckout: false));
+    await tester.tap(find.byKey(const Key('open')));
+    await tester.pumpAndSettle();
+    expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
   });
 
   testWidgets('confirms button label uses Confirmer when not checkout',
@@ -315,7 +333,9 @@ void main() {
 
       paymentRepository = _MockPaymentRepository();
       negotiationRepository = _MockNegotiationRepository();
-      when(() => negotiationRepository.initiatePayment('t-1')).thenAnswer(
+      when(() => negotiationRepository.initiatePayment('t-1',
+              promoCode: any(named: 'promoCode')))
+          .thenAnswer(
         (_) async => (
           clientSecret: 'pi_test_secret',
           paymentIntentId: 'pi_test',
@@ -323,6 +343,18 @@ void main() {
           paymentMethodTypes: ['paypal'],
         ),
       );
+      // Devis initial (sans promo) chargé silencieusement à l'ouverture de la
+      // sheet côté expéditeur au checkout — reflète le taux réel résolu
+      // serveur (peut différer de l'estimation locale en cas d'override).
+      when(() => negotiationRepository.quote('t-1',
+              promoCode: any(named: 'promoCode')))
+          .thenAnswer((_) async => const NegotiationQuote(
+                netEur: 35.0,
+                rate: 0.05,
+                commissionEur: 1.75,
+                totalEur: 36.75,
+                promoApplied: false,
+              ));
 
       if (getIt.isRegistered<LocalAuthService>()) {
         getIt.unregister<LocalAuthService>();
@@ -458,6 +490,48 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Fil de négociation t-1'), findsOneWidget);
+    });
+
+    testWidgets(
+        'aucun champ code promo à cette étape — saisi plus tôt à la publication '
+        'de la demande, jamais resaisi au paiement', (tester) async {
+      await tester.pumpWidget(buildRoutedApp());
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
+      expect(find.byType(TextFormField), findsNothing);
+    });
+
+    testWidgets(
+        'promo déjà appliqué côté serveur (auto, saisi à la publication) → '
+        'reflété dans le breakdown et le libellé du bouton, sans action '
+        'expéditeur', (tester) async {
+      when(() => negotiationRepository.quote('t-1'))
+          .thenAnswer((_) async => const NegotiationQuote(
+                netEur: 35.0,
+                rate: 0.05,
+                commissionEur: 1.75,
+                totalEur: 35.50,
+                promoApplied: true,
+                promoLabel: 'Code WELCOME6 : 3 % de réduction',
+              ));
+
+      await tester.pumpWidget(buildRoutedApp());
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Promo'), findsOneWidget);
+      expect(find.textContaining('Payer (35,50'), findsOneWidget);
+
+      await tester.tap(find.textContaining('Payer ('));
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 60));
+      }
+
+      // Aucun promoCode transmis explicitement : le backend l'applique seul
+      // depuis le thread (déjà porté depuis la demande).
+      verify(() => negotiationRepository.initiatePayment('t-1')).called(1);
     });
   });
 }

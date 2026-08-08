@@ -216,7 +216,7 @@ void main() {
         expect(find.byKey(const Key('payment-methods-card')), findsOneWidget);
         expect(find.text('Mode de paiement souhaité'), findsOneWidget);
         expect(find.text('Carte'), findsOneWidget);
-        expect(find.text('Cash'), findsOneWidget);
+        expect(find.text('Espèces'), findsOneWidget);
         expect(
           find.byKey(const Key('payment-method-chip-stripe')),
           findsOneWidget,
