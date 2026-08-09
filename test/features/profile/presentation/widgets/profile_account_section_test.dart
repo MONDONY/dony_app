@@ -138,4 +138,62 @@ void main() {
       expect(find.text('E-MAIL'), findsNothing);
     },
   );
+
+  // `ProfileAccountSection.isVisible` doit rendre exactement le même verdict
+  // que `build()` : c'est ce que `_sections()` (ProfileScreen) utilise pour
+  // savoir s'il faut réserver un espacement autour de la section — un
+  // désaccord entre les deux referait apparaître le bug de double espace.
+  group('ProfileAccountSection.isVisible', () {
+    test('false quand KYC vérifié + email renseigné + téléphone renseigné', () {
+      setSmsAuthEnabled(true);
+      expect(
+        ProfileAccountSection.isVisible(
+          const UserModel(
+            id: 'user-4',
+            roles: ['SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            phoneNumber: '+221701234567',
+            email: 'amadou@example.com',
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('true tant que le KYC n\'est pas VERIFIED', () {
+      expect(ProfileAccountSection.isVisible(_userWithNothing), isTrue);
+    });
+
+    test('true tant qu\'aucun email n\'est renseigné, même KYC vérifié', () {
+      expect(
+        ProfileAccountSection.isVisible(
+          const UserModel(
+            id: 'user-5',
+            roles: ['SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            phoneNumber: '+221701234567',
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('false pour un téléphone manquant si le SMS OTP backend n\'est '
+        'pas confirmé (rien à réclamer)', () {
+      expect(
+        ProfileAccountSection.isVisible(
+          const UserModel(
+            id: 'user-6',
+            roles: ['SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            email: 'amadou@example.com',
+          ),
+        ),
+        isFalse,
+      );
+    });
+  });
 }

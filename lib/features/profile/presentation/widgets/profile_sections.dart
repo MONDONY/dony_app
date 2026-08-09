@@ -35,17 +35,33 @@ class ProfileAccountSection extends StatelessWidget {
 
   final UserModel? user;
 
+  static bool _computeVisible(UserModel? user, bool phoneAuthEnabled) {
+    final showKyc = user?.kycStatus != 'VERIFIED';
+    final hasEmail = user?.email != null && user!.email!.isNotEmpty;
+    final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
+    final showPhoneRow = phoneAuthEnabled && !hasPhone;
+    final showEmailRow = !hasEmail;
+    return showKyc || showPhoneRow || showEmailRow;
+  }
+
+  /// Lecture non réactive du flag SMS, pour que `_sections()` sache s'il
+  /// doit réserver un espacement autour de cette section avant même son
+  /// premier `build()` — sans ça, une section qui se réduit à rien (compte
+  /// entièrement vérifié) laisse ses deux espacements voisins s'empiler.
+  static bool isVisible(UserModel? user) =>
+      _computeVisible(user, smsAuthEnabledListenable.value);
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final showKyc = user?.kycStatus != 'VERIFIED';
-    final hasEmail = user?.email != null && user!.email!.isNotEmpty;
 
     // Une fois vérifié ou renseigné, chaque élément quitte « Mon compte » —
     // rien à vérifier deux fois, la section ne sert qu'aux actions restantes.
     return ValueListenableBuilder<bool>(
       valueListenable: smsAuthEnabledListenable,
       builder: (_, phoneEnabled, _) {
+        final showKyc = user?.kycStatus != 'VERIFIED';
+        final hasEmail = user?.email != null && user!.email!.isNotEmpty;
         final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
         final showPhoneRow = phoneEnabled && !hasPhone;
         final showEmailRow = !hasEmail;
