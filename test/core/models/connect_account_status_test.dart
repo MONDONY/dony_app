@@ -76,5 +76,22 @@ void main() {
       expect(s.reason, isNull);
       expect(s.isProAccount, isFalse);
     });
+
+    test('fromJson parses requirementsCurrentlyDue', () {
+      final json = {
+        'stripeAccountStatus': 'PENDING_ONBOARDING',
+        'requirementsCurrentlyDue': ['external_account', 'individual.verification.document'],
+      };
+      final s = ConnectAccountStatus.fromJson(json);
+      expect(s.requirementsCurrentlyDue, {
+        'external_account',
+        'individual.verification.document',
+      });
+    });
+
+    test('fromJson defaults requirementsCurrentlyDue to empty set when absent', () {
+      final s = ConnectAccountStatus.fromJson({'stripeAccountStatus': 'ONBOARDING_COMPLETE'});
+      expect(s.requirementsCurrentlyDue, isEmpty);
+    });
   });
 }

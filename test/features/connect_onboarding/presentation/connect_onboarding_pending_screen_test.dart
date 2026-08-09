@@ -110,5 +110,27 @@ void main() {
       verify(() => mockBloc.add(const ConnectOnboardingPollingRequested()))
           .called(greaterThanOrEqualTo(1));
     });
+
+    testWidgets(
+        'shows precise missing item instead of the generic message when known',
+        (tester) async {
+      whenListen<ConnectOnboardingState>(
+        mockBloc,
+        Stream.value(const ConnectOnboardingPending(
+          requirementsCurrentlyDue: {'external_account'},
+        )),
+        initialState: const ConnectOnboardingPending(
+          requirementsCurrentlyDue: {'external_account'},
+        ),
+      );
+
+      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pump(_kSettle);
+
+      expect(
+        find.text("Il ne reste plus qu'une étape : ajoute ton iban."),
+        findsOneWidget,
+      );
+    });
   });
 }

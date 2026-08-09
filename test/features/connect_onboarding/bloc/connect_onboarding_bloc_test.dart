@@ -182,6 +182,27 @@ void main() {
     );
 
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Pending] carrying requirementsCurrentlyDue from the status',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.getAccountStatus()).thenAnswer(
+          (_) async => const ConnectAccountStatus(
+            status: 'PENDING_ONBOARDING',
+            requirementsCurrentlyDue: {'external_account'},
+          ),
+        );
+      },
+      act: (b) => b.add(const ConnectOnboardingPollingRequested()),
+      expect: () => [
+        isA<ConnectOnboardingPending>().having(
+          (s) => s.requirementsCurrentlyDue,
+          'requirementsCurrentlyDue',
+          {'external_account'},
+        ),
+      ],
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
       'emits [Disabled] when account is DISABLED during polling',
       build: buildBloc,
       setUp: () {

@@ -33,7 +33,9 @@ class ConnectOnboardingBloc
       } else if (status.needsOnboarding) {
         emit(const ConnectOnboardingNeedsOnboarding());
       } else {
-        emit(const ConnectOnboardingPending());
+        emit(ConnectOnboardingPending(
+          requirementsCurrentlyDue: status.requirementsCurrentlyDue,
+        ));
       }
     } catch (e) {
       emit(ConnectOnboardingError(unwrapDioError(e)));
@@ -66,7 +68,9 @@ class ConnectOnboardingBloc
       } else if (status.isRejected) {
         emit(ConnectOnboardingRejected(reason: status.reason));
       } else {
-        emit(const ConnectOnboardingPending());
+        emit(ConnectOnboardingPending(
+          requirementsCurrentlyDue: status.requirementsCurrentlyDue,
+        ));
       }
     } catch (e) {
       emit(ConnectOnboardingError(unwrapDioError(e)));

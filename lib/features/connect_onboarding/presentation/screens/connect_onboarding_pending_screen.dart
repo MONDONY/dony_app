@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/models/stripe_requirement_label.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:flutter/material.dart';
@@ -91,15 +92,27 @@ class _ConnectOnboardingPendingScreenState
                   const SizedBox(height: DonySpacing.md),
 
                   // Subtitle
-                  Text(
-                    'Stripe vérifie ton compte. Cette opération peut prendre quelques instants. Tu seras redirigé automatiquement une fois la vérification terminée.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                          height: 1.55,
-                        ),
-                    textAlign: TextAlign.center,
+                  BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
+                    builder: (context, state) {
+                      final missing = state is ConnectOnboardingPending
+                          ? state.requirementsCurrentlyDue
+                          : const <String>{};
+                      return Text(
+                        missing.isEmpty
+                            ? 'Stripe vérifie ton compte. Cette opération peut prendre quelques instants. Tu seras redirigé automatiquement une fois la vérification terminée.'
+                            : missing.length == 1
+                                ? 'Il ne reste plus qu\'une étape : ${stripeRequirementLabel(missing.first).toLowerCase()}.'
+                                : 'Il reste quelques informations à compléter : ${missing.map((r) => stripeRequirementLabel(r).toLowerCase()).join(', ')}.',
+                        style:
+                            Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                  height: 1.55,
+                                ),
+                        textAlign: TextAlign.center,
+                      );
+                    },
                   ).animate().fadeIn(delay: 120.ms),
                   const SizedBox(height: DonySpacing.xxl),
 

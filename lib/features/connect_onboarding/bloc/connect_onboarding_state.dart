@@ -22,7 +22,8 @@ class ConnectOnboardingUrlReady extends ConnectOnboardingState {
 }
 
 class ConnectOnboardingPending extends ConnectOnboardingState {
-  const ConnectOnboardingPending();
+  final Set<String> requirementsCurrentlyDue;
+  const ConnectOnboardingPending({this.requirementsCurrentlyDue = const {}});
 }
 
 class ConnectOnboardingComplete extends ConnectOnboardingState {
