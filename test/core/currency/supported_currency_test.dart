@@ -51,5 +51,15 @@ void main() {
         expect(SupportedCurrency.fromCode('JPY'), isNull);
       },
     );
+
+    test('expose le taux indicatif de chaque devise par rapport à EUR', () {
+      expect(SupportedCurrency.eur.unitsPerEur, 1);
+      expect(SupportedCurrency.usd.unitsPerEur, 1.08);
+      expect(SupportedCurrency.cad.unitsPerEur, 1.47);
+      expect(SupportedCurrency.gbp.unitsPerEur, 0.86);
+      expect(SupportedCurrency.chf.unitsPerEur, 0.95);
+      expect(SupportedCurrency.xof.unitsPerEur, 655.957);
+      expect(SupportedCurrency.xaf.unitsPerEur, 655.957);
+    });
   });
 }
