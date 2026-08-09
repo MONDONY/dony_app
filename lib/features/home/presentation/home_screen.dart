@@ -7,12 +7,11 @@ import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/core/widgets/role_guidance_banner.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -43,8 +42,6 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1610,27 +1607,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
               controller: scrollCtrl,
               slivers: [
                 SliverToBoxAdapter(
-                  child: RoleGuidanceBanner(
-                    // Le CTA suit le mode affiché (cohérence titre ↔ bouton) :
-                    // mode Trajets → « Publier mon trajet » ; mode Colis
-                    // (demandes d'envoi) et expéditeur → « Publier ma demande ».
-                    role: (_isTraveler && _mode.isTrips)
-                        ? ActiveRole.traveler
-                        : ActiveRole.sender,
+                  child: EvergreenGuidanceCarousel(
                     hiveService: getIt<HiveService>(),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.lg,
-                      DonySpacing.sm,
-                      DonySpacing.lg,
-                      0,
-                    ),
-                    child: const ContextualTutorialCard(
-                      context: TutorialContext.search,
-                    ),
+                    isKycVerified: context
+                            .watch<AuthBloc>()
+                            .state
+                            .currentUser
+                            ?.isKycVerified ??
+                        false,
                   ),
                 ),
                 if (_mode.isParcels)
