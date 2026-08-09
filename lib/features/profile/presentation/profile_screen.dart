@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -329,7 +330,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: DonySpacing.lg),
       ],
-      if (user != null && !user.isProfileComplete) ...[
+      if (user != null &&
+          !user.isProfileComplete(
+            countPhone: smsAuthEnabledListenable.value,
+          )) ...[
         ProfileCompletionBanner(
           user: user,
           onTap: () => context.push('/profile/edit'),

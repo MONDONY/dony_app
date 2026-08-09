@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
@@ -33,6 +34,12 @@ Color _renderedTierColor(WidgetTester tester) {
 }
 
 void main() {
+  // Le SMS OTP backend confirmé est l'état par défaut de ces tests (8
+  // champs, téléphone inclus) : le groupe dédié plus bas couvre le cas
+  // désactivé (7 champs) séparément.
+  setUp(() => setSmsAuthEnabled(true));
+  tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+
   testWidgets('0/8 champs → 0 %, les 8 chips manquants affichés', (
     tester,
   ) async {
@@ -127,5 +134,59 @@ void main() {
       expect(find.text('88% complété · Compléter maintenant'), findsOneWidget);
       expect(_renderedTierColor(tester), cs.info);
     });
+  });
+
+  group('SMS OTP backend non confirmé (kSmsAuthEnabledDefault)', () {
+    setUp(() => setSmsAuthEnabled(false));
+
+    testWidgets(
+      '0/7 champs → 0 %, la croix Téléphone est absente (rien à réclamer)',
+      (tester) async {
+        await tester.pumpWidget(_app(_empty));
+        await tester.pump();
+
+        expect(find.text('0% complété · Compléter maintenant'), findsOneWidget);
+        expect(find.text('Téléphone'), findsNothing);
+        for (final label in const [
+          'Photo',
+          'Prénom',
+          'Nom',
+          'Email',
+          'Date de naissance',
+          'Ville',
+          'À propos',
+        ]) {
+          expect(find.text(label), findsOneWidget);
+        }
+      },
+    );
+
+    testWidgets(
+      '7/7 champs (sans téléphone) → 100 %, la bannière disparaît côté '
+      'ProfileScreen (isProfileComplete atteint sans numéro)',
+      (tester) async {
+        final user = _empty.copyWith(
+          avatarUrl: 'https://cdn.example.com/avatar.jpg',
+          firstName: 'Amadou',
+          lastName: 'Diallo',
+          email: 'amadou@example.com',
+          city: 'Dakar',
+          bio: 'Voyageur régulier.',
+          birthDate: DateTime(1995, 3, 12),
+        );
+        await tester.pumpWidget(_app(user));
+        await tester.pump();
+
+        expect(user.phoneNumber, isNull);
+        expect(
+          user.isProfileComplete(countPhone: false),
+          isTrue,
+        );
+        expect(
+          find.text('100% complété · Compléter maintenant'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

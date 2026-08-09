@@ -656,10 +656,20 @@ class ProfileCompletionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: smsAuthEnabledListenable,
+      builder: (context, phoneAuthEnabled, _) =>
+          _build(context, phoneAuthEnabled),
+    );
+  }
+
+  Widget _build(BuildContext context, bool phoneAuthEnabled) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final completed = user.profileCompletionSteps;
-    const total = UserModel.profileTotalSteps;
+    final completed = user.profileCompletionSteps(
+      countPhone: phoneAuthEnabled,
+    );
+    final total = UserModel.profileTotalSteps(countPhone: phoneAuthEnabled);
     final pct = completed / total;
     final tier = profileCompletionTierColor(cs, pct);
 
@@ -668,7 +678,9 @@ class ProfileCompletionBanner extends StatelessWidget {
     if (!(user.firstName?.isNotEmpty ?? false)) missing.add('Prénom');
     if (!(user.lastName?.isNotEmpty ?? false)) missing.add('Nom');
     if (!(user.email?.isNotEmpty ?? false)) missing.add('Email');
-    if (!(user.phoneNumber?.isNotEmpty ?? false)) missing.add('Téléphone');
+    if (phoneAuthEnabled && !(user.phoneNumber?.isNotEmpty ?? false)) {
+      missing.add('Téléphone');
+    }
     if (user.birthDate == null) missing.add('Date de naissance');
     if (!(user.city?.isNotEmpty ?? false)) missing.add('Ville');
     if (!(user.bio?.isNotEmpty ?? false)) missing.add('À propos');

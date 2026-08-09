@@ -212,23 +212,31 @@ class UserModel extends Equatable {
   // naissance, ville, à propos. Reflète tout ce que « Modifier le profil »
   // permet de renseigner (hors langues/mode de transport, des préférences
   // plutôt que de l'identité).
-  bool get isProfileComplete => profileCompletionSteps >= profileTotalSteps;
+  //
+  // [countPhone] : tant que le SMS OTP backend n'est pas confirmé
+  // (`smsAuthEnabledListenable`), personne ne peut ajouter/vérifier de
+  // numéro — l'appelant doit alors passer `false` pour retomber sur 7
+  // champs, sans quoi le profil ne pourrait jamais atteindre 100 %.
+  bool isProfileComplete({bool countPhone = true}) =>
+      profileCompletionSteps(countPhone: countPhone) >=
+      profileTotalSteps(countPhone: countPhone);
 
   // Nombre de champs d'identité renseignés (max = profileTotalSteps).
-  int get profileCompletionSteps {
+  int profileCompletionSteps({bool countPhone = true}) {
     int steps = 0;
     if (avatarUrl?.isNotEmpty ?? false) steps++;
     if (firstName?.isNotEmpty ?? false) steps++;
     if (lastName?.isNotEmpty ?? false) steps++;
     if (email?.isNotEmpty ?? false) steps++;
-    if (phoneNumber?.isNotEmpty ?? false) steps++;
+    if (countPhone && (phoneNumber?.isNotEmpty ?? false)) steps++;
     if (birthDate != null) steps++;
     if (city?.isNotEmpty ?? false) steps++;
     if (bio?.isNotEmpty ?? false) steps++;
     return steps;
   }
 
-  static const int profileTotalSteps = 8;
+  static int profileTotalSteps({bool countPhone = true}) =>
+      countPhone ? 8 : 7;
 
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');

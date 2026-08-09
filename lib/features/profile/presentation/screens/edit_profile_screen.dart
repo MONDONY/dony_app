@@ -260,10 +260,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── Jauge de complétion — masquée une fois à 100% ────────
-                if (user.profileCompletionSteps < UserModel.profileTotalSteps) ...[
-                  _CompletionGauge(user: user),
-                  const SizedBox(height: DonySpacing.xxl),
-                ],
+                ValueListenableBuilder<bool>(
+                  valueListenable: smsAuthEnabledListenable,
+                  builder: (context, phoneAuthEnabled, _) {
+                    final steps = user.profileCompletionSteps(
+                      countPhone: phoneAuthEnabled,
+                    );
+                    final total = UserModel.profileTotalSteps(
+                      countPhone: phoneAuthEnabled,
+                    );
+                    if (steps >= total) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _CompletionGauge(
+                          user: user,
+                          countPhone: phoneAuthEnabled,
+                        ),
+                        const SizedBox(height: DonySpacing.xxl),
+                      ],
+                    );
+                  },
+                ),
 
                 // ── Avatar header — toujours actif, hors vue/édition ─────
                 Center(
@@ -587,15 +605,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 /// déjà son affichage sur `steps < total`, donc le seul état possible ici
 /// est "en cours".
 class _CompletionGauge extends StatelessWidget {
-  const _CompletionGauge({required this.user});
+  const _CompletionGauge({required this.user, required this.countPhone});
   final UserModel user;
+  final bool countPhone;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final steps = user.profileCompletionSteps;
-    const total = UserModel.profileTotalSteps;
+    final steps = user.profileCompletionSteps(countPhone: countPhone);
+    final total = UserModel.profileTotalSteps(countPhone: countPhone);
     final pct = steps / total;
     final tier = profileCompletionTierColor(cs, pct);
 

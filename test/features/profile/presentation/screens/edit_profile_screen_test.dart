@@ -573,10 +573,49 @@ void main() {
       await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
       await tester.pumpAndSettle();
 
-      // 1 champ sur 8 (prénom) : 1/8 = 12.5 % → arrondi à 13 %.
+      // SMS OTP non confirmé par défaut dans ces tests (setUp) : total = 7
+      // champs (téléphone exclu). 1 champ sur 7 (prénom) : 1/7 ≈ 14,3 % →
+      // arrondi à 14 %.
       expect(find.text('Profil complet'), findsOneWidget);
-      expect(find.text('13%'), findsOneWidget);
+      expect(find.text('14%'), findsOneWidget);
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'SMS OTP confirmé (flag actif) : le téléphone manquant compte dans le '
+    'total de 8, la jauge reste visible même avec les 7 autres champs remplis',
+    (tester) async {
+      setSmsAuthEnabled(true);
+      // _senderUser a déjà les 8 champs (avatar/nom/prénom/email/téléphone/
+      // ville/bio/date de naissance) — on retire seulement le téléphone
+      // pour isoler l'effet du flag.
+      final userWithoutPhone = UserModel(
+        id: _senderUser.id,
+        avatarUrl: _senderUser.avatarUrl,
+        firstName: _senderUser.firstName,
+        lastName: _senderUser.lastName,
+        email: _senderUser.email,
+        city: _senderUser.city,
+        bio: _senderUser.bio,
+        birthDate: _senderUser.birthDate,
+        roles: _senderUser.roles,
+        kycStatus: _senderUser.kycStatus,
+        status: _senderUser.status,
+      );
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(userWithoutPhone),
+      );
+
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      // 7 champs sur 8 (téléphone manquant, désormais compté) : 7/8 = 87,5 %
+      // → arrondi à 88 %.
+      expect(find.text('Profil complet'), findsOneWidget);
+      expect(find.text('88%'), findsOneWidget);
     },
   );
 }
