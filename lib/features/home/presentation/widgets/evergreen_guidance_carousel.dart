@@ -18,9 +18,10 @@ import 'package:hive/hive.dart';
 /// Recherche. Remplace `RoleGuidanceBanner` (CTA mort, dismiss définitif) et
 /// `ContextualTutorialCard` (carte séparée) par des cartes compactes (même
 /// gabarit que `ContextualTutorialCard`, entièrement cliquables) en rotation
-/// automatique, chacune masquée dès que l'action qu'elle propose est faite.
-/// Aucune croix de fermeture manuelle : la disparition est entièrement
-/// pilotée par l'état applicatif.
+/// automatique. Slides « Publier trajet », « Envoyer colis » et « Créer une
+/// alerte » restent toujours visibles (actions qu'on peut refaire plusieurs
+/// fois) ; seule la slide KYC se masque une fois l'identité vérifiée
+/// (impossible à refaire). Aucune croix de fermeture manuelle.
 class EvergreenGuidanceCarousel extends StatefulWidget {
   const EvergreenGuidanceCarousel({
     super.key,
@@ -118,24 +119,12 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
     return ValueListenableBuilder<Box>(
       valueListenable: widget.hiveService.listenUserPrefs(
         keys: [
-          HiveService.kHasPublishedAsTraveler,
-          HiveService.kHasPublishedAsSender,
-          HiveService.kHasActiveCorridorAlert,
           if (tutorial != null)
             '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
         ],
       ),
       builder: (context, box, _) {
         final cs = Theme.of(context).colorScheme;
-        final hasPublishedTrip =
-            box.get(HiveService.kHasPublishedAsTraveler, defaultValue: false)
-                as bool;
-        final hasPublishedParcel =
-            box.get(HiveService.kHasPublishedAsSender, defaultValue: false)
-                as bool;
-        final hasActiveCorridorAlert =
-            box.get(HiveService.kHasActiveCorridorAlert, defaultValue: false)
-                as bool;
         final tutorialDismissed =
             tutorial != null &&
             (box.get(
@@ -145,42 +134,39 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
                 as bool);
 
         final slides = <_GuidanceSlideData>[
-          if (!hasPublishedTrip)
-            _GuidanceSlideData(
-              id: 'trip',
-              icon: 'plane',
-              title: 'Publier mon trajet',
-              color: cs.primary,
-              onTap: () => _onSlideTap(
-                context,
-                slideId: 'trip',
-                route: '/trips/publish-intro',
-              ),
+          _GuidanceSlideData(
+            id: 'trip',
+            icon: 'plane',
+            title: 'Publier mon trajet',
+            color: cs.primary,
+            onTap: () => _onSlideTap(
+              context,
+              slideId: 'trip',
+              route: '/trips/publish-intro',
             ),
-          if (!hasPublishedParcel)
-            _GuidanceSlideData(
-              id: 'parcel',
-              icon: 'send',
-              title: 'Envoyer un colis',
-              color: cs.success,
-              onTap: () => _onSlideTap(
-                context,
-                slideId: 'parcel',
-                route: '/parcels/send-intro',
-              ),
+          ),
+          _GuidanceSlideData(
+            id: 'parcel',
+            icon: 'send',
+            title: 'Envoyer un colis',
+            color: cs.success,
+            onTap: () => _onSlideTap(
+              context,
+              slideId: 'parcel',
+              route: '/parcels/send-intro',
             ),
-          if (!hasActiveCorridorAlert)
-            _GuidanceSlideData(
-              id: 'alert',
-              icon: 'bell',
-              title: 'Créer une alerte',
-              color: cs.warning,
-              onTap: () => _onSlideTap(
-                context,
-                slideId: 'alert',
-                route: '/corridor-alerts',
-              ),
+          ),
+          _GuidanceSlideData(
+            id: 'alert',
+            icon: 'bell',
+            title: 'Créer une alerte',
+            color: cs.warning,
+            onTap: () => _onSlideTap(
+              context,
+              slideId: 'alert',
+              route: '/corridor-alerts',
             ),
+          ),
           if (!widget.isKycVerified)
             _GuidanceSlideData(
               id: 'kyc',

@@ -746,6 +746,19 @@ void main() {
         final corridorTop = tester
             .getTopLeft(find.text('Tous les corridors').first)
             .dy;
+
+        // Ordre fixe [trajet, colis, alerte, tuto] : trajet/colis/alerte sont
+        // toujours affichés (actions répétables), tuto est donc en 4e
+        // position. `PageView.builder` ne construit que la page courante, un
+        // swipe par slide est nécessaire pour l'atteindre.
+        for (var i = 0; i < 3; i++) {
+          await tester.drag(
+            find.byKey(const Key('evergreen-guidance-carousel')),
+            const Offset(-800, 0),
+          );
+          await tester.pumpAndSettle();
+        }
+
         final cardTop = tester
             .getTopLeft(find.byKey(const Key('guidance-slide-tutorial')))
             .dy;
@@ -782,7 +795,17 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
 
         // Avant activation : la slide tutoriel du carousel de guidance est
-        // présente (mode liste/sheet).
+        // présente (mode liste/sheet). Ordre fixe [trajet, colis, alerte,
+        // tuto] (KYC vérifié par défaut, absent) : tuto en 4e position, un
+        // swipe par slide est nécessaire (PageView.builder ne construit que
+        // la page courante).
+        for (var i = 0; i < 3; i++) {
+          await tester.drag(
+            find.byKey(const Key('evergreen-guidance-carousel')),
+            const Offset(-800, 0),
+          );
+          await tester.pumpAndSettle();
+        }
         expect(
           find.byKey(const Key('guidance-slide-tutorial')),
           findsOneWidget,
@@ -916,6 +939,16 @@ void main() {
     testWidgets('shows TravelerCards when announcements loaded', (
       tester,
     ) async {
+      // Le carousel de guidance affiche désormais toujours au moins 3 slides
+      // (trajet/colis/alerte), donc plus de hauteur qu'avant la liste de
+      // résultats : fenêtre agrandie pour que TravelerCard reste dans la
+      // zone de cache initiale de la sheet en position "peek" (même pattern
+      // que les autres tests de ce fichier qui touchent au carousel).
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(
         _buildHome(
           announcementState: AnnouncementSearchLoaded([
@@ -2108,6 +2141,16 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+
+      // Le carousel de guidance affiche désormais toujours au moins 3 slides
+      // (trajet/colis/alerte) : la tuile de découverte croisée, plus bas dans
+      // la sheet, dépasse de peu (~40 px) les bornes du viewport (1000×2000)
+      // fixé par `pumpHome`. Fenêtre agrandie après coup pour ce test précis
+      // (pumpHome fixe systématiquement 1000×2000, écraser avant n'aurait
+      // aucun effet).
+      tester.view.physicalSize = const Size(1000, 2400);
+      await tester.pump();
+
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
       await tester.tap(find.byKey(const Key('cross-discovery')));

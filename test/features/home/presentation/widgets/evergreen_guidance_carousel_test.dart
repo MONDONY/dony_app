@@ -67,12 +67,20 @@ BlocProvider<HelpCenterBloc> _helpCenterProvider({
 
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
+// `PageView.builder` ne construit que la page courante (pas de cache large
+// par défaut) : un swipe manuel est nécessaire pour atteindre une slide
+// au-delà de l'index 0 avant de la chercher/taper.
+Future<void> _swipeNext(WidgetTester tester) async {
+  await tester.drag(
+    find.byKey(const Key('evergreen-guidance-carousel')),
+    const Offset(-800, 0),
+  );
+  await tester.pumpAndSettle();
+}
+
 Widget _wrap({
   required MockHiveService hive,
   bool isKycVerified = true,
-  bool hasPublishedTrip = true,
-  bool hasPublishedParcel = true,
-  bool hasActiveCorridorAlert = true,
   bool tutorialDismissed = true,
   String helpConfigJson = _emptyHelpConfigJson,
   bool disableAnimations = false,
@@ -80,15 +88,6 @@ Widget _wrap({
 }) {
   final box = MockBox();
   when(() => hive.userPrefs).thenReturn(box);
-  when(
-    () => box.get(HiveService.kHasPublishedAsTraveler, defaultValue: false),
-  ).thenReturn(hasPublishedTrip);
-  when(
-    () => box.get(HiveService.kHasPublishedAsSender, defaultValue: false),
-  ).thenReturn(hasPublishedParcel);
-  when(
-    () => box.get(HiveService.kHasActiveCorridorAlert, defaultValue: false),
-  ).thenReturn(hasActiveCorridorAlert);
   // Id fixe du seul tutoriel du fixture _searchHelpConfigJson ("search_intro") :
   // clé littérale, pas de matcher générique (évite le mélange matcher/valeur
   // brute que mocktail refuse sur un même appel).
@@ -161,44 +160,29 @@ void main() {
   late MockHiveService hive;
   setUp(() => hive = MockHiveService());
 
-  testWidgets('disparaît quand toutes les actions sont déjà faites', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_wrap(hive: hive));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('evergreen-guidance-carousel')), findsNothing);
-  });
+  testWidgets(
+    'trajet, colis et alerte restent toujours affichés (actions répétables)',
+    (tester) async {
+      await tester.pumpWidget(_wrap(hive: hive));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
+      expect(find.text('Publier mon trajet'), findsOneWidget);
 
-  testWidgets('affiche la slide trajet si pas encore publié', (tester) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasPublishedTrip: false));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
-    expect(find.text('Publier mon trajet'), findsOneWidget);
-  });
+      await _swipeNext(tester);
+      expect(find.byKey(const Key('guidance-slide-parcel')), findsOneWidget);
 
-  testWidgets('masque la slide trajet si déjà publié', (tester) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasPublishedTrip: true));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('guidance-slide-trip')), findsNothing);
-  });
-
-  testWidgets('affiche la slide colis si pas encore envoyé', (tester) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasPublishedParcel: false));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('guidance-slide-parcel')), findsOneWidget);
-  });
-
-  testWidgets('affiche la slide alerte si aucune alerte active', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasActiveCorridorAlert: false));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('guidance-slide-alert')), findsOneWidget);
-  });
+      await _swipeNext(tester);
+      expect(find.byKey(const Key('guidance-slide-alert')), findsOneWidget);
+    },
+  );
 
   testWidgets('affiche la slide KYC si pas vérifié', (tester) async {
     await tester.pumpWidget(_wrap(hive: hive, isKycVerified: false));
     await tester.pumpAndSettle();
+    // Ordre fixe [trajet, colis, alerte, kyc] : kyc est en 4e position.
+    await _swipeNext(tester);
+    await _swipeNext(tester);
+    await _swipeNext(tester);
     expect(find.byKey(const Key('guidance-slide-kyc')), findsOneWidget);
   });
 
@@ -219,6 +203,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      // Ordre fixe [trajet, colis, alerte, tuto] (KYC vérifié par défaut,
+      // absent de la liste) : tuto est en 4e position.
+      await _swipeNext(tester);
+      await _swipeNext(tester);
+      await _swipeNext(tester);
       expect(find.byKey(const Key('guidance-slide-tutorial')), findsOneWidget);
     },
   );
@@ -240,7 +229,7 @@ void main() {
   testWidgets('tap CTA trajet pousse /trips/publish-intro et logue l\'event', (
     tester,
   ) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasPublishedTrip: false));
+    await tester.pumpWidget(_wrap(hive: hive));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('guidance-slide-trip')));
     await tester.pumpAndSettle();
@@ -256,8 +245,9 @@ void main() {
   testWidgets('tap CTA colis pousse /parcels/send-intro et logue l\'event', (
     tester,
   ) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasPublishedParcel: false));
+    await tester.pumpWidget(_wrap(hive: hive));
     await tester.pumpAndSettle();
+    await _swipeNext(tester); // [trajet, colis, ...] : colis en 2e position.
     await tester.tap(find.byKey(const Key('guidance-slide-parcel')));
     await tester.pumpAndSettle();
     expect(find.text('send-intro-parcel'), findsOneWidget);
@@ -272,8 +262,11 @@ void main() {
   testWidgets('tap CTA alerte pousse /corridor-alerts et logue l\'event', (
     tester,
   ) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasActiveCorridorAlert: false));
+    await tester.pumpWidget(_wrap(hive: hive));
     await tester.pumpAndSettle();
+    // [trajet, colis, alerte, ...] : alerte en 3e position.
+    await _swipeNext(tester);
+    await _swipeNext(tester);
     await tester.tap(find.byKey(const Key('guidance-slide-alert')));
     await tester.pumpAndSettle();
     expect(find.text('corridor-alerts'), findsOneWidget);
@@ -290,6 +283,10 @@ void main() {
   ) async {
     await tester.pumpWidget(_wrap(hive: hive, isKycVerified: false));
     await tester.pumpAndSettle();
+    // [trajet, colis, alerte, kyc] : kyc en 4e position.
+    await _swipeNext(tester);
+    await _swipeNext(tester);
+    await _swipeNext(tester);
     await tester.tap(find.byKey(const Key('guidance-slide-kyc')));
     await tester.pumpAndSettle();
     expect(find.text('kyc-verify'), findsOneWidget);
@@ -306,10 +303,9 @@ void main() {
     (tester) async {
       // disableAnimations reste à false (défaut) : contrairement au test
       // « ne tourne pas automatiquement », ici le minuteur doit se déclencher
-      // et faire avancer le PageView vers la slide suivante.
-      await tester.pumpWidget(
-        _wrap(hive: hive, hasPublishedTrip: false, hasPublishedParcel: false),
-      );
+      // et faire avancer le PageView vers la slide suivante. Trajet/colis/
+      // alerte sont toujours visibles, donc au moins 3 slides par défaut.
+      await tester.pumpWidget(_wrap(hive: hive));
       await tester.pumpAndSettle();
       expect(
         tester
@@ -332,29 +328,14 @@ void main() {
     },
   );
 
-  testWidgets('une seule slide visible : pas de dots affichés', (tester) async {
-    await tester.pumpWidget(_wrap(hive: hive, hasPublishedTrip: false));
-    await tester.pumpAndSettle();
-    // trip est la seule slide visible (tout le reste "déjà fait" par défaut) :
-    // DonyStepIndicator n'est construit que si slides.length > 1.
-    expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
-    expect(find.byType(DonyStepIndicator), findsNothing);
-  });
-
   testWidgets(
     'disableAnimations : le carousel ne tourne pas automatiquement après l\'intervalle',
     (tester) async {
-      // 2 slides visibles (trip + parcel) pour que l'autoplay ait un intérêt à
-      // avancer, MediaQuery.disableAnimations à true (réglage d'accessibilité
-      // « réduire les animations » ou test) doit empêcher toute rotation.
-      await tester.pumpWidget(
-        _wrap(
-          hive: hive,
-          hasPublishedTrip: false,
-          hasPublishedParcel: false,
-          disableAnimations: true,
-        ),
-      );
+      // Trajet/colis/alerte toujours visibles (≥ 3 slides par défaut), assez
+      // pour que l'autoplay ait un intérêt à avancer. MediaQuery.
+      // disableAnimations à true (réglage d'accessibilité « réduire les
+      // animations » ou test) doit empêcher toute rotation.
+      await tester.pumpWidget(_wrap(hive: hive, disableAnimations: true));
       await tester.pumpAndSettle();
       expect(
         tester
@@ -383,11 +364,7 @@ void main() {
       // texte : le titre d'une slide ne doit jamais déborder de la hauteur
       // fixe du PageView.
       await tester.pumpWidget(
-        _wrap(
-          hive: hive,
-          hasPublishedTrip: false,
-          textScaler: const TextScaler.linear(2.0),
-        ),
+        _wrap(hive: hive, textScaler: const TextScaler.linear(2.0)),
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
@@ -405,11 +382,7 @@ void main() {
       // 72, la hauteur calculée deviendrait plus petite que le contenu
       // incompressible et écraserait l'icône.
       await tester.pumpWidget(
-        _wrap(
-          hive: hive,
-          hasPublishedTrip: false,
-          textScaler: const TextScaler.linear(0.85),
-        ),
+        _wrap(hive: hive, textScaler: const TextScaler.linear(0.85)),
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
