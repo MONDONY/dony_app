@@ -76,6 +76,7 @@ Widget _wrap({
   bool tutorialDismissed = true,
   String helpConfigJson = _emptyHelpConfigJson,
   bool disableAnimations = false,
+  TextScaler? textScaler,
 }) {
   final box = MockBox();
   when(() => hive.userPrefs).thenReturn(box);
@@ -108,9 +109,10 @@ Widget _wrap({
         path: '/',
         builder: (context, __) => Scaffold(
           body: MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(disableAnimations: disableAnimations),
+            data: MediaQuery.of(context).copyWith(
+              disableAnimations: disableAnimations,
+              textScaler: textScaler,
+            ),
             child: EvergreenGuidanceCarousel(
               hiveService: hive,
               isKycVerified: isKycVerified,
@@ -334,9 +336,9 @@ void main() {
     await tester.pumpWidget(_wrap(hive: hive, hasPublishedTrip: false));
     await tester.pumpAndSettle();
     // trip est la seule slide visible (tout le reste "déjà fait" par défaut) :
-    // la Row de dots n'est construite que si slides.length > 1.
+    // DonyStepIndicator n'est construit que si slides.length > 1.
     expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
-    expect(find.byType(AnimatedContainer), findsNothing);
+    expect(find.byType(DonyStepIndicator), findsNothing);
   });
 
   testWidgets(
@@ -371,6 +373,47 @@ void main() {
             .current,
         0,
       );
+    },
+  );
+
+  testWidgets(
+    'textScaler 2.0 : pas d\'overflow (régression hauteur PageView)',
+    (tester) async {
+      // Reproduit le bug historique de RenderFlex overflow à forte taille de
+      // texte : le titre d'une slide ne doit jamais déborder de la hauteur
+      // fixe du PageView.
+      await tester.pumpWidget(
+        _wrap(
+          hive: hive,
+          hasPublishedTrip: false,
+          textScaler: const TextScaler.linear(2.0),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'textScaler 0.85 (mini a11y) : pas d\'overflow ni d\'écrasement de '
+    'l\'icône (régression hauteur plancher)',
+    (tester) async {
+      // 0.85 = kA11yMinTextScale, le minimum exposé dans Réglages ›
+      // Accessibilité. En dessous de 1.0, ni le padding de DonyCard ni
+      // DonyIconContainerSize.md (40 pt) ne rétrécissent : sans plancher à
+      // 72, la hauteur calculée deviendrait plus petite que le contenu
+      // incompressible et écraserait l'icône.
+      await tester.pumpWidget(
+        _wrap(
+          hive: hive,
+          hasPublishedTrip: false,
+          textScaler: const TextScaler.linear(0.85),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('guidance-slide-trip')), findsOneWidget);
+      expect(tester.takeException(), isNull);
     },
   );
 }

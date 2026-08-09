@@ -424,7 +424,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `home_search_mode_changed` | HomeScreen._onModeChanged — bascule du sélecteur de mode Trajets/Colis (propriété `mode`) |
 | `home_cross_discovery_tapped` | HomeScreen._onCrossDiscoveryTap — bascule proposée depuis l'état vide (propriétés `from_mode`, `count`) |
 | `home_matching_trips_filter_toggled` | HomeScreen._showFilterSheet — pastille « Pour mes trajets » de la feuille de filtres colis (propriétés `active`, `active_trips`) |
-| `home_guidance_carousel_cta_tapped` | HomeScreen — tap CTA d'une slide du carousel evergreen de l'écran Recherche (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
+| `home_guidance_carousel_cta_tapped` | EvergreenGuidanceCarousel — tap sur une carte du carousel de guidance evergreen (Recherche), toute la carte est cliquable (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
 | `accessibility_setting_changed` | AccessibilityBloc — un réglage d'accessibilité est modifié (propriétés `setting`, `value`) ou réinitialisation complète (`setting: reset`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 

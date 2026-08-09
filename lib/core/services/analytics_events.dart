@@ -166,7 +166,9 @@ abstract final class AnalyticsEvents {
   static const homeMatchingTripsFilterToggled =
       'home_matching_trips_filter_toggled';
 
-  /// Tap CTA d'une slide du carousel evergreen (écran Recherche).
+  /// Tap sur une carte du carousel de guidance evergreen (écran Recherche),
+  /// déclenché depuis `EvergreenGuidanceCarousel` (toute la carte est
+  /// cliquable, pas de bouton CTA séparé).
   /// Propriété `slide` : trip / parcel / alert / kyc / tutorial.
   static const homeGuidanceCarouselCtaTapped =
       'home_guidance_carousel_cta_tapped';

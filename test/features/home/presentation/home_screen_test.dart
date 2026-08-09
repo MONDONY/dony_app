@@ -755,6 +755,14 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('TutorialStub:search_intro'), findsOneWidget);
+        // Même couverture analytics que les 4 autres slides (trip/parcel/
+        // alert/kyc) : la propriété `slide` doit valoir 'tutorial'.
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeGuidanceCarouselCtaTapped,
+            properties: {'slide': 'tutorial'},
+          ),
+        ).called(1);
       },
     );
 

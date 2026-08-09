@@ -766,6 +766,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CorridorAlertListBloc(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
+      hiveService: getIt<HiveService>(),
     ),
   );
   // param1 = record {editing, direction} — direction forcée par rôle ou from editing.

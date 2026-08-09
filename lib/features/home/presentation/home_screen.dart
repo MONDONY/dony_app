@@ -994,6 +994,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     final currentUserId = authState.currentUserId;
+    final isKycVerified = authState.currentUser?.isKycVerified ?? false;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
@@ -1142,6 +1143,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             announcements,
                             MediaQuery.of(context).padding.bottom,
                             currentUserId: currentUserId,
+                            isKycVerified: isKycVerified,
                           ),
                         );
                       },
@@ -1469,6 +1471,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     List<AnnouncementModel> announcements,
     double bottomPad, {
     String? currentUserId,
+    required bool isKycVerified,
   }) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
@@ -1612,13 +1615,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 SliverToBoxAdapter(
                   child: EvergreenGuidanceCarousel(
                     hiveService: getIt<HiveService>(),
-                    isKycVerified:
-                        context
-                            .watch<AuthBloc>()
-                            .state
-                            .currentUser
-                            ?.isKycVerified ??
-                        false,
+                    isKycVerified: isKycVerified,
                   ),
                 ),
                 if (_mode.isParcels)

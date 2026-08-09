@@ -15,14 +15,6 @@ class HiveService {
   // evergreen de l'écran Recherche une fois l'action faite.
   static const String kHasActiveCorridorAlert = 'has_active_corridor_alert';
 
-  // Timestamp (ms epoch) de la première vue du banner expéditeur ; le banner
-  // expire 5 min après cette première vue.
-  static const String kSenderBannerFirstSeenAt = 'sender_banner_first_seen_at';
-
-  // Drapeaux de fermeture manuelle (X) des banners d'onboarding.
-  static const String kTravelerBannerDismissed = 'traveler_banner_dismissed';
-  static const String kSenderBannerDismissed = 'sender_banner_dismissed';
-
   // Carte d'introduction du hub Activités, fermée manuellement (X).
   static const String kHubIntroDismissed = 'hub_intro_dismissed';
 

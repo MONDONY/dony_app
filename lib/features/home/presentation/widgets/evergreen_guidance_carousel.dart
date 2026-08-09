@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -53,7 +54,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
   void _restartAutoplay(int slideCount) {
     _autoplayTimer?.cancel();
     if (slideCount <= 1) return;
-    if (MediaQuery.of(context).disableAnimations) return;
+    if (MediaQuery.disableAnimationsOf(context)) return;
     _autoplayTimer = Timer.periodic(
       EvergreenGuidanceCarousel.autoplayInterval,
       (_) {
@@ -125,6 +126,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
         ],
       ),
       builder: (context, box, _) {
+        final cs = Theme.of(context).colorScheme;
         final hasPublishedTrip =
             box.get(HiveService.kHasPublishedAsTraveler, defaultValue: false)
                 as bool;
@@ -148,11 +150,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'trip',
               icon: 'plane',
               title: 'Publier mon trajet',
-              // Primitive fixe, pas cs.primary : en dark mode le ColorScheme
-              // recalibre ce token pour du texte/icônes sur fond sombre, pas
-              // pour un fill plein avec du texte blanc dessus (cf.
-              // app_theme.dart:143-151, même piège documenté pour cs.primary).
-              color: DonyColors.blue500,
+              color: cs.primary,
               onTap: () => _onSlideTap(
                 context,
                 slideId: 'trip',
@@ -164,7 +162,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'parcel',
               icon: 'send',
               title: 'Envoyer un colis',
-              color: DonyColors.success500,
+              color: cs.success,
               onTap: () => _onSlideTap(
                 context,
                 slideId: 'parcel',
@@ -176,7 +174,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'alert',
               icon: 'bell',
               title: 'Créer une alerte',
-              color: DonyColors.warning500,
+              color: cs.warning,
               onTap: () => _onSlideTap(
                 context,
                 slideId: 'alert',
@@ -188,7 +186,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'kyc',
               icon: 'shield-check',
               title: 'Vérifier mon identité',
-              color: DonyColors.info500,
+              color: cs.info,
               onTap: () =>
                   _onSlideTap(context, slideId: 'kyc', route: '/kyc/verify'),
             ),
@@ -197,15 +195,15 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'tutorial',
               icon: 'circle-play',
               title: 'Comment ça marche ?',
-              // accent (terra600, 4.79:1) et non terra500 (3.46:1) : ce fill
-              // porte du texte blanc, terra500 n'atteint pas le seuil AA
-              // 4.5:1 (cf. color_tokens.dart:166-169).
-              color: DonyColors.accent,
+              color: cs.secondary,
               onTap: () => _onTutorialTap(context, tutorial),
             ),
         ];
 
-        if (slides.isEmpty) return const SizedBox.shrink();
+        if (slides.isEmpty) {
+          _autoplayTimer?.cancel();
+          return const SizedBox.shrink();
+        }
 
         if (_lastSlideCount != slides.length) {
           _lastSlideCount = slides.length;
@@ -240,9 +238,19 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
                 // en haut + en bas) + hauteur du conteneur icône md
                 // (DonySpacing.icon) = 16*2 + 40 = 72, cohérent avec la
                 // carte compacte façon ContextualTutorialCard.
-                height: MediaQuery.textScalerOf(
-                  context,
-                ).scale(DonySpacing.base * 2 + DonySpacing.icon),
+                //
+                // math.max(72, ...) : plancher pour les échelles < 1.0 (min
+                // 0.85 dans Réglages › Accessibilité, l'OS peut descendre
+                // plus bas). Ni le padding de DonyCard ni
+                // DonyIconContainerSize.md (40 pt) ne rétrécissent avec le
+                // texte : sans ce plancher, la hauteur calculée passerait
+                // sous 72 et écraserait DonyIconContainer hors de sa taille.
+                height: math.max(
+                  72,
+                  MediaQuery.textScalerOf(
+                    context,
+                  ).scale(DonySpacing.base * 2 + DonySpacing.icon),
+                ),
                 child: PageView.builder(
                   key: const Key('evergreen-guidance-carousel'),
                   controller: _pageController,
@@ -287,31 +295,28 @@ class _SlideCard extends StatelessWidget {
     return DonyCard(
       key: Key('guidance-slide-${data.id}'),
       onTap: data.onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
-        child: Row(
-          children: [
-            DonyIconContainer(
-              iconAsset: data.icon,
-              size: DonyIconContainerSize.md,
-              backgroundColor: data.color.withValues(alpha: 0.12),
-              iconColor: data.color,
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Text(
-                data.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: tt.titleSmall?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
+      child: Row(
+        children: [
+          DonyIconContainer(
+            iconAsset: data.icon,
+            size: DonyIconContainerSize.md,
+            backgroundColor: data.color.withValues(alpha: 0.12),
+            iconColor: data.color,
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Text(
+              data.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.titleSmall?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
-          ],
-        ),
+          ),
+          DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
+        ],
       ),
     );
   }
