@@ -194,21 +194,28 @@ void main() {
 
     // ─── isProfileComplete ────────────────────────────────────────────────────
 
+    final birthDate = DateTime(1995, 3, 12);
+    const fullyComplete = UserModel(
+      id: 'u1',
+      avatarUrl: 'https://cdn.example.com/avatar.jpg',
+      firstName: 'Amadou',
+      lastName: 'Diallo',
+      email: 'amadou@example.com',
+      phoneNumber: '+221701234567',
+      city: 'Dakar',
+      bio: 'Voyageur régulier Paris-Dakar.',
+      roles: [],
+      kycStatus: 'PENDING',
+      status: 'ACTIVE',
+    );
+
     group('isProfileComplete', () {
-      test('prénom + nom + email remplis → true', () {
-        const user = UserModel(
-          id: 'u1',
-          firstName: 'Amadou',
-          lastName: 'Diallo',
-          email: 'amadou@example.com',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
+      test('8 champs remplis (photo, identité, contact, ville, à propos) → true', () {
+        final user = fullyComplete.copyWith(birthDate: birthDate);
         expect(user.isProfileComplete, isTrue);
       });
 
-      test('date de naissance et ville absentes → toujours true (plus requis)', () {
+      test('prénom + nom + email seuls → false (photo/téléphone/etc manquants)', () {
         const user = UserModel(
           id: 'u1',
           firstName: 'Amadou',
@@ -218,44 +225,47 @@ void main() {
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.birthDate, isNull);
-        expect(user.city, isNull);
-        expect(user.isProfileComplete, isTrue);
+        expect(user.isProfileComplete, isFalse);
+      });
+
+      test('date de naissance manquante → false (requise désormais)', () {
+        expect(fullyComplete.birthDate, isNull);
+        expect(fullyComplete.isProfileComplete, isFalse);
+      });
+
+      test('photo manquante → false', () {
+        final user = UserModel(
+          id: 'u1',
+          firstName: 'Amadou',
+          lastName: 'Diallo',
+          email: 'amadou@example.com',
+          phoneNumber: '+221701234567',
+          birthDate: birthDate,
+          city: 'Dakar',
+          bio: 'Voyageur régulier Paris-Dakar.',
+          roles: const [],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.avatarUrl, isNull);
+        expect(user.isProfileComplete, isFalse);
       });
 
       test('email manquant → false', () {
-        const user = UserModel(
+        final user = UserModel(
           id: 'u1',
+          avatarUrl: 'https://cdn.example.com/avatar.jpg',
           firstName: 'Amadou',
           lastName: 'Diallo',
-          roles: [],
+          phoneNumber: '+221701234567',
+          birthDate: birthDate,
+          city: 'Dakar',
+          bio: 'Voyageur régulier Paris-Dakar.',
+          roles: const [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.isProfileComplete, isFalse);
-      });
-
-      test('nom de famille manquant → false', () {
-        const user = UserModel(
-          id: 'u1',
-          firstName: 'Amadou',
-          email: 'amadou@example.com',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.isProfileComplete, isFalse);
-      });
-
-      test('prénom manquant → false', () {
-        const user = UserModel(
-          id: 'u1',
-          lastName: 'Diallo',
-          email: 'amadou@example.com',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
+        expect(user.email, isNull);
         expect(user.isProfileComplete, isFalse);
       });
     });
@@ -263,7 +273,7 @@ void main() {
     // ─── profileCompletionSteps ───────────────────────────────────────────────
 
     group('profileCompletionSteps', () {
-      test('aucun champ → 0 étapes', () {
+      test('aucun champ → 0 étape sur 8', () {
         const user = UserModel(
           id: 'u1',
           roles: [],
@@ -271,6 +281,7 @@ void main() {
           status: 'ACTIVE',
         );
         expect(user.profileCompletionSteps, 0);
+        expect(UserModel.profileTotalSteps, 8);
       });
 
       test('prénom seulement → 1 étape', () {
@@ -295,7 +306,11 @@ void main() {
           status: 'ACTIVE',
         );
         expect(user.profileCompletionSteps, 3);
-        expect(UserModel.profileTotalSteps, 3);
+      });
+
+      test('les 8 champs remplis → 8 étapes', () {
+        final user = fullyComplete.copyWith(birthDate: birthDate);
+        expect(user.profileCompletionSteps, 8);
       });
     });
 

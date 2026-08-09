@@ -208,25 +208,27 @@ class UserModel extends Equatable {
     return a;
   }
 
-  // Prénom, nom et email : les trois seuls champs qui déterminent un profil
-  // "complet". Date de naissance et ville restent éditables mais ne bloquent
-  // plus rien — ce sont des informations secondaires, pas des prérequis.
-  bool get isProfileComplete {
-    return (firstName?.isNotEmpty ?? false) &&
-        (lastName?.isNotEmpty ?? false) &&
-        (email?.isNotEmpty ?? false);
-  }
+  // 8 champs d'identité : photo, prénom, nom, email, téléphone, date de
+  // naissance, ville, à propos. Reflète tout ce que « Modifier le profil »
+  // permet de renseigner (hors langues/mode de transport, des préférences
+  // plutôt que de l'identité).
+  bool get isProfileComplete => profileCompletionSteps >= profileTotalSteps;
 
-  // Number of required profile fields completed (max = profileTotalSteps).
+  // Nombre de champs d'identité renseignés (max = profileTotalSteps).
   int get profileCompletionSteps {
     int steps = 0;
+    if (avatarUrl?.isNotEmpty ?? false) steps++;
     if (firstName?.isNotEmpty ?? false) steps++;
     if (lastName?.isNotEmpty ?? false) steps++;
     if (email?.isNotEmpty ?? false) steps++;
+    if (phoneNumber?.isNotEmpty ?? false) steps++;
+    if (birthDate != null) steps++;
+    if (city?.isNotEmpty ?? false) steps++;
+    if (bio?.isNotEmpty ?? false) steps++;
     return steps;
   }
 
-  static const int profileTotalSteps = 3;
+  static const int profileTotalSteps = 8;
 
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');

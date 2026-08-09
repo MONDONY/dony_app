@@ -29,9 +29,11 @@ class _MockImagePicker extends Mock implements ImagePicker {}
 
 final _senderUser = UserModel(
   id: 'user-sender',
+  avatarUrl: 'https://cdn.example.com/avatar.jpg',
   firstName: 'Ibrahima',
   lastName: 'Diallo',
   email: 'ibra@test.com',
+  phoneNumber: '+221701234567',
   city: 'Paris',
   bio: 'Expéditeur depuis 2022.',
   birthDate: DateTime(1990, 6, 15),
@@ -536,7 +538,7 @@ void main() {
   // ── Jauge de complétion ───────────────────────────────────────────────────
 
   testWidgets(
-    'masque la jauge de complétion quand prénom+nom+email sont remplis',
+    'masque la jauge de complétion quand les 8 champs sont remplis',
     (tester) async {
       whenListen<AuthState>(
         mockAuthBloc,
@@ -571,8 +573,9 @@ void main() {
       await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
       await tester.pumpAndSettle();
 
+      // 1 champ sur 8 (prénom) : 1/8 = 12.5 % → arrondi à 13 %.
       expect(find.text('Profil complet'), findsOneWidget);
-      expect(find.text('33%'), findsOneWidget);
+      expect(find.text('13%'), findsOneWidget);
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     },
   );

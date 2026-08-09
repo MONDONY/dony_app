@@ -8,6 +8,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
+    show profileCompletionTierColor;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -577,7 +579,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
 // ── Extracted sub-widgets ─────────────────────────────────────────────────────
 
-/// Jauge de complétion du profil — prénom + nom + email (`UserModel.
+/// Jauge de complétion du profil — 8 champs d'identité (`UserModel.
 /// profileCompletionSteps` / `profileTotalSteps`). Vit ici plutôt que sur
 /// l'écran « Moi » : c'est l'écran où on agit, pas juste où on regarde.
 ///
@@ -595,6 +597,7 @@ class _CompletionGauge extends StatelessWidget {
     final steps = user.profileCompletionSteps;
     const total = UserModel.profileTotalSteps;
     final pct = steps / total;
+    final tier = profileCompletionTierColor(cs, pct);
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -618,7 +621,7 @@ class _CompletionGauge extends StatelessWidget {
               Text(
                 '${(pct * 100).round()}%',
                 style: tt.bodyMedium?.copyWith(
-                  color: cs.primary,
+                  color: tier.base,
                   fontWeight: FontWeight.w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
@@ -631,13 +634,13 @@ class _CompletionGauge extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               backgroundColor: cs.outline.withValues(alpha: 0.25),
-              valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(tier.base),
               minHeight: 6,
             ),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Prénom, nom et email complètent votre profil',
+            'Photo, identité, coordonnées et informations complètent votre profil',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
