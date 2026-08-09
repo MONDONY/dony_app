@@ -240,7 +240,7 @@ void main() {
   ) async {
     await tester.pumpWidget(_wrap(hive: hive, hasPublishedTrip: false));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('guidance-slide-trip-cta')));
+    await tester.tap(find.byKey(const Key('guidance-slide-trip')));
     await tester.pumpAndSettle();
     expect(find.text('publish-intro-trip'), findsOneWidget);
     verify(
@@ -256,7 +256,7 @@ void main() {
   ) async {
     await tester.pumpWidget(_wrap(hive: hive, hasPublishedParcel: false));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('guidance-slide-parcel-cta')));
+    await tester.tap(find.byKey(const Key('guidance-slide-parcel')));
     await tester.pumpAndSettle();
     expect(find.text('send-intro-parcel'), findsOneWidget);
     verify(
@@ -272,7 +272,7 @@ void main() {
   ) async {
     await tester.pumpWidget(_wrap(hive: hive, hasActiveCorridorAlert: false));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('guidance-slide-alert-cta')));
+    await tester.tap(find.byKey(const Key('guidance-slide-alert')));
     await tester.pumpAndSettle();
     expect(find.text('corridor-alerts'), findsOneWidget);
     verify(
@@ -288,7 +288,7 @@ void main() {
   ) async {
     await tester.pumpWidget(_wrap(hive: hive, isKycVerified: false));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('guidance-slide-kyc-cta')));
+    await tester.tap(find.byKey(const Key('guidance-slide-kyc')));
     await tester.pumpAndSettle();
     expect(find.text('kyc-verify'), findsOneWidget);
     verify(

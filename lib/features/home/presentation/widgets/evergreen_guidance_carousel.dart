@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:flutter/material.dart';
@@ -14,10 +15,11 @@ import 'package:hive/hive.dart';
 
 /// Carousel evergreen affiché juste avant la liste de résultats de l'écran
 /// Recherche. Remplace `RoleGuidanceBanner` (CTA mort, dismiss définitif) et
-/// `ContextualTutorialCard` (carte séparée) par des cartes pleine couleur en
-/// rotation automatique, chacune masquée dès que l'action qu'elle propose
-/// est faite. Aucune croix de fermeture manuelle : la disparition est
-/// entièrement pilotée par l'état applicatif.
+/// `ContextualTutorialCard` (carte séparée) par des cartes compactes (même
+/// gabarit que `ContextualTutorialCard`, entièrement cliquables) en rotation
+/// automatique, chacune masquée dès que l'action qu'elle propose est faite.
+/// Aucune croix de fermeture manuelle : la disparition est entièrement
+/// pilotée par l'état applicatif.
 class EvergreenGuidanceCarousel extends StatefulWidget {
   const EvergreenGuidanceCarousel({
     super.key,
@@ -146,9 +148,6 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'trip',
               icon: 'plane',
               title: 'Publier mon trajet',
-              subtitle:
-                  'Rentabilise tes voyages en transportant des colis pour d’autres.',
-              ctaLabel: 'Commencer',
               // Primitive fixe, pas cs.primary : en dark mode le ColorScheme
               // recalibre ce token pour du texte/icônes sur fond sombre, pas
               // pour un fill plein avec du texte blanc dessus (cf.
@@ -165,9 +164,6 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'parcel',
               icon: 'send',
               title: 'Envoyer un colis',
-              subtitle:
-                  'Trouve un voyageur qui emporte ton colis à destination.',
-              ctaLabel: 'Rechercher',
               color: DonyColors.success500,
               onTap: () => _onSlideTap(
                 context,
@@ -180,9 +176,6 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'alert',
               icon: 'bell',
               title: 'Créer une alerte',
-              subtitle:
-                  'Sois notifié dès qu’une annonce correspond à tes critères.',
-              ctaLabel: 'Créer',
               color: DonyColors.warning500,
               onTap: () => _onSlideTap(
                 context,
@@ -195,9 +188,6 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'kyc',
               icon: 'shield-check',
               title: 'Vérifier mon identité',
-              subtitle:
-                  'Valide ton profil pour publier un trajet et réserver en toute confiance.',
-              ctaLabel: 'Vérifier',
               color: DonyColors.info500,
               onTap: () =>
                   _onSlideTap(context, slideId: 'kyc', route: '/kyc/verify'),
@@ -207,8 +197,6 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'tutorial',
               icon: 'circle-play',
               title: 'Comment ça marche ?',
-              subtitle: tutorial.title,
-              ctaLabel: 'Voir le tuto',
               // accent (terra600, 4.79:1) et non terra500 (3.46:1) : ce fill
               // porte du texte blanc, terra500 n'atteint pas le seuil AA
               // 4.5:1 (cf. color_tokens.dart:166-169).
@@ -246,10 +234,15 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               SizedBox(
                 // Hauteur figée mise à l'échelle avec la taille de texte
                 // choisie par l'utilisateur (réglages d'accessibilité) :
-                // sans ça, le titre + sous-titre (2 lignes) + CTA d'une
-                // slide débordent du PageView dès 200 % (cf.
-                // city_autocomplete_field.dart:318, même piège).
-                height: MediaQuery.textScalerOf(context).scale(172),
+                // sans ça, le titre d'une slide déborde du PageView à forte
+                // taille de texte (cf. city_autocomplete_field.dart:318,
+                // même piège). Padding vertical DonyCard (DonySpacing.base
+                // en haut + en bas) + hauteur du conteneur icône md
+                // (DonySpacing.icon) = 16*2 + 40 = 72, cohérent avec la
+                // carte compacte façon ContextualTutorialCard.
+                height: MediaQuery.textScalerOf(
+                  context,
+                ).scale(DonySpacing.base * 2 + DonySpacing.icon),
                 child: PageView.builder(
                   key: const Key('evergreen-guidance-carousel'),
                   controller: _pageController,
@@ -271,8 +264,6 @@ class _GuidanceSlideData {
     required this.id,
     required this.icon,
     required this.title,
-    required this.subtitle,
-    required this.ctaLabel,
     required this.color,
     required this.onTap,
   });
@@ -280,8 +271,6 @@ class _GuidanceSlideData {
   final String id;
   final String icon;
   final String title;
-  final String subtitle;
-  final String ctaLabel;
   final Color color;
   final VoidCallback onTap;
 }
@@ -294,74 +283,35 @@ class _SlideCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Container(
+    final cs = Theme.of(context).colorScheme;
+    return DonyCard(
       key: Key('guidance-slide-${data.id}'),
-      margin: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: data.color,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: Row(
-        children: [
-          DonyIconContainer(
-            iconAsset: data.icon,
-            size: DonyIconContainerSize.lg,
-            backgroundColor: Colors.white.withValues(alpha: 0.18),
-            iconColor: Colors.white,
-            borderRadius: DonyRadius.md,
-          ),
-          const SizedBox(width: DonySpacing.base),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  data.title,
-                  style: tt.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xxs),
-                Text(
-                  data.subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                GestureDetector(
-                  key: Key('guidance-slide-${data.id}-cta'),
-                  onTap: data.onTap,
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minHeight: kDonyMinTapTarget,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.md,
-                    ),
-                    alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                    ),
-                    child: Text(
-                      '${data.ctaLabel} →',
-                      style: tt.labelMedium?.copyWith(
-                        color: data.color,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      onTap: data.onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+        child: Row(
+          children: [
+            DonyIconContainer(
+              iconAsset: data.icon,
+              size: DonyIconContainerSize.md,
+              backgroundColor: data.color.withValues(alpha: 0.12),
+              iconColor: data.color,
             ),
-          ),
-        ],
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Text(
+                data.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.titleSmall?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
+          ],
+        ),
       ),
     );
   }

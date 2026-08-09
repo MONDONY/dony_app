@@ -725,10 +725,9 @@ void main() {
       'affiche la carte tutoriel après le contrôle de recherche et navigue '
       'vers le tutoriel au tap',
       (tester) async {
-        // Le carousel de guidance evergreen (slide tutoriel) est plus haut
-        // que l'ancienne ContextualTutorialCard : agrandir le viewport pour
-        // que son CTA reste atteignable au tap avec la sheet en position
-        // initiale (peek), sans avoir à la déplier.
+        // Agrandir le viewport pour que la slide tutoriel reste atteignable
+        // au tap avec la sheet en position initiale (peek), sans avoir à la
+        // déplier.
         tester.view.physicalSize = const Size(800, 1000);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
@@ -752,7 +751,7 @@ void main() {
             .dy;
         expect(cardTop, greaterThan(corridorTop));
 
-        await tester.tap(find.byKey(const Key('guidance-slide-tutorial-cta')));
+        await tester.tap(find.byKey(const Key('guidance-slide-tutorial')));
         await tester.pumpAndSettle();
 
         expect(find.text('TutorialStub:search_intro'), findsOneWidget);
