@@ -31,15 +31,12 @@ void main() {
   });
 
   PaymentSheetBloc buildBloc({PaymentSheetConfig cfg = config}) =>
-      PaymentSheetBloc(
-        gateway: gateway,
-        repository: repository,
-        config: cfg,
-      );
+      PaymentSheetBloc(gateway: gateway, repository: repository, config: cfg);
 
   void stubResolution({bool wallet = false}) {
-    when(() => gateway.isPlatformPaySupported())
-        .thenAnswer((_) async => wallet);
+    when(
+      () => gateway.isPlatformPaySupported(),
+    ).thenAnswer((_) async => wallet);
   }
 
   group('paymentIntentId', () {
@@ -60,14 +57,18 @@ void main() {
               cfg: PaymentSheetConfig(
                 clientSecret: 'pi_123_secret_abc',
                 amountEur: 56.0,
-                paymentMethodTypes:
-                    paypal ? const ['card', 'paypal'] : const ['card'],
+                paymentMethodTypes: paypal
+                    ? const ['card', 'paypal']
+                    : const ['card'],
               ),
             );
           },
           act: (bloc) => bloc.add(const PaymentSheetStarted()),
           expect: () => [
-            PaymentSheetResolved(walletAvailable: wallet, paypalAvailable: paypal),
+            PaymentSheetResolved(
+              walletAvailable: wallet,
+              paypalAvailable: paypal,
+            ),
           ],
         );
       }
@@ -76,78 +77,140 @@ void main() {
     blocTest<PaymentSheetBloc, PaymentSheetState>(
       'échec isPlatformPaySupported → wallet indisponible, sheet fonctionnelle',
       build: () {
-        when(() => gateway.isPlatformPaySupported())
-            .thenThrow(Exception('platform'));
+        when(
+          () => gateway.isPlatformPaySupported(),
+        ).thenThrow(Exception('platform'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(const PaymentSheetStarted()),
       expect: () => [
-        const PaymentSheetResolved(walletAvailable: false, paypalAvailable: true),
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: true,
+        ),
       ],
     );
   });
 
   group('Wallet', () {
-    const ready = PaymentSheetResolved(walletAvailable: true, paypalAvailable: true);
+    const ready = PaymentSheetResolved(
+      walletAvailable: true,
+      paypalAvailable: true,
+    );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
       'succès → processing puis success',
       build: () {
-        when(() => gateway.confirmPlatformPay(
-              clientSecret: any(named: 'clientSecret'),
-              amountEur: any(named: 'amountEur'),
-            )).thenAnswer((_) async {});
+        when(
+          () => gateway.confirmPlatformPay(
+            clientSecret: any(named: 'clientSecret'),
+            amountEur: any(named: 'amountEur'),
+          ),
+        ).thenAnswer((_) async {});
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetWalletPressed()),
       expect: () => [
         const PaymentSheetProcessing(
-            ready: ready, method: PaymentMethodKind.wallet),
+          ready: ready,
+          method: PaymentMethodKind.wallet,
+        ),
         const PaymentSheetSuccess(method: PaymentMethodKind.wallet),
       ],
       verify: (_) {
-        verify(() => gateway.confirmPlatformPay(
-              clientSecret: 'pi_123_secret_abc',
-              amountEur: 56.0,
-            )).called(1);
+        verify(
+          () => gateway.confirmPlatformPay(
+            clientSecret: 'pi_123_secret_abc',
+            amountEur: 56.0,
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<PaymentSheetBloc, PaymentSheetState>(
+      'propage la devise CAD au paiement wallet',
+      build: () {
+        when(
+          () => gateway.confirmPlatformPay(
+            clientSecret: any(named: 'clientSecret'),
+            amountEur: any(named: 'amountEur'),
+            currencyCode: any(named: 'currencyCode'),
+          ),
+        ).thenAnswer((_) async {});
+        return buildBloc(
+          cfg: const PaymentSheetConfig(
+            clientSecret: 'pi_123_secret_abc',
+            amountEur: 56.0,
+            currencyCode: 'CAD',
+            paymentMethodTypes: ['card'],
+          ),
+        );
+      },
+      seed: () => ready,
+      act: (bloc) => bloc.add(const PaymentSheetWalletPressed()),
+      expect: () => [
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.wallet,
+        ),
+        const PaymentSheetSuccess(method: PaymentMethodKind.wallet),
+      ],
+      verify: (_) {
+        verify(
+          () => gateway.confirmPlatformPay(
+            clientSecret: 'pi_123_secret_abc',
+            amountEur: 56.0,
+            currencyCode: 'CAD',
+          ),
+        ).called(1);
       },
     );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
       'annulation → retour ready sans failure',
       build: () {
-        when(() => gateway.confirmPlatformPay(
-              clientSecret: any(named: 'clientSecret'),
-              amountEur: any(named: 'amountEur'),
-            )).thenThrow(const PaymentCancelledException());
+        when(
+          () => gateway.confirmPlatformPay(
+            clientSecret: any(named: 'clientSecret'),
+            amountEur: any(named: 'amountEur'),
+          ),
+        ).thenThrow(const PaymentCancelledException());
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetWalletPressed()),
       expect: () => [
         const PaymentSheetProcessing(
-            ready: ready, method: PaymentMethodKind.wallet),
+          ready: ready,
+          method: PaymentMethodKind.wallet,
+        ),
         ready,
       ],
     );
   });
 
   group('PayPal', () {
-    const ready = PaymentSheetResolved(walletAvailable: false, paypalAvailable: true);
+    const ready = PaymentSheetResolved(
+      walletAvailable: false,
+      paypalAvailable: true,
+    );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
       'échec → failure transitoire puis ready ré-armé',
       build: () {
-        when(() => gateway.confirmPayPal(any()))
-            .thenThrow(const PaymentConfirmationException('refusé'));
+        when(
+          () => gateway.confirmPayPal(any()),
+        ).thenThrow(const PaymentConfirmationException('refusé'));
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetPayPalPressed()),
       expect: () => [
         const PaymentSheetProcessing(
-            ready: ready, method: PaymentMethodKind.paypal),
+          ready: ready,
+          method: PaymentMethodKind.paypal,
+        ),
         const PaymentSheetFailure(message: 'refusé', ready: ready),
         ready,
       ],
@@ -163,7 +226,9 @@ void main() {
       act: (bloc) => bloc.add(const PaymentSheetPayPalPressed()),
       expect: () => [
         const PaymentSheetProcessing(
-            ready: ready, method: PaymentMethodKind.paypal),
+          ready: ready,
+          method: PaymentMethodKind.paypal,
+        ),
         const PaymentSheetSuccess(method: PaymentMethodKind.paypal),
       ],
       verify: (_) {
@@ -173,35 +238,47 @@ void main() {
   });
 
   group('Carte — PaymentSheet native Stripe', () {
-    const ready = PaymentSheetResolved(walletAvailable: false, paypalAvailable: false);
+    const ready = PaymentSheetResolved(
+      walletAvailable: false,
+      paypalAvailable: false,
+    );
 
     blocTest<PaymentSheetBloc, PaymentSheetState>(
       'tap → clé éphémère + initPaymentSheet + presentPaymentSheet → success',
       build: () {
-        when(() => repository.createEphemeralKey())
-            .thenAnswer((_) async => _ephemeralKey);
-        when(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            )).thenAnswer((_) async {});
+        when(
+          () => repository.createEphemeralKey(),
+        ).thenAnswer((_) async => _ephemeralKey);
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
         when(() => gateway.presentPaymentSheet()).thenAnswer((_) async {});
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetSuccess(method: PaymentMethodKind.card),
       ],
       verify: (_) {
         verify(() => repository.createEphemeralKey()).called(1);
-        verify(() => gateway.initPaymentSheet(
-              clientSecret: 'pi_123_secret_abc',
-              customerId: 'cus_123',
-              customerEphemeralKeySecret: 'ek_test_secret',
-            )).called(1);
+        verify(
+          () => gateway.initPaymentSheet(
+            clientSecret: 'pi_123_secret_abc',
+            customerId: 'cus_123',
+            customerEphemeralKeySecret: 'ek_test_secret',
+          ),
+        ).called(1);
         verify(() => gateway.presentPaymentSheet()).called(1);
       },
     );
@@ -209,22 +286,30 @@ void main() {
     blocTest<PaymentSheetBloc, PaymentSheetState>(
       'annulation de la PaymentSheet native → retour ready sans erreur',
       build: () {
-        when(() => repository.createEphemeralKey())
-            .thenAnswer((_) async => _ephemeralKey);
-        when(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            )).thenAnswer((_) async {});
-        when(() => gateway.presentPaymentSheet())
-            .thenThrow(const PaymentCancelledException());
+        when(
+          () => repository.createEphemeralKey(),
+        ).thenAnswer((_) async => _ephemeralKey);
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
+        when(
+          () => gateway.presentPaymentSheet(),
+        ).thenThrow(const PaymentCancelledException());
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         ready,
       ],
     );
@@ -233,22 +318,30 @@ void main() {
       'échec de confirmation → le message Stripe localisé remonte tel quel, '
       'comme pour wallet/PayPal, puis ready ré-armé',
       build: () {
-        when(() => repository.createEphemeralKey())
-            .thenAnswer((_) async => _ephemeralKey);
-        when(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            )).thenAnswer((_) async {});
-        when(() => gateway.presentPaymentSheet())
-            .thenThrow(const PaymentConfirmationException('carte refusée'));
+        when(
+          () => repository.createEphemeralKey(),
+        ).thenAnswer((_) async => _ephemeralKey);
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
+        when(
+          () => gateway.presentPaymentSheet(),
+        ).thenThrow(const PaymentConfirmationException('carte refusée'));
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetFailure(message: 'carte refusée', ready: ready),
         ready,
       ],
@@ -258,22 +351,30 @@ void main() {
       'erreur inattendue (non mappée par le gateway) → message générique, '
       'jamais le toString brut',
       build: () {
-        when(() => repository.createEphemeralKey())
-            .thenAnswer((_) async => _ephemeralKey);
-        when(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            )).thenAnswer((_) async {});
-        when(() => gateway.presentPaymentSheet())
-            .thenThrow(StateError('bug interne'));
+        when(
+          () => repository.createEphemeralKey(),
+        ).thenAnswer((_) async => _ephemeralKey);
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
+        when(
+          () => gateway.presentPaymentSheet(),
+        ).thenThrow(StateError('bug interne'));
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetFailure(
           message: PaymentSheetBloc.genericFailureMessage,
           ready: ready,
@@ -286,14 +387,18 @@ void main() {
       'échec réseau sur la clé éphémère → failure avec message carte lisible '
       'puis ready ré-armé (jamais le toString brut)',
       build: () {
-        when(() => repository.createEphemeralKey())
-            .thenThrow(Exception('réseau'));
+        when(
+          () => repository.createEphemeralKey(),
+        ).thenThrow(Exception('réseau'));
         return buildBloc();
       },
       seed: () => ready,
       act: (bloc) => bloc.add(const PaymentSheetCardPressed()),
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetFailure(
           message: PaymentSheetBloc.cardUnavailableMessage,
           ready: ready,
@@ -301,12 +406,15 @@ void main() {
         ready,
       ],
       verify: (_) {
-        verifyNever(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            ));
+        verifyNever(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        );
       },
     );
 
@@ -318,12 +426,15 @@ void main() {
           await Future<void>.delayed(Duration.zero);
           return _ephemeralKey;
         });
-        when(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            )).thenAnswer((_) async {});
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
         when(() => gateway.presentPaymentSheet()).thenAnswer((_) async {});
         return buildBloc();
       },
@@ -332,7 +443,10 @@ void main() {
         ..add(const PaymentSheetCardPressed())
         ..add(const PaymentSheetCardPressed()),
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetSuccess(method: PaymentMethodKind.card),
       ],
       verify: (_) {
@@ -345,14 +459,18 @@ void main() {
       'annulation puis nouveau tap → clé éphémère mémoïsée (un seul fetch)',
       build: () {
         var presentCalls = 0;
-        when(() => repository.createEphemeralKey())
-            .thenAnswer((_) async => _ephemeralKey);
-        when(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            )).thenAnswer((_) async {});
+        when(
+          () => repository.createEphemeralKey(),
+        ).thenAnswer((_) async => _ephemeralKey);
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
         when(() => gateway.presentPaymentSheet()).thenAnswer((_) async {
           presentCalls++;
           if (presentCalls == 1) throw const PaymentCancelledException();
@@ -366,9 +484,15 @@ void main() {
         bloc.add(const PaymentSheetCardPressed());
       },
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         ready, // annulation silencieuse
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetSuccess(method: PaymentMethodKind.card),
       ],
       verify: (_) {
@@ -386,12 +510,15 @@ void main() {
           if (keyCalls == 1) throw Exception('réseau');
           return _ephemeralKey;
         });
-        when(() => gateway.initPaymentSheet(
-              clientSecret: any(named: 'clientSecret'),
-              customerId: any(named: 'customerId'),
-              customerEphemeralKeySecret:
-                  any(named: 'customerEphemeralKeySecret'),
-            )).thenAnswer((_) async {});
+        when(
+          () => gateway.initPaymentSheet(
+            clientSecret: any(named: 'clientSecret'),
+            customerId: any(named: 'customerId'),
+            customerEphemeralKeySecret: any(
+              named: 'customerEphemeralKeySecret',
+            ),
+          ),
+        ).thenAnswer((_) async {});
         when(() => gateway.presentPaymentSheet()).thenAnswer((_) async {});
         return buildBloc();
       },
@@ -402,13 +529,19 @@ void main() {
         bloc.add(const PaymentSheetCardPressed());
       },
       expect: () => [
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetFailure(
           message: PaymentSheetBloc.cardUnavailableMessage,
           ready: ready,
         ),
         ready,
-        const PaymentSheetProcessing(ready: ready, method: PaymentMethodKind.card),
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
         const PaymentSheetSuccess(method: PaymentMethodKind.card),
       ],
       verify: (_) {

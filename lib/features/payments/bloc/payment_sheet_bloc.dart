@@ -1,4 +1,5 @@
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -12,6 +13,10 @@ class PaymentSheetConfig extends Equatable {
   final String clientSecret;
   final double amountEur;
 
+  /// Devise du PaymentIntent. [amountEur] reste le nom historique du champ
+  /// pour préserver les contrats et les appels existants.
+  final String currencyCode;
+
   /// Types du PaymentIntent renvoyés par le backend (ex. ["card","paypal"]) —
   /// le SDK flutter_stripe ne les expose pas via retrievePaymentIntent.
   final List<String> paymentMethodTypes;
@@ -19,6 +24,7 @@ class PaymentSheetConfig extends Equatable {
   const PaymentSheetConfig({
     required this.clientSecret,
     required this.amountEur,
+    this.currencyCode = 'EUR',
     required this.paymentMethodTypes,
   });
 
@@ -26,7 +32,15 @@ class PaymentSheetConfig extends Equatable {
   String get paymentIntentId => clientSecret.split('_secret').first;
 
   @override
-  List<Object?> get props => [clientSecret, amountEur, paymentMethodTypes];
+  List<Object?> get props => [
+    clientSecret,
+    amountEur,
+    currencyCode,
+    paymentMethodTypes,
+  ];
+
+  SupportedCurrency get currency =>
+      SupportedCurrency.fromCode(currencyCode) ?? SupportedCurrency.eur;
 }
 
 class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
@@ -38,9 +52,9 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     required PaymentGateway gateway,
     required PaymentRepository repository,
     required this.config,
-  })  : _gateway = gateway,
-        _repository = repository,
-        super(const PaymentSheetLoading()) {
+  }) : _gateway = gateway,
+       _repository = repository,
+       super(const PaymentSheetLoading()) {
     on<PaymentSheetStarted>(_onStarted);
     on<PaymentSheetWalletPressed>(_onWalletPressed);
     on<PaymentSheetPayPalPressed>(_onPayPalPressed);
@@ -58,34 +72,40 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
       walletAvailable = await _gateway.isPlatformPaySupported();
     } catch (_) {}
 
-    emit(PaymentSheetResolved(
-      walletAvailable: walletAvailable,
-      paypalAvailable: config.paymentMethodTypes.contains('paypal'),
-    ));
+    emit(
+      PaymentSheetResolved(
+        walletAvailable: walletAvailable,
+        paypalAvailable: config.paymentMethodTypes.contains('paypal'),
+      ),
+    );
   }
 
   Future<void> _onWalletPressed(
     PaymentSheetWalletPressed event,
     Emitter<PaymentSheetState> emit,
-  ) =>
-      _confirm(
-        emit,
-        PaymentMethodKind.wallet,
-        () => _gateway.confirmPlatformPay(
-          clientSecret: config.clientSecret,
-          amountEur: config.amountEur,
-        ),
-      );
+  ) => _confirm(
+    emit,
+    PaymentMethodKind.wallet,
+    () => config.currencyCode.toUpperCase() == 'EUR'
+        ? _gateway.confirmPlatformPay(
+            clientSecret: config.clientSecret,
+            amountEur: config.amountEur,
+          )
+        : _gateway.confirmPlatformPay(
+            clientSecret: config.clientSecret,
+            amountEur: config.amountEur,
+            currencyCode: config.currencyCode,
+          ),
+  );
 
   Future<void> _onPayPalPressed(
     PaymentSheetPayPalPressed event,
     Emitter<PaymentSheetState> emit,
-  ) =>
-      _confirm(
-        emit,
-        PaymentMethodKind.paypal,
-        () => _gateway.confirmPayPal(config.clientSecret),
-      );
+  ) => _confirm(
+    emit,
+    PaymentMethodKind.paypal,
+    () => _gateway.confirmPayPal(config.clientSecret),
+  );
 
   /// Message du parcours carte quand la clé éphémère est irrécupérable :
   /// le toString() brut d'une AppException réseau n'est pas montrable.
@@ -112,27 +132,22 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   Future<void> _onCardPressed(
     PaymentSheetCardPressed event,
     Emitter<PaymentSheetState> emit,
-  ) =>
-      _confirm(
-        emit,
-        PaymentMethodKind.card,
-        () async {
-          final EphemeralKeyModel ephemeralKey;
-          try {
-            ephemeralKey =
-                await (_ephemeralKeyFuture ??= _repository.createEphemeralKey());
-          } catch (_) {
-            _ephemeralKeyFuture = null; // ne pas mémoïser un échec
-            throw const PaymentConfirmationException(cardUnavailableMessage);
-          }
-          await _gateway.initPaymentSheet(
-            clientSecret: config.clientSecret,
-            customerId: ephemeralKey.customerId,
-            customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
-          );
-          await _gateway.presentPaymentSheet();
-        },
-      );
+  ) => _confirm(emit, PaymentMethodKind.card, () async {
+    final EphemeralKeyModel ephemeralKey;
+    try {
+      ephemeralKey = await (_ephemeralKeyFuture ??= _repository
+          .createEphemeralKey());
+    } catch (_) {
+      _ephemeralKeyFuture = null; // ne pas mémoïser un échec
+      throw const PaymentConfirmationException(cardUnavailableMessage);
+    }
+    await _gateway.initPaymentSheet(
+      clientSecret: config.clientSecret,
+      customerId: ephemeralKey.customerId,
+      customerEphemeralKeySecret: ephemeralKey.ephemeralKeySecret,
+    );
+    await _gateway.presentPaymentSheet();
+  });
 
   Future<void> _confirm(
     Emitter<PaymentSheetState> emit,
@@ -165,9 +180,9 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   }
 
   PaymentSheetResolved? get _currentReady => switch (state) {
-        final PaymentSheetResolved s => s,
-        PaymentSheetProcessing(:final ready) => ready,
-        PaymentSheetFailure(:final ready) => ready,
-        _ => null,
-      };
+    final PaymentSheetResolved s => s,
+    PaymentSheetProcessing(:final ready) => ready,
+    PaymentSheetFailure(:final ready) => ready,
+    _ => null,
+  };
 }

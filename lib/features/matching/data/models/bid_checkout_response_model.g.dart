@@ -13,6 +13,7 @@ BidCheckoutResponseModel _$BidCheckoutResponseModelFromJson(
   clientSecret: json['clientSecret'] as String,
   publishableKey: json['publishableKey'] as String,
   expiresAt: DateTime.parse(json['expiresAt'] as String),
+  currency: json['currency'] as String? ?? 'EUR',
   paymentMethodTypes:
       (json['paymentMethodTypes'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -26,6 +27,7 @@ Map<String, dynamic> _$BidCheckoutResponseModelToJson(
   'bidId': instance.bidId,
   'clientSecret': instance.clientSecret,
   'publishableKey': instance.publishableKey,
-  'expiresAt': instance.expiresAt.toIso8601String(),
+      'expiresAt': instance.expiresAt.toIso8601String(),
+      'currency': instance.currency,
   'paymentMethodTypes': instance.paymentMethodTypes,
 };

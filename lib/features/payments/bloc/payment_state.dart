@@ -20,6 +20,7 @@ class CheckoutPaymentSheetReady extends PaymentState {
   final String publishableKey;
   final String bidId;
   final double amountEur;
+  final String currencyCode;
   final List<String> paymentMethodTypes;
 
   const CheckoutPaymentSheetReady({
@@ -27,12 +28,19 @@ class CheckoutPaymentSheetReady extends PaymentState {
     required this.publishableKey,
     required this.bidId,
     required this.amountEur,
+    this.currencyCode = 'EUR',
     this.paymentMethodTypes = const [],
   });
 
   @override
-  List<Object?> get props =>
-      [clientSecret, publishableKey, bidId, amountEur, paymentMethodTypes];
+  List<Object?> get props => [
+    clientSecret,
+    publishableKey,
+    bidId,
+    amountEur,
+    currencyCode,
+    paymentMethodTypes,
+  ];
 }
 
 /// URL d'onboarding Stripe prête — naviguer vers la WebView.
@@ -59,6 +67,7 @@ class PaymentSheetReady extends PaymentState {
   final double amount;
   final double commissionAmount;
   final String paymentId;
+  final String currencyCode;
   final List<String> paymentMethodTypes;
 
   const PaymentSheetReady({
@@ -66,12 +75,19 @@ class PaymentSheetReady extends PaymentState {
     required this.amount,
     required this.commissionAmount,
     required this.paymentId,
+    this.currencyCode = 'EUR',
     this.paymentMethodTypes = const [],
   });
 
   @override
-  List<Object?> get props =>
-      [clientSecret, amount, commissionAmount, paymentId, paymentMethodTypes];
+  List<Object?> get props => [
+    clientSecret,
+    amount,
+    commissionAmount,
+    paymentId,
+    currencyCode,
+    paymentMethodTypes,
+  ];
 }
 
 /// Feuille de paiement complétée — escrow actif, en attente de livraison.

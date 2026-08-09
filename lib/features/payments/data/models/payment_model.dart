@@ -14,6 +14,11 @@ class PaymentModel {
   final String? clientSecret;
   final double amount;
   final double commissionAmount;
+
+  /// Devise du PaymentIntent renvoyée par le backend (ISO 4217).
+  /// Les anciennes réponses sont interprétées comme EUR.
+  @JsonKey(defaultValue: 'EUR')
+  final String currency;
   final PaymentStatus status;
   @JsonKey(defaultValue: false)
   final bool disputed;
@@ -28,6 +33,7 @@ class PaymentModel {
     this.clientSecret,
     required this.amount,
     required this.commissionAmount,
+    this.currency = 'EUR',
     required this.status,
     this.disputed = false,
     this.paymentMethodTypes = const [],

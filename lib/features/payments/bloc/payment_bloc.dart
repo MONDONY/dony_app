@@ -13,7 +13,8 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
   final PaymentRepository _repository;
   final AnalyticsService _analytics;
 
-  PaymentBloc(this._repository, this._analytics) : super(const PaymentInitial()) {
+  PaymentBloc(this._repository, this._analytics)
+    : super(const PaymentInitial()) {
     on<BidCheckoutPaymentRequested>(_onBidCheckoutPaymentRequested);
     on<PaymentConnectAccountRequested>(_onConnectAccountRequested);
     on<PaymentOnboardingStatusChecked>(_onOnboardingStatusChecked);
@@ -32,13 +33,16 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     // le nouvel état serait Equatable-égal au précédent et emit() serait un
     // no-op silencieux. L'état initial garantit la transition.
     emit(const PaymentInitial());
-    emit(CheckoutPaymentSheetReady(
-      clientSecret: event.clientSecret,
-      publishableKey: event.publishableKey,
-      bidId: event.bidId,
-      amountEur: event.amountEur,
-      paymentMethodTypes: event.paymentMethodTypes,
-    ));
+    emit(
+      CheckoutPaymentSheetReady(
+        clientSecret: event.clientSecret,
+        publishableKey: event.publishableKey,
+        bidId: event.bidId,
+        amountEur: event.amountEur,
+        currencyCode: event.currencyCode,
+        paymentMethodTypes: event.paymentMethodTypes,
+      ),
+    );
   }
 
   Future<void> _onConnectAccountRequested(
@@ -103,19 +107,26 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     try {
       final payment = await _repository.createPayment(event.bidId);
       if (payment.clientSecret == null) {
-        emit(PaymentError(NetworkException(
-          'Paiement déjà effectué pour cette demande.',
-          code: 'payment-already-done',
-        )));
+        emit(
+          PaymentError(
+            NetworkException(
+              'Paiement déjà effectué pour cette demande.',
+              code: 'payment-already-done',
+            ),
+          ),
+        );
         return;
       }
-      emit(PaymentSheetReady(
-        clientSecret: payment.clientSecret!,
-        amount: payment.amount,
-        commissionAmount: payment.commissionAmount,
-        paymentId: payment.id,
-        paymentMethodTypes: payment.paymentMethodTypes,
-      ));
+      emit(
+        PaymentSheetReady(
+          clientSecret: payment.clientSecret!,
+          amount: payment.amount,
+          commissionAmount: payment.commissionAmount,
+          paymentId: payment.id,
+          currencyCode: payment.currency,
+          paymentMethodTypes: payment.paymentMethodTypes,
+        ),
+      );
     } catch (e) {
       emit(PaymentError(unwrapDioError(e)));
     }
@@ -128,14 +139,16 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     final current = state;
     if (current is PaymentSheetReady) {
       emit(PaymentEscrowPending(current.amount));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.paymentSucceeded,
-        properties: {
-          'method': 'card',
-          'amount': current.amount,
-          'payment_id': current.paymentId,
-        },
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.paymentSucceeded,
+          properties: {
+            'method': 'card',
+            'amount': current.amount,
+            'payment_id': current.paymentId,
+          },
+        ),
+      );
     }
   }
 
@@ -144,9 +157,11 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     Emitter<PaymentState> emit,
   ) async {
     emit(PaymentError(NetworkException(event.message, code: 'payment-failed')));
-    unawaited(_analytics.logEvent(
-      AnalyticsEvents.paymentFailed,
-      properties: {'method': 'card', 'error_code': 'payment-failed'},
-    ));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.paymentFailed,
+        properties: {'method': 'card', 'error_code': 'payment-failed'},
+      ),
+    );
   }
 }

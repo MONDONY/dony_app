@@ -34,6 +34,7 @@ abstract class PaymentGateway {
   Future<void> confirmPlatformPay({
     required String clientSecret,
     required double amountEur,
+    String currencyCode = 'EUR',
   });
 
   Future<void> confirmPayPal(String clientSecret);
@@ -62,55 +63,59 @@ class StripePaymentGateway implements PaymentGateway {
   Future<void> confirmPlatformPay({
     required String clientSecret,
     required double amountEur,
-  }) =>
-      _mapStripeErrors(() => Stripe.instance.confirmPlatformPayPaymentIntent(
-            clientSecret: clientSecret,
-            confirmParams: Platform.isIOS
-                ? PlatformPayConfirmParams.applePay(
-                    applePay: ApplePayParams(
-                      merchantCountryCode: 'FR',
-                      currencyCode: 'EUR',
-                      cartItems: [
-                        ApplePayCartSummaryItem.immediate(
-                          label: 'Yadony',
-                          amount: amountEur.toStringAsFixed(2),
-                        ),
-                      ],
-                    ),
-                  )
-                : const PlatformPayConfirmParams.googlePay(
-                    googlePay: GooglePayParams(
-                      merchantCountryCode: 'FR',
-                      currencyCode: 'EUR',
-                      merchantName: 'Yadony',
-                    ),
+    String currencyCode = 'EUR',
+  }) => _mapStripeErrors(
+    () => Stripe.instance.confirmPlatformPayPaymentIntent(
+      clientSecret: clientSecret,
+      confirmParams: Platform.isIOS
+          ? PlatformPayConfirmParams.applePay(
+              applePay: ApplePayParams(
+                merchantCountryCode: 'FR',
+                currencyCode: currencyCode.toUpperCase(),
+                cartItems: [
+                  ApplePayCartSummaryItem.immediate(
+                    label: 'Yadony',
+                    amount: amountEur.toStringAsFixed(2),
                   ),
-          ));
+                ],
+              ),
+            )
+          : PlatformPayConfirmParams.googlePay(
+              googlePay: GooglePayParams(
+                merchantCountryCode: 'FR',
+                currencyCode: currencyCode.toUpperCase(),
+                merchantName: 'Yadony',
+              ),
+            ),
+    ),
+  );
 
   @override
-  Future<void> confirmPayPal(String clientSecret) =>
-      _mapStripeErrors(() => Stripe.instance.confirmPayment(
-            paymentIntentClientSecret: clientSecret,
-            data: const PaymentMethodParams.payPal(
-              paymentMethodData: PaymentMethodData(),
-            ),
-          ));
+  Future<void> confirmPayPal(String clientSecret) => _mapStripeErrors(
+    () => Stripe.instance.confirmPayment(
+      paymentIntentClientSecret: clientSecret,
+      data: const PaymentMethodParams.payPal(
+        paymentMethodData: PaymentMethodData(),
+      ),
+    ),
+  );
 
   @override
   Future<void> initPaymentSheet({
     required String clientSecret,
     required String customerId,
     required String customerEphemeralKeySecret,
-  }) =>
-      _mapStripeErrors(() => Stripe.instance.initPaymentSheet(
-            paymentSheetParameters: SetupPaymentSheetParameters(
-              paymentIntentClientSecret: clientSecret,
-              customerId: customerId,
-              customerEphemeralKeySecret: customerEphemeralKeySecret,
-              merchantDisplayName: 'Yadony',
-              style: ThemeMode.system,
-            ),
-          ));
+  }) => _mapStripeErrors(
+    () => Stripe.instance.initPaymentSheet(
+      paymentSheetParameters: SetupPaymentSheetParameters(
+        paymentIntentClientSecret: clientSecret,
+        customerId: customerId,
+        customerEphemeralKeySecret: customerEphemeralKeySecret,
+        merchantDisplayName: 'Yadony',
+        style: ThemeMode.system,
+      ),
+    ),
+  );
 
   @override
   Future<void> presentPaymentSheet() =>

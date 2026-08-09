@@ -141,7 +141,7 @@ class NegotiationRepository {
   /// The thread is finalized to ACCEPTED async via webhook. [promoCode] optionnel :
   /// s'il ne s'applique plus (expiré/épuisé entre l'aperçu et le paiement), le
   /// backend retombe silencieusement sur le taux sans promo (jamais bloquant).
-  Future<({String clientSecret, String paymentIntentId, double amountEur, List<String> paymentMethodTypes})>
+  Future<({String clientSecret, String paymentIntentId, double amountEur, String currencyCode, List<String> paymentMethodTypes})>
       initiatePayment(String id, {String? promoCode}) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$id/initiate-payment',
@@ -154,6 +154,7 @@ class NegotiationRepository {
       clientSecret: data['clientSecret'] as String,
       paymentIntentId: data['stripePaymentIntentId'] as String,
       amountEur: (data['amount'] as num).toDouble(),
+      currencyCode: data['currency'] as String? ?? 'EUR',
       paymentMethodTypes: (data['paymentMethodTypes'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??

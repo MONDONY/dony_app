@@ -140,6 +140,7 @@ class AcceptOfferBottomSheet {
                             config: PaymentSheetConfig(
                               clientSecret: init.clientSecret,
                               amountEur: init.amountEur,
+                              currencyCode: init.currencyCode,
                               paymentMethodTypes: init.paymentMethodTypes,
                             ),
                             contextLabel: isTraveler

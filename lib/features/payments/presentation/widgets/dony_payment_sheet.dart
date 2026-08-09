@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,13 +29,14 @@ abstract final class DonyPaymentSheet {
       context,
       isDismissible: false,
       wrapper: (child) => BlocProvider<PaymentSheetBloc>(
-        create: (_) => (bloc ??
-            PaymentSheetBloc(
-              gateway: getIt<PaymentGateway>(),
-              repository: getIt<PaymentRepository>(),
-              config: config,
-            ))
-          ..add(const PaymentSheetStarted()),
+        create: (_) =>
+            (bloc ??
+                  PaymentSheetBloc(
+                    gateway: getIt<PaymentGateway>(),
+                    repository: getIt<PaymentRepository>(),
+                    config: config,
+                  ))
+              ..add(const PaymentSheetStarted()),
         child: child,
       ),
       stickyBottom: _StickyBottom(onSuccess: onSuccess),
@@ -67,8 +69,11 @@ class _Body extends StatelessWidget {
       listenWhen: (previous, current) => current is PaymentSheetFailure,
       listener: (context, state) {
         final failure = state as PaymentSheetFailure;
-        DonySnackbar.show(context,
-            message: failure.message, type: DonySnackbarType.error);
+        DonySnackbar.show(
+          context,
+          message: failure.message,
+          type: DonySnackbarType.error,
+        );
       },
       child: BlocBuilder<PaymentSheetBloc, PaymentSheetState>(
         builder: (context, state) {
@@ -108,6 +113,7 @@ class _MainView extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final bloc = context.read<PaymentSheetBloc>();
+    final config = bloc.config;
     final state = context.watch<PaymentSheetBloc>().state;
     final ready = switch (state) {
       final PaymentSheetResolved s => s,
@@ -125,8 +131,15 @@ class _MainView extends StatelessWidget {
       children: [
         Text('Paiement', style: tt.headlineMedium),
         const SizedBox(height: DonySpacing.xs),
-        Text(contextLabel,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+        Text(
+          contextLabel,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          CurrencyFormatter.format(config.amountEur, config.currency),
+          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: DonySpacing.lg),
         if (ready.walletAvailable) ...[
           SizedBox(
@@ -159,7 +172,8 @@ class _MainView extends StatelessWidget {
           background: cs.primary,
           foreground: cs.onPrimary,
           enabled: !processing,
-          isLoading: state is PaymentSheetProcessing &&
+          isLoading:
+              state is PaymentSheetProcessing &&
               state.method == PaymentMethodKind.card,
           spinnerKey: const Key('paymentSheetCardButtonSpinner'),
           onPressed: () => bloc.add(const PaymentSheetCardPressed()),
@@ -335,13 +349,17 @@ class _StickyBottom extends StatelessWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DonyIcon('shield', size: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            DonyIcon(
+              'shield',
+              size: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: DonySpacing.xxs),
             Text(
               'Paiement sécurisé par Stripe',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         );

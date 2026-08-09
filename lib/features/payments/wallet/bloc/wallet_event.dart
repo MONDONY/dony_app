@@ -22,6 +22,11 @@ class WalletRefreshAfterTopupRequested extends WalletEvent {
 class WalletTopupRequested extends WalletEvent {
   final double amount;
   final String paymentMethod; // 'STRIPE' | 'WAVE' | 'ORANGE_MONEY'
+  final String currencyCode;
 
-  WalletTopupRequested({required this.amount, required this.paymentMethod});
+  WalletTopupRequested({
+    required this.amount,
+    required this.paymentMethod,
+    this.currencyCode = 'EUR',
+  });
 }

@@ -8,6 +8,8 @@ class BidCheckoutResponseModel {
   final String clientSecret;
   final String publishableKey;
   final DateTime expiresAt;
+  @JsonKey(defaultValue: 'EUR')
+  final String currency;
 
   /// Types du PaymentIntent (ex. ["card","paypal"]) — bouton PayPal conditionnel
   /// dans la DonyPaymentSheet.
@@ -19,6 +21,7 @@ class BidCheckoutResponseModel {
     required this.clientSecret,
     required this.publishableKey,
     required this.expiresAt,
+    this.currency = 'EUR',
     this.paymentMethodTypes = const [],
   });
 

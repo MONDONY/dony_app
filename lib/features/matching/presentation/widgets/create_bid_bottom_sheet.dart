@@ -531,6 +531,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             publishableKey: state.response.publishableKey,
             bidId: state.response.bidId,
             amountEur: _computeStripeTotal(),
+            currencyCode: state.response.currency,
             paymentMethodTypes: state.response.paymentMethodTypes,
           ));
     } else if (state is BidQuoteLoaded) {
@@ -1241,6 +1242,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       config: PaymentSheetConfig(
         clientSecret: state.clientSecret,
         amountEur: state.amountEur,
+        currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
       ),
       contextLabel: 'Envoi vers ${widget.announcement.arrivalCity}',

@@ -35,6 +35,26 @@ void main() {
       expect(model.expiresAt.year, 2030);
     });
 
+    test('fromJson parses the backend payment currency and defaults EUR', () {
+      final model = BidCheckoutResponseModel.fromJson({
+        'bidId': 'bid-cad',
+        'clientSecret': 'pi_cad_secret',
+        'publishableKey': 'pk_test_xxx',
+        'expiresAt': '2030-12-31T23:59:59.000',
+        'currency': 'CAD',
+      });
+      expect(model.currency, 'CAD');
+      expect(
+        BidCheckoutResponseModel.fromJson({
+          'bidId': 'bid-eur',
+          'clientSecret': 'pi_eur_secret',
+          'publishableKey': 'pk_test_xxx',
+          'expiresAt': '2030-12-31T23:59:59.000',
+        }).currency,
+        'EUR',
+      );
+    });
+
     test('toJson serializes correctly', () {
       final model = BidCheckoutResponseModel(
         bidId: 'bid-002',

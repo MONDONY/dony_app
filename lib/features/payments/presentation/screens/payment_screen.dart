@@ -73,6 +73,7 @@ class PaymentScreen extends StatelessWidget {
       config: PaymentSheetConfig(
         clientSecret: state.clientSecret,
         amountEur: total,
+        currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
       ),
       contextLabel: 'Envoi de ${bid.recipientName ?? 'votre colis'}',
