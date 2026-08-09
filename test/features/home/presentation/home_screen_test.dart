@@ -1852,31 +1852,19 @@ void main() {
     });
   });
 
-  // ─── Rôle voyageur retiré ───────────────────────────────────────────────────
-  group('segment Colis sans rôle voyageur', () {
-    testWidgets('le tap explique et ne lance aucune recherche de colis', (
+  // ─── Rôle voyageur universel ────────────────────────────────────────────────
+  //
+  // Tout compte porte SENDER + TRAVELER dès l'inscription et ne peut plus en
+  // perdre un (le self-service de désactivation a été retiré : il permettait
+  // à un compte de perdre TRAVELER sans aucun moyen, côté app, de le
+  // réactiver). Le mode Colis n'est donc plus jamais bloqué, quel que soit
+  // `isTraveler` — conservé ici en paramètre de test uniquement pour prouver
+  // que l'absence de TRAVELER dans `roles` ne change plus rien à l'UI.
+  group('mode Colis sans distinction de rôle', () {
+    testWidgets('le tap bascule normalement, avec ou sans TRAVELER', (
       tester,
     ) async {
       await pumpHome(tester, isTraveler: false);
-
-      await tester.tap(find.text('Colis'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Ouvrir les réglages'), findsOneWidget);
-      // La requête partirait en 403 : elle ne doit pas partir du tout.
-      verifyNever(() => prBloc.add(any()));
-      // Et le mode ne bascule pas : la liste reste celle des trajets.
-      expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
-    });
-
-    testWidgets('le segment Colis reste visible', (tester) async {
-      await pumpHome(tester, isTraveler: false);
-
-      expect(find.text('Colis'), findsOneWidget);
-    });
-
-    testWidgets('voyageur : le tap bascule normalement', (tester) async {
-      await pumpHome(tester);
 
       await tester.tap(find.text('Colis'));
       await tester.pumpAndSettle();
@@ -1885,11 +1873,6 @@ void main() {
       expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
     });
 
-    // ── Compteur de l'autre mode ────────────────────────────────────────────
-    //
-    // La bascule vers Colis est bloquée pour cet utilisateur : compter les
-    // colis n'a aucune valeur, et la requête finirait en 403 avalé par le
-    // `catch`. Elle ne doit donc pas partir du tout.
     MockPackageRequestRepository enregistrerCompteurColis() {
       final repo = MockPackageRequestRepository();
       when(
@@ -1920,47 +1903,11 @@ void main() {
       return repo;
     }
 
-    Future<void> verifierAucunComptage(
-      MockPackageRequestRepository repo,
-    ) async {
-      verifyNever(
-        () => repo.search(
-          departure: any(named: 'departure'),
-          arrival: any(named: 'arrival'),
-          dateFrom: any(named: 'dateFrom'),
-          dateTo: any(named: 'dateTo'),
-          maxWeight: any(named: 'maxWeight'),
-          parcelSize: any(named: 'parcelSize'),
-          lat: any(named: 'lat'),
-          lng: any(named: 'lng'),
-          radiusKm: any(named: 'radiusKm'),
-          urgent: any(named: 'urgent'),
-          matchingMyTrips: any(named: 'matchingMyTrips'),
-          page: any(named: 'page'),
-          size: any(named: 'size'),
-        ),
-      );
-    }
-
-    testWidgets('aucun comptage des colis ne part sans rôle voyageur', (
+    testWidgets('le comptage de l\'autre mode part, avec ou sans TRAVELER', (
       tester,
     ) async {
       final repo = enregistrerCompteurColis();
       await pumpHome(tester, isTraveler: false);
-
-      // Un corridor rend pourtant le compteur « significatif » : c'est bien le
-      // rôle, et rien d'autre, qui retient la requête.
-      await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
-
-      await verifierAucunComptage(repo);
-      expect(find.byKey(const Key('mode-other-count')), findsNothing);
-    });
-
-    testWidgets('contrôle : avec le rôle voyageur, le comptage part bien', (
-      tester,
-    ) async {
-      final repo = enregistrerCompteurColis();
-      await pumpHome(tester);
 
       await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
 
@@ -2073,29 +2020,6 @@ void main() {
       },
     );
 
-    testWidgets('« Ouvrir les réglages » ouvre les réglages', (tester) async {
-      _registerTripsSummary(2);
-      final visited = <String>[];
-      tester.view.physicalSize = const Size(1000, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(
-        _buildHomeStubRoutes(
-          visited: visited,
-          user: _makeUser(roles: const ['SENDER']),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 1000));
-
-      await tester.tap(find.text('Colis'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Ouvrir les réglages'));
-      await tester.pumpAndSettle();
-
-      expect(visited, contains('/settings'));
-    });
   });
 
   group('découverte croisée', () {

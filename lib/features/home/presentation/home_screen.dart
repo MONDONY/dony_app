@@ -399,15 +399,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// bascule produira. Lire `_filters` directement laisserait tomber la
   /// neutralisation du corridor par « près de moi », la position et le rayon.
   Future<void> _dispatchOtherModeCount() async {
-    // Sans rôle voyageur, la bascule vers Colis est refusée par le garde-fou :
-    // compter les colis n'a plus aucune valeur, et la requête partirait pour
-    // rien (403 avalé par le `catch` plus bas). On ne l'envoie pas du tout.
-    if (_mode.isTrips && !_isTraveler) {
-      if (mounted) {
-        setState(() => _otherModeCount = null);
-      }
-      return;
-    }
     if (!_filters.otherModeCountIsMeaningful) {
       if (mounted) {
         setState(() => _otherModeCount = null);
@@ -490,12 +481,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _onModeChanged(SearchMode mode) {
     if (mode == _mode) {
-      return;
-    }
-    // Rôle voyageur retiré : le serveur refuserait la recherche de colis. On
-    // explique au lieu de laisser partir une requête qui répondra 403.
-    if (mode.isParcels && !_isTraveler) {
-      unawaited(_showTravelerRoleDisabledSheet());
       return;
     }
     setState(() {
@@ -593,31 +578,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _onModeChanged(_mode.other);
   }
 
-  /// Explique le refus du mode Colis à un utilisateur qui a désactivé son rôle
-  /// voyageur, et l'emmène là où il peut le réactiver. Bouton en position
-  /// collée en bas, jamais dans le contenu défilant.
-  Future<void> _showTravelerRoleDisabledSheet() {
-    // Capturé avant l'ouverture : après le pop, le contexte de la feuille est
-    // mort. `maybeOf` couvre les montages hors routeur (tests de rendu isolé).
-    final router = GoRouter.maybeOf(context);
-    return DonyBottomSheet.show<void>(
-      context,
-      title: 'Rôle voyageur désactivé',
-      subtitle:
-          'Les demandes de colis sont réservées aux voyageurs. '
-          'Réactive ton rôle voyageur pour les consulter.',
-      stickyBottom: DonyButton(
-        label: 'Ouvrir les réglages',
-        onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop();
-          router?.push('/settings');
-        },
-      ),
-      child: const SizedBox.shrink(),
-    );
-  }
-
-  /// Capacité réelle de l'utilisateur (pas le rôle actif sélectionné).
+  /// Capacité réelle de l'utilisateur (pas le rôle actif sélectionné). Tout
+  /// compte porte les deux rôles dès l'inscription et ne peut jamais les
+  /// perdre — utilisé pour du gating de fonctionnalité (ex. favoris), pas
+  /// pour bloquer l'accès à un mode de recherche.
   bool get _isTraveler {
     final s = context.read<AuthBloc>().state;
     return switch (s) {
