@@ -36,16 +36,18 @@ class EvergreenGuidanceCarousel extends StatefulWidget {
 
   static const Duration autoplayInterval = Duration(seconds: 4);
 
+  /// Ids possibles de slide, utilisé pour écouter/lire leur clé de fermeture
+  /// manuelle (X) sans dépendre de l'éligibilité courante de chacune. Public
+  /// pour être réutilisé par l'action « Réafficher les suggestions » de
+  /// `SettingsScreen`, qui doit effacer exactement le même jeu de clés.
+  static const guidanceSlideIds = ['trip', 'parcel', 'alert', 'kyc', 'tutorial'];
+
   @override
   State<EvergreenGuidanceCarousel> createState() =>
       _EvergreenGuidanceCarouselState();
 }
 
 class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
-  // Ids possibles de slide, utilisé pour écouter/lire leur clé de fermeture
-  // manuelle (X) sans dépendre de l'éligibilité courante de chacune.
-  static const _slideIds = ['trip', 'parcel', 'alert', 'kyc', 'tutorial'];
-
   final PageController _pageController = PageController();
   Timer? _autoplayTimer;
   int _currentIndex = 0;
@@ -142,7 +144,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
         keys: [
           if (tutorial != null)
             '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
-          for (final id in _slideIds)
+          for (final id in EvergreenGuidanceCarousel.guidanceSlideIds)
             '${HiveService.kGuidanceSlideDismissedPrefix}$id',
         ],
       ),

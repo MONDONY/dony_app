@@ -1,5 +1,12 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
@@ -147,8 +154,16 @@ class SettingsScreen extends StatelessWidget {
                     iconBgColor: cs.primaryContainer,
                     label: 'Accessibilité',
                     subtitle: 'Contraste, taille de police',
-                    showDivider: false,
                     onTap: () => context.push('/settings/accessibility'),
+                  ),
+                  DonyListTile(
+                    iconAsset: 'refresh-cw',
+                    iconColor: cs.primary,
+                    iconBgColor: cs.primaryContainer,
+                    label: 'Réafficher les suggestions',
+                    subtitle: 'Fait revenir les cartes fermées (écran Recherche)',
+                    showDivider: false,
+                    onTap: () => _resetGuidanceCards(context),
                   ),
                 ],
               ),
@@ -194,6 +209,32 @@ class SettingsScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  /// Efface les flags de fermeture manuelle (X) du carousel de guidance de
+  /// l'écran Recherche : sans ça, une fois toutes les cartes fermées, la
+  /// zone de suggestions (publier trajet, envoyer colis…) reste vide pour
+  /// toujours, sans moyen de revenir en arrière.
+  void _resetGuidanceCards(BuildContext context) {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.settingsGuidanceCardsReset,
+      ),
+    );
+    final hive = getIt<HiveService>();
+    for (final id in EvergreenGuidanceCarousel.guidanceSlideIds) {
+      unawaited(
+        hive.userPrefs.put(
+          '${HiveService.kGuidanceSlideDismissedPrefix}$id',
+          false,
+        ),
+      );
+    }
+    DonySnackbar.show(
+      context,
+      message: 'Suggestions réaffichées sur l\'écran Recherche.',
+      type: DonySnackbarType.success,
     );
   }
 

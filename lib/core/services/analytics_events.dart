@@ -179,6 +179,11 @@ abstract final class AnalyticsEvents {
   static const homeGuidanceCarouselSlideDismissed =
       'home_guidance_carousel_slide_dismissed';
 
+  /// SettingsScreen._resetGuidanceCards — tuile « Réafficher les
+  /// suggestions », efface tous les flags de fermeture manuelle des slides
+  /// du carousel de guidance evergreen (Recherche).
+  static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';
+
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 

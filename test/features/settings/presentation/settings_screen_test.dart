@@ -1,4 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
@@ -6,13 +10,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockAppPreferencesBloc
     extends MockBloc<AppPreferencesEvent, AppPreferencesState>
     implements AppPreferencesBloc {}
 
 class _FakeAppPreferencesEvent extends Fake implements AppPreferencesEvent {}
+
+class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 Widget _wrap({UserPreferencesModel? prefs}) {
   final mockBloc = MockAppPreferencesBloc();
@@ -56,9 +65,25 @@ Widget _wrap({UserPreferencesModel? prefs}) {
 }
 
 void main() {
+  late MockHiveService mockHive;
+  late MockBox mockBox;
+  late MockAnalyticsService mockAnalytics;
+
   setUpAll(() {
     registerFallbackValue(_FakeAppPreferencesEvent());
+    mockHive = MockHiveService();
+    mockBox = MockBox();
+    when(() => mockHive.userPrefs).thenReturn(mockBox);
+    when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+    getIt.registerSingleton<HiveService>(mockHive);
+    mockAnalytics = MockAnalyticsService();
+    when(
+      () => mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    getIt.registerSingleton<AnalyticsService>(mockAnalytics);
   });
+
+  tearDownAll(() => getIt.reset());
 
   group('SettingsScreen', () {
     testWidgets('renders Paramètres title', (tester) async {
@@ -122,7 +147,50 @@ void main() {
       expect(find.text('Notifications', skipOffstage: false), findsOneWidget);
       expect(find.text('Préférences', skipOffstage: false), findsOneWidget);
       expect(find.text('Accessibilité', skipOffstage: false), findsOneWidget);
+      expect(
+        find.text('Réafficher les suggestions', skipOffstage: false),
+        findsOneWidget,
+      );
     });
+
+    testWidgets(
+      'tap Réafficher les suggestions efface les flags Hive et logue '
+      "l'event",
+      (tester) async {
+        await tester.pumpWidget(_wrap());
+        await tester.pumpAndSettle();
+
+        await tester.scrollUntilVisible(
+          find.text('Réafficher les suggestions'),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Réafficher les suggestions'));
+        await tester.pump();
+
+        for (final id in const ['trip', 'parcel', 'alert', 'kyc', 'tutorial']) {
+          verify(
+            () => mockBox.put(
+              '${HiveService.kGuidanceSlideDismissedPrefix}$id',
+              false,
+            ),
+          ).called(1);
+        }
+        verify(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.settingsGuidanceCardsReset,
+          ),
+        ).called(1);
+
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Suggestions réaffichées sur l\'écran Recherche.'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('shows INFORMATIONS section', (tester) async {
       await tester.pumpWidget(_wrap());
