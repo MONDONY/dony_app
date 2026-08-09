@@ -139,6 +139,7 @@ void main() {
           clientSecret: 'pi_test_secret',
           paymentIntentId: 'pi_test',
           amountEur: 39.20,
+          currencyCode: 'EUR',
           paymentMethodTypes: ['paypal'],
         ),
       );

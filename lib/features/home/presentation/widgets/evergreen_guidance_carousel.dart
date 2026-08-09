@@ -35,8 +35,7 @@ class EvergreenGuidanceCarousel extends StatefulWidget {
       _EvergreenGuidanceCarouselState();
 }
 
-class _EvergreenGuidanceCarouselState
-    extends State<EvergreenGuidanceCarousel> {
+class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
   final PageController _pageController = PageController();
   Timer? _autoplayTimer;
   int _currentIndex = 0;
@@ -94,11 +93,11 @@ class _EvergreenGuidanceCarouselState
       ),
     );
     context.read<HelpCenterBloc>().add(
-          HelpTutorialOpenRequested(
-            tutorialId: tutorial.id,
-            source: TutorialContext.search,
-          ),
-        );
+      HelpTutorialOpenRequested(
+        tutorialId: tutorial.id,
+        source: TutorialContext.search,
+      ),
+    );
     context.push('/profile/help/tutorial/${tutorial.id}');
   }
 
@@ -114,31 +113,32 @@ class _EvergreenGuidanceCarouselState
     final tutorial = tutorialConfig.tutorialFor(TutorialContext.search);
 
     return ValueListenableBuilder<Box>(
-      valueListenable: widget.hiveService.listenUserPrefs(keys: [
-        HiveService.kHasPublishedAsTraveler,
-        HiveService.kHasPublishedAsSender,
-        HiveService.kHasActiveCorridorAlert,
-        if (tutorial != null)
-          '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
-      ]),
-      builder: (context, box, _) {
-        final hasPublishedTrip = box.get(
+      valueListenable: widget.hiveService.listenUserPrefs(
+        keys: [
           HiveService.kHasPublishedAsTraveler,
-          defaultValue: false,
-        ) as bool;
-        final hasPublishedParcel = box.get(
           HiveService.kHasPublishedAsSender,
-          defaultValue: false,
-        ) as bool;
-        final hasActiveCorridorAlert = box.get(
           HiveService.kHasActiveCorridorAlert,
-          defaultValue: false,
-        ) as bool;
-        final tutorialDismissed = tutorial != null &&
+          if (tutorial != null)
+            '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
+        ],
+      ),
+      builder: (context, box, _) {
+        final hasPublishedTrip =
+            box.get(HiveService.kHasPublishedAsTraveler, defaultValue: false)
+                as bool;
+        final hasPublishedParcel =
+            box.get(HiveService.kHasPublishedAsSender, defaultValue: false)
+                as bool;
+        final hasActiveCorridorAlert =
+            box.get(HiveService.kHasActiveCorridorAlert, defaultValue: false)
+                as bool;
+        final tutorialDismissed =
+            tutorial != null &&
             (box.get(
-              '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
-              defaultValue: false,
-            ) as bool);
+                  '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
+                  defaultValue: false,
+                )
+                as bool);
 
         final slides = <_GuidanceSlideData>[
           if (!hasPublishedTrip)
@@ -199,11 +199,8 @@ class _EvergreenGuidanceCarouselState
                   'Valide ton profil pour publier un trajet et réserver en toute confiance.',
               ctaLabel: 'Vérifier',
               color: DonyColors.info500,
-              onTap: () => _onSlideTap(
-                context,
-                slideId: 'kyc',
-                route: '/kyc/verify',
-              ),
+              onTap: () =>
+                  _onSlideTap(context, slideId: 'kyc', route: '/kyc/verify'),
             ),
           if (tutorial != null && !tutorialDismissed)
             _GuidanceSlideData(
@@ -230,6 +227,8 @@ class _EvergreenGuidanceCarouselState
           });
         }
         final safeIndex = _currentIndex.clamp(0, slides.length - 1).toInt();
+        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final cardHeight = (172 * textScale).clamp(172.0, 344.0);
 
         return Padding(
           padding: const EdgeInsets.symmetric(
@@ -247,7 +246,7 @@ class _EvergreenGuidanceCarouselState
                   ),
                 ),
               SizedBox(
-                height: 172,
+                height: cardHeight,
                 child: PageView.builder(
                   key: const Key('evergreen-guidance-carousel'),
                   controller: _pageController,
@@ -336,8 +335,9 @@ class _SlideCard extends StatelessWidget {
                   key: Key('guidance-slide-${data.id}-cta'),
                   onTap: data.onTap,
                   child: Container(
-                    constraints:
-                        const BoxConstraints(minHeight: kDonyMinTapTarget),
+                    constraints: const BoxConstraints(
+                      minHeight: kDonyMinTapTarget,
+                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.md,
                     ),
