@@ -547,8 +547,19 @@ void main() {
     setUp(() {
       box = _MockBox();
       when(() => box.put(any<String>(), any<bool>())).thenAnswer((_) async {});
+      // Clé de fermeture du tutoriel contextuel « activités » : non fermée
+      // par défaut, sinon ContextualTutorialCard ne s'affiche jamais.
+      when(
+        () => box.get(
+          '${HiveService.kContextualTutorialDismissedPrefix}activities_intro',
+          defaultValue: any<Object?>(named: 'defaultValue'),
+        ),
+      ).thenReturn(false);
       final hive = _MockHiveService();
       when(() => hive.userPrefs).thenReturn(box);
+      when(
+        () => hive.listenUserPrefs(keys: any(named: 'keys')),
+      ).thenReturn(ValueNotifier<Box>(box));
       getIt.registerLazySingleton<HiveService>(() => hive);
     });
 
