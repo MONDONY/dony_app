@@ -35,17 +35,33 @@ class ProfileAccountSection extends StatelessWidget {
 
   final UserModel? user;
 
+  static bool _computeVisible(UserModel? user, bool phoneAuthEnabled) {
+    final showKyc = user?.kycStatus != 'VERIFIED';
+    final hasEmail = user?.email != null && user!.email!.isNotEmpty;
+    final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
+    final showPhoneRow = phoneAuthEnabled && !hasPhone;
+    final showEmailRow = !hasEmail;
+    return showKyc || showPhoneRow || showEmailRow;
+  }
+
+  /// Lecture non réactive du flag SMS, pour que `_sections()` sache s'il
+  /// doit réserver un espacement autour de cette section avant même son
+  /// premier `build()` — sans ça, une section qui se réduit à rien (compte
+  /// entièrement vérifié) laisse ses deux espacements voisins s'empiler.
+  static bool isVisible(UserModel? user) =>
+      _computeVisible(user, smsAuthEnabledListenable.value);
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final showKyc = user?.kycStatus != 'VERIFIED';
-    final hasEmail = user?.email != null && user!.email!.isNotEmpty;
 
     // Une fois vérifié ou renseigné, chaque élément quitte « Mon compte » —
     // rien à vérifier deux fois, la section ne sert qu'aux actions restantes.
     return ValueListenableBuilder<bool>(
       valueListenable: smsAuthEnabledListenable,
       builder: (_, phoneEnabled, _) {
+        final showKyc = user?.kycStatus != 'VERIFIED';
+        final hasEmail = user?.email != null && user!.email!.isNotEmpty;
         final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
         final showPhoneRow = phoneEnabled && !hasPhone;
         final showEmailRow = !hasEmail;
@@ -612,6 +628,22 @@ DonyListTile kycTile(BuildContext context, UserModel? user) {
 
 // ── Profile completion banner ─────────────────────────────────────────────────
 
+/// Couleur de la jauge/bannière de complétion selon l'avancement : rouge en
+/// dessous d'1/3 (urgent), orange jusqu'aux 2/3 (comportement historique),
+/// bleu au-delà (presque fini). Jamais vert : à 100% la bannière disparaît
+/// entièrement (`ProfileScreen._sections` la conditionne sur
+/// `!user.isProfileComplete`), donc ce palier n'est jamais visuellement
+/// atteint. Partagé avec `_CompletionGauge` (edit_profile_screen.dart) pour
+/// que les deux jauges du même profil affichent toujours la même couleur.
+({Color base, Color light}) profileCompletionTierColor(
+  ColorScheme cs,
+  double pct,
+) {
+  if (pct < 1 / 3) return (base: cs.error, light: cs.errorLight);
+  if (pct < 2 / 3) return (base: cs.warning, light: cs.warningLight);
+  return (base: cs.info, light: cs.infoLight);
+}
+
 class ProfileCompletionBanner extends StatelessWidget {
   const ProfileCompletionBanner({
     super.key,
@@ -624,24 +656,43 @@ class ProfileCompletionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: smsAuthEnabledListenable,
+      builder: (context, phoneAuthEnabled, _) =>
+          _build(context, phoneAuthEnabled),
+    );
+  }
+
+  Widget _build(BuildContext context, bool phoneAuthEnabled) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final completed = user.profileCompletionSteps;
-    const total = UserModel.profileTotalSteps;
+    final completed = user.profileCompletionSteps(
+      countPhone: phoneAuthEnabled,
+    );
+    final total = UserModel.profileTotalSteps(countPhone: phoneAuthEnabled);
+    final pct = completed / total;
+    final tier = profileCompletionTierColor(cs, pct);
 
     final missing = <String>[];
+    if (!(user.avatarUrl?.isNotEmpty ?? false)) missing.add('Photo');
     if (!(user.firstName?.isNotEmpty ?? false)) missing.add('Prénom');
     if (!(user.lastName?.isNotEmpty ?? false)) missing.add('Nom');
     if (!(user.email?.isNotEmpty ?? false)) missing.add('Email');
+    if (phoneAuthEnabled && !(user.phoneNumber?.isNotEmpty ?? false)) {
+      missing.add('Téléphone');
+    }
+    if (user.birthDate == null) missing.add('Date de naissance');
+    if (!(user.city?.isNotEmpty ?? false)) missing.add('Ville');
+    if (!(user.bio?.isNotEmpty ?? false)) missing.add('À propos');
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
-          color: cs.warningLight,
+          color: tier.light,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
+          border: Border.all(color: tier.base.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -651,10 +702,10 @@ class ProfileCompletionBanner extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(DonySpacing.sm),
                   decoration: BoxDecoration(
-                    color: cs.warning.withValues(alpha: 0.12),
+                    color: tier.base.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
-                  child: DonyIcon('notebook-pen', color: cs.warning, size: 18),
+                  child: DonyIcon('notebook-pen', color: tier.base, size: 18),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -669,9 +720,9 @@ class ProfileCompletionBanner extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${(completed / total * 100).round()}% complété · Compléter maintenant',
+                        '${(pct * 100).round()}% complété · Compléter maintenant',
                         style: tt.bodySmall?.copyWith(
-                          color: cs.warning,
+                          color: tier.base,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -685,9 +736,9 @@ class ProfileCompletionBanner extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(DonyRadius.xs),
               child: LinearProgressIndicator(
-                value: completed / total,
+                value: pct,
                 backgroundColor: cs.outline,
-                valueColor: AlwaysStoppedAnimation<Color>(cs.warning),
+                valueColor: AlwaysStoppedAnimation<Color>(tier.base),
                 minHeight: 5,
               ),
             ),
@@ -696,7 +747,9 @@ class ProfileCompletionBanner extends StatelessWidget {
               Wrap(
                 spacing: DonySpacing.xs,
                 runSpacing: DonySpacing.xs,
-                children: missing.map((m) => _MissingChip(label: m)).toList(),
+                children: missing
+                    .map((m) => _MissingChip(label: m, color: tier.base))
+                    .toList(),
               ),
             ],
           ],
@@ -707,12 +760,12 @@ class ProfileCompletionBanner extends StatelessWidget {
 }
 
 class _MissingChip extends StatelessWidget {
-  const _MissingChip({required this.label});
+  const _MissingChip({required this.label, required this.color});
   final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -720,20 +773,20 @@ class _MissingChip extends StatelessWidget {
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: cs.warning.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DonyRadius.sm),
-        border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon('plus', color: cs.warning, size: 12),
+          DonyIcon('plus', color: color, size: 12),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
             style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: cs.warning,
+              color: color,
             ),
           ),
         ],

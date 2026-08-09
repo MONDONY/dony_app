@@ -1,3 +1,4 @@
+import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -178,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SliverPadding(
                             padding: EdgeInsets.fromLTRB(
                               DonySpacing.lg,
-                              DonySpacing.xl,
+                              DonySpacing.lg,
                               DonySpacing.lg,
                               _kNavBarClearance +
                                   MediaQuery.paddingOf(context).bottom,
@@ -304,7 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required UserModel? user,
     required bool isProAccount,
   }) {
-    const gap = SizedBox(height: DonySpacing.xl);
+    const gap = SizedBox(height: DonySpacing.lg);
     var delay = 80;
     Widget animated(Widget child) {
       final w = child
@@ -314,6 +315,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       delay += 40;
       return w;
     }
+
+    final showAccountSection = ProfileAccountSection.isVisible(user);
 
     return [
       if (user != null &&
@@ -327,7 +330,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: DonySpacing.lg),
       ],
-      if (user != null && !user.isProfileComplete) ...[
+      if (user != null &&
+          !user.isProfileComplete(
+            countPhone: smsAuthEnabledListenable.value,
+          )) ...[
         ProfileCompletionBanner(
           user: user,
           onTap: () => context.push('/profile/edit'),
@@ -336,7 +342,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
 
       animated(ProfileAccountSection(user: user)),
-      gap,
+      // Compte entièrement vérifié → la section se réduit à SizedBox.shrink :
+      // sans cette condition, l'espacement d'avant et celui d'après
+      // s'empilaient en un vide de ~2× la hauteur voulue.
+      if (showAccountSection) gap,
       animated(ProfileMoneySection(user: user)),
       gap,
       animated(ProfileReputationSection(user: user)),

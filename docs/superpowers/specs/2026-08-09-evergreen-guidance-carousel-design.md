@@ -66,3 +66,14 @@ Aucun dismiss manuel (pas de croix). La disparition d'une slide est 100% piloté
 - Pas de retouche au `SearchModeSelector` lui-même (toggle ✈️/📦) — le problème de compréhension du toggle est traité via la slide tuto, pas via une refonte du composant.
 - Pas de changement du contenu du tuto existant (`ContextualTutorialCard`), seulement son déplacement en slide.
 - Pas de personnalisation du carousel par rôle actif ou par mode (Trajets/Colis) — mêmes slides dans les deux modes.
+
+---
+
+## Addendum — Task 6 (post-device feedback)
+
+Après test sur device réel, le design "grande carte pleine couleur + CTA" a été
+remplacé par des cartes compactes (taille `ContextualTutorialCard`), toute la
+carte cliquable, plus de bouton CTA séparé. Voir
+`lib/features/home/presentation/widgets/evergreen_guidance_carousel.dart` pour
+l'implémentation actuelle — ce document décrit l'état pré-Task-6, gardé pour
+l'historique de conception.

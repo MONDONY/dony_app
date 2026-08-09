@@ -183,7 +183,7 @@ Text(
 
 ```dart
 DonyButton(
-  label: 'Envoyer un colis',
+  label: 'Publier un colis',
   onPressed: () {},
   variant: DonyButtonVariant.primary,   // primary | secondary | ghost | destructive
   icon: Icons.send,                     // optionnel

@@ -60,7 +60,7 @@ class _FaqScreenState extends State<FaqScreen> {
         _FaqItem(
           id: 'publish_request',
           q: 'Comment publier une demande d\'envoi ?',
-          a: 'Depuis Accueil ou Activités, choisis "Envoyer un colis". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.',
+          a: 'Depuis Accueil ou Activités, choisis "Publier un colis". Décris le colis, son poids estimé et le destinataire. Les voyageurs compatibles pourront proposer une offre.',
         ),
         _FaqItem(
           id: 'edit_request',

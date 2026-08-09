@@ -261,7 +261,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Le vrai CreateBidScreen (widgets/) est affiché.
-    expect(find.text('Envoyer un colis'), findsOneWidget);
+    expect(find.text('Publier un colis'), findsOneWidget);
 
     paymentStates.add(const CheckoutPaymentSheetReady(
       clientSecret: 'pi_test_secret',
@@ -289,7 +289,7 @@ void main() {
 
     // 2. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
     //    SANS navigation vers le détail du bid à ce stade.
-    expect(find.text('Envoyer un colis'), findsNothing);
+    expect(find.text('Publier un colis'), findsNothing);
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Offre payée !'), findsOneWidget);
     expect(find.textContaining('Bid détail'), findsNothing);
@@ -326,7 +326,7 @@ void main() {
     await tester.pumpWidget(_buildHarness(_announcement()));
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
-    expect(find.text('Envoyer un colis'), findsOneWidget);
+    expect(find.text('Publier un colis'), findsOneWidget);
   }
 
   testWidgets(
@@ -343,7 +343,7 @@ void main() {
 
     // 1. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
     //    SANS navigation vers le détail du bid à ce stade.
-    expect(find.text('Envoyer un colis'), findsNothing);
+    expect(find.text('Publier un colis'), findsNothing);
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Offre envoyée !'), findsOneWidget);
     expect(

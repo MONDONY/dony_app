@@ -49,7 +49,7 @@ class ProfileHeader extends StatelessWidget {
         DonySpacing.lg,
         topPad + DonySpacing.lg,
         DonySpacing.lg,
-        DonySpacing.md,
+        DonySpacing.sm,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

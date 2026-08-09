@@ -18,41 +18,40 @@ class MockHiveService extends Mock implements HiveService {}
 class MockBox extends Mock implements Box {}
 
 CorridorAlertModel _created() => CorridorAlertModel(
-      id: 'a1',
-      departureCity: 'Paris',
-      arrivalCity: 'Bamako',
-      active: true,
-      createdAt: DateTime(2026, 6, 20),
-    );
+  id: 'a1',
+  departureCity: 'Paris',
+  arrivalCity: 'Bamako',
+  active: true,
+  createdAt: DateTime(2026, 6, 20),
+);
 
 CorridorAlertModel _alert({
   AlertDirection direction = AlertDirection.travelerWantsPackages,
-}) =>
-    CorridorAlertModel(
-      id: 'a1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      active: true,
-      createdAt: DateTime(2026, 6, 20),
-      direction: direction,
-    );
+}) => CorridorAlertModel(
+  id: 'a1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  active: true,
+  createdAt: DateTime(2026, 6, 20),
+  direction: direction,
+);
 
 void main() {
   late MockRepo repo;
   late MockAnalytics analytics;
 
   setUpAll(() {
-    registerFallbackValue(const CorridorAlertDraft(
-      departureCity: 'x',
-      arrivalCity: 'y',
-    ));
+    registerFallbackValue(
+      const CorridorAlertDraft(departureCity: 'x', arrivalCity: 'y'),
+    );
   });
 
   setUp(() {
     repo = MockRepo();
     analytics = MockAnalytics();
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   test('initial create state is invalid (no corridor)', () {
@@ -96,17 +95,22 @@ void main() {
       // setArrival → both set → valid
       isA<CorridorAlertFormState>().having((s) => s.isValid, 'valid', isTrue),
       isA<CorridorAlertFormState>().having(
-          (s) => s.status, 'status', CorridorAlertFormStatus.submitting),
+        (s) => s.status,
+        'status',
+        CorridorAlertFormStatus.submitting,
+      ),
       isA<CorridorAlertFormState>().having(
-          (s) => s.status, 'status', CorridorAlertFormStatus.success),
+        (s) => s.status,
+        'status',
+        CorridorAlertFormStatus.success,
+      ),
     ],
   );
 
   blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
     'submit (edit) calls update with id',
     build: () {
-      when(() => repo.update('a1', any()))
-          .thenAnswer((_) async => _created());
+      when(() => repo.update('a1', any())).thenAnswer((_) async => _created());
       return CorridorAlertFormCubit(repo, analytics, editing: _created());
     },
     act: (c) => c.submit(),
@@ -162,14 +166,20 @@ void main() {
   // ---------------------------------------------------------------------------
 
   test('initialDirection seeds state.direction on create', () {
-    final cubit = CorridorAlertFormCubit(repo, analytics,
-        initialDirection: AlertDirection.senderWantsTrips);
+    final cubit = CorridorAlertFormCubit(
+      repo,
+      analytics,
+      initialDirection: AlertDirection.senderWantsTrips,
+    );
     expect(cubit.state.direction, AlertDirection.senderWantsTrips);
   });
 
   test('editing alert seeds state.direction from alert', () {
-    final cubit = CorridorAlertFormCubit(repo, analytics,
-        editing: _alert(direction: AlertDirection.senderWantsTrips));
+    final cubit = CorridorAlertFormCubit(
+      repo,
+      analytics,
+      editing: _alert(direction: AlertDirection.senderWantsTrips),
+    );
     expect(cubit.state.direction, AlertDirection.senderWantsTrips);
     expect(cubit.isEditing, isTrue);
   });
@@ -179,26 +189,33 @@ void main() {
     build: () => CorridorAlertFormCubit(repo, analytics),
     act: (c) => c.setDirection(AlertDirection.senderWantsTrips),
     expect: () => [
-      isA<CorridorAlertFormState>()
-          .having((s) => s.direction, 'direction',
-              AlertDirection.senderWantsTrips),
+      isA<CorridorAlertFormState>().having(
+        (s) => s.direction,
+        'direction',
+        AlertDirection.senderWantsTrips,
+      ),
     ],
   );
 
   blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
     'submit sends direction in draft',
-    build: () => CorridorAlertFormCubit(repo, analytics,
-        initialDirection: AlertDirection.senderWantsTrips),
-    setUp: () => when(() => repo.create(any()))
-        .thenAnswer((_) async => _alert(direction: AlertDirection.senderWantsTrips)),
+    build: () => CorridorAlertFormCubit(
+      repo,
+      analytics,
+      initialDirection: AlertDirection.senderWantsTrips,
+    ),
+    setUp: () => when(() => repo.create(any())).thenAnswer(
+      (_) async => _alert(direction: AlertDirection.senderWantsTrips),
+    ),
     act: (c) {
       c.setDeparture('Paris', 'FR');
       c.setArrival('Dakar', 'SN');
       return c.submit();
     },
     verify: (_) {
-      final draft = verify(() => repo.create(captureAny())).captured.single
-          as CorridorAlertDraft;
+      final draft =
+          verify(() => repo.create(captureAny())).captured.single
+              as CorridorAlertDraft;
       expect(draft.direction, AlertDirection.senderWantsTrips);
     },
   );
@@ -222,7 +239,10 @@ void main() {
       // setArrival → valid
       isA<CorridorAlertFormState>().having((s) => s.isValid, 'valid', isTrue),
       isA<CorridorAlertFormState>().having(
-          (s) => s.status, 'status', CorridorAlertFormStatus.submitting),
+        (s) => s.status,
+        'status',
+        CorridorAlertFormStatus.submitting,
+      ),
       isA<CorridorAlertFormState>()
           .having((s) => s.status, 'status', CorridorAlertFormStatus.error)
           .having((s) => s.errorMessage, 'err', isNotNull),
@@ -235,8 +255,11 @@ void main() {
 
   blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
     'setZone stores center, radius, label + hasZone',
-    build: () => CorridorAlertFormCubit(repo, analytics,
-        initialDirection: AlertDirection.senderWantsTrips),
+    build: () => CorridorAlertFormCubit(
+      repo,
+      analytics,
+      initialDirection: AlertDirection.senderWantsTrips,
+    ),
     act: (c) =>
         c.setZone(lat: 48.8566, lng: 2.3522, radiusKm: 20, label: 'Châtelet'),
     verify: (c) {
@@ -251,8 +274,11 @@ void main() {
   blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
     'clearZone resets the zone',
     build: () {
-      final c = CorridorAlertFormCubit(repo, analytics,
-          initialDirection: AlertDirection.senderWantsTrips);
+      final c = CorridorAlertFormCubit(
+        repo,
+        analytics,
+        initialDirection: AlertDirection.senderWantsTrips,
+      );
       c.setZone(lat: 48.85, lng: 2.35, radiusKm: 30, label: 'Paris');
       return c;
     },
@@ -267,10 +293,14 @@ void main() {
 
   blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
     'submit sends zone in draft',
-    build: () => CorridorAlertFormCubit(repo, analytics,
-        initialDirection: AlertDirection.senderWantsTrips),
+    build: () => CorridorAlertFormCubit(
+      repo,
+      analytics,
+      initialDirection: AlertDirection.senderWantsTrips,
+    ),
     setUp: () => when(() => repo.create(any())).thenAnswer(
-        (_) async => _alert(direction: AlertDirection.senderWantsTrips)),
+      (_) async => _alert(direction: AlertDirection.senderWantsTrips),
+    ),
     act: (c) {
       c.setDeparture('Paris', 'FR');
       c.setArrival('Abidjan', 'CI');
@@ -278,8 +308,9 @@ void main() {
       return c.submit();
     },
     verify: (_) {
-      final draft = verify(() => repo.create(captureAny())).captured.single
-          as CorridorAlertDraft;
+      final draft =
+          verify(() => repo.create(captureAny())).captured.single
+              as CorridorAlertDraft;
       expect(draft.centerLat, 48.8566);
       expect(draft.radiusKm, 20);
       expect(draft.centerLabel, 'Châtelet');
@@ -310,20 +341,22 @@ void main() {
   // pour écrire un `null` explicite. Sans ces tests, une sentinelle mal
   // câblée laisserait la ville en place au lieu de l'effacer, en silence.
 
-  test('clearDeparture vide la ville et son code pays, sans toucher arrivée',
-      () {
-    final c = CorridorAlertFormCubit(repo, analytics);
-    c.setDeparture('Paris', 'FR');
-    c.setArrival('Dakar', 'SN');
+  test(
+    'clearDeparture vide la ville et son code pays, sans toucher arrivée',
+    () {
+      final c = CorridorAlertFormCubit(repo, analytics);
+      c.setDeparture('Paris', 'FR');
+      c.setArrival('Dakar', 'SN');
 
-    c.clearDeparture();
+      c.clearDeparture();
 
-    expect(c.state.departureCity, isNull);
-    expect(c.state.departureCountryCode, isNull);
-    expect(c.state.arrivalCity, 'Dakar');
-    expect(c.state.arrivalCountryCode, 'SN');
-    expect(c.state.isValid, isFalse);
-  });
+      expect(c.state.departureCity, isNull);
+      expect(c.state.departureCountryCode, isNull);
+      expect(c.state.arrivalCity, 'Dakar');
+      expect(c.state.arrivalCountryCode, 'SN');
+      expect(c.state.isValid, isFalse);
+    },
+  );
 
   test('clearArrival vide la ville et son code pays, sans toucher départ', () {
     final c = CorridorAlertFormCubit(repo, analytics);
@@ -406,19 +439,24 @@ void main() {
       c.setArrival('Bamako', 'ML');
       await c.submit();
 
-      verify(() => box.put(HiveService.kHasActiveCorridorAlert, true)).called(1);
+      verify(
+        () => box.put(HiveService.kHasActiveCorridorAlert, true),
+      ).called(1);
     });
 
-    test('submit (create) réussi sans hiveService ne lève pas d\'exception', () async {
-      when(() => repo.create(any())).thenAnswer((_) async => _created());
+    test(
+      'submit (create) réussi sans hiveService ne lève pas d\'exception',
+      () async {
+        when(() => repo.create(any())).thenAnswer((_) async => _created());
 
-      final c = CorridorAlertFormCubit(repo, analytics);
-      c.setDeparture('Paris', 'FR');
-      c.setArrival('Bamako', 'ML');
-      await c.submit();
+        final c = CorridorAlertFormCubit(repo, analytics);
+        c.setDeparture('Paris', 'FR');
+        c.setArrival('Bamako', 'ML');
+        await c.submit();
 
-      expect(c.state.status, CorridorAlertFormStatus.success);
-    });
+        expect(c.state.status, CorridorAlertFormStatus.success);
+      },
+    );
 
     test('submit (edit) réussi pose aussi le flag', () async {
       final hive = MockHiveService();
@@ -435,7 +473,9 @@ void main() {
       );
       await c.submit();
 
-      verify(() => box.put(HiveService.kHasActiveCorridorAlert, true)).called(1);
+      verify(
+        () => box.put(HiveService.kHasActiveCorridorAlert, true),
+      ).called(1);
     });
 
     test('submit en erreur ne pose pas le flag', () async {

@@ -194,21 +194,28 @@ void main() {
 
     // ─── isProfileComplete ────────────────────────────────────────────────────
 
+    final birthDate = DateTime(1995, 3, 12);
+    const fullyComplete = UserModel(
+      id: 'u1',
+      avatarUrl: 'https://cdn.example.com/avatar.jpg',
+      firstName: 'Amadou',
+      lastName: 'Diallo',
+      email: 'amadou@example.com',
+      phoneNumber: '+221701234567',
+      city: 'Dakar',
+      bio: 'Voyageur régulier Paris-Dakar.',
+      roles: [],
+      kycStatus: 'PENDING',
+      status: 'ACTIVE',
+    );
+
     group('isProfileComplete', () {
-      test('prénom + nom + email remplis → true', () {
-        const user = UserModel(
-          id: 'u1',
-          firstName: 'Amadou',
-          lastName: 'Diallo',
-          email: 'amadou@example.com',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.isProfileComplete, isTrue);
+      test('8 champs remplis (photo, identité, contact, ville, à propos) → true', () {
+        final user = fullyComplete.copyWith(birthDate: birthDate);
+        expect(user.isProfileComplete(), isTrue);
       });
 
-      test('date de naissance et ville absentes → toujours true (plus requis)', () {
+      test('prénom + nom + email seuls → false (photo/téléphone/etc manquants)', () {
         const user = UserModel(
           id: 'u1',
           firstName: 'Amadou',
@@ -218,59 +225,98 @@ void main() {
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.birthDate, isNull);
-        expect(user.city, isNull);
-        expect(user.isProfileComplete, isTrue);
+        expect(user.isProfileComplete(), isFalse);
+      });
+
+      test('date de naissance manquante → false (requise désormais)', () {
+        expect(fullyComplete.birthDate, isNull);
+        expect(fullyComplete.isProfileComplete(), isFalse);
+      });
+
+      test('photo manquante → false', () {
+        final user = UserModel(
+          id: 'u1',
+          firstName: 'Amadou',
+          lastName: 'Diallo',
+          email: 'amadou@example.com',
+          phoneNumber: '+221701234567',
+          birthDate: birthDate,
+          city: 'Dakar',
+          bio: 'Voyageur régulier Paris-Dakar.',
+          roles: const [],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.avatarUrl, isNull);
+        expect(user.isProfileComplete(), isFalse);
       });
 
       test('email manquant → false', () {
-        const user = UserModel(
+        final user = UserModel(
           id: 'u1',
+          avatarUrl: 'https://cdn.example.com/avatar.jpg',
           firstName: 'Amadou',
           lastName: 'Diallo',
-          roles: [],
+          phoneNumber: '+221701234567',
+          birthDate: birthDate,
+          city: 'Dakar',
+          bio: 'Voyageur régulier Paris-Dakar.',
+          roles: const [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.isProfileComplete, isFalse);
+        expect(user.email, isNull);
+        expect(user.isProfileComplete(), isFalse);
       });
 
-      test('nom de famille manquant → false', () {
-        const user = UserModel(
-          id: 'u1',
-          firstName: 'Amadou',
-          email: 'amadou@example.com',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.isProfileComplete, isFalse);
-      });
-
-      test('prénom manquant → false', () {
-        const user = UserModel(
-          id: 'u1',
-          lastName: 'Diallo',
-          email: 'amadou@example.com',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.isProfileComplete, isFalse);
+      // ── countPhone: false (SMS OTP backend non confirmé) ──────────────────
+      group('countPhone: false (flag SMS OTP désactivé)', () {
+        test('téléphone absent mais les 7 autres champs remplis → true', () {
+          final user = fullyComplete.copyWith(birthDate: birthDate);
+          final userWithoutPhone = UserModel(
+            id: user.id,
+            avatarUrl: user.avatarUrl,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            city: user.city,
+            bio: user.bio,
+            birthDate: user.birthDate,
+            roles: user.roles,
+            kycStatus: user.kycStatus,
+            status: user.status,
+          );
+          expect(userWithoutPhone.phoneNumber, isNull);
+          expect(
+            userWithoutPhone.isProfileComplete(countPhone: false),
+            isTrue,
+          );
+          // Le même utilisateur reste incomplet si le flag est actif (le
+          // total redevient 8 et le téléphone manque).
+          expect(
+            userWithoutPhone.isProfileComplete(),
+            isFalse,
+          );
+        });
       });
     });
 
     // ─── profileCompletionSteps ───────────────────────────────────────────────
 
     group('profileCompletionSteps', () {
-      test('aucun champ → 0 étapes', () {
+      test('aucun champ → 0 étape sur 8', () {
         const user = UserModel(
           id: 'u1',
           roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.profileCompletionSteps, 0);
+        expect(user.profileCompletionSteps(), 0);
+        expect(UserModel.profileTotalSteps(), 8);
+      });
+
+      test('countPhone: false → total de 7', () {
+        expect(UserModel.profileTotalSteps(countPhone: false), 7);
       });
 
       test('prénom seulement → 1 étape', () {
@@ -281,7 +327,7 @@ void main() {
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.profileCompletionSteps, 1);
+        expect(user.profileCompletionSteps(), 1);
       });
 
       test('prénom + nom + email → 3 étapes', () {
@@ -294,8 +340,18 @@ void main() {
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
-        expect(user.profileCompletionSteps, 3);
-        expect(UserModel.profileTotalSteps, 3);
+        expect(user.profileCompletionSteps(), 3);
+      });
+
+      test('les 8 champs remplis → 8 étapes', () {
+        final user = fullyComplete.copyWith(birthDate: birthDate);
+        expect(user.profileCompletionSteps(), 8);
+      });
+
+      test('téléphone rempli mais countPhone: false → il n\'est pas compté', () {
+        final user = fullyComplete.copyWith(birthDate: birthDate);
+        expect(user.phoneNumber, isNotNull);
+        expect(user.profileCompletionSteps(countPhone: false), 7);
       });
     });
 

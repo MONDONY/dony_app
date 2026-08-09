@@ -8,6 +8,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
+    show profileCompletionTierColor;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -258,10 +260,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── Jauge de complétion — masquée une fois à 100% ────────
-                if (user.profileCompletionSteps < UserModel.profileTotalSteps) ...[
-                  _CompletionGauge(user: user),
-                  const SizedBox(height: DonySpacing.xxl),
-                ],
+                ValueListenableBuilder<bool>(
+                  valueListenable: smsAuthEnabledListenable,
+                  builder: (context, phoneAuthEnabled, _) {
+                    final steps = user.profileCompletionSteps(
+                      countPhone: phoneAuthEnabled,
+                    );
+                    final total = UserModel.profileTotalSteps(
+                      countPhone: phoneAuthEnabled,
+                    );
+                    if (steps >= total) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _CompletionGauge(
+                          user: user,
+                          countPhone: phoneAuthEnabled,
+                        ),
+                        const SizedBox(height: DonySpacing.xxl),
+                      ],
+                    );
+                  },
+                ),
 
                 // ── Avatar header — toujours actif, hors vue/édition ─────
                 Center(
@@ -577,7 +597,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
 // ── Extracted sub-widgets ─────────────────────────────────────────────────────
 
-/// Jauge de complétion du profil — prénom + nom + email (`UserModel.
+/// Jauge de complétion du profil — 8 champs d'identité (`UserModel.
 /// profileCompletionSteps` / `profileTotalSteps`). Vit ici plutôt que sur
 /// l'écran « Moi » : c'est l'écran où on agit, pas juste où on regarde.
 ///
@@ -585,16 +605,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 /// déjà son affichage sur `steps < total`, donc le seul état possible ici
 /// est "en cours".
 class _CompletionGauge extends StatelessWidget {
-  const _CompletionGauge({required this.user});
+  const _CompletionGauge({required this.user, required this.countPhone});
   final UserModel user;
+  final bool countPhone;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final steps = user.profileCompletionSteps;
-    const total = UserModel.profileTotalSteps;
+    final steps = user.profileCompletionSteps(countPhone: countPhone);
+    final total = UserModel.profileTotalSteps(countPhone: countPhone);
     final pct = steps / total;
+    final tier = profileCompletionTierColor(cs, pct);
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -618,7 +640,7 @@ class _CompletionGauge extends StatelessWidget {
               Text(
                 '${(pct * 100).round()}%',
                 style: tt.bodyMedium?.copyWith(
-                  color: cs.primary,
+                  color: tier.base,
                   fontWeight: FontWeight.w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
@@ -631,13 +653,13 @@ class _CompletionGauge extends StatelessWidget {
             child: LinearProgressIndicator(
               value: pct,
               backgroundColor: cs.outline.withValues(alpha: 0.25),
-              valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(tier.base),
               minHeight: 6,
             ),
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Prénom, nom et email complètent votre profil',
+            'Photo, identité, coordonnées et informations complètent votre profil',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

@@ -1056,3 +1056,14 @@ git commit -m "test: complète la couverture du carousel de guidance evergreen"
 - Pas de retouche au `SearchModeSelector` (toggle ✈️/📦) — le tuto explique son fonctionnement, on ne redessine pas le composant.
 - Pas de changement du contenu des tutoriels distants (`HelpCenterConfig`) — seulement le point d'affichage de celui de `TutorialContext.search`.
 - Pas de personnalisation par rôle actif ou par mode Trajets/Colis — mêmes slides dans les deux modes.
+
+---
+
+## Addendum — Task 6 (post-device feedback)
+
+Après test sur device réel, le design "grande carte pleine couleur + CTA" a été
+remplacé par des cartes compactes (taille `ContextualTutorialCard`), toute la
+carte cliquable, plus de bouton CTA séparé. Voir
+`lib/features/home/presentation/widgets/evergreen_guidance_carousel.dart` pour
+l'implémentation actuelle — ce document décrit l'état pré-Task-6, gardé pour
+l'historique de conception.

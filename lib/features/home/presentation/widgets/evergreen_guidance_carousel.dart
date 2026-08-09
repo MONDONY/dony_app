@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:flutter/material.dart';
@@ -14,10 +16,14 @@ import 'package:hive/hive.dart';
 
 /// Carousel evergreen affiché juste avant la liste de résultats de l'écran
 /// Recherche. Remplace `RoleGuidanceBanner` (CTA mort, dismiss définitif) et
-/// `ContextualTutorialCard` (carte séparée) par des cartes pleine couleur en
-/// rotation automatique, chacune masquée dès que l'action qu'elle propose
-/// est faite. Aucune croix de fermeture manuelle : la disparition est
-/// entièrement pilotée par l'état applicatif.
+/// `ContextualTutorialCard` (carte séparée) par des cartes compactes (même
+/// gabarit que `ContextualTutorialCard`, entièrement cliquables) en rotation
+/// automatique. Slides « Publier trajet », « Envoyer colis » et « Créer une
+/// alerte » restent toujours visibles (actions qu'on peut refaire plusieurs
+/// fois) ; seule la slide KYC se masque une fois l'identité vérifiée
+/// (impossible à refaire). Chaque slide a en plus sa propre croix de
+/// fermeture manuelle (X) : masquage définitif indépendant de l'état
+/// applicatif, pour l'utilisateur qui ne veut simplement plus la voir.
 class EvergreenGuidanceCarousel extends StatefulWidget {
   const EvergreenGuidanceCarousel({
     super.key,
@@ -29,6 +35,12 @@ class EvergreenGuidanceCarousel extends StatefulWidget {
   final bool isKycVerified;
 
   static const Duration autoplayInterval = Duration(seconds: 4);
+
+  /// Ids possibles de slide, utilisé pour écouter/lire leur clé de fermeture
+  /// manuelle (X) sans dépendre de l'éligibilité courante de chacune. Public
+  /// pour être réutilisé par l'action « Réafficher les suggestions » de
+  /// `SettingsScreen`, qui doit effacer exactement le même jeu de clés.
+  static const guidanceSlideIds = ['trip', 'parcel', 'alert', 'kyc', 'tutorial'];
 
   @override
   State<EvergreenGuidanceCarousel> createState() =>
@@ -51,7 +63,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
   void _restartAutoplay(int slideCount) {
     _autoplayTimer?.cancel();
     if (slideCount <= 1) return;
-    if (MediaQuery.of(context).disableAnimations) return;
+    if (MediaQuery.disableAnimationsOf(context)) return;
     _autoplayTimer = Timer.periodic(
       EvergreenGuidanceCarousel.autoplayInterval,
       (_) {
@@ -101,6 +113,21 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
     context.push('/profile/help/tutorial/${tutorial.id}');
   }
 
+  void _onDismiss(String slideId) {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeGuidanceCarouselSlideDismissed,
+        properties: {'slide': slideId},
+      ),
+    );
+    unawaited(
+      widget.hiveService.userPrefs.put(
+        '${HiveService.kGuidanceSlideDismissedPrefix}$slideId',
+        true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tutorialConfig = context.select<HelpCenterBloc, HelpCenterConfig>(
@@ -115,23 +142,14 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
     return ValueListenableBuilder<Box>(
       valueListenable: widget.hiveService.listenUserPrefs(
         keys: [
-          HiveService.kHasPublishedAsTraveler,
-          HiveService.kHasPublishedAsSender,
-          HiveService.kHasActiveCorridorAlert,
           if (tutorial != null)
             '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
+          for (final id in EvergreenGuidanceCarousel.guidanceSlideIds)
+            '${HiveService.kGuidanceSlideDismissedPrefix}$id',
         ],
       ),
       builder: (context, box, _) {
-        final hasPublishedTrip =
-            box.get(HiveService.kHasPublishedAsTraveler, defaultValue: false)
-                as bool;
-        final hasPublishedParcel =
-            box.get(HiveService.kHasPublishedAsSender, defaultValue: false)
-                as bool;
-        final hasActiveCorridorAlert =
-            box.get(HiveService.kHasActiveCorridorAlert, defaultValue: false)
-                as bool;
+        final cs = Theme.of(context).colorScheme;
         final tutorialDismissed =
             tutorial != null &&
             (box.get(
@@ -139,66 +157,52 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
                   defaultValue: false,
                 )
                 as bool);
+        bool userDismissed(String slideId) =>
+            box.get(
+              '${HiveService.kGuidanceSlideDismissedPrefix}$slideId',
+              defaultValue: false,
+            ) as bool;
 
         final slides = <_GuidanceSlideData>[
-          if (!hasPublishedTrip)
-            _GuidanceSlideData(
-              id: 'trip',
-              icon: 'plane',
-              title: 'Publier mon trajet',
-              subtitle:
-                  'Rentabilise tes voyages en transportant des colis pour d’autres.',
-              ctaLabel: 'Commencer',
-              // Primitive fixe, pas cs.primary : en dark mode le ColorScheme
-              // recalibre ce token pour du texte/icônes sur fond sombre, pas
-              // pour un fill plein avec du texte blanc dessus (cf.
-              // app_theme.dart:143-151, même piège documenté pour cs.primary).
-              color: DonyColors.blue500,
-              onTap: () => _onSlideTap(
-                context,
-                slideId: 'trip',
-                route: '/trips/publish-intro',
-              ),
+          _GuidanceSlideData(
+            id: 'trip',
+            icon: 'plane',
+            title: 'Publier mon trajet',
+            color: cs.primary,
+            onTap: () => _onSlideTap(
+              context,
+              slideId: 'trip',
+              route: '/trips/publish-intro',
             ),
-          if (!hasPublishedParcel)
-            _GuidanceSlideData(
-              id: 'parcel',
-              icon: 'send',
-              title: 'Envoyer un colis',
-              subtitle:
-                  'Trouve un voyageur qui emporte ton colis à destination.',
-              ctaLabel: 'Rechercher',
-              color: DonyColors.success500,
-              onTap: () => _onSlideTap(
-                context,
-                slideId: 'parcel',
-                route: '/parcels/send-intro',
-              ),
+          ),
+          _GuidanceSlideData(
+            id: 'parcel',
+            icon: 'send',
+            title: 'Publier un colis',
+            color: cs.success,
+            onTap: () => _onSlideTap(
+              context,
+              slideId: 'parcel',
+              route: '/parcels/send-intro',
             ),
-          if (!hasActiveCorridorAlert)
-            _GuidanceSlideData(
-              id: 'alert',
-              icon: 'bell',
-              title: 'Créer une alerte',
-              subtitle:
-                  'Sois notifié dès qu’une annonce correspond à tes critères.',
-              ctaLabel: 'Créer',
-              color: DonyColors.warning500,
-              onTap: () => _onSlideTap(
-                context,
-                slideId: 'alert',
-                route: '/corridor-alerts',
-              ),
+          ),
+          _GuidanceSlideData(
+            id: 'alert',
+            icon: 'bell',
+            title: 'Créer une alerte',
+            color: cs.warning,
+            onTap: () => _onSlideTap(
+              context,
+              slideId: 'alert',
+              route: '/corridor-alerts',
             ),
+          ),
           if (!widget.isKycVerified)
             _GuidanceSlideData(
               id: 'kyc',
               icon: 'shield-check',
               title: 'Vérifier mon identité',
-              subtitle:
-                  'Valide ton profil pour publier un trajet et réserver en toute confiance.',
-              ctaLabel: 'Vérifier',
-              color: DonyColors.info500,
+              color: cs.info,
               onTap: () =>
                   _onSlideTap(context, slideId: 'kyc', route: '/kyc/verify'),
             ),
@@ -207,17 +211,15 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               id: 'tutorial',
               icon: 'circle-play',
               title: 'Comment ça marche ?',
-              subtitle: tutorial.title,
-              ctaLabel: 'Voir le tuto',
-              // accent (terra600, 4.79:1) et non terra500 (3.46:1) : ce fill
-              // porte du texte blanc, terra500 n'atteint pas le seuil AA
-              // 4.5:1 (cf. color_tokens.dart:166-169).
-              color: DonyColors.accent,
+              color: cs.secondary,
               onTap: () => _onTutorialTap(context, tutorial),
             ),
-        ];
+        ].where((slide) => !userDismissed(slide.id)).toList();
 
-        if (slides.isEmpty) return const SizedBox.shrink();
+        if (slides.isEmpty) {
+          _autoplayTimer?.cancel();
+          return const SizedBox.shrink();
+        }
 
         if (_lastSlideCount != slides.length) {
           _lastSlideCount = slides.length;
@@ -227,8 +229,6 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
           });
         }
         final safeIndex = _currentIndex.clamp(0, slides.length - 1).toInt();
-        final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
-        final cardHeight = (172 * textScale).clamp(172.0, 344.0);
 
         return Padding(
           padding: const EdgeInsets.symmetric(
@@ -246,13 +246,36 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
                   ),
                 ),
               SizedBox(
-                height: cardHeight,
+                // Hauteur figée mise à l'échelle avec la taille de texte
+                // choisie par l'utilisateur (réglages d'accessibilité) :
+                // sans ça, le titre d'une slide déborde du PageView à forte
+                // taille de texte (cf. city_autocomplete_field.dart:318,
+                // même piège). Padding vertical DonyCard (DonySpacing.base
+                // en haut + en bas) + hauteur du conteneur icône md
+                // (DonySpacing.icon) = 16*2 + 40 = 72, cohérent avec la
+                // carte compacte façon ContextualTutorialCard.
+                //
+                // math.max(72, ...) : plancher pour les échelles < 1.0 (min
+                // 0.85 dans Réglages › Accessibilité, l'OS peut descendre
+                // plus bas). Ni le padding de DonyCard ni
+                // DonyIconContainerSize.md (40 pt) ne rétrécissent avec le
+                // texte : sans ce plancher, la hauteur calculée passerait
+                // sous 72 et écraserait DonyIconContainer hors de sa taille.
+                height: math.max(
+                  72,
+                  MediaQuery.textScalerOf(
+                    context,
+                  ).scale(DonySpacing.base * 2 + DonySpacing.icon),
+                ),
                 child: PageView.builder(
                   key: const Key('evergreen-guidance-carousel'),
                   controller: _pageController,
                   itemCount: slides.length,
                   onPageChanged: (i) => _onPageChanged(i, slides.length),
-                  itemBuilder: (context, i) => _SlideCard(data: slides[i]),
+                  itemBuilder: (context, i) => _SlideCard(
+                    data: slides[i],
+                    onDismiss: () => _onDismiss(slides[i].id),
+                  ),
                 ),
               ),
             ],
@@ -268,8 +291,6 @@ class _GuidanceSlideData {
     required this.id,
     required this.icon,
     required this.title,
-    required this.subtitle,
-    required this.ctaLabel,
     required this.color,
     required this.onTap,
   });
@@ -277,87 +298,51 @@ class _GuidanceSlideData {
   final String id;
   final String icon;
   final String title;
-  final String subtitle;
-  final String ctaLabel;
   final Color color;
   final VoidCallback onTap;
 }
 
 class _SlideCard extends StatelessWidget {
-  const _SlideCard({required this.data});
+  const _SlideCard({required this.data, required this.onDismiss});
 
   final _GuidanceSlideData data;
+  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Container(
+    final cs = Theme.of(context).colorScheme;
+    return DonyCard(
       key: Key('guidance-slide-${data.id}'),
-      margin: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: data.color,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
+      onTap: data.onTap,
       child: Row(
         children: [
           DonyIconContainer(
             iconAsset: data.icon,
-            size: DonyIconContainerSize.lg,
-            backgroundColor: Colors.white.withValues(alpha: 0.18),
-            iconColor: Colors.white,
-            borderRadius: DonyRadius.md,
+            size: DonyIconContainerSize.md,
+            backgroundColor: data.color.withValues(alpha: 0.12),
+            iconColor: data.color,
           ),
-          const SizedBox(width: DonySpacing.base),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  data.title,
-                  style: tt.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xxs),
-                Text(
-                  data.subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                GestureDetector(
-                  key: Key('guidance-slide-${data.id}-cta'),
-                  onTap: data.onTap,
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minHeight: kDonyMinTapTarget,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.md,
-                    ),
-                    alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                    ),
-                    child: Text(
-                      '${data.ctaLabel} →',
-                      style: tt.labelMedium?.copyWith(
-                        color: data.color,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              data.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.titleSmall?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
+          IconButton(
+            key: Key('guidance-slide-dismiss-${data.id}'),
+            onPressed: onDismiss,
+            tooltip: 'Ne plus afficher',
+            visualDensity: VisualDensity.compact,
+            icon: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
+          ),
+          DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
         ],
       ),
     );
