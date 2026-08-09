@@ -173,6 +173,12 @@ abstract final class AnalyticsEvents {
   static const homeGuidanceCarouselCtaTapped =
       'home_guidance_carousel_cta_tapped';
 
+  /// `EvergreenGuidanceCarousel` — fermeture manuelle (X) d'une slide,
+  /// masquage définitif indépendant de son état d'éligibilité.
+  /// Propriété `slide` : trip / parcel / alert / kyc / tutorial.
+  static const homeGuidanceCarouselSlideDismissed =
+      'home_guidance_carousel_slide_dismissed';
+
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 

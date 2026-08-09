@@ -80,26 +80,39 @@ Future<void> _swipeNext(WidgetTester tester) async {
 
 Widget _wrap({
   required MockHiveService hive,
+  MockBox? box,
   bool isKycVerified = true,
   bool tutorialDismissed = true,
+  Set<String> dismissedSlideIds = const {},
   String helpConfigJson = _emptyHelpConfigJson,
   bool disableAnimations = false,
   TextScaler? textScaler,
 }) {
-  final box = MockBox();
-  when(() => hive.userPrefs).thenReturn(box);
+  final resolvedBox = box ?? MockBox();
+  when(() => hive.userPrefs).thenReturn(resolvedBox);
   // Id fixe du seul tutoriel du fixture _searchHelpConfigJson ("search_intro") :
   // clé littérale, pas de matcher générique (évite le mélange matcher/valeur
   // brute que mocktail refuse sur un même appel).
   when(
-    () => box.get(
+    () => resolvedBox.get(
       '${HiveService.kContextualTutorialDismissedPrefix}search_intro',
       defaultValue: false,
     ),
   ).thenReturn(tutorialDismissed);
+  for (final id in const ['trip', 'parcel', 'alert', 'kyc', 'tutorial']) {
+    when(
+      () => resolvedBox.get(
+        '${HiveService.kGuidanceSlideDismissedPrefix}$id',
+        defaultValue: false,
+      ),
+    ).thenReturn(dismissedSlideIds.contains(id));
+  }
+  when(
+    () => resolvedBox.put(any(), any()),
+  ).thenAnswer((_) async {});
   when(
     () => hive.listenUserPrefs(keys: any(named: 'keys')),
-  ).thenReturn(ValueNotifier<Box>(box));
+  ).thenReturn(ValueNotifier<Box>(resolvedBox));
 
   final router = GoRouter(
     initialLocation: '/',
@@ -354,6 +367,37 @@ void main() {
             .current,
         0,
       );
+    },
+  );
+
+  testWidgets(
+    'masque une slide déjà fermée via sa croix (état persisté)',
+    (tester) async {
+      await tester.pumpWidget(_wrap(hive: hive, dismissedSlideIds: {'trip'}));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('guidance-slide-trip')), findsNothing);
+      // Colis devient la 1re slide visible désormais.
+      expect(find.byKey(const Key('guidance-slide-parcel')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'tap sur la croix trajet écrit le flag Hive et logue l\'event',
+    (tester) async {
+      final box = MockBox();
+      await tester.pumpWidget(_wrap(hive: hive, box: box));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('guidance-slide-dismiss-trip')));
+      await tester.pumpAndSettle();
+      verify(
+        () => box.put('${HiveService.kGuidanceSlideDismissedPrefix}trip', true),
+      ).called(1);
+      verify(
+        () => getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.homeGuidanceCarouselSlideDismissed,
+          properties: {'slide': 'trip'},
+        ),
+      ).called(1);
     },
   );
 

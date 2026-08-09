@@ -21,7 +21,9 @@ import 'package:hive/hive.dart';
 /// automatique. Slides « Publier trajet », « Envoyer colis » et « Créer une
 /// alerte » restent toujours visibles (actions qu'on peut refaire plusieurs
 /// fois) ; seule la slide KYC se masque une fois l'identité vérifiée
-/// (impossible à refaire). Aucune croix de fermeture manuelle.
+/// (impossible à refaire). Chaque slide a en plus sa propre croix de
+/// fermeture manuelle (X) : masquage définitif indépendant de l'état
+/// applicatif, pour l'utilisateur qui ne veut simplement plus la voir.
 class EvergreenGuidanceCarousel extends StatefulWidget {
   const EvergreenGuidanceCarousel({
     super.key,
@@ -40,6 +42,10 @@ class EvergreenGuidanceCarousel extends StatefulWidget {
 }
 
 class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
+  // Ids possibles de slide, utilisé pour écouter/lire leur clé de fermeture
+  // manuelle (X) sans dépendre de l'éligibilité courante de chacune.
+  static const _slideIds = ['trip', 'parcel', 'alert', 'kyc', 'tutorial'];
+
   final PageController _pageController = PageController();
   Timer? _autoplayTimer;
   int _currentIndex = 0;
@@ -105,6 +111,21 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
     context.push('/profile/help/tutorial/${tutorial.id}');
   }
 
+  void _onDismiss(String slideId) {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeGuidanceCarouselSlideDismissed,
+        properties: {'slide': slideId},
+      ),
+    );
+    unawaited(
+      widget.hiveService.userPrefs.put(
+        '${HiveService.kGuidanceSlideDismissedPrefix}$slideId',
+        true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tutorialConfig = context.select<HelpCenterBloc, HelpCenterConfig>(
@@ -121,6 +142,8 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
         keys: [
           if (tutorial != null)
             '${HiveService.kContextualTutorialDismissedPrefix}${tutorial.id}',
+          for (final id in _slideIds)
+            '${HiveService.kGuidanceSlideDismissedPrefix}$id',
         ],
       ),
       builder: (context, box, _) {
@@ -132,6 +155,11 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
                   defaultValue: false,
                 )
                 as bool);
+        bool userDismissed(String slideId) =>
+            box.get(
+              '${HiveService.kGuidanceSlideDismissedPrefix}$slideId',
+              defaultValue: false,
+            ) as bool;
 
         final slides = <_GuidanceSlideData>[
           _GuidanceSlideData(
@@ -184,7 +212,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
               color: cs.secondary,
               onTap: () => _onTutorialTap(context, tutorial),
             ),
-        ];
+        ].where((slide) => !userDismissed(slide.id)).toList();
 
         if (slides.isEmpty) {
           _autoplayTimer?.cancel();
@@ -242,7 +270,10 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
                   controller: _pageController,
                   itemCount: slides.length,
                   onPageChanged: (i) => _onPageChanged(i, slides.length),
-                  itemBuilder: (context, i) => _SlideCard(data: slides[i]),
+                  itemBuilder: (context, i) => _SlideCard(
+                    data: slides[i],
+                    onDismiss: () => _onDismiss(slides[i].id),
+                  ),
                 ),
               ),
             ],
@@ -270,9 +301,10 @@ class _GuidanceSlideData {
 }
 
 class _SlideCard extends StatelessWidget {
-  const _SlideCard({required this.data});
+  const _SlideCard({required this.data, required this.onDismiss});
 
   final _GuidanceSlideData data;
+  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
@@ -300,6 +332,13 @@ class _SlideCard extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
+          ),
+          IconButton(
+            key: Key('guidance-slide-dismiss-${data.id}'),
+            onPressed: onDismiss,
+            tooltip: 'Ne plus afficher',
+            visualDensity: VisualDensity.compact,
+            icon: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
           ),
           DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
         ],
