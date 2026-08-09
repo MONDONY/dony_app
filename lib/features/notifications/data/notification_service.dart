@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -26,12 +28,14 @@ class NotificationService {
   final ApiClient _apiClient;
   final NotificationRepository _repository;
   final DeviceIdService _deviceIdService;
+  final ErrorReportingService? _errorReporter;
 
   NotificationService(
     this._apiClient,
     this._repository,
-    this._deviceIdService,
-  );
+    this._deviceIdService, [
+    this._errorReporter,
+  ]);
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -59,12 +63,14 @@ class NotificationService {
       badge: true,
       sound: true,
     );
-    if (kDebugMode) debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
+    if (kDebugMode)
+      debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
 
     // Create Android notification channel
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_androidChannel);
 
     // Init flutter_local_notifications
@@ -112,15 +118,28 @@ class NotificationService {
     try {
       final deviceId = await _deviceIdService.getDeviceId();
       final (deviceName, platform) = await _getDeviceInfo();
-      await _apiClient.dio.put('/auth/me/fcm-token', data: {
-        'fcmToken': token,
-        'deviceId': deviceId,
-        'deviceName': deviceName,
-        'platform': platform,
-      });
+      await _apiClient.dio.put(
+        '/auth/me/fcm-token',
+        data: {
+          'fcmToken': token,
+          'deviceId': deviceId,
+          'deviceName': deviceName,
+          'platform': platform,
+        },
+      );
       if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] Token upload failed: $e');
+      if (e is! DioException) {
+        unawaited(
+          _errorReporter?.report(
+            e,
+            operation: 'notifications.upload_fcm_token',
+            stackTrace: stackTrace,
+            context: {'feature': 'notifications', 'channel': 'fcm'},
+          ),
+        );
+      }
     }
   }
 
@@ -172,16 +191,28 @@ class NotificationService {
     try {
       await _repository.ack(notificationId);
       if (kDebugMode) debugPrint('[FCM] ACK sent for $type / $notificationId');
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] ACK failed: $e');
+      if (e is! DioException) {
+        unawaited(
+          _errorReporter?.report(
+            e,
+            operation: 'notifications.ack_critical',
+            stackTrace: stackTrace,
+            context: {'feature': 'notifications', 'channel': 'fcm'},
+          ),
+        );
+      }
     }
   }
 
   @visibleForTesting
-  Future<void> testAckIfCritical(Map<String, dynamic> data) => _ackIfCritical(data);
+  Future<void> testAckIfCritical(Map<String, dynamic> data) =>
+      _ackIfCritical(data);
 
   @visibleForTesting
-  String? testRouteForMessage(Map<String, dynamic> data) => _routeForMessage(data);
+  String? testRouteForMessage(Map<String, dynamic> data) =>
+      _routeForMessage(data);
 
   void _handleForegroundMessage(RemoteMessage message) {
     _ackIfCritical(message.data);

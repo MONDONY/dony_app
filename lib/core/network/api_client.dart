@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,6 +9,7 @@ import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
 import 'package:dony/core/network/retry_on_transient_error_interceptor.dart';
 import 'package:dony/core/services/device_id_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -21,7 +23,11 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 const _tlsCertPem = String.fromEnvironment('TLS_CERT_PEM');
 
 class ApiClient {
-  ApiClient({required String baseUrl, required DeviceIdService deviceIdService}) {
+  ApiClient({
+    required String baseUrl,
+    required DeviceIdService deviceIdService,
+    ErrorReportingService? errorReporter,
+  }) : _errorReporter = errorReporter {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
@@ -70,9 +76,16 @@ class ApiClient {
     }
 
     if (kProfileMode || kDebugMode) {
-      _dio.interceptors.add(MetricsInterceptor(MetricsInterceptor.globalCollector));
+      _dio.interceptors.add(
+        MetricsInterceptor(MetricsInterceptor.globalCollector),
+      );
     }
 
+    // Added before retry interceptors: report only after their final attempt.
+    final errorReporter = _errorReporter;
+    if (errorReporter != null) {
+      _dio.interceptors.add(_SentryErrorReportingInterceptor(errorReporter));
+    }
     // Ajouté en dernier : dans le sens onError (inverse de l'ajout), c'est le
     // premier à voir l'erreur brute — avant que _AuthInterceptor ne la
     // convertisse en RateLimitException — donc le mieux placé pour retenter
@@ -87,6 +100,7 @@ class ApiClient {
   }
 
   late final Dio _dio;
+  final ErrorReportingService? _errorReporter;
 
   Dio get dio => _dio;
 
@@ -108,17 +122,50 @@ class ApiClient {
   }
 }
 
+class _SentryErrorReportingInterceptor extends Interceptor {
+  const _SentryErrorReportingInterceptor(this._reporter);
+
+  final ErrorReportingService _reporter;
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    unawaited(
+      _reporter.report(
+        err,
+        operation: 'http.${err.requestOptions.method.toUpperCase()}',
+        stackTrace: err.stackTrace,
+        statusCode: err.response?.statusCode,
+        context: {
+          'method': err.requestOptions.method.toUpperCase(),
+          'endpoint': err.requestOptions.uri.path,
+          'feature': _featureForPath(err.requestOptions.uri.path),
+        },
+      ),
+    );
+    handler.next(err);
+  }
+
+  static String _featureForPath(String path) {
+    for (final feature in const [
+      'payments',
+      'kyc',
+      'tracking',
+      'notifications',
+      'auth',
+    ]) {
+      if (path.contains('/$feature')) return feature;
+    }
+    return 'network';
+  }
+}
+
 /// Émet un breadcrumb Sentry par réponse/erreur HTTP. PII-free : uniquement
 /// méthode, chemin (sans query string) et code de statut. Ces miettes forment
 /// la piste réseau attachée au prochain incident capturé.
 class _SentryBreadcrumbInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    _crumb(
-      response.requestOptions,
-      response.statusCode,
-      SentryLevel.info,
-    );
+    _crumb(response.requestOptions, response.statusCode, SentryLevel.info);
     handler.next(response);
   }
 
@@ -128,7 +175,9 @@ class _SentryBreadcrumbInterceptor extends Interceptor {
     _crumb(
       err.requestOptions,
       status,
-      (status != null && status < 500) ? SentryLevel.warning : SentryLevel.error,
+      (status != null && status < 500)
+          ? SentryLevel.warning
+          : SentryLevel.error,
     );
     handler.next(err);
   }
@@ -166,7 +215,8 @@ class _AuthInterceptor extends Interceptor {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final isCritical = options.path.contains('/payments') ||
+        final isCritical =
+            options.path.contains('/payments') ||
             options.path.contains('/kyc') ||
             options.path.contains('/tracking/events') ||
             options.path.contains('/bids/checkout');
@@ -217,7 +267,10 @@ class _AuthInterceptor extends Interceptor {
 
     final AppException appException;
     if (statusCode == 401) {
-      appException = UnauthorizedException(detail ?? 'Session expirée', apiCode);
+      appException = UnauthorizedException(
+        detail ?? 'Session expirée',
+        apiCode,
+      );
     } else if (statusCode == 403) {
       appException = ForbiddenException(detail ?? 'Accès refusé', apiCode);
     } else if (statusCode == 404) {
@@ -232,7 +285,8 @@ class _AuthInterceptor extends Interceptor {
       final rawViolations = data is Map ? data['violations'] : null;
       final Map<String, List<String>>? violations = rawViolations is Map
           ? rawViolations.map(
-              (key, value) => MapEntry(key.toString(), [value.toString()]))
+              (key, value) => MapEntry(key.toString(), [value.toString()]),
+            )
           : null;
       appException = ValidationException(
         detail ?? 'Données invalides',

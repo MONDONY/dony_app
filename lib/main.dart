@@ -9,6 +9,7 @@ import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:bloc/bloc.dart';
 import 'package:dony/core/services/analytics_bloc_observer.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
@@ -53,11 +54,13 @@ Future<void> _bootstrap() async {
   // Edge-to-edge : l'app dessine derrière la barre nav Android.
   // systemNavigationBarColor transparent supprime le scrim noir par défaut.
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    systemNavigationBarColor: Colors.transparent,
-    systemNavigationBarDividerColor: Colors.transparent,
-    systemNavigationBarContrastEnforced: false,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
+    ),
+  );
   // Maintient la native splash visible jusqu'à ce que Flutter soit prêt
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await initializeDateFormatting('fr');
@@ -112,8 +115,12 @@ Future<void> _bootstrap() async {
     await Posthog().setup(config);
     // Rétablit l'état opt-in/out selon le consentement déjà stocké dans Hive.
     await getIt<AnalyticsService>().onConfigured();
-    Bloc.observer = AnalyticsBlocObserver(getIt<AnalyticsService>());
   }
+  // Sentry error reporting remains active when PostHog is disabled.
+  Bloc.observer = AnalyticsBlocObserver(
+    getIt<AnalyticsService>(),
+    getIt<ErrorReportingService>(),
+  );
 
   // NB : on ne déconnecte plus au démarrage sur un « appareil non enregistré ».
   // Ce contrôle était fail-dangerous : l'enregistrement d'appareil dépend d'un
@@ -193,16 +200,13 @@ Future<void> main() async {
     return;
   }
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = _sentryDsn;
-      options.tracesSampleRate = 0.1;
-      options.environment = _environment;
-      options.sendDefaultPii = false;
-      // Logs structurés Sentry : alimentés par AppLog (cf. core/services/app_log.dart).
-      // Sans ce flag, tout appel Sentry.logger.* est ignoré côté SDK.
-      options.enableLogs = true;
-    },
-    appRunner: _bootstrap,
-  );
+  await SentryFlutter.init((options) {
+    options.dsn = _sentryDsn;
+    options.tracesSampleRate = 0.1;
+    options.environment = _environment;
+    options.sendDefaultPii = false;
+    // Logs structurés Sentry : alimentés par AppLog (cf. core/services/app_log.dart).
+    // Sans ce flag, tout appel Sentry.logger.* est ignoré côté SDK.
+    options.enableLogs = true;
+  }, appRunner: _bootstrap);
 }
