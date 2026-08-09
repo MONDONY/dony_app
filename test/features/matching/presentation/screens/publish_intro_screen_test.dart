@@ -176,7 +176,7 @@ void main() {
         (tester) async {
       await _pump(tester, role: PublishIntroRole.parcel, kycStatus: 'VERIFIED');
 
-      expect(find.text('Envoyer un colis'), findsOneWidget);
+      expect(find.text('Publier un colis'), findsOneWidget);
       expect(find.text('Vos engagements d\'expéditeur'), findsOneWidget);
       expect(find.text('Continuer'), findsOneWidget);
       // Le rappel Stripe est réservé au voyageur : absent côté expéditeur.

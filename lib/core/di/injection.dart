@@ -559,9 +559,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NotificationPrefsRemoteDatasource(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<NotificationPrefsRepository>(
-    () => NotificationPrefsRepository(
-      getIt<NotificationPrefsRemoteDatasource>(),
-    ),
+    () =>
+        NotificationPrefsRepository(getIt<NotificationPrefsRemoteDatasource>()),
   );
   getIt.registerFactory<NotificationPrefsBloc>(
     () => NotificationPrefsBloc(
@@ -725,7 +724,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => RecipientRepository(getIt<RecipientDatasource>()),
   );
   getIt.registerFactory<RecipientBloc>(
-    () => RecipientBloc(getIt<RecipientRepository>(), getIt<AnalyticsService>()),
+    () =>
+        RecipientBloc(getIt<RecipientRepository>(), getIt<AnalyticsService>()),
   );
 
   // Subscriptions (abonnements voyageurs)
@@ -766,16 +766,21 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CorridorAlertListBloc(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
+      hiveService: getIt<HiveService>(),
     ),
   );
   // param1 = record {editing, direction} — direction forcée par rôle ou from editing.
-  getIt.registerFactoryParam<CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}), void>(
+  getIt.registerFactoryParam<
+    CorridorAlertFormCubit,
+    ({CorridorAlertModel? editing, AlertDirection direction}),
+    void
+  >(
     (params, _) => CorridorAlertFormCubit(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
       editing: params.editing,
       initialDirection: params.direction,
+      hiveService: getIt<HiveService>(),
     ),
   );
   // param1 = alertId (String), param2 = direction (AlertDirection) — matchs typés par direction.
@@ -875,6 +880,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => DisputeRepository(getIt<DisputeRemoteDatasource>()),
   );
   getIt.registerFactory<DisputeListBloc>(
-    () => DisputeListBloc(getIt<DisputeRepository>(), getIt<AnalyticsService>()),
+    () =>
+        DisputeListBloc(getIt<DisputeRepository>(), getIt<AnalyticsService>()),
   );
 }

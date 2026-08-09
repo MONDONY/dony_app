@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/services/analytics_events.dart';
 import '../../../core/services/analytics_service.dart';
+import '../../../core/storage/hive_service.dart';
 import '../data/corridor_alert_repository.dart';
 import '../data/models/alert_direction.dart';
 import '../data/models/corridor_alert_model.dart';
@@ -73,131 +74,127 @@ class CorridorAlertFormState extends Equatable {
     Object? centerLng = _unset,
     Object? radiusKm = _unset,
     Object? centerLabel = _unset,
-  }) =>
-      CorridorAlertFormState(
-        departureCity: identical(departureCity, _unset)
-            ? this.departureCity
-            : departureCity as String?,
-        arrivalCity: identical(arrivalCity, _unset)
-            ? this.arrivalCity
-            : arrivalCity as String?,
-        departureCountryCode: identical(departureCountryCode, _unset)
-            ? this.departureCountryCode
-            : departureCountryCode as String?,
-        arrivalCountryCode: identical(arrivalCountryCode, _unset)
-            ? this.arrivalCountryCode
-            : arrivalCountryCode as String?,
-        dateFrom: identical(dateFrom, _unset)
-            ? this.dateFrom
-            : dateFrom as DateTime?,
-        dateTo:
-            identical(dateTo, _unset) ? this.dateTo : dateTo as DateTime?,
-        minWeightKg: identical(minWeightKg, _unset)
-            ? this.minWeightKg
-            : minWeightKg as double?,
-        contentCategories: contentCategories ?? this.contentCategories,
-        status: status ?? this.status,
-        errorMessage: identical(errorMessage, _unset)
-            ? this.errorMessage
-            : errorMessage as String?,
-        direction: direction ?? this.direction,
-        centerLat: identical(centerLat, _unset)
-            ? this.centerLat
-            : centerLat as double?,
-        centerLng: identical(centerLng, _unset)
-            ? this.centerLng
-            : centerLng as double?,
-        radiusKm:
-            identical(radiusKm, _unset) ? this.radiusKm : radiusKm as int?,
-        centerLabel: identical(centerLabel, _unset)
-            ? this.centerLabel
-            : centerLabel as String?,
-      );
+  }) => CorridorAlertFormState(
+    departureCity: identical(departureCity, _unset)
+        ? this.departureCity
+        : departureCity as String?,
+    arrivalCity: identical(arrivalCity, _unset)
+        ? this.arrivalCity
+        : arrivalCity as String?,
+    departureCountryCode: identical(departureCountryCode, _unset)
+        ? this.departureCountryCode
+        : departureCountryCode as String?,
+    arrivalCountryCode: identical(arrivalCountryCode, _unset)
+        ? this.arrivalCountryCode
+        : arrivalCountryCode as String?,
+    dateFrom: identical(dateFrom, _unset)
+        ? this.dateFrom
+        : dateFrom as DateTime?,
+    dateTo: identical(dateTo, _unset) ? this.dateTo : dateTo as DateTime?,
+    minWeightKg: identical(minWeightKg, _unset)
+        ? this.minWeightKg
+        : minWeightKg as double?,
+    contentCategories: contentCategories ?? this.contentCategories,
+    status: status ?? this.status,
+    errorMessage: identical(errorMessage, _unset)
+        ? this.errorMessage
+        : errorMessage as String?,
+    direction: direction ?? this.direction,
+    centerLat: identical(centerLat, _unset)
+        ? this.centerLat
+        : centerLat as double?,
+    centerLng: identical(centerLng, _unset)
+        ? this.centerLng
+        : centerLng as double?,
+    radiusKm: identical(radiusKm, _unset) ? this.radiusKm : radiusKm as int?,
+    centerLabel: identical(centerLabel, _unset)
+        ? this.centerLabel
+        : centerLabel as String?,
+  );
 
   @override
   List<Object?> get props => [
-        departureCity,
-        arrivalCity,
-        departureCountryCode,
-        arrivalCountryCode,
-        dateFrom,
-        dateTo,
-        minWeightKg,
-        contentCategories,
-        status,
-        errorMessage,
-        direction,
-        centerLat,
-        centerLng,
-        radiusKm,
-        centerLabel,
-      ];
+    departureCity,
+    arrivalCity,
+    departureCountryCode,
+    arrivalCountryCode,
+    dateFrom,
+    dateTo,
+    minWeightKg,
+    contentCategories,
+    status,
+    errorMessage,
+    direction,
+    centerLat,
+    centerLng,
+    radiusKm,
+    centerLabel,
+  ];
 }
 
 class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
-  CorridorAlertFormCubit(this._repository, this._analytics,
-      {CorridorAlertModel? editing,
-      AlertDirection initialDirection = AlertDirection.travelerWantsPackages})
-      : _editingId = editing?.id,
-        super(
-          editing == null
-              ? CorridorAlertFormState(direction: initialDirection)
-              : CorridorAlertFormState(
-                  departureCity: editing.departureCity,
-                  arrivalCity: editing.arrivalCity,
-                  departureCountryCode: editing.departureCountryCode,
-                  arrivalCountryCode: editing.arrivalCountryCode,
-                  dateFrom: editing.dateFrom,
-                  dateTo: editing.dateTo,
-                  minWeightKg: editing.minWeightKg,
-                  contentCategories: editing.contentCategories,
-                  direction: editing.direction,
-                  centerLat: editing.centerLat,
-                  centerLng: editing.centerLng,
-                  radiusKm: editing.radiusKm,
-                  centerLabel: editing.centerLabel,
-                ),
-        );
+  CorridorAlertFormCubit(
+    this._repository,
+    this._analytics, {
+    CorridorAlertModel? editing,
+    AlertDirection initialDirection = AlertDirection.travelerWantsPackages,
+    HiveService? hiveService,
+  }) : _editingId = editing?.id,
+       _hiveService = hiveService,
+       super(
+         editing == null
+             ? CorridorAlertFormState(direction: initialDirection)
+             : CorridorAlertFormState(
+                 departureCity: editing.departureCity,
+                 arrivalCity: editing.arrivalCity,
+                 departureCountryCode: editing.departureCountryCode,
+                 arrivalCountryCode: editing.arrivalCountryCode,
+                 dateFrom: editing.dateFrom,
+                 dateTo: editing.dateTo,
+                 minWeightKg: editing.minWeightKg,
+                 contentCategories: editing.contentCategories,
+                 direction: editing.direction,
+                 centerLat: editing.centerLat,
+                 centerLng: editing.centerLng,
+                 radiusKm: editing.radiusKm,
+                 centerLabel: editing.centerLabel,
+               ),
+       );
 
   final CorridorAlertRepository _repository;
   final AnalyticsService _analytics;
+  final HiveService? _hiveService;
   final String? _editingId;
 
   bool get isEditing => _editingId != null;
 
-  void setDeparture(String city, String? countryCode) => emit(state.copyWith(
-        departureCity: city,
-        departureCountryCode: countryCode,
-      ));
+  void setDeparture(String city, String? countryCode) => emit(
+    state.copyWith(departureCity: city, departureCountryCode: countryCode),
+  );
 
-  void setArrival(String city, String? countryCode) => emit(state.copyWith(
-        arrivalCity: city,
-        arrivalCountryCode: countryCode,
-      ));
+  void setArrival(String city, String? countryCode) =>
+      emit(state.copyWith(arrivalCity: city, arrivalCountryCode: countryCode));
 
-  void clearDeparture() => emit(state.copyWith(
-        departureCity: null,
-        departureCountryCode: null,
-      ));
+  void clearDeparture() =>
+      emit(state.copyWith(departureCity: null, departureCountryCode: null));
 
-  void clearArrival() => emit(state.copyWith(
-        arrivalCity: null,
-        arrivalCountryCode: null,
-      ));
+  void clearArrival() =>
+      emit(state.copyWith(arrivalCity: null, arrivalCountryCode: null));
 
   /// Échange départ et arrivée (ville + code pays).
-  void swapCorridor() => emit(state.copyWith(
-        departureCity: state.arrivalCity,
-        arrivalCity: state.departureCity,
-        departureCountryCode: state.arrivalCountryCode,
-        arrivalCountryCode: state.departureCountryCode,
-      ));
+  void swapCorridor() => emit(
+    state.copyWith(
+      departureCity: state.arrivalCity,
+      arrivalCity: state.departureCity,
+      departureCountryCode: state.arrivalCountryCode,
+      arrivalCountryCode: state.departureCountryCode,
+    ),
+  );
 
   void setDateWindow(DateTime from, DateTime to) =>
       emit(state.copyWith(dateFrom: from, dateTo: to));
 
-  void clearDateWindow() =>
-      emit(state.copyWith(dateFrom: null, dateTo: null));
+  void clearDateWindow() => emit(state.copyWith(dateFrom: null, dateTo: null));
 
   void setMinWeight(double? kg) => emit(state.copyWith(minWeightKg: kg));
 
@@ -210,20 +207,23 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
     required double lng,
     required int radiusKm,
     String? label,
-  }) =>
-      emit(state.copyWith(
-        centerLat: lat,
-        centerLng: lng,
-        radiusKm: radiusKm,
-        centerLabel: label,
-      ));
+  }) => emit(
+    state.copyWith(
+      centerLat: lat,
+      centerLng: lng,
+      radiusKm: radiusKm,
+      centerLabel: label,
+    ),
+  );
 
-  void clearZone() => emit(state.copyWith(
-        centerLat: null,
-        centerLng: null,
-        radiusKm: null,
-        centerLabel: null,
-      ));
+  void clearZone() => emit(
+    state.copyWith(
+      centerLat: null,
+      centerLng: null,
+      radiusKm: null,
+      centerLabel: null,
+    ),
+  );
 
   /// Remplace la sélection complète.
   ///
@@ -266,19 +266,25 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
     try {
       if (_editingId != null) {
         await _repository.update(_editingId, draft);
-        unawaited(
-            _analytics.logEvent(AnalyticsEvents.corridorAlertUpdated));
+        unawaited(_analytics.logEvent(AnalyticsEvents.corridorAlertUpdated));
       } else {
         await _repository.create(draft);
+        unawaited(_analytics.logEvent(AnalyticsEvents.corridorAlertCreated));
+      }
+      final hive = _hiveService;
+      if (hive != null) {
         unawaited(
-            _analytics.logEvent(AnalyticsEvents.corridorAlertCreated));
+          hive.userPrefs.put(HiveService.kHasActiveCorridorAlert, true),
+        );
       }
       emit(state.copyWith(status: CorridorAlertFormStatus.success));
     } catch (err) {
-      emit(state.copyWith(
-        status: CorridorAlertFormStatus.error,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: CorridorAlertFormStatus.error,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 }

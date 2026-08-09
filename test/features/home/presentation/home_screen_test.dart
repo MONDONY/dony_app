@@ -185,13 +185,16 @@ class _MockGeolocatorPlatform extends Mock
   );
 }
 
-// Simule un utilisateur qui a déjà publié → banner masqué pour tester la liste principale
-// (le banner est testé séparément dans role_guidance_banner_test.dart)
+// Simule un utilisateur qui a déjà publié et déjà créé une alerte → toutes
+// les slides du carousel de guidance evergreen sont masquées par défaut pour
+// tester la liste principale sans bruit visuel (le carousel est testé
+// séparément dans evergreen_guidance_carousel_test.dart).
 class _FakeBox extends Fake implements Box<dynamic> {
   @override
   dynamic get(dynamic key, {dynamic defaultValue}) {
     if (key == HiveService.kHasPublishedAsTraveler ||
-        key == HiveService.kHasPublishedAsSender) {
+        key == HiveService.kHasPublishedAsSender ||
+        key == HiveService.kHasActiveCorridorAlert) {
       return true;
     }
     return defaultValue;
@@ -722,6 +725,14 @@ void main() {
       'affiche la carte tutoriel après le contrôle de recherche et navigue '
       'vers le tutoriel au tap',
       (tester) async {
+        // Agrandir le viewport pour que la slide tutoriel reste atteignable
+        // au tap avec la sheet en position initiale (peek), sans avoir à la
+        // déplier.
+        tester.view.physicalSize = const Size(800, 1000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
         await tester.pumpWidget(
           _buildHomeRouter(
             announcementState: AnnouncementSearchLoaded(const []),
@@ -735,15 +746,36 @@ void main() {
         final corridorTop = tester
             .getTopLeft(find.text('Tous les corridors').first)
             .dy;
+
+        // Ordre fixe [trajet, colis, alerte, tuto] : trajet/colis/alerte sont
+        // toujours affichés (actions répétables), tuto est donc en 4e
+        // position. `PageView.builder` ne construit que la page courante, un
+        // swipe par slide est nécessaire pour l'atteindre.
+        for (var i = 0; i < 3; i++) {
+          await tester.drag(
+            find.byKey(const Key('evergreen-guidance-carousel')),
+            const Offset(-800, 0),
+          );
+          await tester.pumpAndSettle();
+        }
+
         final cardTop = tester
-            .getTopLeft(find.text('Besoin d\'aide ? Voir le tutoriel'))
+            .getTopLeft(find.byKey(const Key('guidance-slide-tutorial')))
             .dy;
         expect(cardTop, greaterThan(corridorTop));
 
-        await tester.tap(find.text('Besoin d\'aide ? Voir le tutoriel'));
+        await tester.tap(find.byKey(const Key('guidance-slide-tutorial')));
         await tester.pumpAndSettle();
 
         expect(find.text('TutorialStub:search_intro'), findsOneWidget);
+        // Même couverture analytics que les 4 autres slides (trip/parcel/
+        // alert/kyc) : la propriété `slide` doit valoir 'tutorial'.
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.homeGuidanceCarouselCtaTapped,
+            properties: {'slide': 'tutorial'},
+          ),
+        ).called(1);
       },
     );
 
@@ -762,21 +794,35 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
 
-        // Avant activation : la carte est présente (mode liste/sheet).
-        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
+        // Avant activation : la slide tutoriel du carousel de guidance est
+        // présente (mode liste/sheet). Ordre fixe [trajet, colis, alerte,
+        // tuto] (KYC vérifié par défaut, absent) : tuto en 4e position, un
+        // swipe par slide est nécessaire (PageView.builder ne construit que
+        // la page courante).
+        for (var i = 0; i < 3; i++) {
+          await tester.drag(
+            find.byKey(const Key('evergreen-guidance-carousel')),
+            const Offset(-800, 0),
+          );
+          await tester.pumpAndSettle();
+        }
+        expect(
+          find.byKey(const Key('guidance-slide-tutorial')),
+          findsOneWidget,
+        );
 
         // Activation de « Près de moi » → bascule sur le carousel : le
         // contrôle de recherche (barre corridor du top overlay) s'efface
         // lui-même (opacity 0 / IgnorePointer) pour laisser la place à la
-        // carte plein écran. La carte tutoriel, ancrée dans le même sheet
-        // que la barre corridor, disparaît pour la même raison — ce n'est
-        // pas une régression, elle réapparaît dès qu'on repasse en liste.
+        // carte plein écran. Le carousel de guidance, ancré dans le même
+        // sheet que la barre corridor, disparaît pour la même raison — ce
+        // n'est pas une régression, il réapparaît dès qu'on repasse en liste.
         await tester.tap(find.byKey(const Key('near-me-fab')));
         await tester.pumpAndSettle();
 
         expect(find.byType(NearMeCarousel), findsOneWidget);
         expect(find.byType(DraggableScrollableSheet), findsNothing);
-        expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+        expect(find.byKey(const Key('guidance-slide-tutorial')), findsNothing);
       },
     );
 
@@ -893,6 +939,16 @@ void main() {
     testWidgets('shows TravelerCards when announcements loaded', (
       tester,
     ) async {
+      // Le carousel de guidance affiche désormais toujours au moins 3 slides
+      // (trajet/colis/alerte), donc plus de hauteur qu'avant la liste de
+      // résultats : fenêtre agrandie pour que TravelerCard reste dans la
+      // zone de cache initiale de la sheet en position "peek" (même pattern
+      // que les autres tests de ce fichier qui touchent au carousel).
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(
         _buildHome(
           announcementState: AnnouncementSearchLoaded([
@@ -2085,6 +2141,16 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, tripResults: const [], otherModeCount: 5);
+
+      // Le carousel de guidance affiche désormais toujours au moins 3 slides
+      // (trajet/colis/alerte) : la tuile de découverte croisée, plus bas dans
+      // la sheet, dépasse de peu (~40 px) les bornes du viewport (1000×2000)
+      // fixé par `pumpHome`. Fenêtre agrandie après coup pour ce test précis
+      // (pumpHome fixe systématiquement 1000×2000, écraser avant n'aurait
+      // aucun effet).
+      tester.view.physicalSize = const Size(1000, 2400);
+      await tester.pump();
+
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
       await tester.tap(find.byKey(const Key('cross-discovery')));

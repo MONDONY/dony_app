@@ -7,12 +7,11 @@ import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/core/widgets/role_guidance_banner.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -43,8 +42,6 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
-import 'package:dony/features/profile/data/models/help_center_config.dart';
-import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -606,7 +603,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
     return DonyBottomSheet.show<void>(
       context,
       title: 'Rôle voyageur désactivé',
-      subtitle: 'Les demandes de colis sont réservées aux voyageurs. '
+      subtitle:
+          'Les demandes de colis sont réservées aux voyageurs. '
           'Réactive ton rôle voyageur pour les consulter.',
       stickyBottom: DonyButton(
         label: 'Ouvrir les réglages',
@@ -928,9 +926,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
         ? next.copyWith(urgencyFilter: result.urgencyFilter)
         : next.copyWith(clearUrgencyFilter: true);
     if (result.weightKg > 0) {
-      next = next.copyWith(clearWeight: true).copyWith(
-        weightMin: result.weightKg,
-      );
+      next = next
+          .copyWith(clearWeight: true)
+          .copyWith(weightMin: result.weightKg);
     }
 
     setState(() {
@@ -996,6 +994,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     final currentUserId = authState.currentUserId;
+    final isKycVerified = authState.currentUser?.isKycVerified ?? false;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
@@ -1121,31 +1120,34 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
                   // ── Liste ou Carousel selon le mode Près de moi ───────────────
                   if (!_isNearMeActive || _nearMeShowList)
-                    Builder(builder: (sheetCtx) {
-                      // La fraction de peek (0.30) est calibrée pour le
-                      // contenu à 100 % : poignée + indication + en-tête. À
-                      // 200 %, ce même contenu ne tient plus dans 30 % de la
-                      // hauteur (RenderFlex overflow constaté). On agrandit
-                      // le peek proportionnellement au facteur d'échelle du
-                      // texte, sans rien changer à 100 % (facteur = 1).
-                      final textScale =
-                          MediaQuery.textScalerOf(sheetCtx).scale(14) / 14;
-                      final peekSize = (0.30 * textScale).clamp(0.30, 0.55);
-                      return DraggableScrollableSheet(
-                        controller: _sheetController,
-                        initialChildSize: peekSize,
-                        minChildSize: peekSize,
-                        snap: true,
-                        snapSizes: [peekSize, 0.6, 1.0],
-                        builder: (ctx, scrollCtrl) => _buildSheet(
-                          ctx,
-                          scrollCtrl,
-                          announcements,
-                          MediaQuery.of(context).padding.bottom,
-                          currentUserId: currentUserId,
-                        ),
-                      );
-                    })
+                    Builder(
+                      builder: (sheetCtx) {
+                        // La fraction de peek (0.30) est calibrée pour le
+                        // contenu à 100 % : poignée + indication + en-tête. À
+                        // 200 %, ce même contenu ne tient plus dans 30 % de la
+                        // hauteur (RenderFlex overflow constaté). On agrandit
+                        // le peek proportionnellement au facteur d'échelle du
+                        // texte, sans rien changer à 100 % (facteur = 1).
+                        final textScale =
+                            MediaQuery.textScalerOf(sheetCtx).scale(14) / 14;
+                        final peekSize = (0.30 * textScale).clamp(0.30, 0.55);
+                        return DraggableScrollableSheet(
+                          controller: _sheetController,
+                          initialChildSize: peekSize,
+                          minChildSize: peekSize,
+                          snap: true,
+                          snapSizes: [peekSize, 0.6, 1.0],
+                          builder: (ctx, scrollCtrl) => _buildSheet(
+                            ctx,
+                            scrollCtrl,
+                            announcements,
+                            MediaQuery.of(context).padding.bottom,
+                            currentUserId: currentUserId,
+                            isKycVerified: isKycVerified,
+                          ),
+                        );
+                      },
+                    )
                   else
                     Positioned(
                       left: 0,
@@ -1459,8 +1461,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     // « compatible » s'accorde avec le nombre de résultats, « trajet » avec le
     // nombre de trajets : les deux varient indépendamment.
     final compatible = 'compatible${n > 1 ? 's' : ''}';
-    final avecTrajets =
-        trips > 1 ? 'tes $trips trajets' : 'ton trajet';
+    final avecTrajets = trips > 1 ? 'tes $trips trajets' : 'ton trajet';
     return '$resultats, $compatible avec $avecTrajets';
   }
 
@@ -1470,6 +1471,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     List<AnnouncementModel> announcements,
     double bottomPad, {
     String? currentUserId,
+    required bool isKycVerified,
   }) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
@@ -1547,45 +1549,46 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   // d'édition : sinon il annoncerait « sur tes trajets » avant
                   // que la recherche filtrée soit partie.
                   child: BlocBuilder<TripsSummaryCubit, TripsSummaryState>(
-                    builder: (summaryCtx, summaryState) => BlocBuilder<
-                      PackageRequestSearchBloc,
-                      PackageRequestSearchState
-                    >(
-                      builder: (headerCtx, prState) {
-                        final matching = prState.matchingMyTrips == true;
-                        // Inconnu reste inconnu : voir `knownActiveTrips`.
-                        final trips = summaryState.knownActiveTrips;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              !_mode.isParcels
-                                  ? 'VOYAGEURS DISPONIBLES'
-                                  : matching
-                                  ? 'COLIS COMPATIBLES'
-                                  : 'DEMANDES D\'ENVOI',
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              !_mode.isParcels
-                                  ? (_isNearMeActive
-                                        ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
-                                        : '$count résultat${count > 1 ? 's' : ''} · $_corridorLabel')
-                                  : matching
-                                  ? _matchingSubtitle(prState, trips)
-                                  : 'Demandes · $_corridorLabel',
-                              style: tt.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                    builder: (summaryCtx, summaryState) =>
+                        BlocBuilder<
+                          PackageRequestSearchBloc,
+                          PackageRequestSearchState
+                        >(
+                          builder: (headerCtx, prState) {
+                            final matching = prState.matchingMyTrips == true;
+                            // Inconnu reste inconnu : voir `knownActiveTrips`.
+                            final trips = summaryState.knownActiveTrips;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  !_mode.isParcels
+                                      ? 'VOYAGEURS DISPONIBLES'
+                                      : matching
+                                      ? 'COLIS COMPATIBLES'
+                                      : 'DEMANDES D\'ENVOI',
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  !_mode.isParcels
+                                      ? (_isNearMeActive
+                                            ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
+                                            : '$count résultat${count > 1 ? 's' : ''} · $_corridorLabel')
+                                      : matching
+                                      ? _matchingSubtitle(prState, trips)
+                                      : 'Demandes · $_corridorLabel',
+                                  style: tt.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                   ),
                 ),
                 if (_mode.isTrips && count > 0)
@@ -1610,27 +1613,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
               controller: scrollCtrl,
               slivers: [
                 SliverToBoxAdapter(
-                  child: RoleGuidanceBanner(
-                    // Le CTA suit le mode affiché (cohérence titre ↔ bouton) :
-                    // mode Trajets → « Publier mon trajet » ; mode Colis
-                    // (demandes d'envoi) et expéditeur → « Publier ma demande ».
-                    role: (_isTraveler && _mode.isTrips)
-                        ? ActiveRole.traveler
-                        : ActiveRole.sender,
+                  child: EvergreenGuidanceCarousel(
                     hiveService: getIt<HiveService>(),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.lg,
-                      DonySpacing.sm,
-                      DonySpacing.lg,
-                      0,
-                    ),
-                    child: const ContextualTutorialCard(
-                      context: TutorialContext.search,
-                    ),
+                    isKycVerified: isKycVerified,
                   ),
                 ),
                 if (_mode.isParcels)
@@ -2012,11 +1997,7 @@ class _CrossDiscoveryTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: cs.primary,
-                ),
+                Icon(Icons.chevron_right_rounded, size: 20, color: cs.primary),
               ],
             ),
           ),
@@ -2136,7 +2117,6 @@ class _NearMeRadiusPill extends StatelessWidget {
     );
   }
 }
-
 
 // ── _DatePresetSheet ──────────────────────────────────────────────────────────
 
@@ -2732,7 +2712,6 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
     );
   }
 }
-
 
 // ── _FavoritesButton ──────────────────────────────────────────────────────────
 

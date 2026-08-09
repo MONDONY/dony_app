@@ -232,7 +232,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   border: Border(top: BorderSide(color: cs.outline)),
                 ),
                 child: DonyButton(
-                  label: 'Envoyer un colis',
+                  label: 'Publier un colis',
                   onPressed: () =>
                       CreateBidBottomSheet.show(context, announcement: _a),
                 ),

@@ -166,6 +166,24 @@ abstract final class AnalyticsEvents {
   static const homeMatchingTripsFilterToggled =
       'home_matching_trips_filter_toggled';
 
+  /// Tap sur une carte du carousel de guidance evergreen (écran Recherche),
+  /// déclenché depuis `EvergreenGuidanceCarousel` (toute la carte est
+  /// cliquable, pas de bouton CTA séparé).
+  /// Propriété `slide` : trip / parcel / alert / kyc / tutorial.
+  static const homeGuidanceCarouselCtaTapped =
+      'home_guidance_carousel_cta_tapped';
+
+  /// `EvergreenGuidanceCarousel` — fermeture manuelle (X) d'une slide,
+  /// masquage définitif indépendant de son état d'éligibilité.
+  /// Propriété `slide` : trip / parcel / alert / kyc / tutorial.
+  static const homeGuidanceCarouselSlideDismissed =
+      'home_guidance_carousel_slide_dismissed';
+
+  /// SettingsScreen._resetGuidanceCards — tuile « Réafficher les
+  /// suggestions », efface tous les flags de fermeture manuelle des slides
+  /// du carousel de guidance evergreen (Recherche).
+  static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';
+
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 

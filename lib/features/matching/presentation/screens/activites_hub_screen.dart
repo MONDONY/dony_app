@@ -497,7 +497,7 @@ class _ActionRow extends StatelessWidget {
             key: const Key('hub-new-request'),
             onPressed: onNewRequest,
             icon: DonyIcon('package', size: 16, color: cs.secondary),
-            label: const Text('Envoyer un colis'),
+            label: const Text('Publier un colis'),
             style: OutlinedButton.styleFrom(
               foregroundColor: cs.secondary,
               backgroundColor: cs.secondaryContainer,

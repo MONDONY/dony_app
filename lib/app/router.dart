@@ -510,7 +510,7 @@ final appRouter = GoRouter(
       ),
     ),
 
-    // ── Envoyer un colis (voyageur PRO, hors shell) ──────────────────────────
+    // ── Publier un colis (voyageur PRO, hors shell) ──────────────────────────
     GoRoute(
       path: '/announcements/send',
       builder: (context, state) => const EnvoyerHubScreen(showBackButton: true),

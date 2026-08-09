@@ -229,20 +229,31 @@ void main() {
     group('avec HiveService', () {
       late _MockHiveService hive;
       late _MockBox box;
+      late _FakeBoxListenable listenable;
+      // État mutable réel du flag, pour que `box.get` reflète les écritures
+      // faites via `box.put` — sans ça le ValueListenableBuilder se
+      // rebuild mais relit toujours la même valeur figée.
+      var dismissedValue = false;
 
       setUp(() {
+        dismissedValue = false;
         box = _MockBox();
-        when(() => box.put(any<String>(), any<bool>())).thenAnswer(
-          (_) async {},
-        );
-        when(
-          () => box.get(
-            '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
-            defaultValue: any<Object?>(named: 'defaultValue'),
-          ),
-        ).thenReturn(false);
+        when(() => box.get(
+              '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
+              defaultValue: any<Object?>(named: 'defaultValue'),
+            )).thenAnswer((_) => dismissedValue);
+        when(() => box.put(any<String>(), any<bool>())).thenAnswer((
+          invocation,
+        ) async {
+          dismissedValue = invocation.positionalArguments[1] as bool;
+          listenable.bump();
+        });
         hive = _MockHiveService();
         when(() => hive.userPrefs).thenReturn(box);
+        listenable = _FakeBoxListenable(box);
+        when(
+          () => hive.listenUserPrefs(keys: any(named: 'keys')),
+        ).thenReturn(listenable);
         getIt.registerLazySingleton<HiveService>(() => hive);
       });
 
@@ -297,12 +308,7 @@ void main() {
       testWidgets('reste masquée si déjà fermée précédemment (Hive)', (
         tester,
       ) async {
-        when(
-          () => box.get(
-            '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
-            defaultValue: any<Object?>(named: 'defaultValue'),
-          ),
-        ).thenReturn(true);
+        dismissedValue = true;
 
         await tester.pumpWidget(
           _wrap(
@@ -314,8 +320,45 @@ void main() {
 
         expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
       });
+
+      testWidgets(
+        'réapparaît sans re-navigation quand la clé Hive repasse à false '
+        '(reset externe, ex. Réglages)',
+        (tester) async {
+          dismissedValue = true;
+
+          await tester.pumpWidget(
+            _wrap(
+              context: TutorialContext.negotiation,
+              configJson: _negotiationConfigJson,
+            ),
+          );
+          await _settleCard(tester);
+          expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsNothing);
+
+          // Simule un reset externe (Réglages) qui efface directement la clé
+          // dans la box, comme le ferait Settings._resetGuidanceCards.
+          dismissedValue = false;
+          listenable.bump();
+          await _settleCard(tester);
+
+          expect(
+            find.text('Besoin d\'aide ? Voir le tutoriel'),
+            findsOneWidget,
+          );
+        },
+      );
     });
   });
+}
+
+/// `ValueNotifier` de test exposant `bump()` pour simuler la notification
+/// que la vraie `Box.listenable()` de Hive émet automatiquement à chaque
+/// `put()` sur une des clés observées — le mock de `Box` ne le fait pas.
+class _FakeBoxListenable extends ValueNotifier<Box> {
+  _FakeBoxListenable(super.value);
+
+  void bump() => notifyListeners();
 }
 
 final class _StaticHelpCenterSource implements HelpCenterConfigSource {
