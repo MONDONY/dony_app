@@ -463,7 +463,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Envoyer un colis'), findsNothing);
+      expect(find.text('Publier un colis'), findsNothing);
     });
 
     testWidgets(
@@ -481,7 +481,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Envoyer un colis'), findsNothing);
+      expect(find.text('Publier un colis'), findsNothing);
     });
 
     testWidgets(
@@ -499,12 +499,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Envoyer un colis'), findsNothing);
+      expect(find.text('Publier un colis'), findsNothing);
     });
 
     testWidgets(
         'expéditeur VÉRIFIÉ : ouvre CreateBidBottomSheet '
-        '(titre "Envoyer un colis")', (tester) async {
+        '(titre "Publier un colis")', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
       await tester.pumpWidget(_harness(
         announcement: a,
@@ -516,7 +516,7 @@ void main() {
       await tester.tap(find.text('Faire une demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Envoyer un colis'), findsOneWidget);
+      expect(find.text('Publier un colis'), findsOneWidget);
       expect(find.text("Vérification d'identité"), findsNothing);
     });
 
@@ -537,7 +537,7 @@ void main() {
       await tester.tap(find.text('Faire une demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Envoyer un colis'), findsOneWidget);
+      expect(find.text('Publier un colis'), findsOneWidget);
       expect(find.text("Vérification d'identité"), findsNothing);
     });
 
@@ -556,7 +556,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Envoyer un colis'), findsNothing);
+      expect(find.text('Publier un colis'), findsNothing);
     });
   });
 }

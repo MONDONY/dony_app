@@ -415,7 +415,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `recipient_created` | RecipientBloc._onCreated — destinataire ajouté au carnet |
 | `recipient_default_set` | RecipientBloc._onDefaultSet — destinataire marqué par défaut |
 | `activites_hub_trips_opened` / `activites_hub_envois_opened` / `activites_hub_demandes_opened` / `activites_hub_negotiations_opened` | ActivitesHubScreen — tap sur une tuile d'activité du hub |
-| `activites_hub_trip_create_opened` / `activites_hub_request_create_opened` | ActivitesHubScreen — CTA « Publier un trajet » / « Envoyer un colis » |
+| `activites_hub_trip_create_opened` / `activites_hub_request_create_opened` | ActivitesHubScreen — CTA « Publier un trajet » / « Publier un colis » |
 | `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |
 | `activites_hub_search_opened` | ActivitesHubScreen — bouton « Suivre un colis » du header |
 | `activites_hub_history_opened` / `activites_hub_help_opened` / `activites_hub_alerts_opened` / `activites_hub_templates_opened` / `activites_hub_addresses_opened` / `activites_hub_recipients_opened` | ActivitesHubScreen — tuiles de la section Outils |
@@ -426,7 +426,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `home_matching_trips_filter_toggled` | HomeScreen._showFilterSheet — pastille « Pour mes trajets » de la feuille de filtres colis (propriétés `active`, `active_trips`) |
 | `home_guidance_carousel_cta_tapped` | EvergreenGuidanceCarousel — tap sur une carte du carousel de guidance evergreen (Recherche), toute la carte est cliquable (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
 | `home_guidance_carousel_slide_dismissed` | EvergreenGuidanceCarousel — croix (X) de fermeture manuelle d'une slide, masquage définitif (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
-| `settings_guidance_cards_reset` | SettingsScreen._resetGuidanceCards — tuile « Réafficher les suggestions », efface tous les flags de fermeture manuelle du carousel de guidance (Recherche) |
+| `settings_guidance_cards_reset` | SettingsScreen._resetGuidanceCards — tuile « Réafficher les suggestions », efface tous les flags de fermeture manuelle du carousel de guidance (Recherche) et des `ContextualTutorialCard` fermées ailleurs dans l'app |
 | `accessibility_setting_changed` | AccessibilityBloc — un réglage d'accessibilité est modifié (propriétés `setting`, `value`) ou réinitialisation complète (`setting: reset`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 

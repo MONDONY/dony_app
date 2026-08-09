@@ -75,6 +75,12 @@ void main() {
     mockBox = MockBox();
     when(() => mockHive.userPrefs).thenReturn(mockBox);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+    when(() => mockBox.keys).thenReturn(<dynamic>[
+      '${HiveService.kContextualTutorialDismissedPrefix}search_basics',
+      '${HiveService.kContextualTutorialDismissedPrefix}publish_flow',
+      HiveService.kThemeMode,
+    ]);
+    when(() => mockBox.delete(any())).thenAnswer((_) async {});
     getIt.registerSingleton<HiveService>(mockHive);
     mockAnalytics = MockAnalyticsService();
     when(
@@ -178,6 +184,20 @@ void main() {
             ),
           ).called(1);
         }
+        // Toutes les ContextualTutorialCard fermées ailleurs dans l'app
+        // (une clé par tutoriel) doivent aussi être effacées, sans toucher
+        // aux autres préférences stockées dans la même box.
+        verify(
+          () => mockBox.delete(
+            '${HiveService.kContextualTutorialDismissedPrefix}search_basics',
+          ),
+        ).called(1);
+        verify(
+          () => mockBox.delete(
+            '${HiveService.kContextualTutorialDismissedPrefix}publish_flow',
+          ),
+        ).called(1);
+        verifyNever(() => mockBox.delete(HiveService.kThemeMode));
         verify(
           () => mockAnalytics.logEvent(
             AnalyticsEvents.settingsGuidanceCardsReset,
@@ -186,7 +206,7 @@ void main() {
 
         await tester.pumpAndSettle();
         expect(
-          find.text('Suggestions réaffichées sur l\'écran Recherche.'),
+          find.text('Suggestions et tutoriels réaffichés.'),
           findsOneWidget,
         );
       },

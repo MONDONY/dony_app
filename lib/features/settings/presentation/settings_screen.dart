@@ -213,8 +213,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   /// Efface les flags de fermeture manuelle (X) du carousel de guidance de
-  /// l'écran Recherche : sans ça, une fois toutes les cartes fermées, la
-  /// zone de suggestions (publier trajet, envoyer colis…) reste vide pour
+  /// l'écran Recherche ainsi que ceux des `ContextualTutorialCard` semées
+  /// dans le reste de l'app (une clé par tutoriel) : sans ça, une fois
+  /// toutes les cartes fermées, ces zones de suggestions restent vides pour
   /// toujours, sans moyen de revenir en arrière.
   void _resetGuidanceCards(BuildContext context) {
     unawaited(
@@ -231,9 +232,17 @@ class SettingsScreen extends StatelessWidget {
         ),
       );
     }
+    final tutorialKeys = hive.userPrefs.keys.where(
+      (key) =>
+          key is String &&
+          key.startsWith(HiveService.kContextualTutorialDismissedPrefix),
+    );
+    for (final key in tutorialKeys.toList()) {
+      unawaited(hive.userPrefs.delete(key));
+    }
     DonySnackbar.show(
       context,
-      message: 'Suggestions réaffichées sur l\'écran Recherche.',
+      message: 'Suggestions et tutoriels réaffichés.',
       type: DonySnackbarType.success,
     );
   }

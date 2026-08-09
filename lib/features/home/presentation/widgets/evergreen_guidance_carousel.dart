@@ -178,7 +178,7 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
           _GuidanceSlideData(
             id: 'parcel',
             icon: 'send',
-            title: 'Envoyer un colis',
+            title: 'Publier un colis',
             color: cs.success,
             onTap: () => _onSlideTap(
               context,

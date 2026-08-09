@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 
 /// Carte compacte réutilisable qui suggère le tutoriel vidéo actif couvrant
 /// [tutorialContext], si le catalogue distant en propose un pour ce point du
@@ -20,6 +21,13 @@ import 'package:go_router/go_router.dart';
 /// rien si aucun tutoriel actif ne correspond, ou si l'utilisateur l'a déjà
 /// fermée via le X — la fermeture est définitive et persistée par tutoriel
 /// dans Hive. Ouvrir le tutoriel (tap sur la carte) ne la ferme pas.
+///
+/// L'onglet qui héberge cette carte (ex. Activités) reste monté en
+/// permanence (`StatefulShellRoute.indexedStack`) : sans écoute réactive de
+/// la clé Hive, un reset externe (Réglages › Réafficher les suggestions) ne
+/// referait jamais réapparaître une carte déjà construite. D'où le
+/// `ValueListenableBuilder` sur `HiveService.listenUserPrefs`, identique au
+/// mécanisme d'`EvergreenGuidanceCarousel`.
 class ContextualTutorialCard extends StatefulWidget {
   const ContextualTutorialCard({required this.context, super.key});
 
@@ -32,35 +40,29 @@ class ContextualTutorialCard extends StatefulWidget {
 }
 
 class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
+  // Repli utilisé uniquement quand HiveService n'est pas enregistré (ex.
+  // certains tests) : sans box à écouter, la fermeture ne peut durer que le
+  // temps de vie de ce widget.
   bool _dismissedThisSession = false;
 
   String _dismissKey(String tutorialId) =>
       '${HiveService.kContextualTutorialDismissedPrefix}$tutorialId';
 
-  bool _isDismissed(String tutorialId) {
-    if (_dismissedThisSession) {
-      return true;
-    }
-    if (!getIt.isRegistered<HiveService>()) {
-      return false;
-    }
+  bool get _hiveAvailable {
     try {
-      return getIt<HiveService>().userPrefs.get(
-            _dismissKey(tutorialId),
-            defaultValue: false,
-          )
-          as bool;
+      return getIt.isRegistered<HiveService>();
     } catch (_) {
       return false;
     }
   }
 
   void _dismiss(String tutorialId) {
-    setState(() => _dismissedThisSession = true);
-    if (getIt.isRegistered<HiveService>()) {
+    if (_hiveAvailable) {
       unawaited(
         getIt<HiveService>().userPrefs.put(_dismissKey(tutorialId), true),
       );
+    } else {
+      setState(() => _dismissedThisSession = true);
     }
   }
 
@@ -74,10 +76,33 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
       },
     );
     final tutorial = config.tutorialFor(widget.context);
-    if (tutorial == null || _isDismissed(tutorial.id)) {
+    if (tutorial == null) {
       return const SizedBox.shrink();
     }
 
+    if (!_hiveAvailable) {
+      if (_dismissedThisSession) {
+        return const SizedBox.shrink();
+      }
+      return _buildCard(context, tutorial);
+    }
+
+    final dismissKey = _dismissKey(tutorial.id);
+    return ValueListenableBuilder<Box>(
+      valueListenable: getIt<HiveService>().listenUserPrefs(
+        keys: [dismissKey],
+      ),
+      builder: (context, box, _) {
+        final dismissed = box.get(dismissKey, defaultValue: false) as bool;
+        if (dismissed) {
+          return const SizedBox.shrink();
+        }
+        return _buildCard(context, tutorial);
+      },
+    );
+  }
+
+  Widget _buildCard(BuildContext context, HelpTutorial tutorial) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 

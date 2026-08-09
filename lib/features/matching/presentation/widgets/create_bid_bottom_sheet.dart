@@ -640,7 +640,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               title: Text(
                 step == _FormStep.paymentPicker
                     ? 'Paiement'
-                    : 'Envoyer un colis',
+                    : 'Publier un colis',
                 style: tt.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,

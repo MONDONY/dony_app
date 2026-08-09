@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 
 /// Transporte des [SearchParams] entre écrans qui ne partagent pas de BLoC
-/// (par ex. depuis le bouton "Envoyer un colis" de l'écran Envoyer vers
+/// (par ex. depuis le bouton "Publier un colis" de l'écran Envoyer vers
 /// l'écran Accueil). L'écran consommateur écoute, applique les params, puis
 /// appelle [consume] pour vider la valeur (one-shot).
 class PendingSearchNotifier extends ChangeNotifier {

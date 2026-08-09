@@ -395,8 +395,8 @@ void main() {
       );
     });
 
-    testWidgets('Envoyer un colis → écran d\'intro colis', (tester) async {
-      await expectNavigation(tester, 'Envoyer un colis', '/parcels/send-intro');
+    testWidgets('Publier un colis → écran d\'intro colis', (tester) async {
+      await expectNavigation(tester, 'Publier un colis', '/parcels/send-intro');
     });
 
     testWidgets('Historique → historique des envois', (tester) async {

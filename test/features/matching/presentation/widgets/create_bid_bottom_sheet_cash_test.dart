@@ -608,7 +608,7 @@ void main() {
       await _openSheet(tester, _announcement(cashEnabled: true));
 
       // Sheet is open.
-      expect(find.text('Envoyer un colis'), findsOneWidget);
+      expect(find.text('Publier un colis'), findsOneWidget);
 
       // Simulate successful bid creation.
       stateController.add(BidCreated(BidModel.skeleton('bid-xyz')));
@@ -618,7 +618,7 @@ void main() {
       // Depuis PR #141 (écrans de succès unifiés) : l'écran de création est
       // fermé et DonySuccessScreen « Offre envoyée ! » s'affiche — la
       // navigation vers le détail du bid n'a lieu qu'après le CTA.
-      expect(find.text('Envoyer un colis'), findsNothing);
+      expect(find.text('Publier un colis'), findsNothing);
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Offre envoyée !'), findsOneWidget);
       expect(find.text('Bid détail'), findsNothing);
@@ -923,7 +923,7 @@ void main() {
         acceptedPaymentMethods: const {BidPaymentMethod.stripe},
       );
       await _openSheet(tester, smallKgAnnouncement);
-      expect(find.text('Envoyer un colis'), findsOneWidget);
+      expect(find.text('Publier un colis'), findsOneWidget);
     });
   });
 
@@ -1004,7 +1004,7 @@ void main() {
       (tester) async {
         await _openSheet(tester, _kgFreeAnnouncement());
 
-        expect(find.text('Envoyer un colis'), findsOneWidget);
+        expect(find.text('Publier un colis'), findsOneWidget);
       },
     );
   });
