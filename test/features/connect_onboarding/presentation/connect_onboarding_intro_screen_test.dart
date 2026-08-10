@@ -112,9 +112,12 @@ void main() {
     });
 
     testWidgets(
-        'redirects to /home when the status check resolves to already complete '
+        'shows the connected confirmation in place, without redirecting, when the '
+        'status check resolves to already complete '
         '(regression: the screen never re-checked status on load, so a completed '
-        'account still saw the onboarding intro until the button was tapped again)',
+        'account still saw the onboarding intro until the button was tapped again; '
+        'the fix must not bounce the user to /home either — they came to check this '
+        'screen and should see the confirmation here)',
         (tester) async {
       whenListen<ConnectOnboardingState>(
         mockBloc,
@@ -131,7 +134,10 @@ void main() {
       await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Home'), findsNothing);
+      expect(find.text('Compte Stripe Connect'), findsOneWidget);
+      expect(find.text('Compte Stripe\nconnecté'), findsOneWidget);
+      expect(find.text('Compléter mon compte'), findsNothing);
       verify(() => stripeBloc.add(const StripeAccountStatusRefreshed()))
           .called(1);
     });

@@ -69,10 +69,10 @@ class _ConnectOnboardingIntroScreenState
         } else if (state is ConnectOnboardingComplete) {
           // Synchronise le singleton global pour que le reste de l'app
           // reflète immédiatement ONBOARDING_COMPLETE sans logout/login.
+          // Ne redirige plus vers /home : l'utilisateur est venu consulter
+          // cet écran spécifiquement, il doit y voir la confirmation plutôt
+          // qu'être renvoyé ailleurs sans explication.
           getIt<StripeAccountBloc>().add(const StripeAccountStatusRefreshed());
-          if (context.mounted) {
-            context.go('/home');
-          }
         }
       },
       builder: (context, state) {
@@ -109,6 +109,10 @@ class _IntroView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (state is ConnectOnboardingComplete) {
+      return const _ConnectedView();
+    }
+
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final isLoading = state is ConnectOnboardingLoading;
@@ -220,6 +224,66 @@ class _IntroView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Affichée à la place du CTA d'onboarding quand le compte Stripe est déjà
+/// ONBOARDING_COMPLETE — reste sur cet écran plutôt que de rediriger, pour
+/// que l'utilisateur venu vérifier son statut voie la confirmation ici même.
+class _ConnectedView extends StatelessWidget {
+  const _ConnectedView();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      appBar: const DonyAppBar(title: 'Compte Stripe Connect'),
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            h,
+            DonySpacing.xxl,
+            h,
+            MediaQuery.of(context).padding.bottom + DonySpacing.huge,
+          ),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DonyMascotteAnimated(
+                  type: DonyMascotteType.succes,
+                  size: DonyMascotteSize.lg,
+                  withGlow: true,
+                ),
+                const SizedBox(height: DonySpacing.xl),
+                Text(
+                  'Compte Stripe\nconnecté',
+                  style: tt.displayLarge?.copyWith(height: 1.2),
+                ).animate().fadeIn(delay: 60.ms),
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  'Ton compte Stripe est actif : tu peux publier tes trajets et recevoir tes paiements par carte directement sur ton compte bancaire.',
+                  style: tt.bodyLarge?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.55,
+                  ),
+                ).animate().fadeIn(delay: 100.ms),
+                const SizedBox(height: DonySpacing.xxl),
+                const DonyStatusBanner(
+                  type: DonyStatusBannerType.success,
+                  iconAsset: 'shield-check',
+                  message: 'Virements automatiques activés après chaque livraison confirmée.',
+                ).animate().fadeIn(delay: 140.ms),
+              ],
+            ).animate().slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ),
+        );
+      }),
     );
   }
 }
