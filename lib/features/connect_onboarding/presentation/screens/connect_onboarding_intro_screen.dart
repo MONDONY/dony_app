@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
@@ -73,6 +74,13 @@ class _ConnectOnboardingIntroScreenState
           // cet écran spécifiquement, il doit y voir la confirmation plutôt
           // qu'être renvoyé ailleurs sans explication.
           getIt<StripeAccountBloc>().add(const StripeAccountStatusRefreshed());
+          // AuthBloc.currentUser.stripeAccountStatus (chargé au login) ne
+          // suit pas ce changement tout seul — sans ce refresh, le Profil
+          // continue d'afficher la tuile « Recevoir mes paiements » même
+          // une fois le compte connecté, car il lit ce champ-là.
+          if (context.mounted) {
+            context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+          }
         }
       },
       builder: (context, state) {
@@ -113,6 +121,22 @@ class _IntroView extends StatelessWidget {
       return const _ConnectedView();
     }
 
+    // Le statut réel n'est pas encore connu au premier build (l'appel
+    // ConnectOnboardingStatusRequested part dans initState mais n'a pas
+    // encore répondu). Le Profil connaît déjà `user.stripeAccountStatus`
+    // (chargé au login) — on s'en sert pour éviter un spinner arbitraire :
+    // si le cache dit déjà "complet", on affiche directement la
+    // confirmation, quitte à ce que le fetch en arrière-plan la corrige si
+    // le cache était périmé. Sans ce garde, le CTA "Complète ton compte"
+    // s'affichait brièvement même pour un compte déjà connecté.
+    if (state is ConnectOnboardingInitial) {
+      final cachedStatus =
+          context.watch<AuthBloc>().state.currentUser?.stripeAccountStatus;
+      if (cachedStatus == 'ONBOARDING_COMPLETE') {
+        return const _ConnectedView();
+      }
+    }
+
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final isLoading = state is ConnectOnboardingLoading;
@@ -139,13 +163,6 @@ class _IntroView extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hero mascotte
-                DonyMascotteAnimated(
-                  type: DonyMascotteType.securise,
-                  size: DonyMascotteSize.lg,
-                ),
-                const SizedBox(height: DonySpacing.xl),
-
                 // Title
                 Text(
                   'Complète ton\ncompte Stripe',
@@ -255,12 +272,6 @@ class _ConnectedView extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DonyMascotteAnimated(
-                  type: DonyMascotteType.succes,
-                  size: DonyMascotteSize.lg,
-                  withGlow: true,
-                ),
-                const SizedBox(height: DonySpacing.xl),
                 Text(
                   'Compte Stripe\nconnecté',
                   style: tt.displayLarge?.copyWith(height: 1.2),

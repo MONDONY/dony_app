@@ -374,7 +374,10 @@ final appRouter = GoRouter(
     // ── Stripe account status (hors shell) ──────────────────────────────
     GoRoute(
       path: '/account/disabled',
-      builder: (context, state) => const AccountDisabledScreen(),
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ConnectOnboardingBloc>(),
+        child: const AccountDisabledScreen(),
+      ),
     ),
     GoRoute(
       path: '/account/rejected',

@@ -139,7 +139,7 @@ Widget _buildTestHarness({
     ),
     GoRoute(path: '/profile/help/contact', builder: (_, _) => stub('Contact')),
     GoRoute(
-      path: '/payments/onboarding',
+      path: '/connect/onboarding/intro',
       builder: (_, _) => stub('PaymentsOnboarding'),
     ),
     GoRoute(
@@ -388,6 +388,31 @@ void main() {
 
       expect(find.text('Mon profil PRO'), findsOneWidget);
       expect(find.text('Passer en compte PRO'), findsNothing);
+    });
+  });
+
+  group('Compte Stripe déjà connecté', () {
+    testWidgets(
+        '« Recevoir mes paiements » disparaît une fois ONBOARDING_COMPLETE '
+        '(il n\'y a plus rien à faire dans ce menu, comme la carte CTA au-dessus)',
+        (tester) async {
+      await pumpWith(
+        tester,
+        const UserModel(
+          id: 'stripe-connected-1',
+          firstName: 'Stripe',
+          lastName: 'Connecté',
+          roles: ['TRAVELER', 'SENDER'],
+          kycStatus: 'VERIFIED',
+          status: 'ACTIVE',
+          stripeAccountStatus: 'ONBOARDING_COMPLETE',
+        ),
+      );
+      await _scrollTo(tester, find.text('Carte commission espèces'));
+
+      expect(find.text('Recevoir mes paiements'), findsNothing);
+      expect(find.text('Carte commission espèces'), findsOneWidget);
+      expect(find.text('Ma grille de prix'), findsOneWidget);
     });
   });
 

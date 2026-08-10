@@ -140,6 +140,12 @@ void main() {
       expect(find.text('Compléter mon compte'), findsNothing);
       verify(() => stripeBloc.add(const StripeAccountStatusRefreshed()))
           .called(1);
+      // Regression: AuthBloc.currentUser.stripeAccountStatus (mis en cache au
+      // login) ne suivait jamais ce changement — le Profil continuait
+      // d'afficher la tuile "Recevoir mes paiements" pour un compte déjà
+      // connecté tant qu'aucun logout/login n'avait eu lieu.
+      verify(() => mockAuthBloc.add(const AuthProfileRefreshRequested()))
+          .called(1);
     });
 
     testWidgets('shows loading when state is ConnectOnboardingLoading',

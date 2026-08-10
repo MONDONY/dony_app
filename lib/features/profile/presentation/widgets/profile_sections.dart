@@ -117,13 +117,18 @@ class ProfileMoneySection extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         ProfileListSection(
           tiles: [
-            DonyListTile(
-              iconAsset: 'piggy-bank',
-              iconColor: cs.success,
-              iconBgColor: cs.successLight,
-              label: 'Recevoir mes paiements',
-              onTap: () => context.push('/connect/onboarding/intro'),
-            ),
+            // Une fois le compte Stripe connecté, il n'y a plus rien à faire
+            // ici — la carte ActivateCardPaymentsCtaCard au-dessus a déjà
+            // disparu dans ce cas, cette ligne suivait le même sort pour ne
+            // pas laisser une action déjà accomplie traîner dans le menu.
+            if (user?.stripeAccountStatus != 'ONBOARDING_COMPLETE')
+              DonyListTile(
+                iconAsset: 'piggy-bank',
+                iconColor: cs.success,
+                iconBgColor: cs.successLight,
+                label: 'Recevoir mes paiements',
+                onTap: () => context.push('/connect/onboarding/intro'),
+              ),
             DonyListTile(
               iconAsset: 'credit-card',
               iconColor: DonyColors.purple,

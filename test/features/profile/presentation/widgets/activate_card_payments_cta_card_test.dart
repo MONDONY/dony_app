@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /// Wrappe la carte dans un GoRouter minimal — nécessaire car
-/// `ActivateCardPaymentsCtaCard` appelle `context.push('/payments/onboarding')`.
+/// `ActivateCardPaymentsCtaCard` appelle `context.push('/connect/onboarding/intro')`.
 Widget _wrap(String? stripeStatus, {VoidCallback? onOnboardingPushed}) {
   final router = GoRouter(
     initialLocation: '/',
@@ -18,7 +18,7 @@ Widget _wrap(String? stripeStatus, {VoidCallback? onOnboardingPushed}) {
         ),
       ),
       GoRoute(
-        path: '/payments/onboarding',
+        path: '/connect/onboarding/intro',
         builder: (context, state) {
           onOnboardingPushed?.call();
           return const Scaffold(body: Text('Onboarding'));
@@ -31,7 +31,7 @@ Widget _wrap(String? stripeStatus, {VoidCallback? onOnboardingPushed}) {
 
 void main() {
   testWidgets(
-    'affichée quand Stripe incomplet, CTA vers /payments/onboarding',
+    'affichée quand Stripe incomplet, CTA vers /connect/onboarding/intro',
     (tester) async {
       var pushed = false;
       await tester.pumpWidget(
