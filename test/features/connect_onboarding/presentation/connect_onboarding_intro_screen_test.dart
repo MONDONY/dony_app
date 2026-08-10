@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -7,6 +8,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,6 +21,10 @@ class MockConnectOnboardingBloc
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
 
 /// Duration long enough to let all flutter_animate delays complete.
 const _kSettle = Duration(milliseconds: 600);
@@ -92,6 +98,42 @@ void main() {
 
       expect(find.text('Compte Stripe Connect'), findsOneWidget);
       expect(find.text('Compléter mon compte'), findsOneWidget);
+    });
+
+    testWidgets(
+        'dispatches ConnectOnboardingStatusRequested on init so an already-complete '
+        'account is detected instead of showing the stale "Complète ton compte" intro',
+        (tester) async {
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
+      await tester.pump(_kSettle);
+
+      verify(() => mockBloc.add(const ConnectOnboardingStatusRequested()))
+          .called(1);
+    });
+
+    testWidgets(
+        'redirects to /home when the status check resolves to already complete '
+        '(regression: the screen never re-checked status on load, so a completed '
+        'account still saw the onboarding intro until the button was tapped again)',
+        (tester) async {
+      whenListen<ConnectOnboardingState>(
+        mockBloc,
+        Stream.value(const ConnectOnboardingComplete()),
+        initialState: const ConnectOnboardingComplete(),
+      );
+
+      final stripeBloc = MockStripeAccountBloc();
+      when(() => stripeBloc.add(const StripeAccountStatusRefreshed()))
+          .thenReturn(null);
+      getIt.registerLazySingleton<StripeAccountBloc>(() => stripeBloc);
+      addTearDown(getIt.reset);
+
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Home'), findsOneWidget);
+      verify(() => stripeBloc.add(const StripeAccountStatusRefreshed()))
+          .called(1);
     });
 
     testWidgets('shows loading when state is ConnectOnboardingLoading',

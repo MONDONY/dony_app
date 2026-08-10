@@ -28,6 +28,12 @@ class _ConnectOnboardingIntroScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // L'écran affichait le même CTA "Complète ton compte Stripe" même une
+    // fois le compte déjà ONBOARDING_COMPLETE, faute de vérifier le statut
+    // réel au chargement — seul un nouveau tap sur le bouton le détectait.
+    context.read<ConnectOnboardingBloc>().add(
+      const ConnectOnboardingStatusRequested(),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final fromStripe =
