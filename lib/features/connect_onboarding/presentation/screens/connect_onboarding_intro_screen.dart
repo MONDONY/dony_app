@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -108,6 +110,10 @@ class _IntroView extends StatelessWidget {
         ? ErrorPresenter.resolve((state as ConnectOnboardingError).error).message
         : null;
 
+    final authState = context.watch<AuthBloc>().state;
+    final kycVerified =
+        authState is AuthAuthenticated && authState.user.isKycVerified;
+
     return Scaffold(
       appBar: const DonyAppBar(title: 'Compte Stripe Connect'),
       body: Builder(builder: (context) {
@@ -152,6 +158,21 @@ class _IntroView extends StatelessWidget {
                 _BenefitsList().animate().fadeIn(delay: 140.ms),
                 const SizedBox(height: DonySpacing.xxl),
 
+                // KYC requis avant Stripe
+                if (!kycVerified) ...[
+                  DonyStatusBanner(
+                    type: DonyStatusBannerType.warning,
+                    title: 'Identité à vérifier',
+                    message:
+                        'Vérifie d\'abord ton identité avant de compléter ton compte Stripe.',
+                    action: TextButton(
+                      onPressed: () => context.push('/kyc/verify'),
+                      child: const Text('Vérifier mon identité'),
+                    ),
+                  ).animate().fadeIn(delay: 160.ms),
+                  const SizedBox(height: DonySpacing.lg),
+                ],
+
                 // Info banner
                 const DonyStatusBanner(
                   type: DonyStatusBannerType.info,
@@ -185,7 +206,7 @@ class _IntroView extends StatelessWidget {
           child: DonyButton(
             label: 'Compléter mon compte',
             iconAsset: 'arrow-right',
-            onPressed: isLoading
+            onPressed: (isLoading || !kycVerified)
                 ? null
                 : () => context
                     .read<ConnectOnboardingBloc>()

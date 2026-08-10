@@ -162,6 +162,25 @@ void main() {
     );
 
     blocTest<KycBloc, KycState>(
+      'emits [StatusLoaded] with rejectionReason when REJECTED',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.getStatus()).thenAnswer((_) async => {
+              'kycStatus': 'REJECTED',
+              'verificationStatus': 'REJECTED',
+              'rejectionReason': 'document_expired',
+            });
+      },
+      act: (b) => b.add(const KycStatusRefreshed()),
+      expect: () => [
+        isA<KycStatusLoaded>()
+            .having((s) => s.kycStatus, 'kycStatus', 'REJECTED')
+            .having((s) => s.rejectionReason, 'rejectionReason',
+                'document_expired'),
+      ],
+    );
+
+    blocTest<KycBloc, KycState>(
       'emits [Error] on generic exception',
       build: buildBloc,
       setUp: () {

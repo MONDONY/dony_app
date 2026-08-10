@@ -67,6 +67,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
         KycStatusLoaded(
           kycStatus: data['kycStatus'] as String,
           verificationStatus: data['verificationStatus'] as String,
+          rejectionReason: data['rejectionReason'] as String?,
         ),
       );
       if ((data['kycStatus'] as String) == 'VERIFIED') {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/models/kyc_rejection_reason_label.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -275,7 +276,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
       case 'VERIFIED':
         return _buildVerifiedContent(cs, tt);
       case 'REJECTED':
-        return _buildRejectedContent(context, cs, tt);
+        return _buildRejectedContent(context, cs, tt, state.rejectionReason);
       case 'NOT_STARTED':
         return _buildNotStartedContent(context, cs, tt);
       default:
@@ -416,7 +417,12 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     );
   }
 
-  Widget _buildRejectedContent(BuildContext context, ColorScheme cs, TextTheme tt) {
+  Widget _buildRejectedContent(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+    String? rejectionReason,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -437,7 +443,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          "Nous n'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.",
+          kycRejectionReasonLabel(rejectionReason),
           style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
           textAlign: TextAlign.center,
         ),

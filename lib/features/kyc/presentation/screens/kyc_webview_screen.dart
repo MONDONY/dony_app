@@ -84,36 +84,49 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
       ..loadRequest(Uri.parse(widget.stripeUrl));
   }
 
+  // Point de sortie unique — bouton "✕" et bouton retour système y mènent tous
+  // les deux. Sans cette garde sur le retour matériel, KycWebViewScreen est le
+  // seul écran de la pile (context.go remplace toute la pile GoRouter) : un
+  // retour système sans PopScope quitte/backgrounde l'app au lieu de router
+  // en interne — c'est ça qui bloquait l'utilisateur après un échec Stripe.
+  void _exit() {
+    context.read<KycBloc>().add(const KycSessionAbandoned());
+    context.read<AuthBloc>().add(const AuthCheckRequested());
+    context.go('/home');
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: DonyAppBar(
-        title: 'Vérification d\'identité',
-        showBackButton: false,
-        actions: [
-          IconButton(
-            tooltip: 'Fermer',
-            icon: DonyIcon('x', color: cs.onSurface),
-            onPressed: () {
-              context.read<KycBloc>().add(const KycSessionAbandoned());
-              context.read<AuthBloc>().add(const AuthCheckRequested());
-              context.go('/home');
-            },
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isLoading,
-            builder: (_, loading, __) => loading
-                ? Center(child: CircularProgressIndicator(color: cs.primary))
-                : const SizedBox.shrink(),
-          ),
-        ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _exit();
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: DonyAppBar(
+          title: 'Vérification d\'identité',
+          showBackButton: false,
+          actions: [
+            IconButton(
+              tooltip: 'Fermer',
+              icon: DonyIcon('x', color: cs.onSurface),
+              onPressed: _exit,
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            WebViewWidget(controller: _controller),
+            ValueListenableBuilder<bool>(
+              valueListenable: _isLoading,
+              builder: (_, loading, __) => loading
+                  ? Center(child: CircularProgressIndicator(color: cs.primary))
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }

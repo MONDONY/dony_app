@@ -1,5 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
@@ -13,17 +17,30 @@ class MockConnectOnboardingBloc
     extends MockBloc<ConnectOnboardingEvent, ConnectOnboardingState>
     implements ConnectOnboardingBloc {}
 
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
 /// Duration long enough to let all flutter_animate delays complete.
 const _kSettle = Duration(milliseconds: 600);
 
-Widget _wrap(ConnectOnboardingBloc bloc) {
+UserModel _buildUser({required String kycStatus}) => UserModel(
+      id: 'user-1',
+      roles: const ['ROLE_TRAVELER'],
+      kycStatus: kycStatus,
+      status: 'ACTIVE',
+    );
+
+Widget _wrap(ConnectOnboardingBloc bloc, AuthBloc authBloc) {
   return MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => BlocProvider<ConnectOnboardingBloc>.value(
-            value: bloc,
+          builder: (_, __) => MultiBlocProvider(
+            providers: [
+              BlocProvider<ConnectOnboardingBloc>.value(value: bloc),
+              BlocProvider<AuthBloc>.value(value: authBloc),
+            ],
             child: const ConnectOnboardingIntroScreen(),
           ),
         ),
@@ -35,6 +52,10 @@ Widget _wrap(ConnectOnboardingBloc bloc) {
           path: '/home',
           builder: (_, __) => const Scaffold(body: Text('Home')),
         ),
+        GoRoute(
+          path: '/kyc/verify',
+          builder: (_, __) => const Scaffold(body: Text('Kyc')),
+        ),
       ],
     ),
   );
@@ -42,6 +63,7 @@ Widget _wrap(ConnectOnboardingBloc bloc) {
 
 void main() {
   late MockConnectOnboardingBloc mockBloc;
+  late MockAuthBloc mockAuthBloc;
 
   setUpAll(() {
     registerFallbackValue(const ConnectOnboardingLinkRequested());
@@ -54,11 +76,18 @@ void main() {
       Stream.value(const ConnectOnboardingNeedsOnboarding()),
       initialState: const ConnectOnboardingNeedsOnboarding(),
     );
+
+    mockAuthBloc = MockAuthBloc();
+    whenListen<AuthState>(
+      mockAuthBloc,
+      Stream.value(AuthAuthenticated(_buildUser(kycStatus: 'VERIFIED'))),
+      initialState: AuthAuthenticated(_buildUser(kycStatus: 'VERIFIED')),
+    );
   });
 
   group('ConnectOnboardingIntroScreen', () {
     testWidgets('renders intro content with CTA button', (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
       await tester.pump(_kSettle);
 
       expect(find.text('Compte Stripe Connect'), findsOneWidget);
@@ -73,7 +102,7 @@ void main() {
         initialState: const ConnectOnboardingLoading(),
       );
 
-      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
       await tester.pump(_kSettle);
 
       // Button should be disabled (no tap handler)
@@ -92,7 +121,7 @@ void main() {
             ConnectOnboardingError(NetworkException('Stripe indisponible')),
       );
 
-      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
       await tester.pump(_kSettle);
 
       // L'écran affiche ErrorPresenter.resolve(error).message → texte du catalog.
@@ -104,7 +133,7 @@ void main() {
 
     testWidgets('dispatches ConnectOnboardingLinkRequested on button tap',
         (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc));
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.tap(find.text('Compléter mon compte'));
@@ -112,6 +141,47 @@ void main() {
 
       verify(() => mockBloc.add(const ConnectOnboardingLinkRequested()))
           .called(1);
+    });
+
+    testWidgets(
+        'shows KYC warning banner and disables CTA when identity is not verified',
+        (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        Stream.value(AuthAuthenticated(_buildUser(kycStatus: 'NOT_STARTED'))),
+        initialState:
+            AuthAuthenticated(_buildUser(kycStatus: 'NOT_STARTED')),
+      );
+
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
+      await tester.pump(_kSettle);
+
+      expect(find.text('Identité à vérifier'), findsOneWidget);
+      expect(find.text('Vérifier mon identité'), findsOneWidget);
+
+      final button = tester.widget<InkWell>(
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      );
+      expect(button.onTap, isNull);
+    });
+
+    testWidgets('navigates to /kyc/verify when tapping the banner action',
+        (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        Stream.value(AuthAuthenticated(_buildUser(kycStatus: 'NOT_STARTED'))),
+        initialState:
+            AuthAuthenticated(_buildUser(kycStatus: 'NOT_STARTED')),
+      );
+
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
+      await tester.pump(_kSettle);
+
+      await tester.ensureVisible(find.text('Vérifier mon identité'));
+      await tester.tap(find.text('Vérifier mon identité'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kyc'), findsOneWidget);
     });
   });
 }
