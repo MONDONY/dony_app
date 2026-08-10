@@ -110,9 +110,8 @@ class _IntroView extends StatelessWidget {
         ? ErrorPresenter.resolve((state as ConnectOnboardingError).error).message
         : null;
 
-    final authState = context.watch<AuthBloc>().state;
     final kycVerified =
-        authState is AuthAuthenticated && authState.user.isKycVerified;
+        context.watch<AuthBloc>().state.currentUser?.isKycVerified ?? false;
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Compte Stripe Connect'),

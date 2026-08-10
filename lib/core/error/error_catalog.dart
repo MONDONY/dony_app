@@ -399,6 +399,20 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.credit_card_off_rounded,
     ),
+    'stripe-account-required': ErrorPresentation(
+      title: 'Compte Stripe requis',
+      message:
+          'Un compte de paiement doit d\'abord être créé. Réessaie dans un instant.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_outlined,
+    ),
+    'stripe-account-invalid': ErrorPresentation(
+      title: 'Compte Stripe invalide',
+      message:
+          'Ton compte de paiement n\'est plus valide. Réessaie pour en créer un nouveau.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_outlined,
+    ),
     'google-timeout': ErrorPresentation(
       title: 'Service indisponible',
       message:

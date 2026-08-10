@@ -122,7 +122,7 @@ class ProfileMoneySection extends StatelessWidget {
               iconColor: cs.success,
               iconBgColor: cs.successLight,
               label: 'Recevoir mes paiements',
-              onTap: () => context.push('/payments/onboarding'),
+              onTap: () => context.push('/connect/onboarding/intro'),
             ),
             DonyListTile(
               iconAsset: 'credit-card',

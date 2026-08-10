@@ -48,6 +48,15 @@ class ConnectOnboardingBloc
   ) async {
     emit(const ConnectOnboardingLoading());
     try {
+      // Le backend rejette la création de lien tant qu'aucun compte Stripe
+      // n'existe (409 stripe-account-required) — rien ne le crée
+      // automatiquement après le KYC. createAccount() est idempotent
+      // (retourne le compte existant s'il y en a déjà un).
+      final account = await _repository.createAccount();
+      if (account.isComplete) {
+        emit(const ConnectOnboardingComplete());
+        return;
+      }
       final url = await _repository.createOnboardingLink();
       emit(ConnectOnboardingUrlReady(url));
     } catch (e) {

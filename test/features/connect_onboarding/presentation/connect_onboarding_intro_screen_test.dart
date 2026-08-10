@@ -144,6 +144,28 @@ void main() {
     });
 
     testWidgets(
+        'recognizes a verified KYC from AuthProfileUpdated, not just AuthAuthenticated '
+        '(regression: reading only AuthAuthenticated missed the state emitted after a '
+        'profile edit, wrongly showing the KYC warning banner for an already-verified user)',
+        (tester) async {
+      whenListen<AuthState>(
+        mockAuthBloc,
+        Stream.value(AuthProfileUpdated(_buildUser(kycStatus: 'VERIFIED'))),
+        initialState: AuthProfileUpdated(_buildUser(kycStatus: 'VERIFIED')),
+      );
+
+      await tester.pumpWidget(_wrap(mockBloc, mockAuthBloc));
+      await tester.pump(_kSettle);
+
+      expect(find.text('Identité à vérifier'), findsNothing);
+
+      final button = tester.widget<InkWell>(
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      );
+      expect(button.onTap, isNotNull);
+    });
+
+    testWidgets(
         'shows KYC warning banner and disables CTA when identity is not verified',
         (tester) async {
       whenListen<AuthState>(

@@ -124,9 +124,12 @@ void main() {
 
   group('ConnectOnboardingLinkRequested', () {
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
-      'emits [Loading, UrlReady] with url on success',
+      'emits [Loading, UrlReady] with url on success '
+      '(createAccount is idempotent — no Stripe account existed yet)',
       build: buildBloc,
       setUp: () {
+        when(() => mockRepo.createAccount())
+            .thenAnswer((_) async => _notCreated);
         when(() => mockRepo.createOnboardingLink())
             .thenAnswer((_) async => 'https://connect.stripe.com/setup/abc');
       },
@@ -139,12 +142,51 @@ void main() {
           'https://connect.stripe.com/setup/abc',
         ),
       ],
+      verify: (_) {
+        verify(() => mockRepo.createAccount()).called(1);
+      },
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Loading, Complete] without requesting a link when the account '
+      'is already onboarded (createAccount returned ONBOARDING_COMPLETE)',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.createAccount()).thenAnswer((_) async => _complete);
+      },
+      act: (b) => b.add(const ConnectOnboardingLinkRequested()),
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingComplete>(),
+      ],
+      verify: (_) {
+        verifyNever(() => mockRepo.createOnboardingLink());
+      },
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Loading, Error] when createAccount throws '
+      '(regression: the 409 stripe-account-required the backend returns when no '
+      'account exists yet was surfacing as this generic error before createAccount() '
+      'was called first)',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.createAccount())
+            .thenThrow(Exception('Stripe error'));
+      },
+      act: (b) => b.add(const ConnectOnboardingLinkRequested()),
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingError>(),
+      ],
     );
 
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
       'emits [Loading, Error] when createOnboardingLink throws',
       build: buildBloc,
       setUp: () {
+        when(() => mockRepo.createAccount())
+            .thenAnswer((_) async => _notCreated);
         when(() => mockRepo.createOnboardingLink())
             .thenThrow(Exception('Stripe error'));
       },

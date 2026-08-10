@@ -44,7 +44,7 @@ class ActivateCardPaymentsCtaCard extends StatelessWidget {
           ],
         ),
         child: InkWell(
-          onTap: () => context.push('/payments/onboarding'),
+          onTap: () => context.push('/connect/onboarding/intro'),
           borderRadius: BorderRadius.circular(DonyRadius.card),
           splashColor: Colors.white.withValues(alpha: 0.12),
           highlightColor: Colors.white.withValues(alpha: 0.06),

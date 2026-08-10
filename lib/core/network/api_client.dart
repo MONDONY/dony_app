@@ -32,6 +32,11 @@ class ApiClient {
       BaseOptions(
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 10),
+        // Sans sendTimeout, l'écriture du body (POST/PUT/PATCH) sur un socket
+        // qui stalle peut bloquer indéfiniment — ni connectTimeout (couvre
+        // seulement le handshake TCP) ni receiveTimeout (démarre après
+        // l'envoi complet) ne s'en chargent.
+        sendTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
           'Content-Type': 'application/json',
@@ -202,6 +207,13 @@ class _AuthInterceptor extends Interceptor {
   final DeviceIdService _deviceIdService;
   _AuthInterceptor(this._deviceIdService);
 
+  // getIdToken() passe par un canal natif dépendant de Google Play
+  // Services — sur certains devices (GMS cassé/indisponible) l'appel ne
+  // rend jamais la main, forcé ou non : un deuxième appel en secours serait
+  // tout aussi susceptible de geler. On garde donc le dernier token obtenu
+  // avec succès et on l'utilise si le canal ne répond pas à temps.
+  String? _lastKnownToken;
+
   @override
   Future<void> onRequest(
     RequestOptions options,
@@ -220,7 +232,26 @@ class _AuthInterceptor extends Interceptor {
             options.path.contains('/kyc') ||
             options.path.contains('/tracking/events') ||
             options.path.contains('/bids/checkout');
-        final token = await user.getIdToken(isCritical);
+        String? token;
+        try {
+          token = await user.getIdToken(isCritical).timeout(
+            const Duration(seconds: 8),
+          );
+          _lastKnownToken = token;
+        } on TimeoutException {
+          token = _lastKnownToken;
+          if (token == null) {
+            handler.reject(
+              DioException(
+                requestOptions: options,
+                error:
+                    'Authentification indisponible : le canal Firebase ne répond pas sur cet appareil.',
+                type: DioExceptionType.connectionTimeout,
+              ),
+            );
+            return;
+          }
+        }
         options.headers['Authorization'] = 'Bearer $token';
         final deviceId = await _deviceIdService.getDeviceId();
         options.headers['X-Device-Id'] = deviceId;
