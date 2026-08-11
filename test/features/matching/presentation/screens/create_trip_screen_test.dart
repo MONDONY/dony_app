@@ -29,6 +29,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart'
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -477,6 +478,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   }
 
+  void registerCurrencyPreference(String currencyCode) {
+    final hive = MockHiveService();
+    final prefs = MockBox();
+    when(() => hive.userPrefs).thenReturn(prefs);
+    when(
+      () => prefs.get(HiveService.kCurrencyCode, defaultValue: 'EUR'),
+    ).thenReturn(currencyCode);
+    getIt.registerSingleton<HiveService>(hive);
+    addTearDown(() => getIt.unregister<HiveService>());
+  }
+
   // ── Group: AppBar titles ──────────────────────────────────────────────────────
 
   group('CreateTripScreen — AppBar titles', () {
@@ -618,6 +630,71 @@ void main() {
   // ── Group: Form structure ─────────────────────────────────────────────────────
 
   group('CreateTripScreen — Form structure', () {
+    testWidgets('bandeau devise EUR avant le premier champ du trajet', (
+      tester,
+    ) async {
+      setupViewport(tester);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+      expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(
+          'Publication en Euro, devise EUR. Les utilisateurs dans une autre devise ne verront pas cette annonce.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(find.byKey(const Key('currency-publish-banner'))).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('departureCityField'))).dy,
+        ),
+      );
+    });
+
+    testWidgets('bandeau devise lit CAD depuis Hive', (tester) async {
+      setupViewport(tester);
+      registerCurrencyPreference('CAD');
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      expect(find.text('Publié en Dollar canadien (CAD)'), findsOneWidget);
+    });
+
+    testWidgets('bandeau devise absent en mode édition', (tester) async {
+      setupViewport(tester);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(args: CreateTripArgs(announcement: _makeAnnouncement())),
+        ),
+      );
+
+      expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
+    });
+
+    testWidgets('bandeau devise reste lisible avec texte agrandi', (tester) async {
+      setupViewport(tester);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('stepper header est présent à l\'étape 0', (tester) async {
       setupViewport(tester);
 

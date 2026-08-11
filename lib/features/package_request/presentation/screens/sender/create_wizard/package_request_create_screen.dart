@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/currency_publish_banner.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -390,6 +392,20 @@ class _PackageRequestCreateScreenState
                         context: TutorialContext.requestPublish,
                       ),
                     ),
+                    if (!state.isEditing)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.base,
+                          DonySpacing.base,
+                          DonySpacing.base,
+                          0,
+                        ),
+                        child: CurrencyPublishBanner.fromHive(
+                          hiveService: getIt.isRegistered<HiveService>()
+                              ? getIt<HiveService>()
+                              : null,
+                        ),
+                      ),
                     Expanded(
                       child: Step1TrajetColis(
                         key: _step1Key,

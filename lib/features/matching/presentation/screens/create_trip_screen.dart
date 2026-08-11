@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/currency_publish_banner.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -231,6 +233,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 context: TutorialContext.tripPublish,
               ),
               const SizedBox(height: DonySpacing.base),
+              if (!isEdit && !isLocked) ...[
+                CurrencyPublishBanner.fromHive(
+                  hiveService: getIt.isRegistered<HiveService>()
+                      ? getIt<HiveService>()
+                      : null,
+                ),
+                const SizedBox(height: DonySpacing.base),
+              ],
               _TripFormContent(
                 announcement: args?.announcement,
                 lockContext: args?.lockContext,

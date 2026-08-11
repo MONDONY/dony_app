@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -234,6 +235,17 @@ void main() {
     unregisterFakeRecentCityStore();
   });
 
+  void registerCurrencyPreference(Object? currencyCode) {
+    final hive = MockHiveService();
+    final prefs = MockBox();
+    when(() => hive.userPrefs).thenReturn(prefs);
+    when(
+      () => prefs.get(HiveService.kCurrencyCode, defaultValue: 'EUR'),
+    ).thenReturn(currencyCode);
+    getIt.registerSingleton<HiveService>(hive);
+    addTearDown(() => getIt.unregister<HiveService>());
+  }
+
   Widget buildHarness({String helpConfigJson = _emptyHelpConfigJson}) {
     final router = GoRouter(
       initialLocation: '/',
@@ -428,6 +440,32 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('TutorialStub:request_publish_basics'), findsOneWidget);
+  });
+
+  testWidgets('bandeau devise repli EUR avant le premier champ de la demande', (
+    tester,
+  ) async {
+    registerCurrencyPreference(42);
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-create')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+    expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('currency-publish-banner'))).dy,
+      lessThan(
+        tester.getTopLeft(find.byKey(const Key('step1-departure-city'))).dy,
+      ),
+    );
+  });
+
+  testWidgets('bandeau devise absent en édition de demande', (tester) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-edit')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
   });
 
   testWidgets('création réussie affiche DonySuccessScreen (plus de SnackBar)', (
