@@ -24,6 +24,7 @@ AnnouncementModel _makeAnn({
   bool kycVerified = false,
   DateTime? departureDate,
   List<String>? acceptedContentTypes,
+  String currency = 'EUR',
 }) =>
     AnnouncementModel(
       id: 'a1',
@@ -36,6 +37,7 @@ AnnouncementModel _makeAnn({
       availableKg: 8,
       totalKg: 8,
       pricePerKg: 12,
+      currency: currency,
       status: 'ACTIVE',
       createdAt: DateTime(2026, 5, 1),
       updatedAt: DateTime(2026, 5, 1),
@@ -86,7 +88,21 @@ void main() {
       expect(find.text('Mamadou Diallo'), findsOneWidget);
       // Carte vue par l'expéditeur : prix au kilo affiché = net × 1,12
       // (12 €/kg net → 13,44 €/kg commission Yadony incluse).
-      expect(find.text('13.44 €/kg'), findsOneWidget);
+      expect(find.textContaining('13,44'), findsOneWidget);
+      expect(find.textContaining('€/kg'), findsOneWidget);
+    });
+
+    testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(currency: 'CAD'),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('CA\$'), findsOneWidget);
+      expect(find.textContaining('€/kg'), findsNothing);
     });
 
     testWidgets('shows KYC badge when kiloPro is true', (tester) async {

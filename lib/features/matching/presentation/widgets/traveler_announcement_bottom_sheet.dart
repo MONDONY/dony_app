@@ -285,7 +285,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           iconAsset: 'euro',
           label: announcement.pricingMode == 'MIXED'
               ? 'Grille tarifaire'
-              : '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
+              : '${formatPriceIn(announcement.senderPricePerKg, announcement.currency)}/kg',
           labelStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
         ),
 
@@ -325,7 +325,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                     ),
                     const SizedBox(width: DonySpacing.sm),
                     Text(
-                      '${item.unitPriceDisplay % 1 == 0 ? item.unitPriceDisplay.toStringAsFixed(0) : item.unitPriceDisplay.toStringAsFixed(2)} €',
+                      formatPriceIn(item.unitPriceDisplay, announcement.currency),
                       style: tt.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: cs.primary,

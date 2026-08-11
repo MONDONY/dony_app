@@ -72,6 +72,7 @@ AnnouncementModel _buildAnnouncement({
   DateTime? handoverStart,
   DateTime? handoverEnd,
   bool acceptsUnverified = false,
+  String currency = 'EUR',
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -83,6 +84,7 @@ AnnouncementModel _buildAnnouncement({
     availableKg: 12,
     totalKg: 20,
     pricePerKg: 8,
+    currency: currency,
     status: 'ACTIVE',
     traveler: TravelerProfile(
       id: 't1',
@@ -201,6 +203,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Remise :'), findsNothing);
+  });
+
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR',
+      (tester) async {
+    final a = _buildAnnouncement(kycVerified: true, currency: 'CAD');
+    await tester.pumpWidget(_harness(announcement: a));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('€/kg'), findsNothing);
   });
 
   testWidgets('affiche le titre, le voyageur et le bouton Faire une demande',

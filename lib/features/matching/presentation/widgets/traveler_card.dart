@@ -120,7 +120,7 @@ class TravelerCard extends StatelessWidget {
 
     final priceLabel = announcement.pricingMode == 'MIXED'
         ? 'Grille tarifaire'
-        : '${formatKgPrice(announcement.senderPricePerKg)} €/kg';
+        : '${formatPriceIn(announcement.senderPricePerKg, announcement.currency)}/kg';
 
     return _PressableCard(
       onTap: onTap,
