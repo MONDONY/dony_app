@@ -44,7 +44,7 @@ class PaymentScreen extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is PaymentEscrowPending) {
-          return _EscrowConfirmedView(amount: state.amount);
+          return _EscrowConfirmedView(amount: state.amount, currency: bid.currency);
         }
         return BlocBuilder<ConfigBloc, ConfigState>(
           builder: (context, configState) {
@@ -178,7 +178,7 @@ class _PaymentSummaryView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.lg),
                 ],
                 DonyButton(
-                  label: 'Payer ${_total.toStringAsFixed(2)} €',
+                  label: 'Payer ${formatPriceIn(_total, bid.currency)}',
                   onPressed: isLoading ? null : () => _pay(context),
                   isLoading: isLoading,
                   iconAsset: 'lock',
@@ -247,7 +247,7 @@ class _SummaryCard extends StatelessWidget {
                     // Tarif BRUT (net + commission). Le backend ne renvoie
                     // jamais le tarif net à l'expéditeur.
                     value: bid.senderPricePerKg != null
-                        ? '${formatKgPrice(bid.senderPricePerKg!)} €/kg'
+                        ? '${formatPriceIn(bid.senderPricePerKg!, bid.currency)}/kg'
                         : '-',
                   ),
                 ] else if (bid.pricingMode == BidPricingMode.grid) ...[
@@ -270,7 +270,7 @@ class _SummaryCard extends StatelessWidget {
                   style: tt.titleMedium,
                 ),
                 Text(
-                  '${total.toStringAsFixed(2)} €',
+                  formatPriceIn(total, bid.currency),
                   style: tt.headlineMedium?.copyWith(color: cs.primary),
                 ),
               ],
@@ -286,7 +286,8 @@ class _SummaryCard extends StatelessWidget {
 
 class _EscrowConfirmedView extends StatelessWidget {
   final double amount;
-  const _EscrowConfirmedView({required this.amount});
+  final String currency;
+  const _EscrowConfirmedView({required this.amount, required this.currency});
 
   @override
   Widget build(BuildContext context) {
@@ -294,7 +295,7 @@ class _EscrowConfirmedView extends StatelessWidget {
       mascotteType: DonyMascotteType.securise,
       title: 'Envoi réservé !',
       subtitle:
-          '${amount.toStringAsFixed(2)} € sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.',
+          '${formatPriceIn(amount, currency)} sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.',
       ctaLabel: 'Voir mes envois',
       onCta: () => context.go('/home'),
       analyticsContext: 'escrow_payment',

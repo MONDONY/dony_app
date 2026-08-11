@@ -180,7 +180,7 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                           // Tarif BRUT affiché à l'expéditeur (jamais le net).
                           InfoRow(
                             label: 'Tarif par kg',
-                            value: '${formatKgPrice(bid.senderPricePerKg!)} €',
+                            value: formatPriceIn(bid.senderPricePerKg!, bid.currency),
                           ),
                         ],
                         // Section 3 — LIEN DE SUIVI (conditionnel)
