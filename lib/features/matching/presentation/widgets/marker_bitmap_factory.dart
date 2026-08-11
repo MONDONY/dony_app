@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -80,6 +81,7 @@ class MarkerBitmapFactory {
     bool isSelected = false,
     Brightness brightness = Brightness.light,
     String prefix = '',
+    String? currencyCode,
   }) async {
     final key = _PricePillKey(
       priceCents: (pricePerKg * 100).round(),
@@ -87,6 +89,7 @@ class MarkerBitmapFactory {
       isSelected: isSelected,
       isDark: brightness == Brightness.dark,
       prefix: prefix,
+      currencyCode: currencyCode ?? 'EUR',
     );
     final cached = _pillCache[key];
     if (cached != null) {
@@ -98,6 +101,7 @@ class MarkerBitmapFactory {
       isSelected: isSelected,
       brightness: brightness,
       prefix: prefix,
+      currencyCode: currencyCode,
     );
     _pillCache[key] = bitmap;
     return bitmap;
@@ -112,6 +116,7 @@ class MarkerBitmapFactory {
     bool isSelected = false,
     Brightness brightness = Brightness.light,
     String prefix = '',
+    String? currencyCode,
   }) async {
     final key = _StackedPillKey(
       priceCents: (pricePerKg * 100).round(),
@@ -120,6 +125,7 @@ class MarkerBitmapFactory {
       isSelected: isSelected,
       isDark: brightness == Brightness.dark,
       prefix: prefix,
+      currencyCode: currencyCode ?? 'EUR',
     );
     final cached = _stackedPillCache[key];
     if (cached != null) {
@@ -132,6 +138,7 @@ class MarkerBitmapFactory {
       isSelected: isSelected,
       brightness: brightness,
       prefix: prefix,
+      currencyCode: currencyCode,
     );
     _stackedPillCache[key] = bitmap;
     return bitmap;
@@ -144,13 +151,11 @@ class MarkerBitmapFactory {
     required bool isSelected,
     required Brightness brightness,
     String prefix = '',
+    String? currencyCode,
   }) async {
     final palette = _pillPalette(brightness);
-    final price = pricePerKg <= 0
-        ? 'Grille'
-        : pricePerKg == pricePerKg.roundToDouble()
-            ? '${pricePerKg.toInt()}€'
-            : '${pricePerKg.toStringAsFixed(1)}€';
+    final price =
+        pricePerKg <= 0 ? 'Grille' : formatPriceIn(pricePerKg, currencyCode);
     const fontSize = 12.0;
     const paddingH = 6.0;
     const paddingV = 4.0;
@@ -324,13 +329,11 @@ class MarkerBitmapFactory {
     required bool isSelected,
     required Brightness brightness,
     String prefix = '',
+    String? currencyCode,
   }) async {
     final palette = _pillPalette(brightness);
-    final label = pricePerKg <= 0
-        ? 'Grille'
-        : pricePerKg == pricePerKg.roundToDouble()
-            ? '${pricePerKg.toInt()}€'
-            : '${pricePerKg.toStringAsFixed(1)}€';
+    final label =
+        pricePerKg <= 0 ? 'Grille' : formatPriceIn(pricePerKg, currencyCode);
 
     const fontSize = 12.0;
     const paddingH = 6.0;
@@ -586,6 +589,7 @@ class _PricePillKey {
     required this.isSelected,
     required this.isDark,
     required this.prefix,
+    required this.currencyCode,
   });
 
   final int priceCents;
@@ -593,6 +597,7 @@ class _PricePillKey {
   final bool isSelected;
   final bool isDark;
   final String prefix;
+  final String currencyCode;
 
   @override
   bool operator ==(Object other) =>
@@ -602,10 +607,12 @@ class _PricePillKey {
           colorValue == other.colorValue &&
           isSelected == other.isSelected &&
           isDark == other.isDark &&
-          prefix == other.prefix;
+          prefix == other.prefix &&
+          currencyCode == other.currencyCode;
 
   @override
-  int get hashCode => Object.hash(priceCents, colorValue, isSelected, isDark, prefix);
+  int get hashCode =>
+      Object.hash(priceCents, colorValue, isSelected, isDark, prefix, currencyCode);
 }
 
 class _StackedPillKey {
@@ -616,6 +623,7 @@ class _StackedPillKey {
     required this.isSelected,
     required this.isDark,
     required this.prefix,
+    required this.currencyCode,
   });
 
   final int priceCents;
@@ -624,6 +632,7 @@ class _StackedPillKey {
   final bool isSelected;
   final bool isDark;
   final String prefix;
+  final String currencyCode;
 
   @override
   bool operator ==(Object other) =>
@@ -634,8 +643,10 @@ class _StackedPillKey {
           colorValue == other.colorValue &&
           isSelected == other.isSelected &&
           isDark == other.isDark &&
-          prefix == other.prefix;
+          prefix == other.prefix &&
+          currencyCode == other.currencyCode;
 
   @override
-  int get hashCode => Object.hash(priceCents, count, colorValue, isSelected, isDark, prefix);
+  int get hashCode =>
+      Object.hash(priceCents, count, colorValue, isSelected, isDark, prefix, currencyCode);
 }

@@ -156,6 +156,23 @@ void main() {
         pricePerKg: 12, isSelected: true);
       expect(identical(plain, selected), isFalse);
     });
+
+    test('different currencies produce different bitmaps, not always EUR',
+        () async {
+      final eur = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12, currencyCode: 'EUR');
+      final cad = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12, currencyCode: 'CAD');
+      expect(identical(eur, cad), isFalse);
+    });
+
+    test('same currency hits the cache', () async {
+      final a = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12, currencyCode: 'CAD');
+      final b = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12, currencyCode: 'CAD');
+      expect(identical(a, b), isTrue);
+    });
   });
 
   group('MarkerBitmapFactory.stackedPricePill brightness', () {
@@ -173,6 +190,14 @@ void main() {
       final b = await MarkerBitmapFactory.stackedPricePill(
           pricePerKg: 12, count: 3, brightness: Brightness.dark);
       expect(identical(a, b), isTrue);
+    });
+
+    test('different currencies produce different stacked bitmaps', () async {
+      final eur = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, currencyCode: 'EUR');
+      final cad = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, currencyCode: 'CAD');
+      expect(identical(eur, cad), isFalse);
     });
   });
 }
