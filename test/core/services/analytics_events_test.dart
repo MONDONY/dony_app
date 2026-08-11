@@ -8,6 +8,8 @@ void main() {
       AnalyticsEvents.otpSubmitted,
       AnalyticsEvents.signupCompleted,
       AnalyticsEvents.analyticsConsentAnswered,
+      AnalyticsEvents.currencyOnboardingSelected,
+      AnalyticsEvents.currencyOnboardingSkipped,
       AnalyticsEvents.loginSuccess,
       AnalyticsEvents.loginFailed,
       AnalyticsEvents.kycStarted,
@@ -45,6 +47,10 @@ void main() {
       expect(e, isNotEmpty);
       expect(e, matches(RegExp(r'^[a-z][a-z_]+$')));
     }
-    expect(events.toSet().length, events.length, reason: 'Duplicate event name');
+    expect(
+      events.toSet().length,
+      events.length,
+      reason: 'Duplicate event name',
+    );
   });
 }
