@@ -1,6 +1,9 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -16,12 +19,6 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  final _currencyFmt = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: '€',
-    decimalDigits: 2,
-  );
-
   @override
   void initState() {
     super.initState();
@@ -37,10 +34,7 @@ class _WalletScreenState extends State<WalletScreen> {
           return switch (state) {
             WalletInitial() || WalletLoading() => const _LoadingView(),
             WalletError(:final message) => _ErrorView(message: message),
-            WalletLoaded(:final wallet) => _LoadedView(
-                wallet: wallet,
-                currencyFmt: _currencyFmt,
-              ),
+            WalletLoaded(:final wallet) => _LoadedView(wallet: wallet),
             _ => const SizedBox.shrink(),
           };
         },
@@ -109,17 +103,20 @@ class _ErrorView extends StatelessWidget {
 // ─── Loaded ───────────────────────────────────────────────────────────────────
 
 class _LoadedView extends StatelessWidget {
-  const _LoadedView({
-    required this.wallet,
-    required this.currencyFmt,
-  });
+  const _LoadedView({required this.wallet});
 
   final dynamic wallet;
-  final NumberFormat currencyFmt;
 
   @override
   Widget build(BuildContext context) {
     final transactions = wallet.transactions as List<WalletTransactionModel>;
+    final activeCurrency =
+        SupportedCurrency.fromCode(wallet.currency as String) ??
+            SupportedCurrency.eur;
+    final lockedBalances =
+        (wallet.balances as List<WalletCurrencyBalanceModel>)
+            .where((b) => !b.active)
+            .toList();
 
     return RefreshIndicator(
       color: Theme.of(context).colorScheme.primary,
@@ -152,10 +149,30 @@ class _LoadedView extends StatelessWidget {
             collapseMode: CollapseMode.pin,
             background: _HeroHeader(
               balance: wallet.balance as double,
-              currencyFmt: currencyFmt,
+              currency: activeCurrency,
             ),
           ),
         ),
+
+        // ── Locked (non-active currency) balances ────────────────────────────
+        if (lockedBalances.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.xl,
+                DonySpacing.lg,
+                0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final locked in lockedBalances)
+                    _LockedBalanceTile(balance: locked),
+                ],
+              ),
+            ),
+          ),
 
         // ── Transactions list ──────────────────────────────────────────────
         if (transactions.isEmpty)
@@ -209,7 +226,7 @@ class _LoadedView extends StatelessWidget {
             delegate: SliverChildBuilderDelegate(
               (ctx, i) => _TxTile(
                 tx: transactions[i],
-                formatter: currencyFmt,
+                currency: activeCurrency,
                 index: i,
               ),
               childCount: transactions.length,
@@ -230,11 +247,11 @@ class _LoadedView extends StatelessWidget {
 class _HeroHeader extends StatelessWidget {
   const _HeroHeader({
     required this.balance,
-    required this.currencyFmt,
+    required this.currency,
   });
 
   final double balance;
-  final NumberFormat currencyFmt;
+  final SupportedCurrency currency;
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +285,7 @@ class _HeroHeader extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                currencyFmt.format(balance),
+                CurrencyFormatter.format(balance, currency),
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       color: DonyColors.neutral0,
                       fontSize: 36,
@@ -378,12 +395,12 @@ class _HeroAction extends StatelessWidget {
 class _TxTile extends StatelessWidget {
   const _TxTile({
     required this.tx,
-    required this.formatter,
+    required this.currency,
     required this.index,
   });
 
   final WalletTransactionModel tx;
-  final NumberFormat formatter;
+  final SupportedCurrency currency;
   final int index;
 
   String get _label => switch (tx.type) {
@@ -448,7 +465,7 @@ class _TxTile extends StatelessWidget {
             ),
             // Amount
             Text(
-              '$amountPrefix${formatter.format(tx.amount.abs())}',
+              '$amountPrefix${CurrencyFormatter.format(tx.amount.abs(), currency)}',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: amountColor,
                     fontWeight: FontWeight.w700,
@@ -461,5 +478,88 @@ class _TxTile extends StatelessWidget {
         .animate(delay: (60 * index).ms)
         .fadeIn(duration: 250.ms)
         .slideX(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+// ─── Locked (non-active currency) balance tile ─────────────────────────────────
+
+class _LockedBalanceTile extends StatelessWidget {
+  const _LockedBalanceTile({required this.balance});
+
+  final WalletCurrencyBalanceModel balance;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final currency =
+        SupportedCurrency.fromCode(balance.currency) ?? SupportedCurrency.eur;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+      child: DonyCard(
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+              ),
+              child: Icon(
+                Icons.lock_outline_rounded,
+                color: cs.onSurfaceVariant,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.base),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        CurrencyFormatter.format(balance.balance, currency),
+                        style:
+                            Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                      ),
+                      const SizedBox(width: DonySpacing.xs),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.xs,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(DonyRadius.sm),
+                        ),
+                        child: Text(
+                          'verrouillé',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Reviens sur ${currency.displayName} dans Réglages pour l\'utiliser.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

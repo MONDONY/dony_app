@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
@@ -148,6 +149,91 @@ void main() {
     // Le type brut ne doit jamais s'afficher — toujours le label FR
     expect(find.text('Parrainage'), findsOneWidget);
     expect(find.text('REFERRAL_REWARD'), findsNothing);
+  });
+
+  testWidgets('affiche le solde dans la devise active, pas toujours en EUR',
+      (tester) async {
+    final wallet = WalletModel(
+      balance: 15.00,
+      currency: 'CAD',
+      transactions: [],
+      balances: const [
+        WalletCurrencyBalanceModel(
+          currency: 'CAD',
+          balance: 15.00,
+          active: true,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('CA\$'), findsAtLeastNWidgets(1));
+  });
+
+  testWidgets('affiche les soldes verrouillés des devises non actives',
+      (tester) async {
+    final wallet = WalletModel(
+      balance: 47.50,
+      currency: 'EUR',
+      transactions: [],
+      balances: const [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 47.50,
+          active: true,
+        ),
+        WalletCurrencyBalanceModel(
+          currency: 'CAD',
+          balance: 15.00,
+          active: false,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('verrouillé'), findsOneWidget);
+    expect(find.textContaining('Dollar canadien'), findsOneWidget);
+  });
+
+  testWidgets(
+      'ne montre aucune section verrouillée si une seule devise possédée',
+      (tester) async {
+    final wallet = WalletModel(
+      balance: 47.50,
+      currency: 'EUR',
+      transactions: [],
+      balances: const [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 47.50,
+          active: true,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('verrouillé'), findsNothing);
   });
 
   testWidgets('affiche message vide quand liste transactions vide',
