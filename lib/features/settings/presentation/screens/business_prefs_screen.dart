@@ -176,11 +176,27 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                       color: Theme.of(context).colorScheme.primary,
                     )
                   : null,
-              onTap: () {
-                context.read<BusinessPrefsBloc>().add(
-                  CurrencyChanged(currency.code),
-                );
+              onTap: () async {
+                if (current == currency.code) {
+                  context.pop();
+                  return;
+                }
                 context.pop();
+                final confirmed = await DonyDialog.show(
+                  context,
+                  title: 'Changer de devise',
+                  message:
+                      'Tes trajets/colis en $current resteront visibles pour '
+                      'toi mais plus pour les autres. Ton solde $current '
+                      'reste récupérable en revenant sur cette devise plus '
+                      'tard.',
+                  confirmLabel: 'Changer pour ${currency.code}',
+                );
+                if (confirmed == true && context.mounted) {
+                  context.read<BusinessPrefsBloc>().add(
+                    CurrencyChanged(currency.code),
+                  );
+                }
               },
             ),
         ],
