@@ -6,12 +6,14 @@ abstract final class CurrencyFormatter {
     num amount,
     SupportedCurrency currency, {
     String? locale,
+    bool compact = false,
   }) {
+    final isWhole = amount == amount.truncateToDouble();
     final formatter = NumberFormat.currency(
       locale: locale ?? currency.locale,
       name: currency.code,
       symbol: currency.symbol,
-      decimalDigits: currency.minorUnit,
+      decimalDigits: compact && isWhole ? 0 : currency.minorUnit,
     );
     return formatter.format(amount);
   }

@@ -366,6 +366,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           a.pricePerKg,
                           SupportedCurrency.fromCode(a.currency) ??
                               SupportedCurrency.eur,
+                          compact: true,
                         )}/kg',
                   color: cs.primary,
                   cs: cs,

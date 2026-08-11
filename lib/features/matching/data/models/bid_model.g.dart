@@ -109,6 +109,7 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
           ?.map((e) => BidPhoto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       [],
+  currency: json['currency'] as String? ?? 'EUR',
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -182,6 +183,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'senderAvatarUrl': instance.senderAvatarUrl,
   'travelerAvatarUrl': instance.travelerAvatarUrl,
   'photos': instance.photos,
+  'currency': instance.currency,
 };
 
 const _$BidPaymentMethodEnumMap = {

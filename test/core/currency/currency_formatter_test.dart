@@ -42,4 +42,30 @@ void main() {
   test('ne forge aucune devise lorsque la devise active est indisponible', () {
     expect(CurrencyFormatter.formatOrPlain(25, null), '25');
   });
+
+  group('CurrencyFormatter.format compact', () {
+    test('valeur entière → pas de décimales', () {
+      final result = CurrencyFormatter.format(8, SupportedCurrency.eur,
+          locale: 'fr_FR', compact: true);
+      expect(result, contains('8'));
+      expect(result, contains('€'));
+      expect(result, isNot(contains(',00')));
+    });
+
+    test('valeur non entière → décimales conservées', () {
+      expect(
+        CurrencyFormatter.format(8.5, SupportedCurrency.eur,
+            locale: 'fr_FR', compact: true),
+        contains('8,50'),
+      );
+    });
+
+    test('compact respecte la position/symbole de la devise (CAD)', () {
+      expect(
+        CurrencyFormatter.format(25, SupportedCurrency.cad,
+            locale: 'en_CA', compact: true),
+        r'CA$25',
+      );
+    });
+  });
 }

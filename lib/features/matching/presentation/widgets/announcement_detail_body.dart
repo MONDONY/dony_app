@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -128,7 +130,12 @@ class AnnouncementDetailBody extends StatelessWidget {
                 child: _InfoPill(
                   value: a.pricingMode == 'MIXED'
                       ? 'Grille'
-                      : '${a.pricePerKg % 1 == 0 ? a.pricePerKg.toStringAsFixed(0) : a.pricePerKg.toStringAsFixed(1)}€/kg',
+                      : '${CurrencyFormatter.format(
+                          a.pricePerKg,
+                          SupportedCurrency.fromCode(a.currency) ??
+                              SupportedCurrency.eur,
+                          compact: true,
+                        )}/kg',
                   label: a.pricingMode == 'MIXED' ? 'tarifaire' : 'prix',
                 ),
               ),

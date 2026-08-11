@@ -108,6 +108,32 @@ void main() {
   });
 
   testWidgets(
+      'affiche le prix dans la devise du trajet, pas toujours en EUR',
+      (tester) async {
+    final announcement = AnnouncementModel(
+      id: 'ann-3',
+      travelerId: 'trav-1',
+      departureCity: 'Toronto',
+      arrivalCity: 'Paris',
+      departureDate: DateTime(2026, 8, 19),
+      availableKg: 15,
+      totalKg: 15,
+      pricePerKg: 8,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 7),
+      updatedAt: DateTime(2026, 7),
+      acceptedPaymentMethods: const <BidPaymentMethod>{},
+      currency: 'CAD',
+    );
+
+    await tester.pumpWidget(host(announcement));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('8€/kg'), findsNothing);
+  });
+
+  testWidgets(
       'modèle minimal → corridor présent, sections optionnelles absentes',
       (tester) async {
     await tester.pumpWidget(host(_minimal()));

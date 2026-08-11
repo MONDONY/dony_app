@@ -371,4 +371,19 @@ void main() {
       expect(model.tripCancellationRematchStatus, isNull);
     });
   });
+
+  group('BidModel.currency', () {
+    test('fromJson mappe currency depuis le backend, pas toujours EUR', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'currency': 'CAD',
+      });
+      expect(model.currency, 'CAD');
+    });
+
+    test('currency vaut EUR par défaut quand absent (ancien payload)', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.currency, 'EUR');
+    });
+  });
 }

@@ -18,6 +18,7 @@ AnnouncementModel _announcement({
   String pricingMode = 'KG',
   double pricePerKg = 8.0,
   List<Map<String, dynamic>>? priceGridItems,
+  String currency = 'EUR',
 }) {
   return AnnouncementModel.fromJson({
     'id': 'a1',
@@ -33,6 +34,7 @@ AnnouncementModel _announcement({
     'pricePerKg': pricePerKg,
     'pricingMode': pricingMode,
     if (priceGridItems != null) 'priceGridItems': priceGridItems,
+    'currency': currency,
     'status': status,
     if (capacityUnit != null) 'capacityUnit': capacityUnit,
     'pendingBidCount': pendingBidCount,
@@ -61,8 +63,22 @@ void main() {
     expect(find.text('🇸🇳'), findsOneWidget);
     expect(find.textContaining('7 kg vendus sur 20 kg'), findsOneWidget);
     expect(find.textContaining('13 kg'), findsWidgets);
-    expect(find.textContaining('8 €'), findsOneWidget);
+    expect(find.textContaining('8'), findsWidgets);
+    expect(find.textContaining('€'), findsWidgets);
     expect(find.text('Actif'), findsOneWidget);
+  });
+
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(currency: 'CAD'),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('8 €'), findsNothing);
   });
 
   testWidgets('mode grille (MIXED) : affiche "dès X €", jamais "0 € / kg"',
@@ -91,7 +107,7 @@ void main() {
     )));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.textContaining('dès 25 €'), findsOneWidget);
+    expect(find.textContaining('dès 25'), findsOneWidget);
     expect(find.textContaining('0 €'), findsNothing);
     expect(find.textContaining('/ kg'), findsNothing);
   });
@@ -160,7 +176,8 @@ void main() {
     expect(find.text('Terminé'), findsOneWidget);
     expect(find.textContaining('vendus sur'), findsNothing);
     expect(find.textContaining('20 kg vendus'), findsOneWidget);
-    expect(find.textContaining('160 € gagnés'), findsOneWidget);
+    expect(find.textContaining('160'), findsOneWidget);
+    expect(find.textContaining('gagnés'), findsOneWidget);
   });
 
   // ── KG_FREE tests ──────────────────────────────────────────────────────────

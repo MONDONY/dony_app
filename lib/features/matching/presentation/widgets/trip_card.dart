@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -121,11 +123,14 @@ class TripCard extends StatelessWidget {
   String _kg(double v) =>
       '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 1)} kg';
 
-  /// Formats price: drops .00 suffix for whole numbers.
-  String _price(double v) =>
-      v.truncateToDouble() == v
-          ? '${v.toStringAsFixed(0)} €'
-          : '${v.toStringAsFixed(2)} €';
+  /// Formats price in the trip's own currency: drops decimals for whole
+  /// numbers.
+  String _price(double v) => CurrencyFormatter.format(
+        v,
+        SupportedCurrency.fromCode(announcement.currency) ??
+            SupportedCurrency.eur,
+        compact: true,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -510,7 +515,7 @@ class _PastCardContent extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${earned.toStringAsFixed(0)} € gagnés',
+                        '${price(earned)} gagnés',
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                           fontWeight: FontWeight.w500,

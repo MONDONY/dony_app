@@ -157,6 +157,11 @@ class BidModel {
   @JsonKey(defaultValue: <BidPhoto>[])
   final List<BidPhoto> photos;
 
+  /// Devise du bid, héritée de l'annonce à la création. `EUR` par défaut pour
+  /// les anciens payloads sans ce champ.
+  @JsonKey(defaultValue: 'EUR')
+  final String currency;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -224,6 +229,7 @@ class BidModel {
     this.senderAvatarUrl,
     this.travelerAvatarUrl,
     this.photos = const [],
+    this.currency = 'EUR',
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>
