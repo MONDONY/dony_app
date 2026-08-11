@@ -174,7 +174,10 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      '${formatKgPrice(netToSenderPrice(announcement.pricePerKg))} €',
+                                      formatPriceIn(
+                                        netToSenderPrice(announcement.pricePerKg),
+                                        announcement.currency,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: tt.titleLarge?.copyWith(

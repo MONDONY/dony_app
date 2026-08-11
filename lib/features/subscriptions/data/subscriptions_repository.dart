@@ -17,6 +17,7 @@ class TravelerAnnouncement {
   final double pricePerKg;
   final double availableKg;
   final String status;
+  final String currency;
   const TravelerAnnouncement({
     required this.id,
     required this.departureCity,
@@ -25,6 +26,7 @@ class TravelerAnnouncement {
     required this.pricePerKg,
     required this.availableKg,
     required this.status,
+    this.currency = 'EUR',
   });
 
   factory TravelerAnnouncement.fromJson(Map<String, dynamic> json) => TravelerAnnouncement(
@@ -35,6 +37,7 @@ class TravelerAnnouncement {
         pricePerKg: (json['pricePerKg'] as num).toDouble(),
         availableKg: (json['availableKg'] as num).toDouble(),
         status: json['status'] as String,
+        currency: json['currency'] as String? ?? 'EUR',
       );
 }
 

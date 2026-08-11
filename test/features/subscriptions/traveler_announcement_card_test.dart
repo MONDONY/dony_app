@@ -24,6 +24,7 @@ void main() {
     double availableKg = 5,
     DateTime? departureDate,
     String status = 'ACTIVE',
+    String currency = 'EUR',
   }) =>
       TravelerAnnouncement(
         id: 'a1',
@@ -33,6 +34,7 @@ void main() {
         pricePerKg: pricePerKg,
         availableKg: availableKg,
         status: status,
+        currency: currency,
       );
 
   testWidgets('affiche les villes départ et arrivée', (tester) async {
@@ -75,8 +77,19 @@ void main() {
       onReserve: () {},
     )));
     // Fiche publique vue par l'expéditeur : prix = net × 1,12 (8 → 8,96 €).
-    expect(find.text('8.96 €'), findsOneWidget);
+    expect(find.textContaining('8,96'), findsOneWidget);
+    expect(find.textContaining('€'), findsOneWidget);
     expect(find.text('/kg'), findsOneWidget);
+  });
+
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TravelerAnnouncementCard(
+      announcement: _announcement(pricePerKg: 8, currency: 'CAD'),
+      onReserve: () {},
+    )));
+    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('€'), findsNothing);
   });
 
   testWidgets('le bouton Réserver déclenche onReserve', (tester) async {

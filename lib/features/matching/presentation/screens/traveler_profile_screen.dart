@@ -399,7 +399,7 @@ class _CorridorBanner extends StatelessWidget {
               _StatPill(
                 iconAsset: 'euro',
                 label:
-                    '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
+                    '${formatPriceIn(announcement.senderPricePerKg, announcement.currency)}/kg',
                 cs: cs,
               ),
             ],
