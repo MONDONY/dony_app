@@ -28,6 +28,22 @@ const _prefs = UserBusinessPrefsDto(
   minBidPriceEur: 0,
 );
 
+const _cadPrefs = UserBusinessPrefsDto(
+  weightUnit: 'kg',
+  currencyCode: 'CAD',
+  pickupRadiusKm: 10,
+  defaultPackageWeightKg: 23,
+  minBidPriceEur: 0,
+);
+
+const _unsupportedPrefs = UserBusinessPrefsDto(
+  weightUnit: 'kg',
+  currencyCode: 'JPY',
+  pickupRadiusKm: 10,
+  defaultPackageWeightKg: 23,
+  minBidPriceEur: 0,
+);
+
 void main() {
   late MockBusinessPrefsRepository repository;
   late MockBox prefs;
@@ -99,6 +115,25 @@ void main() {
     verify: (_) {
       verifyNever(() => prefs.put(any(), any()));
       verifyNever(() => analytics.logEvent(any()));
+    },
+  );
+
+  blocTest<CurrencyOnboardingCubit, CurrencyOnboardingState>(
+    'passer : refuse une devise backend inconnue sans marquer l’onboarding vu',
+    setUp: () {
+      when(() => repository.fetchPrefs())
+          .thenAnswer((_) async => _unsupportedPrefs);
+    },
+    build: build,
+    act: (cubit) => cubit.skip(),
+    expect: () => const [
+      CurrencyOnboardingSaving(null),
+      CurrencyOnboardingError('Impossible d’enregistrer ce choix. Réessayez.'),
+    ],
+    verify: (_) {
+      verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
+      verifyNever(() => prefs.put(HiveService.kCurrencyOnboardingSeen, true));
+      verifyNever(() => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped));
     },
   );
 
@@ -242,7 +277,10 @@ void main() {
   );
 
   blocTest<CurrencyOnboardingCubit, CurrencyOnboardingState>(
-    'passer : écrit uniquement le flag vu puis émet succès et trace le skip',
+    'passer : relit la devise serveur puis la met en cache avant le flag vu',
+    setUp: () {
+      when(() => repository.fetchPrefs()).thenAnswer((_) async => _cadPrefs);
+    },
     build: build,
     act: (cubit) => cubit.skip(),
     expect: () => const [
@@ -250,10 +288,10 @@ void main() {
       CurrencyOnboardingSuccess(),
     ],
     verify: (_) {
-      verifyNever(() => repository.fetchPrefs());
       verifyNever(() => repository.updatePrefs(any()));
-      verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
       verifyInOrder([
+        () => repository.fetchPrefs(),
+        () => prefs.put(HiveService.kCurrencyCode, 'CAD'),
         () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
         () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
       ]);
@@ -261,7 +299,7 @@ void main() {
   );
 
   test(
-    'échec Hive du skip : émet erreur sans succès ni devise et permet retry',
+    'échec Hive du skip : émet erreur sans succès et permet retry',
     () async {
       var seenWriteAttempts = 0;
       when(
@@ -294,9 +332,7 @@ void main() {
           'Impossible d’enregistrer ce choix. Réessayez.',
         ),
       );
-      verifyNever(() => repository.fetchPrefs());
       verifyNever(() => repository.updatePrefs(any()));
-      verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
       verifyNever(
         () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
       );
@@ -315,7 +351,11 @@ void main() {
       expect(cubit.state, const CurrencyOnboardingSuccess());
       expect(seenWriteAttempts, 2);
       verifyInOrder([
+        () => repository.fetchPrefs(),
+        () => prefs.put(HiveService.kCurrencyCode, 'EUR'),
         () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+        () => repository.fetchPrefs(),
+        () => prefs.put(HiveService.kCurrencyCode, 'EUR'),
         () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
         () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
       ]);

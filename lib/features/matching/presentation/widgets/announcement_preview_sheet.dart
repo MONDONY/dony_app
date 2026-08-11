@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -9,6 +11,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   final VoidCallback onConfirm;
   final bool isSubmitting;
   final TimeOfDay? departureTime;
+  final SupportedCurrency? currency;
 
   const AnnouncementPreviewSheet({
     super.key,
@@ -16,6 +19,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     required this.onConfirm,
     this.isSubmitting = false,
     this.departureTime,
+    this.currency,
   });
 
   static Future<void> show(
@@ -25,6 +29,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     VoidCallback? onSaveDraft,
     bool isSubmitting = false,
     TimeOfDay? departureTime,
+    SupportedCurrency? currency,
   }) {
     return DonyBottomSheet.show<void>(
       context,
@@ -52,6 +57,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         onConfirm: onConfirm,
         isSubmitting: isSubmitting,
         departureTime: departureTime,
+        currency: currency,
       ),
     );
   }
@@ -79,8 +85,8 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         : null;
 
     final prixStr = formState.pricePerKg != null
-        ? '${formState.pricePerKg!.toStringAsFixed(0)} €/kg'
-            '${netEstimate != null ? ' · estimation ${netEstimate.toStringAsFixed(0)}€ net' : ''}'
+        ? '${CurrencyFormatter.formatOrPlain(formState.pricePerKg!, currency)}/kg'
+            '${netEstimate != null ? ' · estimation ${CurrencyFormatter.formatOrPlain(netEstimate, currency)} net' : ''}'
         : '-';
 
     return Padding(
@@ -123,7 +129,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             value: formState.capacityUnit.label,
           ),
           _PreviewRow(
-            iconAsset: 'euro',
+            iconAsset: 'banknote',
             label: 'Prix',
             value: prixStr,
           ),

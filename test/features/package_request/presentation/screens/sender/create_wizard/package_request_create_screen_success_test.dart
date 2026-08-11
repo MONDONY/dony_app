@@ -240,7 +240,7 @@ void main() {
     final prefs = MockBox();
     when(() => hive.userPrefs).thenReturn(prefs);
     when(
-      () => prefs.get(HiveService.kCurrencyCode, defaultValue: 'EUR'),
+      () => prefs.get(HiveService.kCurrencyCode, defaultValue: null),
     ).thenReturn(currencyCode);
     getIt.registerSingleton<HiveService>(hive);
     addTearDown(() => getIt.unregister<HiveService>());
@@ -442,7 +442,7 @@ void main() {
     expect(find.text('TutorialStub:request_publish_basics'), findsOneWidget);
   });
 
-  testWidgets('bandeau devise repli EUR avant le premier champ de la demande', (
+  testWidgets('bandeau devise invalide : ne prétend pas publier en EUR', (
     tester,
   ) async {
     registerCurrencyPreference(42);
@@ -451,7 +451,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
-    expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+    expect(find.text('Devise à confirmer'), findsOneWidget);
+    expect(find.text('Publié en Euro (EUR)'), findsNothing);
     expect(
       tester.getTopLeft(find.byKey(const Key('currency-publish-banner'))).dy,
       lessThan(

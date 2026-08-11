@@ -3,11 +3,12 @@
 // Placed in test/features/package_request/presentation/
 // per the task specification.
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
-import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
 import 'package:flutter/material.dart';
@@ -74,7 +75,9 @@ void main() {
         MaterialApp(
           home: BlocProvider.value(
             value: bloc,
-            child: const Scaffold(body: Step3RecapBudget()),
+            child: const Scaffold(
+              body: Step3RecapBudget(currency: SupportedCurrency.eur),
+            ),
           ),
         ),
       );
@@ -82,7 +85,7 @@ void main() {
 
       // Net = 39.20 / 1.12 ≈ 35.00
       final net = 39.20 / 1.12;
-      final netLabel = PriceDisplay.eur(net);
+      final netLabel = CurrencyFormatter.format(net, SupportedCurrency.eur);
       expect(find.textContaining(netLabel), findsOneWidget);
     });
 

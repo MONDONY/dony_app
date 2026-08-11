@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -15,32 +16,30 @@ class CurrencyPublishBanner extends StatelessWidget {
     HiveService? hiveService,
   }) => CurrencyPublishBanner(key: key, currency: resolveCurrency(hiveService));
 
-  final SupportedCurrency currency;
+  final SupportedCurrency? currency;
 
-  static SupportedCurrency resolveCurrency(HiveService? hiveService) {
-    final storedCode = hiveService?.userPrefs.get(
-      HiveService.kCurrencyCode,
-      defaultValue: SupportedCurrency.eur.code,
-    );
-    return SupportedCurrency.fromCode(
-          storedCode is String ? storedCode : null,
-        ) ??
-        SupportedCurrency.eur;
-  }
+  static SupportedCurrency? resolveCurrency(HiveService? hiveService) =>
+      ActiveCurrency.fromHive(hiveService);
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final title = 'Publié en ${currency.displayName} (${currency.code})';
-    const description =
-        'Les utilisateurs dans une autre devise ne verront pas cette annonce.';
+    final hasCurrency = currency != null;
+    final title = hasCurrency
+        ? 'Publié en ${currency!.displayName} (${currency!.code})'
+        : 'Devise à confirmer';
+    final description = hasCurrency
+        ? 'Les utilisateurs dans une autre devise ne verront pas cette annonce.'
+        : 'La devise de publication est vérifiée par Yadony avant publication.';
+    final semantics = hasCurrency
+        ? 'Publication en ${currency!.displayName}, devise ${currency!.code}. '
+              'Les utilisateurs dans une autre devise ne verront pas cette annonce.'
+        : 'Devise de publication à confirmer par Yadony avant publication.';
 
     return Semantics(
       container: true,
-      label:
-          'Publication en ${currency.displayName}, devise ${currency.code}. '
-          'Les utilisateurs dans une autre devise ne verront pas cette annonce.',
+      label: semantics,
       child: ExcludeSemantics(
         child: Container(
           key: const Key('currency-publish-banner'),

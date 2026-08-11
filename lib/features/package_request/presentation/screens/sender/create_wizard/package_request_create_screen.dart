@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_publish_banner.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -92,6 +94,10 @@ class _PackageRequestCreateScreenState
   final _step1Key = GlobalKey<Step1TrajetColisState>();
   final _step2Key = GlobalKey<Step2DetailsState>();
   final _step3Key = GlobalKey<Step3RecapBudgetState>();
+
+  SupportedCurrency? get _activeCurrency => ActiveCurrency.fromHive(
+        getIt.isRegistered<HiveService>() ? getIt<HiveService>() : null,
+      );
 
   /// Vrai quand l'étape courante a tous ses champs obligatoires renseignés.
   ///
@@ -421,6 +427,7 @@ class _PackageRequestCreateScreenState
                 _ => Step3RecapBudget(
                   key: _step3Key,
                   canContinueNotifier: _canContinueNotifier,
+                  currency: _activeCurrency,
                 ),
               },
             ),
@@ -447,6 +454,7 @@ class _PackageRequestCreateScreenState
         PackageRequestPreviewSheet.show(
           context,
           formState: state,
+          currency: _activeCurrency,
           onConfirm: () {
             Navigator.of(context, rootNavigator: true).pop();
             _step3Key.currentState?.submit();

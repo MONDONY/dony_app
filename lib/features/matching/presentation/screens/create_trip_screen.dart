@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/currency_publish_banner.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -81,6 +84,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   late final ValueNotifier<bool> _canContinueStep1Notifier;
   late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
   void Function({bool saveAsDraft})? _submit;
+
+  SupportedCurrency? get _activeCurrency => ActiveCurrency.fromHive(
+        getIt.isRegistered<HiveService>() ? getIt<HiveService>() : null,
+      );
 
   /// Vrai dès que l'utilisateur a modifié un champ depuis l'ouverture.
   ///
@@ -426,6 +433,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                           isSubmitting: isLoading,
                                           departureTime:
                                               _departureTimeNotifier.value,
+                                          currency: _activeCurrency,
                                         );
                                       }
                                     : null,
@@ -545,6 +553,9 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   bool get _isEdit => widget.announcement != null;
   bool get _isLocked => widget.lockContext != null;
+  SupportedCurrency? get _activeCurrency => ActiveCurrency.fromHive(
+        getIt.isRegistered<HiveService>() ? getIt<HiveService>() : null,
+      );
   bool get _isCustomPrice => _priceOptionNotifier.value == kPriceOptions.length;
   double get _pricePerKg => _isCustomPrice
       ? _customPriceNotifier.value
@@ -1677,7 +1688,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                         ? Text(t.emoji!)
                         : DonyIcon('bookmark', size: 16, color: cs.primary),
                     label: Text(
-                        '${t.label} · ${t.pricePerKg.toStringAsFixed(0)}€/kg'),
+                        '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg, _activeCurrency)}/kg'),
                     onPressed: () => _applyTemplate(t),
                   );
                 },
@@ -1830,6 +1841,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   List<Widget> _buildStep2(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       PrixConditionsStep(
+        currency: _activeCurrency,
         priceOptionNotifier: _priceOptionNotifier,
         customPriceNotifier: _customPriceNotifier,
         availableKgNotifier: _availableKgNotifier,

@@ -12,6 +12,8 @@
 // Les animations flutter_animate sont drainées via pump(200 ms).
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -75,6 +77,7 @@ Widget _host({
   StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
   double initialAvailableKg = 10,
+  SupportedCurrency? currency = SupportedCurrency.eur,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -119,6 +122,7 @@ Widget _host({
         ],
         child: SingleChildScrollView(
           child: PrixConditionsStep(
+            currency: currency,
             priceOptionNotifier: priceOptionNotifier,
             customPriceNotifier: customPriceNotifier,
             availableKgNotifier: availableKgNotifier,
@@ -168,14 +172,23 @@ void main() {
     testWidgets('les 4 chips de prix prédéfinis sont affichés',
         (tester) async {
       await _pump(tester);
-      // kPriceOptions = [5.0, 6.0, 7.0, 8.0] → "5€", "6€", "7€", "8€"
+      // kPriceOptions = [5.0, 6.0, 7.0, 8.0], dans la devise active.
       for (final price in kPriceOptions) {
         expect(
-          find.text('${price.toStringAsFixed(0)}€'),
+          find.text(CurrencyFormatter.format(price, SupportedCurrency.eur)),
           findsOneWidget,
-          reason: 'Chip ${price.toStringAsFixed(0)}€ doit être présent',
+          reason: 'Chip ${price.toStringAsFixed(0)} EUR doit être présent',
         );
       }
+    });
+
+    testWidgets('affiche les montants en CAD sans conversion', (tester) async {
+      await tester.pumpWidget(_host(currency: SupportedCurrency.cad));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text(r'CA$5.00'), findsOneWidget);
+      expect(find.text('5€'), findsNothing);
+      expect(find.textContaining(r'CA$50.00'), findsOneWidget);
     });
 
     testWidgets('chip "Autre prix" est affiché', (tester) async {
@@ -325,6 +338,7 @@ void main() {
                 ],
                 child: SingleChildScrollView(
                   child: PrixConditionsStep(
+                    currency: SupportedCurrency.eur,
                     priceOptionNotifier: ValueNotifier<int>(0),
                     customPriceNotifier: ValueNotifier<double>(0),
                     availableKgNotifier: ValueNotifier<double>(10),
@@ -615,6 +629,7 @@ void main() {
               ],
               child: SingleChildScrollView(
                 child: PrixConditionsStep(
+                  currency: SupportedCurrency.eur,
                   priceOptionNotifier: priceOpt,
                   customPriceNotifier: customPrice,
                   availableKgNotifier: availKg,
@@ -639,8 +654,8 @@ void main() {
 
       expect(find.text('Petit colis'), findsOneWidget);
       expect(find.text('Grand colis'), findsOneWidget);
-      expect(find.textContaining('5.00 €'), findsOneWidget);
-      expect(find.textContaining('10.00 €'), findsOneWidget);
+      expect(find.text(CurrencyFormatter.format(5, SupportedCurrency.eur)), findsOneWidget);
+      expect(find.text(CurrencyFormatter.format(10, SupportedCurrency.eur)), findsOneWidget);
     });
   });
 }

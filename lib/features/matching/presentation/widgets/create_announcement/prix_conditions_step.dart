@@ -1,6 +1,8 @@
 // Étape 2 du formulaire "Publier un trajet" : Prix & Conditions.
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur, zéro changement
 // de comportement.
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -25,6 +27,7 @@ import 'package:go_router/go_router.dart';
 /// [_CreateAnnouncementContentState] — ils sont simplement passés en paramètre.
 /// Le cycle de vie (create / dispose) reste entièrement dans le state parent.
 class PrixConditionsStep extends StatelessWidget {
+  final SupportedCurrency? currency;
   final ValueNotifier<int> priceOptionNotifier;
   final ValueNotifier<double> customPriceNotifier;
   final ValueNotifier<double> availableKgNotifier;
@@ -52,7 +55,7 @@ class PrixConditionsStep extends StatelessWidget {
   /// autres champs restent éditables.
   final bool lockPrice;
 
-  /// Trajet dédié : prix total convenu avec l'expéditeur (€). Si non-null et
+  /// Trajet dédié : prix total convenu avec l'expéditeur. Si non-null et
   /// [lockPrice] actif, la note générique est remplacée par une carte affichant
   /// ce montant. Sinon, la note générique « Prix fixé par la négociation ».
   final double? lockedTotalPriceEur;
@@ -63,6 +66,7 @@ class PrixConditionsStep extends StatelessWidget {
 
   const PrixConditionsStep({
     super.key,
+    this.currency,
     required this.priceOptionNotifier,
     required this.customPriceNotifier,
     required this.availableKgNotifier,
@@ -103,7 +107,8 @@ class PrixConditionsStep extends StatelessWidget {
         // négo : note générique (pas de total à afficher).
         if (lockPrice)
           lockedTotalPriceEur != null
-              ? _LockedAgreedPriceCard(amount: lockedTotalPriceEur!)
+              ? _LockedAgreedPriceCard(
+                  amount: lockedTotalPriceEur!, currency: currency)
               : const _LockedPriceNote(),
         if (!lockPrice) ...[
         // ── MODE DE TARIFICATION ──────────────────────────────────────────────
@@ -235,7 +240,8 @@ class PrixConditionsStep extends StatelessWidget {
                                         ),
                                         child: Center(
                                           child: Text(
-                                            '${kPriceOptions[i].toStringAsFixed(0)}€',
+                                            CurrencyFormatter.formatOrPlain(
+                                              kPriceOptions[i], currency),
                                             style: tt.titleMedium?.copyWith(
                                               color: selected
                                                   ? cs.success
@@ -318,7 +324,7 @@ class PrixConditionsStep extends StatelessWidget {
                                 suffixIcon: Padding(
                                   padding: const EdgeInsets.only(
                                       right: DonySpacing.md),
-                                  child: Text('€/kg',
+                                  child: Text('${currency?.symbol ?? ''}/kg',
                                       style: tt.bodyMedium?.copyWith(
                                           color: cs.onSurfaceVariant)),
                                 ),
@@ -337,7 +343,7 @@ class PrixConditionsStep extends StatelessWidget {
                                   ? 'Sélectionnez un prix pour voir l\'estimation'
                                   : kg == 0
                                       ? 'Capacité illimitée : estimation selon la demande'
-                                      : 'Vous touchez ${travelerNet.toStringAsFixed(0)}€ · l\'expéditeur paie ${senderTotal.toStringAsFixed(0)}€',
+                                      : 'Vous touchez ${CurrencyFormatter.formatOrPlain(travelerNet, currency)} · l\'expéditeur paie ${CurrencyFormatter.formatOrPlain(senderTotal, currency)}',
                               style: tt.bodySmall?.copyWith(
                                 color: selectedIdx == -1
                                     ? cs.error.withValues(alpha: 0.7)
@@ -374,6 +380,7 @@ class PrixConditionsStep extends StatelessWidget {
                   marketMedianPrice: 8.0,
                   warning: formState.priceWarning,
                   corridor: corridor,
+                  currency: currency,
                 );
               },
             );
@@ -442,7 +449,8 @@ class PrixConditionsStep extends StatelessWidget {
                                 ),
                                 const SizedBox(width: DonySpacing.sm),
                                 Text(
-                                  '${item.unitPriceDisplay.toStringAsFixed(2)} €',
+                                  CurrencyFormatter.formatOrPlain(
+                                    item.unitPriceDisplay, currency),
                                   style: tt.labelSmall?.copyWith(
                                     color: cs.primary,
                                     fontWeight: FontWeight.w700,
@@ -1079,8 +1087,9 @@ class _LockedPriceNote extends StatelessWidget {
 /// Carte affichant le prix total convenu (flux trajet dédié). Le montant est
 /// fixé par la négociation et non modifiable dans le formulaire.
 class _LockedAgreedPriceCard extends StatelessWidget {
-  const _LockedAgreedPriceCard({required this.amount});
+  const _LockedAgreedPriceCard({required this.amount, required this.currency});
   final double amount;
+  final SupportedCurrency? currency;
 
   @override
   Widget build(BuildContext context) {
@@ -1108,7 +1117,7 @@ class _LockedAgreedPriceCard extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 Text(
-                  '${amount.toStringAsFixed(0)} €',
+                  CurrencyFormatter.formatOrPlain(amount, currency),
                   style: tt.headlineSmall?.copyWith(
                     color: cs.success,
                     fontWeight: FontWeight.w800,

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
@@ -116,7 +117,22 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, '600');
       key.currentState!.submit();
       await tester.pump();
-      expect(find.text('Entre 0 et 500€'), findsOneWidget);
+      expect(find.text('Entre 0 et 500'), findsOneWidget);
+    });
+
+    testWidgets('affiche le suffixe et le détail du budget en CAD', (tester) async {
+      final seed = const PackageRequestFormState(totalBudgetEur: 40);
+      await tester.pumpWidget(
+        wrap(
+          const Step3RecapBudget(currency: SupportedCurrency.cad),
+          seed: seed,
+          useMock: true,
+        ),
+      );
+
+      expect(find.text(r'CA$'), findsOneWidget);
+      expect(find.text(r'CA$40.00'), findsOneWidget);
+      expect(find.textContaining('€'), findsNothing);
     });
 
     testWidgets(

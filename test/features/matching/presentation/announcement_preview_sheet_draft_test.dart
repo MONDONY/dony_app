@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,26 @@ Widget _app({
     );
 
 void main() {
+  testWidgets('affiche le prix de l’aperçu en CAD sans conversion', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AnnouncementPreviewSheet(
+            currency: SupportedCurrency.cad,
+            formState: const AnnouncementFormState(
+              pricePerKg: 5,
+              availableKg: 10,
+            ),
+            onConfirm: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(r'CA$5.00/kg · estimation CA$50.00 net'), findsOneWidget);
+    expect(find.textContaining('€/kg'), findsNothing);
+  });
+
   testWidgets(
       'l\'aperçu propose Publier et Enregistrer comme brouillon',
       (tester) async {

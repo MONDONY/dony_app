@@ -38,4 +38,8 @@ void main() {
       contains('1 251'),
     );
   });
+
+  test('ne forge aucune devise lorsque la devise active est indisponible', () {
+    expect(CurrencyFormatter.formatOrPlain(25, null), '25');
+  });
 }

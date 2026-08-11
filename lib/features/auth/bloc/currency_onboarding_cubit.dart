@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -93,6 +94,12 @@ class CurrencyOnboardingCubit extends Cubit<CurrencyOnboardingState> {
 
     emit(const CurrencyOnboardingSaving(null));
     try {
+      final current = await _repository.fetchPrefs();
+      final currency = SupportedCurrency.fromCode(current.currencyCode);
+      if (currency == null) {
+        throw StateError('Unsupported backend currency');
+      }
+      await _prefs.put(HiveService.kCurrencyCode, currency.code);
       await _prefs.put(HiveService.kCurrencyOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped));
       emit(const CurrencyOnboardingSuccess());

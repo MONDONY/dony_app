@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,7 @@ abstract final class PackageRequestPreviewSheet {
     required VoidCallback onConfirm,
     VoidCallback? onSaveDraft,
     bool isSubmitting = false,
+    SupportedCurrency? currency,
   }) {
     return DonyBottomSheet.show<void>(
       context,
@@ -37,14 +40,15 @@ abstract final class PackageRequestPreviewSheet {
           ],
         ],
       ),
-      child: _PreviewBody(formState: formState),
+      child: _PreviewBody(formState: formState, currency: currency),
     );
   }
 }
 
 class _PreviewBody extends StatelessWidget {
-  const _PreviewBody({required this.formState});
+  const _PreviewBody({required this.formState, required this.currency});
   final PackageRequestFormState formState;
+  final SupportedCurrency? currency;
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +80,9 @@ class _PreviewBody extends StatelessWidget {
         Text(
           s.negotiable
               ? (s.totalBudgetEur != null
-                  ? 'Budget indicatif : ${s.totalBudgetEur!.toStringAsFixed(0)} €'
+                  ? 'Budget indicatif : ${CurrencyFormatter.formatOrPlain(s.totalBudgetEur!, currency)}'
                   : 'Ouvert aux offres')
-              : 'Prix ferme : ${s.totalBudgetEur?.toStringAsFixed(0) ?? '?'} €',
+              : 'Prix ferme : ${s.totalBudgetEur == null ? '?' : CurrencyFormatter.formatOrPlain(s.totalBudgetEur!, currency)}',
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],

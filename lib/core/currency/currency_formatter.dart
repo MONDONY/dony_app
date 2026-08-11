@@ -15,4 +15,13 @@ abstract final class CurrencyFormatter {
     );
     return formatter.format(amount);
   }
+
+  /// Formate un montant avec la devise active, sans inventer de devise quand
+  /// sa synchronisation n'a pas encore abouti.
+  static String formatOrPlain(num amount, SupportedCurrency? currency) {
+    if (currency == null) {
+      return NumberFormat.decimalPattern('fr_FR').format(amount);
+    }
+    return format(amount, currency);
+  }
 }

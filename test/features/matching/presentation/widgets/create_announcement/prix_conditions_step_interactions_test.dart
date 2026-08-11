@@ -6,6 +6,8 @@
 // - Ajout d'un type custom "Ce que j'accepte" via CaInlineAddRow
 // - Ajout d'un type refusé via CaInlineAddRow
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -59,6 +61,7 @@ Widget _host({
   bool lockPrice = false,
   double? lockedTotalPriceEur,
   bool showPaymentMethods = true,
+  SupportedCurrency? currency = SupportedCurrency.eur,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -80,6 +83,7 @@ Widget _host({
         ],
         child: SingleChildScrollView(
           child: PrixConditionsStep(
+            currency: currency,
             priceOptionNotifier: priceOption ?? ValueNotifier<int>(0),
             customPriceNotifier: customPrice ?? ValueNotifier<double>(0),
             availableKgNotifier: availableKg ?? ValueNotifier<double>(10),
@@ -145,12 +149,12 @@ Future<void> _pump(WidgetTester tester, {
 
 void main() {
   group('PrixConditionsStep — interactions prix', () {
-    testWidgets('tap sur chip 7€ change le notifier priceOption', (tester) async {
+    testWidgets('tap sur chip 7 EUR change le notifier priceOption', (tester) async {
       final priceOption = ValueNotifier<int>(0);
       await _pump(tester, priceOption: priceOption);
 
-      // Chip "7€" est le 3ème chip (index 2)
-      await tester.tap(find.text('7€'));
+      // Chip 7 EUR est le 3ème chip (index 2).
+      await tester.tap(find.text(CurrencyFormatter.format(7, SupportedCurrency.eur)));
       await tester.pump();
 
       expect(priceOption.value, 2);

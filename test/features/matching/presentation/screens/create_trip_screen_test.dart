@@ -483,7 +483,7 @@ void main() {
     final prefs = MockBox();
     when(() => hive.userPrefs).thenReturn(prefs);
     when(
-      () => prefs.get(HiveService.kCurrencyCode, defaultValue: 'EUR'),
+      () => prefs.get(HiveService.kCurrencyCode, defaultValue: null),
     ).thenReturn(currencyCode);
     getIt.registerSingleton<HiveService>(hive);
     addTearDown(() => getIt.unregister<HiveService>());
@@ -612,7 +612,7 @@ void main() {
       },
     );
 
-    testWidgets('mode création: bouton "Retour" absent à l\'étape 0', (
+  testWidgets('mode création: bouton "Retour" absent à l\'étape 0', (
       tester,
     ) async {
       setupViewport(tester);
@@ -630,10 +630,11 @@ void main() {
   // ── Group: Form structure ─────────────────────────────────────────────────────
 
   group('CreateTripScreen — Form structure', () {
-    testWidgets('bandeau devise EUR avant le premier champ du trajet', (
+  testWidgets('bandeau devise EUR avant le premier champ du trajet', (
       tester,
     ) async {
       setupViewport(tester);
+      registerCurrencyPreference('EUR');
 
       await _pumpAndDrain(
         tester,

@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -20,10 +22,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Layout : titre "Budget" · récap · choix du mode de prix · budget requis ·
 /// aperçu net voyageur · modes de paiement · mention CGU au-dessus du CTA.
 class Step3RecapBudget extends StatefulWidget {
-  const Step3RecapBudget({super.key, this.canContinueNotifier});
+  const Step3RecapBudget({super.key, this.canContinueNotifier, this.currency});
 
   /// Piloté par l'étape, lu par le bouton « Publier » de la coque.
   final ValueNotifier<bool>? canContinueNotifier;
+  final SupportedCurrency? currency;
 
   @override
   State<Step3RecapBudget> createState() => Step3RecapBudgetState();
@@ -195,6 +198,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 _BudgetTotalInput(
                   controller: _budgetCtrl,
                   onBudgetChanged: _invalidateQuote,
+                  currency: widget.currency,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
@@ -224,6 +228,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                       return _BudgetBreakdown(
                         budgetEur: state.totalBudgetEur!,
                         quote: quote,
+                        currency: widget.currency,
                       );
                     },
                   ),
@@ -400,8 +405,13 @@ class _FieldLabel extends StatelessWidget {
 // ─── Budget total input ──────────────────────────────────────────────────────
 
 class _BudgetTotalInput extends StatelessWidget {
-  const _BudgetTotalInput({required this.controller, this.onBudgetChanged});
+  const _BudgetTotalInput({
+    required this.controller,
+    this.onBudgetChanged,
+    required this.currency,
+  });
   final TextEditingController controller;
+  final SupportedCurrency? currency;
 
   /// Prévient le parent qu'un devis chargé précédemment est périmé.
   final VoidCallback? onBudgetChanged;
@@ -429,7 +439,7 @@ class _BudgetTotalInput extends StatelessWidget {
         ),
         hintText: 'Ex. 40,00',
         hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-        suffixText: '€',
+        suffixText: currency?.symbol,
         suffixStyle: tt.titleSmall?.copyWith(
           fontWeight: FontWeight.w800,
           color: cs.onSurfaceVariant,
@@ -464,7 +474,7 @@ class _BudgetTotalInput extends StatelessWidget {
         }
         final d = double.tryParse(v.replaceAll(',', '.'));
         if (d == null || d < 0 || d > 500) {
-          return 'Entre 0 et 500€';
+          return 'Entre 0 et ${CurrencyFormatter.formatOrPlain(500, currency)}';
         }
         return null;
       },
@@ -481,10 +491,15 @@ class _BudgetTotalInput extends StatelessWidget {
 /// ne change pas : un promo rend son offre plus attractive à dépense égale,
 /// au lieu de réduire ce qu'il paie — cf. PackageRequestService.quote).
 class _BudgetBreakdown extends StatelessWidget {
-  const _BudgetBreakdown({required this.budgetEur, this.quote});
+  const _BudgetBreakdown({
+    required this.budgetEur,
+    this.quote,
+    required this.currency,
+  });
 
   final double budgetEur;
   final NegotiationQuote? quote;
+  final SupportedCurrency? currency;
 
   @override
   Widget build(BuildContext context) {
@@ -510,14 +525,14 @@ class _BudgetBreakdown extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _line(tt, cs, 'Budget', PriceDisplay.eur(budgetEur)),
+          _line(tt, cs, 'Budget', CurrencyFormatter.formatOrPlain(budgetEur, currency)),
           const SizedBox(height: DonySpacing.xs),
           _line(tt, cs, 'Commission Yadony ($ratePct %)',
-              PriceDisplay.eur(commissionEur)),
+              CurrencyFormatter.formatOrPlain(commissionEur, currency)),
           if (hasRealBoost) ...[
             const SizedBox(height: DonySpacing.xs),
             _line(tt, cs, 'Grâce au code promo, le voyageur touche',
-                '+${PriceDisplay.eur(boost)}',
+                '+${CurrencyFormatter.formatOrPlain(boost, currency)}',
                 valueColor: cs.success),
           ],
           const SizedBox(height: DonySpacing.xs),
@@ -530,7 +545,7 @@ class _BudgetBreakdown extends StatelessWidget {
               Text('Le voyageur touchera',
                   style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success)),
               Text(
-                PriceDisplay.eur(net),
+                CurrencyFormatter.formatOrPlain(net, currency),
                 style: tt.bodyMedium?.copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
