@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_catalog.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -38,6 +39,23 @@ void main() {
       final p = ErrorCatalog.lookup(error);
 
       expect(p.message, 'Vérifie les informations saisies puis réessaie.');
+    });
+  });
+
+  group('ErrorCatalog — currency-mismatch', () {
+    test('code dédié → message, sévérité et icône dédiés', () {
+      const error = NetworkException('ignored', code: 'currency-mismatch');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Devise différente');
+      expect(
+        p.message,
+        'Ce trajet n\'est plus disponible dans ta devise. '
+        'Change de devise dans Réglages pour le voir.',
+      );
+      expect(p.severity, ErrorSeverity.warning);
+      expect(p.icon, Icons.currency_exchange_rounded);
     });
   });
 
