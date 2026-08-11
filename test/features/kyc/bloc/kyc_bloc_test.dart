@@ -174,6 +174,26 @@ void main() {
     );
 
     blocTest<KycBloc, KycState>(
+      'emits [StatusLoaded] carrying rejectionCode on REJECTED',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.getStatus()).thenAnswer((_) async => {
+              'kycStatus': 'REJECTED',
+              'verificationStatus': 'REJECTED',
+              'rejectionReason': 'The document is invalid.',
+              'rejectionCode': 'document_unverified_other',
+            });
+      },
+      act: (b) => b.add(const KycStatusRefreshed()),
+      expect: () => [
+        isA<KycStatusLoaded>()
+            .having((s) => s.kycStatus, 'kycStatus', 'REJECTED')
+            .having((s) => s.rejectionCode, 'rejectionCode',
+                'document_unverified_other'),
+      ],
+    );
+
+    blocTest<KycBloc, KycState>(
       'emits [Error] wrapping raw exception containing 503',
       build: buildBloc,
       setUp: () {
