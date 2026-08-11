@@ -538,8 +538,8 @@ void main() {
     // Poids par défaut à l'ouverture = 5 kg (prix/kg net voyageur = 12€,
     // fixture du fichier) — pas de promo : calcul 100 % local, 12 % de
     // commission (taux pinné par ce fichier).
-    await _scrollTo(tester, find.text('5 kg × 12€'));
-    expect(find.text('5 kg × 12€'), findsOneWidget);
+    await _scrollTo(tester, find.textContaining('5 kg × 12'));
+    expect(find.textContaining('5 kg × 12'), findsOneWidget);
     // La valeur de cette ligne doit être le NET (5×12=60€), pas le total
     // commission incluse (67,20€).
     expect(find.textContaining('60,00'), findsWidgets);

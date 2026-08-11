@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -365,7 +366,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     } else {
       final total = _computeStripeTotal();
       label =
-          'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(total)} & payer';
+          'Bloquer ${formatPriceIn(total, widget.announcement.currency)} & payer';
       iconAsset = 'lock';
     }
 
@@ -803,7 +804,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Sous-total : ${subtotal.toStringAsFixed(2)} €',
+                                        'Sous-total : ${formatPriceIn(subtotal, widget.announcement.currency)}',
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.success,
                                         ),
@@ -1087,6 +1088,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   promoApplied: promoApplied,
                   commissionRate: rate,
                   commissionEur: commissionEur,
+                  currency: widget.announcement.currency,
                 );
               },
             ),
@@ -1209,7 +1211,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: DonySpacing.xl),
-                _WalletTile(balance: walletState.wallet.balance),
+                _WalletTile(
+                  balance: walletState.wallet.balance,
+                  currency: widget.announcement.currency,
+                ),
               ],
             );
           },
@@ -1949,15 +1954,15 @@ class _MethodTile extends StatelessWidget {
 // ── Wallet tile ────────────────────────────────────────────────────────────────
 
 class _WalletTile extends StatelessWidget {
-  const _WalletTile({required this.balance});
+  const _WalletTile({required this.balance, required this.currency});
 
   final double balance;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
     final hasBalance = balance > 0;
 
     return GestureDetector(
@@ -1996,7 +2001,7 @@ class _WalletTile extends StatelessWidget {
                   ),
                   Text(
                     hasBalance
-                        ? 'Solde disponible : ${fmt.format(balance)}'
+                        ? 'Solde disponible : ${formatPriceIn(balance, currency)}'
                         : 'Solde insuffisant · Recharger',
                     style: tt.bodySmall?.copyWith(
                       color: hasBalance ? cs.primary : cs.onSurfaceVariant,
@@ -2029,6 +2034,7 @@ class _PriceBreakdown extends StatelessWidget {
     required this.totalPrice,
     required this.commissionRate,
     required this.commissionEur,
+    required this.currency,
     this.originalTotal,
     this.promoApplied = false,
   });
@@ -2040,6 +2046,7 @@ class _PriceBreakdown extends StatelessWidget {
   final double totalPrice;
   final double? originalTotal;
   final bool promoApplied;
+  final String currency;
 
   /// Taux de commission Yadony effectif sur ce devis (ex. 0,05 = 5 %).
   final double commissionRate;
@@ -2051,7 +2058,14 @@ class _PriceBreakdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+    final resolvedCurrency =
+        SupportedCurrency.fromCode(currency) ?? SupportedCurrency.eur;
+    final fmt = NumberFormat.currency(
+      locale: resolvedCurrency.locale,
+      name: resolvedCurrency.code,
+      symbol: resolvedCurrency.symbol,
+      decimalDigits: resolvedCurrency.minorUnit,
+    );
     // L'économie n'est réelle que si le taux promo est strictement inférieur
     // au taux "sans promo" (originalTotal) — un code promo au même taux que
     // le taux global courant (ex. WELCOME05 = 5 % = taux par défaut actuel)
@@ -2065,7 +2079,7 @@ class _PriceBreakdown extends StatelessWidget {
     if (weightKg > 0 && kgDisplay > 0) {
       lines.add(_line(
         tt,
-        '${formatKgPrice(weightKg)} kg × ${formatKgPrice(pricePerKg)}€',
+        '${formatKgPrice(weightKg)} kg × ${formatPriceIn(pricePerKg, currency)}',
         fmt.format(kgDisplay),
       ));
     }
