@@ -102,6 +102,145 @@ void main() {
     },
   );
 
+  test(
+    'échec Hive sur la devise : émet erreur sans flag ni succès et permet retry',
+    () async {
+      var currencyWriteAttempts = 0;
+      when(() => prefs.put(HiveService.kCurrencyCode, 'XOF')).thenAnswer((
+        _,
+      ) async {
+        currencyWriteAttempts += 1;
+        if (currencyWriteAttempts == 1) {
+          throw StateError('hive unavailable');
+        }
+      });
+      final cubit = build();
+      addTearDown(cubit.close);
+      final failedStates = expectLater(
+        cubit.stream.take(2),
+        emitsInOrder(const [
+          CurrencyOnboardingSaving('XOF'),
+          CurrencyOnboardingError(
+            'Impossible d’enregistrer la devise. Réessayez.',
+          ),
+        ]),
+      );
+
+      await cubit.select('XOF');
+
+      await failedStates;
+
+      expect(
+        cubit.state,
+        const CurrencyOnboardingError(
+          'Impossible d’enregistrer la devise. Réessayez.',
+        ),
+      );
+      verifyNever(() => prefs.put(HiveService.kCurrencyOnboardingSeen, true));
+      verifyNever(
+        () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSelected),
+      );
+
+      final retriedStates = expectLater(
+        cubit.stream.take(2),
+        emitsInOrder(const [
+          CurrencyOnboardingSaving('XOF'),
+          CurrencyOnboardingSuccess(),
+        ]),
+      );
+      await cubit.select('XOF');
+
+      await retriedStates;
+
+      expect(cubit.state, const CurrencyOnboardingSuccess());
+      expect(currencyWriteAttempts, 2);
+      verifyInOrder([
+        () => repository.fetchPrefs(),
+        () => repository.updatePrefs(any()),
+        () => prefs.put(HiveService.kCurrencyCode, 'XOF'),
+        () => repository.fetchPrefs(),
+        () => repository.updatePrefs(any()),
+        () => prefs.put(HiveService.kCurrencyCode, 'XOF'),
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+        () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSelected),
+      ]);
+    },
+  );
+
+  test(
+    'échec Hive sur le flag vu : émet erreur sans succès et permet retry',
+    () async {
+      var currencyWriteAttempts = 0;
+      var seenWriteAttempts = 0;
+      when(() => prefs.put(HiveService.kCurrencyCode, 'XAF')).thenAnswer((
+        _,
+      ) async {
+        currencyWriteAttempts += 1;
+      });
+      when(
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+      ).thenAnswer((_) async {
+        seenWriteAttempts += 1;
+        if (seenWriteAttempts == 1) {
+          throw StateError('hive unavailable');
+        }
+      });
+      final cubit = build();
+      addTearDown(cubit.close);
+      final failedStates = expectLater(
+        cubit.stream.take(2),
+        emitsInOrder(const [
+          CurrencyOnboardingSaving('XAF'),
+          CurrencyOnboardingError(
+            'Impossible d’enregistrer la devise. Réessayez.',
+          ),
+        ]),
+      );
+
+      await cubit.select('XAF');
+
+      await failedStates;
+
+      expect(
+        cubit.state,
+        const CurrencyOnboardingError(
+          'Impossible d’enregistrer la devise. Réessayez.',
+        ),
+      );
+      expect(currencyWriteAttempts, 1);
+      expect(seenWriteAttempts, 1);
+      verifyNever(
+        () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSelected),
+      );
+
+      final retriedStates = expectLater(
+        cubit.stream.take(2),
+        emitsInOrder(const [
+          CurrencyOnboardingSaving('XAF'),
+          CurrencyOnboardingSuccess(),
+        ]),
+      );
+      await cubit.select('XAF');
+
+      await retriedStates;
+
+      expect(cubit.state, const CurrencyOnboardingSuccess());
+      expect(currencyWriteAttempts, 2);
+      expect(seenWriteAttempts, 2);
+      verifyInOrder([
+        () => repository.fetchPrefs(),
+        () => repository.updatePrefs(any()),
+        () => prefs.put(HiveService.kCurrencyCode, 'XAF'),
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+        () => repository.fetchPrefs(),
+        () => repository.updatePrefs(any()),
+        () => prefs.put(HiveService.kCurrencyCode, 'XAF'),
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+        () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSelected),
+      ]);
+    },
+  );
+
   blocTest<CurrencyOnboardingCubit, CurrencyOnboardingState>(
     'passer : écrit uniquement le flag vu puis émet succès et trace le skip',
     build: build,
@@ -115,6 +254,68 @@ void main() {
       verifyNever(() => repository.updatePrefs(any()));
       verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
       verifyInOrder([
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+        () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
+      ]);
+    },
+  );
+
+  test(
+    'échec Hive du skip : émet erreur sans succès ni devise et permet retry',
+    () async {
+      var seenWriteAttempts = 0;
+      when(
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+      ).thenAnswer((_) async {
+        seenWriteAttempts += 1;
+        if (seenWriteAttempts == 1) {
+          throw StateError('hive unavailable');
+        }
+      });
+      final cubit = build();
+      addTearDown(cubit.close);
+      final failedStates = expectLater(
+        cubit.stream.take(2),
+        emitsInOrder(const [
+          CurrencyOnboardingSaving(null),
+          CurrencyOnboardingError(
+            'Impossible d’enregistrer ce choix. Réessayez.',
+          ),
+        ]),
+      );
+
+      await cubit.skip();
+
+      await failedStates;
+
+      expect(
+        cubit.state,
+        const CurrencyOnboardingError(
+          'Impossible d’enregistrer ce choix. Réessayez.',
+        ),
+      );
+      verifyNever(() => repository.fetchPrefs());
+      verifyNever(() => repository.updatePrefs(any()));
+      verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
+      verifyNever(
+        () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
+      );
+
+      final retriedStates = expectLater(
+        cubit.stream.take(2),
+        emitsInOrder(const [
+          CurrencyOnboardingSaving(null),
+          CurrencyOnboardingSuccess(),
+        ]),
+      );
+      await cubit.skip();
+
+      await retriedStates;
+
+      expect(cubit.state, const CurrencyOnboardingSuccess());
+      expect(seenWriteAttempts, 2);
+      verifyInOrder([
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
         () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
         () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
       ]);
