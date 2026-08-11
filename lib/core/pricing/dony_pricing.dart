@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/foundation.dart';
 
@@ -55,6 +57,15 @@ double netToSenderPrice(double net) => net * donyCommissionMultiplier;
 /// Pratique car le prix expéditeur (net × multiplicateur) est rarement entier.
 String formatKgPrice(double value) =>
     value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
+
+/// Formate un prix dans sa devise réelle (symbole et position corrects),
+/// sans décimales superflues (ex. « 8 € », « CA\$8.40 »). À utiliser partout
+/// où la devise du trajet/bid/annonce est connue, à la place de
+/// [formatKgPrice] + un « € » codé en dur. Repli EUR si absente/inconnue.
+String formatPriceIn(double value, String? currencyCode) {
+  final currency = SupportedCurrency.fromCode(currencyCode) ?? SupportedCurrency.eur;
+  return CurrencyFormatter.format(value, currency, compact: true);
+}
 
 /// Plafond de remboursement Yadony en cas de perte de colis (€), source unique
 /// backend `dony.reimbursement.max-amount-eur`. Chargé une fois au démarrage

@@ -79,6 +79,25 @@ void main() {
     });
   });
 
+  group('formatPriceIn', () {
+    test('formate dans la devise donnée, pas toujours en EUR', () {
+      expect(formatPriceIn(8, 'CAD'), 'CA\$8');
+    });
+
+    test('devise EUR : symbole € en suffixe, entier si rond', () {
+      final result = formatPriceIn(8, 'EUR');
+      expect(result, contains('8'));
+      expect(result, contains('€'));
+      expect(result, isNot(contains(',00')));
+    });
+
+    test('devise absente ou inconnue → repli EUR', () {
+      final result = formatPriceIn(8, null);
+      expect(result, contains('8'));
+      expect(result, contains('€'));
+    });
+  });
+
   group('AnnouncementSenderPricing.senderPricePerKg', () {
     test('utilise le champ backend pricePerKgDisplay quand présent', () {
       // Source de vérité backend : on n\'applique pas un second multiplicateur.
