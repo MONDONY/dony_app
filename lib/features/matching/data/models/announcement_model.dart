@@ -186,6 +186,11 @@ class AnnouncementModel {
   /// via [isUrgent]).
   final bool? urgent;
 
+  /// Devise du trajet, figée à la création. `EUR` par défaut pour les
+  /// anciens payloads sans ce champ.
+  @JsonKey(defaultValue: 'EUR')
+  final String currency;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -226,6 +231,7 @@ class AnnouncementModel {
     this.handoverWindowEnd,
     this.isFavorite = false,
     this.urgent,
+    this.currency = 'EUR',
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

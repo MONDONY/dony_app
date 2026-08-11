@@ -37,6 +37,7 @@ AnnouncementModel _makeAnnouncement({
   DateTime? handoverWindowEnd,
   String status = 'ACTIVE',
   int bidsCount = 0,
+  String currency = 'EUR',
 }) =>
     AnnouncementModel(
       id: 'ann-detail-001',
@@ -53,6 +54,7 @@ AnnouncementModel _makeAnnouncement({
       updatedAt: DateTime(2026, 6, 1),
       handoverWindowStart: handoverWindowStart,
       handoverWindowEnd: handoverWindowEnd,
+      currency: currency,
     );
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
@@ -174,6 +176,17 @@ void main() {
       find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'clock'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR',
+      (tester) async {
+    final announcement = _makeAnnouncement(currency: 'CAD');
+
+    await _pump(tester, announcement: announcement, annBloc: annBloc, cancelBloc: cancelBloc);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('8 €/kg'), findsNothing);
   });
 
   testWidgets('masque la fenêtre si absente (annonce legacy)', (tester) async {

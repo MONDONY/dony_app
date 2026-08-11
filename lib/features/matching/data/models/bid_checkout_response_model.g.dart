@@ -27,7 +27,7 @@ Map<String, dynamic> _$BidCheckoutResponseModelToJson(
   'bidId': instance.bidId,
   'clientSecret': instance.clientSecret,
   'publishableKey': instance.publishableKey,
-      'expiresAt': instance.expiresAt.toIso8601String(),
-      'currency': instance.currency,
+  'expiresAt': instance.expiresAt.toIso8601String(),
+  'currency': instance.currency,
   'paymentMethodTypes': instance.paymentMethodTypes,
 };

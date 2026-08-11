@@ -91,6 +91,20 @@ void main() {
     });
   });
 
+  group('AnnouncementModel.currency', () {
+    test('deserializes currency from backend, not always EUR', () {
+      final json = baseAnnouncementJson()..['currency'] = 'CAD';
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.currency, 'CAD');
+    });
+
+    test('defaults to EUR when currency is absent (older payload)', () {
+      final json = baseAnnouncementJson();
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.currency, 'EUR');
+    });
+  });
+
   group('AnnouncementGridItemModel', () {
     test('constructs correctly', () {
       const item = AnnouncementGridItemModel(
