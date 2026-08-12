@@ -209,15 +209,16 @@ void main() {
       },
     );
 
-    testWidgets('le segment « Demandes » a disparu de l\'écran Envoyer', (
-      tester,
-    ) async {
-      await tester.pumpWidget(wrap());
-      await tester.pump(const Duration(milliseconds: 400));
+    testWidgets(
+      'le segment « Demandes » a disparu de l\'écran Envoyer',
+      (tester) async {
+        await tester.pumpWidget(wrap());
+        await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('Demandes'), findsNothing);
-      expect(find.byType(TabBarView), findsNothing);
-    });
+        expect(find.text('Demandes'), findsNothing);
+        expect(find.byType(TabBarView), findsNothing);
+      },
+    );
 
     testWidgets('le bouton "+ Nouveau" est présent (HeaderPill)', (
       tester,
@@ -227,6 +228,7 @@ void main() {
 
       expect(find.text('+ Nouveau'), findsOneWidget);
     });
+
   });
 
   // ── Back button regression tests ─────────────────────────────────────────────

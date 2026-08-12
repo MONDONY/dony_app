@@ -35,7 +35,8 @@ class ContextualTutorialCard extends StatefulWidget {
   final TutorialContext context;
 
   @override
-  State<ContextualTutorialCard> createState() => _ContextualTutorialCardState();
+  State<ContextualTutorialCard> createState() =>
+      _ContextualTutorialCardState();
 }
 
 class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
@@ -88,7 +89,9 @@ class _ContextualTutorialCardState extends State<ContextualTutorialCard> {
 
     final dismissKey = _dismissKey(tutorial.id);
     return ValueListenableBuilder<Box>(
-      valueListenable: getIt<HiveService>().listenUserPrefs(keys: [dismissKey]),
+      valueListenable: getIt<HiveService>().listenUserPrefs(
+        keys: [dismissKey],
+      ),
       builder: (context, box, _) {
         final dismissed = box.get(dismissKey, defaultValue: false) as bool;
         if (dismissed) {

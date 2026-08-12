@@ -14,10 +14,10 @@ class PendingRating {
   final bool isTravelerRating;
 
   factory PendingRating.fromJson(Map<String, dynamic> json) => PendingRating(
-    bidId: json['bidId'] as String,
-    otherPartyName: json['otherPartyName'] as String,
-    otherPartyId: json['otherPartyId'] as String,
-    deliveredAt: DateTime.parse(json['deliveredAt'] as String),
-    isTravelerRating: json['isTravelerRating'] as bool? ?? false,
-  );
+        bidId: json['bidId'] as String,
+        otherPartyName: json['otherPartyName'] as String,
+        otherPartyId: json['otherPartyId'] as String,
+        deliveredAt: DateTime.parse(json['deliveredAt'] as String),
+        isTravelerRating: json['isTravelerRating'] as bool? ?? false,
+      );
 }

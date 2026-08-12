@@ -24,10 +24,7 @@ class SubscriptionTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base, vertical: DonySpacing.md),
         child: Row(
           children: [
             DonyAvatar(name: item.travelerName, imageUrl: item.avatarUrl),
@@ -36,33 +33,18 @@ class SubscriptionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          item.travelerName,
-                          style: tt.titleSmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    subtitle,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
+                  Row(children: [
+                    Flexible(child: Text(item.travelerName, style: tt.titleSmall, overflow: TextOverflow.ellipsis)),
+                  ]),
+                  Text(subtitle, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                 ],
               ),
             ),
             IconButton(
-              tooltip: item.pushEnabled
-                  ? 'Couper les notifications'
-                  : 'Activer les notifications',
+              tooltip: item.pushEnabled ? 'Couper les notifications' : 'Activer les notifications',
               onPressed: onToggleBell,
-              icon: DonyIcon(
-                item.pushEnabled ? 'bell' : 'bell-off',
-                color: item.pushEnabled ? cs.primary : cs.onSurfaceVariant,
-              ),
+              icon: DonyIcon(item.pushEnabled ? 'bell' : 'bell-off',
+                  color: item.pushEnabled ? cs.primary : cs.onSurfaceVariant),
             ),
             DonyIcon('chevron-right', color: cs.onSurfaceVariant),
           ],

@@ -5,8 +5,7 @@ import 'package:dony/features/settings/data/repositories/blocked_users_repositor
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockBlockedUsersRepository extends Mock
-    implements BlockedUsersRepository {}
+class MockBlockedUsersRepository extends Mock implements BlockedUsersRepository {}
 
 void main() {
   late MockBlockedUsersRepository mockRepo;
@@ -38,9 +37,8 @@ void main() {
     blocTest<BlockedUsersBloc, BlockedUsersState>(
       'BlockedUsersLoadRequested émet Loading puis Loaded avec la liste',
       setUp: () {
-        when(
-          () => mockRepo.fetchBlockedUsers(),
-        ).thenAnswer((_) async => [user1, user2]);
+        when(() => mockRepo.fetchBlockedUsers())
+            .thenAnswer((_) async => [user1, user2]);
       },
       build: () => BlockedUsersBloc(mockRepo),
       act: (bloc) => bloc.add(const BlockedUsersLoadRequested()),
@@ -62,7 +60,8 @@ void main() {
       act: (bloc) => bloc.add(const BlockedUsersLoadRequested()),
       expect: () => [
         isA<BlockedUsersLoading>(),
-        isA<BlockedUsersLoaded>().having((s) => s.users, 'users', isEmpty),
+        isA<BlockedUsersLoaded>()
+            .having((s) => s.users, 'users', isEmpty),
       ],
     );
 
@@ -70,9 +69,8 @@ void main() {
     blocTest<BlockedUsersBloc, BlockedUsersState>(
       'BlockedUsersLoadRequested émet Error si le repo lève une exception',
       setUp: () {
-        when(
-          () => mockRepo.fetchBlockedUsers(),
-        ).thenThrow(Exception('Network error'));
+        when(() => mockRepo.fetchBlockedUsers())
+            .thenThrow(Exception('Network error'));
       },
       build: () => BlockedUsersBloc(mockRepo),
       act: (bloc) => bloc.add(const BlockedUsersLoadRequested()),
@@ -91,13 +89,13 @@ void main() {
       'BlockedUserUnblockRequested déblocage ok → Unblocking puis Loaded sans user débloqué',
       setUp: () {
         when(() => mockRepo.unblockUser('u1')).thenAnswer((_) async {});
-        when(
-          () => mockRepo.fetchBlockedUsers(),
-        ).thenAnswer((_) async => [user2]);
+        when(() => mockRepo.fetchBlockedUsers())
+            .thenAnswer((_) async => [user2]);
       },
       build: () => BlockedUsersBloc(mockRepo),
       seed: () => BlockedUsersLoaded([user1, user2]),
-      act: (bloc) => bloc.add(const BlockedUserUnblockRequested('u1')),
+      act: (bloc) =>
+          bloc.add(const BlockedUserUnblockRequested('u1')),
       expect: () => [
         isA<BlockedUsersUnblocking>()
             .having((s) => s.userId, 'userId', 'u1')
@@ -116,16 +114,17 @@ void main() {
     blocTest<BlockedUsersBloc, BlockedUsersState>(
       'BlockedUserUnblockRequested rollback vers liste initiale si le backend échoue',
       setUp: () {
-        when(
-          () => mockRepo.unblockUser('u1'),
-        ).thenThrow(Exception('Server error'));
+        when(() => mockRepo.unblockUser('u1'))
+            .thenThrow(Exception('Server error'));
       },
       build: () => BlockedUsersBloc(mockRepo),
       seed: () => BlockedUsersLoaded([user1, user2]),
-      act: (bloc) => bloc.add(const BlockedUserUnblockRequested('u1')),
+      act: (bloc) =>
+          bloc.add(const BlockedUserUnblockRequested('u1')),
       expect: () => [
         isA<BlockedUsersUnblocking>(),
-        isA<BlockedUsersLoaded>().having((s) => s.users.length, 'length', 2),
+        isA<BlockedUsersLoaded>()
+            .having((s) => s.users.length, 'length', 2),
       ],
     );
 

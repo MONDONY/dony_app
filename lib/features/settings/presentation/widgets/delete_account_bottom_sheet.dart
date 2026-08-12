@@ -26,8 +26,7 @@ class DeleteAccountBottomSheet extends StatefulWidget {
     DeletionEligibilityCubit? eligibilityCubit,
   }) {
     final deletionBloc = context.read<AccountDeletionBloc>();
-    final cubit =
-        eligibilityCubit ??
+    final cubit = eligibilityCubit ??
         DeletionEligibilityCubit(getIt<AccountDeletionRepository>());
     cubit.check();
     final modeNotifier = ValueNotifier<DeleteMode?>(null);
@@ -66,7 +65,8 @@ class DeleteAccountBottomSheet extends StatefulWidget {
       _DeleteAccountBottomSheetState();
 }
 
-class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
+class _DeleteAccountBottomSheetState
+    extends State<DeleteAccountBottomSheet> {
   String? _reason;
 
   @override
@@ -150,18 +150,9 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
             value: _reason,
             onChanged: (v) => setState(() => _reason = v),
             options: const [
-              DonyRadioOption(
-                value: "Je n'utilise plus le service",
-                label: "Je n'utilise plus le service",
-              ),
-              DonyRadioOption(
-                value: 'Problème de confidentialité',
-                label: 'Problème de confidentialité',
-              ),
-              DonyRadioOption(
-                value: 'Trop de notifications',
-                label: 'Trop de notifications',
-              ),
+              DonyRadioOption(value: "Je n'utilise plus le service", label: "Je n'utilise plus le service"),
+              DonyRadioOption(value: 'Problème de confidentialité', label: 'Problème de confidentialité'),
+              DonyRadioOption(value: 'Trop de notifications', label: 'Trop de notifications'),
               DonyRadioOption(value: 'Autre raison', label: 'Autre raison'),
             ],
           ),
@@ -225,8 +216,7 @@ class _DeleteActions extends StatelessWidget {
                         ? DonyButtonVariant.destructive
                         : DonyButtonVariant.primary,
                     isLoading: isSubmitting,
-                    onPressed:
-                        mode == null ||
+                    onPressed: mode == null ||
                             isSubmitting ||
                             eligibility.isLoading ||
                             !eligibility.canDelete
@@ -272,7 +262,8 @@ class _ModeCard extends StatelessWidget {
       valueListenable: modeNotifier,
       builder: (_, selected, __) {
         final isSelected = selected == mode;
-        final borderColor = isSelected ? badgeColor : cs.outline;
+        final borderColor =
+            isSelected ? badgeColor : cs.outline;
         final bgColor = isSelected
             ? badgeColor.withValues(alpha: 0.06)
             : Colors.transparent;
@@ -295,18 +286,13 @@ class _ModeCard extends StatelessWidget {
                     DonyIcon(iconAsset, size: 20, color: badgeColor),
                     const SizedBox(width: DonySpacing.sm),
                     Expanded(
-                      child: Text(
-                        title,
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      child: Text(title,
+                          style: tt.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700)),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: 3,
-                      ),
+                          horizontal: DonySpacing.sm, vertical: 3),
                       decoration: BoxDecoration(
                         color: badgeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(DonyRadius.xl),
@@ -314,18 +300,15 @@ class _ModeCard extends StatelessWidget {
                       child: Text(
                         badge,
                         style: tt.labelSmall?.copyWith(
-                          color: badgeColor,
-                          fontWeight: FontWeight.w700,
-                        ),
+                            color: badgeColor, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: DonySpacing.sm),
-                Text(
-                  description,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
+                Text(description,
+                    style: tt.bodySmall
+                        ?.copyWith(color: cs.onSurfaceVariant)),
               ],
             ),
           ),

@@ -34,12 +34,12 @@ class MobileMoneyPaymentModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    status,
-    amount,
-    currency,
-    paymentLink,
-    expiresAt,
-    failureReason,
-  ];
+        id,
+        status,
+        amount,
+        currency,
+        paymentLink,
+        expiresAt,
+        failureReason,
+      ];
 }

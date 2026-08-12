@@ -8,12 +8,12 @@ class MockConnectedDevicesDatasource extends Mock
     implements ConnectedDevicesDatasource {}
 
 DeviceModel _device({required bool isCurrent}) => DeviceModel(
-  deviceId: 'device-1',
-  deviceName: 'Pixel 7',
-  platform: 'android',
-  lastSeenAt: DateTime(2026, 5, 22),
-  isCurrent: isCurrent,
-);
+      deviceId: 'device-1',
+      deviceName: 'Pixel 7',
+      platform: 'android',
+      lastSeenAt: DateTime(2026, 5, 22),
+      isCurrent: isCurrent,
+    );
 
 void main() {
   late MockConnectedDevicesDatasource mockDatasource;
@@ -27,9 +27,8 @@ void main() {
   group('fetchDevices', () {
     test('délègue au datasource et retourne la liste', () async {
       final devices = [_device(isCurrent: true)];
-      when(
-        () => mockDatasource.fetchDevices(),
-      ).thenAnswer((_) async => devices);
+      when(() => mockDatasource.fetchDevices())
+          .thenAnswer((_) async => devices);
 
       final result = await repo.fetchDevices();
 
@@ -40,53 +39,48 @@ void main() {
 
   group('isCurrentDeviceRegistered', () {
     test(
-      'retourne true quand au moins un appareil a isCurrent == true',
-      () async {
-        when(() => mockDatasource.fetchDevices()).thenAnswer(
-          (_) async => [_device(isCurrent: false), _device(isCurrent: true)],
-        );
+        'retourne true quand au moins un appareil a isCurrent == true',
+        () async {
+      when(() => mockDatasource.fetchDevices()).thenAnswer(
+        (_) async => [_device(isCurrent: false), _device(isCurrent: true)],
+      );
 
-        expect(await repo.isCurrentDeviceRegistered(), isTrue);
-      },
-    );
-
-    test(
-      'retourne false quand aucun appareil n\'a isCurrent == true (appareil révoqué)',
-      () async {
-        when(() => mockDatasource.fetchDevices()).thenAnswer(
-          (_) async => [_device(isCurrent: false), _device(isCurrent: false)],
-        );
-
-        expect(await repo.isCurrentDeviceRegistered(), isFalse);
-      },
-    );
+      expect(await repo.isCurrentDeviceRegistered(), isTrue);
+    });
 
     test(
-      'retourne false quand la liste est vide (appareil absent du serveur)',
-      () async {
-        when(() => mockDatasource.fetchDevices()).thenAnswer((_) async => []);
+        'retourne false quand aucun appareil n\'a isCurrent == true (appareil révoqué)',
+        () async {
+      when(() => mockDatasource.fetchDevices()).thenAnswer(
+        (_) async => [_device(isCurrent: false), _device(isCurrent: false)],
+      );
 
-        expect(await repo.isCurrentDeviceRegistered(), isFalse);
-      },
-    );
+      expect(await repo.isCurrentDeviceRegistered(), isFalse);
+    });
 
     test(
-      'retourne true (fail-safe) quand le datasource lève une exception',
-      () async {
-        when(
-          () => mockDatasource.fetchDevices(),
-        ).thenThrow(Exception('Network error'));
+        'retourne false quand la liste est vide (appareil absent du serveur)',
+        () async {
+      when(() => mockDatasource.fetchDevices())
+          .thenAnswer((_) async => []);
 
-        expect(await repo.isCurrentDeviceRegistered(), isTrue);
-      },
-    );
+      expect(await repo.isCurrentDeviceRegistered(), isFalse);
+    });
+
+    test(
+        'retourne true (fail-safe) quand le datasource lève une exception',
+        () async {
+      when(() => mockDatasource.fetchDevices())
+          .thenThrow(Exception('Network error'));
+
+      expect(await repo.isCurrentDeviceRegistered(), isTrue);
+    });
   });
 
   group('revokeDevice', () {
     test('délègue au datasource', () async {
-      when(
-        () => mockDatasource.revokeDevice('device-1'),
-      ).thenAnswer((_) async {});
+      when(() => mockDatasource.revokeDevice('device-1'))
+          .thenAnswer((_) async {});
 
       await repo.revokeDevice('device-1');
 

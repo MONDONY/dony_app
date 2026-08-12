@@ -22,9 +22,8 @@ void main() {
     expect(read.confirmImportantActions, isTrue);
   });
 
-  testWidgets('sans scope monté, les valeurs par défaut sont sûres', (
-    tester,
-  ) async {
+  testWidgets('sans scope monté, les valeurs par défaut sont sûres',
+      (tester) async {
     await tester.pumpWidget(const SizedBox.shrink());
     final ctx = tester.element(find.byType(SizedBox));
     expect(ctx.a11y.underlineLinks, isFalse);
@@ -33,25 +32,20 @@ void main() {
     expect(ctx.a11y.confirmImportantActions, isFalse);
   });
 
-  testWidgets('un changement de valeur reconstruit les dépendants', (
-    tester,
-  ) async {
+  testWidgets('un changement de valeur reconstruit les dépendants',
+      (tester) async {
     var builds = 0;
     Widget wrap(bool underline) => AccessibilityScope(
-      underlineLinks: underline,
-      reinforceLabels: false,
-      persistentMessages: false,
-      confirmImportantActions: false,
-      child: Builder(
-        builder: (ctx) {
-          builds++;
-          return Text(
-            '${ctx.a11y.underlineLinks}',
-            textDirection: TextDirection.ltr,
-          );
-        },
-      ),
-    );
+          underlineLinks: underline,
+          reinforceLabels: false,
+          persistentMessages: false,
+          confirmImportantActions: false,
+          child: Builder(builder: (ctx) {
+            builds++;
+            return Text('${ctx.a11y.underlineLinks}',
+                textDirection: TextDirection.ltr);
+          }),
+        );
 
     await tester.pumpWidget(wrap(false));
     expect(builds, 1);

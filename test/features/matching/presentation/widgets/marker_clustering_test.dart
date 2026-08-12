@@ -35,32 +35,23 @@ void main() {
     });
     test('groups points in the same cell, separates far ones', () {
       const paris = LatLng(48.8566, 2.3522);
-      const parisClose = LatLng(
-        48.85665,
-        2.35225,
-      ); // ~7 m — within kSameSpot (1e-4)
+      const parisClose = LatLng(48.85665, 2.35225); // ~7 m — within kSameSpot (1e-4)
       const dakar = LatLng(14.6928, -17.4467);
       final clusters = gridCluster<LatLng>(
-        const [paris, parisClose, dakar],
-        12,
-        _id,
-      );
+          const [paris, parisClose, dakar], 12, _id);
       expect(clusters.length, 2); // paris+parisClose merged, dakar alone
       final big = clusters.firstWhere((c) => c.isMultiple);
       expect(big.count, 2);
       expect(big.isSameSpot, isTrue); // within ~10-15 m
     });
-    test(
-      'marks a cluster as not same-spot when points are ~km apart but in one cell',
-      () {
-        // At low zoom the cell is large (3 deg); two points 0.5 deg apart share a cell.
-        const a = LatLng(48.0, 2.0);
-        const b = LatLng(48.4, 2.4); // ~50 km
-        final clusters = gridCluster<LatLng>(const [a, b], 3, _id);
-        expect(clusters.length, 1);
-        expect(clusters.first.isSameSpot, isFalse);
-      },
-    );
+    test('marks a cluster as not same-spot when points are ~km apart but in one cell', () {
+      // At low zoom the cell is large (3 deg); two points 0.5 deg apart share a cell.
+      const a = LatLng(48.0, 2.0);
+      const b = LatLng(48.4, 2.4); // ~50 km
+      final clusters = gridCluster<LatLng>(const [a, b], 3, _id);
+      expect(clusters.length, 1);
+      expect(clusters.first.isSameSpot, isFalse);
+    });
   });
 
   group('mergeSameSpotSingletons', () {
@@ -76,31 +67,25 @@ void main() {
       expect(merged.first.count, 2);
       expect(merged.first.isSameSpot, isTrue);
     });
-    test(
-      'keeps distant singletons separate and passes multi clusters through',
-      () {
-        const a = LatLng(48.8566, 2.3522);
-        const b = LatLng(45.0, 4.0); // far
-        final multi = MarkerCluster<LatLng>([a, b], a, isSameSpot: false);
-        final singles = [
-          multi,
-          MarkerCluster<LatLng>([a], a, isSameSpot: true),
-          MarkerCluster<LatLng>([b], b, isSameSpot: true),
-        ];
-        final merged = mergeSameSpotSingletons<LatLng>(singles, _id);
-        expect(merged.length, 3); // nothing merged
-      },
-    );
+    test('keeps distant singletons separate and passes multi clusters through', () {
+      const a = LatLng(48.8566, 2.3522);
+      const b = LatLng(45.0, 4.0); // far
+      final multi = MarkerCluster<LatLng>([a, b], a, isSameSpot: false);
+      final singles = [
+        multi,
+        MarkerCluster<LatLng>([a], a, isSameSpot: true),
+        MarkerCluster<LatLng>([b], b, isSameSpot: true),
+      ];
+      final merged = mergeSameSpotSingletons<LatLng>(singles, _id);
+      expect(merged.length, 3); // nothing merged
+    });
     test('early-returns unchanged with fewer than 2 singletons', () {
       const a = LatLng(48.8566, 2.3522);
       const b = LatLng(45.0, 4.0);
       final multi = MarkerCluster<LatLng>([a, b], a, isSameSpot: false);
       final lone = MarkerCluster<LatLng>([a], a, isSameSpot: true);
       final merged = mergeSameSpotSingletons<LatLng>([multi, lone], _id);
-      expect(
-        merged.length,
-        2,
-      ); // multi passes through, lone singleton untouched
+      expect(merged.length, 2); // multi passes through, lone singleton untouched
       expect(merged, containsAll(<MarkerCluster<LatLng>>[multi, lone]));
     });
   });

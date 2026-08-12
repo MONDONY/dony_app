@@ -7,9 +7,7 @@ class DeliveryAddressDatasource {
   DeliveryAddressDatasource(this._apiClient);
 
   Future<List<DeliveryAddress>> getAll() async {
-    final response = await _apiClient.dio.get(
-      '/addressbook/delivery-addresses',
-    );
+    final response = await _apiClient.dio.get('/addressbook/delivery-addresses');
     return (response.data as List)
         .map((j) => DeliveryAddress.fromJson(j as Map<String, dynamic>))
         .toList();

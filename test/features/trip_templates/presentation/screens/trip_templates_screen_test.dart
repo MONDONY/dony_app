@@ -71,10 +71,7 @@ Widget _wrap(TripTemplateBloc bloc, {String configJson = _emptyConfigJson}) =>
         child: MaterialApp.router(
           routerConfig: GoRouter(
             routes: [
-              GoRoute(
-                path: '/',
-                builder: (_, _) => const TripTemplatesScreen(),
-              ),
+              GoRoute(path: '/', builder: (_, _) => const TripTemplatesScreen()),
               GoRoute(
                 path: '/trip-templates/edit',
                 builder: (_, _) => const Scaffold(body: Text('Edit')),
@@ -96,9 +93,9 @@ void main() {
   testWidgets('affiche la carte tutoriel quand le catalogue en propose un', (
     tester,
   ) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const TripTemplateState(status: TripTemplateStatus.success));
+    when(() => bloc.state).thenReturn(
+      const TripTemplateState(status: TripTemplateStatus.success),
+    );
     await tester.pumpWidget(_wrap(bloc, configJson: _hubConfigJson));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
@@ -110,9 +107,9 @@ void main() {
   testWidgets('pas de carte tutoriel sans tutoriel actif pour ce contexte', (
     tester,
   ) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const TripTemplateState(status: TripTemplateStatus.success));
+    when(() => bloc.state).thenReturn(
+      const TripTemplateState(status: TripTemplateStatus.success),
+    );
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
@@ -124,9 +121,9 @@ void main() {
   testWidgets('empty state s\'affiche toujours à côté de la carte tutoriel', (
     tester,
   ) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const TripTemplateState(status: TripTemplateStatus.success));
+    when(() => bloc.state).thenReturn(
+      const TripTemplateState(status: TripTemplateStatus.success),
+    );
     await tester.pumpWidget(_wrap(bloc, configJson: _hubConfigJson));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));

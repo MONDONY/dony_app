@@ -15,8 +15,7 @@ class NotificationRepository {
 
   Future<void> markAllRead() => _datasource.markAllRead();
 
-  Future<void> deleteNotification(String id) =>
-      _datasource.deleteNotification(id);
+  Future<void> deleteNotification(String id) => _datasource.deleteNotification(id);
 
   Future<void> ack(String id) => _datasource.ack(id);
 }

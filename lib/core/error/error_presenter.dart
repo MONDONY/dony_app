@@ -36,10 +36,8 @@ abstract final class ErrorPresenter {
 
     // Always log raw details in debug — never in prod and never to the user.
     if (kDebugMode && unwrapped is AppException) {
-      debugPrint(
-        '[ErrorPresenter] code=${unwrapped.code} '
-        'severity=${p.severity.name} raw="${unwrapped.message}"',
-      );
+      debugPrint('[ErrorPresenter] code=${unwrapped.code} '
+          'severity=${p.severity.name} raw="${unwrapped.message}"');
     }
 
     if (p.severity == ErrorSeverity.critical) {

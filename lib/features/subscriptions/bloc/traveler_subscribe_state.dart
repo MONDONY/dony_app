@@ -18,10 +18,11 @@ class TravelerSubscribeState {
     bool? subscribed,
     bool? pushEnabled,
     String? error,
-  }) => TravelerSubscribeState(
-    status: status ?? this.status,
-    subscribed: subscribed ?? this.subscribed,
-    pushEnabled: pushEnabled ?? this.pushEnabled,
-    error: error,
-  );
+  }) =>
+      TravelerSubscribeState(
+        status: status ?? this.status,
+        subscribed: subscribed ?? this.subscribed,
+        pushEnabled: pushEnabled ?? this.pushEnabled,
+        error: error,
+      );
 }

@@ -55,8 +55,7 @@ abstract final class DonyDialog {
     return show(
       context,
       title: 'Quitter sans enregistrer ?',
-      message:
-          'Les informations que vous avez saisies ne seront pas '
+      message: 'Les informations que vous avez saisies ne seront pas '
           'conservées. Vous devrez tout ressaisir.',
       confirmLabel: 'Quitter',
       cancelLabel: 'Continuer la saisie',
@@ -93,17 +92,17 @@ class _DonyDialogWidget extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final confirmColor = switch (variant) {
-      DonyDialogVariant.info => cs.primary,
+      DonyDialogVariant.info        => cs.primary,
       DonyDialogVariant.destructive => cs.error,
     };
 
     final iconColor = switch (variant) {
-      DonyDialogVariant.info => cs.primary,
+      DonyDialogVariant.info        => cs.primary,
       DonyDialogVariant.destructive => cs.error,
     };
 
     final iconBg = switch (variant) {
-      DonyDialogVariant.info => cs.primaryContainer,
+      DonyDialogVariant.info        => cs.primaryContainer,
       DonyDialogVariant.destructive => cs.errorContainer,
     };
 

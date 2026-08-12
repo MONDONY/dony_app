@@ -14,7 +14,7 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
   final AnalyticsService _analytics;
 
   RecipientBloc(this._repository, this._analytics)
-    : super(const RecipientState()) {
+      : super(const RecipientState()) {
     on<RecipientLoaded>(_onLoaded);
     on<RecipientCreated>(_onCreated);
     on<RecipientUpdated>(_onUpdated);
@@ -30,15 +30,16 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
     emit(state.copyWith(status: RecipientStatus.loading));
     try {
       final recipients = await _repository.getAll();
-      emit(
-        state.copyWith(
-          status: RecipientStatus.success,
-          recipients: recipients,
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: RecipientStatus.success,
+        recipients: recipients,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(state.copyWith(
+        status: RecipientStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -65,16 +66,17 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
         ),
         created,
       ];
-      emit(
-        state.copyWith(
-          status: RecipientStatus.success,
-          recipients: updatedList,
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: RecipientStatus.success,
+        recipients: updatedList,
+        error: null,
+      ));
       unawaited(_analytics.logEvent(AnalyticsEvents.recipientCreated));
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(state.copyWith(
+        status: RecipientStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -101,15 +103,16 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
         }
         return updated.isDefault ? r.copyWith(isDefault: false) : r;
       }).toList();
-      emit(
-        state.copyWith(
-          status: RecipientStatus.success,
-          recipients: updatedList,
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: RecipientStatus.success,
+        recipients: updatedList,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(state.copyWith(
+        status: RecipientStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -119,18 +122,18 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
   ) async {
     try {
       await _repository.delete(event.id);
-      final updatedList = state.recipients
-          .where((r) => r.id != event.id)
-          .toList();
-      emit(
-        state.copyWith(
-          status: RecipientStatus.success,
-          recipients: updatedList,
-          error: null,
-        ),
-      );
+      final updatedList =
+          state.recipients.where((r) => r.id != event.id).toList();
+      emit(state.copyWith(
+        status: RecipientStatus.success,
+        recipients: updatedList,
+        error: null,
+      ));
     } catch (e) {
-      emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
+      emit(state.copyWith(
+        status: RecipientStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -138,7 +141,8 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
     RecipientDefaultSet event,
     Emitter<RecipientState> emit,
   ) async {
-    final target = state.recipients.where((r) => r.id == event.id).firstOrNull;
+    final target =
+        state.recipients.where((r) => r.id == event.id).firstOrNull;
     if (target == null) {
       return;
     }
@@ -154,18 +158,13 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
         if (target.notes != null) 'notes': target.notes,
         'isDefault': true,
       });
-      emit(
-        state.copyWith(
-          status: RecipientStatus.success,
-          recipients: state.recipients
-              .map(
-                (r) =>
-                    r.id == event.id ? updated : r.copyWith(isDefault: false),
-              )
-              .toList(),
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: RecipientStatus.success,
+        recipients: state.recipients
+            .map((r) => r.id == event.id ? updated : r.copyWith(isDefault: false))
+            .toList(),
+        error: null,
+      ));
       unawaited(_analytics.logEvent(AnalyticsEvents.recipientDefaultSet));
     } catch (e) {
       emit(state.copyWith(status: RecipientStatus.error, error: e.toString()));
@@ -173,11 +172,9 @@ class RecipientBloc extends Bloc<RecipientEvent, RecipientState> {
   }
 
   void _onPicked(RecipientPicked event, Emitter<RecipientState> emit) {
-    unawaited(
-      _analytics.logEvent(
-        AnalyticsEvents.recipientSelected,
-        properties: {'source': event.source},
-      ),
-    );
+    unawaited(_analytics.logEvent(
+      AnalyticsEvents.recipientSelected,
+      properties: {'source': event.source},
+    ));
   }
 }

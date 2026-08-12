@@ -209,7 +209,9 @@ void main() {
     expect(find.text('🔥 Urgent'), findsOneWidget);
   });
 
-  testWidgets('date souhaitée lointaine → badge urgent absent', (tester) async {
+  testWidgets('date souhaitée lointaine → badge urgent absent', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(_req(desiredDate: DateTime.now().add(const Duration(days: 30)))),
     );

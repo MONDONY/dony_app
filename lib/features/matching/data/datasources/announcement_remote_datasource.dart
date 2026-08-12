@@ -266,29 +266,31 @@ class AnnouncementRemoteDatasource {
     double? radiusKm,
     bool? urgent,
   }) => <String, dynamic>{
-    if (departureCity != null) 'departureCity': departureCity,
-    if (arrivalCity != null) 'arrivalCity': arrivalCity,
-    if (departureDateFrom != null)
-      'departureDateFrom': DateFormat('yyyy-MM-dd').format(departureDateFrom),
-    if (departureDateTo != null)
-      'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
-    if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
-    if (maxAvailableKg != null) 'maxAvailableKg': maxAvailableKg,
-    if (maxPricePerKg != null) 'maxPricePerKg': maxPricePerKg,
-    if (kiloProOnly == true) 'kiloProOnly': true,
-    if (minRating != null) 'minRating': minRating,
-    if (weekendOnly == true) 'weekendOnly': true,
-    if (transportMode != null)
-      'transportMode': transportModeToWire(transportMode),
-    if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
-    if (contentType != null) 'contentType': contentType,
-    if (userLat != null) 'userLat': userLat,
-    if (userLng != null) 'userLng': userLng,
-    if (radiusKm != null) 'radiusKm': radiusKm,
-    // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
-    // seulement présent quand le chip est actif (cf. PR back #112).
-    if (urgent == true) 'urgent': true,
-  };
+        if (departureCity != null) 'departureCity': departureCity,
+        if (arrivalCity != null) 'arrivalCity': arrivalCity,
+        if (departureDateFrom != null)
+          'departureDateFrom': DateFormat(
+            'yyyy-MM-dd',
+          ).format(departureDateFrom),
+        if (departureDateTo != null)
+          'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
+        if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
+        if (maxAvailableKg != null) 'maxAvailableKg': maxAvailableKg,
+        if (maxPricePerKg != null) 'maxPricePerKg': maxPricePerKg,
+        if (kiloProOnly == true) 'kiloProOnly': true,
+        if (minRating != null) 'minRating': minRating,
+        if (weekendOnly == true) 'weekendOnly': true,
+        if (transportMode != null)
+          'transportMode': transportModeToWire(transportMode),
+        if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
+        if (contentType != null) 'contentType': contentType,
+        if (userLat != null) 'userLat': userLat,
+        if (userLng != null) 'userLng': userLng,
+        if (radiusKm != null) 'radiusKm': radiusKm,
+        // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
+        // seulement présent quand le chip est actif (cf. PR back #112).
+        if (urgent == true) 'urgent': true,
+      };
 
   Future<void> deleteAnnouncement(String id) async {
     await _apiClient.dio.delete('/announcements/$id');

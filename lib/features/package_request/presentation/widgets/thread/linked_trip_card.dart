@@ -7,7 +7,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 /// Bandeau cliquable affiché entre le fil de messages et la CTA bar,
 /// uniquement quand le statut est [AWAITING_PAYMENT] et qu'un trajet est lié.
 class LinkedTripCard extends StatelessWidget {
-  const LinkedTripCard({required this.trip, required this.onTap, super.key});
+  const LinkedTripCard({
+    required this.trip,
+    required this.onTap,
+    super.key,
+  });
 
   final LinkedTripSummary trip;
   final VoidCallback onTap;
@@ -33,7 +37,9 @@ class LinkedTripCard extends StatelessWidget {
             colors: [Color(0xFF1E293B), Color(0xFF0F2544)],
           ),
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.starGold.withValues(alpha: 0.6)),
+          border: Border.all(
+            color: DonyColors.starGold.withValues(alpha: 0.6),
+          ),
         ),
         child: Row(
           children: [
@@ -47,10 +53,10 @@ class LinkedTripCard extends StatelessWidget {
                   Text(
                     '${trip.departureCity} → ${trip.arrivalCity}',
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: DonyColors.neutral0,
-                    ),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: DonyColors.neutral0,
+                        ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -58,10 +64,10 @@ class LinkedTripCard extends StatelessWidget {
                         ? '$date · Kg libre'
                         : '$date · ${trip.availableKg} kg',
                     style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: DonyColors.neutral400,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+                          fontWeight: FontWeight.w500,
+                          color: DonyColors.neutral400,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                   ),
                 ],
               ),

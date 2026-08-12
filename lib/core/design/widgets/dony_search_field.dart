@@ -81,16 +81,12 @@ class _DonySearchFieldState extends State<DonySearchField> {
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
       textInputAction: TextInputAction.search,
-      style: Theme.of(
-        context,
-      ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: cs.onSurface,
+          ),
       decoration: InputDecoration(
         hintText: widget.hint,
-        prefixIcon: Icon(
-          widget.prefixIcon,
-          size: 20,
-          color: cs.onSurfaceVariant,
-        ),
+        prefixIcon: Icon(widget.prefixIcon, size: 20, color: cs.onSurfaceVariant),
         suffixIcon: _hasText
             ? IconButton(
                 icon: const DonyIcon('x', size: 18),

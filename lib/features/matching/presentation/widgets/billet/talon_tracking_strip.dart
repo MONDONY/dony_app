@@ -64,7 +64,11 @@ class TalonTrackingStrip extends StatelessWidget {
           ),
           IconButton(
             key: const Key('talon-share-button'),
-            icon: DonyIcon('share-2', color: cs.primary, size: 20),
+            icon: DonyIcon(
+              'share-2',
+              color: cs.primary,
+              size: 20,
+            ),
             tooltip: 'Partager',
             onPressed: () => Share.share(
               'Suivez mon colis Yadony #$trackingNumber',

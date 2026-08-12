@@ -37,9 +37,8 @@ void main() {
   setUp(() {
     mockBox = MockBox();
     reset(mockBox);
-    when(
-      () => mockBox.get(any(), defaultValue: any(named: 'defaultValue')),
-    ).thenAnswer((inv) => inv.namedArguments[#defaultValue]);
+    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
+        .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
 
     repo = MockPackageRequestRepository();
@@ -48,9 +47,8 @@ void main() {
     when(() => repo.getPackageMatchAlert()).thenAnswer((_) async => true);
     when(() => repo.setPackageMatchAlert(any())).thenAnswer((_) async {});
     when(() => prefsRepo.updatePrefs(any())).thenAnswer((_) async {});
-    when(
-      () => prefsRepo.fetchPrefs(),
-    ).thenAnswer((_) async => const NotificationPrefsDto({}));
+    when(() => prefsRepo.fetchPrefs())
+        .thenAnswer((_) async => const NotificationPrefsDto({}));
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
@@ -150,16 +148,10 @@ void main() {
         ..add(const NotifPrefToggled('push_promo'))
         ..add(const NotifPrefToggled('push_promo')),
       expect: () => [
-        isA<NotificationPrefsState>().having(
-          (s) => s.prefs['push_promo'],
-          'push_promo_on',
-          isTrue,
-        ),
-        isA<NotificationPrefsState>().having(
-          (s) => s.prefs['push_promo'],
-          'push_promo_off',
-          isFalse,
-        ),
+        isA<NotificationPrefsState>()
+            .having((s) => s.prefs['push_promo'], 'push_promo_on', isTrue),
+        isA<NotificationPrefsState>()
+            .having((s) => s.prefs['push_promo'], 'push_promo_off', isFalse),
       ],
     );
 
@@ -172,10 +164,7 @@ void main() {
             .having((s) => s.prefs['push_promo'], 'push_promo', isTrue)
             .having((s) => s.prefs['push_activity_bids'], 'bids', isTrue)
             .having(
-              (s) => s.prefs['push_activity_negotiations'],
-              'negs',
-              isTrue,
-            ),
+                (s) => s.prefs['push_activity_negotiations'], 'negs', isTrue),
       ],
     );
 
@@ -202,14 +191,12 @@ void main() {
     NotificationPrefsBloc build() =>
         NotificationPrefsBloc(mockBox, repo, analytics, prefsRepo);
 
-    test(
-      'état initial : la valeur est inconnue tant qu\'elle n\'est pas lue',
-      () {
-        final bloc = build();
-        expect(bloc.state.packageMatchAlert, isNull);
-        bloc.close();
-      },
-    );
+    test('état initial : la valeur est inconnue tant qu\'elle n\'est pas lue',
+        () {
+      final bloc = build();
+      expect(bloc.state.packageMatchAlert, isNull);
+      bloc.close();
+    });
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'chargement → la valeur serveur arrive dans l\'état',
@@ -219,11 +206,8 @@ void main() {
       },
       act: (bloc) => bloc.add(const NotifPackageMatchAlertLoadRequested()),
       expect: () => [
-        isA<NotificationPrefsState>().having(
-          (s) => s.packageMatchAlert,
-          'packageMatchAlert',
-          isFalse,
-        ),
+        isA<NotificationPrefsState>()
+            .having((s) => s.packageMatchAlert, 'packageMatchAlert', isFalse),
       ],
       verify: (_) => verify(() => repo.getPackageMatchAlert()).called(1),
     );
@@ -243,11 +227,8 @@ void main() {
       build: build,
       act: (bloc) => bloc.add(const NotifPackageMatchAlertToggled(false)),
       expect: () => [
-        isA<NotificationPrefsState>().having(
-          (s) => s.packageMatchAlert,
-          'packageMatchAlert',
-          isFalse,
-        ),
+        isA<NotificationPrefsState>()
+            .having((s) => s.packageMatchAlert, 'packageMatchAlert', isFalse),
       ],
       verify: (_) {
         verify(() => repo.setPackageMatchAlert(false)).called(1);
@@ -263,9 +244,8 @@ void main() {
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'bascule en échec → retour à la valeur précédente',
       build: () {
-        when(
-          () => repo.setPackageMatchAlert(any()),
-        ).thenThrow(Exception('réseau'));
+        when(() => repo.setPackageMatchAlert(any()))
+            .thenThrow(Exception('réseau'));
         return build();
       },
       act: (bloc) async {
@@ -274,21 +254,12 @@ void main() {
         bloc.add(const NotifPackageMatchAlertToggled(false));
       },
       expect: () => [
-        isA<NotificationPrefsState>().having(
-          (s) => s.packageMatchAlert,
-          'chargée',
-          isTrue,
-        ),
-        isA<NotificationPrefsState>().having(
-          (s) => s.packageMatchAlert,
-          'optimiste',
-          isFalse,
-        ),
-        isA<NotificationPrefsState>().having(
-          (s) => s.packageMatchAlert,
-          'restaurée',
-          isTrue,
-        ),
+        isA<NotificationPrefsState>()
+            .having((s) => s.packageMatchAlert, 'chargée', isTrue),
+        isA<NotificationPrefsState>()
+            .having((s) => s.packageMatchAlert, 'optimiste', isFalse),
+        isA<NotificationPrefsState>()
+            .having((s) => s.packageMatchAlert, 'restaurée', isTrue),
       ],
       verify: (_) => verifyNever(
         () => analytics.logEvent(
@@ -323,8 +294,14 @@ void main() {
     );
 
     test('les events portent leurs props', () {
-      expect(const NotifPackageMatchAlertToggled(true).props, contains(true));
-      expect(const NotifPackageMatchAlertLoadRequested().props, isEmpty);
+      expect(
+        const NotifPackageMatchAlertToggled(true).props,
+        contains(true),
+      );
+      expect(
+        const NotifPackageMatchAlertLoadRequested().props,
+        isEmpty,
+      );
     });
 
     test('packageMatchAlert participe à l\'égalité de l\'état', () {
@@ -346,12 +323,8 @@ void main() {
     /// Place le compte dans l'état courant : un premier échange avec le serveur
     /// a déjà eu lieu, donc la synchro lit au lieu de remonter le cache.
     void dejaSynchronise() {
-      when(
-        () => mockBox.get(
-          'notif_synced_once',
-          defaultValue: any(named: 'defaultValue'),
-        ),
-      ).thenReturn(true);
+      when(() => mockBox.get('notif_synced_once',
+          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
     }
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
@@ -368,11 +341,7 @@ void main() {
       },
       act: (bloc) => bloc.add(const NotifPrefsSyncRequested()),
       expect: () => [
-        isA<NotificationPrefsState>().having(
-          (s) => s.isSyncing,
-          'en cours',
-          isTrue,
-        ),
+        isA<NotificationPrefsState>().having((s) => s.isSyncing, 'en cours', isTrue),
         isA<NotificationPrefsState>()
             .having((s) => s.prefs['push_messages'], 'messages', isFalse)
             .having((s) => s.prefs['push_promo'], 'promo', isTrue)
@@ -388,12 +357,8 @@ void main() {
       'lecture en échec → le cache est conservé, pas de retour aux défauts',
       build: () {
         dejaSynchronise();
-        when(
-          () => mockBox.get(
-            'notif_push_messages',
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn(false);
+        when(() => mockBox.get('notif_push_messages',
+            defaultValue: any(named: 'defaultValue'))).thenReturn(false);
         when(() => prefsRepo.fetchPrefs()).thenThrow(Exception('réseau'));
         return build();
       },
@@ -411,19 +376,15 @@ void main() {
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'première synchro → les choix locaux remontent au lieu d\'être écrasés',
       build: () {
-        when(
-          () => mockBox.get(
-            'notif_push_messages',
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn(false);
+        when(() => mockBox.get('notif_push_messages',
+            defaultValue: any(named: 'defaultValue'))).thenReturn(false);
         return build();
       },
       act: (bloc) => bloc.add(const NotifPrefsSyncRequested()),
       verify: (bloc) {
-        final dto =
-            verify(() => prefsRepo.updatePrefs(captureAny())).captured.single
-                as NotificationPrefsDto;
+        final dto = verify(() => prefsRepo.updatePrefs(captureAny()))
+            .captured
+            .single as NotificationPrefsDto;
         expect(dto.toJson()['pushMessages'], isFalse);
         verifyNever(() => prefsRepo.fetchPrefs());
         verify(() => mockBox.put('notif_synced_once', true)).called(1);
@@ -462,9 +423,9 @@ void main() {
       build: build,
       act: (bloc) => bloc.add(const NotifPrefToggled('push_messages')),
       verify: (_) {
-        final dto =
-            verify(() => prefsRepo.updatePrefs(captureAny())).captured.single
-                as NotificationPrefsDto;
+        final dto = verify(() => prefsRepo.updatePrefs(captureAny()))
+            .captured
+            .single as NotificationPrefsDto;
         final json = dto.toJson();
         expect(json.keys, hasLength(6));
         expect(json['pushMessages'], isFalse);
@@ -522,9 +483,8 @@ void main() {
           bloc.add(NotifPrefToggled(key));
         }
       },
-      verify: (bloc) => verify(
-        () => prefsRepo.updatePrefs(any()),
-      ).called(bloc.state.prefs.length),
+      verify: (bloc) => verify(() => prefsRepo.updatePrefs(any()))
+          .called(bloc.state.prefs.length),
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(

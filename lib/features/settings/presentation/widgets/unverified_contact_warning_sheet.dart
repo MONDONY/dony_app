@@ -49,20 +49,17 @@ class _UnverifiedContactWarningSheetState
   static const _consequences = [
     (
       icon: 'user-x',
-      text:
-          "Tous les utilisateurs pourront t'envoyer une demande, "
+      text: "Tous les utilisateurs pourront t'envoyer une demande, "
           "qu'ils aient vérifié leur identité ou non.",
     ),
     (
       icon: 'shield',
-      text:
-          "Yadony ne peut pas confirmer l'identité d'un profil non vérifié, "
+      text: "Yadony ne peut pas confirmer l'identité d'un profil non vérifié, "
           'ni son nom, ni ses papiers.',
     ),
     (
       icon: 'triangle-alert',
-      text:
-          "Yadony n'est pas responsable des difficultés que tu pourrais "
+      text: "Yadony n'est pas responsable des difficultés que tu pourrais "
           'rencontrer avec un profil non vérifié.',
     ),
   ];

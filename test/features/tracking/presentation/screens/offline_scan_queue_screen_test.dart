@@ -33,13 +33,16 @@ Future<void> _tearDownHive() async {
 }
 
 Widget _buildApp() => MaterialApp.router(
-  theme: AppTheme.light(),
-  routerConfig: GoRouter(
-    routes: [
-      GoRoute(path: '/', builder: (_, __) => const OfflineScanQueueScreen()),
-    ],
-  ),
-);
+      theme: AppTheme.light(),
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => const OfflineScanQueueScreen(),
+          ),
+        ],
+      ),
+    );
 
 void main() {
   setUpAll(() async => _setUpHive());
@@ -63,9 +66,7 @@ void main() {
       expect(find.text("FILE D'ATTENTE (0)"), findsOneWidget);
     });
 
-    testWidgets('shows empty state message when queue is empty', (
-      tester,
-    ) async {
+    testWidgets('shows empty state message when queue is empty', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
       expect(find.text('Aucune lecture en attente.'), findsOneWidget);
@@ -79,16 +80,12 @@ void main() {
         {
           'bidId': 'A47C000000',
           'eventType': 'PICKUP',
-          'offlineTimestamp': now
-              .subtract(const Duration(minutes: 2))
-              .toIso8601String(),
+          'offlineTimestamp': now.subtract(const Duration(minutes: 2)).toIso8601String(),
         },
         {
           'bidId': 'B891X00000',
           'eventType': 'IN_TRANSIT',
-          'offlineTimestamp': now
-              .subtract(const Duration(minutes: 4))
-              .toIso8601String(),
+          'offlineTimestamp': now.subtract(const Duration(minutes: 4)).toIso8601String(),
         },
       ]);
     });
@@ -109,7 +106,10 @@ void main() {
     testWidgets('shows correct count in alert banner subtitle', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pump();
-      expect(find.textContaining('2 lectures en attente'), findsOneWidget);
+      expect(
+        find.textContaining('2 lectures en attente'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('shows Hors-ligne chip in appbar', (tester) async {

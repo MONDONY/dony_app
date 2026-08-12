@@ -12,8 +12,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
   final CancellationRepository _repository;
   final AnalyticsService _analytics;
 
-  CancellationBloc(this._repository, this._analytics)
-    : super(CancellationInitial()) {
+  CancellationBloc(this._repository, this._analytics) : super(CancellationInitial()) {
     on<CancellationTripRequested>(_onTripCancellationRequested);
     on<RematchSuggestionsRequested>(_onRematchRequested);
     on<NoShowReportRequested>(_onNoShowReport);
@@ -39,12 +38,10 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
         reason: event.reason,
       );
       emit(CancellationSuccess(result));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.cancellationInitiated,
-          properties: {'reason': event.reason},
-        ),
-      );
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.cancellationInitiated,
+        properties: {'reason': event.reason},
+      ));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }
@@ -56,9 +53,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
   ) async {
     emit(CancellationLoading());
     try {
-      final suggestions = await _repository.getRematchSuggestions(
-        event.cancellationId,
-      );
+      final suggestions = await _repository.getRematchSuggestions(event.cancellationId);
       emit(RematchSuggestionsLoaded(suggestions));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
@@ -114,9 +109,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.reportDeliveryNoShow(event.bidId);
       emit(DeliveryNoShowReported());
-      unawaited(
-        _analytics.logEvent(AnalyticsEvents.deliveryNoShowReportedByTraveler),
-      );
+      unawaited(_analytics.logEvent(AnalyticsEvents.deliveryNoShowReportedByTraveler));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }
@@ -130,9 +123,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.reportTravelerDeliveryNoShow(event.bidId);
       emit(DeliveryNoShowReported());
-      unawaited(
-        _analytics.logEvent(AnalyticsEvents.deliveryNoShowReportedBySender),
-      );
+      unawaited(_analytics.logEvent(AnalyticsEvents.deliveryNoShowReportedBySender));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }
@@ -173,12 +164,10 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.cancelAfterHandover(event.bidId);
       emit(CancelledAfterHandover());
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.cancelAfterHandoverInitiated,
-          properties: {'actor': event.actor},
-        ),
-      );
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.cancelAfterHandoverInitiated,
+        properties: {'actor': event.actor},
+      ));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }

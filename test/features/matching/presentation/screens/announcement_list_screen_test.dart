@@ -84,7 +84,11 @@ Future<void> _pump(
 
   // Stub getTripsSummary to return immediately with zeros
   when(() => mockRepo.getTripsSummary(period: any(named: 'period'))).thenAnswer(
-    (_) async => const TripsSummaryModel(activeTrips: 0, kgSold: 0, revenue: 0),
+    (_) async => const TripsSummaryModel(
+      activeTrips: 0,
+      kgSold: 0,
+      revenue: 0,
+    ),
   );
 
   // Stub analytics calls

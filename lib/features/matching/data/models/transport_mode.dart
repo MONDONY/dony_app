@@ -27,20 +27,20 @@ TransportMode? transportModeFromWire(String? wire) {
 
 extension TransportModeUI on TransportMode {
   String get label => switch (this) {
-    TransportMode.plane => 'Avion',
-    TransportMode.car => 'Voiture',
-    TransportMode.train => 'Train',
-    TransportMode.bus => 'Bus',
-    TransportMode.boat => 'Bateau',
-    TransportMode.other => 'Autre',
-  };
+        TransportMode.plane => 'Avion',
+        TransportMode.car => 'Voiture',
+        TransportMode.train => 'Train',
+        TransportMode.bus => 'Bus',
+        TransportMode.boat => 'Bateau',
+        TransportMode.other => 'Autre',
+      };
 
   IconData get icon => switch (this) {
-    TransportMode.plane => Icons.flight_rounded,
-    TransportMode.car => Icons.directions_car_rounded,
-    TransportMode.train => Icons.train_rounded,
-    TransportMode.bus => Icons.directions_bus_rounded,
-    TransportMode.boat => Icons.directions_boat_rounded,
-    TransportMode.other => Icons.commute_rounded,
-  };
+        TransportMode.plane => Icons.flight_rounded,
+        TransportMode.car => Icons.directions_car_rounded,
+        TransportMode.train => Icons.train_rounded,
+        TransportMode.bus => Icons.directions_bus_rounded,
+        TransportMode.boat => Icons.directions_boat_rounded,
+        TransportMode.other => Icons.commute_rounded,
+      };
 }

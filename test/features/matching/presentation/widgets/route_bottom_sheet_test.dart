@@ -27,51 +27,44 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
 class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 
 UserModel _makeUser({String id = 'uid-1'}) => UserModel(
-  id: id,
-  phoneNumber: '+33600000000',
-  firstName: 'Test',
-  lastName: 'User',
-  roles: ['ROLE_SENDER'],
-  kycStatus: 'VERIFIED',
-  status: 'ACTIVE',
-);
+      id: id,
+      phoneNumber: '+33600000000',
+      firstName: 'Test',
+      lastName: 'User',
+      roles: ['ROLE_SENDER'],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
 
-AnnouncementModel _ann(
-  String dep,
-  String arr, {
-  String id = 'a1',
-  String travelerId = 't1',
-}) => AnnouncementModel(
-  id: id,
-  travelerId: travelerId,
-  departureCity: dep,
-  arrivalCity: arr,
-  departureDate: DateTime(2026, 6, 15),
-  availableKg: 8,
-  totalKg: 8,
-  pricePerKg: 12,
-  status: 'ACTIVE',
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
-  traveler: TravelerProfile(
-    id: travelerId,
-    displayName: 'Sékou Ba',
-    kiloPro: false,
-  ),
-);
+AnnouncementModel _ann(String dep, String arr,
+        {String id = 'a1', String travelerId = 't1'}) =>
+    AnnouncementModel(
+      id: id,
+      travelerId: travelerId,
+      departureCity: dep,
+      arrivalCity: arr,
+      departureDate: DateTime(2026, 6, 15),
+      availableKg: 8,
+      totalKg: 8,
+      pricePerKg: 12,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 5, 1),
+      updatedAt: DateTime(2026, 5, 1),
+      traveler: TravelerProfile(id: travelerId, displayName: 'Sékou Ba', kiloPro: false),
+    );
 
 final _paris = CityConstants.findById('paris')!;
 final _dakar = CityConstants.findById('dakar')!;
 final _abidjan = CityConstants.findById('abidjan')!;
 
-Widget _wrap(Widget child, {AuthState? authState, FavoriteIdsCubit? favCubit}) {
+Widget _wrap(Widget child,
+    {AuthState? authState, FavoriteIdsCubit? favCubit}) {
   final bidBloc = _MockBidBloc();
   final authBloc = _MockAuthBloc();
   when(() => bidBloc.state).thenReturn(BidInitial());
   when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
-  when(
-    () => authBloc.state,
-  ).thenReturn(authState ?? AuthAuthenticated(_makeUser()));
+  when(() => authBloc.state)
+      .thenReturn(authState ?? AuthAuthenticated(_makeUser()));
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
 
   addTearDown(bidBloc.close);
@@ -80,10 +73,7 @@ Widget _wrap(Widget child, {AuthState? authState, FavoriteIdsCubit? favCubit}) {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => Scaffold(body: child),
-      ),
+      GoRoute(path: '/', builder: (_, __) => Scaffold(body: child)),
       GoRoute(path: '/search/:id', builder: (_, __) => const Scaffold()),
     ],
   );
@@ -91,7 +81,8 @@ Widget _wrap(Widget child, {AuthState? authState, FavoriteIdsCubit? favCubit}) {
   final providers = <BlocProvider>[
     BlocProvider<BidBloc>.value(value: bidBloc),
     BlocProvider<AuthBloc>.value(value: authBloc),
-    if (favCubit != null) BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
+    if (favCubit != null)
+      BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
   ];
 
   return MultiBlocProvider(
@@ -111,17 +102,11 @@ void main() {
       _ann('Lyon', 'Dakar', id: 'a4'),
     ];
 
-    testWidgets('ExactRouteFilter shows only Paris→Dakar trips', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(
-          RouteBottomSheet(
-            announcements: announcements,
-            filter: ExactRouteFilter(_paris, _dakar),
-          ),
-        ),
-      );
+    testWidgets('ExactRouteFilter shows only Paris→Dakar trips', (tester) async {
+      await tester.pumpWidget(_wrap(RouteBottomSheet(
+        announcements: announcements,
+        filter: ExactRouteFilter(_paris, _dakar),
+      )));
       await tester.pumpAndSettle();
       expect(find.text('Paris → Dakar'), findsOneWidget);
       expect(find.byKey(const Key('traveler-card-a1')), findsOneWidget);
@@ -129,17 +114,11 @@ void main() {
       expect(find.byKey(const Key('traveler-card-a4')), findsNothing);
     });
 
-    testWidgets('DepartureCityFilter shows trips from Paris only', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(
-          RouteBottomSheet(
-            announcements: announcements,
-            filter: DepartureCityFilter(_paris),
-          ),
-        ),
-      );
+    testWidgets('DepartureCityFilter shows trips from Paris only', (tester) async {
+      await tester.pumpWidget(_wrap(RouteBottomSheet(
+        announcements: announcements,
+        filter: DepartureCityFilter(_paris),
+      )));
       await tester.pumpAndSettle();
       expect(find.text('Départs depuis Paris'), findsOneWidget);
       expect(find.byKey(const Key('traveler-card-a1')), findsOneWidget);
@@ -148,14 +127,10 @@ void main() {
     });
 
     testWidgets('ArrivalCityFilter shows trips to Dakar only', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          RouteBottomSheet(
-            announcements: announcements,
-            filter: ArrivalCityFilter(_dakar),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(RouteBottomSheet(
+        announcements: announcements,
+        filter: ArrivalCityFilter(_dakar),
+      )));
       await tester.pumpAndSettle();
       expect(find.text('Arrivées à Dakar'), findsOneWidget);
       expect(find.byKey(const Key('traveler-card-a1')), findsOneWidget);
@@ -164,34 +139,21 @@ void main() {
     });
 
     testWidgets('ExactRouteFilter Paris→Abidjan shows a3 only', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          RouteBottomSheet(
-            announcements: announcements,
-            filter: ExactRouteFilter(_paris, _abidjan),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_wrap(RouteBottomSheet(
+        announcements: announcements,
+        filter: ExactRouteFilter(_paris, _abidjan),
+      )));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('traveler-card-a3')), findsOneWidget);
     });
 
-    testWidgets('shows empty message when filter matches nothing', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(
-          RouteBottomSheet(
-            announcements: const [],
-            filter: ExactRouteFilter(_paris, _dakar),
-          ),
-        ),
-      );
+    testWidgets('shows empty message when filter matches nothing', (tester) async {
+      await tester.pumpWidget(_wrap(RouteBottomSheet(
+        announcements: const [],
+        filter: ExactRouteFilter(_paris, _dakar),
+      )));
       await tester.pumpAndSettle();
-      expect(
-        find.text('Aucun trajet disponible sur cette route'),
-        findsOneWidget,
-      );
+      expect(find.text('Aucun trajet disponible sur cette route'), findsOneWidget);
     });
   });
 
@@ -199,45 +161,39 @@ void main() {
 
   group('RouteBottomSheet – showFavorite', () {
     testWidgets(
-      'non-owned card shows FavoriteHeartButton when FavoriteIdsCubit is provided',
-      (tester) async {
-        final repo = _MockFavoriteRepository();
-        final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
-        // travelerId='t1', authenticated user='uid-1' → not owner
-        await tester.pumpWidget(
-          _wrap(
-            RouteBottomSheet(
-              announcements: [_ann('Paris', 'Dakar', id: 'a1')],
-              filter: ExactRouteFilter(_paris, _dakar),
-            ),
-            favCubit: cubit,
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.byType(FavoriteHeartButton), findsOneWidget);
-      },
-    );
+        'non-owned card shows FavoriteHeartButton when FavoriteIdsCubit is provided',
+        (tester) async {
+      final repo = _MockFavoriteRepository();
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+      // travelerId='t1', authenticated user='uid-1' → not owner
+      await tester.pumpWidget(_wrap(
+        RouteBottomSheet(
+          announcements: [_ann('Paris', 'Dakar', id: 'a1')],
+          filter: ExactRouteFilter(_paris, _dakar),
+        ),
+        favCubit: cubit,
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(FavoriteHeartButton), findsOneWidget);
+    });
 
     testWidgets(
-      'owned card does NOT show FavoriteHeartButton even when FavoriteIdsCubit is provided',
-      (tester) async {
-        final repo = _MockFavoriteRepository();
-        final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
-        // travelerId='uid-1' matches auth user → isOwn=true → showFavorite:false
-        await tester.pumpWidget(
-          _wrap(
-            RouteBottomSheet(
-              announcements: [
-                _ann('Paris', 'Dakar', id: 'a1', travelerId: 'uid-1'),
-              ],
-              filter: ExactRouteFilter(_paris, _dakar),
-            ),
-            favCubit: cubit,
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.byType(FavoriteHeartButton), findsNothing);
-      },
-    );
+        'owned card does NOT show FavoriteHeartButton even when FavoriteIdsCubit is provided',
+        (tester) async {
+      final repo = _MockFavoriteRepository();
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+      // travelerId='uid-1' matches auth user → isOwn=true → showFavorite:false
+      await tester.pumpWidget(_wrap(
+        RouteBottomSheet(
+          announcements: [
+            _ann('Paris', 'Dakar', id: 'a1', travelerId: 'uid-1'),
+          ],
+          filter: ExactRouteFilter(_paris, _dakar),
+        ),
+        favCubit: cubit,
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+    });
   });
 }

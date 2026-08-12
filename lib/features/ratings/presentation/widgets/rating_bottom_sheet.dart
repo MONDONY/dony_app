@@ -35,9 +35,7 @@ class RatingBottomSheet extends StatefulWidget {
     VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
-      title: isTravelerRating
-          ? 'Évaluer l\'expéditeur'
-          : 'Évaluer $travelerName',
+      title: isTravelerRating ? 'Évaluer l\'expéditeur' : 'Évaluer $travelerName',
       subtitle: 'Votre avis aide la communauté Yadony',
       wrapper: (child) => BlocProvider.value(value: ratingBloc, child: child),
       stickyBottom: ValueListenableBuilder<int>(
@@ -49,9 +47,7 @@ class RatingBottomSheet extends StatefulWidget {
               label: "Envoyer l'évaluation",
               iconAsset: 'star',
               isLoading: isLoading,
-              onPressed: (stars > 0 && !isLoading)
-                  ? () => submit?.call()
-                  : null,
+              onPressed: (stars > 0 && !isLoading) ? () => submit?.call() : null,
             );
           },
         ),
@@ -89,25 +85,20 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
 
   void _submit() {
     if (_stars == 0) return;
-    final comment = _commentCtrl.text.trim().isEmpty
-        ? null
-        : _commentCtrl.text.trim();
+    final comment =
+        _commentCtrl.text.trim().isEmpty ? null : _commentCtrl.text.trim();
     if (widget.isTravelerRating) {
-      context.read<RatingBloc>().add(
-        TravelerRatingSubmitRequested(
-          bidId: widget.bidId,
-          stars: _stars,
-          comment: comment,
-        ),
-      );
+      context.read<RatingBloc>().add(TravelerRatingSubmitRequested(
+        bidId: widget.bidId,
+        stars: _stars,
+        comment: comment,
+      ));
     } else {
-      context.read<RatingBloc>().add(
-        RatingSubmitRequested(
-          bidId: widget.bidId,
-          stars: _stars,
-          comment: comment,
-        ),
-      );
+      context.read<RatingBloc>().add(RatingSubmitRequested(
+        bidId: widget.bidId,
+        stars: _stars,
+        comment: comment,
+      ));
     }
   }
 
@@ -120,11 +111,7 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
       listener: (context, state) {
         if (state is RatingSuccess) {
           Navigator.of(context).pop();
-          DonySnackbar.show(
-            context,
-            message: 'Merci pour votre évaluation !',
-            type: DonySnackbarType.success,
-          );
+          DonySnackbar.show(context, message: 'Merci pour votre évaluation !', type: DonySnackbarType.success);
         } else if (state is RatingError) {
           ErrorPresenter.show(context, state.error);
         }

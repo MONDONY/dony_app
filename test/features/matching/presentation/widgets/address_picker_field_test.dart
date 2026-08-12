@@ -44,26 +44,17 @@ void main() {
   });
 
   testWidgets('initialValue affiche le label au chargement', (tester) async {
-    const initial = AddressData(
-      label: 'Lyon déjà saisie',
-      lat: 45.748,
-      lng: 4.846,
-    );
+    const initial = AddressData(label: 'Lyon déjà saisie', lat: 45.748, lng: 4.846);
     await tester.pumpWidget(buildWidget(initialValue: initial));
     expect(find.text('Lyon déjà saisie'), findsOneWidget);
   });
 
   testWidgets('bouton GPS est visible', (tester) async {
     await tester.pumpWidget(buildWidget());
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'),
-      findsOneWidget,
-    );
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'), findsOneWidget);
   });
 
-  testWidgets('validation échoue si aucune adresse sélectionnée', (
-    tester,
-  ) async {
+  testWidgets('validation échoue si aucune adresse sélectionnée', (tester) async {
     final formKey = GlobalKey<FormState>();
     await tester.pumpWidget(buildWidget(formKey: formKey));
 
@@ -74,15 +65,13 @@ void main() {
   });
 
   testWidgets('widget_overlay_showsMainAndSecondaryText', (tester) async {
-    when(() => mockService.search(any(), any())).thenAnswer(
-      (_) async => const [
-        AddressSuggestion(
-          placeId: 'id1',
-          mainText: '12 rue Victor Hugo',
-          secondaryText: 'Lyon, France',
-        ),
-      ],
-    );
+    when(() => mockService.search(any(), any())).thenAnswer((_) async => const [
+      AddressSuggestion(
+        placeId: 'id1',
+        mainText: '12 rue Victor Hugo',
+        secondaryText: 'Lyon, France',
+      ),
+    ]);
 
     await tester.pumpWidget(buildWidget());
     await tester.enterText(find.byType(TextField), 'Victor');
@@ -95,19 +84,11 @@ void main() {
   });
 
   testWidgets('widget_tapSuggestion_callsResolvePlace', (tester) async {
-    when(() => mockService.search(any(), any())).thenAnswer(
-      (_) async => const [
-        AddressSuggestion(
-          placeId: 'ChIJi',
-          mainText: 'Paris',
-          secondaryText: 'France',
-        ),
-      ],
-    );
-    when(() => mockService.resolvePlace(any(), any())).thenAnswer(
-      (_) async =>
-          const AddressData(label: 'Paris, France', lat: 48.8566, lng: 2.3522),
-    );
+    when(() => mockService.search(any(), any())).thenAnswer((_) async => const [
+      AddressSuggestion(placeId: 'ChIJi', mainText: 'Paris', secondaryText: 'France'),
+    ]);
+    when(() => mockService.resolvePlace(any(), any())).thenAnswer((_) async =>
+        const AddressData(label: 'Paris, France', lat: 48.8566, lng: 2.3522));
 
     await tester.pumpWidget(buildWidget());
     await tester.enterText(find.byType(TextField), 'Paris');
@@ -159,9 +140,7 @@ void main() {
     expect(capturedTokens[0], equals(capturedTokens[1])); // same session
   });
 
-  testWidgets('sessionToken_resetAfterResolve_newTokenOnNextSearch', (
-    tester,
-  ) async {
+  testWidgets('sessionToken_resetAfterResolve_newTokenOnNextSearch', (tester) async {
     final capturedTokens = <String>[];
     var searchCallCount = 0;
 
@@ -170,19 +149,13 @@ void main() {
       searchCallCount++;
       if (searchCallCount == 1) {
         return const [
-          AddressSuggestion(
-            placeId: 'id1',
-            mainText: 'Lyon',
-            secondaryText: 'France',
-          ),
+          AddressSuggestion(placeId: 'id1', mainText: 'Lyon', secondaryText: 'France'),
         ];
       }
       return const [];
     });
-    when(() => mockService.resolvePlace(any(), any())).thenAnswer(
-      (_) async =>
-          const AddressData(label: 'Lyon, France', lat: 45.748, lng: 4.846),
-    );
+    when(() => mockService.resolvePlace(any(), any())).thenAnswer((_) async =>
+        const AddressData(label: 'Lyon, France', lat: 45.748, lng: 4.846));
 
     await tester.pumpWidget(buildWidget());
 
@@ -203,25 +176,14 @@ void main() {
     await tester.pump();
 
     expect(capturedTokens.length, 2);
-    expect(
-      capturedTokens[0],
-      isNot(equals(capturedTokens[1])),
-    ); // different sessions
+    expect(capturedTokens[0], isNot(equals(capturedTokens[1]))); // different sessions
   });
 
   testWidgets('resolvePlace_throws_showsOfflineBanner', (tester) async {
-    when(() => mockService.search(any(), any())).thenAnswer(
-      (_) async => const [
-        AddressSuggestion(
-          placeId: 'id1',
-          mainText: 'Lyon',
-          secondaryText: 'France',
-        ),
-      ],
-    );
-    when(
-      () => mockService.resolvePlace(any(), any()),
-    ).thenThrow(Exception('network'));
+    when(() => mockService.search(any(), any())).thenAnswer((_) async => const [
+      AddressSuggestion(placeId: 'id1', mainText: 'Lyon', secondaryText: 'France'),
+    ]);
+    when(() => mockService.resolvePlace(any(), any())).thenThrow(Exception('network'));
 
     await tester.pumpWidget(buildWidget());
     await tester.enterText(find.byType(TextField), 'Lyon');
@@ -235,19 +197,11 @@ void main() {
   });
 
   testWidgets('focusLoss_restoresCommittedLabel', (tester) async {
-    when(() => mockService.search(any(), any())).thenAnswer(
-      (_) async => const [
-        AddressSuggestion(
-          placeId: 'id1',
-          mainText: 'Paris',
-          secondaryText: 'France',
-        ),
-      ],
-    );
-    when(() => mockService.resolvePlace(any(), any())).thenAnswer(
-      (_) async =>
-          const AddressData(label: 'Paris, France', lat: 48.8566, lng: 2.3522),
-    );
+    when(() => mockService.search(any(), any())).thenAnswer((_) async => const [
+      AddressSuggestion(placeId: 'id1', mainText: 'Paris', secondaryText: 'France'),
+    ]);
+    when(() => mockService.resolvePlace(any(), any())).thenAnswer((_) async =>
+        const AddressData(label: 'Paris, France', lat: 48.8566, lng: 2.3522));
 
     await tester.pumpWidget(buildWidget());
 
@@ -270,35 +224,25 @@ void main() {
     expect(find.text('Paris, France'), findsOneWidget);
   });
 
-  testWidgets('showGpsButton: true par défaut → bouton GPS visible', (
-    tester,
-  ) async {
+  testWidgets('showGpsButton: true par défaut → bouton GPS visible', (tester) async {
     await tester.pumpWidget(buildWidget());
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'),
-      findsOneWidget,
-    );
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'), findsOneWidget);
   });
 
   testWidgets('showGpsButton: false → bouton GPS masqué', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Form(
-            child: AddressPickerField(
-              fieldLabel: 'Lieu de remise',
-              isRequired: true,
-              autocompleteService: mockService,
-              showGpsButton: false,
-            ),
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Form(
+          child: AddressPickerField(
+            fieldLabel: 'Lieu de remise',
+            isRequired: true,
+            autocompleteService: mockService,
+            showGpsButton: false,
           ),
         ),
       ),
-    );
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'),
-      findsNothing,
-    );
+    ));
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'locate-fixed'), findsNothing);
     expect(find.text('Utiliser ma position actuelle'), findsNothing);
   });
 }

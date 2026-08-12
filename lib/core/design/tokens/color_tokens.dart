@@ -4,7 +4,7 @@ abstract final class DonyColors {
   // ═══════════════════════════════════════════════════════════════
   // BLEU YADONY — Primaire (Confiance)
   // ═══════════════════════════════════════════════════════════════
-  static const blue50 = Color(0xFFEDF2FF);
+  static const blue50  = Color(0xFFEDF2FF);
   static const blue100 = Color(0xFFD6E1FF);
   static const blue200 = Color(0xFFA8BEFF);
   static const blue300 = Color(0xFF6F92FF);
@@ -18,7 +18,7 @@ abstract final class DonyColors {
   // ═══════════════════════════════════════════════════════════════
   // TERRACOTTA YADONY — Accent (Chaleur africaine)
   // ═══════════════════════════════════════════════════════════════
-  static const terra50 = Color(0xFFFCF0E9);
+  static const terra50  = Color(0xFFFCF0E9);
   static const terra100 = Color(0xFFF8DBC8);
   static const terra200 = Color(0xFFF2B898);
   static const terra300 = Color(0xFFEA9468);
@@ -32,10 +32,10 @@ abstract final class DonyColors {
   // ═══════════════════════════════════════════════════════════════
   // NEUTRAL — Gris chauds (légère teinte sable)
   // ═══════════════════════════════════════════════════════════════
-  static const neutral0 = Color(0xFFFFFFFF); // Blanc pur
-  static const neutral50 = Color(0xFFFAFAF8); // BG APP ★
+  static const neutral0   = Color(0xFFFFFFFF);  // Blanc pur
+  static const neutral50  = Color(0xFFFAFAF8);  // BG APP ★
   static const neutral100 = Color(0xFFF2F1ED);
-  static const neutral200 = Color(0xFFE8E5DF); // Bordure default ★
+  static const neutral200 = Color(0xFFE8E5DF);  // Bordure default ★
   static const neutral300 = Color(0xFFD2CDC2);
   static const neutral400 = Color(0xFFA8A294);
   static const neutral500 = Color(0xFF797367);
@@ -47,8 +47,8 @@ abstract final class DonyColors {
   // ═══════════════════════════════════════════════════════════════
   // SAND — Surface communautaire chaude
   // ═══════════════════════════════════════════════════════════════
-  static const sand50 = Color(0xFFFBF8F2);
-  static const sand100 = Color(0xFFF7F3ED); // SURFACE WARM ★
+  static const sand50  = Color(0xFFFBF8F2);
+  static const sand100 = Color(0xFFF7F3ED);  // SURFACE WARM ★
   static const sand200 = Color(0xFFEDE6D8);
   static const sand300 = Color(0xFFDFD3BA);
   static const sand400 = Color(0xFFC9B894);
@@ -57,7 +57,7 @@ abstract final class DonyColors {
   // ═══════════════════════════════════════════════════════════════
   // INK — Texte principal
   // ═══════════════════════════════════════════════════════════════
-  static const ink50 = Color(0xFFF4F6F9);
+  static const ink50  = Color(0xFFF4F6F9);
   static const ink100 = Color(0xFFE2E7EF);
   static const ink200 = Color(0xFFC0C9D8);
   static const ink300 = Color(0xFF8595AD);
@@ -71,13 +71,13 @@ abstract final class DonyColors {
   // ═══════════════════════════════════════════════════════════════
   // SÉMANTIQUE — États
   // ═══════════════════════════════════════════════════════════════
-  static const success50 = Color(0xFFE5F4EE);
+  static const success50  = Color(0xFFE5F4EE);
   // Assombri (était #0E8A5F, 4.36:1 sur blanc et 3.84:1 sur success50, tous
   // deux sous 4.5:1). À #0C7A54 : 5.35:1 et 4.71:1.
   static const success500 = Color(0xFF0C7A54); // Vert validation ★
   static const success700 = Color(0xFF0A6446);
 
-  static const warning50 = Color(0xFFFCF3DF);
+  static const warning50  = Color(0xFFFCF3DF);
   // Assombri franchement (était #E8A23B). L'amber vif ne faisait que 2.17:1
   // sur blanc : il échouait même le seuil 3:1 des éléments non textuels, donc
   // aucun usage ne le sauvait. À #96631A : 5.13:1 sur blanc, 4.64:1 sur
@@ -85,45 +85,43 @@ abstract final class DonyColors {
   static const warning500 = Color(0xFF96631A); // Amber foncé ★
   static const warning700 = Color(0xFFB07725);
 
-  static const danger50 = Color(0xFFFCE8E5);
+  static const danger50  = Color(0xFFFCE8E5);
   // Assombri (était #D9342B, 3.98:1 sur son propre fond pâle).
   // À #C42A22 : 5.67:1 sur blanc, 4.81:1 sur danger50.
   static const danger500 = Color(0xFFC42A22); // Rouge erreur ★
   static const danger700 = Color(0xFFA81F18);
 
-  static const info50 = Color(0xFFE5F0FA);
+  static const info50  = Color(0xFFE5F0FA);
   // Assombri (était #1B7BC2, 3.90:1 sur info50).
   // À #166BA9 : 5.66:1 sur blanc, 4.90:1 sur info50.
   static const info500 = Color(0xFF166BA9); // Bleu info ★
   static const info700 = Color(0xFF115687);
 
-  static const favorite = Color(
-    0xFFE11D48,
-  ); // Cœur favori (rempli). Contour = cs.onSurfaceVariant.
+  static const favorite = Color(0xFFE11D48); // Cœur favori (rempli). Contour = cs.onSurfaceVariant.
 
   // Accent violet / teal (badges spéciaux)
-  static const amberLight = Color(0xFFFEF3C7);
-  static const amberDark = Color(0xFFB45309);
-  static const violet = Color(0xFF7C3AED);
+  static const amberLight  = Color(0xFFFEF3C7);
+  static const amberDark   = Color(0xFFB45309);
+  static const violet      = Color(0xFF7C3AED);
   static const violetLight = Color(0xFFEDE7F6);
-  static const purple = Color(0xFF6A1B9A);
-  static const teal = Color(0xFF00695C);
+  static const purple      = Color(0xFF6A1B9A);
+  static const teal        = Color(0xFF00695C);
 
   // Urgence départ (matching) — < 3j / 3–7j / 7–14j / 14j+
-  static const urgencyRed = Color(0xFFEF4444);
+  static const urgencyRed    = Color(0xFFEF4444);
   static const urgencyOrange = Color(0xFFF97316);
-  static const urgencyAmber = Color(0xFFFBBF24);
-  static const urgencyGreen = Color(0xFF22C55E);
+  static const urgencyAmber  = Color(0xFFFBBF24);
+  static const urgencyGreen  = Color(0xFF22C55E);
 
   // Notation (ratings)
   static const starGold = Color(0xFFF59E0B);
 
   // Parrainage — palette legacy conservée pour l'écran referral
-  static const referralGreen = Color(0xFF1A6B3C);
-  static const referralGreenDark = Color(0xFF134F2D);
-  static const referralGreenMid = Color(0xFF22A55C);
+  static const referralGreen       = Color(0xFF1A6B3C);
+  static const referralGreenDark   = Color(0xFF134F2D);
+  static const referralGreenMid    = Color(0xFF22A55C);
   static const referralGreenAccent = Color(0xFF4CAF7D);
-  static const referralGreen50 = Color(0xFFE8F5EE);
+  static const referralGreen50     = Color(0xFFE8F5EE);
 
   // Pro stats — dégradé dark mode carte statistiques voyageur
   static const proBg1 = Color(0xFF1A2744); // bleu nuit profond
@@ -135,10 +133,10 @@ abstract final class DonyColors {
   static const kycBadgeGold = Color(0xFFF0B829);
 
   // Thread status — couleurs de chips dans thread_hero_card
-  static const threadStatusOpen = Color(0xFF0E1B2E);
-  static const threadStatusAmber = Color(0xFFB5781E);
-  static const threadStatusViolet = Color(0xFF5B21B6);
-  static const threadStatusGreen = Color(0xFF15803D);
+  static const threadStatusOpen    = Color(0xFF0E1B2E);
+  static const threadStatusAmber   = Color(0xFFB5781E);
+  static const threadStatusViolet  = Color(0xFF5B21B6);
+  static const threadStatusGreen   = Color(0xFF15803D);
   static const threadStatusNeutral = Color(0xFF6B7280);
 
   /// Texte des pastilles de statut de négociation, posé sur des fonds pâles
@@ -148,43 +146,43 @@ abstract final class DonyColors {
   /// et n'ont donc aucune exigence de contraste. En texte, `threadStatusAmber`
   /// ne tenait que 3.33:1 et `threadStatusNeutral` 4.39:1, tous deux sous le
   /// seuil de 4.5:1.
-  static const threadPillAmberFg = Color(0xFF8A5A12); // 5.31:1 sur #FEF3C7
+  static const threadPillAmberFg   = Color(0xFF8A5A12); // 5.31:1 sur #FEF3C7
   static const threadPillNeutralFg = Color(0xFF5F6673); // 5.44:1 sur #F3F4F6
 
   // Dégradé hero (shipment_list) — fond bleu-sable/navy selon brightness
-  static const heroGradientDarkA = Color(0xFF080D18);
-  static const heroGradientDarkB = Color(0xFF0B0918);
-  static const heroGradientDarkC = Color(0xFF0E0C09);
+  static const heroGradientDarkA  = Color(0xFF080D18);
+  static const heroGradientDarkB  = Color(0xFF0B0918);
+  static const heroGradientDarkC  = Color(0xFF0E0C09);
   static const heroGradientLightB = Color(0xFFF2F0FF);
 
   // ═══════════════════════════════════════════════════════════════
   // RÔLES SÉMANTIQUES — Raccourcis à préférer dans les widgets
   // ═══════════════════════════════════════════════════════════════
-  static const primary = blue500;
+  static const primary      = blue500;
   static const primaryHover = blue600;
   static const primaryPress = blue700;
-  static const primarySoft = blue50;
+  static const primarySoft  = blue50;
 
   // terra600 et non terra500 : le rôle accent porte du texte et reçoit du
   // texte blanc, deux usages qui exigent 4.5:1. terra500 n'en donnait que
   // 3.46:1, terra600 en donne 4.79:1. terra500 reste disponible comme
   // primitive de palette, pour les dégradés décoratifs.
-  static const accent = terra600;
+  static const accent     = terra600;
   static const accentSoft = terra50;
 
-  static const bgApp = neutral50;
-  static const surface = neutral0;
+  static const bgApp       = neutral50;
+  static const surface     = neutral0;
   static const surfaceWarm = sand100;
   static const surfaceInfo = blue50;
 
   static const textPrimary = ink800;
-  static const textMuted = neutral600;
-  static const textSubtle = neutral500;
+  static const textMuted   = neutral600;
+  static const textSubtle  = neutral500;
   static const textOnBrand = neutral0;
 
   static const borderDefault = neutral200;
-  static const borderStrong = neutral300;
-  static const borderFocus = blue500;
+  static const borderStrong  = neutral300;
+  static const borderFocus   = blue500;
 
   /// Contour des champs de saisie, distinct de [borderDefault].
   ///
@@ -194,7 +192,7 @@ abstract final class DonyColors {
   /// lui-même blanc cassé : le champ n'avait aucune limite perceptible.
   /// Volontairement séparé, pour ne pas alourdir les bordures de cartes ni
   /// les séparateurs, qui eux sont décoratifs.
-  static const borderInput = Color(0xFF948E80); // 3.26:1 sur blanc
+  static const borderInput     = Color(0xFF948E80); // 3.26:1 sur blanc
   static const borderInputDark = Color(0xFF646A74); // 3.17:1 sur surface sombre
 
   // ═══════════════════════════════════════════════════════════════
@@ -205,41 +203,39 @@ abstract final class DonyColors {
 
   // green* → blue* (le vert était une erreur de couleur primaire)
   static const greenDark = blue900;
-  static const green50 = blue50;
-  static const green100 = blue100;
-  static const green200 = blue200;
-  static const green300 = blue300;
-  static const green400 = blue500; // ancien primary → nouveau primary
-  static const green500 = blue600;
-  static const green600 = blue700;
-  static const green700 = blue800;
+  static const green50   = blue50;
+  static const green100  = blue100;
+  static const green200  = blue200;
+  static const green300  = blue300;
+  static const green400  = blue500; // ancien primary → nouveau primary
+  static const green500  = blue600;
+  static const green600  = blue700;
+  static const green700  = blue800;
 
   // grey* → neutral*
-  static const white = neutral0;
-  static const bg = neutral50;
-  static const grey50 = neutral50;
-  static const grey100 = neutral100;
-  static const grey200 = neutral200;
-  static const grey300 = neutral300;
-  static const grey400 = neutral400;
-  static const grey500 = neutral500;
+  static const white       = neutral0;
+  static const bg          = neutral50;
+  static const grey50      = neutral50;
+  static const grey100     = neutral100;
+  static const grey200     = neutral200;
+  static const grey300     = neutral300;
+  static const grey400     = neutral400;
+  static const grey500     = neutral500;
 
   // semantic old names
-  static const success = success500;
+  static const success      = success500;
   static const successLight = success50;
-  static const error = danger500;
-  static const errorLight = danger50;
-  static const warning = warning500;
+  static const error        = danger500;
+  static const errorLight   = danger50;
+  static const warning      = warning500;
   static const warningLight = warning50;
-  static const info = info500;
-  static const infoLight = info50;
+  static const info         = info500;
+  static const infoLight    = info50;
 
   // shadow
-  static const shadow = Color(0x1A0A2540); // ink800 @ 10%
+  static const shadow     = Color(0x1A0A2540); // ink800 @ 10%
   static const scrimLight = Color(0x33000000); // black @ 20% — ombres subtiles
-  static const scrimDark = Color(
-    0x88000000,
-  ); // black @ 53% — overlay image/hero
+  static const scrimDark  = Color(0x88000000); // black @ 53% — overlay image/hero
 
   // ═══════════════════════════════════════════════════════════════
   // DARK MODE — Palette dérivée
@@ -253,16 +249,16 @@ abstract final class DonyColors {
   // Assombri (était #1A2B47) : blueDark500 posé dessus n'atteignait que
   // 4.32:1, sous le seuil 4.5:1 du texte courant. À #152238 la paire monte à
   // 4.85:1.
-  static const blueDark50 = Color(0xFF152238); // PrimarySoft dark
+  static const blueDark50  = Color(0xFF152238); // PrimarySoft dark
 
   // Terra accent recalibré
   static const terraDark500 = Color(0xFFE8865B); // ACCENT DARK ★
-  static const terraDark50 = Color(0xFF2E1F18); // Fond accent dark
+  static const terraDark50  = Color(0xFF2E1F18); // Fond accent dark
   static const terraDark700 = Color(0xFFB95524);
 
   // Neutrals dark (chauds, cohérents avec sand)
-  static const neutralDark0 = Color(0xFF0A0E14); // BG APP DARK ★
-  static const neutralDark50 = Color(0xFF11161E);
+  static const neutralDark0   = Color(0xFF0A0E14); // BG APP DARK ★
+  static const neutralDark50  = Color(0xFF11161E);
   static const neutralDark100 = Color(0xFF161B23); // SURFACE DARK ★
   static const neutralDark200 = Color(0xFF222932);
   static const neutralDark300 = Color(0xFF2D333D); // BORDER DARK ★
@@ -279,13 +275,13 @@ abstract final class DonyColors {
 
   // États sémantiques dark
   static const successDark500 = Color(0xFF2DA677);
-  static const successDark50 = Color(0xFF0F2B1F);
+  static const successDark50  = Color(0xFF0F2B1F);
   static const warningDark500 = Color(0xFFF0B84A);
-  static const warningDark50 = Color(0xFF2B2014);
-  static const dangerDark500 = Color(0xFFEF5048);
-  static const dangerDark50 = Color(0xFF2B1715);
-  static const infoDark500 = Color(0xFF3FA0E5);
-  static const infoDark50 = Color(0xFF0F1F2D);
+  static const warningDark50  = Color(0xFF2B2014);
+  static const dangerDark500  = Color(0xFFEF5048);
+  static const dangerDark50   = Color(0xFF2B1715);
+  static const infoDark500    = Color(0xFF3FA0E5);
+  static const infoDark50     = Color(0xFF0F1F2D);
 
   static const shadowDark = Color(0x66000000); // black @ 40%
 
@@ -293,35 +289,35 @@ abstract final class DonyColors {
   // Ajoutée, jamais substituée aux tokens ci-dessus : le rendu normal ne
   // change pas. Cible 7:1 sur le texte principal, 4.5:1 minimum sur le
   // secondaire, bordures nettement visibles.
-  static const surfaceHc = neutral0; // blanc pur
-  static const bgAppHc = neutral0; // pas de fond casse, contraste max
-  static const textPrimaryHc = Color(0xFF000000); // noir pur sur blanc, 21:1
-  static const textMutedHc = Color(0xFF3A3630); // 9.3:1 sur blanc
+  static const surfaceHc       = neutral0;          // blanc pur
+  static const bgAppHc         = neutral0;          // pas de fond casse, contraste max
+  static const textPrimaryHc   = Color(0xFF000000); // noir pur sur blanc, 21:1
+  static const textMutedHc     = Color(0xFF3A3630); // 9.3:1 sur blanc
   static const borderDefaultHc = Color(0xFF5C5850); // bordure nettement visible
-  static const primaryHc = Color(0xFF00368F); // bleu assombri, 9.1:1 sur blanc
+  static const primaryHc       = Color(0xFF00368F); // bleu assombri, 9.1:1 sur blanc
 
   // Fonds pleins des boutons en haut contraste. `DonyButton` peint un dégradé
   // dont la partie la plus claire descend à 2.6:1 avec un libellé blanc ; en
   // haut contraste il bascule sur ces aplats, dont le ratio est mesuré.
   static const successHc = Color(0xFF0A6446); // blanc dessus : 7.18:1
-  static const dangerHc = Color(0xFFA81F18); // blanc dessus : 7.31:1
-  static const accentHc = Color(0xFF7A3616); // blanc dessus : 8.87:1
+  static const dangerHc  = Color(0xFFA81F18); // blanc dessus : 7.31:1
+  static const accentHc  = Color(0xFF7A3616); // blanc dessus : 8.87:1
 
   static const successHcDark = Color(0xFF7FD4AE); // noir dessus : 11.93:1
-  static const dangerHcDark = Color(0xFFFF9B96); // noir dessus : 10.38:1
-  static const accentHcDark = Color(0xFFF0A882); // noir dessus : 10.63:1
+  static const dangerHcDark  = Color(0xFFFF9B96); // noir dessus : 10.38:1
+  static const accentHcDark  = Color(0xFFF0A882); // noir dessus : 10.63:1
 
   /// Couleur de texte posée sur un aplat de marque en haut contraste sombre.
   /// Les aplats y sont clairs, donc le blanc n'y tient pas : blanc sur
   /// [primaryHcDark] ne fait que 2.04:1, noir y fait 10.30:1.
   static const onBrandHcDark = Color(0xFF000000);
 
-  static const surfaceHcDark = Color(0xFF000000);
-  static const bgAppHcDark = Color(0xFF000000);
-  static const textPrimaryHcDark = neutral0; // blanc pur sur noir, 21:1
-  static const textMutedHcDark = Color(0xFFD6D2CA);
+  static const surfaceHcDark       = Color(0xFF000000);
+  static const bgAppHcDark         = Color(0xFF000000);
+  static const textPrimaryHcDark   = neutral0;      // blanc pur sur noir, 21:1
+  static const textMutedHcDark     = Color(0xFFD6D2CA);
   static const borderDefaultHcDark = Color(0xFF9A958C);
-  static const primaryHcDark = Color(0xFF8FB6FF);
+  static const primaryHcDark       = Color(0xFF8FB6FF);
 }
 
 extension DonyStatusColors on ColorScheme {

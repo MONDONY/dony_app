@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockApiClient extends Mock implements ApiClient {}
-
 class _MockDio extends Mock implements Dio {}
 
 void main() {
@@ -13,34 +12,32 @@ void main() {
     final api = _MockApiClient();
     final dio = _MockDio();
     when(() => api.dio).thenReturn(dio);
-    when(() => dio.get<dynamic>('/disputes/me')).thenAnswer(
-      (_) async => Response(
-        requestOptions: RequestOptions(path: '/disputes/me'),
-        data: [
-          {
-            'id': 'd1',
-            'bidId': null,
-            'type': 'SENDER_NO_SHOW_CONTESTED',
-            'status': 'OPEN',
-            'refundFrozen': true,
-            'createdAt': '2026-07-12T08:00:00',
-            'myRole': 'SENDER',
-            'otherPartyName': null,
-            'departureCity': null,
-            'arrivalCity': null,
-            'departureCountryCode': null,
-            'arrivalCountryCode': null,
-            'tripDate': null,
-            'weightKg': null,
-            'resolutionType': null,
-            'resolvedAt': null,
-            'resolutionNote': null,
-            'guaranteeAmountCents': null,
-            'isBeneficiary': false,
-          },
-        ],
-      ),
-    );
+    when(() => dio.get<dynamic>('/disputes/me')).thenAnswer((_) async => Response(
+          requestOptions: RequestOptions(path: '/disputes/me'),
+          data: [
+            {
+              'id': 'd1',
+              'bidId': null,
+              'type': 'SENDER_NO_SHOW_CONTESTED',
+              'status': 'OPEN',
+              'refundFrozen': true,
+              'createdAt': '2026-07-12T08:00:00',
+              'myRole': 'SENDER',
+              'otherPartyName': null,
+              'departureCity': null,
+              'arrivalCity': null,
+              'departureCountryCode': null,
+              'arrivalCountryCode': null,
+              'tripDate': null,
+              'weightKg': null,
+              'resolutionType': null,
+              'resolvedAt': null,
+              'resolutionNote': null,
+              'guaranteeAmountCents': null,
+              'isBeneficiary': false,
+            }
+          ],
+        ));
 
     final result = await DisputeRemoteDatasource(api).getMyDisputes();
     expect(result, hasLength(1));

@@ -63,9 +63,7 @@ void main() {
 
     test('BID_ACCEPTED with non-UUID bidId returns null', () {
       expect(
-        routeForNotification(
-          _notif('BID_ACCEPTED', data: {'bidId': '../../evil'}),
-        ),
+        routeForNotification(_notif('BID_ACCEPTED', data: {'bidId': '../../evil'})),
         isNull,
       );
     });
@@ -80,57 +78,40 @@ void main() {
     test('BID_REJECTED with valid cancellationId routes to rematch screen', () {
       expect(
         routeForNotification(
-          _notif(
-            'BID_REJECTED',
-            data: {'cancellationId': annId, 'bidId': bidId},
-          ),
+          _notif('BID_REJECTED', data: {'cancellationId': annId, 'bidId': bidId}),
         ),
         '/cancellations/$annId/rematch',
       );
     });
 
-    test(
-      'BID_REJECTED with non-UUID cancellationId falls back to bid detail',
-      () {
-        expect(
-          routeForNotification(
-            _notif(
-              'BID_REJECTED',
-              data: {'cancellationId': '../../evil', 'bidId': bidId},
-            ),
-          ),
-          '/bids/$bidId',
-        );
-      },
-    );
+    test('BID_REJECTED with non-UUID cancellationId falls back to bid detail', () {
+      expect(
+        routeForNotification(
+          _notif('BID_REJECTED', data: {'cancellationId': '../../evil', 'bidId': bidId}),
+        ),
+        '/bids/$bidId',
+      );
+    });
 
-    test(
-      'BID_REJECTED with valid cancellationId and no bidId routes to rematch screen',
-      () {
-        expect(
-          routeForNotification(
-            _notif('BID_REJECTED', data: {'cancellationId': annId}),
-          ),
-          '/cancellations/$annId/rematch',
-        );
-      },
-    );
+    test('BID_REJECTED with valid cancellationId and no bidId routes to rematch screen', () {
+      expect(
+        routeForNotification(_notif('BID_REJECTED', data: {'cancellationId': annId})),
+        '/cancellations/$annId/rematch',
+      );
+    });
 
     test('unknown type returns null', () {
       expect(routeForNotification(_notif('WHATEVER')), isNull);
     });
 
-    test(
-      'TRIP_CANCELLED with valid cancellationId routes to rematch screen',
-      () {
-        expect(
-          routeForNotification(
-            _notif('TRIP_CANCELLED', data: {'cancellationId': annId}),
-          ),
-          '/cancellations/$annId/rematch',
-        );
-      },
-    );
+    test('TRIP_CANCELLED with valid cancellationId routes to rematch screen', () {
+      expect(
+        routeForNotification(
+          _notif('TRIP_CANCELLED', data: {'cancellationId': annId}),
+        ),
+        '/cancellations/$annId/rematch',
+      );
+    });
 
     test('TRIP_CANCELLED without any id falls back to shipments history', () {
       expect(
@@ -139,17 +120,14 @@ void main() {
       );
     });
 
-    test(
-      'TRIP_CANCELLED with non-UUID cancellationId falls back to shipments history',
-      () {
-        expect(
-          routeForNotification(
-            _notif('TRIP_CANCELLED', data: {'cancellationId': 'not-a-uuid'}),
-          ),
-          '/profile/shipments/history',
-        );
-      },
-    );
+    test('TRIP_CANCELLED with non-UUID cancellationId falls back to shipments history', () {
+      expect(
+        routeForNotification(
+          _notif('TRIP_CANCELLED', data: {'cancellationId': 'not-a-uuid'}),
+        ),
+        '/profile/shipments/history',
+      );
+    });
 
     test('TRIP_CANCELLED with bidId only routes to bid detail', () {
       expect(

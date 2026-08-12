@@ -14,12 +14,11 @@ class DeviceModel {
   });
 
   factory DeviceModel.fromJson(Map<String, dynamic> json) => DeviceModel(
-    deviceId: json['deviceId'] as String? ?? '',
-    deviceName: json['deviceName'] as String? ?? 'Appareil inconnu',
-    platform: json['platform'] as String? ?? 'android',
-    lastSeenAt:
-        DateTime.tryParse(json['lastSeenAt'] as String? ?? '') ??
-        DateTime.now(),
-    isCurrent: json['isCurrent'] as bool? ?? false,
-  );
+        deviceId: json['deviceId'] as String? ?? '',
+        deviceName: json['deviceName'] as String? ?? 'Appareil inconnu',
+        platform: json['platform'] as String? ?? 'android',
+        lastSeenAt: DateTime.tryParse(json['lastSeenAt'] as String? ?? '') ??
+            DateTime.now(),
+        isCurrent: json['isCurrent'] as bool? ?? false,
+      );
 }

@@ -91,6 +91,10 @@ Future<bool> confirmImportantAction(
   if (!AccessibilityScope.of(context).confirmImportantActions) {
     return true;
   }
-  final ok = await DonyDialog.show(context, title: title, message: message);
+  final ok = await DonyDialog.show(
+    context,
+    title: title,
+    message: message,
+  );
   return ok ?? false;
 }

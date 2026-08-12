@@ -29,7 +29,8 @@ class MockTravelerSubscribeBloc
     extends MockBloc<TravelerSubscribeEvent, TravelerSubscribeState>
     implements TravelerSubscribeBloc {}
 
-class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 class FakeProfilePublicEvent extends Fake implements ProfilePublicEvent {}
 
@@ -100,12 +101,12 @@ final _ratingSummary = RatingSummary(
 // ─── Helper: minimal UserModel ────────────────────────────────────────────────
 
 UserModel _fakeUser(String id) => UserModel(
-  id: id,
-  phoneNumber: '+33600000001',
-  roles: const ['ROLE_SENDER'],
-  kycStatus: 'APPROVED',
-  status: 'ACTIVE',
-);
+      id: id,
+      phoneNumber: '+33600000001',
+      roles: const ['ROLE_SENDER'],
+      kycStatus: 'APPROVED',
+      status: 'ACTIVE',
+    );
 
 // ─── Widget builders ──────────────────────────────────────────────────────────
 
@@ -130,9 +131,8 @@ Widget _wrap(
   } else {
     subBloc = MockTravelerSubscribeBloc();
     when(() => subBloc.state).thenReturn(const TravelerSubscribeState());
-    when(
-      () => subBloc.stream,
-    ).thenAnswer((_) => Stream.value(const TravelerSubscribeState()));
+    when(() => subBloc.stream)
+        .thenAnswer((_) => Stream.value(const TravelerSubscribeState()));
   }
 
   final MockAuthBloc aBloc;
@@ -140,12 +140,10 @@ Widget _wrap(
     aBloc = authBloc;
   } else {
     aBloc = MockAuthBloc();
-    when(
-      () => aBloc.state,
-    ).thenReturn(AuthAuthenticated(_fakeUser(authUserId)));
-    when(
-      () => aBloc.stream,
-    ).thenAnswer((_) => Stream.value(AuthAuthenticated(_fakeUser(authUserId))));
+    when(() => aBloc.state)
+        .thenReturn(AuthAuthenticated(_fakeUser(authUserId)));
+    when(() => aBloc.stream).thenAnswer(
+        (_) => Stream.value(AuthAuthenticated(_fakeUser(authUserId))));
   }
 
   return MultiBlocProvider(
@@ -172,7 +170,9 @@ Widget _wrap(
             path: '/settings/report-incident',
             builder: (_, state) {
               final extra = state.extra as Map<String, dynamic>?;
-              return Scaffold(body: Text('Reported: ${extra?['targetId']}'));
+              return Scaffold(
+                body: Text('Reported: ${extra?['targetId']}'),
+              );
             },
           ),
         ],
@@ -190,10 +190,7 @@ Widget _wrapLoaded({
   String authUserId = _currentUserId,
 }) {
   final bloc = MockProfilePublicBloc();
-  final loadedState = ProfilePublicLoaded(
-    profile: profile,
-    recentRatings: _ratingSummary,
-  );
+  final loadedState = ProfilePublicLoaded(profile: profile, recentRatings: _ratingSummary);
   when(() => bloc.state).thenReturn(loadedState);
   when(() => bloc.stream).thenAnswer((_) => Stream.value(loadedState));
   return _wrap(
@@ -235,9 +232,9 @@ void main() {
 
   // ── 2. Title — contextual ─────────────────────────────────────────────────
 
-  testWidgets('title is "Ce que les autres voient" when viewing own profile', (
-    tester,
-  ) async {
+  testWidgets(
+      'title is "Ce que les autres voient" when viewing own profile',
+      (tester) async {
     // screenUserId == authUserId → own profile
     when(() => bloc.state).thenReturn(const ProfilePublicLoading());
 
@@ -253,9 +250,9 @@ void main() {
     expect(find.text('Ce que les autres voient'), findsOneWidget);
   });
 
-  testWidgets('title is displayName when viewing another user (loaded)', (
-    tester,
-  ) async {
+  testWidgets(
+      'title is displayName when viewing another user (loaded)',
+      (tester) async {
     // Profile with displayName 'abou D.' viewed by a different user
     const otherProfile = ProfilePublicModel(
       userId: _userId,
@@ -295,9 +292,9 @@ void main() {
     expect(find.text('abou D.'), findsWidgets); // in app bar
   });
 
-  testWidgets('title is "Profil" when viewing another user while loading', (
-    tester,
-  ) async {
+  testWidgets(
+      'title is "Profil" when viewing another user while loading',
+      (tester) async {
     when(() => bloc.state).thenReturn(const ProfilePublicLoading());
 
     await tester.pumpWidget(
@@ -334,8 +331,7 @@ void main() {
     final containers = tester.widgetList<Container>(find.byType(Container));
     final hasBlueHeroGradient = containers.any((c) {
       final decoration = c.decoration;
-      if (decoration is! BoxDecoration ||
-          decoration.gradient is! LinearGradient) {
+      if (decoration is! BoxDecoration || decoration.gradient is! LinearGradient) {
         return false;
       }
       final colors = (decoration.gradient! as LinearGradient).colors;
@@ -386,9 +382,8 @@ void main() {
   // ── 5. Error + retry ──────────────────────────────────────────────────────
 
   testWidgets('shows retry button on error', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
+    when(() => bloc.state)
+        .thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -397,9 +392,8 @@ void main() {
   });
 
   testWidgets('retry button dispatches ProfilePublicRequested', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
+    when(() => bloc.state)
+        .thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -410,9 +404,8 @@ void main() {
 
   // ── 6. À propos + langues ─────────────────────────────────────────────────
 
-  testWidgets('profil public affiche À propos + langues si présents', (
-    tester,
-  ) async {
+  testWidgets('profil public affiche À propos + langues si présents',
+      (tester) async {
     await tester.pumpWidget(
       _wrapLoaded(
         profile: profileWith(
@@ -429,10 +422,11 @@ void main() {
     expect(find.text('LANGUES', skipOffstage: false), findsOneWidget);
   });
 
-  testWidgets('profil public masque À propos/langues si absents', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_wrapLoaded(profile: profileWith()));
+  testWidgets('profil public masque À propos/langues si absents',
+      (tester) async {
+    await tester.pumpWidget(
+      _wrapLoaded(profile: profileWith()),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('À PROPOS', skipOffstage: false), findsNothing);
@@ -440,12 +434,13 @@ void main() {
     expect(find.text('TRANSPORT', skipOffstage: false), findsNothing);
   });
 
-  testWidgets('profil public affiche le bon label de transport', (
-    tester,
-  ) async {
+  testWidgets('profil public affiche le bon label de transport', (tester) async {
     await tester.pumpWidget(
       _wrapLoaded(
-        profile: profileWith(languages: [], transportMode: 'VOITURE'),
+        profile: profileWith(
+          languages: [],
+          transportMode: 'VOITURE',
+        ),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
@@ -457,9 +452,8 @@ void main() {
 
   // ── 7. Stats row: 2 cols, no "Répond en" / "Membre depuis" stat ──────────
 
-  testWidgets('stats row shows Note and Livraisons only (2 columns)', (
-    tester,
-  ) async {
+  testWidgets('stats row shows Note and Livraisons only (2 columns)',
+      (tester) async {
     await tester.pumpWidget(_wrapLoaded(profile: _profile));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -478,18 +472,15 @@ void main() {
     expect(find.text('Moussa Koné', skipOffstage: false), findsOneWidget);
   });
 
-  testWidgets('review card shows corridor chip when both cities present', (
-    tester,
-  ) async {
+  testWidgets('review card shows corridor chip when both cities present',
+      (tester) async {
     await tester.pumpWidget(_wrapLoaded(profile: _profile));
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Paris → Dakar', skipOffstage: false), findsOneWidget);
   });
 
-  testWidgets('review card shows fallback author name when null', (
-    tester,
-  ) async {
+  testWidgets('review card shows fallback author name when null', (tester) async {
     final summaryNoAuthor = RatingSummary(
       averageRating: 4.0,
       ratingCount: 1,
@@ -515,9 +506,8 @@ void main() {
     expect(find.text('Utilisateur', skipOffstage: false), findsOneWidget);
   });
 
-  testWidgets('review card hides corridor chip when cities absent', (
-    tester,
-  ) async {
+  testWidgets('review card hides corridor chip when cities absent',
+      (tester) async {
     final summaryNoCorridor = RatingSummary(
       averageRating: 5.0,
       ratingCount: 1,
@@ -536,46 +526,45 @@ void main() {
     );
     final b = MockProfilePublicBloc();
     when(() => b.state).thenReturn(
-      ProfilePublicLoaded(profile: _profile, recentRatings: summaryNoCorridor),
+      ProfilePublicLoaded(
+          profile: _profile, recentRatings: summaryNoCorridor),
     );
     await tester.pumpWidget(_wrap(b));
     await tester.pump(const Duration(milliseconds: 600));
 
     // Corridor text "→" should not appear
-    expect(find.textContaining('→', skipOffstage: false), findsNothing);
+    expect(
+        find.textContaining('→', skipOffstage: false), findsNothing);
   });
 
   // ── 9. Subscribe action — compact, in-hero ────────────────────────────────
 
   testWidgets(
-    'subscribe button appears when showSubscribe=true and userId != currentUser',
-    (tester) async {
-      final subBloc = MockTravelerSubscribeBloc();
-      const subState = TravelerSubscribeState(
-        status: TravelerSubscribeStatus.ready,
-        subscribed: false,
-      );
-      when(() => subBloc.state).thenReturn(subState);
-      when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+      'subscribe button appears when showSubscribe=true and userId != currentUser',
+      (tester) async {
+    final subBloc = MockTravelerSubscribeBloc();
+    const subState = TravelerSubscribeState(
+      status: TravelerSubscribeStatus.ready,
+      subscribed: false,
+    );
+    when(() => subBloc.state).thenReturn(subState);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
 
-      await tester.pumpWidget(
-        _wrapLoaded(
-          profile: _profile,
-          subscribeBloc: subBloc,
-          showSubscribe: true,
-          screenUserId: _userId,
-          authUserId: _currentUserId,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        subscribeBloc: subBloc,
+        showSubscribe: true,
+        screenUserId: _userId,
+        authUserId: _currentUserId,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.text("S'abonner"), findsOneWidget);
-    },
-  );
+    expect(find.text("S'abonner"), findsOneWidget);
+  });
 
-  testWidgets('subscribe button absent when showSubscribe=false', (
-    tester,
-  ) async {
+  testWidgets('subscribe button absent when showSubscribe=false', (tester) async {
     await tester.pumpWidget(
       _wrapLoaded(
         profile: _profile,
@@ -590,9 +579,7 @@ void main() {
     expect(find.text('Abonné ✓'), findsNothing);
   });
 
-  testWidgets('subscribe button absent when viewing own profile', (
-    tester,
-  ) async {
+  testWidgets('subscribe button absent when viewing own profile', (tester) async {
     await tester.pumpWidget(
       _wrapLoaded(
         profile: _profile,
@@ -607,9 +594,8 @@ void main() {
     expect(find.text('Abonné ✓'), findsNothing);
   });
 
-  testWidgets('shows "Abonné ✓" + bell icon when already subscribed', (
-    tester,
-  ) async {
+  testWidgets('shows "Abonné ✓" + bell icon when already subscribed',
+      (tester) async {
     final subBloc = MockTravelerSubscribeBloc();
     const subState = TravelerSubscribeState(
       status: TravelerSubscribeStatus.ready,
@@ -659,9 +645,8 @@ void main() {
     verify(() => subBloc.add(const SubscribePressed())).called(1);
   });
 
-  testWidgets('tapping bell dispatches TogglePushPressed(!pushEnabled)', (
-    tester,
-  ) async {
+  testWidgets('tapping bell dispatches TogglePushPressed(!pushEnabled)',
+      (tester) async {
     final subBloc = MockTravelerSubscribeBloc();
     const subState = TravelerSubscribeState(
       status: TravelerSubscribeStatus.ready,
@@ -692,40 +677,38 @@ void main() {
     expect(toggle.single.enabled, isFalse);
   });
 
-  testWidgets(
-    'tapping "Abonné ✓" opens confirm dialog, confirming unsubscribes',
-    (tester) async {
-      final subBloc = MockTravelerSubscribeBloc();
-      const subState = TravelerSubscribeState(
-        status: TravelerSubscribeStatus.ready,
-        subscribed: true,
-        pushEnabled: false,
-      );
-      when(() => subBloc.state).thenReturn(subState);
-      when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
+  testWidgets('tapping "Abonné ✓" opens confirm dialog, confirming unsubscribes',
+      (tester) async {
+    final subBloc = MockTravelerSubscribeBloc();
+    const subState = TravelerSubscribeState(
+      status: TravelerSubscribeStatus.ready,
+      subscribed: true,
+      pushEnabled: false,
+    );
+    when(() => subBloc.state).thenReturn(subState);
+    when(() => subBloc.stream).thenAnswer((_) => Stream.value(subState));
 
-      await tester.pumpWidget(
-        _wrapLoaded(
-          profile: _profile,
-          subscribeBloc: subBloc,
-          showSubscribe: true,
-          screenUserId: _userId,
-          authUserId: _currentUserId,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        subscribeBloc: subBloc,
+        showSubscribe: true,
+        screenUserId: _userId,
+        authUserId: _currentUserId,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
 
-      await tester.tap(find.text('Abonné ✓'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Abonné ✓'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Se désabonner ?'), findsOneWidget);
+    expect(find.text('Se désabonner ?'), findsOneWidget);
 
-      await tester.tap(find.text('Se désabonner'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Se désabonner'));
+    await tester.pumpAndSettle();
 
-      verify(() => subBloc.add(const UnsubscribePressed())).called(1);
-    },
-  );
+    verify(() => subBloc.add(const UnsubscribePressed())).called(1);
+  });
 
   // ── 10. Report action (⋮) ─────────────────────────────────────────────────
 
@@ -743,86 +726,83 @@ void main() {
   });
 
   testWidgets(
-    'report icon present, tap navigates to report-incident with user target',
-    (tester) async {
-      await tester.pumpWidget(
-        _wrapLoaded(
-          profile: _profile,
-          screenUserId: _userId,
-          authUserId: _currentUserId, // different user → not own profile
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
+      'report icon present, tap navigates to report-incident with user target',
+      (tester) async {
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        screenUserId: _userId,
+        authUserId: _currentUserId, // different user → not own profile
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.byTooltip('Signaler'), findsOneWidget);
+    expect(find.byTooltip('Signaler'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Signaler'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Signaler'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Reported: user-1'), findsOneWidget);
-    },
-  );
+    expect(find.text('Reported: user-1'), findsOneWidget);
+  });
 
   // ── 11. Coverage — avatar network image + contact/availability section ──────
 
   testWidgets(
-    'shows hero avatar, review avatar and disponibilité section when data present',
-    (tester) async {
-      const profileWithAvatarAndContact = ProfilePublicModel(
-        userId: _userId,
-        displayName: 'Fatou Diallo',
-        avatarUrl: 'https://example.com/avatar.jpg',
-        kycVerified: true,
-        isProAccount: false,
-        isKiloPro: false,
-        completedBidsCount: 12,
-        averageRating: 4.8,
-        ratingCount: 7,
-        memberSince: 'mars 2025',
-        badges: [],
-        contactMode: 'both',
-        responseDelayHours: 5,
-      );
-      final summaryWithAuthorAvatar = RatingSummary(
-        averageRating: 4.8,
-        ratingCount: 7,
-        distribution: const {1: 0, 2: 0, 3: 0, 4: 2, 5: 5},
-        ratings: [
-          RatingItem(
-            stars: 5,
-            comment: 'Parfait !',
-            createdAt: DateTime.utc(2026, 3),
-            excluded: false,
-            authorName: 'Moussa Koné',
-            authorAvatarUrl: 'https://example.com/author.jpg',
-            departureCity: 'Paris',
-            arrivalCity: 'Dakar',
-          ),
-        ],
-        page: 0,
-        totalPages: 1,
-      );
-      final b = MockProfilePublicBloc();
-      final loadedState = ProfilePublicLoaded(
-        profile: profileWithAvatarAndContact,
-        recentRatings: summaryWithAuthorAvatar,
-      );
-      when(() => b.state).thenReturn(loadedState);
-      when(() => b.stream).thenAnswer((_) => Stream.value(loadedState));
+      'shows hero avatar, review avatar and disponibilité section when data present',
+      (tester) async {
+    const profileWithAvatarAndContact = ProfilePublicModel(
+      userId: _userId,
+      displayName: 'Fatou Diallo',
+      avatarUrl: 'https://example.com/avatar.jpg',
+      kycVerified: true,
+      isProAccount: false,
+      isKiloPro: false,
+      completedBidsCount: 12,
+      averageRating: 4.8,
+      ratingCount: 7,
+      memberSince: 'mars 2025',
+      badges: [],
+      contactMode: 'both',
+      responseDelayHours: 5,
+    );
+    final summaryWithAuthorAvatar = RatingSummary(
+      averageRating: 4.8,
+      ratingCount: 7,
+      distribution: const {1: 0, 2: 0, 3: 0, 4: 2, 5: 5},
+      ratings: [
+        RatingItem(
+          stars: 5,
+          comment: 'Parfait !',
+          createdAt: DateTime.utc(2026, 3),
+          excluded: false,
+          authorName: 'Moussa Koné',
+          authorAvatarUrl: 'https://example.com/author.jpg',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+        ),
+      ],
+      page: 0,
+      totalPages: 1,
+    );
+    final b = MockProfilePublicBloc();
+    final loadedState = ProfilePublicLoaded(
+      profile: profileWithAvatarAndContact,
+      recentRatings: summaryWithAuthorAvatar,
+    );
+    when(() => b.state).thenReturn(loadedState);
+    when(() => b.stream).thenAnswer((_) => Stream.value(loadedState));
 
-      await tester.pumpWidget(_wrap(b));
-      await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpWidget(_wrap(b));
+    await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.byType(Image), findsWidgets);
-      expect(find.text('DISPONIBILITÉ', skipOffstage: false), findsOneWidget);
-      expect(find.text('Appel & message', skipOffstage: false), findsOneWidget);
-      expect(find.text('Répond en < 5h', skipOffstage: false), findsOneWidget);
-    },
-  );
+    expect(find.byType(Image), findsWidgets);
+    expect(find.text('DISPONIBILITÉ', skipOffstage: false), findsOneWidget);
+    expect(find.text('Appel & message', skipOffstage: false), findsOneWidget);
+    expect(find.text('Répond en < 5h', skipOffstage: false), findsOneWidget);
+  });
 
-  testWidgets('disponibilité section shows call-only and message-only labels', (
-    tester,
-  ) async {
+  testWidgets('disponibilité section shows call-only and message-only labels',
+      (tester) async {
     for (final entry in {
       'call': 'Joignable par appel',
       'message': 'Joignable par message',

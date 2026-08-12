@@ -8,33 +8,24 @@ import 'package:mocktail/mocktail.dart';
 class _MockService extends Mock implements AddressAutocompleteService {}
 
 void main() {
-  testWidgets('onResolved contract: AddressData fields are accessible', (
-    tester,
-  ) async {
+  testWidgets('onResolved contract: AddressData fields are accessible', (tester) async {
     final service = _MockService();
     final controller = TextEditingController();
     AddressData? resolved;
 
-    when(
-      () => service.search(
-        any(),
-        any(),
-        lat: any(named: 'lat'),
-        lng: any(named: 'lng'),
-      ),
-    ).thenAnswer((_) async => []);
+    when(() => service.search(any(), any(),
+            lat: any(named: 'lat'), lng: any(named: 'lng')))
+        .thenAnswer((_) async => []);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: AddressSuggestField(
-            controller: controller,
-            service: service,
-            onResolved: (a) => resolved = a,
-          ),
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: AddressSuggestField(
+          controller: controller,
+          service: service,
+          onResolved: (a) => resolved = a,
         ),
       ),
-    );
+    ));
 
     // Vérifie que AddressData accepte les champs enrichis (contrat de type)
     const enriched = AddressData(

@@ -248,7 +248,7 @@ void main() {
     testWidgets(
       'expéditeur → affiche le prix qu\'il paie (gross = net+commission)',
       (tester) async {
-        // Viewer 'sender-1' ≠ travelerId 'tr-1' → gross exact. net 45 → 45×1.12 = "50,40 €".
+        // Viewer 'sender-1' ≠ travelerId 'tr-1' → gross exact. net 45 → 45×1.12 = "50,40 €".
         when(() => bloc.state).thenReturn(
           NegotiationListState(
             status: NegotiationListStatus.loaded,
@@ -257,13 +257,13 @@ void main() {
         );
         await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
-        expect(find.text('50,40 €'), findsOneWidget);
-        expect(find.text('45,00 €'), findsNothing);
+        expect(find.text('50,40 €'), findsOneWidget);
+        expect(find.text('45,00 €'), findsNothing);
       },
     );
 
     testWidgets('voyageur → affiche son net', (tester) async {
-      // Viewer = le voyageur 'tr-1' → net exact → "45,00 €".
+      // Viewer = le voyageur 'tr-1' → net exact → "45,00 €".
       when(() => authBloc.state).thenReturn(AuthAuthenticated(_user('tr-1')));
       when(() => bloc.state).thenReturn(
         NegotiationListState(
@@ -273,7 +273,7 @@ void main() {
       );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
-      expect(find.text('45,00 €'), findsOneWidget);
+      expect(find.text('45,00 €'), findsOneWidget);
     });
 
     testWidgets('affiche "R.2/5"', (tester) async {

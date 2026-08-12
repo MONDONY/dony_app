@@ -95,7 +95,9 @@ class OfflineQueueBottomSheet extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -130,7 +132,11 @@ class _EventIconBox extends StatelessWidget {
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
-      child: DonyIcon('qr-code', size: 18, color: cs.onPrimaryContainer),
+      child: DonyIcon(
+        'qr-code',
+        size: 18,
+        color: cs.onPrimaryContainer,
+      ),
     );
   }
 }

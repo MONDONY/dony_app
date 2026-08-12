@@ -5,22 +5,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 BidModel _bid(String status) => BidModel.fromJson({
-  'id': 'b1',
-  'announcementId': 'a1',
-  'senderId': 's1',
-  'status': status,
-  'weightKg': 4.5,
-  'recipientName': 'Mariama D.',
-  'departureCity': 'Paris',
-  'arrivalCity': 'Dakar',
-  'travelerName': 'Ibrahima Diallo',
-  'departureDate': DateTime.now()
-      .add(const Duration(days: 3))
-      .toIso8601String(),
-  // Required fields discovered in BidModel constructor:
-  'createdAt': DateTime.now().toIso8601String(),
-  'updatedAt': DateTime.now().toIso8601String(),
-});
+      'id': 'b1',
+      'announcementId': 'a1',
+      'senderId': 's1',
+      'status': status,
+      'weightKg': 4.5,
+      'recipientName': 'Mariama D.',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'travelerName': 'Ibrahima Diallo',
+      'departureDate':
+          DateTime.now().add(const Duration(days: 3)).toIso8601String(),
+      // Required fields discovered in BidModel constructor:
+      'createdAt': DateTime.now().toIso8601String(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -29,12 +28,12 @@ void main() {
     await initializeDateFormatting('fr');
   });
 
-  testWidgets('affiche la date du trajet (Départ dans 3 jours)', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _wrap(ShipmentCard(bid: _bid('ACCEPTED'), onTap: () {}, index: 0)),
-    );
+  testWidgets('affiche la date du trajet (Départ dans 3 jours)', (tester) async {
+    await tester.pumpWidget(_wrap(ShipmentCard(
+      bid: _bid('ACCEPTED'),
+      onTap: () {},
+      index: 0,
+    )));
     await tester.pump(const Duration(milliseconds: 600));
 
     // La date du départ, absente auparavant, doit désormais figurer sur la carte.
@@ -42,9 +41,11 @@ void main() {
   });
 
   testWidgets('IN_TRANSIT : stepper étape 3, badge transit', (tester) async {
-    await tester.pumpWidget(
-      _wrap(ShipmentCard(bid: _bid('IN_TRANSIT'), onTap: () {}, index: 0)),
-    );
+    await tester.pumpWidget(_wrap(ShipmentCard(
+      bid: _bid('IN_TRANSIT'),
+      onTap: () {},
+      index: 0,
+    )));
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.textContaining('EN TRANSIT'), findsOneWidget);
@@ -55,9 +56,11 @@ void main() {
   });
 
   testWidgets('PENDING : pas de stepper (pré-acceptation)', (tester) async {
-    await tester.pumpWidget(
-      _wrap(ShipmentCard(bid: _bid('PENDING'), onTap: () {}, index: 0)),
-    );
+    await tester.pumpWidget(_wrap(ShipmentCard(
+      bid: _bid('PENDING'),
+      onTap: () {},
+      index: 0,
+    )));
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byType(ShipmentStepper), findsNothing);

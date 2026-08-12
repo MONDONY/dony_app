@@ -141,13 +141,15 @@ class CaInlineAddRow extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+              style:
+                  tt.bodyMedium?.copyWith(color: cs.onSurface),
               onSubmitted: (_) => onAdd(),
               textInputAction: TextInputAction.done,
               scrollPadding: const EdgeInsets.only(bottom: 120),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                hintStyle:
+                    tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: DonySpacing.md,
@@ -170,11 +172,8 @@ class CaInlineAddRow extends StatelessWidget {
                     color: accentColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const DonyIcon(
-                    'plus',
-                    size: 18,
-                    color: DonyColors.white,
-                  ),
+                  child: const DonyIcon('plus',
+                      size: 18, color: DonyColors.white),
                 ),
               ),
             ),
@@ -231,9 +230,9 @@ class CaRemovableChip extends StatelessWidget {
             excludeSemantics: true,
             label: 'Retirer \$label',
             child: GestureDetector(
-              onTap: onRemove,
-              child: DonyIcon('x', size: 14, color: accentColor),
-            ),
+            onTap: onRemove,
+            child: DonyIcon('x', size: 14, color: accentColor),
+          )
           ),
         ],
       ),
@@ -271,18 +270,22 @@ class CaTimeRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            DonyIcon('clock', size: 14, color: color.withValues(alpha: 0.7)),
+            DonyIcon('clock',
+                size: 14, color: color.withValues(alpha: 0.7)),
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Text(
                 time == null
                     ? isDeparture
-                          ? 'Heure de départ (optionnel)'
-                          : 'Heure d\'arrivée (optionnel)'
+                        ? 'Heure de départ (optionnel)'
+                        : 'Heure d\'arrivée (optionnel)'
                     : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
                 style: tt.bodyMedium?.copyWith(
-                  fontWeight: time != null ? FontWeight.w600 : FontWeight.w400,
-                  color: time != null ? cs.onSurface : cs.onSurfaceVariant,
+                  fontWeight:
+                      time != null ? FontWeight.w600 : FontWeight.w400,
+                  color: time != null
+                      ? cs.onSurface
+                      : cs.onSurfaceVariant,
                 ),
               ),
             ),
@@ -293,12 +296,14 @@ class CaTimeRow extends StatelessWidget {
                 excludeSemantics: true,
                 label: "Effacer l'heure",
                 child: GestureDetector(
-                  onTap: onClear,
-                  child: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
+                onTap: onClear,
+                  child: DonyIcon('x',
+                      size: 16, color: cs.onSurfaceVariant),
                 ),
               )
             else
-              DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+              DonyIcon('chevron-right',
+                  size: 18, color: cs.onSurfaceVariant),
           ],
         ),
       ),
@@ -312,11 +317,8 @@ class CaStepperHeader extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
 
-  const CaStepperHeader({
-    super.key,
-    required this.currentStep,
-    required this.totalSteps,
-  });
+  const CaStepperHeader(
+      {super.key, required this.currentStep, required this.totalSteps});
 
   static const _labels = ['Trajet', 'Lieux & capacité', 'Prix & conditions'];
 
@@ -355,11 +357,10 @@ class CaStepperHeader extends StatelessWidget {
                   color: i == currentStep
                       ? cs.primary
                       : i < currentStep
-                      ? cs.primary.withValues(alpha: 0.7)
-                      : cs.onSurfaceVariant,
-                  fontWeight: i == currentStep
-                      ? FontWeight.w800
-                      : FontWeight.w500,
+                          ? cs.primary.withValues(alpha: 0.7)
+                          : cs.onSurfaceVariant,
+                  fontWeight:
+                      i == currentStep ? FontWeight.w800 : FontWeight.w500,
                 ),
               ),
             );
@@ -393,12 +394,7 @@ class CaStepNode extends StatelessWidget {
             ? Border.all(color: cs.primary.withValues(alpha: 0.3), width: 4)
             : null,
         boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: cs.primary.withValues(alpha: 0.25),
-                  blurRadius: 8,
-                ),
-              ]
+            ? [BoxShadow(color: cs.primary.withValues(alpha: 0.25), blurRadius: 8)]
             : null,
       ),
       child: Center(
@@ -437,7 +433,8 @@ class CaDateRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            DonyIcon('calendar', size: 14, color: cs.onSurfaceVariant),
+            DonyIcon('calendar',
+                size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Text(
@@ -445,12 +442,16 @@ class CaDateRow extends StatelessWidget {
                     ? 'Date de départ'
                     : DateFormat('EEE d MMM yyyy', 'fr').format(date!),
                 style: tt.bodyMedium?.copyWith(
-                  fontWeight: date != null ? FontWeight.w600 : FontWeight.w400,
-                  color: date != null ? cs.onSurface : cs.onSurfaceVariant,
+                  fontWeight:
+                      date != null ? FontWeight.w600 : FontWeight.w400,
+                  color: date != null
+                      ? cs.onSurface
+                      : cs.onSurfaceVariant,
                 ),
               ),
             ),
-            DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+            DonyIcon('chevron-right',
+                size: 18, color: cs.onSurfaceVariant),
           ],
         ),
       ),

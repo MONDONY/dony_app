@@ -11,35 +11,24 @@ import 'package:flutter/material.dart';
 /// Raccourcis métier : [DonyEmoji.planeTakeoff], [DonyEmoji.planeLanding],
 /// [DonyEmoji.parcel].
 class DonyEmoji extends StatelessWidget {
-  const DonyEmoji(this.emoji, {super.key, this.size = 16, this.semanticLabel});
+  const DonyEmoji(
+    this.emoji, {
+    super.key,
+    this.size = 16,
+    this.semanticLabel,
+  });
 
   /// Décollage 🛫 — départ d'un trajet.
-  const DonyEmoji.planeTakeoff({
-    Key? key,
-    double size = 16,
-    String? semanticLabel,
-  }) : this(
-         '🛫',
-         key: key,
-         size: size,
-         semanticLabel: semanticLabel ?? 'Décollage',
-       );
+  const DonyEmoji.planeTakeoff({Key? key, double size = 16, String? semanticLabel})
+      : this('🛫', key: key, size: size, semanticLabel: semanticLabel ?? 'Décollage');
 
   /// Atterrissage 🛬 — arrivée d'un trajet.
-  const DonyEmoji.planeLanding({
-    Key? key,
-    double size = 16,
-    String? semanticLabel,
-  }) : this(
-         '🛬',
-         key: key,
-         size: size,
-         semanticLabel: semanticLabel ?? 'Atterrissage',
-       );
+  const DonyEmoji.planeLanding({Key? key, double size = 16, String? semanticLabel})
+      : this('🛬', key: key, size: size, semanticLabel: semanticLabel ?? 'Atterrissage');
 
   /// Colis 📦.
   const DonyEmoji.parcel({Key? key, double size = 16, String? semanticLabel})
-    : this('📦', key: key, size: size, semanticLabel: semanticLabel ?? 'Colis');
+      : this('📦', key: key, size: size, semanticLabel: semanticLabel ?? 'Colis');
 
   final String emoji;
 

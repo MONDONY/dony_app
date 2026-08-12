@@ -22,12 +22,12 @@ class DonyInfoRow extends StatelessWidget {
   }) : _isDivider = false;
 
   const DonyInfoRow.divider({super.key})
-    : label = '',
-      value = '',
-      icon = null,
-      valueStyle = DonyInfoRowValueStyle.normal,
-      valueWidget = null,
-      _isDivider = true;
+      : label = '',
+        value = '',
+        icon = null,
+        valueStyle = DonyInfoRowValueStyle.normal,
+        valueWidget = null,
+        _isDivider = true;
 
   final String label;
   final String value;
@@ -49,21 +49,21 @@ class DonyInfoRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final valueColor = switch (valueStyle) {
-      DonyInfoRowValueStyle.normal => cs.onSurface,
-      DonyInfoRowValueStyle.accent => cs.secondary,
+      DonyInfoRowValueStyle.normal  => cs.onSurface,
+      DonyInfoRowValueStyle.accent  => cs.secondary,
       DonyInfoRowValueStyle.success => cs.success,
       DonyInfoRowValueStyle.warning => cs.warning,
-      DonyInfoRowValueStyle.danger => cs.error,
-      DonyInfoRowValueStyle.muted => cs.onSurfaceVariant,
+      DonyInfoRowValueStyle.danger  => cs.error,
+      DonyInfoRowValueStyle.muted   => cs.onSurfaceVariant,
     };
 
     final valueFw = switch (valueStyle) {
-      DonyInfoRowValueStyle.normal => FontWeight.w500,
-      DonyInfoRowValueStyle.accent => FontWeight.w700,
+      DonyInfoRowValueStyle.normal  => FontWeight.w500,
+      DonyInfoRowValueStyle.accent  => FontWeight.w700,
       DonyInfoRowValueStyle.success => FontWeight.w600,
       DonyInfoRowValueStyle.warning => FontWeight.w600,
-      DonyInfoRowValueStyle.danger => FontWeight.w600,
-      DonyInfoRowValueStyle.muted => FontWeight.w400,
+      DonyInfoRowValueStyle.danger  => FontWeight.w600,
+      DonyInfoRowValueStyle.muted   => FontWeight.w400,
     };
 
     return Padding(
@@ -82,8 +82,7 @@ class DonyInfoRow extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.sm),
           Flexible(
-            child:
-                valueWidget ??
+            child: valueWidget ??
                 Text(
                   value,
                   maxLines: 1,

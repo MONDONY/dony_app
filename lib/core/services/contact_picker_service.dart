@@ -35,7 +35,7 @@ String normalizePhone(String raw) {
 /// cas "rien de récupéré".
 class ContactPickerService {
   ContactPickerService({FlutterNativeContactPicker? picker})
-    : _picker = picker ?? FlutterNativeContactPicker();
+      : _picker = picker ?? FlutterNativeContactPicker();
 
   final FlutterNativeContactPicker _picker;
 

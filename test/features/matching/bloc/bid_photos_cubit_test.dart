@@ -18,9 +18,7 @@ void main() {
   });
 
   test('add uploads and marks ready with key', () async {
-    when(
-      () => repo.uploadBidPhoto(any()),
-    ).thenAnswer((_) async => 'bids/s/1.jpg');
+    when(() => repo.uploadBidPhoto(any())).thenAnswer((_) async => 'bids/s/1.jpg');
     await cubit.add('/tmp/1.jpg');
     expect(cubit.state.single.status, BidPhotoUploadStatus.ready);
     expect(cubit.readyKeys, ['bids/s/1.jpg']);
@@ -34,9 +32,7 @@ void main() {
   });
 
   test('caps at 4 photos', () async {
-    when(
-      () => repo.uploadBidPhoto(any()),
-    ).thenAnswer((_) async => 'bids/s/x.jpg');
+    when(() => repo.uploadBidPhoto(any())).thenAnswer((_) async => 'bids/s/x.jpg');
     for (var i = 0; i < 5; i++) {
       await cubit.add('/tmp/$i.jpg');
     }
@@ -45,9 +41,7 @@ void main() {
   });
 
   test('remove drops the entry', () async {
-    when(
-      () => repo.uploadBidPhoto(any()),
-    ).thenAnswer((_) async => 'bids/s/1.jpg');
+    when(() => repo.uploadBidPhoto(any())).thenAnswer((_) async => 'bids/s/1.jpg');
     await cubit.add('/tmp/1.jpg');
     cubit.remove(cubit.state.single.localId);
     expect(cubit.state, isEmpty);

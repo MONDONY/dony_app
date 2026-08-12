@@ -10,10 +10,7 @@ class MockStripeAccountRepository extends Mock
 
 const _complete = ConnectAccountStatus(status: 'ONBOARDING_COMPLETE');
 const _disabled = ConnectAccountStatus(status: 'DISABLED');
-const _rejected = ConnectAccountStatus(
-  status: 'REJECTED',
-  reason: 'Docs invalides',
-);
+const _rejected = ConnectAccountStatus(status: 'REJECTED', reason: 'Docs invalides');
 
 void main() {
   late MockStripeAccountRepository mockRepo;
@@ -35,9 +32,8 @@ void main() {
       'emits [Loading, Ready(complete)] on success',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _complete);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _complete);
       },
       act: (b) => b.add(const StripeAccountStatusLoaded()),
       expect: () => [
@@ -54,9 +50,8 @@ void main() {
       'emits [Loading, Ready(disabled)] when account is DISABLED',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _disabled);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _disabled);
       },
       act: (b) => b.add(const StripeAccountStatusLoaded()),
       expect: () => [
@@ -73,9 +68,8 @@ void main() {
       'emits [Loading, Ready(rejected)] when account is REJECTED',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _rejected);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _rejected);
       },
       act: (b) => b.add(const StripeAccountStatusLoaded()),
       expect: () => [
@@ -92,9 +86,8 @@ void main() {
       'emits [Loading, LoadError] when repo throws',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenThrow(Exception('Network error'));
+        when(() => mockRepo.getAccountStatus())
+            .thenThrow(Exception('Network error'));
       },
       act: (b) => b.add(const StripeAccountStatusLoaded()),
       expect: () => [
@@ -110,9 +103,8 @@ void main() {
       build: buildBloc,
       seed: () => const StripeAccountReady(_disabled),
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _complete);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _complete);
       },
       act: (b) => b.add(const StripeAccountStatusRefreshed()),
       expect: () => [
@@ -129,7 +121,8 @@ void main() {
       build: buildBloc,
       seed: () => const StripeAccountReady(_complete),
       setUp: () {
-        when(() => mockRepo.getAccountStatus()).thenThrow(Exception('Timeout'));
+        when(() => mockRepo.getAccountStatus())
+            .thenThrow(Exception('Timeout'));
       },
       act: (b) => b.add(const StripeAccountStatusRefreshed()),
       expect: () => [isA<StripeAccountLoadError>()],

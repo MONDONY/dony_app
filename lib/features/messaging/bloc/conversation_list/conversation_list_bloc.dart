@@ -24,7 +24,7 @@ class ConversationListBloc
   String _currentSearchQuery = '';
 
   ConversationListBloc(this._repository, this._firestoreRepo)
-    : super(const ConversationListInitial()) {
+      : super(const ConversationListInitial()) {
     on<ConversationsLoadRequested>(_onLoad);
     on<ConversationsUnreadUpdated>(_onUnreadUpdated);
     on<ConversationDeleteRequested>(_onDelete);
@@ -63,14 +63,12 @@ class ConversationListBloc
       }
       _loaded = conversations;
       _archived = archived;
-      emit(
-        ConversationListLoaded(
-          conversations,
-          archivedConversations: archived,
-          filter: _currentFilter,
-          searchQuery: _currentSearchQuery,
-        ),
-      );
+      emit(ConversationListLoaded(
+        conversations,
+        archivedConversations: archived,
+        filter: _currentFilter,
+        searchQuery: _currentSearchQuery,
+      ));
     } catch (e) {
       emit(ConversationListError(unwrapDioError(e)));
       return;
@@ -84,12 +82,10 @@ class ConversationListBloc
             .map((c) => c.firestoreConversationId)
             .where((id) => id.isNotEmpty)
             .toSet();
-        unawaited(
-          _firestoreRepo.cleanupOrphanUnreadCounters(
-            currentUserUid: uid,
-            validFirestoreIds: validIds,
-          ),
-        );
+        unawaited(_firestoreRepo.cleanupOrphanUnreadCounters(
+          currentUserUid: uid,
+          validFirestoreIds: validIds,
+        ));
 
         _unreadSub = _firestoreRepo
             .perConversationUnreadStream(uid)
@@ -118,14 +114,12 @@ class ConversationListBloc
       return c.copyWith(hasUnread: count > 0, unreadCount: count);
     }).toList();
     _loaded = updated;
-    emit(
-      ConversationListLoaded(
-        updated,
-        archivedConversations: _archived,
-        filter: _currentFilter,
-        searchQuery: _currentSearchQuery,
-      ),
-    );
+    emit(ConversationListLoaded(
+      updated,
+      archivedConversations: _archived,
+      filter: _currentFilter,
+      searchQuery: _currentSearchQuery,
+    ));
   }
 
   Future<void> _onDelete(
@@ -173,12 +167,8 @@ class ConversationListBloc
     _currentSearchQuery = event.searchQuery;
     // Fields already updated — _onLoad will emit with the new values when ready.
     if (state is ConversationListLoaded) {
-      emit(
-        (state as ConversationListLoaded).copyWithFilter(
-          filter: event.filter,
-          searchQuery: event.searchQuery,
-        ),
-      );
+      emit((state as ConversationListLoaded)
+          .copyWithFilter(filter: event.filter, searchQuery: event.searchQuery));
     }
   }
 
@@ -189,9 +179,7 @@ class ConversationListBloc
     if (_loaded == null) {
       return;
     }
-    final conv = _loaded!
-        .where((c) => c.id == event.conversationId)
-        .firstOrNull;
+    final conv = _loaded!.where((c) => c.id == event.conversationId).firstOrNull;
     if (conv != null) {
       _archived = [..._archived, conv];
     }
@@ -207,22 +195,18 @@ class ConversationListBloc
     ConversationUnarchiveRequested event,
     Emitter<ConversationListState> emit,
   ) async {
-    final conv = _archived
-        .where((c) => c.id == event.conversationId)
-        .firstOrNull;
+    final conv = _archived.where((c) => c.id == event.conversationId).firstOrNull;
     if (conv == null) {
       return;
     }
     _archived = _archived.where((c) => c.id != event.conversationId).toList();
     _loaded = [conv, ...(_loaded ?? [])];
-    emit(
-      ConversationListLoaded(
-        _loaded!,
-        archivedConversations: _archived,
-        filter: _currentFilter,
-        searchQuery: _currentSearchQuery,
-      ),
-    );
+    emit(ConversationListLoaded(
+      _loaded!,
+      archivedConversations: _archived,
+      filter: _currentFilter,
+      searchQuery: _currentSearchQuery,
+    ));
     try {
       await _repository.unarchiveConversation(event.conversationId);
     } catch (_) {
@@ -235,14 +219,12 @@ class ConversationListBloc
       return;
     }
     _loaded = _loaded!.where((c) => c.id != id).toList();
-    emit(
-      ConversationListLoaded(
-        _loaded!,
-        archivedConversations: _archived,
-        filter: _currentFilter,
-        searchQuery: _currentSearchQuery,
-      ),
-    );
+    emit(ConversationListLoaded(
+      _loaded!,
+      archivedConversations: _archived,
+      filter: _currentFilter,
+      searchQuery: _currentSearchQuery,
+    ));
   }
 
   @override

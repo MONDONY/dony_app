@@ -57,9 +57,7 @@ void main() {
     box = MockBox();
     hive = MockHiveService();
     when(() => hive.userPrefs).thenReturn(box);
-    when(
-      () => box.put(any<dynamic>(), any<dynamic>()),
-    ).thenAnswer((_) async {});
+    when(() => box.put(any<dynamic>(), any<dynamic>())).thenAnswer((_) async {});
     store = RecentCityStore(hive);
   });
 
@@ -68,9 +66,8 @@ void main() {
     final key = role == CityFieldRole.departure
         ? HiveService.kRecentDepartureCities
         : HiveService.kRecentArrivalCities;
-    when(
-      () => box.get(key, defaultValue: any<dynamic>(named: 'defaultValue')),
-    ).thenReturn(cities.map((c) => c.toJson()).toList());
+    when(() => box.get(key, defaultValue: any<dynamic>(named: 'defaultValue')))
+        .thenReturn(cities.map((c) => c.toJson()).toList());
   }
 
   /// Villes passées au dernier `put` pour [role].
@@ -86,10 +83,8 @@ void main() {
   group('read', () {
     test('rend une liste vide quand rien n\'a été mémorisé', () {
       when(
-        () => box.get(
-          any<dynamic>(),
-          defaultValue: any<dynamic>(named: 'defaultValue'),
-        ),
+        () => box.get(any<dynamic>(),
+            defaultValue: any<dynamic>(named: 'defaultValue')),
       ).thenReturn(const <dynamic>[]);
 
       expect(store.read(CityFieldRole.departure), isEmpty);
@@ -115,10 +110,8 @@ void main() {
 
     test('ignore les entrées qui ne sont pas des Map', () {
       when(
-        () => box.get(
-          any<dynamic>(),
-          defaultValue: any<dynamic>(named: 'defaultValue'),
-        ),
+        () => box.get(any<dynamic>(),
+            defaultValue: any<dynamic>(named: 'defaultValue')),
       ).thenReturn(<dynamic>['corrompu', 42, _paris.toJson()]);
 
       expect(store.read(CityFieldRole.departure).map((c) => c.name), ['Paris']);
@@ -131,10 +124,10 @@ void main() {
 
       await store.add(CityFieldRole.departure, _paris);
 
-      expect(lastWrite(CityFieldRole.departure).map((m) => m['name']), [
-        'Paris',
-        'Lyon',
-      ]);
+      expect(
+        lastWrite(CityFieldRole.departure).map((m) => m['name']),
+        ['Paris', 'Lyon'],
+      );
     });
 
     test('remonte une ville déjà présente sans la dupliquer', () async {
@@ -142,11 +135,10 @@ void main() {
 
       await store.add(CityFieldRole.departure, _paris);
 
-      expect(lastWrite(CityFieldRole.departure).map((m) => m['name']), [
-        'Paris',
-        'Lyon',
-        'Dakar',
-      ]);
+      expect(
+        lastWrite(CityFieldRole.departure).map((m) => m['name']),
+        ['Paris', 'Lyon', 'Dakar'],
+      );
     });
 
     test('deux villes homonymes de pays différents coexistent', () async {
@@ -172,17 +164,14 @@ void main() {
     test('écrit sous la clé du rôle visé', () async {
       seed(CityFieldRole.arrival, const []);
       when(
-        () => box.get(
-          any<dynamic>(),
-          defaultValue: any<dynamic>(named: 'defaultValue'),
-        ),
+        () => box.get(any<dynamic>(),
+            defaultValue: any<dynamic>(named: 'defaultValue')),
       ).thenReturn(const <dynamic>[]);
 
       await store.add(CityFieldRole.arrival, _dakar);
 
-      verify(
-        () => box.put(HiveService.kRecentArrivalCities, any<dynamic>()),
-      ).called(1);
+      verify(() => box.put(HiveService.kRecentArrivalCities, any<dynamic>()))
+          .called(1);
       verifyNever(
         () => box.put(HiveService.kRecentDepartureCities, any<dynamic>()),
       );

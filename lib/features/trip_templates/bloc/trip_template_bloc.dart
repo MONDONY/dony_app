@@ -14,85 +14,50 @@ class TripTemplateBloc extends Bloc<TripTemplateEvent, TripTemplateState> {
   final TripTemplateRepository _repository;
 
   Future<void> _onLoaded(
-    TripTemplateLoaded event,
-    Emitter<TripTemplateState> emit,
-  ) async {
+      TripTemplateLoaded event, Emitter<TripTemplateState> emit) async {
     emit(state.copyWith(status: TripTemplateStatus.loading));
     try {
       final templates = await _repository.getAll();
-      emit(
-        state.copyWith(
-          status: TripTemplateStatus.success,
-          templates: templates,
-        ),
-      );
+      emit(state.copyWith(status: TripTemplateStatus.success, templates: templates));
     } catch (e) {
-      emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(status: TripTemplateStatus.error, error: e.toString()));
     }
   }
 
   Future<void> _onCreated(
-    TripTemplateCreated event,
-    Emitter<TripTemplateState> emit,
-  ) async {
+      TripTemplateCreated event, Emitter<TripTemplateState> emit) async {
     emit(state.copyWith(status: TripTemplateStatus.loading));
     try {
       final created = await _repository.create(event.data);
-      emit(
-        state.copyWith(
+      emit(state.copyWith(
           status: TripTemplateStatus.success,
-          templates: [created, ...state.templates],
-        ),
-      );
+          templates: [created, ...state.templates]));
     } catch (e) {
-      emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(status: TripTemplateStatus.error, error: e.toString()));
     }
   }
 
   Future<void> _onUpdated(
-    TripTemplateUpdated event,
-    Emitter<TripTemplateState> emit,
-  ) async {
+      TripTemplateUpdated event, Emitter<TripTemplateState> emit) async {
     emit(state.copyWith(status: TripTemplateStatus.loading));
     try {
       final updated = await _repository.update(event.id, event.data);
-      final templates = state.templates
-          .map((t) => t.id == event.id ? updated : t)
-          .toList();
-      emit(
-        state.copyWith(
-          status: TripTemplateStatus.success,
-          templates: templates,
-        ),
-      );
+      final templates =
+          state.templates.map((t) => t.id == event.id ? updated : t).toList();
+      emit(state.copyWith(status: TripTemplateStatus.success, templates: templates));
     } catch (e) {
-      emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(status: TripTemplateStatus.error, error: e.toString()));
     }
   }
 
   Future<void> _onDeleted(
-    TripTemplateDeleted event,
-    Emitter<TripTemplateState> emit,
-  ) async {
+      TripTemplateDeleted event, Emitter<TripTemplateState> emit) async {
     try {
       await _repository.delete(event.id);
       final templates = state.templates.where((t) => t.id != event.id).toList();
-      emit(
-        state.copyWith(
-          status: TripTemplateStatus.success,
-          templates: templates,
-        ),
-      );
+      emit(state.copyWith(status: TripTemplateStatus.success, templates: templates));
     } catch (e) {
-      emit(
-        state.copyWith(status: TripTemplateStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(status: TripTemplateStatus.error, error: e.toString()));
     }
   }
 }

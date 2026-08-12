@@ -63,10 +63,7 @@ void main() {
 
         expect(find.text('Payer mon envoi'), findsNothing);
         expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
-        expect(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'banknote'),
-          findsOneWidget,
-        );
+        expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'banknote'), findsOneWidget);
       },
     );
 
@@ -87,19 +84,20 @@ void main() {
       },
     );
 
-    testWidgets('WAVE → traité comme espèces (pas de "Payer mon envoi")', (
-      tester,
-    ) async {
-      final bid = _makeBid(
-        status: 'PENDING',
-        paymentMethod: BidPaymentMethod.wave,
-      );
+    testWidgets(
+      'WAVE → traité comme espèces (pas de "Payer mon envoi")',
+      (tester) async {
+        final bid = _makeBid(
+          status: 'PENDING',
+          paymentMethod: BidPaymentMethod.wave,
+        );
 
-      await tester.pumpWidget(_wrap(bid));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(bid));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Payer mon envoi'), findsNothing);
-      expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
-    });
+        expect(find.text('Payer mon envoi'), findsNothing);
+        expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
+      },
+    );
   });
 }

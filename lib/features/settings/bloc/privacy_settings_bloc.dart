@@ -18,7 +18,7 @@ class PrivacySettingsBloc
   final AnalyticsService? _analytics;
 
   PrivacySettingsBloc(this._repo, this._box, [this._analytics])
-    : super(_initialState(_box)) {
+      : super(_initialState(_box)) {
     on<PrivacySettingsLoadRequested>(_onLoad);
     on<ContactKycOnlyToggled>(_onToggleKycOnly);
     on<HidePhoneNumberToggled>(_onToggleHidePhone);
@@ -49,18 +49,14 @@ class PrivacySettingsBloc
       final settings = await _repo.fetch();
       await _box.put(HiveService.kContactKycOnly, settings.contactKycOnly);
       await _box.put(HiveService.kHidePhoneNumber, settings.hidePhoneNumber);
-      emit(
-        PrivacySettingsLoaded(
-          contactKycOnly: settings.contactKycOnly,
-          hidePhoneNumber: settings.hidePhoneNumber,
-        ),
-      );
+      emit(PrivacySettingsLoaded(
+        contactKycOnly: settings.contactKycOnly,
+        hidePhoneNumber: settings.hidePhoneNumber,
+      ));
     } catch (_) {
       // Si une valeur Hive est déjà affichée, on la conserve sans montrer d'erreur.
       if (state is! PrivacySettingsLoaded) {
-        emit(
-          const PrivacySettingsError('Impossible de charger les préférences'),
-        );
+        emit(const PrivacySettingsError('Impossible de charger les préférences'));
       }
     }
   }
@@ -68,7 +64,8 @@ class PrivacySettingsBloc
   Future<void> _onToggleKycOnly(
     ContactKycOnlyToggled event,
     Emitter<PrivacySettingsState> emit,
-  ) => _push(emit, (current) => current.copyWith(contactKycOnly: event.value));
+  ) =>
+      _push(emit, (current) => current.copyWith(contactKycOnly: event.value));
 
   Future<void> _onToggleHidePhone(
     HidePhoneNumberToggled event,
@@ -81,12 +78,10 @@ class PrivacySettingsBloc
     // Tracké seulement si le serveur a confirmé : un rollback ne doit pas
     // compter comme un choix de l'utilisateur. Aucune PII, juste le booléen.
     if (applied) {
-      unawaited(
-        _analytics?.logEvent(
-          AnalyticsEvents.phoneVisibilityToggled,
-          properties: {'hidden': event.value},
-        ),
-      );
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.phoneVisibilityToggled,
+        properties: {'hidden': event.value},
+      ));
     }
   }
 
@@ -110,12 +105,10 @@ class PrivacySettingsBloc
     emit(updated);
     await _write(updated);
     try {
-      await _repo.update(
-        PrivacySettingsModel(
-          contactKycOnly: updated.contactKycOnly,
-          hidePhoneNumber: updated.hidePhoneNumber,
-        ),
-      );
+      await _repo.update(PrivacySettingsModel(
+        contactKycOnly: updated.contactKycOnly,
+        hidePhoneNumber: updated.hidePhoneNumber,
+      ));
       return true;
     } catch (_) {
       await _write(previous);

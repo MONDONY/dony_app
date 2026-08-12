@@ -17,9 +17,10 @@ class TripRecurrenceState {
     TripRecurrenceStatus? status,
     List<TripRecurrence>? recurrences,
     String? error,
-  }) => TripRecurrenceState(
-    status: status ?? this.status,
-    recurrences: recurrences ?? this.recurrences,
-    error: error,
-  );
+  }) =>
+      TripRecurrenceState(
+        status: status ?? this.status,
+        recurrences: recurrences ?? this.recurrences,
+        error: error,
+      );
 }

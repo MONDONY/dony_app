@@ -76,15 +76,14 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                     padding: EdgeInsets.only(
                       bottom: i < _methods.length - 1 ? DonySpacing.sm : 0,
                     ),
-                    child:
-                        _MethodCard(
-                              def: m,
-                              isSelected: _selected == m.value,
-                              onTap: () => setState(() => _selected = m.value),
-                            )
-                            .animate(delay: (60 * i).ms)
-                            .fadeIn(duration: 250.ms)
-                            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                    child: _MethodCard(
+                      def: m,
+                      isSelected: _selected == m.value,
+                      onTap: () => setState(() => _selected = m.value),
+                    )
+                        .animate(delay: (60 * i).ms)
+                        .fadeIn(duration: 250.ms)
+                        .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   );
                 }),
               ],
@@ -215,9 +214,7 @@ class _MethodCard extends StatelessWidget {
                 width: DonySpacing.icon,
                 height: DonySpacing.icon,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? DonyColors.blue100
-                      : DonyColors.neutral100,
+                  color: isSelected ? DonyColors.blue100 : DonyColors.neutral100,
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
                 child: def.iconAsset != null
@@ -245,7 +242,9 @@ class _MethodCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       def.subtitle,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

@@ -12,8 +12,8 @@ class AnnouncementFormBloc
   final PriceGridRepository? _priceGridRepository;
 
   AnnouncementFormBloc({PriceGridRepository? priceGridRepository})
-    : _priceGridRepository = priceGridRepository,
-      super(const AnnouncementFormState()) {
+      : _priceGridRepository = priceGridRepository,
+        super(const AnnouncementFormState()) {
     on<DepartureCityChanged>(_onDepartureCityChanged);
     on<ArrivalCityChanged>(_onArrivalCityChanged);
     on<DepartureDateChanged>(_onDepartureDateChanged);
@@ -37,24 +37,20 @@ class AnnouncementFormBloc
     DepartureCityChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
-    emit(
-      state.copyWith(
-        departureCity: event.city,
-        departureCountryCode: event.countryCode,
-      ),
-    );
+    emit(state.copyWith(
+      departureCity: event.city,
+      departureCountryCode: event.countryCode,
+    ));
   }
 
   void _onArrivalCityChanged(
     ArrivalCityChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
-    emit(
-      state.copyWith(
-        arrivalCity: event.city,
-        arrivalCountryCode: event.countryCode,
-      ),
-    );
+    emit(state.copyWith(
+      arrivalCity: event.city,
+      arrivalCountryCode: event.countryCode,
+    ));
   }
 
   void _onDepartureDateChanged(
@@ -74,12 +70,10 @@ class AnnouncementFormBloc
     } else if (event.price > _maxReasonablePrice) {
       warning = PriceWarning.tooHigh;
     }
-    emit(
-      state.copyWith(
-        pricePerKg: event.price,
-        priceWarningGetter: () => warning,
-      ),
-    );
+    emit(state.copyWith(
+      pricePerKg: event.price,
+      priceWarningGetter: () => warning,
+    ));
   }
 
   void _onAvailableKgChanged(
@@ -96,31 +90,25 @@ class AnnouncementFormBloc
     switch (event.unit) {
       case CapacityUnit.suitcase23kg:
       case CapacityUnit.suitcase32kg:
-        emit(
-          state.copyWith(
-            capacityUnit: event.unit,
-            availableKgGetter: () => event.unit.maxKg,
-          ),
-        );
+        emit(state.copyWith(
+          capacityUnit: event.unit,
+          availableKgGetter: () => event.unit.maxKg,
+        ));
       case CapacityUnit.kgFree:
         // « Kg libre » : capacité illimitée, vendue au kilo. availableKg n'a pas
         // de sens ici — le backend exige >= 1 (@DecimalMin 1.0) mais ignore la
         // valeur pour KG_FREE. On garde la valeur courante (ou 1 par défaut)
         // pour rester soumettable sans saisie ET ne pas perdre un kg déjà saisi
         // si l'utilisateur revient en mode « exact ». L'UI ne montre pas de champ.
-        emit(
-          state.copyWith(
-            capacityUnit: event.unit,
-            availableKgGetter: () => state.availableKg ?? 1.0,
-          ),
-        );
+        emit(state.copyWith(
+          capacityUnit: event.unit,
+          availableKgGetter: () => state.availableKg ?? 1.0,
+        ));
       case CapacityUnit.custom:
-        emit(
-          state.copyWith(
-            capacityUnit: event.unit,
-            availableKgGetter: () => state.availableKg ?? 1.0,
-          ),
-        );
+        emit(state.copyWith(
+          capacityUnit: event.unit,
+          availableKgGetter: () => state.availableKg ?? 1.0,
+        ));
     }
   }
 
@@ -199,13 +187,11 @@ class AnnouncementFormBloc
     try {
       final items = await _priceGridRepository.getItems();
       final previewItems = items
-          .map(
-            (e) => GridPreviewItem(
-              id: e.id,
-              label: e.label,
-              unitPriceDisplay: e.unitPriceDisplay,
-            ),
-          )
+          .map((e) => GridPreviewItem(
+                id: e.id,
+                label: e.label,
+                unitPriceDisplay: e.unitPriceDisplay,
+              ))
           .toList();
       emit(state.copyWith(gridPreviewItems: previewItems));
     } catch (_) {

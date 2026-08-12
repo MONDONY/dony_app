@@ -11,10 +11,7 @@ const _notCreated = ConnectAccountStatus(status: 'NOT_CREATED');
 const _pending = ConnectAccountStatus(status: 'PENDING_ONBOARDING');
 const _complete = ConnectAccountStatus(status: 'ONBOARDING_COMPLETE');
 const _disabled = ConnectAccountStatus(status: 'DISABLED');
-const _rejected = ConnectAccountStatus(
-  status: 'REJECTED',
-  reason: 'Docs invalides',
-);
+const _rejected = ConnectAccountStatus(status: 'REJECTED', reason: 'Docs invalides');
 
 void main() {
   late MockConnectOnboardingRepository mockRepo;
@@ -38,9 +35,8 @@ void main() {
       'emits [Loading, Complete] when status is ONBOARDING_COMPLETE',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _complete);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _complete);
       },
       act: (b) => b.add(const ConnectOnboardingStatusRequested()),
       expect: () => [
@@ -53,9 +49,8 @@ void main() {
       'emits [Loading, NeedsOnboarding] when status is NOT_CREATED',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _notCreated);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _notCreated);
       },
       act: (b) => b.add(const ConnectOnboardingStatusRequested()),
       expect: () => [
@@ -68,9 +63,8 @@ void main() {
       'emits [Loading, NeedsOnboarding] when status is PENDING_ONBOARDING',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _pending);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _pending);
       },
       act: (b) => b.add(const ConnectOnboardingStatusRequested()),
       expect: () => [
@@ -83,9 +77,8 @@ void main() {
       'emits [Loading, Error] when getAccountStatus throws',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenThrow(Exception('Network error'));
+        when(() => mockRepo.getAccountStatus())
+            .thenThrow(Exception('Network error'));
       },
       act: (b) => b.add(const ConnectOnboardingStatusRequested()),
       expect: () => [
@@ -98,9 +91,8 @@ void main() {
       'emits [Loading, Disabled] when status is DISABLED',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _disabled);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _disabled);
       },
       act: (b) => b.add(const ConnectOnboardingStatusRequested()),
       expect: () => [
@@ -113,9 +105,8 @@ void main() {
       'emits [Loading, Rejected] with reason when status is REJECTED',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _rejected);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _rejected);
       },
       act: (b) => b.add(const ConnectOnboardingStatusRequested()),
       expect: () => [
@@ -136,9 +127,8 @@ void main() {
       'emits [Loading, UrlReady] with url on success',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.createOnboardingLink(),
-        ).thenAnswer((_) async => 'https://connect.stripe.com/setup/abc');
+        when(() => mockRepo.createOnboardingLink())
+            .thenAnswer((_) async => 'https://connect.stripe.com/setup/abc');
       },
       act: (b) => b.add(const ConnectOnboardingLinkRequested()),
       expect: () => [
@@ -155,9 +145,8 @@ void main() {
       'emits [Loading, Error] when createOnboardingLink throws',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.createOnboardingLink(),
-        ).thenThrow(Exception('Stripe error'));
+        when(() => mockRepo.createOnboardingLink())
+            .thenThrow(Exception('Stripe error'));
       },
       act: (b) => b.add(const ConnectOnboardingLinkRequested()),
       expect: () => [
@@ -174,9 +163,8 @@ void main() {
       'emits [Complete] when account is complete during polling',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _complete);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _complete);
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
       expect: () => [isA<ConnectOnboardingComplete>()],
@@ -186,9 +174,8 @@ void main() {
       'emits [Pending] when account is still pending during polling',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _pending);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _pending);
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
       expect: () => [isA<ConnectOnboardingPending>()],
@@ -198,9 +185,8 @@ void main() {
       'emits [Disabled] when account is DISABLED during polling',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _disabled);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _disabled);
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
       expect: () => [isA<ConnectOnboardingDisabled>()],
@@ -210,9 +196,8 @@ void main() {
       'emits [Rejected] with reason when account is REJECTED during polling',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getAccountStatus(),
-        ).thenAnswer((_) async => _rejected);
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _rejected);
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
       expect: () => [
@@ -228,7 +213,8 @@ void main() {
       'emits [Error] when polling throws',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getAccountStatus()).thenThrow(Exception('Timeout'));
+        when(() => mockRepo.getAccountStatus())
+            .thenThrow(Exception('Timeout'));
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
       expect: () => [isA<ConnectOnboardingError>()],
@@ -242,9 +228,7 @@ void main() {
       'emits [Error] with provided message',
       build: buildBloc,
       act: (b) => b.add(
-        const ConnectOnboardingLaunchFailed(
-          "Impossible d'ouvrir le navigateur.",
-        ),
+        const ConnectOnboardingLaunchFailed("Impossible d'ouvrir le navigateur."),
       ),
       expect: () => [
         isA<ConnectOnboardingError>().having(

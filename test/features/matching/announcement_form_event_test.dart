@@ -36,7 +36,10 @@ void main() {
 
     test('DepartureDateChanged — equal when same date', () {
       final date = DateTime(2025, 6, 15);
-      expect(DepartureDateChanged(date), equals(DepartureDateChanged(date)));
+      expect(
+        DepartureDateChanged(date),
+        equals(DepartureDateChanged(date)),
+      );
     });
 
     test('DepartureDateChanged — not equal when different date', () {
@@ -47,11 +50,17 @@ void main() {
     });
 
     test('PriceChanged — equal when same price', () {
-      expect(const PriceChanged(8.0), equals(const PriceChanged(8.0)));
+      expect(
+        const PriceChanged(8.0),
+        equals(const PriceChanged(8.0)),
+      );
     });
 
     test('PriceChanged — not equal when different price', () {
-      expect(const PriceChanged(8.0), isNot(equals(const PriceChanged(10.0))));
+      expect(
+        const PriceChanged(8.0),
+        isNot(equals(const PriceChanged(10.0))),
+      );
     });
 
     test('AvailableKgChanged — equal when same kg', () {
@@ -111,7 +120,8 @@ void main() {
     });
 
     test('PickupAddressChanged — equal when same address', () {
-      const addr = AddressData(label: 'Paris 1er', lat: 48.86, lng: 2.35);
+      const addr =
+          AddressData(label: 'Paris 1er', lat: 48.86, lng: 2.35);
       expect(
         const PickupAddressChanged(addr),
         equals(const PickupAddressChanged(addr)),
@@ -176,7 +186,10 @@ void main() {
     });
 
     test('FormResetRequested — two instances are equal', () {
-      expect(const FormResetRequested(), equals(const FormResetRequested()));
+      expect(
+        const FormResetRequested(),
+        equals(const FormResetRequested()),
+      );
     });
 
     test('AnnouncementPricingModeSetRequested — equal when same mode', () {
@@ -186,17 +199,13 @@ void main() {
       );
     });
 
-    test(
-      'AnnouncementPricingModeSetRequested — not equal when different mode',
-      () {
-        expect(
-          const AnnouncementPricingModeSetRequested(PricingMode.mixed),
-          isNot(
-            equals(const AnnouncementPricingModeSetRequested(PricingMode.kg)),
-          ),
-        );
-      },
-    );
+    test('AnnouncementPricingModeSetRequested — not equal when different mode', () {
+      expect(
+        const AnnouncementPricingModeSetRequested(PricingMode.mixed),
+        isNot(
+            equals(const AnnouncementPricingModeSetRequested(PricingMode.kg))),
+      );
+    });
 
     test('AnnouncementGridPreviewLoadRequested — two instances are equal', () {
       expect(
@@ -205,15 +214,12 @@ void main() {
       );
     });
 
-    test(
-      'AnnouncementPricePerKgClearedRequested — two instances are equal',
-      () {
-        expect(
-          const AnnouncementPricePerKgClearedRequested(),
-          equals(const AnnouncementPricePerKgClearedRequested()),
-        );
-      },
-    );
+    test('AnnouncementPricePerKgClearedRequested — two instances are equal', () {
+      expect(
+        const AnnouncementPricePerKgClearedRequested(),
+        equals(const AnnouncementPricePerKgClearedRequested()),
+      );
+    });
 
     test('different event types are not equal', () {
       expect(

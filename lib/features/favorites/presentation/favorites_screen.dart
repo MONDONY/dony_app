@@ -69,18 +69,22 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   indicatorColor: Theme.of(context).colorScheme.primary,
                   labelColor: Theme.of(context).colorScheme.primary,
                   labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  unselectedLabelColor: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                  unselectedLabelColor:
+                      Theme.of(context).colorScheme.onSurfaceVariant,
                   tabs: const [
                     Tab(text: 'Trajets'),
                     Tab(text: 'Demandes'),
                   ],
                 ),
               ),
-              body: const TabBarView(children: [_TripsTab(), _RequestsTab()]),
+              body: const TabBarView(
+                children: [
+                  _TripsTab(),
+                  _RequestsTab(),
+                ],
+              ),
             ),
           );
         }
@@ -88,7 +92,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         // Sender role: trips only, no tab bar
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: const DonyAppBar(title: 'Mes favoris'),
+          appBar: const DonyAppBar(
+            title: 'Mes favoris',
+          ),
           body: const _TripsTab(),
         );
       },
@@ -112,9 +118,7 @@ class _TripsTab extends StatelessWidget {
         }
 
         if (state is FavoriteTripsEmpty) {
-          return const _EmptyState(
-            message: 'Aucun trajet favori pour l\'instant',
-          );
+          return const _EmptyState(message: 'Aucun trajet favori pour l\'instant');
         }
 
         if (state is FavoriteTripsError) {
@@ -202,8 +206,9 @@ class _RequestsTab extends StatelessWidget {
                   item: request,
                   index: index,
                   showFavorite: true,
-                  onTap: () =>
-                      context.push('/package-requests/${request.id}/public'),
+                  onTap: () => context.push(
+                    '/package-requests/${request.id}/public',
+                  ),
                 );
               },
             ),
@@ -231,36 +236,35 @@ class _EmptyState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xxl),
-        child:
-            Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.bookmark_border_rounded,
-                      size: 64,
-                      color: cs.onSurfaceVariant.withValues(alpha: 0.4),
-                    ),
-                    const SizedBox(height: DonySpacing.lg),
-                    Text(
-                      'Aucun favori pour l\'instant',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(color: cs.onSurface),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    Text(
-                      message,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                )
-                .animate()
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.bookmark_border_rounded,
+              size: 64,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
+            const SizedBox(height: DonySpacing.lg),
+            Text(
+              'Aucun favori pour l\'instant',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: cs.onSurface,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ).animate().fadeIn(duration: 300.ms).slideY(
+              begin: 0.04,
+              curve: Curves.easeOutCubic,
+            ),
       ),
     );
   }
@@ -284,17 +288,17 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: DonySpacing.lg),
             Text(
               'Une erreur est survenue',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(color: cs.onSurface),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: cs.onSurface,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
               'Impossible de charger vos favoris.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xl),

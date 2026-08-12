@@ -63,29 +63,31 @@ class AccessibilityState extends Equatable {
     bool? reinforceLabels,
     bool? persistentMessages,
     bool? confirmImportantActions,
-  }) => AccessibilityState(
-    followSystemTextScale: followSystemTextScale ?? this.followSystemTextScale,
-    textScaleFactor: textScaleFactor ?? this.textScaleFactor,
-    highContrast: highContrast ?? this.highContrast,
-    reduceMotion: reduceMotion ?? this.reduceMotion,
-    boldText: boldText ?? this.boldText,
-    underlineLinks: underlineLinks ?? this.underlineLinks,
-    reinforceLabels: reinforceLabels ?? this.reinforceLabels,
-    persistentMessages: persistentMessages ?? this.persistentMessages,
-    confirmImportantActions:
-        confirmImportantActions ?? this.confirmImportantActions,
-  );
+  }) =>
+      AccessibilityState(
+        followSystemTextScale:
+            followSystemTextScale ?? this.followSystemTextScale,
+        textScaleFactor: textScaleFactor ?? this.textScaleFactor,
+        highContrast: highContrast ?? this.highContrast,
+        reduceMotion: reduceMotion ?? this.reduceMotion,
+        boldText: boldText ?? this.boldText,
+        underlineLinks: underlineLinks ?? this.underlineLinks,
+        reinforceLabels: reinforceLabels ?? this.reinforceLabels,
+        persistentMessages: persistentMessages ?? this.persistentMessages,
+        confirmImportantActions:
+            confirmImportantActions ?? this.confirmImportantActions,
+      );
 
   @override
   List<Object?> get props => [
-    followSystemTextScale,
-    textScaleFactor,
-    highContrast,
-    reduceMotion,
-    boldText,
-    underlineLinks,
-    reinforceLabels,
-    persistentMessages,
-    confirmImportantActions,
-  ];
+        followSystemTextScale,
+        textScaleFactor,
+        highContrast,
+        reduceMotion,
+        boldText,
+        underlineLinks,
+        reinforceLabels,
+        persistentMessages,
+        confirmImportantActions,
+      ];
 }

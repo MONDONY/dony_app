@@ -63,21 +63,21 @@ final _convWeeksAgo = ConversationModel(
 );
 
 GoRouter _buildRouter(ConversationListBloc bloc) => GoRouter(
-  initialLocation: '/',
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => BlocProvider<ConversationListBloc>.value(
-        value: bloc,
-        child: const ConversationListScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/conversations/:id',
-      builder: (_, __) => const Scaffold(body: Text('Chat')),
-    ),
-  ],
-);
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => BlocProvider<ConversationListBloc>.value(
+            value: bloc,
+            child: const ConversationListScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/conversations/:id',
+          builder: (_, __) => const Scaffold(body: Text('Chat')),
+        ),
+      ],
+    );
 
 Future<void> _pump(WidgetTester tester, ConversationListBloc bloc) async {
   await tester.pumpWidget(
@@ -107,9 +107,7 @@ void main() {
   tearDown(() => bloc.close());
 
   group('ConversationListScreen', () {
-    testWidgets('affiche le header Messages dans tous les états', (
-      tester,
-    ) async {
+    testWidgets('affiche le header Messages dans tous les états', (tester) async {
       for (final state in [
         const ConversationListLoading() as ConversationListState,
         const ConversationListLoaded([]),
@@ -117,22 +115,14 @@ void main() {
       ]) {
         when(() => bloc.state).thenReturn(state);
         await _pump(tester, bloc);
-        expect(
-          find.text('Messages'),
-          findsOneWidget,
-          reason: 'header manquant pour $state',
-        );
-        expect(
-          find.byType(TextField),
-          findsOneWidget,
-          reason: 'search bar manquante pour $state',
-        );
+        expect(find.text('Messages'), findsOneWidget,
+            reason: 'header manquant pour $state');
+        expect(find.byType(TextField), findsOneWidget,
+            reason: 'search bar manquante pour $state');
       }
     });
 
-    testWidgets('shows loading indicator when state is Loading', (
-      tester,
-    ) async {
+    testWidgets('shows loading indicator when state is Loading', (tester) async {
       when(() => bloc.state).thenReturn(const ConversationListLoading());
       await _pump(tester, bloc);
 
@@ -146,9 +136,7 @@ void main() {
       expect(find.text('Aucun message'), findsOneWidget);
     });
 
-    testWidgets('renders conversation tile with participant name', (
-      tester,
-    ) async {
+    testWidgets('renders conversation tile with participant name', (tester) async {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
       await _pump(tester, bloc);
 
@@ -157,67 +145,58 @@ void main() {
     });
 
     testWidgets('shows error state with retry button', (tester) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(ConversationListError(NetworkException('Erreur réseau')));
+      when(() => bloc.state).thenReturn(
+          ConversationListError(NetworkException('Erreur réseau')));
       await _pump(tester, bloc);
 
       expect(find.text('Erreur de chargement'), findsOneWidget);
       expect(find.text('Réessayer'), findsOneWidget);
     });
 
-    testWidgets('retry button dispatches ConversationsLoadRequested', (
-      tester,
-    ) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(ConversationListError(NetworkException('Erreur réseau')));
+    testWidgets('retry button dispatches ConversationsLoadRequested',
+        (tester) async {
+      when(() => bloc.state).thenReturn(
+          ConversationListError(NetworkException('Erreur réseau')));
       await _pump(tester, bloc);
 
       await tester.tap(find.text('Réessayer'));
       await tester.pump();
 
-      verify(
-        () => bloc.add(const ConversationsLoadRequested()),
-      ).called(greaterThanOrEqualTo(1));
+      verify(() => bloc.add(const ConversationsLoadRequested()))
+          .called(greaterThanOrEqualTo(1));
     });
 
-    testWidgets("affiche section AUJOURD'HUI pour message récent", (
-      tester,
-    ) async {
+    testWidgets("affiche section AUJOURD'HUI pour message récent", (tester) async {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
       await _pump(tester, bloc);
 
       expect(find.text("AUJOURD'HUI"), findsOneWidget);
     });
 
-    testWidgets('affiche section CETTE SEMAINE pour message de 3 jours', (
-      tester,
-    ) async {
+    testWidgets('affiche section CETTE SEMAINE pour message de 3 jours',
+        (tester) async {
       await initializeDateFormatting('fr');
-      when(() => bloc.state).thenReturn(ConversationListLoaded([_convDaysAgo]));
+      when(() => bloc.state)
+          .thenReturn(ConversationListLoaded([_convDaysAgo]));
       await _pump(tester, bloc);
 
       expect(find.text('CETTE SEMAINE'), findsOneWidget);
       expect(find.text('Fatoumata'), findsOneWidget);
     });
 
-    testWidgets('affiche section PLUS ANCIEN pour message de 10 jours', (
-      tester,
-    ) async {
+    testWidgets('affiche section PLUS ANCIEN pour message de 10 jours',
+        (tester) async {
       await initializeDateFormatting('fr');
-      when(
-        () => bloc.state,
-      ).thenReturn(ConversationListLoaded([_convWeeksAgo]));
+      when(() => bloc.state)
+          .thenReturn(ConversationListLoaded([_convWeeksAgo]));
       await _pump(tester, bloc);
 
       expect(find.text('PLUS ANCIEN'), findsOneWidget);
       expect(find.text('Oumar'), findsOneWidget);
     });
 
-    testWidgets('affiche pills de filtre quand searchQuery est vide', (
-      tester,
-    ) async {
+    testWidgets('affiche pills de filtre quand searchQuery est vide',
+        (tester) async {
       when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
       await _pump(tester, bloc);
 
@@ -227,18 +206,16 @@ void main() {
       expect(find.text('Terminés'), findsOneWidget);
     });
 
-    testWidgets('taper dans le champ dispatch ConversationFilterChanged', (
-      tester,
-    ) async {
-      when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+    testWidgets('taper dans le champ dispatch ConversationFilterChanged',
+        (tester) async {
+      when(() => bloc.state)
+          .thenReturn(const ConversationListLoaded([]));
       await _pump(tester, bloc);
 
       await tester.enterText(find.byType(TextField), 'Dakar');
       await tester.pump();
 
-      verify(
-        () => bloc.add(
-          any(
+      verify(() => bloc.add(any(
             that: predicate<ConversationListEvent>(
               (e) =>
                   e is ConversationFilterChanged &&
@@ -246,9 +223,7 @@ void main() {
                   e.filter == ConversationFilter.all,
               'is ConversationFilterChanged(filter: all, searchQuery: Dakar)',
             ),
-          ),
-        ),
-      ).called(greaterThanOrEqualTo(1));
+          ))).called(greaterThanOrEqualTo(1));
     });
 
     testWidgets('tapping conversation tile navigates to chat', (tester) async {
@@ -262,29 +237,25 @@ void main() {
     });
 
     testWidgets(
-      'après retour du chat (pop), recharge la liste pour refléter le '
-      'dernier message envoyé/lu',
-      (tester) async {
-        when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
-        await _pump(tester, bloc);
-        clearInteractions(bloc);
+        'après retour du chat (pop), recharge la liste pour refléter le '
+        'dernier message envoyé/lu', (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+      clearInteractions(bloc);
 
-        await tester.tap(find.text('Aïcha Bah'));
-        await tester.pumpAndSettle();
-        expect(find.text('Chat'), findsOneWidget);
+      await tester.tap(find.text('Aïcha Bah'));
+      await tester.pumpAndSettle();
+      expect(find.text('Chat'), findsOneWidget);
 
-        Navigator.of(tester.element(find.text('Chat'))).pop();
-        await tester.pumpAndSettle();
+      Navigator.of(tester.element(find.text('Chat'))).pop();
+      await tester.pumpAndSettle();
 
-        verify(
-          () => bloc.add(const ConversationsLoadRequested()),
-        ).called(greaterThanOrEqualTo(1));
-      },
-    );
+      verify(() => bloc.add(const ConversationsLoadRequested()))
+          .called(greaterThanOrEqualTo(1));
+    });
 
-    testWidgets('_formatTime shows maintenant for sub-1-minute message', (
-      tester,
-    ) async {
+    testWidgets('_formatTime shows maintenant for sub-1-minute message',
+        (tester) async {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_convNow]));
       await _pump(tester, bloc);
 
@@ -292,123 +263,106 @@ void main() {
       expect(find.text('maintenant'), findsOneWidget);
     });
 
-    testWidgets('empty state adapté quand searchQuery non vide', (
-      tester,
-    ) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(const ConversationListLoaded([], searchQuery: 'xyz'));
+    testWidgets('empty state adapté quand searchQuery non vide', (tester) async {
+      when(() => bloc.state).thenReturn(
+        const ConversationListLoaded([], searchQuery: 'xyz'),
+      );
       await _pump(tester, bloc);
 
       expect(find.text('Aucun résultat'), findsOneWidget);
     });
 
     testWidgets(
-      'swipe Supprimer + confirmation dispatche ConversationDeleteRequested '
-      'même sous un Navigator imbriqué (shell branch)',
-      (tester) async {
-        when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
-        // Reproduit la prod : l'écran vit dans le Navigator imbriqué d'un
-        // StatefulShellBranch alors que showDialog pousse sur le root navigator.
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light(),
-            home: Navigator(
-              onGenerateRoute: (_) => MaterialPageRoute(
-                builder: (_) => BlocProvider<ConversationListBloc>.value(
-                  value: bloc,
-                  child: const ConversationListScreen(),
-                ),
+        'swipe Supprimer + confirmation dispatche ConversationDeleteRequested '
+        'même sous un Navigator imbriqué (shell branch)', (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      // Reproduit la prod : l'écran vit dans le Navigator imbriqué d'un
+      // StatefulShellBranch alors que showDialog pousse sur le root navigator.
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(
+              builder: (_) => BlocProvider<ConversationListBloc>.value(
+                value: bloc,
+                child: const ConversationListScreen(),
               ),
             ),
           ),
-        );
-        await tester.pump(const Duration(milliseconds: 400));
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
 
-        await tester.drag(find.text('Aïcha Bah'), const Offset(-300, 0));
-        await tester.pumpAndSettle();
+      await tester.drag(find.text('Aïcha Bah'), const Offset(-300, 0));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Supprimer'));
-        await tester.pumpAndSettle();
-        expect(find.text('Supprimer la conversation ?'), findsOneWidget);
+      await tester.tap(find.text('Supprimer'));
+      await tester.pumpAndSettle();
+      expect(find.text('Supprimer la conversation ?'), findsOneWidget);
 
-        await tester.tap(
-          find.descendant(
-            of: find.byType(AlertDialog),
-            matching: find.text('Supprimer'),
-          ),
-        );
-        await tester.pumpAndSettle();
+      await tester.tap(find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Supprimer'),
+      ));
+      await tester.pumpAndSettle();
 
-        expect(find.byType(AlertDialog), findsNothing);
-        verify(
-          () => bloc.add(
-            any(
-              that: predicate<ConversationListEvent>(
-                (e) =>
-                    e is ConversationDeleteRequested &&
-                    e.conversationId == 'conv-1',
-                'is ConversationDeleteRequested(conv-1)',
-              ),
+      expect(find.byType(AlertDialog), findsNothing);
+      verify(() => bloc.add(any(
+            that: predicate<ConversationListEvent>(
+              (e) =>
+                  e is ConversationDeleteRequested &&
+                  e.conversationId == 'conv-1',
+              'is ConversationDeleteRequested(conv-1)',
             ),
-          ),
-        ).called(1);
-      },
-    );
+          ))).called(1);
+    });
 
     testWidgets(
-      'Annuler dans le dialog ne dispatche pas ConversationDeleteRequested',
-      (tester) async {
-        when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light(),
-            home: Navigator(
-              onGenerateRoute: (_) => MaterialPageRoute(
-                builder: (_) => BlocProvider<ConversationListBloc>.value(
-                  value: bloc,
-                  child: const ConversationListScreen(),
-                ),
+        'Annuler dans le dialog ne dispatche pas ConversationDeleteRequested',
+        (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(
+              builder: (_) => BlocProvider<ConversationListBloc>.value(
+                value: bloc,
+                child: const ConversationListScreen(),
               ),
             ),
           ),
-        );
-        await tester.pump(const Duration(milliseconds: 400));
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
 
-        await tester.drag(find.text('Aïcha Bah'), const Offset(-300, 0));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Supprimer'));
-        await tester.pumpAndSettle();
+      await tester.drag(find.text('Aïcha Bah'), const Offset(-300, 0));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Supprimer'));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Annuler'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
 
-        expect(find.byType(AlertDialog), findsNothing);
-        verifyNever(
-          () => bloc.add(
-            any(
-              that: predicate<ConversationListEvent>(
-                (e) => e is ConversationDeleteRequested,
-                'is ConversationDeleteRequested',
-              ),
+      expect(find.byType(AlertDialog), findsNothing);
+      verifyNever(() => bloc.add(any(
+            that: predicate<ConversationListEvent>(
+              (e) => e is ConversationDeleteRequested,
+              'is ConversationDeleteRequested',
             ),
-          ),
-        );
-      },
-    );
+          )));
+    });
 
-    testWidgets('pull-to-refresh dispatches ConversationsLoadRequested', (
-      tester,
-    ) async {
+    testWidgets('pull-to-refresh dispatches ConversationsLoadRequested',
+        (tester) async {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
       await _pump(tester, bloc);
 
       await tester.drag(find.byType(ListView), const Offset(0, 400));
       await tester.pump(const Duration(milliseconds: 100));
 
-      verify(
-        () => bloc.add(const ConversationsLoadRequested()),
-      ).called(greaterThanOrEqualTo(1));
+      verify(() => bloc.add(const ConversationsLoadRequested()))
+          .called(greaterThanOrEqualTo(1));
     });
   });
 }

@@ -46,26 +46,25 @@ class RouteBottomSheet extends StatelessWidget {
   });
 
   String get _title => switch (filter) {
-    ExactRouteFilter(from: final f, to: final t) =>
-      '${f.displayName} → ${t.displayName}',
-    DepartureCityFilter(city: final c) => 'Départs depuis ${c.displayName}',
-    ArrivalCityFilter(city: final c) => 'Arrivées à ${c.displayName}',
-  };
+        ExactRouteFilter(from: final f, to: final t) =>
+          '${f.displayName} → ${t.displayName}',
+        DepartureCityFilter(city: final c) => 'Départs depuis ${c.displayName}',
+        ArrivalCityFilter(city: final c) => 'Arrivées à ${c.displayName}',
+      };
 
   List<AnnouncementModel> get _filtered => switch (filter) {
-    ExactRouteFilter(from: final f, to: final t) =>
-      announcements
-          .where(
-            (a) =>
-                a.departureCity == f.displayName &&
-                a.arrivalCity == t.displayName,
-          )
-          .toList(),
-    DepartureCityFilter(city: final c) =>
-      announcements.where((a) => a.departureCity == c.displayName).toList(),
-    ArrivalCityFilter(city: final c) =>
-      announcements.where((a) => a.arrivalCity == c.displayName).toList(),
-  };
+        ExactRouteFilter(from: final f, to: final t) => announcements
+            .where(
+              (a) =>
+                  a.departureCity == f.displayName &&
+                  a.arrivalCity == t.displayName,
+            )
+            .toList(),
+        DepartureCityFilter(city: final c) =>
+          announcements.where((a) => a.departureCity == c.displayName).toList(),
+        ArrivalCityFilter(city: final c) =>
+          announcements.where((a) => a.arrivalCity == c.displayName).toList(),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -105,12 +104,12 @@ class RouteBottomSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
               child: Row(
                 children: [
-                  Expanded(child: Text(_title, style: tt.titleLarge)),
+                  Expanded(
+                    child: Text(_title, style: tt.titleLarge),
+                  ),
                   Text(
                     '${items.length} trajet${items.length != 1 ? 's' : ''}',
-                    style: tt.bodySmall?.copyWith(
-                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                    ),
+                    style: tt.bodySmall?.copyWith(color: Theme.of(ctx).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -122,9 +121,8 @@ class RouteBottomSheet extends StatelessWidget {
                   ? Center(
                       child: Text(
                         'Aucun trajet disponible sur cette route',
-                        style: tt.bodyMedium?.copyWith(
-                          color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                        ),
+                        style: tt.bodyMedium
+                            ?.copyWith(color: Theme.of(ctx).colorScheme.onSurfaceVariant),
                         textAlign: TextAlign.center,
                       ),
                     )
@@ -150,8 +148,7 @@ class RouteBottomSheet extends StatelessWidget {
                               const SizedBox(height: DonySpacing.md),
                           itemBuilder: (_, i) {
                             final ann = items[i];
-                            final isOwn =
-                                currentUserId != null &&
+                            final isOwn = currentUserId != null &&
                                 ann.travelerId == currentUserId;
                             final existingBid = activeBids[ann.id];
                             return TravelerCard(

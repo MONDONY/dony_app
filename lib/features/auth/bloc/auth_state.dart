@@ -122,10 +122,10 @@ class AuthOAuthNewUser extends AuthState {
 /// [currentUser]/[currentUserId] pour ne pas casser après une maj de profil.
 extension AuthStateUser on AuthState {
   UserModel? get currentUser => switch (this) {
-    AuthAuthenticated(:final user) => user,
-    AuthProfileUpdated(:final user) => user,
-    _ => null,
-  };
+        AuthAuthenticated(:final user) => user,
+        AuthProfileUpdated(:final user) => user,
+        _ => null,
+      };
 
   String? get currentUserId => currentUser?.id;
 }

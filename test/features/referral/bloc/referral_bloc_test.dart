@@ -53,20 +53,25 @@ void main() {
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralLoadRequested()),
-    expect: () => [isA<ReferralLoading>(), isA<ReferralLoaded>()],
+    expect: () => [
+      isA<ReferralLoading>(),
+      isA<ReferralLoaded>(),
+    ],
   );
 
   // 3. ReferralLoadRequested → [ReferralLoading, ReferralError] en cas d'exception
   blocTest<ReferralBloc, ReferralState>(
     'emits [ReferralLoading, ReferralError] when load throws',
     setUp: () {
-      when(
-        () => mockRepo.getMyReferral(),
-      ).thenThrow(Exception('Erreur réseau'));
+      when(() => mockRepo.getMyReferral())
+          .thenThrow(Exception('Erreur réseau'));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralLoadRequested()),
-    expect: () => [isA<ReferralLoading>(), isA<ReferralError>()],
+    expect: () => [
+      isA<ReferralLoading>(),
+      isA<ReferralError>(),
+    ],
   );
 
   // 4. ReferralLoaded contient le bon code
@@ -109,9 +114,8 @@ void main() {
   blocTest<ReferralBloc, ReferralState>(
     'ReferralError has non-empty message when exception is thrown',
     setUp: () {
-      when(
-        () => mockRepo.getMyReferral(),
-      ).thenThrow(Exception('Service indisponible'));
+      when(() => mockRepo.getMyReferral())
+          .thenThrow(Exception('Service indisponible'));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralLoadRequested()),
@@ -133,7 +137,10 @@ void main() {
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralRedeemRequested('AISSA0012')),
-    expect: () => [isA<ReferralRedeemLoading>(), isA<ReferralRedeemed>()],
+    expect: () => [
+      isA<ReferralRedeemLoading>(),
+      isA<ReferralRedeemed>(),
+    ],
   );
 
   // 9. referral-code-not-found → [ReferralRedeemLoading, ReferralRedeemError]

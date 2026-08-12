@@ -21,10 +21,7 @@ class IncidentPhotosCubit extends Cubit<List<IncidentPhotoUpload>> {
 
   /// Clés S3 des captures uploadées avec succès, à joindre au signalement.
   List<String> get readyKeys => state
-      .where(
-        (p) =>
-            p.status == IncidentPhotoUploadStatus.ready && p.remoteKey != null,
-      )
+      .where((p) => p.status == IncidentPhotoUploadStatus.ready && p.remoteKey != null)
       .map((p) => p.remoteKey!)
       .toList();
 

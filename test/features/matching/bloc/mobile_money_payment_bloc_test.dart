@@ -25,39 +25,34 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyStatusPolled → MobileMoneyPaymentPending quand status=PENDING',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-1',
-            status: 'PENDING',
-            paymentLink: 'https://wave.test/pay?ref=abc',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
+        when(() => repo.getStatus(bidId))
+            .thenAnswer((_) async => const MobileMoneyPaymentModel(
+              id: 'id-1',
+              status: 'PENDING',
+              paymentLink: 'https://wave.test/pay?ref=abc',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
         return bloc;
       },
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentPending>().having(
-          (s) => s.paymentLink,
-          'paymentLink',
-          contains('wave.test'),
-        ),
+        isA<MobileMoneyPaymentPending>()
+            .having((s) => s.paymentLink, 'paymentLink', contains('wave.test')),
       ],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyStatusPolled → MobileMoneyPaymentConfirmed quand status=COMPLETED',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-2',
-            status: 'COMPLETED',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
+        when(() => repo.getStatus(bidId))
+            .thenAnswer((_) async => const MobileMoneyPaymentModel(
+              id: 'id-2',
+              status: 'COMPLETED',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
         return bloc;
       },
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
@@ -83,14 +78,13 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyStatusPolled → MobileMoneyPaymentExpired quand status=EXPIRED',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-3',
-            status: 'EXPIRED',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
+        when(() => repo.getStatus(bidId)).thenAnswer((_) async =>
+            const MobileMoneyPaymentModel(
+              id: 'id-3',
+              status: 'EXPIRED',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
         return bloc;
       },
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
@@ -103,50 +97,42 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyStatusPolled → MobileMoneyPaymentError quand status=FAILED',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-4',
-            status: 'FAILED',
-            amount: 50.0,
-            currency: 'XOF',
-            failureReason: 'Solde insuffisant',
-          ),
-        );
+        when(() => repo.getStatus(bidId)).thenAnswer((_) async =>
+            const MobileMoneyPaymentModel(
+              id: 'id-4',
+              status: 'FAILED',
+              amount: 50.0,
+              currency: 'XOF',
+              failureReason: 'Solde insuffisant',
+            ));
         return bloc;
       },
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentError>().having(
-          (s) => s.message,
-          'message',
-          'Solde insuffisant',
-        ),
+        isA<MobileMoneyPaymentError>()
+            .having((s) => s.message, 'message', 'Solde insuffisant'),
       ],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyLinkRegenRequested → MobileMoneyPaymentPending avec nouveau lien',
       build: () {
-        when(() => repo.regenerateLink(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-5',
-            status: 'PENDING',
-            amount: 50.0,
-            currency: 'XOF',
-            paymentLink: 'https://wave.test/pay?ref=new',
-          ),
-        );
+        when(() => repo.regenerateLink(bidId)).thenAnswer((_) async =>
+            const MobileMoneyPaymentModel(
+              id: 'id-5',
+              status: 'PENDING',
+              amount: 50.0,
+              currency: 'XOF',
+              paymentLink: 'https://wave.test/pay?ref=new',
+            ));
         return bloc;
       },
       act: (b) => b.add(const MobileMoneyLinkRegenRequested(bidId: bidId)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentPending>().having(
-          (s) => s.paymentLink,
-          'paymentLink',
-          contains('ref=new'),
-        ),
+        isA<MobileMoneyPaymentPending>()
+            .having((s) => s.paymentLink, 'paymentLink', contains('ref=new')),
       ],
     );
 
@@ -154,14 +140,13 @@ void main() {
       'MobileMoneyStatusPolled depuis état Pending → pas de Loading (pas de clignotement)',
       build: () {
         // Server returns COMPLETED — so a state change DOES happen, but no Loading first
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-6',
-            status: 'COMPLETED',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
+        when(() => repo.getStatus(bidId))
+            .thenAnswer((_) async => const MobileMoneyPaymentModel(
+              id: 'id-6',
+              status: 'COMPLETED',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
         return bloc;
       },
       seed: () => const MobileMoneyPaymentPending(
@@ -177,15 +162,14 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyStatusPolled depuis état Error → Loading émis (première tentative après erreur)',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-7',
-            status: 'PENDING',
-            paymentLink: 'https://wave.test/pay?ref=abc',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
+        when(() => repo.getStatus(bidId))
+            .thenAnswer((_) async => const MobileMoneyPaymentModel(
+              id: 'id-7',
+              status: 'PENDING',
+              paymentLink: 'https://wave.test/pay?ref=abc',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
         return bloc;
       },
       seed: () => const MobileMoneyPaymentError('previous error'),

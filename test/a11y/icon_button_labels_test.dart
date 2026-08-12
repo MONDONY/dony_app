@@ -39,8 +39,7 @@ void main() {
         if (suivant > 0) fenetre = fenetre.substring(0, suivant);
 
         if (!fenetre.contains('tooltip:')) {
-          final ligne =
-              '\n'.allMatches(source.substring(0, match.start)).length + 1;
+          final ligne = '\n'.allMatches(source.substring(0, match.start)).length + 1;
           defauts.add('${entity.path}:$ligne');
         }
       }
@@ -49,8 +48,7 @@ void main() {
     expect(
       defauts,
       isEmpty,
-      reason:
-          'IconButton sans tooltip, donc sans nom accessible :\n'
+      reason: 'IconButton sans tooltip, donc sans nom accessible :\n'
           '${defauts.join('\n')}\n\n'
           "Ajoutez `tooltip: '...'`, ou enveloppez d'un Semantics(label:) et "
           'déclarez le fichier dans les exemptions de ce test.',

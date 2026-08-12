@@ -23,7 +23,11 @@ import 'package:go_router/go_router.dart';
 /// - **Modifier** → édition (uniquement si 0 demande, sinon désactivé).
 /// - **Supprimer** (si supprimable) ou **Annuler** (si ACTIVE non supprimable).
 class OwnerActionGrid extends StatelessWidget {
-  const OwnerActionGrid({super.key, required this.a, required this.isOwner});
+  const OwnerActionGrid({
+    super.key,
+    required this.a,
+    required this.isOwner,
+  });
 
   /// Trajet affiché.
   final AnnouncementModel a;
@@ -58,12 +62,10 @@ class OwnerActionGrid extends StatelessWidget {
     // Gating édition / suppression — un brouillon (DRAFT) est modifiable ET
     // supprimable au même titre qu'un trajet ACTIF sans demande (le backend
     // autorise désormais la suppression d'un DRAFT).
-    final canEdit =
-        (a.status == 'ACTIVE' || a.status == 'DRAFT') &&
+    final canEdit = (a.status == 'ACTIVE' || a.status == 'DRAFT') &&
         (a.bidsCount ?? 0) == 0;
     final isCancelled = a.status == 'CANCELLED';
-    final canDelete =
-        ((a.status == 'ACTIVE' || a.status == 'DRAFT') &&
+    final canDelete = ((a.status == 'ACTIVE' || a.status == 'DRAFT') &&
             (a.bidsCount ?? 0) == 0) ||
         isCancelled;
     final isActive = a.status == 'ACTIVE';

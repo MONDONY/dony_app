@@ -40,11 +40,12 @@ class UserReviewsLoaded extends UserReviewsState {
     RatingSummary? summary,
     List<RatingItem>? allRatings,
     bool? isLoadingMore,
-  }) => UserReviewsLoaded(
-    summary: summary ?? this.summary,
-    allRatings: allRatings ?? this.allRatings,
-    isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-  );
+  }) =>
+      UserReviewsLoaded(
+        summary: summary ?? this.summary,
+        allRatings: allRatings ?? this.allRatings,
+        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      );
 }
 
 class UserReviewsError extends UserReviewsState {
@@ -57,7 +58,7 @@ class UserReviewsError extends UserReviewsState {
 
 class UserReviewsCubit extends Cubit<UserReviewsState> {
   UserReviewsCubit(this._repository, this._analytics)
-    : super(const UserReviewsInitial());
+      : super(const UserReviewsInitial());
 
   final RatingRepository _repository;
   final AnalyticsService _analytics;

@@ -40,13 +40,7 @@ class EvergreenGuidanceCarousel extends StatefulWidget {
   /// manuelle (X) sans dépendre de l'éligibilité courante de chacune. Public
   /// pour être réutilisé par l'action « Réafficher les suggestions » de
   /// `SettingsScreen`, qui doit effacer exactement le même jeu de clés.
-  static const guidanceSlideIds = [
-    'trip',
-    'parcel',
-    'alert',
-    'kyc',
-    'tutorial',
-  ];
+  static const guidanceSlideIds = ['trip', 'parcel', 'alert', 'kyc', 'tutorial'];
 
   @override
   State<EvergreenGuidanceCarousel> createState() =>
@@ -165,10 +159,9 @@ class _EvergreenGuidanceCarouselState extends State<EvergreenGuidanceCarousel> {
                 as bool);
         bool userDismissed(String slideId) =>
             box.get(
-                  '${HiveService.kGuidanceSlideDismissedPrefix}$slideId',
-                  defaultValue: false,
-                )
-                as bool;
+              '${HiveService.kGuidanceSlideDismissedPrefix}$slideId',
+              defaultValue: false,
+            ) as bool;
 
         final slides = <_GuidanceSlideData>[
           _GuidanceSlideData(

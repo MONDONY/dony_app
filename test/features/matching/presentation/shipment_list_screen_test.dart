@@ -143,37 +143,35 @@ void main() {
     expect(find.text('Réinitialiser'), findsOneWidget);
   });
 
-  testWidgets(
-    'mode standalone (embedded:false) affiche le header « Colis en route »',
-    (tester) async {
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(const [])]),
-        initialState: BidListLoaded(const []),
-      );
+  testWidgets('mode standalone (embedded:false) affiche le header « Colis en route »',
+      (tester) async {
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(const [])]),
+      initialState: BidListLoaded(const []),
+    );
 
-      final router = GoRouter(
-        initialLocation: '/',
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, __) => MultiBlocProvider(
-              providers: [
-                BlocProvider<BidBloc>.value(value: bidBloc),
-                BlocProvider<PaymentBloc>.value(value: paymentBloc),
-              ],
-              child: const ShipmentListScreen(embedded: false),
-            ),
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => MultiBlocProvider(
+            providers: [
+              BlocProvider<BidBloc>.value(value: bidBloc),
+              BlocProvider<PaymentBloc>.value(value: paymentBloc),
+            ],
+            child: const ShipmentListScreen(embedded: false),
           ),
-        ],
-      );
+        ),
+      ],
+    );
 
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Colis en route'), findsOneWidget);
-    },
-  );
+    expect(find.text('Colis en route'), findsOneWidget);
+  });
 
   testWidgets('état BidLoading affiche un spinner', (tester) async {
     whenListen(
@@ -211,9 +209,7 @@ void main() {
     expect(find.textContaining('Erreur de chargement'), findsOneWidget);
   });
 
-  testWidgets('liste vide totale affiche « Aucun envoi pour l\'instant »', (
-    tester,
-  ) async {
+  testWidgets('liste vide totale affiche « Aucun envoi pour l\'instant »', (tester) async {
     whenListen(
       bidBloc,
       const Stream<BidState>.empty(),
@@ -225,9 +221,7 @@ void main() {
     expect(find.textContaining('Aucun envoi'), findsOneWidget);
   });
 
-  testWidgets('liste vide totale — chips et champ recherche masqués', (
-    tester,
-  ) async {
+  testWidgets('liste vide totale — chips et champ recherche masqués', (tester) async {
     whenListen(
       bidBloc,
       const Stream<BidState>.empty(),
@@ -241,9 +235,7 @@ void main() {
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('liste vide totale affiche CTA « Rechercher un trajet »', (
-    tester,
-  ) async {
+  testWidgets('liste vide totale affiche CTA « Rechercher un trajet »', (tester) async {
     whenListen(
       bidBloc,
       const Stream<BidState>.empty(),
@@ -255,30 +247,32 @@ void main() {
     expect(find.text('Rechercher un trajet'), findsOneWidget);
   });
 
-  testWidgets(
-    'puce rapide « En cours » filtre les bids ACCEPTED/HANDED_OVER/IN_TRANSIT',
-    (tester) async {
-      final bids = [_bid('ACCEPTED', 'Dakar'), _bid('PENDING', 'Abidjan')];
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
-        initialState: BidListLoaded(bids),
-      );
-      await tester.pumpWidget(subject());
-      await tester.pumpAndSettle();
+  testWidgets('puce rapide « En cours » filtre les bids ACCEPTED/HANDED_OVER/IN_TRANSIT',
+      (tester) async {
+    final bids = [
+      _bid('ACCEPTED', 'Dakar'),
+      _bid('PENDING', 'Abidjan'),
+    ];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('En cours'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('En cours'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Dakar'), findsOneWidget);
-      expect(find.text('Abidjan'), findsNothing);
-    },
-  );
+    expect(find.text('Dakar'), findsOneWidget);
+    expect(find.text('Abidjan'), findsNothing);
+  });
 
-  testWidgets('puce rapide « Tous » réinitialise le filtre statut', (
-    tester,
-  ) async {
-    final bids = [_bid('ACCEPTED', 'Dakar'), _bid('PENDING', 'Abidjan')];
+  testWidgets('puce rapide « Tous » réinitialise le filtre statut', (tester) async {
+    final bids = [
+      _bid('ACCEPTED', 'Dakar'),
+      _bid('PENDING', 'Abidjan'),
+    ];
     whenListen(
       bidBloc,
       Stream<BidState>.fromIterable([BidListLoaded(bids)]),
@@ -298,32 +292,28 @@ void main() {
     expect(find.text('Abidjan'), findsOneWidget);
   });
 
-  testWidgets(
-    'puce rapide « En attente » filtre PENDING/AWAITING_PAYMENT/PAYMENT_ESCROWED',
-    (tester) async {
-      final bids = [
-        _bid('ACCEPTED', 'Dakar'),
-        _bid('AWAITING_PAYMENT', 'Abidjan'),
-      ];
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
-        initialState: BidListLoaded(bids),
-      );
-      await tester.pumpWidget(subject());
-      await tester.pumpAndSettle();
+  testWidgets('puce rapide « En attente » filtre PENDING/AWAITING_PAYMENT/PAYMENT_ESCROWED',
+      (tester) async {
+    final bids = [
+      _bid('ACCEPTED', 'Dakar'),
+      _bid('AWAITING_PAYMENT', 'Abidjan'),
+    ];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('En attente'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('En attente'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Abidjan'), findsOneWidget);
-      expect(find.text('Dakar'), findsNothing);
-    },
-  );
+    expect(find.text('Abidjan'), findsOneWidget);
+    expect(find.text('Dakar'), findsNothing);
+  });
 
-  testWidgets('« Tout effacer » réinitialise les filtres actifs', (
-    tester,
-  ) async {
+  testWidgets('« Tout effacer » réinitialise les filtres actifs', (tester) async {
     final bids = [_bid('ACCEPTED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -347,27 +337,23 @@ void main() {
     expect(find.text('Tout effacer'), findsNothing);
   });
 
-  testWidgets(
-    'BidListLoaded avec isRefreshing = true affiche le LinearProgressIndicator',
-    (tester) async {
-      final bids = [_bid('ACCEPTED', 'Dakar')];
-      whenListen(
-        bidBloc,
-        const Stream<BidState>.empty(),
-        initialState: BidListLoaded(bids, isRefreshing: true),
-      );
-      await tester.pumpWidget(subject());
-      await tester.pump(const Duration(milliseconds: 400));
+  testWidgets('BidListLoaded avec isRefreshing = true affiche le LinearProgressIndicator',
+      (tester) async {
+    final bids = [_bid('ACCEPTED', 'Dakar')];
+    whenListen(
+      bidBloc,
+      const Stream<BidState>.empty(),
+      initialState: BidListLoaded(bids, isRefreshing: true),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-    },
-  );
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+  });
 
   // Note: after ShipmentCard redesign, AWAITING_PAYMENT shows badge 'EN ATTENTE'
   // and navigates to bid detail on tap (no inline "Payer →" button).
-  testWidgets('carte AWAITING_PAYMENT affiche le badge EN ATTENTE', (
-    tester,
-  ) async {
+  testWidgets('carte AWAITING_PAYMENT affiche le badge EN ATTENTE', (tester) async {
     final bids = [_bid('AWAITING_PAYMENT', 'Dakar')];
     whenListen(
       bidBloc,
@@ -380,39 +366,35 @@ void main() {
     expect(find.text('EN ATTENTE'), findsOneWidget);
   });
 
-  testWidgets(
-    'carte COMPLETED affiche le badge LIVRÉ et le CTA « Détails → »',
-    (tester) async {
-      final bids = [_bid('COMPLETED', 'Dakar')];
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
-        initialState: BidListLoaded(bids),
-      );
-      await tester.pumpWidget(subject());
-      await tester.pumpAndSettle();
+  testWidgets('carte COMPLETED affiche le badge LIVRÉ et le CTA « Détails → »',
+      (tester) async {
+    final bids = [_bid('COMPLETED', 'Dakar')];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
 
-      expect(find.text('LIVRÉ'), findsOneWidget);
-      expect(find.text('Détails →'), findsOneWidget);
-    },
-  );
+    expect(find.text('LIVRÉ'), findsOneWidget);
+    expect(find.text('Détails →'), findsOneWidget);
+  });
 
-  testWidgets(
-    'carte ACCEPTED affiche le badge À REMETTRE et le CTA « Voir le QR → »',
-    (tester) async {
-      final bids = [_bid('ACCEPTED', 'Dakar')];
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
-        initialState: BidListLoaded(bids),
-      );
-      await tester.pumpWidget(subject());
-      await tester.pumpAndSettle();
+  testWidgets('carte ACCEPTED affiche le badge À REMETTRE et le CTA « Voir le QR → »',
+      (tester) async {
+    final bids = [_bid('ACCEPTED', 'Dakar')];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
 
-      expect(find.text('À REMETTRE'), findsOneWidget);
-      expect(find.text('Voir le QR →'), findsOneWidget);
-    },
-  );
+    expect(find.text('À REMETTRE'), findsOneWidget);
+    expect(find.text('Voir le QR →'), findsOneWidget);
+  });
 
   testWidgets('carte REJECTED affiche badge TERMINÉ', (tester) async {
     final bids = [_bid('REJECTED', 'Dakar')];
@@ -492,35 +474,31 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  testWidgets(
-    'taper Réinitialiser dans l\'état vide filtré réinitialise le filtre',
-    (tester) async {
-      final bids = [_bid('ACCEPTED', 'Dakar')];
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
-        initialState: BidListLoaded(bids),
-      );
-      await tester.pumpWidget(subject());
-      await tester.pumpAndSettle();
+  testWidgets('taper Réinitialiser dans l\'état vide filtré réinitialise le filtre',
+      (tester) async {
+    final bids = [_bid('ACCEPTED', 'Dakar')];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
 
-      // Create filtered empty state via search
-      await tester.enterText(find.byType(TextField).first, 'zzz');
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pumpAndSettle();
+    // Create filtered empty state via search
+    await tester.enterText(find.byType(TextField).first, 'zzz');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Réinitialiser'), findsOneWidget);
-      await tester.tap(find.text('Réinitialiser'));
-      await tester.pumpAndSettle();
+    expect(find.text('Réinitialiser'), findsOneWidget);
+    await tester.tap(find.text('Réinitialiser'));
+    await tester.pumpAndSettle();
 
-      // Filter reset: all bids visible again
-      expect(find.text('Dakar'), findsOneWidget);
-    },
-  );
+    // Filter reset: all bids visible again
+    expect(find.text('Dakar'), findsOneWidget);
+  });
 
-  testWidgets('effacer la recherche via bouton clear dans le champ', (
-    tester,
-  ) async {
+  testWidgets('effacer la recherche via bouton clear dans le champ', (tester) async {
     final bids = [_bid('ACCEPTED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -535,9 +513,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Find the clear icon button (DonySearchField uses Icons.close_rounded)
-    final clearIcon = find.byWidgetPredicate(
-      (w) => w is DonyIcon && w.name == 'x',
-    );
+    final clearIcon = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x');
     expect(clearIcon, findsOneWidget);
     await tester.tap(clearIcon);
     await tester.pump(const Duration(milliseconds: 300));
@@ -547,26 +523,21 @@ void main() {
     expect(find.text('Dakar'), findsOneWidget);
   });
 
-  testWidgets(
-    'carte avec statut inconnu affiche le statut brut dans le badge',
-    (tester) async {
-      final bids = [_bid('CUSTOM_STATUS', 'Dakar')];
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(bids)]),
-        initialState: BidListLoaded(bids),
-      );
-      await tester.pumpWidget(subject());
-      await tester.pumpAndSettle();
+  testWidgets('carte avec statut inconnu affiche le statut brut dans le badge', (tester) async {
+    final bids = [_bid('CUSTOM_STATUS', 'Dakar')];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
 
-      // ShipmentCard._badge() default case returns bid.status as label
-      expect(find.text('CUSTOM_STATUS'), findsOneWidget);
-    },
-  );
+    // ShipmentCard._badge() default case returns bid.status as label
+    expect(find.text('CUSTOM_STATUS'), findsOneWidget);
+  });
 
-  testWidgets('StatusChipsRow présente quand la liste contient des bids', (
-    tester,
-  ) async {
+  testWidgets('StatusChipsRow présente quand la liste contient des bids', (tester) async {
     final bids = [_bid('ACCEPTED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -583,9 +554,7 @@ void main() {
     expect(find.text('Livrés'), findsOneWidget);
   });
 
-  testWidgets('tapper « Livrés » → cubit statuses == {COMPLETED}', (
-    tester,
-  ) async {
+  testWidgets('tapper « Livrés » → cubit statuses == {COMPLETED}', (tester) async {
     final bids = [_bid('COMPLETED', 'Dakar'), _bid('ACCEPTED', 'Abidjan')];
     whenListen(
       bidBloc,
@@ -602,9 +571,7 @@ void main() {
     expect(find.text('Abidjan'), findsNothing);
   });
 
-  testWidgets('mode standalone avec canGoBack=true affiche le bouton retour', (
-    tester,
-  ) async {
+  testWidgets('mode standalone avec canGoBack=true affiche le bouton retour', (tester) async {
     whenListen(
       bidBloc,
       const Stream<BidState>.empty(),

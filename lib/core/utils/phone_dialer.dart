@@ -29,8 +29,7 @@ Future<void> dialPhoneNumber(BuildContext context, String? phone) async {
     // externalApplication explicite : on veut le composeur du système, pas une vue
     // interne. La visibilité du paquet dialer est déclarée dans le <queries> du
     // AndroidManifest — sans elle, canLaunchUrl renvoie false sur Android 11+.
-    launched =
-        await canLaunchUrl(uri) &&
+    launched = await canLaunchUrl(uri) &&
         await launchUrl(uri, mode: LaunchMode.externalApplication);
   } catch (_) {
     launched = false;

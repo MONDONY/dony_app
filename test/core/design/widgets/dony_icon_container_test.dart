@@ -4,67 +4,47 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
-    theme: AppTheme.light(),
-    home: Scaffold(body: Center(child: child)),
-  );
+        theme: AppTheme.light(),
+        home: Scaffold(body: Center(child: child)),
+      );
 
   group('DonyIconContainer', () {
     testWidgets('sm size renders 32x32 container', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const DonyIconContainer(
-            icon: Icons.home,
-            size: DonyIconContainerSize.sm,
-          ),
-        ),
-      );
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(icon: Icons.home, size: DonyIconContainerSize.sm),
+      ));
       final container = tester.widget<Container>(find.byType(Container).first);
       expect(container.constraints?.maxWidth, 32.0);
     });
 
     testWidgets('md size renders 40x40 container (default)', (tester) async {
-      await tester.pumpWidget(wrap(const DonyIconContainer(icon: Icons.star)));
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(icon: Icons.star),
+      ));
       final container = tester.widget<Container>(find.byType(Container).first);
       expect(container.constraints?.maxWidth, 40.0);
     });
 
     testWidgets('lg size renders 56x56 container', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const DonyIconContainer(
-            icon: Icons.person,
-            size: DonyIconContainerSize.lg,
-          ),
-        ),
-      );
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(icon: Icons.person, size: DonyIconContainerSize.lg),
+      ));
       final container = tester.widget<Container>(find.byType(Container).first);
       expect(container.constraints?.maxWidth, 56.0);
     });
 
     testWidgets('xl size renders 72x72 container', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const DonyIconContainer(
-            icon: Icons.check,
-            size: DonyIconContainerSize.xl,
-          ),
-        ),
-      );
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(icon: Icons.check, size: DonyIconContainerSize.xl),
+      ));
       final container = tester.widget<Container>(find.byType(Container).first);
       expect(container.constraints?.maxWidth, 72.0);
     });
 
-    testWidgets('xxl size renders 80x80 container with 44px icon', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrap(
-          const DonyIconContainer(
-            icon: Icons.check_circle_rounded,
-            size: DonyIconContainerSize.xxl,
-          ),
-        ),
-      );
+    testWidgets('xxl size renders 80x80 container with 44px icon', (tester) async {
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(icon: Icons.check_circle_rounded, size: DonyIconContainerSize.xxl),
+      ));
       final container = tester.widget<Container>(find.byType(Container).first);
       expect(container.constraints?.maxWidth, 80.0);
       final icon = tester.widget<Icon>(find.byType(Icon));
@@ -72,24 +52,22 @@ void main() {
     });
 
     testWidgets('custom colors are applied', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const DonyIconContainer(
-            icon: Icons.info,
-            backgroundColor: DonyColors.infoLight,
-            iconColor: DonyColors.info,
-          ),
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(
+          icon: Icons.info,
+          backgroundColor: DonyColors.infoLight,
+          iconColor: DonyColors.info,
         ),
-      );
+      ));
       expect(find.byType(Icon), findsOneWidget);
       final icon = tester.widget<Icon>(find.byType(Icon));
       expect(icon.color, DonyColors.info);
     });
 
     testWidgets('custom borderRadius overrides default', (tester) async {
-      await tester.pumpWidget(
-        wrap(const DonyIconContainer(icon: Icons.lock, borderRadius: 8)),
-      );
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(icon: Icons.lock, borderRadius: 8),
+      ));
       expect(find.byType(Container), findsOneWidget);
     });
   });

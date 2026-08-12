@@ -16,14 +16,14 @@ void main() {
   setUp(() => cubit = _MockConnectivityCubit());
 
   Widget wrap() => MaterialApp(
-    theme: ThemeData.light(useMaterial3: true),
-    home: Scaffold(
-      body: BlocProvider<ConnectivityCubit>.value(
-        value: cubit,
-        child: const ConnectivityBanner(),
-      ),
-    ),
-  );
+        theme: ThemeData.light(useMaterial3: true),
+        home: Scaffold(
+          body: BlocProvider<ConnectivityCubit>.value(
+            value: cubit,
+            child: const ConnectivityBanner(),
+          ),
+        ),
+      );
 
   testWidgets('rien affiché quand online', (tester) async {
     when(() => cubit.state).thenReturn(const ConnectivityState());
@@ -35,12 +35,11 @@ void main() {
     expect(find.text('Connexion rétablie'), findsNothing);
   });
 
-  testWidgets('bandeau rouge "Pas de connexion internet" quand offline', (
-    tester,
-  ) async {
-    when(
-      () => cubit.state,
-    ).thenReturn(const ConnectivityState(status: ConnectivityStatus.offline));
+  testWidgets('bandeau rouge "Pas de connexion internet" quand offline',
+      (tester) async {
+    when(() => cubit.state).thenReturn(
+      const ConnectivityState(status: ConnectivityStatus.offline),
+    );
     await tester.pumpWidget(wrap());
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -48,9 +47,9 @@ void main() {
   });
 
   testWidgets('bandeau ambre "Connexion instable" quand weak', (tester) async {
-    when(
-      () => cubit.state,
-    ).thenReturn(const ConnectivityState(status: ConnectivityStatus.weak));
+    when(() => cubit.state).thenReturn(
+      const ConnectivityState(status: ConnectivityStatus.weak),
+    );
     await tester.pumpWidget(wrap());
     await tester.pump(const Duration(milliseconds: 300));
 
@@ -58,18 +57,17 @@ void main() {
   });
 
   testWidgets(
-    'bandeau vert "Connexion rétablie" quand justReconnected, même si status online',
-    (tester) async {
-      when(() => cubit.state).thenReturn(
-        const ConnectivityState(
-          status: ConnectivityStatus.online,
-          justReconnected: true,
-        ),
-      );
-      await tester.pumpWidget(wrap());
-      await tester.pump(const Duration(milliseconds: 300));
+      'bandeau vert "Connexion rétablie" quand justReconnected, même si status online',
+      (tester) async {
+    when(() => cubit.state).thenReturn(
+      const ConnectivityState(
+        status: ConnectivityStatus.online,
+        justReconnected: true,
+      ),
+    );
+    await tester.pumpWidget(wrap());
+    await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Connexion rétablie'), findsOneWidget);
-    },
-  );
+    expect(find.text('Connexion rétablie'), findsOneWidget);
+  });
 }

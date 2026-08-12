@@ -65,9 +65,8 @@ void main() {
       expect(find.text('Compléter mon compte'), findsOneWidget);
     });
 
-    testWidgets('shows loading when state is ConnectOnboardingLoading', (
-      tester,
-    ) async {
+    testWidgets('shows loading when state is ConnectOnboardingLoading',
+        (tester) async {
       whenListen<ConnectOnboardingState>(
         mockBloc,
         Stream.value(const ConnectOnboardingLoading()),
@@ -79,25 +78,18 @@ void main() {
 
       // Button should be disabled (no tap handler)
       final button = tester.widget<InkWell>(
-        find.descendant(
-          of: find.byType(DonyButton),
-          matching: find.byType(InkWell),
-        ),
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
       );
       expect(button.onTap, isNull);
     });
 
-    testWidgets('shows error banner when state is ConnectOnboardingError', (
-      tester,
-    ) async {
+    testWidgets('shows error banner when state is ConnectOnboardingError',
+        (tester) async {
       whenListen<ConnectOnboardingState>(
         mockBloc,
-        Stream.value(
-          ConnectOnboardingError(NetworkException('Stripe indisponible')),
-        ),
-        initialState: ConnectOnboardingError(
-          NetworkException('Stripe indisponible'),
-        ),
+        Stream.value(ConnectOnboardingError(NetworkException('Stripe indisponible'))),
+        initialState:
+            ConnectOnboardingError(NetworkException('Stripe indisponible')),
       );
 
       await tester.pumpWidget(_wrap(mockBloc));
@@ -110,18 +102,16 @@ void main() {
       );
     });
 
-    testWidgets('dispatches ConnectOnboardingLinkRequested on button tap', (
-      tester,
-    ) async {
+    testWidgets('dispatches ConnectOnboardingLinkRequested on button tap',
+        (tester) async {
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(_kSettle);
 
       await tester.tap(find.text('Compléter mon compte'));
       await tester.pump(_kSettle);
 
-      verify(
-        () => mockBloc.add(const ConnectOnboardingLinkRequested()),
-      ).called(1);
+      verify(() => mockBloc.add(const ConnectOnboardingLinkRequested()))
+          .called(1);
     });
   });
 }

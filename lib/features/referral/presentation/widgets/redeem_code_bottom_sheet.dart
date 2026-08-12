@@ -13,10 +13,7 @@ abstract final class RedeemCodeBottomSheet {
   static Future<bool?> show(BuildContext context) {
     // Pre-create the bloc so it survives MediaQuery rebuilds (keyboard open/close)
     // without being re-instantiated. Closed manually in whenComplete().
-    final bloc = ReferralBloc(
-      getIt<ReferralRepository>(),
-      getIt<AnalyticsService>(),
-    );
+    final bloc = ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>());
     final notifier = ValueNotifier<bool>(false);
     final ctrl = TextEditingController();
     ctrl.addListener(() => notifier.value = ctrl.text.trim().isNotEmpty);
@@ -26,22 +23,26 @@ abstract final class RedeemCodeBottomSheet {
       title: 'Entrer un code parrain',
       subtitle:
           'Tu as été invité par un ami ? Entre son code pour qu\'il soit récompensé à ta première livraison.',
-      wrapper: (child) =>
-          BlocProvider<ReferralBloc>.value(value: bloc, child: child),
+      wrapper: (child) => BlocProvider<ReferralBloc>.value(
+        value: bloc,
+        child: child,
+      ),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: notifier,
         builder: (context, hasText, _) =>
             BlocBuilder<ReferralBloc, ReferralState>(
-              builder: (context, state) => DonyButton(
-                label: 'Appliquer',
-                isLoading: state is ReferralRedeemLoading,
-                onPressed: hasText && state is! ReferralRedeemLoading
-                    ? () => context.read<ReferralBloc>().add(
-                        ReferralRedeemRequested(ctrl.text.trim().toUpperCase()),
-                      )
-                    : null,
-              ),
-            ),
+          builder: (context, state) => DonyButton(
+            label: 'Appliquer',
+            isLoading: state is ReferralRedeemLoading,
+            onPressed: hasText && state is! ReferralRedeemLoading
+                ? () => context.read<ReferralBloc>().add(
+                      ReferralRedeemRequested(
+                        ctrl.text.trim().toUpperCase(),
+                      ),
+                    )
+                : null,
+          ),
+        ),
       ),
       child: BlocListener<ReferralBloc, ReferralState>(
         listener: (context, state) {

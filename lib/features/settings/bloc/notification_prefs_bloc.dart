@@ -44,17 +44,15 @@ class NotificationPrefsBloc
     this._packageRequests,
     this._analytics,
     this._prefsRepository,
-  ) : super(
-        NotificationPrefsState(
+  ) : super(NotificationPrefsState(
           prefs: {
             for (final e in _defaults.entries)
-              e.key:
-                  (_box.get('notif_${e.key}', defaultValue: e.value)
-                      as bool?) ??
-                  e.value,
+              e.key: (_box.get(
+                    'notif_${e.key}',
+                    defaultValue: e.value,
+                  ) as bool?) ?? e.value,
           },
-        ),
-      ) {
+        )) {
     on<NotifPrefsSyncRequested>(_onSync);
     on<NotifPrefToggled>(_onToggled);
     on<NotifPackageMatchAlertLoadRequested>(_onPackageMatchAlertLoad);
@@ -122,20 +120,16 @@ class NotificationPrefsBloc
 
     try {
       await _prefsRepository.updatePrefs(NotificationPrefsDto(updated));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.notificationPrefToggled,
-          properties: {'pref': event.key, 'enabled': enabled},
-        ),
-      );
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.notificationPrefToggled,
+        properties: {'pref': event.key, 'enabled': enabled},
+      ));
     } catch (_) {
       await _box.put('notif_${event.key}', previous[event.key]);
-      emit(
-        state.copyWith(
-          prefs: previous,
-          errorMessageGetter: () => 'Impossible de synchroniser. Réessayez.',
-        ),
-      );
+      emit(state.copyWith(
+        prefs: previous,
+        errorMessageGetter: () => 'Impossible de synchroniser. Réessayez.',
+      ));
     }
   }
 
@@ -164,23 +158,19 @@ class NotificationPrefsBloc
     emit(state.copyWith(packageMatchAlert: event.enabled));
     try {
       await _packageRequests.setPackageMatchAlert(event.enabled);
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.packageMatchAlertToggled,
-          properties: {'enabled': event.enabled},
-        ),
-      );
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.packageMatchAlertToggled,
+        properties: {'enabled': event.enabled},
+      ));
     } catch (_) {
       // Construction explicite plutôt que `copyWith` : le retour en arrière
       // doit pouvoir restaurer la valeur inconnue (`null`), qu'un paramètre
       // optionnel ne sait pas exprimer.
-      emit(
-        NotificationPrefsState(
-          prefs: state.prefs,
-          packageMatchAlert: previous,
-          isSyncing: state.isSyncing,
-        ),
-      );
+      emit(NotificationPrefsState(
+        prefs: state.prefs,
+        packageMatchAlert: previous,
+        isSyncing: state.isSyncing,
+      ));
     }
   }
 }

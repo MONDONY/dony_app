@@ -26,52 +26,40 @@ void main() {
   });
 
   testWidgets('affiche le champ de recherche et le bouton', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: BlocProvider<TrackingBloc>.value(
-          value: bloc,
-          child: Builder(
-            builder: (ctx) => TextButton(
-              onPressed: () => TrackingSearchBottomSheet.show(ctx),
-              child: const Text('Ouvrir'),
-            ),
-          ),
-        ),
+    await tester.pumpWidget(MaterialApp(
+      home: BlocProvider<TrackingBloc>.value(
+        value: bloc,
+        child: Builder(builder: (ctx) => TextButton(
+          onPressed: () => TrackingSearchBottomSheet.show(ctx),
+          child: const Text('Ouvrir'),
+        )),
       ),
-    );
+    ));
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
     expect(find.text('Numéro de suivi'), findsOneWidget);
     expect(find.text('Rechercher'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'search'),
-      findsOneWidget,
-    );
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'search'), findsOneWidget);
   });
 
-  testWidgets('envoie TrackingSearchRequested avec le numéro normalisé', (
-    tester,
-  ) async {
+  testWidgets('envoie TrackingSearchRequested avec le numéro normalisé',
+      (tester) async {
     final trackingBloc = _MockTrackingBloc();
     when(() => trackingBloc.state).thenReturn(TrackingInitial());
     when(() => trackingBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => trackingBloc.add(any())).thenReturn(null);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: BlocProvider<TrackingBloc>.value(
-          value: trackingBloc,
-          child: Builder(
-            builder: (ctx) => TextButton(
-              onPressed: () => TrackingSearchBottomSheet.show(ctx),
-              child: const Text('Ouvrir'),
-            ),
-          ),
-        ),
+    await tester.pumpWidget(MaterialApp(
+      home: BlocProvider<TrackingBloc>.value(
+        value: trackingBloc,
+        child: Builder(builder: (ctx) => TextButton(
+          onPressed: () => TrackingSearchBottomSheet.show(ctx),
+          child: const Text('Ouvrir'),
+        )),
       ),
-    );
+    ));
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
@@ -83,38 +71,30 @@ void main() {
     await tester.tap(find.text('Rechercher'));
     await tester.pumpAndSettle();
 
-    verify(
-      () => trackingBloc.add(
-        any(
-          that: isA<TrackingSearchRequested>().having(
-            (e) => e.number,
-            'number',
-            'DON-481234',
-          ),
-        ),
-      ),
-    ).called(1);
+    verify(() => trackingBloc.add(any(
+        that: isA<TrackingSearchRequested>().having(
+          (e) => e.number,
+          'number',
+          'DON-481234',
+        )))).called(1);
   });
 
-  testWidgets('accepte le numéro avec ou sans préfixe DON-', (tester) async {
+  testWidgets('accepte le numéro avec ou sans préfixe DON-',
+      (tester) async {
     final trackingBloc = _MockTrackingBloc();
     when(() => trackingBloc.state).thenReturn(TrackingInitial());
     when(() => trackingBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => trackingBloc.add(any())).thenReturn(null);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: BlocProvider<TrackingBloc>.value(
-          value: trackingBloc,
-          child: Builder(
-            builder: (ctx) => TextButton(
-              onPressed: () => TrackingSearchBottomSheet.show(ctx),
-              child: const Text('Ouvrir'),
-            ),
-          ),
-        ),
+    await tester.pumpWidget(MaterialApp(
+      home: BlocProvider<TrackingBloc>.value(
+        value: trackingBloc,
+        child: Builder(builder: (ctx) => TextButton(
+          onPressed: () => TrackingSearchBottomSheet.show(ctx),
+          child: const Text('Ouvrir'),
+        )),
       ),
-    );
+    ));
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
@@ -124,16 +104,12 @@ void main() {
     await tester.tap(find.text('Rechercher'));
     await tester.pumpAndSettle();
 
-    verify(
-      () => trackingBloc.add(
-        any(
-          that: isA<TrackingSearchRequested>().having(
-            (e) => e.number,
-            'number',
-            'DON-481234',
-          ),
-        ),
-      ),
-    ).called(1);
+    verify(() => trackingBloc.add(any(
+        that: isA<TrackingSearchRequested>().having(
+          (e) => e.number,
+          'number',
+          'DON-481234',
+        )))).called(1);
   });
+
 }

@@ -1,12 +1,7 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
-const _confirmedStatuses = {
-  'ACCEPTED',
-  'HANDED_OVER',
-  'IN_TRANSIT',
-  'COMPLETED',
-};
+const _confirmedStatuses = {'ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT', 'COMPLETED'};
 const _departedStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'COMPLETED'};
 const _transitStatuses = {'IN_TRANSIT', 'COMPLETED'};
 const _arrivedStatuses = {'COMPLETED'};
@@ -32,20 +27,19 @@ List<AnnouncementModel> selectScannableTrips(List<AnnouncementModel> trips) {
 
   final inProgress = trips.where((t) => t.status == 'IN_PROGRESS').toList()
     ..sort(byDate);
-  final upcoming =
-      trips.where((t) => t.status == 'ACTIVE' || t.status == 'FULL').toList()
-        ..sort(byDate);
+  final upcoming = trips
+      .where((t) => t.status == 'ACTIVE' || t.status == 'FULL')
+      .toList()
+    ..sort(byDate);
   return [...inProgress, ...upcoming];
 }
 
 ScanHubProgress computeScanProgress(List<BidModel> bids) {
   return ScanHubProgress(
-    confirmedColis: bids
-        .where((b) => _confirmedStatuses.contains(b.status))
-        .length,
-    scannedDepart: bids
-        .where((b) => _departedStatuses.contains(b.status))
-        .length,
+    confirmedColis:
+        bids.where((b) => _confirmedStatuses.contains(b.status)).length,
+    scannedDepart:
+        bids.where((b) => _departedStatuses.contains(b.status)).length,
   );
 }
 
@@ -55,9 +49,10 @@ ScanHubProgress computeScanProgress(List<BidModel> bids) {
 /// Source unique de vérité pour « quels bids sont scannables » dans le hub
 /// Scan & Suivi — exclut `PENDING`, `REJECTED` et tout `CANCELLED` (y compris
 /// les auto-annulés, déjà hors de `_confirmedStatuses`).
-List<BidModel> confirmedColis(List<BidModel> bids) => bids
-    .where((b) => _confirmedStatuses.contains(b.status))
-    .toList(growable: false);
+List<BidModel> confirmedColis(List<BidModel> bids) =>
+    bids.where((b) => _confirmedStatuses.contains(b.status)).toList(
+          growable: false,
+        );
 
 /// Étape à scanner ensuite pour ce colis, dérivée de son statut. `null` si
 /// toutes les étapes sont déjà scannées (statut `COMPLETED`).
@@ -77,7 +72,7 @@ String? nextRequiredStep(BidModel bid) {
 /// Progression par étape d'un colis — pilote les 3 points affichés sur sa
 /// ligne dans la liste du hub.
 ({bool depart, bool transit, bool arrivee}) colisStepProgress(BidModel bid) => (
-  depart: _departedStatuses.contains(bid.status),
-  transit: _transitStatuses.contains(bid.status),
-  arrivee: _arrivedStatuses.contains(bid.status),
-);
+      depart: _departedStatuses.contains(bid.status),
+      transit: _transitStatuses.contains(bid.status),
+      arrivee: _arrivedStatuses.contains(bid.status),
+    );

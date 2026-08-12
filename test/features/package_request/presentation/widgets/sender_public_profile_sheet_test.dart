@@ -8,26 +8,27 @@ SenderPublicProfile _sender({
   bool kycVerified = true,
   double averageRating = 4.8,
   int totalRatings = 12,
-}) => SenderPublicProfile(
-  id: 'sender-1',
-  displayName: 'Fatou Diallo',
-  averageRating: averageRating,
-  totalRatings: totalRatings,
-  kycVerified: kycVerified,
-);
+}) =>
+    SenderPublicProfile(
+      id: 'sender-1',
+      displayName: 'Fatou Diallo',
+      averageRating: averageRating,
+      totalRatings: totalRatings,
+      kycVerified: kycVerified,
+    );
 
 Widget _buildApp(SenderPublicProfile sender) => MaterialApp(
-  theme: AppTheme.light(),
-  home: Scaffold(
-    body: Builder(
-      builder: (ctx) => ElevatedButton(
-        key: const Key('open'),
-        onPressed: () => showSenderPublicProfileSheet(ctx, sender),
-        child: const Text('Ouvrir'),
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: Builder(
+          builder: (ctx) => ElevatedButton(
+            key: const Key('open'),
+            onPressed: () => showSenderPublicProfileSheet(ctx, sender),
+            child: const Text('Ouvrir'),
+          ),
+        ),
       ),
-    ),
-  ),
-);
+    );
 
 void main() {
   group('SenderPublicProfileSheet', () {
@@ -45,27 +46,24 @@ void main() {
       expect(find.text('Fatou Diallo'), findsWidgets);
     });
 
-    testWidgets('shows "Identité vérifiée" when kycVerified=true', (
-      tester,
-    ) async {
+    testWidgets('shows "Identité vérifiée" when kycVerified=true',
+        (tester) async {
       await tester.pumpWidget(_buildApp(_sender(kycVerified: true)));
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.text('Identité vérifiée'), findsOneWidget);
     });
 
-    testWidgets('hides "Identité vérifiée" when kycVerified=false', (
-      tester,
-    ) async {
+    testWidgets('hides "Identité vérifiée" when kycVerified=false',
+        (tester) async {
       await tester.pumpWidget(_buildApp(_sender(kycVerified: false)));
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.text('Identité vérifiée'), findsNothing);
     });
 
-    testWidgets('shows average rating and review count when totalRatings > 0', (
-      tester,
-    ) async {
+    testWidgets('shows average rating and review count when totalRatings > 0',
+        (tester) async {
       await tester.pumpWidget(
         _buildApp(_sender(averageRating: 4.8, totalRatings: 12)),
       );
@@ -76,7 +74,9 @@ void main() {
     });
 
     testWidgets('shows "Nouveau membre" when totalRatings = 0', (tester) async {
-      await tester.pumpWidget(_buildApp(_sender(totalRatings: 0)));
+      await tester.pumpWidget(
+        _buildApp(_sender(totalRatings: 0)),
+      );
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.text('Nouveau membre'), findsOneWidget);

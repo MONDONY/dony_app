@@ -28,9 +28,9 @@ void main() {
     blocTest<DeletionEligibilityCubit, DeletionEligibilityState>(
       'aucun blocage → isLoading=false, canDelete=true',
       build: () {
-        when(
-          () => mockRepo.checkEligibility(),
-        ).thenAnswer((_) async => const DeletionEligibility(canDelete: true));
+        when(() => mockRepo.checkEligibility()).thenAnswer(
+          (_) async => const DeletionEligibility(canDelete: true),
+        );
         return cubit;
       },
       act: (c) => c.check(),
@@ -38,11 +38,7 @@ void main() {
         isA<DeletionEligibilityState>()
             .having((s) => s.isLoading, 'isLoading', isFalse)
             .having((s) => s.canDelete, 'canDelete', isTrue)
-            .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              isNull,
-            ),
+            .having((s) => s.blockedReasonMessage, 'blockedReasonMessage', isNull),
       ],
     );
 
@@ -61,11 +57,8 @@ void main() {
       expect: () => [
         isA<DeletionEligibilityState>()
             .having((s) => s.canDelete, 'canDelete', isFalse)
-            .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              contains('séquestre'),
-            ),
+            .having((s) => s.blockedReasonMessage, 'blockedReasonMessage',
+                contains('séquestre')),
       ],
     );
 
@@ -84,11 +77,8 @@ void main() {
       expect: () => [
         isA<DeletionEligibilityState>()
             .having((s) => s.canDelete, 'canDelete', isFalse)
-            .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              contains('wallet'),
-            ),
+            .having((s) => s.blockedReasonMessage, 'blockedReasonMessage',
+                contains('wallet')),
       ],
     );
 
@@ -107,20 +97,15 @@ void main() {
       expect: () => [
         isA<DeletionEligibilityState>()
             .having((s) => s.canDelete, 'canDelete', isFalse)
-            .having(
-              (s) => s.blockedReasonMessage,
-              'blockedReasonMessage',
-              isNotNull,
-            ),
+            .having((s) => s.blockedReasonMessage, 'blockedReasonMessage', isNotNull),
       ],
     );
 
     blocTest<DeletionEligibilityCubit, DeletionEligibilityState>(
       'erreur réseau → fail-open, canDelete=true (le backend reste autoritaire à la tentative réelle)',
       build: () {
-        when(
-          () => mockRepo.checkEligibility(),
-        ).thenThrow(Exception('network down'));
+        when(() => mockRepo.checkEligibility())
+            .thenThrow(Exception('network down'));
         return cubit;
       },
       act: (c) => c.check(),

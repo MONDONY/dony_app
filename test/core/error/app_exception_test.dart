@@ -37,10 +37,7 @@ void main() {
 
     test('NotFoundException stocke resourceType optionnel', () {
       // ignore: prefer_const_constructors
-      final e = NotFoundException(
-        message: 'Annonce introuvable',
-        resourceType: 'announcement',
-      );
+      final e = NotFoundException(message: 'Annonce introuvable', resourceType: 'announcement');
       expect(e.code, 'NOT_FOUND');
       expect(e.message, 'Annonce introuvable');
       expect(e.resourceType, 'announcement');
@@ -67,12 +64,9 @@ void main() {
 
     test('ValidationException stores errors map', () {
       // ignore: prefer_const_constructors
-      final e = ValidationException(
-        'invalid',
-        errors: {
-          'email': ['required', 'invalid format'],
-        },
-      );
+      final e = ValidationException('invalid', errors: {
+        'email': ['required', 'invalid format'],
+      });
       expect(e.errors!['email'], hasLength(2));
       expect(e.props, contains(e.errors));
     });

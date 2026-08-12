@@ -2,7 +2,7 @@
 //
 // Vérifie que :
 //  1. 3 cartes candidats avec bouton "Choisir" sont affichées
-//  2. Chaque carte affiche "Tu paies 39,20 €"
+//  2. Chaque carte affiche "Tu paies 39,20 €"
 //  3. Tapper "Choisir" sur la première carte déclenche NegotiationAcceptRequested
 //  4. La note "Les autres seront déclinés automatiquement." est visible
 
@@ -140,13 +140,13 @@ void main() {
       expect(find.text('Choisir'), findsNWidgets(3));
     });
 
-    testWidgets('chaque carte affiche "Tu paies 39,20 €"', (tester) async {
+    testWidgets('chaque carte affiche "Tu paies 39,20 €"', (tester) async {
       await tester.pumpWidget(
         wrap(request: _firmRequest(), threads: _threeThreads()),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Tu paies 39,20 €'), findsNWidgets(3));
+      expect(find.text('Tu paies 39,20 €'), findsNWidgets(3));
     });
 
     testWidgets(

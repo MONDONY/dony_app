@@ -50,12 +50,10 @@ Future<void> _pumpHost(
   AddressData? initialPickupAddress,
   AddressData? initialDeliveryAddress,
 }) async {
-  await tester.pumpWidget(
-    _host(
-      initialPickupAddress: initialPickupAddress,
-      initialDeliveryAddress: initialDeliveryAddress,
-    ),
-  );
+  await tester.pumpWidget(_host(
+    initialPickupAddress: initialPickupAddress,
+    initialDeliveryAddress: initialDeliveryAddress,
+  ));
   await tester.pump(const Duration(milliseconds: 200));
   await tester.pump();
 }
@@ -106,89 +104,71 @@ void main() {
       expect(find.text('Capacité disponible'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets(
-      'les libellés de section sont en casse normale (pas en majuscules intégrales)',
-      (tester) async {
-        await _pumpHost(tester);
-        expect(
-          find.text('Lieux de remise'),
-          findsOneWidget,
-          reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES',
-        );
-        expect(
-          find.text('Capacité disponible'),
-          findsAtLeastNWidgets(1),
-          reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES',
-        );
-        expect(
-          find.text('LIEUX DE REMISE'),
-          findsNothing,
-          reason: 'Les majuscules intégrales ne doivent plus être utilisées',
-        );
-        expect(
-          find.text('CAPACITÉ DISPONIBLE'),
-          findsNothing,
-          reason: 'Les majuscules intégrales ne doivent plus être utilisées',
-        );
-      },
-    );
+    testWidgets('les libellés de section sont en casse normale (pas en majuscules intégrales)',
+        (tester) async {
+      await _pumpHost(tester);
+      expect(find.text('Lieux de remise'), findsOneWidget,
+          reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES');
+      expect(find.text('Capacité disponible'), findsAtLeastNWidgets(1),
+          reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES');
+      expect(find.text('LIEUX DE REMISE'), findsNothing,
+          reason: 'Les majuscules intégrales ne doivent plus être utilisées');
+      expect(find.text('CAPACITÉ DISPONIBLE'), findsNothing,
+          reason: 'Les majuscules intégrales ne doivent plus être utilisées');
+    });
 
     testWidgets(
-      'initialPickupAddress affiche la valeur initiale dans le champ remise',
-      (tester) async {
-        const address = AddressData(
-          label: '12 rue Victor Hugo, Lyon',
-          lat: 45.748,
-          lng: 4.846,
-        );
-        await _pumpHost(tester, initialPickupAddress: address);
-        expect(find.text('12 rue Victor Hugo, Lyon'), findsOneWidget);
-      },
-    );
+        'initialPickupAddress affiche la valeur initiale dans le champ remise',
+        (tester) async {
+      const address = AddressData(
+        label: '12 rue Victor Hugo, Lyon',
+        lat: 45.748,
+        lng: 4.846,
+      );
+      await _pumpHost(tester, initialPickupAddress: address);
+      expect(find.text('12 rue Victor Hugo, Lyon'), findsOneWidget);
+    });
 
     testWidgets(
-      'initialDeliveryAddress affiche la valeur initiale dans le champ récupération',
-      (tester) async {
-        const address = AddressData(
-          label: 'Aéroport CDG, Roissy',
-          lat: 49.01,
-          lng: 2.55,
-        );
-        await _pumpHost(tester, initialDeliveryAddress: address);
-        expect(find.text('Aéroport CDG, Roissy'), findsOneWidget);
-      },
-    );
+        'initialDeliveryAddress affiche la valeur initiale dans le champ récupération',
+        (tester) async {
+      const address = AddressData(
+        label: 'Aéroport CDG, Roissy',
+        lat: 49.01,
+        lng: 2.55,
+      );
+      await _pumpHost(tester, initialDeliveryAddress: address);
+      expect(find.text('Aéroport CDG, Roissy'), findsOneWidget);
+    });
 
     testWidgets(
-      'AddressSelectorField remise reçoit la valeur initiale pickup',
-      (tester) async {
-        const address = AddressData(
-          label: '12 rue Victor Hugo, Lyon',
-          lat: 45.748,
-          lng: 4.846,
-        );
-        await _pumpHost(tester, initialPickupAddress: address);
-        final fields = tester
-            .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
-            .toList();
-        expect(fields.first.value, equals(address));
-      },
-    );
+        'AddressSelectorField remise reçoit la valeur initiale pickup',
+        (tester) async {
+      const address = AddressData(
+        label: '12 rue Victor Hugo, Lyon',
+        lat: 45.748,
+        lng: 4.846,
+      );
+      await _pumpHost(tester, initialPickupAddress: address);
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      expect(fields.first.value, equals(address));
+    });
 
     testWidgets(
-      'AddressSelectorField livraison reçoit la valeur initiale delivery',
-      (tester) async {
-        const address = AddressData(
-          label: 'Aéroport CDG, Roissy',
-          lat: 49.01,
-          lng: 2.55,
-        );
-        await _pumpHost(tester, initialDeliveryAddress: address);
-        final fields = tester
-            .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
-            .toList();
-        expect(fields.last.value, equals(address));
-      },
-    );
+        'AddressSelectorField livraison reçoit la valeur initiale delivery',
+        (tester) async {
+      const address = AddressData(
+        label: 'Aéroport CDG, Roissy',
+        lat: 49.01,
+        lng: 2.55,
+      );
+      await _pumpHost(tester, initialDeliveryAddress: address);
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      expect(fields.last.value, equals(address));
+    });
   });
 }

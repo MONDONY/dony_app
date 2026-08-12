@@ -36,10 +36,10 @@ class DonyTextField extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.onSubmitted,
-  }) : _variant = _DonyTextFieldVariant.text,
-       _value = null,
-       _onTap = null,
-       _trailing = null;
+  })  : _variant = _DonyTextFieldVariant.text,
+        _value = null,
+        _onTap = null,
+        _trailing = null;
 
   // ── Constructeur tappable ───────────────────────────────────────────────────
 
@@ -70,26 +70,26 @@ class DonyTextField extends StatelessWidget {
     VoidCallback? onTap,
     this.requiredLabel = false,
     this.errorText,
-  }) : _variant = _DonyTextFieldVariant.tappable,
-       _value = value,
-       _onTap = onTap,
-       _trailing = trailing,
-       controller = null,
-       hint = null,
-       suffixIcon = null,
-       obscureText = false,
-       keyboardType = null,
-       onChanged = null,
-       validator = null,
-       enabled = true,
-       autofocus = false,
-       maxLines = 1,
-       minLines = null,
-       // La variante tappable n'ouvre pas de clavier : ni focus, ni touche
-       // d'action, ni validation clavier n'ont de sens ici.
-       focusNode = null,
-       textInputAction = null,
-       onSubmitted = null;
+  })  : _variant = _DonyTextFieldVariant.tappable,
+        _value = value,
+        _onTap = onTap,
+        _trailing = trailing,
+        controller = null,
+        hint = null,
+        suffixIcon = null,
+        obscureText = false,
+        keyboardType = null,
+        onChanged = null,
+        validator = null,
+        enabled = true,
+        autofocus = false,
+        maxLines = 1,
+        minLines = null,
+        // La variante tappable n'ouvre pas de clavier : ni focus, ni touche
+        // d'action, ni validation clavier n'ont de sens ici.
+        focusNode = null,
+        textInputAction = null,
+        onSubmitted = null;
 
   // ── Champs partagés ─────────────────────────────────────────────────────────
 
@@ -166,8 +166,7 @@ class DonyTextField extends StatelessWidget {
       label: labelWidget,
       labelText: labelWidget == null ? (labelOverride ?? label) : null,
       hintText: hintOverride ?? hint,
-      prefixIcon:
-          prefixWidget ??
+      prefixIcon: prefixWidget ??
           (prefixIcon != null
               ? Icon(prefixIcon, color: prefixIconColor)
               : null),
@@ -214,7 +213,10 @@ class DonyTextField extends StatelessWidget {
           child: InputDecorator(
             // isEmpty: true force le label en position hint/placeholder.
             isEmpty: !hasValue,
-            decoration: _decoration(context, suffixOverride: _trailing),
+            decoration: _decoration(
+              context,
+              suffixOverride: _trailing,
+            ),
             child: hasValue
                 ? Text(
                     _value,

@@ -1,16 +1,11 @@
 class RecurrenceAddress {
-  const RecurrenceAddress({
-    required this.label,
-    required this.lat,
-    required this.lng,
-  });
+  const RecurrenceAddress({required this.label, required this.lat, required this.lng});
 
   final String label;
   final double lat;
   final double lng;
 
-  factory RecurrenceAddress.fromJson(Map<String, dynamic> json) =>
-      RecurrenceAddress(
+  factory RecurrenceAddress.fromJson(Map<String, dynamic> json) => RecurrenceAddress(
         label: json['label'] as String,
         lat: (json['lat'] as num).toDouble(),
         lng: (json['lng'] as num).toDouble(),
@@ -81,16 +76,9 @@ class TripRecurrence {
       availableKg: (json['availableKg'] as num).toDouble(),
       pricePerKg: (json['pricePerKg'] as num).toDouble(),
       acceptedCategories:
-          (json['acceptedCategories'] as List?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-      pickupAddress: RecurrenceAddress.fromJson(
-        json['pickupAddress'] as Map<String, dynamic>,
-      ),
-      deliveryAddress: RecurrenceAddress.fromJson(
-        json['deliveryAddress'] as Map<String, dynamic>,
-      ),
+          (json['acceptedCategories'] as List?)?.map((e) => e as String).toList() ?? const [],
+      pickupAddress: RecurrenceAddress.fromJson(json['pickupAddress'] as Map<String, dynamic>),
+      deliveryAddress: RecurrenceAddress.fromJson(json['deliveryAddress'] as Map<String, dynamic>),
       departureTime: time,
       arrivalTime: arrival,
       cashAccepted: json['cashAccepted'] as bool? ?? false,

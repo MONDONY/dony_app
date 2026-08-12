@@ -83,7 +83,8 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                   children: [
                     IconButton(
                       tooltip: 'Fermer',
-                      icon: const DonyIcon('x', color: DonyColors.neutral0),
+                      icon: const DonyIcon('x',
+                          color: DonyColors.neutral0),
                       onPressed: () => context.pop<String?>(),
                     ),
                     Expanded(
@@ -98,7 +99,8 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
                     ),
                     IconButton(
                       tooltip: 'Activer ou couper la lampe',
-                      icon: const DonyIcon('zap', color: DonyColors.neutral0),
+                      icon: const DonyIcon('zap',
+                          color: DonyColors.neutral0),
                       onPressed: () => _scanner.toggleTorch(),
                     ),
                   ],
@@ -108,8 +110,9 @@ class _QrPickerScreenState extends State<QrPickerScreen> {
             // Scan frame
             ValueListenableBuilder<bool>(
               valueListenable: _detected,
-              builder: (context, detected, _) =>
-                  Center(child: _QrFrame(detected: detected)),
+              builder: (context, detected, _) => Center(
+                child: _QrFrame(detected: detected),
+              ),
             ),
             // Hint text
             Positioned(
@@ -149,26 +152,24 @@ class _QrFrame extends StatelessWidget {
             Alignment.bottomLeft,
             Alignment.bottomRight,
           ])
-            Align(
-              alignment: a,
-              child: _Corner(alignment: a),
-            ),
+            Align(alignment: a, child: _Corner(alignment: a)),
           if (detected)
             Center(
-              child:
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: cs.success,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const DonyIcon(
-                      'check',
-                      color: DonyColors.neutral0,
-                      size: 40,
-                    ),
-                  ).animate().scale(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: cs.success,
+                  shape: BoxShape.circle,
+                ),
+                child: const DonyIcon(
+                  'check',
+                  color: DonyColors.neutral0,
+                  size: 40,
+                ),
+              )
+                  .animate()
+                  .scale(
                     begin: const Offset(0.5, 0.5),
                     duration: 300.ms,
                     curve: Curves.easeOutBack,
@@ -186,10 +187,10 @@ class _Corner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLeft =
-        alignment == Alignment.topLeft || alignment == Alignment.bottomLeft;
-    final isTop =
-        alignment == Alignment.topLeft || alignment == Alignment.topRight;
+    final isLeft = alignment == Alignment.topLeft ||
+        alignment == Alignment.bottomLeft;
+    final isTop = alignment == Alignment.topLeft ||
+        alignment == Alignment.topRight;
     return SizedBox(
       width: 28,
       height: 28,

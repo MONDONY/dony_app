@@ -12,14 +12,14 @@ import '../../../helpers/mock_analytics_backend.dart';
 class _MockReferralRepo extends Mock implements ReferralRepository {}
 
 ReferralInfo _fakeReferralInfo() => const ReferralInfo(
-  code: 'TEST-CODE',
-  shareUrl: 'https://dony.app/invite/TEST-CODE',
-  totalInvited: 0,
-  signedUp: 0,
-  rewarded: 0,
-  totalEarnedCents: 0,
-  hasBeenReferred: false,
-);
+      code: 'TEST-CODE',
+      shareUrl: 'https://dony.app/invite/TEST-CODE',
+      totalInvited: 0,
+      signedUp: 0,
+      rewarded: 0,
+      totalEarnedCents: 0,
+      hasBeenReferred: false,
+    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -28,9 +28,9 @@ void main() {
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-          const MethodChannel('dev.fluttercommunity.plus/share'),
-          (call) async => null,
-        );
+      const MethodChannel('dev.fluttercommunity.plus/share'),
+      (call) async => null,
+    );
   });
 
   late _MockReferralRepo repo;
@@ -42,38 +42,27 @@ void main() {
   });
 
   ReferralBloc makeBloc({bool enabled = true}) {
-    final a = enabled
-        ? makeEnabledAnalytics(backend)
-        : makeDisabledAnalytics(backend);
+    final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
     a.onConfigured();
     return ReferralBloc(repo, a);
   }
 
-  test(
-    'referral_shared fires on ReferralShared when state is loaded',
-    () async {
-      // First load the referral to set state to ReferralLoaded
-      when(
-        () => repo.getMyReferral(),
-      ).thenAnswer((_) async => _fakeReferralInfo());
-      final bloc = makeBloc();
-      bloc.add(const ReferralLoadRequested());
-      await bloc.stream.firstWhere((s) => s is ReferralLoaded);
-      clearInteractions(backend);
+  test('referral_shared fires on ReferralShared when state is loaded', () async {
+    // First load the referral to set state to ReferralLoaded
+    when(() => repo.getMyReferral()).thenAnswer((_) async => _fakeReferralInfo());
+    final bloc = makeBloc();
+    bloc.add(const ReferralLoadRequested());
+    await bloc.stream.firstWhere((s) => s is ReferralLoaded);
+    clearInteractions(backend);
 
-      // Now share
-      bloc.add(const ReferralShared());
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-      verify(
-        () => backend.capture(AnalyticsEvents.referralShared, any()),
-      ).called(1);
-    },
-  );
+    // Now share
+    bloc.add(const ReferralShared());
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    verify(() => backend.capture(AnalyticsEvents.referralShared, any())).called(1);
+  });
 
   test('no event when disabled', () async {
-    when(
-      () => repo.getMyReferral(),
-    ).thenAnswer((_) async => _fakeReferralInfo());
+    when(() => repo.getMyReferral()).thenAnswer((_) async => _fakeReferralInfo());
     final bloc = makeBloc(enabled: false);
     bloc.add(const ReferralLoadRequested());
     await bloc.stream.firstWhere((s) => s is ReferralLoaded);

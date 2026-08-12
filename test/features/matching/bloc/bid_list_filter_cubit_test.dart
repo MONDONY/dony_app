@@ -8,18 +8,19 @@ BidModel _bid({
   String? senderName,
   String? trackingNumber,
   String? rejectionReason,
-}) => BidModel(
-  id: 'b1',
-  announcementId: 'a1',
-  senderId: 's1',
-  senderName: senderName,
-  trackingNumber: trackingNumber,
-  rejectionReason: rejectionReason,
-  weightKg: 1,
-  status: status,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
-);
+}) =>
+    BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      senderName: senderName,
+      trackingNumber: trackingNumber,
+      rejectionReason: rejectionReason,
+      weightKg: 1,
+      status: status,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
 
 void main() {
   group('BidListFilterCubit', () {
@@ -42,10 +43,10 @@ void main() {
       'setFilter émet le nouvel état',
       build: BidListFilterCubit.new,
       act: (c) => c.setFilter(AcceptedStatusFilter.closed),
-      expect: () => const [
-        BidListFilterState(filter: AcceptedStatusFilter.closed),
-      ],
+      expect: () =>
+          const [BidListFilterState(filter: AcceptedStatusFilter.closed)],
     );
+
   });
 
   group('isAcceptedTabBid', () {
@@ -62,9 +63,8 @@ void main() {
 
     test('exclut CANCELLED auto-annulé (TRAVELER_NO_RESPONSE)', () {
       expect(
-        isAcceptedTabBid(
-          _bid(status: 'CANCELLED', rejectionReason: 'TRAVELER_NO_RESPONSE'),
-        ),
+        isAcceptedTabBid(_bid(
+            status: 'CANCELLED', rejectionReason: 'TRAVELER_NO_RESPONSE')),
         isFalse,
       );
     });
@@ -72,8 +72,7 @@ void main() {
     test('inclut CANCELLED post-acceptation (autre motif ou nul)', () {
       expect(
         isAcceptedTabBid(
-          _bid(status: 'CANCELLED', rejectionReason: 'TRIP_CANCELLED'),
-        ),
+            _bid(status: 'CANCELLED', rejectionReason: 'TRIP_CANCELLED')),
         isTrue,
       );
       expect(isAcceptedTabBid(_bid(status: 'CANCELLED')), isTrue);
@@ -106,9 +105,8 @@ void main() {
     });
     test('faux pour un CANCELLED auto-annulé (TRAVELER_NO_RESPONSE)', () {
       expect(
-        isClosedBid(
-          _bid(status: 'CANCELLED', rejectionReason: 'TRAVELER_NO_RESPONSE'),
-        ),
+        isClosedBid(_bid(
+            status: 'CANCELLED', rejectionReason: 'TRAVELER_NO_RESPONSE')),
         isFalse,
       );
     });
@@ -141,10 +139,7 @@ void main() {
 
     test('match par numéro de suivi', () {
       final b = _bid(
-        status: 'ACCEPTED',
-        senderName: 'X',
-        trackingNumber: 'DNY-4815',
-      );
+          status: 'ACCEPTED', senderName: 'X', trackingNumber: 'DNY-4815');
       expect(bidMatchesQuery(b, 'dny-48'), isTrue);
       expect(bidMatchesQuery(b, '4815'), isTrue);
       expect(bidMatchesQuery(b, '9999'), isFalse);

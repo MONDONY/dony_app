@@ -28,17 +28,18 @@ BidModel _makeBid({
   String id = 'bid-00000001',
   String senderName = 'Moussa Traoré',
   String contentCategory = 'Vêtements',
-}) => BidModel(
-  id: id,
-  announcementId: 'ann-1',
-  senderId: 'sender-1',
-  senderName: senderName,
-  weightKg: 3,
-  contentCategory: contentCategory,
-  status: status,
-  createdAt: DateTime(2026, 5),
-  updatedAt: DateTime(2026, 5),
-);
+}) =>
+    BidModel(
+      id: id,
+      announcementId: 'ann-1',
+      senderId: 'sender-1',
+      senderName: senderName,
+      weightKg: 3,
+      contentCategory: contentCategory,
+      status: status,
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+    );
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
 
@@ -61,8 +62,9 @@ Future<void> _pump(WidgetTester tester, _MockBidBloc bidBloc) async {
       ),
       GoRoute(
         path: '/bids/:bidId',
-        builder: (_, state) =>
-            Scaffold(body: Text('Bid detail ${state.pathParameters['bidId']}')),
+        builder: (_, state) => Scaffold(
+          body: Text('Bid detail ${state.pathParameters['bidId']}'),
+        ),
       ),
     ],
   );
@@ -83,9 +85,8 @@ void main() {
     bidBloc = _MockBidBloc();
     analytics = _MockAnalyticsService();
 
-    when(
-      () => analytics.logEvent(any(), properties: any(named: 'properties')),
-    ).thenAnswer((_) async {});
+    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
+        .thenAnswer((_) async {});
 
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
@@ -102,12 +103,15 @@ void main() {
 
   void stub(BidState state) {
     when(() => bidBloc.state).thenReturn(state);
-    whenListen(bidBloc, Stream<BidState>.value(state), initialState: state);
+    whenListen(
+      bidBloc,
+      Stream<BidState>.value(state),
+      initialState: state,
+    );
   }
 
-  testWidgets('liste vide → affiche l\'état vide « Aucun colis embarqué »', (
-    tester,
-  ) async {
+  testWidgets('liste vide → affiche l\'état vide « Aucun colis embarqué »',
+      (tester) async {
     stub(BidListLoaded(const []));
 
     await _pump(tester, bidBloc);
@@ -118,39 +122,39 @@ void main() {
   });
 
   testWidgets(
-    'seuls les colis embarqués (acceptés) sont affichés, les PENDING masqués',
-    (tester) async {
-      final accepted = _makeBid(
-        status: 'ACCEPTED',
-        id: 'bid-accepted',
-        senderName: 'Aïssa Camara',
-        contentCategory: 'Documents',
-      );
-      final pending = _makeBid(
-        status: 'PENDING',
-        id: 'bid-pending',
-        senderName: 'Karim Sow',
-        contentCategory: 'Électronique',
-      );
-      stub(BidListLoaded([accepted, pending]));
+      'seuls les colis embarqués (acceptés) sont affichés, les PENDING masqués',
+      (tester) async {
+    final accepted = _makeBid(
+      status: 'ACCEPTED',
+      id: 'bid-accepted',
+      senderName: 'Aïssa Camara',
+      contentCategory: 'Documents',
+    );
+    final pending = _makeBid(
+      status: 'PENDING',
+      id: 'bid-pending',
+      senderName: 'Karim Sow',
+      contentCategory: 'Électronique',
+    );
+    stub(BidListLoaded([accepted, pending]));
 
-      await _pump(tester, bidBloc);
-      await tester.pump();
+    await _pump(tester, bidBloc);
+    await tester.pump();
 
-      // Le colis accepté est rendu (contenu + expéditeur visibles).
-      expect(find.text('Documents'), findsOneWidget);
-      expect(find.textContaining('Aïssa Camara'), findsOneWidget);
+    // Le colis accepté est rendu (contenu + expéditeur visibles).
+    expect(find.text('Documents'), findsOneWidget);
+    expect(find.textContaining('Aïssa Camara'), findsOneWidget);
 
-      // Le colis PENDING n'apparaît pas (filtré par isAcceptedTabBid).
-      expect(find.text('Électronique'), findsNothing);
-      expect(find.textContaining('Karim Sow'), findsNothing);
+    // Le colis PENDING n'apparaît pas (filtré par isAcceptedTabBid).
+    expect(find.text('Électronique'), findsNothing);
+    expect(find.textContaining('Karim Sow'), findsNothing);
 
-      // Aucun état vide quand au moins un colis est embarqué.
-      expect(find.byType(DonyEmptyState), findsNothing);
-    },
-  );
+    // Aucun état vide quand au moins un colis est embarqué.
+    expect(find.byType(DonyEmptyState), findsNothing);
+  });
 
-  testWidgets('état de chargement → CircularProgressIndicator', (tester) async {
+  testWidgets('état de chargement → CircularProgressIndicator',
+      (tester) async {
     stub(BidLoading());
 
     await _pump(tester, bidBloc);
@@ -159,20 +163,13 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('≥ 2 statuts → filtre rapide affiché avec compteur « Tous »', (
-    tester,
-  ) async {
-    stub(
-      BidListLoaded([
-        _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
-        _makeBid(
-          status: 'IN_TRANSIT',
-          id: 'b2',
-          contentCategory: 'Électronique',
-        ),
-        _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
-      ]),
-    );
+  testWidgets('≥ 2 statuts → filtre rapide affiché avec compteur « Tous »',
+      (tester) async {
+    stub(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
+      _makeBid(status: 'IN_TRANSIT', id: 'b2', contentCategory: 'Électronique'),
+      _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
+    ]));
 
     await _pump(tester, bidBloc);
     await tester.pump();
@@ -185,20 +182,13 @@ void main() {
     expect(find.text('Bijoux'), findsOneWidget);
   });
 
-  testWidgets('tap chip statut → filtre la liste sur ce statut', (
-    tester,
-  ) async {
-    stub(
-      BidListLoaded([
-        _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
-        _makeBid(
-          status: 'IN_TRANSIT',
-          id: 'b2',
-          contentCategory: 'Électronique',
-        ),
-        _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
-      ]),
-    );
+  testWidgets('tap chip statut → filtre la liste sur ce statut',
+      (tester) async {
+    stub(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', contentCategory: 'Documents'),
+      _makeBid(status: 'IN_TRANSIT', id: 'b2', contentCategory: 'Électronique'),
+      _makeBid(status: 'CANCELLED', id: 'b3', contentCategory: 'Bijoux'),
+    ]));
 
     await _pump(tester, bidBloc);
     await tester.pump();
@@ -213,12 +203,10 @@ void main() {
   });
 
   testWidgets('un seul statut → pas de filtre rapide', (tester) async {
-    stub(
-      BidListLoaded([
-        _makeBid(status: 'ACCEPTED', id: 'b1'),
-        _makeBid(status: 'ACCEPTED', id: 'b2', senderName: 'Autre Expéditeur'),
-      ]),
-    );
+    stub(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1'),
+      _makeBid(status: 'ACCEPTED', id: 'b2', senderName: 'Autre Expéditeur'),
+    ]));
 
     await _pump(tester, bidBloc);
     await tester.pump();

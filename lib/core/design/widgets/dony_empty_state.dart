@@ -61,18 +61,16 @@ class DonyEmptyState extends StatelessWidget {
 
     final (bg, ic, defaultIcon) = switch (type) {
       DonyEmptyStateType.empty => (
-        cs.primaryContainer,
-        cs.primary,
-        Icons.inbox_outlined,
-      ),
+          cs.primaryContainer,
+          cs.primary,
+          Icons.inbox_outlined,
+        ),
       DonyEmptyStateType.error => (
-        cs.errorLight,
-        cs.error,
-        Icons.wifi_off_rounded,
-      ),
-      _ => throw StateError(
-        'DonyEmptyState: type loading handled by early return',
-      ),
+          cs.errorLight,
+          cs.error,
+          Icons.wifi_off_rounded,
+        ),
+      _ => throw StateError('DonyEmptyState: type loading handled by early return'),
     };
 
     return Center(
@@ -82,10 +80,7 @@ class DonyEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             (mascotte != null
-                    ? DonyMascotteAnimated(
-                        type: mascotte!,
-                        size: DonyMascotteSize.lg,
-                      )
+                    ? DonyMascotteAnimated(type: mascotte!, size: DonyMascotteSize.lg)
                     : DonyIconContainer(
                         icon: iconAsset == null ? (icon ?? defaultIcon) : null,
                         iconAsset: iconAsset,
@@ -95,16 +90,13 @@ class DonyEmptyState extends StatelessWidget {
                       ))
                 .animate()
                 .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
-                .scaleXY(
-                  begin: 0.82,
-                  duration: 400.ms,
-                  curve: Curves.easeOutBack,
-                ),
+                .scaleXY(begin: 0.82, duration: 400.ms, curve: Curves.easeOutBack),
             const SizedBox(height: DonySpacing.xl),
-            Text(title, style: tt.headlineSmall, textAlign: TextAlign.center)
-                .animate(delay: 80.ms)
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.05),
+            Text(
+              title,
+              style: tt.headlineSmall,
+              textAlign: TextAlign.center,
+            ).animate(delay: 80.ms).fadeIn(duration: 300.ms).slideY(begin: 0.05),
             if (description != null) ...[
               const SizedBox(height: DonySpacing.sm),
               Text(
@@ -116,16 +108,13 @@ class DonyEmptyState extends StatelessWidget {
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: DonySpacing.xl),
               DonyButton(
-                    label: actionLabel!,
-                    onPressed: onAction,
-                    variant: type == DonyEmptyStateType.error
-                        ? DonyButtonVariant.primary
-                        : DonyButtonVariant.secondary,
-                    fullWidth: false,
-                  )
-                  .animate(delay: 200.ms)
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.05),
+                label: actionLabel!,
+                onPressed: onAction,
+                variant: type == DonyEmptyStateType.error
+                    ? DonyButtonVariant.primary
+                    : DonyButtonVariant.secondary,
+                fullWidth: false,
+              ).animate(delay: 200.ms).fadeIn(duration: 300.ms).slideY(begin: 0.05),
             ],
           ],
         ),

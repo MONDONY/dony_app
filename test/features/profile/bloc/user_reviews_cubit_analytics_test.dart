@@ -46,9 +46,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(AnalyticsEvents.publicReviewsOpened, {
-          'rating_count': 12,
-        }),
+        () => backend.capture(
+          AnalyticsEvents.publicReviewsOpened,
+          {'rating_count': 12},
+        ),
       ).called(1);
     });
 
@@ -62,9 +63,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(AnalyticsEvents.publicReviewsOpened, {
-          'rating_count': 12,
-        }),
+        () => backend.capture(
+          AnalyticsEvents.publicReviewsOpened,
+          {'rating_count': 12},
+        ),
       ).called(1);
     });
 
@@ -114,11 +116,8 @@ void main() {
       build: () => makeCubit(),
       act: (c) => c.load('user-1', seed: _kSummary),
       expect: () => [
-        isA<UserReviewsLoaded>().having(
-          (s) => s.summary.ratingCount,
-          'ratingCount',
-          12,
-        ),
+        isA<UserReviewsLoaded>()
+            .having((s) => s.summary.ratingCount, 'ratingCount', 12),
       ],
     );
 
@@ -131,7 +130,10 @@ void main() {
         return makeCubit();
       },
       act: (c) => c.load('user-1'),
-      expect: () => [isA<UserReviewsLoading>(), isA<UserReviewsLoaded>()],
+      expect: () => [
+        isA<UserReviewsLoading>(),
+        isA<UserReviewsLoaded>(),
+      ],
     );
 
     blocTest<UserReviewsCubit, UserReviewsState>(
@@ -143,7 +145,10 @@ void main() {
         return makeCubit();
       },
       act: (c) => c.load('user-1'),
-      expect: () => [isA<UserReviewsLoading>(), isA<UserReviewsError>()],
+      expect: () => [
+        isA<UserReviewsLoading>(),
+        isA<UserReviewsError>(),
+      ],
     );
   });
 }

@@ -45,15 +45,15 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-    theme: AppTheme.light(),
-    home: BlocProvider(
-      create: (_) => PackageRequestFormBloc(
-        packageRepo,
-        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-      ),
-      child: Scaffold(body: child),
-    ),
-  );
+        theme: AppTheme.light(),
+        home: BlocProvider(
+          create: (_) => PackageRequestFormBloc(
+            packageRepo,
+            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          ),
+          child: Scaffold(body: child),
+        ),
+      );
 
   group('Step1TrajetColis — avion lock + trajet (poids retiré)', () {
     // 1. Weight input field is NO LONGER in step 1 (moved to step 2)
@@ -77,9 +77,8 @@ void main() {
     });
 
     // 4. No S/M/L size selector (no interactive size chip labelled 'M')
-    testWidgets('no S/M/L size selector — M is not a visible chip', (
-      tester,
-    ) async {
+    testWidgets('no S/M/L size selector — M is not a visible chip',
+        (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('M'), findsNothing);
       expect(find.text('S'), findsNothing);
@@ -89,10 +88,7 @@ void main() {
     // 5. Airplane lock indicator is visible
     testWidgets('airplane lock indicator is visible', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'),
-        findsOneWidget,
-      );
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'), findsOneWidget);
       expect(find.text('Avion'), findsOneWidget);
     });
 

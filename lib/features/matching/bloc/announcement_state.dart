@@ -51,8 +51,10 @@ class AnnouncementSearchLoaded extends AnnouncementState {
   final bool isEmpty;
   final bool isReloading;
 
-  AnnouncementSearchLoaded(this.results, {this.isReloading = false})
-    : isEmpty = results.isEmpty;
+  AnnouncementSearchLoaded(
+    this.results, {
+    this.isReloading = false,
+  }) : isEmpty = results.isEmpty;
 }
 
 class AnnouncementNotFound extends AnnouncementState {}

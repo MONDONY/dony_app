@@ -32,8 +32,7 @@ class NegotiationMessage extends Equatable {
   final String? body;
   final DateTime createdAt;
 
-  factory NegotiationMessage.fromJson(Map<String, dynamic> json) =>
-      NegotiationMessage(
+  factory NegotiationMessage.fromJson(Map<String, dynamic> json) => NegotiationMessage(
         id: json['id'] as String,
         threadId: json['threadId'] as String,
         fromUserId: json['fromUserId'] as String,
@@ -44,13 +43,5 @@ class NegotiationMessage extends Equatable {
       );
 
   @override
-  List<Object?> get props => [
-    id,
-    threadId,
-    fromUserId,
-    kind,
-    proposedPriceEur,
-    body,
-    createdAt,
-  ];
+  List<Object?> get props => [id, threadId, fromUserId, kind, proposedPriceEur, body, createdAt];
 }

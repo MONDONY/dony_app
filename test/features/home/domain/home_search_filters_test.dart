@@ -39,36 +39,32 @@ void main() {
       expect(f.toAnnouncementQuery().departureDateTo, DateTime(2026, 8, 12));
     });
 
-    test(
-      'poids trajets et poids colis ne se propagent jamais l\'un vers l\'autre',
-      () {
-        const f = HomeSearchFilters(weightMin: 6, maxWeight: 3);
+    test('poids trajets et poids colis ne se propagent jamais l\'un vers l\'autre', () {
+      const f = HomeSearchFilters(weightMin: 6, maxWeight: 3);
 
-        // weightMin = « voyageur acceptant au moins 6 kg » — filtre trajets.
-        expect(f.toSearchParams().weightKg, 6);
-        // maxWeight = « demandes d'au plus 3 kg » — filtre colis.
-        expect(f.toPackageRequestQuery().maxWeight, 3);
-        // Aucune contamination croisée.
-        expect(f.toPackageRequestQuery().maxWeight, isNot(6));
-        expect(f.toAnnouncementQuery().minAvailableKg, 6);
-        expect(f.toAnnouncementQuery().maxAvailableKg, isNull);
-      },
-    );
+      // weightMin = « voyageur acceptant au moins 6 kg » — filtre trajets.
+      expect(f.toSearchParams().weightKg, 6);
+      // maxWeight = « demandes d'au plus 3 kg » — filtre colis.
+      expect(f.toPackageRequestQuery().maxWeight, 3);
+      // Aucune contamination croisée.
+      expect(f.toPackageRequestQuery().maxWeight, isNot(6));
+      expect(f.toAnnouncementQuery().minAvailableKg, 6);
+      expect(f.toAnnouncementQuery().maxAvailableKg, isNull);
+    });
 
     test(
-      'weightMax alimente maxAvailableKg, distinct de maxWeight (défaut 1)',
-      () {
-        const f = HomeSearchFilters(weightMax: 12, maxWeight: 3);
+        'weightMax alimente maxAvailableKg, distinct de maxWeight (défaut 1)',
+        () {
+      const f = HomeSearchFilters(weightMax: 12, maxWeight: 3);
 
-        expect(f.toAnnouncementQuery().maxAvailableKg, 12);
-        expect(f.toAnnouncementQuery().maxAvailableKg, isNot(3));
-      },
-    );
+      expect(f.toAnnouncementQuery().maxAvailableKg, 12);
+      expect(f.toAnnouncementQuery().maxAvailableKg, isNot(3));
+    });
 
     test('les filtres spécifiques ne comptent que dans leur mode', () {
       const f = HomeSearchFilters(
-        kiloProOnly: true, // trajets
-        minRating: 4.5, // trajets
+        kiloProOnly: true,      // trajets
+        minRating: 4.5,         // trajets
         parcelSize: ParcelSize.medium, // colis
       );
 
@@ -107,7 +103,8 @@ void main() {
       expect(f.toAnnouncementQuery().arrivalCity, isNull);
     });
 
-    test('nearMe actif alimente lat/lng/radius dans toAnnouncementQuery', () {
+    test('nearMe actif alimente lat/lng/radius dans toAnnouncementQuery',
+        () {
       const f = HomeSearchFilters(
         nearMeActive: true,
         nearMeRadiusKm: 25,
@@ -121,7 +118,8 @@ void main() {
       expect(q.radiusKm, 25);
     });
 
-    test('sans « près de moi », lat/lng/radius ne partent pas dans '
+    test(
+        'sans « près de moi », lat/lng/radius ne partent pas dans '
         'toAnnouncementQuery', () {
       const f = HomeSearchFilters(userLat: 48.85, userLng: 2.35);
 
@@ -131,7 +129,8 @@ void main() {
       expect(q.radiusKm, isNull);
     });
 
-    test('défaut 1 : chaque filtre compté par activeCountFor(trips) est '
+    test(
+        'défaut 1 : chaque filtre compté par activeCountFor(trips) est '
         'effectivement transmis par toAnnouncementQuery (pas de filtre '
         'fantôme)', () {
       const f = HomeSearchFilters(
@@ -169,7 +168,8 @@ void main() {
       expect(q.contentType, 'documents'); // contentType
     });
 
-    test('convention serveur : les booléens de toAnnouncementQuery ne '
+    test(
+        'convention serveur : les booléens de toAnnouncementQuery ne '
         'partent jamais à false explicitement', () {
       const f = HomeSearchFilters();
 
@@ -180,16 +180,15 @@ void main() {
       expect(q.urgent, isNull);
     });
 
+    test('« près de moi » seul rend le compteur de l\'autre mode significatif',
+        () {
+      const f = HomeSearchFilters(nearMeActive: true);
+
+      expect(f.otherModeCountIsMeaningful, isTrue);
+    });
+
     test(
-      '« près de moi » seul rend le compteur de l\'autre mode significatif',
-      () {
-        const f = HomeSearchFilters(nearMeActive: true);
-
-        expect(f.otherModeCountIsMeaningful, isTrue);
-      },
-    );
-
-    test('urgentOnly seul ne rend pas le compteur de l\'autre mode '
+        'urgentOnly seul ne rend pas le compteur de l\'autre mode '
         'significatif (ne restreint ni zone ni période)', () {
       const f = HomeSearchFilters(urgentOnly: true);
 

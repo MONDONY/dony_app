@@ -40,20 +40,17 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
       emit(state.copyWith(status: ConnectivityStatus.offline));
       _ensureProbeInterval(degradedProbeInterval);
     }
-    _connectivitySub = _repository.onHasConnectionChanged.listen(
-      _onDeviceConnectivityChanged,
-    );
+    _connectivitySub =
+        _repository.onHasConnectionChanged.listen(_onDeviceConnectivityChanged);
   }
 
   void _onDeviceConnectivityChanged(bool hasConnection) {
     if (!hasConnection) {
       _reconnectedFlashTimer?.cancel();
-      emit(
-        state.copyWith(
-          status: ConnectivityStatus.offline,
-          justReconnected: false,
-        ),
-      );
+      emit(state.copyWith(
+        status: ConnectivityStatus.offline,
+        justReconnected: false,
+      ));
       _ensureProbeInterval(degradedProbeInterval);
       return;
     }
@@ -81,12 +78,10 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
     final hasConnection = await _repository.hasConnection();
     if (!hasConnection) {
       if (state.status != ConnectivityStatus.offline) {
-        emit(
-          state.copyWith(
-            status: ConnectivityStatus.offline,
-            justReconnected: false,
-          ),
-        );
+        emit(state.copyWith(
+          status: ConnectivityStatus.offline,
+          justReconnected: false,
+        ));
       }
       _ensureProbeInterval(degradedProbeInterval);
       return;
@@ -98,26 +93,20 @@ class ConnectivityCubit extends Cubit<ConnectivityState> {
       final wasDegraded = state.status != ConnectivityStatus.online;
       if (wasDegraded) {
         _reconnectedFlashTimer?.cancel();
-        emit(
-          state.copyWith(
-            status: ConnectivityStatus.online,
-            justReconnected: true,
-          ),
-        );
-        _reconnectedFlashTimer = Timer(
-          reconnectedFlashDuration,
-          clearReconnectedFlag,
-        );
+        emit(state.copyWith(
+          status: ConnectivityStatus.online,
+          justReconnected: true,
+        ));
+        _reconnectedFlashTimer =
+            Timer(reconnectedFlashDuration, clearReconnectedFlag);
       }
       _ensureProbeInterval(healthyProbeInterval);
     } else {
       if (state.status != ConnectivityStatus.weak) {
-        emit(
-          state.copyWith(
-            status: ConnectivityStatus.weak,
-            justReconnected: false,
-          ),
-        );
+        emit(state.copyWith(
+          status: ConnectivityStatus.weak,
+          justReconnected: false,
+        ));
       }
       _ensureProbeInterval(degradedProbeInterval);
     }

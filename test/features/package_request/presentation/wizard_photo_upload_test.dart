@@ -10,9 +10,9 @@ import 'package:image_picker/image_picker.dart';
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
-    theme: AppTheme.light(),
-    home: Scaffold(body: child),
-  );
+        theme: AppTheme.light(),
+        home: Scaffold(body: child),
+      );
 
   group('DonyMediaService compressor seam', () {
     test('compressor function accepts a function with the right signature', () {
@@ -35,44 +35,44 @@ void main() {
   });
 
   group('WizardPhotoUpload — compressor injection', () {
-    test(
-      'compressForUpload is called before upload when photo is picked',
-      () async {
-        bool called = false;
-        late XFile capturedInput;
+    test('compressForUpload is called before upload when photo is picked',
+        () async {
+      bool called = false;
+      late XFile capturedInput;
 
-        Future<XFile> mockCompressor(XFile input) async {
-          called = true;
-          capturedInput = input;
-          return input; // pass-through: no real compression in unit test
-        }
+      Future<XFile> mockCompressor(XFile input) async {
+        called = true;
+        capturedInput = input;
+        return input; // pass-through: no real compression in unit test
+      }
 
-        // Simulate the internal _pick flow by calling the compressor directly
-        // (we cannot tap an ImagePicker in unit tests without a platform channel).
-        // We verify that the widget wires the injected compressor correctly by
-        // inspecting the widget tree and calling the compressor path manually.
-        final fakeFile = XFile('/tmp/test_photo.jpg');
-        final result = await mockCompressor(fakeFile);
+      // Simulate the internal _pick flow by calling the compressor directly
+      // (we cannot tap an ImagePicker in unit tests without a platform channel).
+      // We verify that the widget wires the injected compressor correctly by
+      // inspecting the widget tree and calling the compressor path manually.
+      final fakeFile = XFile('/tmp/test_photo.jpg');
+      final result = await mockCompressor(fakeFile);
 
-        expect(called, isTrue);
-        expect(capturedInput.path, '/tmp/test_photo.jpg');
-        expect(result.path, '/tmp/test_photo.jpg');
-      },
-    );
+      expect(called, isTrue);
+      expect(capturedInput.path, '/tmp/test_photo.jpg');
+      expect(result.path, '/tmp/test_photo.jpg');
+    });
   });
 
   group('WizardPhotoUpload widget', () {
     testWidgets('shows empty state when photoFile is null', (tester) async {
       await tester.pumpWidget(
-        wrap(WizardPhotoUpload(photoFile: null, onPhotoPicked: (_) {})),
+        wrap(
+          WizardPhotoUpload(
+            photoFile: null,
+            onPhotoPicked: (_) {},
+          ),
+        ),
       );
 
       expect(find.text('Ajouter une photo (optionnel)'), findsOneWidget);
       expect(find.text('Aide les voyageurs à se projeter'), findsOneWidget);
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'image-plus'),
-        findsOneWidget,
-      );
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'image-plus'), findsOneWidget);
     });
 
     testWidgets('shows preview when photoFile is provided', (tester) async {
@@ -86,19 +86,20 @@ void main() {
       });
 
       await tester.pumpWidget(
-        wrap(WizardPhotoUpload(photoFile: file, onPhotoPicked: (_) {})),
+        wrap(
+          WizardPhotoUpload(
+            photoFile: file,
+            onPhotoPicked: (_) {},
+          ),
+        ),
       );
 
       expect(find.text('Photo ajoutée'), findsOneWidget);
-      expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
-        findsOneWidget,
-      );
+      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
     });
 
-    testWidgets('calls onPhotoPicked(null) when remove button is tapped', (
-      tester,
-    ) async {
+    testWidgets('calls onPhotoPicked(null) when remove button is tapped',
+        (tester) async {
       final dir = Directory.systemTemp.createTempSync('wizard_photo_test2_');
       final file = File('${dir.path}/photo.jpg')
         ..writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0]);
@@ -121,9 +122,7 @@ void main() {
       );
 
       // Tap the remove icon
-      await tester.tap(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
-      );
+      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
       await tester.pump();
 
       // After tapping remove, the widget should show the empty state
@@ -131,34 +130,33 @@ void main() {
     });
 
     testWidgets(
-      'accepts injected DonyMediaService with custom compressor — widget renders correctly',
-      (tester) async {
-        bool compressorCalled = false;
+        'accepts injected DonyMediaService with custom compressor — widget renders correctly',
+        (tester) async {
+      bool compressorCalled = false;
 
-        Future<XFile> trackingCompressor(XFile input) async {
-          compressorCalled = true;
-          return input;
-        }
+      Future<XFile> trackingCompressor(XFile input) async {
+        compressorCalled = true;
+        return input;
+      }
 
-        // WizardPhotoUpload now accepts a DonyMediaService directly (the
-        // compressor is injected into DonyMediaService, not the widget).
-        final fakeService = DonyMediaService(compressor: trackingCompressor);
+      // WizardPhotoUpload now accepts a DonyMediaService directly (the
+      // compressor is injected into DonyMediaService, not the widget).
+      final fakeService = DonyMediaService(compressor: trackingCompressor);
 
-        await tester.pumpWidget(
-          wrap(
-            WizardPhotoUpload(
-              photoFile: null,
-              onPhotoPicked: (_) {},
-              mediaService: fakeService,
-            ),
+      await tester.pumpWidget(
+        wrap(
+          WizardPhotoUpload(
+            photoFile: null,
+            onPhotoPicked: (_) {},
+            mediaService: fakeService,
           ),
-        );
+        ),
+      );
 
-        // Widget renders correctly with injected mediaService
-        expect(find.text('Ajouter une photo (optionnel)'), findsOneWidget);
-        // The compressor has not been called yet (no photo picked)
-        expect(compressorCalled, isFalse);
-      },
-    );
+      // Widget renders correctly with injected mediaService
+      expect(find.text('Ajouter une photo (optionnel)'), findsOneWidget);
+      // The compressor has not been called yet (no photo picked)
+      expect(compressorCalled, isFalse);
+    });
   });
 }

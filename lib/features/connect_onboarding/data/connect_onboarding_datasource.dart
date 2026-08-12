@@ -13,9 +13,7 @@ class ConnectOnboardingDatasource {
   }
 
   Future<String> createOnboardingLink() async {
-    final response = await _client.dio.post(
-      '/payments/connect/onboarding-link',
-    );
+    final response = await _client.dio.post('/payments/connect/onboarding-link');
     final data = response.data as Map<String, dynamic>;
     return data['url'] as String;
   }

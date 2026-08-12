@@ -5,7 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 part 'pickup_address_event.dart';
 part 'pickup_address_state.dart';
 
-class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
+class PickupAddressBloc
+    extends Bloc<PickupAddressEvent, PickupAddressState> {
   final PickupAddressRepository _repository;
 
   PickupAddressBloc(this._repository) : super(const PickupAddressState()) {
@@ -23,17 +24,16 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
     emit(state.copyWith(status: PickupAddressStatus.loading));
     try {
       final addresses = await _repository.getAll();
-      emit(
-        state.copyWith(
-          status: PickupAddressStatus.success,
-          addresses: addresses,
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.success,
+        addresses: addresses,
+        error: null,
+      ));
     } catch (e) {
-      emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -58,22 +58,20 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
       });
       var updatedList = List.of(state.addresses);
       if (event.isDefault) {
-        updatedList = updatedList
-            .map((a) => a.copyWith(isDefault: false))
-            .toList();
+        updatedList =
+            updatedList.map((a) => a.copyWith(isDefault: false)).toList();
       }
       updatedList.add(created);
-      emit(
-        state.copyWith(
-          status: PickupAddressStatus.success,
-          addresses: updatedList,
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.success,
+        addresses: updatedList,
+        error: null,
+      ));
     } catch (e) {
-      emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -98,25 +96,23 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
       });
       var updatedList = List.of(state.addresses);
       if (event.isDefault) {
-        updatedList = updatedList
-            .map((a) => a.copyWith(isDefault: false))
-            .toList();
+        updatedList =
+            updatedList.map((a) => a.copyWith(isDefault: false)).toList();
       }
       final idx = updatedList.indexWhere((a) => a.id == event.id);
       if (idx != -1) {
         updatedList[idx] = updated;
       }
-      emit(
-        state.copyWith(
-          status: PickupAddressStatus.success,
-          addresses: updatedList,
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.success,
+        addresses: updatedList,
+        error: null,
+      ));
     } catch (e) {
-      emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -127,19 +123,20 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
     try {
       final updated = await _repository.setDefault(event.id);
       final updatedList = state.addresses
-          .map((a) => a.id == event.id ? updated : a.copyWith(isDefault: false))
+          .map((a) => a.id == event.id
+              ? updated
+              : a.copyWith(isDefault: false))
           .toList();
-      emit(
-        state.copyWith(
-          status: PickupAddressStatus.success,
-          addresses: updatedList,
-          error: null,
-        ),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.success,
+        addresses: updatedList,
+        error: null,
+      ));
     } catch (e) {
-      emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 
@@ -149,20 +146,18 @@ class PickupAddressBloc extends Bloc<PickupAddressEvent, PickupAddressState> {
   ) async {
     try {
       await _repository.delete(event.id);
-      final updatedList = state.addresses
-          .where((a) => a.id != event.id)
-          .toList();
-      emit(
-        state.copyWith(
-          status: PickupAddressStatus.success,
-          addresses: updatedList,
-          error: null,
-        ),
-      );
+      final updatedList =
+          state.addresses.where((a) => a.id != event.id).toList();
+      emit(state.copyWith(
+        status: PickupAddressStatus.success,
+        addresses: updatedList,
+        error: null,
+      ));
     } catch (e) {
-      emit(
-        state.copyWith(status: PickupAddressStatus.error, error: e.toString()),
-      );
+      emit(state.copyWith(
+        status: PickupAddressStatus.error,
+        error: e.toString(),
+      ));
     }
   }
 }

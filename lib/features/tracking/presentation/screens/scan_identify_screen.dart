@@ -15,7 +15,11 @@ const _etapeLabels = <String, (String, String?, String?)>{
 };
 
 class ScanIdentifyScreen extends StatefulWidget {
-  const ScanIdentifyScreen({super.key, this.etape, this.focusNumber = false});
+  const ScanIdentifyScreen({
+    super.key,
+    this.etape,
+    this.focusNumber = false,
+  });
 
   final String? etape;
   final bool focusNumber;
@@ -113,9 +117,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final etapeLabel = _selectedEtape != null
-        ? _etapeLabels[_selectedEtape!]
-        : null;
+    final etapeLabel = _selectedEtape != null ? _etapeLabels[_selectedEtape!] : null;
 
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
@@ -147,11 +149,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                     avatar: switch (etapeLabel.$3) {
                       'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 14),
                       'plane-landing' => const DonyEmoji.planeLanding(size: 14),
-                      _ => DonyIcon(
-                        etapeLabel.$2!,
-                        size: 14,
-                        color: cs.primary,
-                      ),
+                      _ => DonyIcon(etapeLabel.$2!, size: 14, color: cs.primary),
                     },
                     label: Text(etapeLabel.$1),
                     labelStyle: tt.labelSmall?.copyWith(
@@ -192,7 +190,8 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                     ),
                     child: Column(
                       children: [
-                        DonyIcon('scan-line', size: 36, color: cs.onPrimary),
+                        DonyIcon('scan-line',
+                            size: 36, color: cs.onPrimary),
                         const SizedBox(height: DonySpacing.sm),
                         Text(
                           'Ouvrir le lecteur QR',
@@ -216,23 +215,21 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                 const SizedBox(height: DonySpacing.base),
 
                 // OU divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: cs.outline)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                      ),
-                      child: Text(
-                        'OU',
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                Row(children: [
+                  Expanded(child: Divider(color: cs.outline)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm,
+                    ),
+                    child: Text(
+                      'OU',
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
-                    Expanded(child: Divider(color: cs.outline)),
-                  ],
-                ),
+                  ),
+                  Expanded(child: Divider(color: cs.outline)),
+                ]),
 
                 const SizedBox(height: DonySpacing.base),
 

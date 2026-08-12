@@ -20,16 +20,16 @@ class _MockDio extends Mock implements Dio {}
 // ---------------------------------------------------------------------------
 
 Response<dynamic> _ok(dynamic data, String path) => Response(
-  data: data,
-  statusCode: 200,
-  requestOptions: RequestOptions(path: path),
-);
+      data: data,
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
 
 Response<dynamic> _noContent(String path) => Response(
-  data: null,
-  statusCode: 204,
-  requestOptions: RequestOptions(path: path),
-);
+      data: null,
+      statusCode: 204,
+      requestOptions: RequestOptions(path: path),
+    );
 
 void main() {
   late _MockApiClient client;
@@ -48,9 +48,8 @@ void main() {
   // ---------------------------------------------------------------------------
   group('add()', () {
     test('calls PUT /favorites/trip/<id>', () async {
-      when(
-        () => dio.put('/favorites/trip/t1'),
-      ).thenAnswer((_) async => _noContent('/favorites/trip/t1'));
+      when(() => dio.put('/favorites/trip/t1'))
+          .thenAnswer((_) async => _noContent('/favorites/trip/t1'));
 
       await ds.add('trip', 't1');
 
@@ -58,9 +57,8 @@ void main() {
     });
 
     test('calls PUT /favorites/package-request/<id>', () async {
-      when(
-        () => dio.put('/favorites/package-request/r1'),
-      ).thenAnswer((_) async => _noContent('/favorites/package-request/r1'));
+      when(() => dio.put('/favorites/package-request/r1'))
+          .thenAnswer((_) async => _noContent('/favorites/package-request/r1'));
 
       await ds.add('package-request', 'r1');
 
@@ -68,9 +66,8 @@ void main() {
     });
 
     test('propagates error from dio.put', () async {
-      when(
-        () => dio.put(any()),
-      ).thenAnswer((_) async => throw Exception('network'));
+      when(() => dio.put(any()))
+          .thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(ds.add('trip', 't1'), throwsException);
     });
@@ -81,9 +78,8 @@ void main() {
   // ---------------------------------------------------------------------------
   group('remove()', () {
     test('calls DELETE /favorites/trip/<id>', () async {
-      when(
-        () => dio.delete('/favorites/trip/t1'),
-      ).thenAnswer((_) async => _noContent('/favorites/trip/t1'));
+      when(() => dio.delete('/favorites/trip/t1'))
+          .thenAnswer((_) async => _noContent('/favorites/trip/t1'));
 
       await ds.remove('trip', 't1');
 
@@ -91,9 +87,8 @@ void main() {
     });
 
     test('calls DELETE /favorites/package-request/<id>', () async {
-      when(
-        () => dio.delete('/favorites/package-request/r1'),
-      ).thenAnswer((_) async => _noContent('/favorites/package-request/r1'));
+      when(() => dio.delete('/favorites/package-request/r1'))
+          .thenAnswer((_) async => _noContent('/favorites/package-request/r1'));
 
       await ds.remove('package-request', 'r1');
 
@@ -101,9 +96,8 @@ void main() {
     });
 
     test('propagates error from dio.delete', () async {
-      when(
-        () => dio.delete(any()),
-      ).thenAnswer((_) async => throw Exception('network'));
+      when(() => dio.delete(any()))
+          .thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(ds.remove('trip', 't1'), throwsException);
     });
@@ -129,9 +123,9 @@ void main() {
     });
 
     test('returns empty sets when lists are absent', () async {
-      when(
-        () => dio.get('/favorites/ids'),
-      ).thenAnswer((_) async => _ok(<String, dynamic>{}, '/favorites/ids'));
+      when(() => dio.get('/favorites/ids')).thenAnswer(
+        (_) async => _ok(<String, dynamic>{}, '/favorites/ids'),
+      );
 
       final result = await ds.ids();
 
@@ -140,9 +134,8 @@ void main() {
     });
 
     test('propagates error from dio.get', () async {
-      when(
-        () => dio.get('/favorites/ids'),
-      ).thenAnswer((_) async => throw Exception('network'));
+      when(() => dio.get('/favorites/ids'))
+          .thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(ds.ids(), throwsException);
     });
@@ -160,9 +153,8 @@ void main() {
             'travelerId': 'tv1',
             'departureCity': 'Paris',
             'arrivalCity': 'Dakar',
-            'departureDate': DateTime.now()
-                .add(const Duration(days: 5))
-                .toIso8601String(),
+            'departureDate':
+                DateTime.now().add(const Duration(days: 5)).toIso8601String(),
             'totalKg': 20.0,
             'availableKg': 15.0,
             'pricePerKg': 8.0,
@@ -184,9 +176,8 @@ void main() {
     });
 
     test('returns empty list when response is empty', () async {
-      when(
-        () => dio.get('/favorites/trips'),
-      ).thenAnswer((_) async => _ok([], '/favorites/trips'));
+      when(() => dio.get('/favorites/trips'))
+          .thenAnswer((_) async => _ok([], '/favorites/trips'));
 
       final result = await ds.trips();
 
@@ -194,9 +185,8 @@ void main() {
     });
 
     test('propagates error from dio.get', () async {
-      when(
-        () => dio.get('/favorites/trips'),
-      ).thenAnswer((_) async => throw Exception('network'));
+      when(() => dio.get('/favorites/trips'))
+          .thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(ds.trips(), throwsException);
     });
@@ -236,9 +226,8 @@ void main() {
     });
 
     test('returns empty list when response is empty', () async {
-      when(
-        () => dio.get('/favorites/package-requests'),
-      ).thenAnswer((_) async => _ok([], '/favorites/package-requests'));
+      when(() => dio.get('/favorites/package-requests'))
+          .thenAnswer((_) async => _ok([], '/favorites/package-requests'));
 
       final result = await ds.packageRequests();
 
@@ -246,9 +235,8 @@ void main() {
     });
 
     test('propagates error from dio.get', () async {
-      when(
-        () => dio.get('/favorites/package-requests'),
-      ).thenAnswer((_) async => throw Exception('network'));
+      when(() => dio.get('/favorites/package-requests'))
+          .thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(ds.packageRequests(), throwsException);
     });

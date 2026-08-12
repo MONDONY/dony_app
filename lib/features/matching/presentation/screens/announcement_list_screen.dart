@@ -16,20 +16,19 @@ import 'package:go_router/go_router.dart';
 // ── Status sort priority ──────────────────────────────────────────────────────
 
 int _statusPriority(String status) => switch (status) {
-  'DRAFT' => 0,
-  'IN_PROGRESS' => 1,
-  'ACTIVE' => 2,
-  'FULL' => 3,
-  'COMPLETED' => 4,
-  'CANCELLED' => 5,
-  _ => 6,
-};
+      'DRAFT' => 0,
+      'IN_PROGRESS' => 1,
+      'ACTIVE' => 2,
+      'FULL' => 3,
+      'COMPLETED' => 4,
+      'CANCELLED' => 5,
+      _ => 6,
+    };
 
 // ── Chip counts ───────────────────────────────────────────────────────────────
 
 ({int all, int draft, int active, int completed, int cancelled}) _counts(
-  List<AnnouncementModel> list,
-) {
+    List<AnnouncementModel> list) {
   int d = 0, a = 0, c = 0, x = 0;
   for (final item in list) {
     if (item.status == 'DRAFT') {
@@ -105,9 +104,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
     if (isActive && !_tickerWasActive) {
       context.read<AnnouncementBloc>().add(AnnouncementListRequested());
       // Pré-charge les négos pour alimenter le badge du bouton "Envoyer".
-      context.read<NegotiationListBloc>().add(
-        const NegotiationListFetchRequested(),
-      );
+      context.read<NegotiationListBloc>().add(const NegotiationListFetchRequested());
     }
     _tickerWasActive = isActive;
   }
@@ -127,16 +124,13 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
   /// Returns the filtered + sorted list from _lastList.
   List<AnnouncementModel> _filtered(TripFilterState filter) {
     return _lastList
-        .where(
-          (a) =>
-              filter.matchesStatus(a.status) &&
-              filter.matchesQuery(a.departureCity, a.arrivalCity),
-        )
+        .where((a) =>
+            filter.matchesStatus(a.status) &&
+            filter.matchesQuery(a.departureCity, a.arrivalCity))
         .toList()
       ..sort((a, b) {
-        final pCmp = _statusPriority(
-          a.status,
-        ).compareTo(_statusPriority(b.status));
+        final pCmp =
+            _statusPriority(a.status).compareTo(_statusPriority(b.status));
         if (pCmp != 0) {
           return pCmp;
         }
@@ -169,8 +163,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
         showBackButton: widget.showBackButton,
         sendParcelBadge: widget.onSendParcel != null
             ? context.select<NegotiationListBloc, int>(
-                (b) => b.state.activeCount,
-              )
+                (b) => b.state.activeCount)
             : 0,
         hPad: hPad,
         tt: tt,
@@ -201,8 +194,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
 
           if (state is AnnouncementError && _lastList.isEmpty) {
             return _ErrorView(
-              message: ErrorPresenter.resolve(state.error).message,
-            );
+                message: ErrorPresenter.resolve(state.error).message);
           }
 
           final counts = _counts(_lastList);
@@ -231,11 +223,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(
-                            hPad,
-                            DonySpacing.lg,
-                            hPad,
-                            0,
-                          ),
+                              hPad, DonySpacing.lg, hPad, 0),
                           child: ActivitySearchField(
                             hint: 'Rechercher une destination…',
                             onChanged: (v) =>
@@ -246,19 +234,15 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: EdgeInsets.fromLTRB(
-                            hPad,
-                            DonySpacing.md,
-                            hPad,
-                            0,
-                          ),
+                              hPad, DonySpacing.md, hPad, 0),
                           child: StatusChipsRow<TripStatusFilter>(
                             chips: chips,
                             selected: filterState.filter,
                             onSelected: (value) {
                               if (value != filterState.filter) {
-                                context.read<TripFilterCubit>().setFilter(
-                                  value,
-                                );
+                                context
+                                    .read<TripFilterCubit>()
+                                    .setFilter(value);
                               }
                             },
                           ),
@@ -300,29 +284,24 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                                   ? (_) => _confirmDeleteDialog(context)
                                   : null,
                               onDismissed: (_) {
-                                context.read<AnnouncementBloc>().add(
-                                  AnnouncementDeleteRequested(item.id),
-                                );
+                                context
+                                    .read<AnnouncementBloc>()
+                                    .add(AnnouncementDeleteRequested(item.id));
                               },
                               background: Container(
                                 alignment: Alignment.centerRight,
                                 padding: const EdgeInsets.only(
-                                  right: DonySpacing.xl,
-                                ),
+                                    right: DonySpacing.xl),
                                 decoration: BoxDecoration(
                                   color: cs.error,
-                                  borderRadius: BorderRadius.circular(
-                                    DonyRadius.card,
-                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(DonyRadius.card),
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    DonyIcon(
-                                      'trash',
-                                      color: cs.onError,
-                                      size: 26,
-                                    ),
+                                    DonyIcon('trash',
+                                        color: cs.onError, size: 26),
                                     const SizedBox(height: DonySpacing.xs),
                                     Text(
                                       'Supprimer',
@@ -344,9 +323,9 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
                                     extra: item,
                                   );
                                   if (context.mounted) {
-                                    context.read<AnnouncementBloc>().add(
-                                      AnnouncementListRequested(),
-                                    );
+                                    context
+                                        .read<AnnouncementBloc>()
+                                        .add(AnnouncementListRequested());
                                   }
                                 },
                               ),
@@ -475,7 +454,10 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                           ),
                           const SizedBox(width: DonySpacing.xs),
                         ],
-                        HeaderPill(label: '+ Nouveau', onTap: onCreateTrip),
+                        HeaderPill(
+                          label: '+ Nouveau',
+                          onTap: onCreateTrip,
+                        ),
                       ],
                     ),
                   ],
@@ -523,9 +505,9 @@ class _ErrorView extends StatelessWidget {
             OutlinedButton.icon(
               icon: const DonyIcon('refresh-cw'),
               label: const Text('Réessayer'),
-              onPressed: () => context.read<AnnouncementBloc>().add(
-                AnnouncementListRequested(),
-              ),
+              onPressed: () => context
+                  .read<AnnouncementBloc>()
+                  .add(AnnouncementListRequested()),
             ),
           ],
         ),

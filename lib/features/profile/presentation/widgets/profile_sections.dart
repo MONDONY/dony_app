@@ -62,8 +62,7 @@ class ProfileAccountSection extends StatelessWidget {
       builder: (_, phoneEnabled, _) {
         final showKyc = user?.kycStatus != 'VERIFIED';
         final hasEmail = user?.email != null && user!.email!.isNotEmpty;
-        final hasPhone =
-            user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
+        final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
         final showPhoneRow = phoneEnabled && !hasPhone;
         final showEmailRow = !hasEmail;
 
@@ -443,7 +442,9 @@ class _ContactRow extends StatelessWidget {
         InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.vertical(
-            top: isFirst ? const Radius.circular(DonyRadius.card) : Radius.zero,
+            top: isFirst
+                ? const Radius.circular(DonyRadius.card)
+                : Radius.zero,
             bottom: isLast
                 ? const Radius.circular(DonyRadius.card)
                 : Radius.zero,
@@ -665,7 +666,9 @@ class ProfileCompletionBanner extends StatelessWidget {
   Widget _build(BuildContext context, bool phoneAuthEnabled) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final completed = user.profileCompletionSteps(countPhone: phoneAuthEnabled);
+    final completed = user.profileCompletionSteps(
+      countPhone: phoneAuthEnabled,
+    );
     final total = UserModel.profileTotalSteps(countPhone: phoneAuthEnabled);
     final pct = completed / total;
     final tier = profileCompletionTierColor(cs, pct);

@@ -49,14 +49,14 @@ void main() {
   // Se distingue du badge chiffré (rectangle arrondi + Text) et de l'étoile PRO
   // (couleur warning).
   Finder attentionDot() => find.byWidgetPredicate((w) {
-    if (w is! Container || w.child != null) {
-      return false;
-    }
-    final deco = w.decoration;
-    return deco is BoxDecoration &&
-        deco.shape == BoxShape.circle &&
-        deco.color == DonyColors.error;
-  });
+        if (w is! Container || w.child != null) {
+          return false;
+        }
+        final deco = w.decoration;
+        return deco is BoxDecoration &&
+            deco.shape == BoxShape.circle &&
+            deco.color == DonyColors.error;
+      });
 
   // Décoration de l'anneau (AnimatedContainer ancêtre du DonyAvatar).
   BoxDecoration ringDecoration(WidgetTester tester) {
@@ -218,9 +218,7 @@ void main() {
 
     testWidgets('le badge chiffré a priorité sur le point', (tester) async {
       await tester.pumpWidget(
-        host(
-          buildItem(index: 1, currentIndex: 0, showDot: true, badgeCount: 2),
-        ),
+        host(buildItem(index: 1, currentIndex: 0, showDot: true, badgeCount: 2)),
       );
 
       // Un décompte précis existe : on montre le nombre, pas le point nu.
@@ -248,21 +246,20 @@ void main() {
       expect(text.style?.fontWeight, FontWeight.w600);
     });
 
-    testWidgets(
-      'libellé exclu de l\'arbre sémantique (pas de double annonce)',
-      (tester) async {
-        await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
-        await tester.pumpAndSettle();
+    testWidgets('libellé exclu de l\'arbre sémantique (pas de double annonce)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+      await tester.pumpAndSettle();
 
-        expect(
-          find.ancestor(
-            of: find.text('Moi'),
-            matching: find.byType(ExcludeSemantics),
-          ),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(
+        find.ancestor(
+          of: find.text('Moi'),
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
+    });
   });
 
   group('DonyNavItem — accessibilité & interaction', () {

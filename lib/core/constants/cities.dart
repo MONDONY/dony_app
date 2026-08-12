@@ -23,55 +23,13 @@ class CityConstants {
   CityConstants._();
 
   static const List<City> all = [
-    City(
-      id: 'paris',
-      displayName: 'Paris',
-      country: 'France',
-      coordinates: LatLng(48.8566, 2.3522),
-      type: CityType.departure,
-    ),
-    City(
-      id: 'lyon',
-      displayName: 'Lyon',
-      country: 'France',
-      coordinates: LatLng(45.7640, 4.8357),
-      type: CityType.departure,
-    ),
-    City(
-      id: 'marseille',
-      displayName: 'Marseille',
-      country: 'France',
-      coordinates: LatLng(43.2965, 5.3698),
-      type: CityType.departure,
-    ),
-    City(
-      id: 'dakar',
-      displayName: 'Dakar',
-      country: 'Sénégal',
-      coordinates: LatLng(14.7167, -17.4677),
-      type: CityType.arrival,
-    ),
-    City(
-      id: 'abidjan',
-      displayName: 'Abidjan',
-      country: "Côte d'Ivoire",
-      coordinates: LatLng(5.3599, -4.0083),
-      type: CityType.arrival,
-    ),
-    City(
-      id: 'bamako',
-      displayName: 'Bamako',
-      country: 'Mali',
-      coordinates: LatLng(12.6392, -8.0029),
-      type: CityType.arrival,
-    ),
-    City(
-      id: 'douala',
-      displayName: 'Douala',
-      country: 'Cameroun',
-      coordinates: LatLng(4.0511, 9.7679),
-      type: CityType.arrival,
-    ),
+    City(id: 'paris',     displayName: 'Paris',     country: 'France',          coordinates: LatLng(48.8566, 2.3522),   type: CityType.departure),
+    City(id: 'lyon',      displayName: 'Lyon',      country: 'France',          coordinates: LatLng(45.7640, 4.8357),   type: CityType.departure),
+    City(id: 'marseille', displayName: 'Marseille', country: 'France',          coordinates: LatLng(43.2965, 5.3698),   type: CityType.departure),
+    City(id: 'dakar',     displayName: 'Dakar',     country: 'Sénégal',         coordinates: LatLng(14.7167, -17.4677), type: CityType.arrival),
+    City(id: 'abidjan',   displayName: 'Abidjan',   country: "Côte d'Ivoire",   coordinates: LatLng(5.3599, -4.0083),   type: CityType.arrival),
+    City(id: 'bamako',    displayName: 'Bamako',    country: 'Mali',            coordinates: LatLng(12.6392, -8.0029),  type: CityType.arrival),
+    City(id: 'douala',    displayName: 'Douala',    country: 'Cameroun',        coordinates: LatLng(4.0511, 9.7679),    type: CityType.arrival),
   ];
 
   static List<City> get departures =>

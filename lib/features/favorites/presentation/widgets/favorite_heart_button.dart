@@ -41,17 +41,13 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
     );
     _scale = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 1,
-          end: 1.25,
-        ).chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(begin: 1, end: 1.25)
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 1.25,
-          end: 1,
-        ).chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween<double>(begin: 1.25, end: 1)
+            .chain(CurveTween(curve: Curves.easeIn)),
         weight: 50,
       ),
     ]).animate(_controller);
@@ -74,8 +70,10 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
 
     return AnimatedBuilder(
       animation: _scale,
-      builder: (context, child) =>
-          Transform.scale(scale: _scale.value, child: child),
+      builder: (context, child) => Transform.scale(
+        scale: _scale.value,
+        child: child,
+      ),
       child: IconButton(
         // `compact` retranche 4 px sur chaque axe et ramenait la cible à 40 px
         // malgré les contraintes ci-dessous.
@@ -89,13 +87,13 @@ class _FavoriteHeartButtonState extends State<FavoriteHeartButton>
         ),
         icon: Icon(
           widget.isFavorite ? Icons.bookmark : Icons.bookmark_border,
-          color: widget.isFavorite ? DonyColors.primary : cs.onSurfaceVariant,
+          color: widget.isFavorite
+              ? DonyColors.primary
+              : cs.onSurfaceVariant,
           size: widget.size,
         ),
         onPressed: _handleToggle,
-        tooltip: widget.isFavorite
-            ? 'Retirer des favoris'
-            : 'Ajouter aux favoris',
+        tooltip: widget.isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris',
       ),
     );
   }

@@ -63,12 +63,10 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         bottom: false,
         child: BlocBuilder<ConversationListBloc, ConversationListState>(
           builder: (context, state) {
-            final filter = state is ConversationListLoaded
-                ? state.filter
-                : ConversationFilter.all;
-            final searchQuery = state is ConversationListLoaded
-                ? state.searchQuery
-                : '';
+            final filter =
+                state is ConversationListLoaded ? state.filter : ConversationFilter.all;
+            final searchQuery =
+                state is ConversationListLoaded ? state.searchQuery : '';
 
             return Column(
               children: [
@@ -101,9 +99,8 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         title: 'Erreur de chargement',
         description: ErrorPresenter.resolve(state.error).message,
         actionLabel: 'Réessayer',
-        onAction: () => context.read<ConversationListBloc>().add(
-          const ConversationsLoadRequested(),
-        ),
+        onAction: () =>
+            context.read<ConversationListBloc>().add(const ConversationsLoadRequested()),
       );
     }
 
@@ -131,9 +128,8 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
 
       return RefreshIndicator(
         color: cs.primary,
-        onRefresh: () async => context.read<ConversationListBloc>().add(
-          const ConversationsLoadRequested(),
-        ),
+        onRefresh: () async =>
+            context.read<ConversationListBloc>().add(const ConversationsLoadRequested()),
         child: ListView.builder(
           // Padding bas = hauteur de la nav flottante (~100) + safe area,
           // pour que les derniers éléments scrollent au-dessus de l'île de
@@ -186,9 +182,8 @@ List<_ListItem> _buildGroupedItems(List<ConversationModel> convs) {
       older.add(c);
       continue;
     }
-    final local = c.lastMessageAt!.isUtc
-        ? c.lastMessageAt!.toLocal()
-        : c.lastMessageAt!;
+    final local =
+        c.lastMessageAt!.isUtc ? c.lastMessageAt!.toLocal() : c.lastMessageAt!;
     final todayDate = DateTime(now.year, now.month, now.day);
     final localDate = DateTime(local.year, local.month, local.day);
     final dayDiff = todayDate.difference(localDate).inDays;
@@ -245,10 +240,7 @@ class _MessagesHeader extends StatelessWidget {
           // Bloc 1 — Titre
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.md,
-              DonySpacing.base,
-              0,
+              DonySpacing.lg, DonySpacing.md, DonySpacing.base, 0,
             ),
             child: Row(
               children: [
@@ -273,33 +265,30 @@ class _MessagesHeader extends StatelessWidget {
             child: TextField(
               controller: searchController,
               onChanged: (q) => context.read<ConversationListBloc>().add(
-                ConversationFilterChanged(filter: activeFilter, searchQuery: q),
-              ),
+                    ConversationFilterChanged(
+                      filter: activeFilter,
+                      searchQuery: q,
+                    ),
+                  ),
               textInputAction: TextInputAction.search,
               style: tt.bodyMedium?.copyWith(color: cs.onSurface),
               decoration: InputDecoration(
                 hintText: 'Rechercher une conversation…',
                 hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                prefixIcon: DonyIcon(
-                  'search',
-                  size: 18,
-                  color: cs.onSurfaceVariant,
-                ),
+                prefixIcon:
+                    DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
                 suffixIcon: isSearching
                     ? IconButton(
-                        icon: DonyIcon(
-                          'x',
-                          size: 16,
-                          color: cs.onSurfaceVariant,
-                        ),
+                        icon: DonyIcon('x',
+                            size: 16, color: cs.onSurfaceVariant),
                         onPressed: () {
                           searchController.clear();
                           context.read<ConversationListBloc>().add(
-                            ConversationFilterChanged(
-                              filter: activeFilter,
-                              searchQuery: '',
-                            ),
-                          );
+                                ConversationFilterChanged(
+                                  filter: activeFilter,
+                                  searchQuery: '',
+                                ),
+                              );
                         },
                         tooltip: 'Effacer',
                       )
@@ -335,10 +324,7 @@ class _MessagesHeader extends StatelessWidget {
                 : SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.lg,
-                      0,
-                      DonySpacing.lg,
-                      DonySpacing.sm,
+                      DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.sm,
                     ),
                     child: Row(
                       children: [
@@ -346,44 +332,44 @@ class _MessagesHeader extends StatelessWidget {
                           label: 'Tous',
                           isActive: activeFilter == ConversationFilter.all,
                           onTap: () => context.read<ConversationListBloc>().add(
-                            const ConversationFilterChanged(
-                              filter: ConversationFilter.all,
-                              searchQuery: '',
-                            ),
-                          ),
+                                const ConversationFilterChanged(
+                                  filter: ConversationFilter.all,
+                                  searchQuery: '',
+                                ),
+                              ),
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         _FilterPill(
                           label: 'Non lus',
                           isActive: activeFilter == ConversationFilter.unread,
                           onTap: () => context.read<ConversationListBloc>().add(
-                            const ConversationFilterChanged(
-                              filter: ConversationFilter.unread,
-                              searchQuery: '',
-                            ),
-                          ),
+                                const ConversationFilterChanged(
+                                  filter: ConversationFilter.unread,
+                                  searchQuery: '',
+                                ),
+                              ),
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         _FilterPill(
                           label: 'En cours',
                           isActive: activeFilter == ConversationFilter.active,
                           onTap: () => context.read<ConversationListBloc>().add(
-                            const ConversationFilterChanged(
-                              filter: ConversationFilter.active,
-                              searchQuery: '',
-                            ),
-                          ),
+                                const ConversationFilterChanged(
+                                  filter: ConversationFilter.active,
+                                  searchQuery: '',
+                                ),
+                              ),
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         _FilterPill(
                           label: 'Terminés',
                           isActive: activeFilter == ConversationFilter.done,
                           onTap: () => context.read<ConversationListBloc>().add(
-                            const ConversationFilterChanged(
-                              filter: ConversationFilter.done,
-                              searchQuery: '',
-                            ),
-                          ),
+                                const ConversationFilterChanged(
+                                  filter: ConversationFilter.done,
+                                  searchQuery: '',
+                                ),
+                              ),
                         ),
                       ],
                     ),
@@ -452,10 +438,7 @@ class _SectionLabel extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.md,
-        DonySpacing.lg,
-        DonySpacing.xs,
+        DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.xs,
       ),
       child: Text(
         label,
@@ -487,16 +470,15 @@ class _SlidableTile extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (ctx) {
-              ctx.read<ConversationListBloc>().add(
-                ConversationArchiveRequested(conversation.id),
-              );
+              ctx.read<ConversationListBloc>()
+                  .add(ConversationArchiveRequested(conversation.id));
               DonySnackbar.show(
                 ctx,
                 message: 'Conversation archivée',
                 actionLabel: 'Annuler',
                 onAction: () => ctx.read<ConversationListBloc>().add(
-                  ConversationUnarchiveRequested(conversation.id),
-                ),
+                      ConversationUnarchiveRequested(conversation.id),
+                    ),
               );
             },
             backgroundColor: cs.warning,
@@ -518,7 +500,8 @@ class _SlidableTile extends StatelessWidget {
                 // la branche et la Future ne se résout jamais.
                 builder: (dialogCtx) => AlertDialog(
                   title: const Text('Supprimer la conversation ?'),
-                  content: const Text('Cette action est irréversible.'),
+                  content: const Text(
+                      'Cette action est irréversible.'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(false),
@@ -526,10 +509,8 @@ class _SlidableTile extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(true),
-                      child: const Text(
-                        'Supprimer',
-                        style: TextStyle(color: Colors.red),
-                      ),
+                      child: const Text('Supprimer',
+                          style: TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
@@ -550,3 +531,4 @@ class _SlidableTile extends StatelessWidget {
     );
   }
 }
+

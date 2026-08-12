@@ -31,9 +31,7 @@ class CorridorAlertTile extends StatelessWidget {
 
     // ── Date ──────────────────────────────────────────────────────────────
     if (alert.dateFrom != null && alert.dateTo != null) {
-      parts.add(
-        '${_compactDate(alert.dateFrom!)}–${_compactDate(alert.dateTo!)}',
-      );
+      parts.add('${_compactDate(alert.dateFrom!)}–${_compactDate(alert.dateTo!)}');
     } else if (alert.dateFrom != null) {
       parts.add('À partir du ${_compactDate(alert.dateFrom!)}');
     } else if (alert.dateTo != null) {
@@ -65,7 +63,8 @@ class CorridorAlertTile extends StatelessWidget {
     return parts.join(' · ');
   }
 
-  static String _compactDate(DateTime d) => DateFormat('d MMM', 'fr').format(d);
+  static String _compactDate(DateTime d) =>
+      DateFormat('d MMM', 'fr').format(d);
 
   @override
   Widget build(BuildContext context) {
@@ -137,10 +136,7 @@ class CorridorAlertTile extends StatelessWidget {
                   ),
                   if (alert.hasPickupZone) ...[
                     const SizedBox(height: 4),
-                    _ZoneChip(
-                      radiusKm: alert.radiusKm!,
-                      label: alert.centerLabel,
-                    ),
+                    _ZoneChip(radiusKm: alert.radiusKm!, label: alert.centerLabel),
                   ],
                 ],
               ),

@@ -8,21 +8,21 @@ import 'package:mocktail/mocktail.dart';
 class _MockRepo extends Mock implements FavoriteRepository {}
 
 PackageRequestSearchItem _makeItem() => PackageRequestSearchItem(
-  id: 'req-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  desiredDate: DateTime(2025, 6, 1),
-  dateToleranceDays: 3,
-  weightKg: 5.0,
-  parcelSize: ParcelSize.medium,
-  sender: const SenderPublicProfile(
-    id: 'sender-1',
-    displayName: 'Mamadou Diallo',
-    averageRating: 4.8,
-    totalRatings: 10,
-    kycVerified: true,
-  ),
-);
+      id: 'req-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      desiredDate: DateTime(2025, 6, 1),
+      dateToleranceDays: 3,
+      weightKg: 5.0,
+      parcelSize: ParcelSize.medium,
+      sender: const SenderPublicProfile(
+        id: 'sender-1',
+        displayName: 'Mamadou Diallo',
+        averageRating: 4.8,
+        totalRatings: 10,
+        kycVerified: true,
+      ),
+    );
 
 void main() {
   late _MockRepo repo;

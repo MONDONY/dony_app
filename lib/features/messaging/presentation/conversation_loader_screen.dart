@@ -30,16 +30,12 @@ class _ConversationLoaderScreenState extends State<ConversationLoaderScreen> {
   @override
   void initState() {
     super.initState();
-    _future = getIt<ConversationRepository>().getConversation(
-      widget.conversationId,
-    );
+    _future = getIt<ConversationRepository>().getConversation(widget.conversationId);
   }
 
   void _retry() {
     setState(() {
-      _future = getIt<ConversationRepository>().getConversation(
-        widget.conversationId,
-      );
+      _future = getIt<ConversationRepository>().getConversation(widget.conversationId);
     });
   }
 

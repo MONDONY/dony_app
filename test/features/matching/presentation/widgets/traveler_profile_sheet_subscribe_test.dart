@@ -55,11 +55,8 @@ void main() {
   setUp(() {
     ratingBloc = MockRatingBloc();
     subscribeBloc = MockTravelerSubscribeBloc();
-    whenListen(
-      ratingBloc,
-      const Stream<RatingState>.empty(),
-      initialState: _ratingsLoaded,
-    );
+    whenListen(ratingBloc, const Stream<RatingState>.empty(),
+        initialState: _ratingsLoaded);
 
     getIt.registerFactory<RatingBloc>(() => ratingBloc);
     getIt.registerFactory<TravelerSubscribeBloc>(() => subscribeBloc);
@@ -69,9 +66,8 @@ void main() {
     getIt.reset();
   });
 
-  testWidgets('affiche le bouton « S\'abonner » pour un non-abonné', (
-    tester,
-  ) async {
+  testWidgets('affiche le bouton « S\'abonner » pour un non-abonné',
+      (tester) async {
     whenListen(
       subscribeBloc,
       const Stream<TravelerSubscribeState>.empty(),
@@ -86,9 +82,8 @@ void main() {
     expect(find.text("S'abonner à ce voyageur"), findsOneWidget);
   });
 
-  testWidgets('un tap sur « S\'abonner » dispatch SubscribePressed', (
-    tester,
-  ) async {
+  testWidgets('un tap sur « S\'abonner » dispatch SubscribePressed',
+      (tester) async {
     whenListen(
       subscribeBloc,
       const Stream<TravelerSubscribeState>.empty(),
@@ -105,9 +100,8 @@ void main() {
     verify(() => subscribeBloc.add(const SubscribePressed())).called(1);
   });
 
-  testWidgets('affiche « Abonné ✓ » et la cloche pour un abonné', (
-    tester,
-  ) async {
+  testWidgets('affiche « Abonné ✓ » et la cloche pour un abonné',
+      (tester) async {
     whenListen(
       subscribeBloc,
       const Stream<TravelerSubscribeState>.empty(),
@@ -121,15 +115,11 @@ void main() {
     await _openSheet(tester);
 
     expect(find.text('Abonné ✓'), findsOneWidget);
-    expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'),
-      findsWidgets,
-    );
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell'), findsWidgets);
   });
 
-  testWidgets('la barre est masquée tant que le statut n\'est pas chargé', (
-    tester,
-  ) async {
+  testWidgets('la barre est masquée tant que le statut n\'est pas chargé',
+      (tester) async {
     whenListen(
       subscribeBloc,
       const Stream<TravelerSubscribeState>.empty(),

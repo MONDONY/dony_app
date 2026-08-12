@@ -7,13 +7,8 @@ class KycRepository {
 
   Future<Map<String, dynamic>> createSession() async {
     try {
-      final response = await _apiClient.dio.post<Map<String, dynamic>>(
-        '/kyc/session',
-      );
-      if (response.data == null)
-        throw const NetworkException(
-          'Réponse invalide du serveur de vérification d\'identité',
-        );
+      final response = await _apiClient.dio.post<Map<String, dynamic>>('/kyc/session');
+      if (response.data == null) throw const NetworkException('Réponse invalide du serveur de vérification d\'identité');
       return response.data!;
     } catch (e) {
       throw unwrapDioError(e);
@@ -22,13 +17,8 @@ class KycRepository {
 
   Future<Map<String, dynamic>> getStatus() async {
     try {
-      final response = await _apiClient.dio.get<Map<String, dynamic>>(
-        '/kyc/status',
-      );
-      if (response.data == null)
-        throw const NetworkException(
-          'Réponse invalide du serveur de vérification d\'identité',
-        );
+      final response = await _apiClient.dio.get<Map<String, dynamic>>('/kyc/status');
+      if (response.data == null) throw const NetworkException('Réponse invalide du serveur de vérification d\'identité');
       return response.data!;
     } catch (e) {
       throw unwrapDioError(e);

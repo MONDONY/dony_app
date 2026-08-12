@@ -17,14 +17,14 @@ void main() {
     test('traveler sees net amount formatted correctly', () {
       expect(
         PriceDisplay.threadPriceLabel(35, 39.20, true),
-        'Tu reçois 35,00 €',
+        'Tu reçois 35,00 €',
       );
     });
 
     test('sender sees gross amount when grossPriceEur provided', () {
       expect(
         PriceDisplay.threadPriceLabel(35, 39.20, false),
-        'Tu paies 39,20 €',
+        'Tu paies 39,20 €',
       );
     });
 
@@ -32,27 +32,24 @@ void main() {
       // gross = 35 * 1.12 = 39.20
       expect(
         PriceDisplay.threadPriceLabel(35, null, false),
-        'Tu paies 39,20 €',
+        'Tu paies 39,20 €',
       );
     });
 
     test('traveler ignores gross — always shows net', () {
       expect(
         PriceDisplay.threadPriceLabel(50, 60.0, true),
-        'Tu reçois 50,00 €',
+        'Tu reçois 50,00 €',
       );
     });
 
-    test(
-      'sender with null gross falls back to net*1.12 rounded to 2 decimals',
-      () {
-        // net = 100 → gross = 112.00
-        expect(
-          PriceDisplay.threadPriceLabel(100, null, false),
-          'Tu paies 112,00 €',
-        );
-      },
-    );
+    test('sender with null gross falls back to net*1.12 rounded to 2 decimals', () {
+      // net = 100 → gross = 112.00
+      expect(
+        PriceDisplay.threadPriceLabel(100, null, false),
+        'Tu paies 112,00 €',
+      );
+    });
   });
 
   // ─── Widget tests for ThreadMessageBubble ──────────────────────────────────
@@ -67,10 +64,12 @@ void main() {
         createdAt: DateTime(2026, 6, 1, 10, 30),
       );
 
-  Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+  Widget _wrap(Widget child) => MaterialApp(
+        home: Scaffold(body: child),
+      );
 
   testWidgets(
-    'ThreadMessageBubble — traveler with proposedPriceEur=35 shows "Tu reçois 35,00 €"',
+    'ThreadMessageBubble — traveler with proposedPriceEur=35 shows "Tu reçois 35,00 €"',
     (tester) async {
       await tester.pumpWidget(
         _wrap(
@@ -82,12 +81,12 @@ void main() {
         ),
       );
 
-      expect(find.text('Tu reçois 35,00 €'), findsOneWidget);
+      expect(find.text('Tu reçois 35,00 €'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'ThreadMessageBubble — sender with proposedPriceEur=35, grossPriceEur=39.20 shows "Tu paies 39,20 €"',
+    'ThreadMessageBubble — sender with proposedPriceEur=35, grossPriceEur=39.20 shows "Tu paies 39,20 €"',
     (tester) async {
       await tester.pumpWidget(
         _wrap(
@@ -100,12 +99,12 @@ void main() {
         ),
       );
 
-      expect(find.text('Tu paies 39,20 €'), findsOneWidget);
+      expect(find.text('Tu paies 39,20 €'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'ThreadMessageBubble — sender with grossPriceEur=null computes gross from net (35 → 39,20 €)',
+    'ThreadMessageBubble — sender with grossPriceEur=null computes gross from net (35 → 39,20 €)',
     (tester) async {
       await tester.pumpWidget(
         _wrap(
@@ -119,7 +118,7 @@ void main() {
       );
 
       // gross = 35 * 1.12 = 39.20
-      expect(find.text('Tu paies 39,20 €'), findsOneWidget);
+      expect(find.text('Tu paies 39,20 €'), findsOneWidget);
     },
   );
 

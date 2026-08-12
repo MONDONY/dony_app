@@ -18,7 +18,7 @@ import 'package:dio/dio.dart';
 /// ne sont jamais retentées ici).
 class RetryOnTransientErrorInterceptor extends Interceptor {
   RetryOnTransientErrorInterceptor(this._dio, {Random? random})
-    : _random = random ?? Random();
+      : _random = random ?? Random();
 
   final Dio _dio;
   final Random _random;

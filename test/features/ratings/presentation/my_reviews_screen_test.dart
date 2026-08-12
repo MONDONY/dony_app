@@ -17,13 +17,18 @@ class MockMyReviewsBloc extends MockBloc<MyReviewsEvent, MyReviewsState>
 class FakeMyReviewsEvent extends Fake implements MyReviewsEvent {}
 
 Widget _wrap(MyReviewsBloc bloc) => BlocProvider<MyReviewsBloc>.value(
-  value: bloc,
-  child: MaterialApp.router(
-    routerConfig: GoRouter(
-      routes: [GoRoute(path: '/', builder: (_, __) => const MyReviewsScreen())],
-    ),
-  ),
-);
+      value: bloc,
+      child: MaterialApp.router(
+        routerConfig: GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, __) => const MyReviewsScreen(),
+            ),
+          ],
+        ),
+      ),
+    );
 
 final _summaryWithReviews = RatingSummary(
   averageRating: 4.5,
@@ -71,9 +76,8 @@ void main() {
   });
 
   // 1. Affiche CircularProgressIndicator quand MyReviewsLoading
-  testWidgets('shows CircularProgressIndicator when MyReviewsLoading', (
-    tester,
-  ) async {
+  testWidgets('shows CircularProgressIndicator when MyReviewsLoading',
+      (tester) async {
     when(() => bloc.state).thenReturn(const MyReviewsLoading());
 
     await tester.pumpWidget(_wrap(bloc));
@@ -94,9 +98,8 @@ void main() {
 
   // 3. Affiche état vide quand ratingCount == 0
   testWidgets('shows empty state when ratingCount is 0', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const MyReviewsLoaded(summary: _emptySummary));
+    when(() => bloc.state)
+        .thenReturn(const MyReviewsLoaded(summary: _emptySummary));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -106,9 +109,8 @@ void main() {
 
   // 4. Affiche le score moyen quand des avis existent
   testWidgets('shows average score when reviews exist', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+    when(() => bloc.state)
+        .thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -118,9 +120,8 @@ void main() {
 
   // 5. Affiche les barres de distribution
   testWidgets('shows distribution bars when reviews exist', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+    when(() => bloc.state)
+        .thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -132,9 +133,8 @@ void main() {
 
   // 6. Bouton "Réessayer" quand MyReviewsError
   testWidgets('shows retry button on MyReviewsError', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const MyReviewsError(message: 'Erreur réseau'));
+    when(() => bloc.state)
+        .thenReturn(const MyReviewsError(message: 'Erreur réseau'));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -143,9 +143,8 @@ void main() {
   });
 
   testWidgets('retry button dispatches MyReviewsRequested', (tester) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(const MyReviewsError(message: 'Erreur réseau'));
+    when(() => bloc.state)
+        .thenReturn(const MyReviewsError(message: 'Erreur réseau'));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -156,12 +155,10 @@ void main() {
   });
 
   // 8. Tap sur une ligne de distribution → MyReviewsStarFilterToggled
-  testWidgets('tapping a distribution row dispatches star filter', (
-    tester,
-  ) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
+  testWidgets('tapping a distribution row dispatches star filter',
+      (tester) async {
+    when(() => bloc.state)
+        .thenReturn(MyReviewsLoaded(summary: _summaryWithReviews));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -169,26 +166,16 @@ void main() {
 
     // La ligne 5★ a 2 avis → cliquable.
     await tester.tap(find.text('5★'));
-    verify(
-      () => bloc.add(
-        any(
-          that: isA<MyReviewsStarFilterToggled>().having(
-            (e) => e.stars,
-            'stars',
-            5,
-          ),
-        ),
-      ),
-    ).called(1);
+    verify(() => bloc.add(any(
+        that: isA<MyReviewsStarFilterToggled>()
+            .having((e) => e.stars, 'stars', 5)))).called(1);
   });
 
   // 9. Filtre actif → liste réduite + bouton « Tout afficher »
-  testWidgets('active filter shows only matching reviews and a reset', (
-    tester,
-  ) async {
+  testWidgets('active filter shows only matching reviews and a reset',
+      (tester) async {
     when(() => bloc.state).thenReturn(
-      MyReviewsLoaded(summary: _summaryWithReviews, selectedStars: 5),
-    );
+        MyReviewsLoaded(summary: _summaryWithReviews, selectedStars: 5));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));

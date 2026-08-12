@@ -20,8 +20,7 @@ Widget? buildRequiredLabel(
   if (label == null || !isRequired) {
     return null;
   }
-  final labelStyle =
-      style ??
+  final labelStyle = style ??
       Theme.of(context).inputDecorationTheme.labelStyle ??
       Theme.of(context).textTheme.bodyMedium;
   return Text.rich(

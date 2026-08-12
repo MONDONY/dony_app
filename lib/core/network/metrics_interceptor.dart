@@ -4,8 +4,7 @@ import 'package:dony/core/network/network_metrics_collector.dart';
 class MetricsInterceptor extends Interceptor {
   MetricsInterceptor(this.collector);
   final NetworkMetricsCollector collector;
-  static final NetworkMetricsCollector globalCollector =
-      NetworkMetricsCollector();
+  static final NetworkMetricsCollector globalCollector = NetworkMetricsCollector();
 
   static int _nowMs() => DateTime.now().millisecondsSinceEpoch;
 
@@ -15,24 +14,14 @@ class MetricsInterceptor extends Interceptor {
     handler.next(options);
   }
 
-  void _record(
-    RequestOptions o,
-    int? status,
-    dynamic data,
-    Headers? respHeaders,
-  ) {
+  void _record(RequestOptions o, int? status, dynamic data, Headers? respHeaders) {
     final start = (o.extra['_perf_start'] as int?) ?? _nowMs();
-    collector.record(
-      RequestSample(
-        method: o.method,
-        path: o.path,
-        status: status ?? 0,
-        durationMs: _nowMs() - start,
-        reqBytes: o.data is String ? (o.data as String).length : 0,
-        respBytes: _respBytes(data, respHeaders),
-        startTsMs: start,
-      ),
-    );
+    collector.record(RequestSample(
+      method: o.method, path: o.path, status: status ?? 0,
+      durationMs: _nowMs() - start,
+      reqBytes: o.data is String ? (o.data as String).length : 0,
+      respBytes: _respBytes(data, respHeaders), startTsMs: start,
+    ));
   }
 
   /// Taille de la réponse en octets. Priorité au header Content-Length (le cas
@@ -56,23 +45,15 @@ class MetricsInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    _record(
-      response.requestOptions,
-      response.statusCode,
-      response.data,
-      response.headers,
-    );
+    _record(response.requestOptions, response.statusCode, response.data,
+        response.headers);
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    _record(
-      err.requestOptions,
-      err.response?.statusCode ?? 0,
-      err.response?.data,
-      err.response?.headers,
-    );
+    _record(err.requestOptions, err.response?.statusCode ?? 0,
+        err.response?.data, err.response?.headers);
     handler.next(err);
   }
 }

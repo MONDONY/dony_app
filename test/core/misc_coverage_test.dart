@@ -31,7 +31,10 @@ void main() {
 
   group('QrScanSubmitRequested', () {
     test('holds required fields', () {
-      final e = QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT');
+      final e = QrScanSubmitRequested(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+      );
       expect(e.bidId, 'bid-1');
       expect(e.eventType, 'TRANSIT');
       expect(e.photo, isNull);

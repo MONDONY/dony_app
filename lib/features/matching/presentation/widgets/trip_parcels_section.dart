@@ -48,12 +48,10 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
       return;
     }
     _logged = true;
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.tripParcelsViewed,
-        properties: {'count': count},
-      ),
-    );
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.tripParcelsViewed,
+      properties: {'count': count},
+    ));
   }
 
   void _onFilter(String? status) {
@@ -61,12 +59,10 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
       return;
     }
     _statusFilter.value = status;
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.tripParcelsFiltered,
-        properties: {'status': status ?? 'all'},
-      ),
-    );
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.tripParcelsFiltered,
+      properties: {'status': status ?? 'all'},
+    ));
   }
 
   @override
@@ -96,9 +92,8 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
               );
             }
             if (state is BidListLoaded) {
-              final embarked = state.bids
-                  .where(isAcceptedTabBid)
-                  .toList(growable: false);
+              final embarked =
+                  state.bids.where(isAcceptedTabBid).toList(growable: false);
 
               // Premier rendu de la liste chargée → tir analytics unique.
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -136,8 +131,8 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
                   final visible = active == null
                       ? embarked
                       : embarked
-                            .where((b) => b.status == active)
-                            .toList(growable: false);
+                          .where((b) => b.status == active)
+                          .toList(growable: false);
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -285,15 +280,15 @@ const _kStatusOrder = <String>[
 
 /// Libellé FR + couleur d'un statut de colis embarqué.
 (String, Color) _statusMeta(String status, ColorScheme cs) => switch (status) {
-  'ACCEPTED' => ('Accepté', cs.primary),
-  'HANDED_OVER' => ('Remis', cs.warning),
-  'IN_TRANSIT' => ('En transit', cs.info),
-  'COMPLETED' => ('Livré', cs.success),
-  'NO_SHOW' => ('Absent', cs.error),
-  'PARCEL_REFUSED' => ('Refusé', cs.error),
-  'CANCELLED' => ('Annulé', cs.error),
-  _ => (status, cs.onSurfaceVariant),
-};
+      'ACCEPTED' => ('Accepté', cs.primary),
+      'HANDED_OVER' => ('Remis', cs.warning),
+      'IN_TRANSIT' => ('En transit', cs.info),
+      'COMPLETED' => ('Livré', cs.success),
+      'NO_SHOW' => ('Absent', cs.error),
+      'PARCEL_REFUSED' => ('Refusé', cs.error),
+      'CANCELLED' => ('Annulé', cs.error),
+      _ => (status, cs.onSurfaceVariant),
+    };
 
 /// Chip de filtre d'un statut : libellé FR + compteur + pastille colorée.
 StatusChipData<String?> _statusFilterChip(
@@ -332,9 +327,9 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
       ),
     );
   }

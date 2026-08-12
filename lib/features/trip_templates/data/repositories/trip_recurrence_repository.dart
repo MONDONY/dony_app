@@ -7,8 +7,7 @@ class TripRecurrenceRepository {
   final TripRecurrenceDatasource _datasource;
 
   Future<List<TripRecurrence>> getAll() => _datasource.getAll();
-  Future<TripRecurrence> create(Map<String, dynamic> data) =>
-      _datasource.create(data);
+  Future<TripRecurrence> create(Map<String, dynamic> data) => _datasource.create(data);
   Future<TripRecurrence> update(String id, Map<String, dynamic> data) =>
       _datasource.update(id, data);
   Future<void> delete(String id) => _datasource.delete(id);

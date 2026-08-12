@@ -6,13 +6,10 @@ import 'package:dony/features/payments/presentation/widgets/payment_method_names
 // Reset de debugDefaultTargetPlatformOverride EN FIN DE CORPS (pas en tearDown) :
 // le binding exécute debugAssertAllFoundationVarsUnset avant les tearDowns.
 void main() {
-  testWidgets('iOS → Carte + Apple Pay + PayPal, pas Google Pay', (
-    tester,
-  ) async {
+  testWidgets('iOS → Carte + Apple Pay + PayPal, pas Google Pay', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: PaymentMethodNames())),
-    );
+        const MaterialApp(home: Scaffold(body: PaymentMethodNames())));
     expect(find.text('Carte'), findsOneWidget);
     expect(find.text('Apple Pay'), findsOneWidget);
     expect(find.text('PayPal'), findsOneWidget);
@@ -20,13 +17,10 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('Android → Carte + Google Pay + PayPal, pas Apple Pay', (
-    tester,
-  ) async {
+  testWidgets('Android → Carte + Google Pay + PayPal, pas Apple Pay', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: PaymentMethodNames())),
-    );
+        const MaterialApp(home: Scaffold(body: PaymentMethodNames())));
     expect(find.text('Carte'), findsOneWidget);
     expect(find.text('Google Pay'), findsOneWidget);
     expect(find.text('PayPal'), findsOneWidget);

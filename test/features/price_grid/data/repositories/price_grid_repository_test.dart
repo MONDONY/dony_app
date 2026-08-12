@@ -33,9 +33,7 @@ void main() {
 
   group('PriceGridRepository', () {
     test('getItems delegates to datasource', () async {
-      when(
-        () => mockDatasource.getItems(),
-      ).thenAnswer((_) async => [item1, item2]);
+      when(() => mockDatasource.getItems()).thenAnswer((_) async => [item1, item2]);
 
       final result = await repository.getItems();
 
@@ -44,12 +42,10 @@ void main() {
     });
 
     test('addItem delegates to datasource', () async {
-      when(
-        () => mockDatasource.addItem(
-          label: any(named: 'label'),
-          unitPriceNet: any(named: 'unitPriceNet'),
-        ),
-      ).thenAnswer((_) async => item1);
+      when(() => mockDatasource.addItem(
+            label: any(named: 'label'),
+            unitPriceNet: any(named: 'unitPriceNet'),
+          )).thenAnswer((_) async => item1);
 
       final result = await repository.addItem(
         label: 'Valise cabine',
@@ -57,20 +53,18 @@ void main() {
       );
 
       expect(result, item1);
-      verify(
-        () =>
-            mockDatasource.addItem(label: 'Valise cabine', unitPriceNet: 10.0),
-      ).called(1);
+      verify(() => mockDatasource.addItem(
+            label: 'Valise cabine',
+            unitPriceNet: 10.0,
+          )).called(1);
     });
 
     test('updateItem delegates to datasource', () async {
-      when(
-        () => mockDatasource.updateItem(
-          itemId: any(named: 'itemId'),
-          label: any(named: 'label'),
-          unitPriceNet: any(named: 'unitPriceNet'),
-        ),
-      ).thenAnswer((_) async => item1);
+      when(() => mockDatasource.updateItem(
+            itemId: any(named: 'itemId'),
+            label: any(named: 'label'),
+            unitPriceNet: any(named: 'unitPriceNet'),
+          )).thenAnswer((_) async => item1);
 
       final result = await repository.updateItem(
         itemId: 'uuid-1',
@@ -79,13 +73,11 @@ void main() {
       );
 
       expect(result, item1);
-      verify(
-        () => mockDatasource.updateItem(
-          itemId: 'uuid-1',
-          label: 'Valise cabine',
-          unitPriceNet: 10.0,
-        ),
-      ).called(1);
+      verify(() => mockDatasource.updateItem(
+            itemId: 'uuid-1',
+            label: 'Valise cabine',
+            unitPriceNet: 10.0,
+          )).called(1);
     });
 
     test('deleteItem delegates to datasource', () async {
@@ -97,9 +89,8 @@ void main() {
     });
 
     test('reorder delegates to datasource', () async {
-      when(
-        () => mockDatasource.reorder(['uuid-2', 'uuid-1']),
-      ).thenAnswer((_) async => [item2, item1]);
+      when(() => mockDatasource.reorder(['uuid-2', 'uuid-1']))
+          .thenAnswer((_) async => [item2, item1]);
 
       final result = await repository.reorder(['uuid-2', 'uuid-1']);
 

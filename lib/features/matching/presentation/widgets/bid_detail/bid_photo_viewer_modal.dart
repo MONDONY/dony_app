@@ -28,8 +28,7 @@ class BidPhotoViewerModal extends StatefulWidget {
     return showDialog<void>(
       context: context,
       barrierColor: Colors.black54,
-      builder: (_) =>
-          BidPhotoViewerModal(photos: photos, initialIndex: initialIndex),
+      builder: (_) => BidPhotoViewerModal(photos: photos, initialIndex: initialIndex),
     );
   }
 
@@ -48,12 +47,10 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
     _controller = PageController(initialPage: widget.initialIndex);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (getIt.isRegistered<AnalyticsService>()) {
-        unawaited(
-          getIt<AnalyticsService>().logEvent(
-            AnalyticsEvents.bidPhotosViewed,
-            properties: {'photo_count': widget.photos.length},
-          ),
-        );
+        unawaited(getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.bidPhotosViewed,
+          properties: {'photo_count': widget.photos.length},
+        ));
       }
     });
   }
@@ -105,28 +102,28 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
                         excludeSemantics: true,
                         label: 'Fermer',
                         child: GestureDetector(
-                          onTap: () => Navigator.of(context).pop(),
-                          behavior: HitTestBehavior.opaque,
-                          child: SizedBox(
-                            width: 44,
-                            height: 44,
-                            child: Center(
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: cs.surfaceContainerHighest,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  size: 16,
-                                  color: cs.onSurface,
-                                ),
+                        onTap: () => Navigator.of(context).pop(),
+                        behavior: HitTestBehavior.opaque,
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: Center(
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: cs.surfaceContainerHighest,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: cs.onSurface,
                               ),
                             ),
                           ),
                         ),
+                      )
                       ),
                     ],
                   ),
@@ -142,12 +139,12 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
                         onPageChanged: (i) => _index.value = i,
                         itemBuilder: (_, i) => CachedNetworkImage(
                           imageUrl: widget.photos[i].url,
-                          cacheKey: DonyImage.stableCacheKey(
-                            widget.photos[i].url,
-                          ),
+                          cacheKey: DonyImage.stableCacheKey(widget.photos[i].url),
                           fit: BoxFit.cover,
                           placeholder: (_, _) => Center(
-                            child: CircularProgressIndicator(color: cs.primary),
+                            child: CircularProgressIndicator(
+                              color: cs.primary,
+                            ),
                           ),
                           errorWidget: (_, _, _) => Icon(
                             Icons.broken_image_outlined,
@@ -167,9 +164,8 @@ class _BidPhotoViewerModalState extends State<BidPhotoViewerModal> {
                           for (var i = 0; i < count; i++)
                             AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 3.5,
-                              ),
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 3.5),
                               width: i == current ? 20 : 7,
                               height: 7,
                               decoration: BoxDecoration(

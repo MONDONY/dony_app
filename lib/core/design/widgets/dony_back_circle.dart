@@ -25,7 +25,10 @@ class DonyBackCircle extends StatelessWidget {
             color: cs.surface,
             border: Border.all(color: cs.outline),
           ),
-          child: DonyIcon('arrow-left', size: 20, color: cs.onSurface),
+          child: DonyIcon('arrow-left',
+            size: 20,
+            color: cs.onSurface,
+          ),
         ),
       ),
     );

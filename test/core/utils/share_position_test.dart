@@ -4,9 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('sharePositionOriginFor', () {
-    testWidgets('returns a non-zero Rect matching the widget bounds', (
-      tester,
-    ) async {
+    testWidgets('returns a non-zero Rect matching the widget bounds', (tester) async {
       Rect? origin;
 
       await tester.pumpWidget(

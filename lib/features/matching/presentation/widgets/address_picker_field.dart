@@ -23,13 +23,12 @@ class AddressPickerField extends FormField<AddressData> {
     FormFieldValidator<AddressData>? validator,
     super.autovalidateMode = AutovalidateMode.onUserInteraction,
   }) : super(
-         validator:
-             validator ??
-             (isRequired
-                 ? (v) => v == null ? 'Adresse obligatoire' : null
-                 : null),
-         builder: (_) => const SizedBox.shrink(),
-       );
+          validator: validator ??
+              (isRequired
+                  ? (v) => v == null ? 'Adresse obligatoire' : null
+                  : null),
+          builder: (_) => const SizedBox.shrink(),
+        );
 
   final String fieldLabel;
   final AddressAutocompleteService autocompleteService;
@@ -100,8 +99,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     _suppressListener = true;
     try {
       _ctrl.text = text;
-      _lastSearchedText =
-          text; // keep in sync so focus-restore doesn't re-search
+      _lastSearchedText = text; // keep in sync so focus-restore doesn't re-search
     } finally {
       _suppressListener = false;
     }
@@ -195,10 +193,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     setState(() => _resolvingPlace = true);
     try {
       final token = _sessionToken ?? _getOrCreateSessionToken();
-      final addr = await _w.autocompleteService.resolvePlace(
-        suggestion.placeId,
-        token,
-      );
+      final addr =
+          await _w.autocompleteService.resolvePlace(suggestion.placeId, token);
       _sessionToken = null;
       _sessionTokenCreatedAt = null;
       if (!mounted) return;
@@ -234,33 +230,24 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       if (!mounted) return;
-      _showSheet(
-        _PermissionSheet(
-          permanent: permission == LocationPermission.deniedForever,
-        ),
-      );
+      _showSheet(_PermissionSheet(
+          permanent: permission == LocationPermission.deniedForever));
       return;
     }
     try {
       final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
-      final addr = await _w.autocompleteService.reverseGeocode(
-        pos.latitude,
-        pos.longitude,
-      );
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.high));
+      final addr = await _w.autocompleteService
+          .reverseGeocode(pos.latitude, pos.longitude);
       if (!mounted) return;
-      _select(
-        addr ??
-            AddressData(
-              label:
-                  'Position GPS (${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)})',
-              lat: pos.latitude,
-              lng: pos.longitude,
-            ),
-      );
+      _select(addr ??
+          AddressData(
+            label:
+                'Position GPS (${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)})',
+            lat: pos.latitude,
+            lng: pos.longitude,
+          ));
     } catch (_) {
       if (!mounted) return;
       _showSheet(const _GpsDisabledSheet());
@@ -272,9 +259,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
       context: context,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(DonyRadius.sheet),
-        ),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       builder: (_) => sheet,
     );
@@ -298,7 +284,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               constraints: const BoxConstraints(maxHeight: 240),
               child: ListView.separated(
                 shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+                padding:
+                    const EdgeInsets.symmetric(vertical: DonySpacing.xs),
                 itemCount: _suggestions.length,
                 separatorBuilder: (sepCtx, __) => Divider(
                   height: 1,
@@ -324,9 +311,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                             height: 32,
                             decoration: BoxDecoration(
                               color: ics.primaryContainer,
-                              borderRadius: BorderRadius.circular(
-                                DonyRadius.sm,
-                              ),
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.sm),
                             ),
                             child: DonyIcon(
                               'map-pin',
@@ -402,10 +388,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     final borderColor = hasErr
         ? cs.error
         : isFocused
-        ? cs.primary
-        : confirmed
-        ? cs.success
-        : cs.outline;
+            ? cs.primary
+            : confirmed
+                ? cs.success
+                : cs.outline;
     final borderWidth = (hasErr || isFocused || confirmed) ? 1.5 : 1.0;
 
     return CompositedTransformTarget(
@@ -432,21 +418,23 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               decoration: InputDecoration(
                 labelText: _w.fieldLabel,
                 labelStyle: tt.bodyMedium?.copyWith(
-                  color: isFocused ? cs.primary : cs.onSurfaceVariant,
+                  color: isFocused
+                      ? cs.primary
+                      : cs.onSurfaceVariant,
                 ),
                 floatingLabelStyle: tt.bodySmall?.copyWith(
                   color: isFocused
                       ? cs.primary
                       : confirmed
-                      ? cs.success
-                      : cs.onSurfaceVariant,
+                          ? cs.success
+                          : cs.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
                 // Hint visible uniquement après que le label a flotté
-                hintText: isFocused
-                    ? 'Tapez pour rechercher une adresse…'
-                    : null,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                hintText: isFocused ? 'Tapez pour rechercher une adresse…' : null,
+                hintStyle: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -467,8 +455,8 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                     color: confirmed
                         ? cs.success
                         : isFocused
-                        ? cs.primary
-                        : _w.prefixIconColor ?? cs.onSurfaceVariant,
+                            ? cs.primary
+                            : _w.prefixIconColor ?? cs.onSurfaceVariant,
                   ),
                 ),
                 prefixIconConstraints: const BoxConstraints(
@@ -488,15 +476,16 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                         ),
                       )
                     : confirmed && !isFocused
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: DonySpacing.md),
-                        child: DonyIcon(
-                          'circle-check',
-                          color: cs.success,
-                          size: 20,
-                        ),
-                      )
-                    : null,
+                        ? Padding(
+                            padding: const EdgeInsets.only(
+                                right: DonySpacing.md),
+                            child: DonyIcon(
+                              'circle-check',
+                              color: cs.success,
+                              size: 20,
+                            ),
+                          )
+                        : null,
               ),
             ),
           ),
@@ -545,7 +534,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               padding: const EdgeInsets.only(top: 2, left: 4),
               child: Text(
                 errorText!,
-                style: TextStyle(color: cs.error, fontSize: 12),
+                style: TextStyle(
+                  color: cs.error,
+                  fontSize: 12,
+                ),
               ),
             ),
 
@@ -556,11 +548,18 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DonyIcon('wifi-off', size: 12, color: cs.warning),
+                  DonyIcon(
+                    'wifi-off',
+                    size: 12,
+                    color: cs.warning,
+                  ),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     'Connexion requise pour la recherche d\'adresse',
-                    style: TextStyle(color: cs.warning, fontSize: 12),
+                    style: TextStyle(
+                      color: cs.warning,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -608,7 +607,11 @@ class _PermissionSheet extends StatelessWidget {
               color: cs.warningLight,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: DonyIcon('map-pin-off', size: 24, color: cs.warning),
+            child: DonyIcon(
+              'map-pin-off',
+              size: 24,
+              color: cs.warning,
+            ),
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
@@ -667,7 +670,11 @@ class _GpsDisabledSheet extends StatelessWidget {
               color: cs.warningLight,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: DonyIcon('map-pin-off', size: 24, color: cs.warning),
+            child: DonyIcon(
+              'map-pin-off',
+              size: 24,
+              color: cs.warning,
+            ),
           ),
           const SizedBox(height: DonySpacing.base),
           Text(

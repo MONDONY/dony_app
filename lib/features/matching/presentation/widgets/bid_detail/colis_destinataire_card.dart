@@ -66,11 +66,8 @@ class _PhotoGallery extends StatelessWidget {
         for (var i = 0; i < shown.length; i++) ...[
           Expanded(
             child: GestureDetector(
-              onTap: () => BidPhotoViewerModal.show(
-                context,
-                photos: photos,
-                initialIndex: i,
-              ),
+              onTap: () =>
+                  BidPhotoViewerModal.show(context, photos: photos, initialIndex: i),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
                 child: AspectRatio(
@@ -86,10 +83,8 @@ class _PhotoGallery extends StatelessWidget {
                             ColoredBox(color: cs.surfaceContainerHighest),
                         errorWidget: (_, _, _) => ColoredBox(
                           color: cs.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.broken_image_outlined,
-                            color: cs.onSurfaceVariant,
-                          ),
+                          child: Icon(Icons.broken_image_outlined,
+                              color: cs.onSurfaceVariant),
                         ),
                       ),
                       if (i == shown.length - 1 && extra > 0)

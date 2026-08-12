@@ -14,7 +14,7 @@ class DisputeListBloc extends Bloc<DisputeListEvent, DisputeListState> {
   bool _openedLogged = false;
 
   DisputeListBloc(this._repository, this._analytics)
-    : super(const DisputeListInitial()) {
+      : super(const DisputeListInitial()) {
     on<DisputesLoadRequested>(_onLoad);
   }
 
@@ -27,12 +27,10 @@ class DisputeListBloc extends Bloc<DisputeListEvent, DisputeListState> {
       final disputes = await _repository.getMyDisputes();
       if (!_openedLogged) {
         _openedLogged = true;
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.disputesOpened,
-            properties: {'count': disputes.length},
-          ),
-        );
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.disputesOpened,
+          properties: {'count': disputes.length},
+        ));
       }
       emit(DisputeListLoaded(disputes));
     } catch (e) {

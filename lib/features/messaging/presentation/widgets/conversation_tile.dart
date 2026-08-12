@@ -61,9 +61,8 @@ class ConversationTile extends StatelessWidget {
                                 ? participant.name
                                 : 'Utilisateur',
                             style: tt.titleLarge?.copyWith(
-                              fontWeight: unread
-                                  ? FontWeight.w800
-                                  : FontWeight.w700,
+                              fontWeight:
+                                  unread ? FontWeight.w800 : FontWeight.w700,
                               color: cs.onSurface,
                             ),
                             maxLines: 1,
@@ -87,10 +86,7 @@ class ConversationTile extends StatelessWidget {
                     if (conversation.tripLabel != null) ...[
                       const SizedBox(height: 3),
                       _TripLabel(
-                        label: conversation.tripLabel!,
-                        cs: cs,
-                        tt: tt,
-                      ),
+                          label: conversation.tripLabel!, cs: cs, tt: tt),
                     ],
                     const SizedBox(height: 3),
                     Row(
@@ -113,10 +109,9 @@ class ConversationTile extends StatelessWidget {
                         const SizedBox(width: DonySpacing.xs),
                         if (unread && conversation.unreadCount > 0)
                           _UnreadBadge(
-                            count: conversation.unreadCount,
-                            cs: cs,
-                            tt: tt,
-                          ),
+                              count: conversation.unreadCount,
+                              cs: cs,
+                              tt: tt),
                       ],
                     ),
                   ],
@@ -145,8 +140,7 @@ String formatConversationTime(DateTime dt) {
   if (diff.inMinutes < 1) {
     return 'maintenant';
   }
-  final isToday =
-      now.year == local.year &&
+  final isToday = now.year == local.year &&
       now.month == local.month &&
       now.day == local.day;
   if (isToday) {

@@ -5,24 +5,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets(
-    'confirmation de paiement escrow utilise DonySuccessScreen avec la mascotte securise',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: DonySuccessScreen(
-            mascotteType: DonyMascotteType.securise,
-            title: 'Envoi réservé !',
-            subtitle:
-                '50.00 € sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.',
-            ctaLabel: 'Voir mes envois',
-            onCta: () {},
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 500));
+      'confirmation de paiement escrow utilise DonySuccessScreen avec la mascotte securise',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: DonySuccessScreen(
+        mascotteType: DonyMascotteType.securise,
+        title: 'Envoi réservé !',
+        subtitle:
+            '50.00 € sont bloqués et sécurisés, puis libérés après confirmation de livraison par le destinataire.',
+        ctaLabel: 'Voir mes envois',
+        onCta: () {},
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Envoi réservé !'), findsOneWidget);
-    },
-  );
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Envoi réservé !'), findsOneWidget);
+  });
 }

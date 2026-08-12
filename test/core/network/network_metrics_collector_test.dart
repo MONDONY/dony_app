@@ -2,28 +2,16 @@ import 'package:dony/core/network/network_metrics_collector.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 RequestSample s(String path, {int status = 200, int dur = 100, int ts = 0}) =>
-    RequestSample(
-      method: 'GET',
-      path: path,
-      status: status,
-      durationMs: dur,
-      reqBytes: 0,
-      respBytes: 500,
-      startTsMs: ts,
-    );
+    RequestSample(method: 'GET', path: path, status: status, durationMs: dur,
+        reqBytes: 0, respBytes: 500, startTsMs: ts);
 
 void main() {
   test('normalizePath remplace les UUID/ids par :id', () {
-    expect(
-      NetworkMetricsCollector.normalizePath(
-        '/announcements/3fa85f64-5717-4562-b3fc-2c963f66afa6/trip',
-      ),
-      '/announcements/:id/trip',
-    );
-    expect(
-      NetworkMetricsCollector.normalizePath('/favorites/trip/42'),
-      '/favorites/trip/:id',
-    );
+    expect(NetworkMetricsCollector.normalizePath(
+        '/announcements/3fa85f64-5717-4562-b3fc-2c963f66afa6/trip'),
+        '/announcements/:id/trip');
+    expect(NetworkMetricsCollector.normalizePath('/favorites/trip/42'),
+        '/favorites/trip/:id');
   });
 
   test('aggregate calcule count, p50, p95, max, errorRate par endpoint', () {
@@ -41,43 +29,32 @@ void main() {
 
   test('burst détecté si >=3 appels du meme endpoint en <500ms', () {
     final c = NetworkMetricsCollector();
-    c
-      ..record(s('/y', ts: 0))
-      ..record(s('/y', ts: 100))
-      ..record(s('/y', ts: 300));
+    c..record(s('/y', ts: 0))..record(s('/y', ts: 100))..record(s('/y', ts: 300));
     expect(c.aggregate().firstWhere((e) => e.key == 'GET /y').burst, isTrue);
   });
 
   test('pas de burst si appels espacés', () {
     final c = NetworkMetricsCollector();
-    c
-      ..record(s('/z', ts: 0))
-      ..record(s('/z', ts: 800))
-      ..record(s('/z', ts: 1700));
+    c..record(s('/z', ts: 0))..record(s('/z', ts: 800))..record(s('/z', ts: 1700));
     expect(c.aggregate().firstWhere((e) => e.key == 'GET /z').burst, isFalse);
   });
 
-  test(
-    'rawSamplesJson retourne une map par sample avec les 3 clés requises',
-    () {
-      final c = NetworkMetricsCollector();
-      c.record(s('/announcements/42', dur: 150, ts: 1000));
-      c.record(
-        s('/bids/3fa85f64-5717-4562-b3fc-2c963f66afa6', dur: 200, ts: 1200),
-      );
-      final raw = c.rawSamplesJson();
-      expect(raw.length, 2);
-      for (final map in raw) {
-        expect(map.containsKey('path'), isTrue);
-        expect(map.containsKey('startTsMs'), isTrue);
-        expect(map.containsKey('durationMs'), isTrue);
-      }
-      expect(raw[0]['path'], '/announcements/:id');
-      expect(raw[0]['startTsMs'], 1000);
-      expect(raw[0]['durationMs'], 150);
-      expect(raw[1]['path'], '/bids/:id');
-      expect(raw[1]['startTsMs'], 1200);
-      expect(raw[1]['durationMs'], 200);
-    },
-  );
+  test('rawSamplesJson retourne une map par sample avec les 3 clés requises', () {
+    final c = NetworkMetricsCollector();
+    c.record(s('/announcements/42', dur: 150, ts: 1000));
+    c.record(s('/bids/3fa85f64-5717-4562-b3fc-2c963f66afa6', dur: 200, ts: 1200));
+    final raw = c.rawSamplesJson();
+    expect(raw.length, 2);
+    for (final map in raw) {
+      expect(map.containsKey('path'), isTrue);
+      expect(map.containsKey('startTsMs'), isTrue);
+      expect(map.containsKey('durationMs'), isTrue);
+    }
+    expect(raw[0]['path'], '/announcements/:id');
+    expect(raw[0]['startTsMs'], 1000);
+    expect(raw[0]['durationMs'], 150);
+    expect(raw[1]['path'], '/bids/:id');
+    expect(raw[1]['startTsMs'], 1200);
+    expect(raw[1]['durationMs'], 200);
+  });
 }

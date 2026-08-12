@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 enum DonyLogoVariant {
   onLight, // fond clair : mot-logo Yadony (bleu nuit + orange)
-  onDark, // fond sombre/coloré : idem, faute de déclinaison claire
+  onDark,  // fond sombre/coloré : idem, faute de déclinaison claire
 }
 
 class DonyLogo extends StatelessWidget {
@@ -21,7 +21,7 @@ class DonyLogo extends StatelessWidget {
   // et ne sont plus utilisés. Tant qu'aucune déclinaison sur fond sombre
   // n'existe, onDark réutilise le même fichier.
   static const _assetLight = 'assets/logos/logo-yadony.png';
-  static const _assetDark = 'assets/logos/logo-yadony.png';
+  static const _assetDark  = 'assets/logos/logo-yadony.png';
 
   @override
   Widget build(BuildContext context) {

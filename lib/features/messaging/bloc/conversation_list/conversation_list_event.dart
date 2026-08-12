@@ -29,10 +29,7 @@ class ConversationRemovedLocally extends ConversationListEvent {
 class ConversationFilterChanged extends ConversationListEvent {
   final ConversationFilter filter;
   final String searchQuery;
-  const ConversationFilterChanged({
-    required this.filter,
-    required this.searchQuery,
-  });
+  const ConversationFilterChanged({required this.filter, required this.searchQuery});
 }
 
 /// Swipe-to-archive : déplace vers la liste archivée sans appel API.

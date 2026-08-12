@@ -24,9 +24,9 @@ class ConnectedDevicesScreen extends StatelessWidget {
           if (state is ConnectedDevicesError) {
             return _ErrorView(
               message: state.message,
-              onRetry: () => context.read<ConnectedDevicesBloc>().add(
-                const DevicesLoadRequested(),
-              ),
+              onRetry: () => context
+                  .read<ConnectedDevicesBloc>()
+                  .add(const DevicesLoadRequested()),
             );
           }
           if (state is ConnectedDevicesLoaded) {
@@ -67,11 +67,11 @@ class _DeviceList extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.md),
         ...devices.asMap().entries.map(
-          (entry) => _DeviceTile(device: entry.value)
-              .animate()
-              .fadeIn(delay: (entry.key * 60).ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        ),
+              (entry) => _DeviceTile(device: entry.value)
+                  .animate()
+                  .fadeIn(delay: (entry.key * 60).ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ),
         if (others.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.xl),
           DonyButton(
@@ -90,9 +90,9 @@ class _DeviceList extends StatelessWidget {
       authService: getIt<LocalAuthService>(),
     );
     if (confirmed == true && context.mounted) {
-      context.read<ConnectedDevicesBloc>().add(
-        const AllOthersRevokeRequested(),
-      );
+      context
+          .read<ConnectedDevicesBloc>()
+          .add(const AllOthersRevokeRequested());
     }
   }
 }
@@ -103,11 +103,11 @@ class _DeviceTile extends StatelessWidget {
   final DeviceModel device;
 
   String get _platformIcon => switch (device.platform) {
-    'ios' => '\u{1F34E}',
-    'android' => '\u{1F916}',
-    'web' => '\u{1F4BB}',
-    _ => '\u{1F4F1}',
-  };
+        'ios' => '\u{1F34E}',
+        'android' => '\u{1F916}',
+        'web' => '\u{1F4BB}',
+        _ => '\u{1F4F1}',
+      };
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -159,9 +159,8 @@ class _DeviceTile extends StatelessWidget {
                     Flexible(
                       child: Text(
                         device.deviceName,
-                        style: tt.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: tt.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -178,7 +177,8 @@ class _DeviceTile extends StatelessWidget {
                         ),
                         child: Text(
                           'Cet appareil',
-                          style: tt.labelSmall?.copyWith(color: cs.onPrimary),
+                          style:
+                              tt.labelSmall?.copyWith(color: cs.onPrimary),
                         ),
                       ),
                     ],
@@ -187,7 +187,8 @@ class _DeviceTile extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   _formatDate(device.lastSeenAt),
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  style:
+                      tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -209,9 +210,9 @@ class _DeviceTile extends StatelessWidget {
       authService: getIt<LocalAuthService>(),
     );
     if (confirmed == true && context.mounted) {
-      context.read<ConnectedDevicesBloc>().add(
-        DeviceRevokeRequested(device.deviceId),
-      );
+      context
+          .read<ConnectedDevicesBloc>()
+          .add(DeviceRevokeRequested(device.deviceId));
     }
   }
 }

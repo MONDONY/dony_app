@@ -15,9 +15,9 @@ void main() {
   XFile passthrough(XFile f) => f;
 
   DonyMediaService makeService() => DonyMediaService(
-    imagePicker: mockPicker,
-    compressor: (f) async => passthrough(f),
-  );
+        imagePicker: mockPicker,
+        compressor: (f) async => passthrough(f),
+      );
 
   XFile fakeXFile(String name, int sizeBytes) {
     final path = '${tempDir.path}/$name';
@@ -40,12 +40,10 @@ void main() {
 
   group('pick — user cancels at picker', () {
     test('returns null', () async {
-      when(
-        () => mockPicker.pickImage(
-          source: any(named: 'source'),
-          imageQuality: any(named: 'imageQuality'),
-        ),
-      ).thenAnswer((_) async => null);
+      when(() => mockPicker.pickImage(
+            source: any(named: 'source'),
+            imageQuality: any(named: 'imageQuality'),
+          )).thenAnswer((_) async => null);
 
       final result = await makeService().pick(source: ImageSource.gallery);
 
@@ -55,13 +53,12 @@ void main() {
 
   group('pick — file too large', () {
     test('throws MediaFileTooLargeException when raw file > 50 MB', () async {
-      final bigFile = fakeXFile('big.jpg', DonyMediaService.maxInputBytes + 1);
-      when(
-        () => mockPicker.pickImage(
-          source: any(named: 'source'),
-          imageQuality: any(named: 'imageQuality'),
-        ),
-      ).thenAnswer((_) async => bigFile);
+      final bigFile =
+          fakeXFile('big.jpg', DonyMediaService.maxInputBytes + 1);
+      when(() => mockPicker.pickImage(
+            source: any(named: 'source'),
+            imageQuality: any(named: 'imageQuality'),
+          )).thenAnswer((_) async => bigFile);
 
       await expectLater(
         makeService().pick(source: ImageSource.gallery),
@@ -71,9 +68,7 @@ void main() {
 
     test('exception exposes maxMb from the configured cap', () {
       const ex = MediaFileTooLargeException(
-        60 * 1024 * 1024,
-        DonyMediaService.maxInputBytes,
-      );
+          60 * 1024 * 1024, DonyMediaService.maxInputBytes);
       expect(ex.maxMb, equals(50));
     });
 
@@ -87,12 +82,10 @@ void main() {
   group('pick — rejects videos', () {
     test('throws UnsupportedMediaTypeException for a video file', () async {
       final video = fakeXFile('clip.mp4', 1024);
-      when(
-        () => mockPicker.pickImage(
-          source: any(named: 'source'),
-          imageQuality: any(named: 'imageQuality'),
-        ),
-      ).thenAnswer((_) async => video);
+      when(() => mockPicker.pickImage(
+            source: any(named: 'source'),
+            imageQuality: any(named: 'imageQuality'),
+          )).thenAnswer((_) async => video);
 
       await expectLater(
         makeService().pick(source: ImageSource.gallery),
@@ -104,12 +97,10 @@ void main() {
   group('pick — success', () {
     test('returns the compressed file', () async {
       final small = fakeXFile('photo.jpg', 512);
-      when(
-        () => mockPicker.pickImage(
-          source: any(named: 'source'),
-          imageQuality: any(named: 'imageQuality'),
-        ),
-      ).thenAnswer((_) async => small);
+      when(() => mockPicker.pickImage(
+            source: any(named: 'source'),
+            imageQuality: any(named: 'imageQuality'),
+          )).thenAnswer((_) async => small);
 
       final result = await makeService().pick(source: ImageSource.gallery);
 

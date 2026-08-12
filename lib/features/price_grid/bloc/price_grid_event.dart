@@ -9,10 +9,7 @@ class PriceGridLoadRequested extends PriceGridEvent {
 class PriceGridItemAddRequested extends PriceGridEvent {
   final String label;
   final double unitPriceNet;
-  const PriceGridItemAddRequested({
-    required this.label,
-    required this.unitPriceNet,
-  });
+  const PriceGridItemAddRequested({required this.label, required this.unitPriceNet});
 }
 
 class PriceGridItemUpdateRequested extends PriceGridEvent {

@@ -16,10 +16,8 @@ class RatingListItem extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final isDark = cs.brightness == Brightness.dark;
-    final dateStr = DateFormat(
-      'd MMM yyyy',
-      'fr_FR',
-    ).format(item.createdAt.toLocal());
+    final dateStr =
+        DateFormat('d MMM yyyy', 'fr_FR').format(item.createdAt.toLocal());
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
@@ -59,7 +57,9 @@ class RatingListItem extends StatelessWidget {
                     const Spacer(),
                     Text(
                       dateStr,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

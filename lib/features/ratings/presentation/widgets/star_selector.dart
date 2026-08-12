@@ -47,9 +47,8 @@ class StarSelector extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => onSelect(index),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.xs,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 180),
                     child: Builder(

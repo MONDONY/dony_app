@@ -32,9 +32,7 @@ void main() {
     );
     expect(find.textContaining('01/2025'), findsOneWidget);
     expect(
-      find.byWidgetPredicate(
-        (w) => w is DonyIcon && w.name == 'triangle-alert',
-      ),
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'triangle-alert'),
       findsOneWidget,
     );
   });

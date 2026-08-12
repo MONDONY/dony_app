@@ -37,8 +37,7 @@ class CancellationBottomSheet extends StatefulWidget {
       isDanger: true,
       title: 'Annuler ce trajet ?',
       subtitle: 'Cette action est irréversible',
-      wrapper: (child) =>
-          BlocProvider.value(value: cancellationBloc, child: child),
+      wrapper: (child) => BlocProvider.value(value: cancellationBloc, child: child),
       stickyBottom: BlocBuilder<CancellationBloc, CancellationState>(
         builder: (ctx, state) => DonyButton(
           label: "Confirmer l'annulation",
@@ -111,12 +110,10 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
       iconAsset: 'triangle-alert',
     ).then((confirmed) {
       if (confirmed == true) {
-        bloc.add(
-          CancellationTripRequested(
-            announcementId: widget.announcementId,
-            reason: reason,
-          ),
-        );
+        bloc.add(CancellationTripRequested(
+          announcementId: widget.announcementId,
+          reason: reason,
+        ));
       }
     });
   }
@@ -157,7 +154,8 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
                 Expanded(
                   child: Text(
                     'Tous les expéditeurs liés seront remboursés automatiquement.',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    style:
+                        tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
               ],

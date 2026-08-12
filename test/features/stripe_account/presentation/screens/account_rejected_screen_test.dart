@@ -25,25 +25,24 @@ void main() {
   setUp(() {
     mockOnboardingBloc = MockConnectOnboardingBloc();
     mockStripeBloc = MockStripeAccountBloc();
-    when(
-      () => mockOnboardingBloc.state,
-    ).thenReturn(const ConnectOnboardingInitial());
-    when(() => mockStripeBloc.state).thenReturn(
-      const StripeAccountReady(
-        ConnectAccountStatus(status: 'REJECTED', reason: 'Documents invalides'),
-      ),
-    );
+    when(() => mockOnboardingBloc.state)
+        .thenReturn(const ConnectOnboardingInitial());
+    when(() => mockStripeBloc.state)
+        .thenReturn(const StripeAccountReady(ConnectAccountStatus(
+          status: 'REJECTED',
+          reason: 'Documents invalides',
+        )));
   });
 
   Widget buildWidget() => MaterialApp(
-    home: MultiBlocProvider(
-      providers: [
-        BlocProvider<ConnectOnboardingBloc>.value(value: mockOnboardingBloc),
-        BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
-      ],
-      child: const AccountRejectedScreen(),
-    ),
-  );
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<ConnectOnboardingBloc>.value(value: mockOnboardingBloc),
+            BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
+          ],
+          child: const AccountRejectedScreen(),
+        ),
+      );
 
   testWidgets('affiche le titre et le message', (tester) async {
     await tester.pumpWidget(buildWidget());
@@ -65,12 +64,9 @@ void main() {
     expect(find.text('Contacter le support Yadony'), findsNothing);
   });
 
-  testWidgets('bouton support apparaît après 2 taps sur Reconfigurer', (
-    tester,
-  ) async {
-    when(
-      () => mockOnboardingBloc.state,
-    ).thenReturn(const ConnectOnboardingInitial());
+  testWidgets('bouton support apparaît après 2 taps sur Reconfigurer',
+      (tester) async {
+    when(() => mockOnboardingBloc.state).thenReturn(const ConnectOnboardingInitial());
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.text('Reconfigurer mon compte'));
     await tester.pump();
@@ -79,9 +75,8 @@ void main() {
     expect(find.text('Contacter le support Yadony'), findsOneWidget);
   });
 
-  testWidgets('affiche un SnackBar quand ConnectOnboardingError est émis', (
-    tester,
-  ) async {
+  testWidgets('affiche un SnackBar quand ConnectOnboardingError est émis',
+      (tester) async {
     const errorMessage = 'Impossible de générer le lien';
     whenListen(
       mockOnboardingBloc,

@@ -7,7 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
+class _MockNegotiationBloc
+    extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
 Widget _buildApp(_MockNegotiationBloc bloc) {
@@ -19,8 +20,11 @@ Widget _buildApp(_MockNegotiationBloc bloc) {
         child: Builder(
           builder: (ctx) => ElevatedButton(
             key: const Key('open'),
-            onPressed: () =>
-                RejectBottomSheet.show(ctx, bloc: bloc, threadId: 't-1'),
+            onPressed: () => RejectBottomSheet.show(
+              ctx,
+              bloc: bloc,
+              threadId: 't-1',
+            ),
             child: const Text('Ouvrir'),
           ),
         ),
@@ -35,9 +39,8 @@ void main() {
   setUp(() {
     bloc = _MockNegotiationBloc();
     when(() => bloc.state).thenReturn(const NegotiationInitial());
-    when(
-      () => bloc.stream,
-    ).thenAnswer((_) => const Stream<NegotiationState>.empty());
+    when(() => bloc.stream)
+        .thenAnswer((_) => const Stream<NegotiationState>.empty());
   });
 
   tearDown(() => bloc.close());
@@ -63,9 +66,8 @@ void main() {
     expect(find.text('Confirmer le rejet'), findsOneWidget);
   });
 
-  testWidgets('tapping Confirmer dispatches NegotiationRejectRequested', (
-    tester,
-  ) async {
+  testWidgets('tapping Confirmer dispatches NegotiationRejectRequested',
+      (tester) async {
     await tester.pumpWidget(_buildApp(bloc));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
@@ -85,14 +87,12 @@ void main() {
     await tester.pump();
     verify(
       () => bloc.add(
-        NegotiationRejectRequested(threadId: 't-1', reason: 'Trop cher'),
-      ),
+          NegotiationRejectRequested(threadId: 't-1', reason: 'Trop cher')),
     ).called(1);
   });
 
-  testWidgets('Confirmer le rejet button is present in the sheet', (
-    tester,
-  ) async {
+  testWidgets('Confirmer le rejet button is present in the sheet',
+      (tester) async {
     await tester.pumpWidget(_buildApp(bloc));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();

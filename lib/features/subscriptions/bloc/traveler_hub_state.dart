@@ -23,11 +23,12 @@ class TravelerHubState {
     bool? pushEnabled,
     List<TravelerAnnouncement>? announcements,
     String? error,
-  }) => TravelerHubState(
-    status: status ?? this.status,
-    subscribed: subscribed ?? this.subscribed,
-    pushEnabled: pushEnabled ?? this.pushEnabled,
-    announcements: announcements ?? this.announcements,
-    error: error,
-  );
+  }) =>
+      TravelerHubState(
+        status: status ?? this.status,
+        subscribed: subscribed ?? this.subscribed,
+        pushEnabled: pushEnabled ?? this.pushEnabled,
+        announcements: announcements ?? this.announcements,
+        error: error,
+      );
 }

@@ -17,15 +17,13 @@ void main() {
   setUp(() {
     box = MockBox();
     analytics = MockAnalyticsService();
-    when(
-      () => box.get(any(), defaultValue: any(named: 'defaultValue')),
-    ).thenAnswer((inv) => inv.namedArguments[#defaultValue]);
+    when(() => box.get(any(), defaultValue: any(named: 'defaultValue')))
+        .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
     when(() => box.get(any())).thenReturn(null);
     when(() => box.put(any(), any())).thenAnswer((_) async {});
     when(() => box.delete(any())).thenAnswer((_) async {});
-    when(
-      () => analytics.logEvent(any(), properties: any(named: 'properties')),
-    ).thenAnswer((_) async {});
+    when(() => analytics.logEvent(any(),
+        properties: any(named: 'properties'))).thenAnswer((_) async {});
   });
 
   AccessibilityBloc build() => AccessibilityBloc(box, analytics);
@@ -121,9 +119,8 @@ void main() {
     test('les nouvelles clés sont écrites après migration', () {
       legacy(textScale: 'large');
       final bloc = build();
-      verify(
-        () => box.put(HiveService.kA11yFollowSystemTextScale, false),
-      ).called(1);
+      verify(() => box.put(HiveService.kA11yFollowSystemTextScale, false))
+          .called(1);
       verify(() => box.put(HiveService.kA11yTextScaleFactor, 1.3)).called(1);
       bloc.close();
     });
@@ -141,11 +138,8 @@ void main() {
       build: build,
       act: (b) => b.add(const TextScaleFactorChanged(1.45)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.textScaleFactor,
-          'textScaleFactor',
-          1.45,
-        ),
+        isA<AccessibilityState>()
+            .having((s) => s.textScaleFactor, 'textScaleFactor', 1.45),
       ],
       verify: (_) {
         verify(() => box.put(HiveService.kA11yTextScaleFactor, 1.45)).called(1);
@@ -159,16 +153,10 @@ void main() {
         ..add(const TextScaleFactorChanged(5.0))
         ..add(const TextScaleFactorChanged(0.1)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.textScaleFactor,
-          'max borné',
-          2.0,
-        ),
-        isA<AccessibilityState>().having(
-          (s) => s.textScaleFactor,
-          'min borné',
-          0.85,
-        ),
+        isA<AccessibilityState>()
+            .having((s) => s.textScaleFactor, 'max borné', 2.0),
+        isA<AccessibilityState>()
+            .having((s) => s.textScaleFactor, 'min borné', 0.85),
       ],
     );
 
@@ -178,15 +166,11 @@ void main() {
       act: (b) => b.add(const FollowSystemTextScaleToggled(false)),
       expect: () => [
         isA<AccessibilityState>().having(
-          (s) => s.followSystemTextScale,
-          'followSystemTextScale',
-          isFalse,
-        ),
+            (s) => s.followSystemTextScale, 'followSystemTextScale', isFalse),
       ],
       verify: (_) {
-        verify(
-          () => box.put(HiveService.kA11yFollowSystemTextScale, false),
-        ).called(1);
+        verify(() => box.put(HiveService.kA11yFollowSystemTextScale, false))
+            .called(1);
       },
     );
 
@@ -195,16 +179,13 @@ void main() {
       build: build,
       act: (b) => b.add(const HighContrastModeChanged(AccessibilityMode.on)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.highContrast,
-          'highContrast',
-          AccessibilityMode.on,
-        ),
+        isA<AccessibilityState>()
+            .having((s) => s.highContrast, 'highContrast', AccessibilityMode.on),
       ],
       verify: (_) {
-        verify(
-          () => box.put(HiveService.kA11yHighContrast, AccessibilityMode.on),
-        ).called(1);
+        verify(() =>
+                box.put(HiveService.kA11yHighContrast, AccessibilityMode.on))
+            .called(1);
       },
     );
 
@@ -213,11 +194,8 @@ void main() {
       build: build,
       act: (b) => b.add(const ReduceMotionModeChanged(AccessibilityMode.off)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.reduceMotion,
-          'reduceMotion',
-          AccessibilityMode.off,
-        ),
+        isA<AccessibilityState>()
+            .having((s) => s.reduceMotion, 'reduceMotion', AccessibilityMode.off),
       ],
     );
 
@@ -238,11 +216,8 @@ void main() {
       build: build,
       act: (b) => b.add(const UnderlineLinksToggled(true)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.underlineLinks,
-          'underlineLinks',
-          isTrue,
-        ),
+        isA<AccessibilityState>()
+            .having((s) => s.underlineLinks, 'underlineLinks', isTrue),
       ],
       verify: (_) {
         verify(() => box.put(HiveService.kA11yUnderlineLinks, true)).called(1);
@@ -254,11 +229,8 @@ void main() {
       build: build,
       act: (b) => b.add(const ReinforceLabelsToggled(true)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.reinforceLabels,
-          'reinforceLabels',
-          isTrue,
-        ),
+        isA<AccessibilityState>()
+            .having((s) => s.reinforceLabels, 'reinforceLabels', isTrue),
       ],
     );
 
@@ -267,11 +239,8 @@ void main() {
       build: build,
       act: (b) => b.add(const PersistentMessagesToggled(true)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.persistentMessages,
-          'persistentMessages',
-          isTrue,
-        ),
+        isA<AccessibilityState>()
+            .having((s) => s.persistentMessages, 'persistentMessages', isTrue),
       ],
     );
 
@@ -280,11 +249,8 @@ void main() {
       build: build,
       act: (b) => b.add(const ConfirmImportantActionsToggled(true)),
       expect: () => [
-        isA<AccessibilityState>().having(
-          (s) => s.confirmImportantActions,
-          'confirmImportantActions',
-          isTrue,
-        ),
+        isA<AccessibilityState>().having((s) => s.confirmImportantActions,
+            'confirmImportantActions', isTrue),
       ],
     );
   });
@@ -319,12 +285,10 @@ void main() {
       build: build,
       act: (b) => b.add(const BoldTextToggled(true)),
       verify: (_) {
-        verify(
-          () => analytics.logEvent(
-            'accessibility_setting_changed',
-            properties: {'setting': 'bold_text', 'value': 'true'},
-          ),
-        ).called(1);
+        verify(() => analytics.logEvent(
+              'accessibility_setting_changed',
+              properties: {'setting': 'bold_text', 'value': 'true'},
+            )).called(1);
       },
     );
 
@@ -333,12 +297,10 @@ void main() {
       build: build,
       act: (b) => b.add(const AccessibilityResetRequested()),
       verify: (_) {
-        verify(
-          () => analytics.logEvent(
-            'accessibility_setting_changed',
-            properties: {'setting': 'reset', 'value': 'all'},
-          ),
-        ).called(1);
+        verify(() => analytics.logEvent(
+              'accessibility_setting_changed',
+              properties: {'setting': 'reset', 'value': 'all'},
+            )).called(1);
       },
     );
   });

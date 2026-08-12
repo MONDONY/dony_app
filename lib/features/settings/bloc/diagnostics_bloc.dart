@@ -15,19 +15,16 @@ class DiagnosticsBloc extends Bloc<DiagnosticsEvent, DiagnosticsState> {
   }
 
   Future<void> _onLoadRequested(
-    DiagnosticsLoadRequested e,
-    Emitter<DiagnosticsState> emit,
-  ) async {
+      DiagnosticsLoadRequested e, Emitter<DiagnosticsState> emit) async {
     final info = await PackageInfo.fromPlatform();
-    emit(
-      state.copyWith(appVersion: info.version, buildNumber: info.buildNumber),
-    );
+    emit(state.copyWith(
+      appVersion: info.version,
+      buildNumber: info.buildNumber,
+    ));
   }
 
   Future<void> _onApiPing(
-    ApiPingRequested e,
-    Emitter<DiagnosticsState> emit,
-  ) async {
+      ApiPingRequested e, Emitter<DiagnosticsState> emit) async {
     emit(state.copyWith(isPinging: true));
     try {
       await _api.dio.get('/actuator/health');

@@ -110,12 +110,10 @@ void main() {
     testWidgets(
       'les champs heure et date sont rendus via DonyTextField.tappable (InputDecorator)',
       (tester) async {
-        await tester.pumpWidget(
-          _buildSubject(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         // Les trois DonyTextField.tappable ont leurs Keys stables
@@ -129,26 +127,25 @@ void main() {
       },
     );
 
-    testWidgets('heure de départ requise (D1), heure d\'arrivée optionnelle', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _buildSubject(
+    testWidgets(
+      'heure de départ requise (D1), heure d\'arrivée optionnelle',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
 
-      final depTime = tester.widget<DonyTextField>(
-        find.byKey(const Key('departureTimeField')),
-      );
-      expect(depTime.label, 'Heure de départ');
-      expect(depTime.requiredLabel, isTrue);
+        final depTime = tester.widget<DonyTextField>(
+          find.byKey(const Key('departureTimeField')),
+        );
+        expect(depTime.label, 'Heure de départ');
+        expect(depTime.requiredLabel, isTrue);
 
-      // L'heure d'arrivée reste optionnelle.
-      expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
-    });
+        // L'heure d'arrivée reste optionnelle.
+        expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'tap sur le champ heure de départ déclenche onSelectDepartureTime',
@@ -161,29 +158,27 @@ void main() {
         final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
         final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: TrajetStep(
-                  departureCityNotifier: departureCityNotifier,
-                  arrivalCityNotifier: arrivalCityNotifier,
-                  departureDateNotifier: departureDateNotifier,
-                  departureTimeNotifier: departureTimeNotifier,
-                  arrivalTimeNotifier: arrivalTimeNotifier,
-                  transportModeNotifier: transportModeNotifier,
-                  departureCityBloc: departureCityBloc,
-                  arrivalCityBloc: arrivalCityBloc,
-                  onSelectDepartureTime: () async {
-                    called = true;
-                  },
-                  onSelectArrivalTime: () async {},
-                  onSelectDate: () async {},
-                ),
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: TrajetStep(
+                departureCityNotifier: departureCityNotifier,
+                arrivalCityNotifier: arrivalCityNotifier,
+                departureDateNotifier: departureDateNotifier,
+                departureTimeNotifier: departureTimeNotifier,
+                arrivalTimeNotifier: arrivalTimeNotifier,
+                transportModeNotifier: transportModeNotifier,
+                departureCityBloc: departureCityBloc,
+                arrivalCityBloc: arrivalCityBloc,
+                onSelectDepartureTime: () async {
+                  called = true;
+                },
+                onSelectArrivalTime: () async {},
+                onSelectDate: () async {},
               ),
             ),
           ),
-        );
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         await tester.tap(find.byKey(const Key('departureTimeField')));
@@ -193,19 +188,18 @@ void main() {
       },
     );
 
-    testWidgets('tap sur le champ date de départ déclenche onSelectDate', (
-      tester,
-    ) async {
-      var called = false;
-      final departureCityNotifier = ValueNotifier<String?>(null);
-      final arrivalCityNotifier = ValueNotifier<String?>(null);
-      final departureDateNotifier = ValueNotifier<DateTime?>(null);
-      final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-      final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-      final transportModeNotifier = ValueNotifier<TransportMode?>(null);
+    testWidgets(
+      'tap sur le champ date de départ déclenche onSelectDate',
+      (tester) async {
+        var called = false;
+        final departureCityNotifier = ValueNotifier<String?>(null);
+        final arrivalCityNotifier = ValueNotifier<String?>(null);
+        final departureDateNotifier = ValueNotifier<DateTime?>(null);
+        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
-      await tester.pumpWidget(
-        MaterialApp(
+        await tester.pumpWidget(MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: TrajetStep(
@@ -225,74 +219,72 @@ void main() {
               ),
             ),
           ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.tap(find.byKey(const Key('departureDateField')));
-      await tester.pump();
+        await tester.tap(find.byKey(const Key('departureDateField')));
+        await tester.pump();
 
-      expect(called, isTrue);
-    });
+        expect(called, isTrue);
+      },
+    );
   });
 
   group('M5 — Marquage champs requis (astérisque)', () {
-    testWidgets('les champs requis affichent un astérisque dans leur label', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _buildSubject(
+    testWidgets(
+      'les champs requis affichent un astérisque dans leur label',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
 
-      // Exactement 4 champs requis : ville de départ, ville d'arrivée,
-      // date de départ, heure de départ (D1). Chacun affiche un TextSpan " *"
-      // via Text.rich. find.textContaining(' *') matche chaque TextSpan
-      // séparément, donc on attend exactement 4 occurrences.
-      expect(find.textContaining(' *'), findsNWidgets(4));
-    });
+        // Exactement 4 champs requis : ville de départ, ville d'arrivée,
+        // date de départ, heure de départ (D1). Chacun affiche un TextSpan " *"
+        // via Text.rich. find.textContaining(' *') matche chaque TextSpan
+        // séparément, donc on attend exactement 4 occurrences.
+        expect(find.textContaining(' *'), findsNWidgets(4));
+      },
+    );
 
-    testWidgets('le champ date de départ a requiredLabel true', (tester) async {
-      await tester.pumpWidget(
-        _buildSubject(
+    testWidgets(
+      'le champ date de départ a requiredLabel true',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
 
-      // Le champ date de départ est un DonyTextField.tappable (required)
-      // → son Key est présente et le widget est rendu
-      final dateFinder = find.byKey(const Key('departureDateField'));
-      expect(dateFinder, findsOneWidget);
+        // Le champ date de départ est un DonyTextField.tappable (required)
+        // → son Key est présente et le widget est rendu
+        final dateFinder = find.byKey(const Key('departureDateField'));
+        expect(dateFinder, findsOneWidget);
 
-      // Le widget DonyTextField.tappable avec requiredLabel
-      // → on vérifie la propriété directement
-      final dateField = tester.widget<DonyTextField>(dateFinder);
-      expect(dateField.requiredLabel, isTrue);
-      expect(dateField.label, 'Date de départ');
-    });
+        // Le widget DonyTextField.tappable avec requiredLabel
+        // → on vérifie la propriété directement
+        final dateField = tester.widget<DonyTextField>(dateFinder);
+        expect(dateField.requiredLabel, isTrue);
+        expect(dateField.label, 'Date de départ');
+      },
+    );
 
     testWidgets(
       'seule l\'heure d\'arrivée est optionnelle (départ requis, D1)',
       (tester) async {
-        await tester.pumpWidget(
-          _buildSubject(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         // L'heure d'arrivée reste le seul champ optionnel.
         expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
 
-        final donyTextFields = tester
-            .widgetList<DonyTextField>(find.byType(DonyTextField))
-            .toList();
+        final donyTextFields = tester.widgetList<DonyTextField>(
+          find.byType(DonyTextField),
+        ).toList();
         // 3 DonyTextField.tappable : 2 heures + 1 date
         expect(donyTextFields.length, 3);
 
@@ -305,10 +297,8 @@ void main() {
 
         // Date de départ ET heure de départ sont requis (requiredLabel: true).
         final requiredTappables = donyTextFields
-            .where(
-              (f) =>
-                  f.label == 'Date de départ' || f.label == 'Heure de départ',
-            )
+            .where((f) =>
+                f.label == 'Date de départ' || f.label == 'Heure de départ')
             .toList();
         expect(requiredTappables.length, 2);
         for (final f in requiredTappables) {
@@ -319,102 +309,104 @@ void main() {
   });
 
   group('B1 — Suggestions ville inline', () {
-    testWidgets('les suggestions de ville s\'affichent sous le champ arrivée', (
-      tester,
-    ) async {
-      // Émettre CitySearchLoaded pour le bloc arrivée
-      whenListen(
-        arrivalCityBloc,
-        Stream.fromIterable([
-          const CitySearchInitial(),
-          CitySearchLoaded(const [_dakar, _abidjan]),
-        ]),
-        initialState: const CitySearchInitial(),
-      );
+    testWidgets(
+      'les suggestions de ville s\'affichent sous le champ arrivée',
+      (tester) async {
+        // Émettre CitySearchLoaded pour le bloc arrivée
+        whenListen(
+          arrivalCityBloc,
+          Stream.fromIterable([
+            const CitySearchInitial(),
+            CitySearchLoaded(const [_dakar, _abidjan]),
+          ]),
+          initialState: const CitySearchInitial(),
+        );
 
-      await tester.pumpWidget(
-        _buildSubject(
+        await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
-        ),
-      );
+        ));
 
-      // Taper dans le champ ville d'arrivée
-      await tester.enterText(find.byKey(const Key('arrivalCityField')), 'Dak');
-      // Laisser passer le debounce + les émissions du stream
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pump();
+        // Taper dans le champ ville d'arrivée
+        await tester.enterText(
+          find.byKey(const Key('arrivalCityField')),
+          'Dak',
+        );
+        // Laisser passer le debounce + les émissions du stream
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pump();
 
-      // La suggestion doit être visible dans le flux (pas en Overlay)
-      expect(find.text('Dakar'), findsOneWidget);
-      expect(find.text('Abidjan'), findsOneWidget);
+        // La suggestion doit être visible dans le flux (pas en Overlay)
+        expect(find.text('Dakar'), findsOneWidget);
+        expect(find.text('Abidjan'), findsOneWidget);
 
-      // B1 structural check — la suggestion n'est pas enfant d'un ClipRRect
-      expect(
-        find.ancestor(of: find.text('Dakar'), matching: find.byType(ClipRRect)),
-        findsNothing,
-      );
-    });
+        // B1 structural check — la suggestion n'est pas enfant d'un ClipRRect
+        expect(
+          find.ancestor(
+            of: find.text('Dakar'),
+            matching: find.byType(ClipRRect),
+          ),
+          findsNothing,
+        );
+      },
+    );
 
-    testWidgets('toucher une suggestion remplit le champ et ferme la liste', (
-      tester,
-    ) async {
-      // StreamController manuel pour contrôler précisément le timing des états
-      final controller = StreamController<CitySearchState>();
+    testWidgets(
+      'toucher une suggestion remplit le champ et ferme la liste',
+      (tester) async {
+        // StreamController manuel pour contrôler précisément le timing des états
+        final controller = StreamController<CitySearchState>();
 
-      // État initial : Initial
-      when(() => arrivalCityBloc.state).thenReturn(const CitySearchInitial());
-      whenListen(
-        arrivalCityBloc,
-        controller.stream,
-        initialState: const CitySearchInitial(),
-      );
+        // État initial : Initial
+        when(() => arrivalCityBloc.state).thenReturn(const CitySearchInitial());
+        whenListen(
+          arrivalCityBloc,
+          controller.stream,
+          initialState: const CitySearchInitial(),
+        );
 
-      await tester.pumpWidget(
-        _buildSubject(
+        await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
-        ),
-      );
+        ));
 
-      // Émettre les suggestions
-      controller.add(CitySearchLoaded(const [_dakar]));
-      await tester.pump();
-      await tester.pump();
+        // Émettre les suggestions
+        controller.add(CitySearchLoaded(const [_dakar]));
+        await tester.pump();
+        await tester.pump();
 
-      // La suggestion Dakar est visible
-      expect(find.text('Dakar'), findsOneWidget);
+        // La suggestion Dakar est visible
+        expect(find.text('Dakar'), findsOneWidget);
 
-      // Simuler la sélection : le widget appelle CitySearchCleared → Initial
-      controller.add(const CitySearchInitial());
+        // Simuler la sélection : le widget appelle CitySearchCleared → Initial
+        controller.add(const CitySearchInitial());
 
-      // Taper sur la suggestion
-      await tester.tap(find.text('Dakar'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        // Taper sur la suggestion
+        await tester.tap(find.text('Dakar'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      // Le champ est rempli avec "Dakar"
-      final field = tester.widget<TextField>(
-        find.byKey(const Key('arrivalCityField')),
-      );
-      expect(field.controller?.text, 'Dakar');
+        // Le champ est rempli avec "Dakar"
+        final field = tester.widget<TextField>(
+          find.byKey(const Key('arrivalCityField')),
+        );
+        expect(field.controller?.text, 'Dakar');
 
-      // La liste est fermée : le BLoC est en CitySearchInitial → pas de suggestions
-      // "Dakar" n'apparaît qu'une fois (dans le champ, plus dans la liste)
-      expect(find.text('Dakar'), findsOneWidget);
+        // La liste est fermée : le BLoC est en CitySearchInitial → pas de suggestions
+        // "Dakar" n'apparaît qu'une fois (dans le champ, plus dans la liste)
+        expect(find.text('Dakar'), findsOneWidget);
 
-      await controller.close();
-    });
+        await controller.close();
+      },
+    );
 
     testWidgets(
       'les Keys departureCityField et arrivalCityField sont présentes',
       (tester) async {
-        await tester.pumpWidget(
-          _buildSubject(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
         // Laisser les animations initiales se terminer
         await tester.pump(const Duration(milliseconds: 300));
 
@@ -435,12 +427,10 @@ void main() {
         // Les deux villes ne sont plus deux champs isolés à emoji
         // décollage/atterrissage : elles partagent la carte « billet »
         // commune à la recherche et aux alertes, labels courts en capitales.
-        await tester.pumpWidget(
-          _buildSubject(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.byType(CityCorridorFields), findsOneWidget);
@@ -451,34 +441,31 @@ void main() {
       },
     );
 
-    testWidgets('chaque ville sélectionnée affiche le drapeau de son pays', (
-      tester,
-    ) async {
-      // Le drapeau remplace l'ancien emoji avion : il porte une information
-      // (le pays), là où 🛫/🛬 ne faisait que redire le rôle du champ.
-      await tester.pumpWidget(
-        _buildSubject(
+    testWidgets(
+      'chaque ville sélectionnée affiche le drapeau de son pays',
+      (tester) async {
+        // Le drapeau remplace l'ancien emoji avion : il porte une information
+        // (le pays), là où 🛫/🛬 ne faisait que redire le rôle du champ.
+        await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
           departureCity: 'Paris',
           arrivalCity: 'Abidjan',
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('🇫🇷'), findsOneWidget);
-      expect(find.text('🇨🇮'), findsOneWidget);
-    });
+        expect(find.text('🇫🇷'), findsOneWidget);
+        expect(find.text('🇨🇮'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'P4 — champ date de départ a prefixIconColor = colorScheme.primary',
       (tester) async {
-        await tester.pumpWidget(
-          _buildSubject(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         final dateField = tester.widget<DonyTextField>(
@@ -498,12 +485,10 @@ void main() {
     testWidgets(
       'champ heure d\'arrivée a prefixIconColor = colorScheme.secondary',
       (tester) async {
-        await tester.pumpWidget(
-          _buildSubject(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         final arrivalTimeField = tester.widget<DonyTextField>(
@@ -521,12 +506,10 @@ void main() {
     testWidgets(
       'champ heure de départ a prefixIconColor = colorScheme.primary',
       (tester) async {
-        await tester.pumpWidget(
-          _buildSubject(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         final departureTimeField = tester.widget<DonyTextField>(
@@ -546,53 +529,55 @@ void main() {
   // Task 5 — Feedback informatif « sera signalé urgent » sous le date picker.
   // ---------------------------------------------------------------------------
   group('Feedback urgent sous le date picker trajet', () {
-    testWidgets('date proche (demain) → le hint urgent est affiché', (
-      tester,
-    ) async {
-      final departureCityNotifier = ValueNotifier<String?>(null);
-      final arrivalCityNotifier = ValueNotifier<String?>(null);
-      final departureDateNotifier = ValueNotifier<DateTime?>(null);
-      final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-      final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-      final transportModeNotifier = ValueNotifier<TransportMode?>(null);
+    testWidgets(
+      'date proche (demain) → le hint urgent est affiché',
+      (tester) async {
+        final departureCityNotifier = ValueNotifier<String?>(null);
+        final arrivalCityNotifier = ValueNotifier<String?>(null);
+        final departureDateNotifier = ValueNotifier<DateTime?>(null);
+        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: TrajetStep(
-                departureCityNotifier: departureCityNotifier,
-                arrivalCityNotifier: arrivalCityNotifier,
-                departureDateNotifier: departureDateNotifier,
-                departureTimeNotifier: departureTimeNotifier,
-                arrivalTimeNotifier: arrivalTimeNotifier,
-                transportModeNotifier: transportModeNotifier,
-                departureCityBloc: departureCityBloc,
-                arrivalCityBloc: arrivalCityBloc,
-                onSelectDepartureTime: () async {},
-                onSelectArrivalTime: () async {},
-                onSelectDate: () async {},
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: TrajetStep(
+                  departureCityNotifier: departureCityNotifier,
+                  arrivalCityNotifier: arrivalCityNotifier,
+                  departureDateNotifier: departureDateNotifier,
+                  departureTimeNotifier: departureTimeNotifier,
+                  arrivalTimeNotifier: arrivalTimeNotifier,
+                  transportModeNotifier: transportModeNotifier,
+                  departureCityBloc: departureCityBloc,
+                  arrivalCityBloc: arrivalCityBloc,
+                  onSelectDepartureTime: () async {},
+                  onSelectArrivalTime: () async {},
+                  onSelectDate: () async {},
+                ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
+        );
+        await tester.pump(const Duration(milliseconds: 300));
 
-      // Absent tant qu'aucune date n'est sélectionnée.
-      expect(
-        find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
-        findsNothing,
-      );
+        // Absent tant qu'aucune date n'est sélectionnée.
+        expect(
+          find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+          findsNothing,
+        );
 
-      departureDateNotifier.value = DateTime.now().add(const Duration(days: 1));
-      await tester.pump();
+        departureDateNotifier.value =
+            DateTime.now().add(const Duration(days: 1));
+        await tester.pump();
 
-      expect(
-        find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
-        findsOneWidget,
-      );
-    });
+        expect(
+          find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets(
       'date lointaine → le hint urgent reste absent (SizedBox.shrink)',
@@ -627,9 +612,8 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 300));
 
-        departureDateNotifier.value = DateTime.now().add(
-          const Duration(days: 60),
-        );
+        departureDateNotifier.value =
+            DateTime.now().add(const Duration(days: 60));
         await tester.pump();
 
         expect(

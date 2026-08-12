@@ -16,7 +16,10 @@ class MobileMoneyPaymentLoading extends MobileMoneyPaymentState {
 }
 
 class MobileMoneyPaymentPending extends MobileMoneyPaymentState {
-  const MobileMoneyPaymentPending({required this.paymentLink, this.expiresAt});
+  const MobileMoneyPaymentPending({
+    required this.paymentLink,
+    this.expiresAt,
+  });
   final String paymentLink;
   final DateTime? expiresAt;
 

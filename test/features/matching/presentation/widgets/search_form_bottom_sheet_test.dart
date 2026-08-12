@@ -31,7 +31,8 @@ Widget _harness(ValueNotifier<SearchParams?> resultNotifier) {
       body: Builder(
         builder: (context) => ElevatedButton(
           onPressed: () async {
-            resultNotifier.value = await SearchFormBottomSheet.show(context);
+            resultNotifier.value =
+                await SearchFormBottomSheet.show(context);
           },
           child: const Text('Ouvrir filtres'),
         ),
@@ -146,26 +147,24 @@ void main() {
     'vider la ville de départ efface son filtre sans perdre l\'arrivée',
     (tester) async {
       final result = ValueNotifier<SearchParams?>(null);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () async {
-                  result.value = await SearchFormBottomSheet.show(
-                    context,
-                    initialParams: const SearchParams(
-                      departureCity: 'Paris',
-                      arrivalCity: 'Dakar',
-                    ),
-                  );
-                },
-                child: const Text('Ouvrir filtres'),
-              ),
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                result.value = await SearchFormBottomSheet.show(
+                  context,
+                  initialParams: const SearchParams(
+                    departureCity: 'Paris',
+                    arrivalCity: 'Dakar',
+                  ),
+                );
+              },
+              child: const Text('Ouvrir filtres'),
             ),
           ),
         ),
-      );
+      ));
       await tester.tap(find.text('Ouvrir filtres'));
       await tester.pumpAndSettle();
 

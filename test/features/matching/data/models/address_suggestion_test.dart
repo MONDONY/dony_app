@@ -28,21 +28,9 @@ void main() {
     });
 
     test('equality is based on placeId, mainText, secondaryText', () {
-      const a = AddressSuggestion(
-        placeId: 'id1',
-        mainText: 'Paris',
-        secondaryText: 'France',
-      );
-      const b = AddressSuggestion(
-        placeId: 'id1',
-        mainText: 'Paris',
-        secondaryText: 'France',
-      );
-      const c = AddressSuggestion(
-        placeId: 'id2',
-        mainText: 'Paris',
-        secondaryText: 'France',
-      );
+      const a = AddressSuggestion(placeId: 'id1', mainText: 'Paris', secondaryText: 'France');
+      const b = AddressSuggestion(placeId: 'id1', mainText: 'Paris', secondaryText: 'France');
+      const c = AddressSuggestion(placeId: 'id2', mainText: 'Paris', secondaryText: 'France');
 
       expect(a, equals(b));
       expect(a, isNot(equals(c)));

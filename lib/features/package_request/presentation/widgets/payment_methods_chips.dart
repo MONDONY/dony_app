@@ -14,9 +14,8 @@ class PaymentMethodsChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ordered = PaymentMethod.canonicalOrder
-        .where(methods.contains)
-        .toList();
+    final ordered =
+        PaymentMethod.canonicalOrder.where(methods.contains).toList();
     return Wrap(
       spacing: DonySpacing.sm,
       runSpacing: DonySpacing.sm,

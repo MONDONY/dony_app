@@ -28,9 +28,8 @@ Future<bool?> _openSheet(WidgetTester tester) async {
 
 void main() {
   group('UnverifiedContactWarningSheet', () {
-    testWidgets('annonce les trois conséquences et le non-recommandé', (
-      tester,
-    ) async {
+    testWidgets('annonce les trois conséquences et le non-recommandé',
+        (tester) async {
       await _openSheet(tester);
 
       expect(find.text('Accepter les profils non vérifiés ?'), findsOneWidget);
@@ -52,15 +51,13 @@ void main() {
       );
     });
 
-    testWidgets(
-      'le bouton reste inactif tant que le risque n\'est pas accepté',
-      (tester) async {
-        await _openSheet(tester);
+    testWidgets('le bouton reste inactif tant que le risque n\'est pas accepté',
+        (tester) async {
+      await _openSheet(tester);
 
-        final button = tester.widget<DonyButton>(find.byType(DonyButton));
-        expect(button.onPressed, isNull);
-      },
-    );
+      final button = tester.widget<DonyButton>(find.byType(DonyButton));
+      expect(button.onPressed, isNull);
+    });
 
     testWidgets('cocher la case active le bouton', (tester) async {
       await _openSheet(tester);

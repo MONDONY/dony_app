@@ -9,8 +9,8 @@ import 'package:mocktail/mocktail.dart';
 class _MockCancellationBloc extends Mock implements CancellationBloc {}
 
 Widget _wrap(Widget child, CancellationBloc bloc) => MaterialApp(
-  home: BlocProvider<CancellationBloc>.value(value: bloc, child: child),
-);
+      home: BlocProvider<CancellationBloc>.value(value: bloc, child: child),
+    );
 
 void main() {
   late CancellationBloc bloc;
@@ -22,18 +22,13 @@ void main() {
   });
 
   testWidgets('affiche les 5 options de raison', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () =>
-                CancellationBottomSheet.show(ctx, announcementId: 'ann-1'),
-            child: const Text('Ouvrir'),
-          ),
-        ),
-        bloc,
-      ),
-    );
+    await tester.pumpWidget(_wrap(
+      Builder(builder: (ctx) => TextButton(
+        onPressed: () => CancellationBottomSheet.show(ctx, announcementId: 'ann-1'),
+        child: const Text('Ouvrir'),
+      )),
+      bloc,
+    ));
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
@@ -44,18 +39,13 @@ void main() {
   });
 
   testWidgets('le bouton Confirmer est présent', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () =>
-                CancellationBottomSheet.show(ctx, announcementId: 'ann-1'),
-            child: const Text('Ouvrir'),
-          ),
-        ),
-        bloc,
-      ),
-    );
+    await tester.pumpWidget(_wrap(
+      Builder(builder: (ctx) => TextButton(
+        onPressed: () => CancellationBottomSheet.show(ctx, announcementId: 'ann-1'),
+        child: const Text('Ouvrir'),
+      )),
+      bloc,
+    ));
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();

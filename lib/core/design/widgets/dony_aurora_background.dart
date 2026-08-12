@@ -46,37 +46,61 @@ class DonyAuroraBackground extends StatelessWidget {
   final Widget child;
 
   _AuroraSpec get _spec => switch (variant) {
-    DonyAurora.pink => const _AuroraSpec(
-      gradient: [Color(0xFFFFD0E7), Color(0xFFC5A6FF), Color(0xFF7DA5FF)],
-      blobAColor: Color(0xFFFF6FB5),
-      blobBColor: Color(0xFF7B5BFF),
-    ),
-    DonyAurora.peach => const _AuroraSpec(
-      gradient: [Color(0xFFFFE3B5), Color(0xFFFF9678), Color(0xFFE64C7E)],
-      blobAColor: Color(0xFFFFB37A),
-      blobBColor: Color(0xFFFF4D8A),
-    ),
-    DonyAurora.blue => const _AuroraSpec(
-      gradient: [Color(0xFFBCE8FF), Color(0xFF7CB0FF), Color(0xFF7460FF)],
-      blobAColor: Color(0xFF5EE0FF),
-      blobBColor: Color(0xFF5B6AFF),
-    ),
-    DonyAurora.green => const _AuroraSpec(
-      gradient: [Color(0xFFC5F3D5), Color(0xFF7DE0B8), Color(0xFF5EBED4)],
-      blobAColor: Color(0xFF5EE5A0),
-      blobBColor: Color(0xFF5EB8FF),
-    ),
-    DonyAurora.violet => const _AuroraSpec(
-      gradient: [Color(0xFFE4C5FF), Color(0xFFFFA5D8), Color(0xFFFF8775)],
-      blobAColor: Color(0xFFC77DFF),
-      blobBColor: Color(0xFFFF5B85),
-    ),
-    DonyAurora.cyan => const _AuroraSpec(
-      gradient: [Color(0xFFB5F0FF), Color(0xFF82C5FF), Color(0xFFA899FF)],
-      blobAColor: Color(0xFF5EE0FF),
-      blobBColor: Color(0xFF7B85FF),
-    ),
-  };
+        DonyAurora.pink => const _AuroraSpec(
+            gradient: [
+              Color(0xFFFFD0E7),
+              Color(0xFFC5A6FF),
+              Color(0xFF7DA5FF),
+            ],
+            blobAColor: Color(0xFFFF6FB5),
+            blobBColor: Color(0xFF7B5BFF),
+          ),
+        DonyAurora.peach => const _AuroraSpec(
+            gradient: [
+              Color(0xFFFFE3B5),
+              Color(0xFFFF9678),
+              Color(0xFFE64C7E),
+            ],
+            blobAColor: Color(0xFFFFB37A),
+            blobBColor: Color(0xFFFF4D8A),
+          ),
+        DonyAurora.blue => const _AuroraSpec(
+            gradient: [
+              Color(0xFFBCE8FF),
+              Color(0xFF7CB0FF),
+              Color(0xFF7460FF),
+            ],
+            blobAColor: Color(0xFF5EE0FF),
+            blobBColor: Color(0xFF5B6AFF),
+          ),
+        DonyAurora.green => const _AuroraSpec(
+            gradient: [
+              Color(0xFFC5F3D5),
+              Color(0xFF7DE0B8),
+              Color(0xFF5EBED4),
+            ],
+            blobAColor: Color(0xFF5EE5A0),
+            blobBColor: Color(0xFF5EB8FF),
+          ),
+        DonyAurora.violet => const _AuroraSpec(
+            gradient: [
+              Color(0xFFE4C5FF),
+              Color(0xFFFFA5D8),
+              Color(0xFFFF8775),
+            ],
+            blobAColor: Color(0xFFC77DFF),
+            blobBColor: Color(0xFFFF5B85),
+          ),
+        DonyAurora.cyan => const _AuroraSpec(
+            gradient: [
+              Color(0xFFB5F0FF),
+              Color(0xFF82C5FF),
+              Color(0xFFA899FF),
+            ],
+            blobAColor: Color(0xFF5EE0FF),
+            blobBColor: Color(0xFF7B85FF),
+          ),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -101,13 +125,21 @@ class DonyAuroraBackground extends StatelessWidget {
           Positioned(
             top: -60,
             left: -60,
-            child: _Blob(color: spec.blobAColor, size: 280, opacity: 0.55),
+            child: _Blob(
+              color: spec.blobAColor,
+              size: 280,
+              opacity: 0.55,
+            ),
           ),
           // Blob B — bottom-right, donne de la profondeur
           Positioned(
             bottom: -80,
             right: -80,
-            child: _Blob(color: spec.blobBColor, size: 320, opacity: 0.5),
+            child: _Blob(
+              color: spec.blobBColor,
+              size: 320,
+              opacity: 0.5,
+            ),
           ),
           // Contenu au-dessus
           Positioned.fill(child: child),
@@ -118,7 +150,11 @@ class DonyAuroraBackground extends StatelessWidget {
 }
 
 class _Blob extends StatelessWidget {
-  const _Blob({required this.color, required this.size, required this.opacity});
+  const _Blob({
+    required this.color,
+    required this.size,
+    required this.opacity,
+  });
 
   final Color color;
   final double size;

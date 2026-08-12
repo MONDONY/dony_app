@@ -96,7 +96,9 @@ class _PillTab extends StatelessWidget {
           color: isActive ? cs.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(22),
         ),
-        child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
+        child: Center(
+          child: Text(emoji, style: const TextStyle(fontSize: 20)),
+        ),
       ),
     );
   }

@@ -9,9 +9,8 @@ class CitySearchBloc extends Bloc<CitySearchEvent, CitySearchState> {
   CitySearchBloc(this._repository) : super(const CitySearchInitial()) {
     on<CitySearchQueryChanged>(
       _onQueryChanged,
-      transformer: (events, mapper) => events
-          .debounceTime(const Duration(milliseconds: 300))
-          .switchMap(mapper),
+      transformer: (events, mapper) =>
+          events.debounceTime(const Duration(milliseconds: 300)).switchMap(mapper),
     );
     on<CitySearchCleared>(_onCleared);
   }

@@ -9,10 +9,10 @@ class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
 
 Response<T> _ok<T>(T data, String path) => Response(
-  data: data,
-  statusCode: 200,
-  requestOptions: RequestOptions(path: path),
-);
+      data: data,
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
 
 void main() {
   late MockApiClient mockClient;
@@ -32,9 +32,9 @@ void main() {
         'sessionId': 'vs_123',
         'clientSecret': 'secret_abc',
       };
-      when(() => mockDio.post<Map<String, dynamic>>('/kyc/session')).thenAnswer(
-        (_) async => _ok<Map<String, dynamic>>(sessionData, '/kyc/session'),
-      );
+      when(() => mockDio.post<Map<String, dynamic>>('/kyc/session'))
+          .thenAnswer((_) async =>
+              _ok<Map<String, dynamic>>(sessionData, '/kyc/session'));
 
       final result = await repo.createSession();
 
@@ -43,13 +43,12 @@ void main() {
     });
 
     test('throws when response data is null', () async {
-      when(() => mockDio.post<Map<String, dynamic>>('/kyc/session')).thenAnswer(
-        (_) async => Response(
-          data: null,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: '/kyc/session'),
-        ),
-      );
+      when(() => mockDio.post<Map<String, dynamic>>('/kyc/session'))
+          .thenAnswer((_) async => Response(
+                data: null,
+                statusCode: 200,
+                requestOptions: RequestOptions(path: '/kyc/session'),
+              ));
 
       expect(() => repo.createSession(), throwsA(isA<Exception>()));
     });
@@ -61,9 +60,9 @@ void main() {
         'status': 'PENDING',
         'requiresAction': false,
       };
-      when(() => mockDio.get<Map<String, dynamic>>('/kyc/status')).thenAnswer(
-        (_) async => _ok<Map<String, dynamic>>(statusData, '/kyc/status'),
-      );
+      when(() => mockDio.get<Map<String, dynamic>>('/kyc/status'))
+          .thenAnswer((_) async =>
+              _ok<Map<String, dynamic>>(statusData, '/kyc/status'));
 
       final result = await repo.getStatus();
 
@@ -71,13 +70,12 @@ void main() {
     });
 
     test('throws when response data is null', () async {
-      when(() => mockDio.get<Map<String, dynamic>>('/kyc/status')).thenAnswer(
-        (_) async => Response(
-          data: null,
-          statusCode: 200,
-          requestOptions: RequestOptions(path: '/kyc/status'),
-        ),
-      );
+      when(() => mockDio.get<Map<String, dynamic>>('/kyc/status'))
+          .thenAnswer((_) async => Response(
+                data: null,
+                statusCode: 200,
+                requestOptions: RequestOptions(path: '/kyc/status'),
+              ));
 
       expect(() => repo.getStatus(), throwsA(isA<Exception>()));
     });

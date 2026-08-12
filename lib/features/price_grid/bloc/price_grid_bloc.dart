@@ -14,10 +14,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     on<PriceGridItemsReorderRequested>(_onReorder);
   }
 
-  Future<void> _onLoad(
-    PriceGridLoadRequested event,
-    Emitter<PriceGridState> emit,
-  ) async {
+  Future<void> _onLoad(PriceGridLoadRequested event, Emitter<PriceGridState> emit) async {
     emit(const PriceGridLoading());
     try {
       final items = await _repository.getItems();
@@ -27,16 +24,10 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onAdd(
-    PriceGridItemAddRequested event,
-    Emitter<PriceGridState> emit,
-  ) async {
+  Future<void> _onAdd(PriceGridItemAddRequested event, Emitter<PriceGridState> emit) async {
     try {
       emit(const PriceGridLoading());
-      await _repository.addItem(
-        label: event.label,
-        unitPriceNet: event.unitPriceNet,
-      );
+      await _repository.addItem(label: event.label, unitPriceNet: event.unitPriceNet);
       final items = await _repository.getItems();
       emit(PriceGridLoaded(items));
     } catch (e) {
@@ -44,10 +35,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onUpdate(
-    PriceGridItemUpdateRequested event,
-    Emitter<PriceGridState> emit,
-  ) async {
+  Future<void> _onUpdate(PriceGridItemUpdateRequested event, Emitter<PriceGridState> emit) async {
     try {
       emit(const PriceGridLoading());
       await _repository.updateItem(
@@ -62,10 +50,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onDelete(
-    PriceGridItemDeleteRequested event,
-    Emitter<PriceGridState> emit,
-  ) async {
+  Future<void> _onDelete(PriceGridItemDeleteRequested event, Emitter<PriceGridState> emit) async {
     try {
       emit(const PriceGridLoading());
       await _repository.deleteItem(event.itemId);
@@ -76,10 +61,7 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onReorder(
-    PriceGridItemsReorderRequested event,
-    Emitter<PriceGridState> emit,
-  ) async {
+  Future<void> _onReorder(PriceGridItemsReorderRequested event, Emitter<PriceGridState> emit) async {
     try {
       emit(const PriceGridLoading());
       final items = await _repository.reorder(event.orderedIds);

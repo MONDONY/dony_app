@@ -57,13 +57,12 @@ void main() {
           },
         ];
 
-        when(() => mockDio.get('/travelers/me/price-grid')).thenAnswer(
-          (_) async => Response(
-            data: responseData,
-            statusCode: 200,
-            requestOptions: RequestOptions(path: ''),
-          ),
-        );
+        when(() => mockDio.get('/travelers/me/price-grid'))
+            .thenAnswer((_) async => Response(
+                  data: responseData,
+                  statusCode: 200,
+                  requestOptions: RequestOptions(path: ''),
+                ));
 
         final result = await datasource.getItems();
 
@@ -72,12 +71,11 @@ void main() {
       });
 
       test('should throw when getItems fails', () async {
-        when(() => mockDio.get('/travelers/me/price-grid')).thenThrow(
-          DioException(
-            requestOptions: RequestOptions(path: ''),
-            type: DioExceptionType.unknown,
-          ),
-        );
+        when(() => mockDio.get('/travelers/me/price-grid'))
+            .thenThrow(DioException(
+          requestOptions: RequestOptions(path: ''),
+              type: DioExceptionType.unknown,
+            ));
 
         expect(() => datasource.getItems(), throwsA(isA<DioException>()));
       });
@@ -85,24 +83,23 @@ void main() {
 
     group('addItem', () {
       test('should add item and return created item', () async {
-        when(
-          () => mockDio.post(
-            '/travelers/me/price-grid/items',
-            data: {'label': 'Valise cabine', 'unitPriceNet': 10.0},
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            data: {
-              'id': 'uuid-1',
-              'label': 'Valise cabine',
-              'unitPriceNet': 10.0,
-              'unitPriceDisplay': 11.20,
-              'position': 0,
-            },
-            statusCode: 201,
-            requestOptions: RequestOptions(path: ''),
-          ),
-        );
+        when(() => mockDio.post(
+              '/travelers/me/price-grid/items',
+              data: {
+                'label': 'Valise cabine',
+                'unitPriceNet': 10.0,
+              },
+            )).thenAnswer((_) async => Response(
+              data: {
+                'id': 'uuid-1',
+                'label': 'Valise cabine',
+                'unitPriceNet': 10.0,
+                'unitPriceDisplay': 11.20,
+                'position': 0,
+              },
+              statusCode: 201,
+              requestOptions: RequestOptions(path: ''),
+            ));
 
         final result = await datasource.addItem(
           label: 'Valise cabine',
@@ -110,35 +107,35 @@ void main() {
         );
 
         expect(result, item1);
-        verify(
-          () => mockDio.post(
-            '/travelers/me/price-grid/items',
-            data: {'label': 'Valise cabine', 'unitPriceNet': 10.0},
-          ),
-        ).called(1);
+        verify(() => mockDio.post(
+              '/travelers/me/price-grid/items',
+              data: {
+                'label': 'Valise cabine',
+                'unitPriceNet': 10.0,
+              },
+            )).called(1);
       });
     });
 
     group('updateItem', () {
       test('should update item and return updated item', () async {
-        when(
-          () => mockDio.put(
-            '/travelers/me/price-grid/items/uuid-1',
-            data: {'label': 'Valise 23kg', 'unitPriceNet': 20.0},
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            data: {
-              'id': 'uuid-1',
-              'label': 'Valise 23kg',
-              'unitPriceNet': 20.0,
-              'unitPriceDisplay': 22.4,
-              'position': 0,
-            },
-            statusCode: 200,
-            requestOptions: RequestOptions(path: ''),
-          ),
-        );
+        when(() => mockDio.put(
+              '/travelers/me/price-grid/items/uuid-1',
+              data: {
+                'label': 'Valise 23kg',
+                'unitPriceNet': 20.0,
+              },
+            )).thenAnswer((_) async => Response(
+              data: {
+                'id': 'uuid-1',
+                'label': 'Valise 23kg',
+                'unitPriceNet': 20.0,
+                'unitPriceDisplay': 22.4,
+                'position': 0,
+              },
+              statusCode: 200,
+              requestOptions: RequestOptions(path: ''),
+            ));
 
         final result = await datasource.updateItem(
           itemId: 'uuid-1',
@@ -153,20 +150,16 @@ void main() {
 
     group('deleteItem', () {
       test('should delete item successfully', () async {
-        when(
-          () => mockDio.delete('/travelers/me/price-grid/items/uuid-1'),
-        ).thenAnswer(
-          (_) async => Response(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: ''),
-          ),
-        );
+        when(() => mockDio.delete('/travelers/me/price-grid/items/uuid-1'))
+            .thenAnswer((_) async => Response(
+              statusCode: 204,
+              requestOptions: RequestOptions(path: ''),
+            ));
 
         await datasource.deleteItem('uuid-1');
 
-        verify(
-          () => mockDio.delete('/travelers/me/price-grid/items/uuid-1'),
-        ).called(1);
+        verify(() => mockDio.delete('/travelers/me/price-grid/items/uuid-1'))
+            .called(1);
       });
     });
 
@@ -189,18 +182,14 @@ void main() {
           },
         ];
 
-        when(
-          () => mockDio.put(
-            '/travelers/me/price-grid/reorder',
-            data: ['uuid-2', 'uuid-1'],
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            data: reorderedData,
-            statusCode: 200,
-            requestOptions: RequestOptions(path: ''),
-          ),
-        );
+        when(() => mockDio.put(
+              '/travelers/me/price-grid/reorder',
+              data: ['uuid-2', 'uuid-1'],
+            )).thenAnswer((_) async => Response(
+              data: reorderedData,
+              statusCode: 200,
+              requestOptions: RequestOptions(path: ''),
+            ));
 
         final result = await datasource.reorder(['uuid-2', 'uuid-1']);
 

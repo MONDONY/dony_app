@@ -53,28 +53,15 @@ class DonyMediaService {
 
   /// File extensions that are explicitly rejected (videos / non-images).
   static const Set<String> _videoExtensions = {
-    'mp4',
-    'mov',
-    'avi',
-    'mkv',
-    'webm',
-    '3gp',
-    '3gpp',
-    'm4v',
-    'flv',
-    'wmv',
-    'mpeg',
-    'mpg',
-    'm2ts',
-    'ts',
-    'mts',
+    'mp4', 'mov', 'avi', 'mkv', 'webm', '3gp', '3gpp', 'm4v',
+    'flv', 'wmv', 'mpeg', 'mpg', 'm2ts', 'ts', 'mts',
   };
 
   DonyMediaService({
     ImagePicker? imagePicker,
     Future<XFile> Function(XFile)? compressor,
-  }) : _imagePicker = imagePicker ?? ImagePicker(),
-       _compressorOverride = compressor;
+  })  : _imagePicker = imagePicker ?? ImagePicker(),
+        _compressorOverride = compressor;
 
   final ImagePicker _imagePicker;
   final Future<XFile> Function(XFile)? _compressorOverride;

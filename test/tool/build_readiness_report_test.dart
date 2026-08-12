@@ -5,8 +5,7 @@ import 'package:test/test.dart';
 import '../../tool/build_readiness_report.dart';
 
 /// Minimal template with one marker pair.
-String _template({String section = 'SECTION_PERF'}) =>
-    '''
+String _template({String section = 'SECTION_PERF'}) => '''
 # Report
 <!-- ${section}_START -->
 <!-- ${section}_END -->

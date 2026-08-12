@@ -2019,6 +2019,7 @@ void main() {
         verify(() => summary.load()).called(1);
       },
     );
+
   });
 
   group('découverte croisée', () {

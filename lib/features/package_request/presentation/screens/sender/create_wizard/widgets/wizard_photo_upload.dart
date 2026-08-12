@@ -102,9 +102,9 @@ class WizardPhotoUpload extends StatelessWidget {
           child: Text(
             'Photo ajoutée',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: cs.onSurface,
-            ),
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                ),
           ),
         ),
         IconButton(

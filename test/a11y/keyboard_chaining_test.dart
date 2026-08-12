@@ -25,9 +25,8 @@ void main() {
       expect(champ.textInputAction, TextInputAction.next);
     });
 
-    testWidgets('passe au champ suivant à la validation clavier', (
-      tester,
-    ) async {
+    testWidgets('passe au champ suivant à la validation clavier',
+        (tester) async {
       // Vérifie le comportement, pas seulement la déclaration : `next` doit
       // réellement déplacer le focus.
       final premier = FocusNode();
@@ -64,9 +63,8 @@ void main() {
       expect(premier.hasFocus, isFalse);
     });
 
-    testWidgets('la variante tappable n\'a pas de touche d\'action', (
-      tester,
-    ) async {
+    testWidgets('la variante tappable n\'a pas de touche d\'action',
+        (tester) async {
       // Elle ouvre un sélecteur, jamais un clavier.
       await tester.pumpWidget(
         MaterialApp(
@@ -89,18 +87,15 @@ void main() {
     // sans touche d'action romprait la chaîne en silence, et aucun test de
     // widget ne le verrait sans monter l'écran entier avec ses dépendances.
     const formulaires = <String, int>{
-      'lib/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart':
-          4,
+      'lib/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart': 4,
       // Le champ email (textInputAction: next) est sorti de ce formulaire :
       // sa modification passe désormais par un écran OTP dédié, pas par une
       // saisie libre chaînée ici. Reste prénom → nom → ville.
       'lib/features/profile/presentation/screens/edit_profile_screen.dart': 3,
       // Ce formulaire n'a réellement que 3 champs texte (nom, téléphone,
       // ville) — rien ne suit la ville, pas de 4e champ à chaîner.
-      'lib/features/package_request/presentation/screens/sender/complete_details_screen.dart':
-          3,
-      'lib/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart':
-          2,
+      'lib/features/package_request/presentation/screens/sender/complete_details_screen.dart': 3,
+      'lib/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart': 2,
     };
 
     formulaires.forEach((chemin, attendu) {
@@ -109,14 +104,12 @@ void main() {
       expect(
         trouve,
         greaterThanOrEqualTo(attendu),
-        reason:
-            '$chemin : $trouve champs chaînés, $attendu attendus au minimum',
+        reason: '$chemin : $trouve champs chaînés, $attendu attendus au minimum',
       );
       expect(
         source.contains('TextInputAction.done'),
         isTrue,
-        reason:
-            '$chemin : le dernier champ doit conclure par « done », '
+        reason: '$chemin : le dernier champ doit conclure par « done », '
             'sinon le clavier propose d\'avancer vers rien',
       );
     });

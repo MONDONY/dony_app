@@ -14,10 +14,7 @@ class TravelerHubBloc extends Bloc<TravelerHubEvent, TravelerHubState> {
     on<HubTogglePush>(_onTogglePush);
   }
 
-  Future<void> _onLoad(
-    LoadTravelerHub e,
-    Emitter<TravelerHubState> emit,
-  ) async {
+  Future<void> _onLoad(LoadTravelerHub e, Emitter<TravelerHubState> emit) async {
     if (state.status == TravelerHubStatus.loading) {
       return;
     }
@@ -33,60 +30,41 @@ class TravelerHubBloc extends Bloc<TravelerHubEvent, TravelerHubState> {
       if (status.subscribed) {
         await _repository.markSeen(e.travelerId);
       }
-      emit(
-        state.copyWith(
-          status: TravelerHubStatus.success,
-          subscribed: status.subscribed,
-          pushEnabled: status.pushEnabled,
-          announcements: anns,
-        ),
-      );
+      emit(state.copyWith(
+        status: TravelerHubStatus.success,
+        subscribed: status.subscribed,
+        pushEnabled: status.pushEnabled,
+        announcements: anns,
+      ));
     } catch (err) {
-      emit(
-        state.copyWith(status: TravelerHubStatus.error, error: err.toString()),
-      );
+      emit(state.copyWith(status: TravelerHubStatus.error, error: err.toString()));
     }
   }
 
-  Future<void> _onSubscribe(
-    HubSubscribePressed e,
-    Emitter<TravelerHubState> emit,
-  ) async {
+  Future<void> _onSubscribe(HubSubscribePressed e, Emitter<TravelerHubState> emit) async {
     try {
       await _repository.subscribe(travelerId);
       emit(state.copyWith(subscribed: true));
     } catch (err) {
-      emit(
-        state.copyWith(status: TravelerHubStatus.error, error: err.toString()),
-      );
+      emit(state.copyWith(status: TravelerHubStatus.error, error: err.toString()));
     }
   }
 
-  Future<void> _onUnsubscribe(
-    HubUnsubscribePressed e,
-    Emitter<TravelerHubState> emit,
-  ) async {
+  Future<void> _onUnsubscribe(HubUnsubscribePressed e, Emitter<TravelerHubState> emit) async {
     try {
       await _repository.unsubscribe(travelerId);
       emit(state.copyWith(subscribed: false, pushEnabled: false));
     } catch (err) {
-      emit(
-        state.copyWith(status: TravelerHubStatus.error, error: err.toString()),
-      );
+      emit(state.copyWith(status: TravelerHubStatus.error, error: err.toString()));
     }
   }
 
-  Future<void> _onTogglePush(
-    HubTogglePush e,
-    Emitter<TravelerHubState> emit,
-  ) async {
+  Future<void> _onTogglePush(HubTogglePush e, Emitter<TravelerHubState> emit) async {
     try {
       final s = await _repository.setPush(travelerId, e.enabled);
       emit(state.copyWith(pushEnabled: s.pushEnabled));
     } catch (err) {
-      emit(
-        state.copyWith(status: TravelerHubStatus.error, error: err.toString()),
-      );
+      emit(state.copyWith(status: TravelerHubStatus.error, error: err.toString()));
     }
   }
 }

@@ -61,11 +61,7 @@ class SearchFormBottomSheet {
               Expanded(
                 flex: 2,
                 child: DonyButton(
-                  label: count == 1
-                      ? 'Rechercher · 1 filtre'
-                      : count > 1
-                      ? 'Rechercher · $count filtres'
-                      : 'Rechercher',
+                  label: count == 1 ? 'Rechercher · 1 filtre' : count > 1 ? 'Rechercher · $count filtres' : 'Rechercher',
                   onPressed: () => submitFn?.call(),
                 ),
               ),
@@ -99,8 +95,7 @@ class _SearchFormContent extends StatefulWidget {
 
   final SearchParams? initialParams;
   final ValueNotifier<int>? filterCountNotifier;
-  final void Function(VoidCallback submit, VoidCallback reset)?
-  onCallbacksReady;
+  final void Function(VoidCallback submit, VoidCallback reset)? onCallbacksReady;
 
   @override
   State<_SearchFormContent> createState() => _SearchFormContentState();
@@ -190,23 +185,21 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   }
 
   void _submit() {
-    Navigator.of(context, rootNavigator: true).pop(
-      SearchParams(
-        departureCity: _departureCityNotifier.value,
-        arrivalCity: _arrivalCityNotifier.value,
-        date: _dateNotifier.value,
-        weightKg: _weightKgNotifier.value,
-        maxPricePerKg: _maxPricePerKgNotifier.value,
-        kiloProOnly: _kiloProOnlyNotifier.value,
-        ratingFilter: _ratingFilterNotifier.value,
-        weekendFilter: _weekendFilterNotifier.value,
-        priceFilter: _priceFilterNotifier.value,
-        transportMode: _transportModeNotifier.value,
-        kycVerifiedOnly: _kycVerifiedOnlyNotifier.value,
-        contentType: _contentTypeNotifier.value,
-        urgencyFilter: _urgencyFilterNotifier.value,
-      ),
-    );
+    Navigator.of(context, rootNavigator: true).pop(SearchParams(
+      departureCity: _departureCityNotifier.value,
+      arrivalCity: _arrivalCityNotifier.value,
+      date: _dateNotifier.value,
+      weightKg: _weightKgNotifier.value,
+      maxPricePerKg: _maxPricePerKgNotifier.value,
+      kiloProOnly: _kiloProOnlyNotifier.value,
+      ratingFilter: _ratingFilterNotifier.value,
+      weekendFilter: _weekendFilterNotifier.value,
+      priceFilter: _priceFilterNotifier.value,
+      transportMode: _transportModeNotifier.value,
+      kycVerifiedOnly: _kycVerifiedOnlyNotifier.value,
+      contentType: _contentTypeNotifier.value,
+      urgencyFilter: _urgencyFilterNotifier.value,
+    ));
   }
 
   void _swapCities() {
@@ -316,33 +309,29 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                     maxPrice: _priceFilterNotifier.value
                         ? _maxPricePerKgNotifier.value
                         : null,
-                    onTap: () => unawaited(
-                      showPricePicker(
-                        context,
-                        maxPrice: _priceFilterNotifier.value
-                            ? _maxPricePerKgNotifier.value
-                            : null,
-                        onApply: (v) {
-                          _priceFilterNotifier.value = v != null;
-                          if (v != null) {
-                            _maxPricePerKgNotifier.value = v;
-                          }
-                        },
-                      ),
-                    ),
+                    onTap: () => unawaited(showPricePicker(
+                      context,
+                      maxPrice: _priceFilterNotifier.value
+                          ? _maxPricePerKgNotifier.value
+                          : null,
+                      onApply: (v) {
+                        _priceFilterNotifier.value = v != null;
+                        if (v != null) {
+                          _maxPricePerKgNotifier.value = v;
+                        }
+                      },
+                    )),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: TransportModeField(
                     mode: _transportModeNotifier.value,
-                    onTap: () => unawaited(
-                      showTransportPicker(
-                        context,
-                        mode: _transportModeNotifier.value,
-                        onApply: (v) => _transportModeNotifier.value = v,
-                      ),
-                    ),
+                    onTap: () => unawaited(showTransportPicker(
+                      context,
+                      mode: _transportModeNotifier.value,
+                      onApply: (v) => _transportModeNotifier.value = v,
+                    )),
                   ),
                 ),
               ],

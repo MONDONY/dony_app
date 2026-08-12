@@ -17,9 +17,10 @@ class TripTemplateState {
     TripTemplateStatus? status,
     List<TripTemplate>? templates,
     String? error,
-  }) => TripTemplateState(
-    status: status ?? this.status,
-    templates: templates ?? this.templates,
-    error: error,
-  );
+  }) =>
+      TripTemplateState(
+        status: status ?? this.status,
+        templates: templates ?? this.templates,
+        error: error,
+      );
 }

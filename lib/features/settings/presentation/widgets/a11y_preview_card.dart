@@ -24,9 +24,8 @@ class A11yPreviewCard extends StatelessWidget {
       reduceMotion: state.reduceMotion == AccessibilityMode.on,
       underlineLinks: state.underlineLinks,
     );
-    final previewTheme = isDark
-        ? AppTheme.dark(a11y: options)
-        : AppTheme.light(a11y: options);
+    final previewTheme =
+        isDark ? AppTheme.dark(a11y: options) : AppTheme.light(a11y: options);
 
     final mq = MediaQuery.of(context);
 
@@ -87,19 +86,9 @@ class A11yPreviewCard extends StatelessWidget {
             spacing: DonySpacing.sm,
             runSpacing: DonySpacing.xs,
             children: [
-              Text(
-                'Paris',
-                style: tt.titleLarge?.copyWith(color: cs.onSurface),
-              ),
-              Icon(
-                Icons.arrow_forward_rounded,
-                size: 16,
-                color: cs.onSurfaceVariant,
-              ),
-              Text(
-                'Dakar',
-                style: tt.titleLarge?.copyWith(color: cs.onSurface),
-              ),
+              Text('Paris', style: tt.titleLarge?.copyWith(color: cs.onSurface)),
+              Icon(Icons.arrow_forward_rounded, size: 16, color: cs.onSurfaceVariant),
+              Text('Dakar', style: tt.titleLarge?.copyWith(color: cs.onSurface)),
               // Seul ce badge a un défaut de contraste connu et déjà différé
               // (étiquette renforcée de DonyUrgentBadge, tâche ultérieure) :
               // on l'exempte lui seul du contrôle WCAG, pas le reste de
@@ -118,7 +107,10 @@ class A11yPreviewCard extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.md),
-          DonyButton(label: 'Faire une offre', onPressed: () {}),
+          DonyButton(
+            label: 'Faire une offre',
+            onPressed: () {},
+          ),
         ],
       ),
     );

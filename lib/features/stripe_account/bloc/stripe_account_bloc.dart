@@ -5,7 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 part 'stripe_account_event.dart';
 part 'stripe_account_state.dart';
 
-class StripeAccountBloc extends Bloc<StripeAccountEvent, StripeAccountState> {
+class StripeAccountBloc
+    extends Bloc<StripeAccountEvent, StripeAccountState> {
   final IStripeAccountRepository _repository;
 
   StripeAccountBloc(this._repository) : super(const StripeAccountInitial()) {

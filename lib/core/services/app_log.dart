@@ -18,25 +18,19 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 abstract final class AppLog {
   static void debug(String message, {Map<String, Object>? data}) {
     _console('DEBUG', message, data);
-    unawaited(
-      Future.sync(() => Sentry.logger.debug(message, attributes: _attrs(data))),
-    );
+    unawaited(Future.sync(() => Sentry.logger.debug(message, attributes: _attrs(data))));
     _breadcrumb(message, data, SentryLevel.debug);
   }
 
   static void info(String message, {Map<String, Object>? data}) {
     _console('INFO', message, data);
-    unawaited(
-      Future.sync(() => Sentry.logger.info(message, attributes: _attrs(data))),
-    );
+    unawaited(Future.sync(() => Sentry.logger.info(message, attributes: _attrs(data))));
     _breadcrumb(message, data, SentryLevel.info);
   }
 
   static void warn(String message, {Map<String, Object>? data}) {
     _console('WARN', message, data);
-    unawaited(
-      Future.sync(() => Sentry.logger.warn(message, attributes: _attrs(data))),
-    );
+    unawaited(Future.sync(() => Sentry.logger.warn(message, attributes: _attrs(data))));
     _breadcrumb(message, data, SentryLevel.warning);
   }
 
@@ -50,20 +44,14 @@ abstract final class AppLog {
     Map<String, Object>? data,
   }) {
     _console('ERROR', '$message${error != null ? ' — $error' : ''}', data);
-    unawaited(
-      Future.sync(() => Sentry.logger.error(message, attributes: _attrs(data))),
-    );
+    unawaited(Future.sync(() => Sentry.logger.error(message, attributes: _attrs(data))));
     _breadcrumb(message, data, SentryLevel.error);
     if (error != null) {
       unawaited(Sentry.captureException(error, stackTrace: stackTrace));
     }
   }
 
-  static void _console(
-    String level,
-    String message,
-    Map<String, Object>? data,
-  ) {
+  static void _console(String level, String message, Map<String, Object>? data) {
     if (!kDebugMode) return;
     final suffix = (data == null || data.isEmpty) ? '' : ' $data';
     debugPrint('[dony] $level $message$suffix');
@@ -71,14 +59,15 @@ abstract final class AppLog {
 
   /// Ajoute un breadcrumb Sentry — la « piste » d'événements qui accompagne le
   /// prochain crash. Complète les Logs structurés (visibles même sans crash).
-  static void _breadcrumb(
-    String message,
-    Map<String, Object>? data,
-    SentryLevel level,
-  ) {
+  static void _breadcrumb(String message, Map<String, Object>? data, SentryLevel level) {
     unawaited(
       Sentry.addBreadcrumb(
-        Breadcrumb(message: message, level: level, data: data, category: 'app'),
+        Breadcrumb(
+          message: message,
+          level: level,
+          data: data,
+          category: 'app',
+        ),
       ),
     );
   }

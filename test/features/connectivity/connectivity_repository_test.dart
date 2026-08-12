@@ -32,9 +32,8 @@ void main() {
     });
 
     test('false quand toutes les interfaces sont none', () async {
-      when(
-        () => connectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.none]);
+      when(() => connectivity.checkConnectivity())
+          .thenAnswer((_) async => [ConnectivityResult.none]);
       expect(await repository.hasConnection(), isFalse);
     });
   });
@@ -57,12 +56,11 @@ void main() {
 
   group('isApiResponsive()', () {
     test('true quand le ping /actuator/health répond', () async {
-      when(() => dio.get(any(), options: any(named: 'options'))).thenAnswer(
-        (_) async => Response(
-          requestOptions: RequestOptions(path: '/actuator/health'),
-          statusCode: 200,
-        ),
-      );
+      when(() => dio.get(any(), options: any(named: 'options')))
+          .thenAnswer((_) async => Response(
+                requestOptions: RequestOptions(path: '/actuator/health'),
+                statusCode: 200,
+              ));
       expect(await repository.isApiResponsive(), isTrue);
     });
 
@@ -77,9 +75,8 @@ void main() {
     });
 
     test('false quand le ping échoue (erreur serveur)', () async {
-      when(
-        () => dio.get(any(), options: any(named: 'options')),
-      ).thenThrow(Exception('boom'));
+      when(() => dio.get(any(), options: any(named: 'options')))
+          .thenThrow(Exception('boom'));
       expect(await repository.isApiResponsive(), isFalse);
     });
   });

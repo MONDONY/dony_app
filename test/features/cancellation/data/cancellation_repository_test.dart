@@ -8,12 +8,12 @@ class MockCancellationRemoteDatasource extends Mock
     implements CancellationRemoteDatasource {}
 
 CancellationModel _cancellation() => CancellationModel(
-  announcementId: 'ann-001',
-  affectedBidsCount: 1,
-  reason: 'SICK',
-  rematchSuggestions: [],
-  cancelledAt: DateTime(2024, 1, 15),
-);
+      announcementId: 'ann-001',
+      affectedBidsCount: 1,
+      reason: 'SICK',
+      rematchSuggestions: [],
+      cancelledAt: DateTime(2024, 1, 15),
+    );
 
 void main() {
   late MockCancellationRemoteDatasource mockDs;
@@ -25,12 +25,10 @@ void main() {
   });
 
   test('cancelTrip delegates to datasource', () async {
-    when(
-      () => mockDs.cancelTrip(
-        announcementId: any(named: 'announcementId'),
-        reason: any(named: 'reason'),
-      ),
-    ).thenAnswer((_) async => _cancellation());
+    when(() => mockDs.cancelTrip(
+          announcementId: any(named: 'announcementId'),
+          reason: any(named: 'reason'),
+        )).thenAnswer((_) async => _cancellation());
 
     final result = await repo.cancelTrip(
       announcementId: 'ann-001',
@@ -40,9 +38,8 @@ void main() {
   });
 
   test('getRematchSuggestions delegates to datasource', () async {
-    when(
-      () => mockDs.getRematchSuggestions('canc-1'),
-    ).thenAnswer((_) async => []);
+    when(() => mockDs.getRematchSuggestions('canc-1'))
+        .thenAnswer((_) async => []);
 
     final result = await repo.getRematchSuggestions('canc-1');
     expect(result, isEmpty);
@@ -73,9 +70,7 @@ void main() {
   });
 
   test('reportTravelerDeliveryNoShow delegates to datasource', () async {
-    when(
-      () => mockDs.reportTravelerDeliveryNoShow('bid-5'),
-    ).thenAnswer((_) async {});
+    when(() => mockDs.reportTravelerDeliveryNoShow('bid-5')).thenAnswer((_) async {});
 
     await repo.reportTravelerDeliveryNoShow('bid-5');
 
@@ -107,9 +102,8 @@ void main() {
   });
 
   test('confirmReturn delegates to datasource', () async {
-    when(
-      () => mockDs.confirmReturn('bid-3', '123456'),
-    ).thenAnswer((_) async => const ReturnCodeModel(returnedAt: null));
+    when(() => mockDs.confirmReturn('bid-3', '123456')).thenAnswer(
+        (_) async => const ReturnCodeModel(returnedAt: null));
 
     await repo.confirmReturn('bid-3', '123456');
 
@@ -117,9 +111,8 @@ void main() {
   });
 
   test('getReturnCode delegates to datasource', () async {
-    when(
-      () => mockDs.getReturnCode('bid-3'),
-    ).thenAnswer((_) async => const ReturnCodeModel(returnCode: '654321'));
+    when(() => mockDs.getReturnCode('bid-3'))
+        .thenAnswer((_) async => const ReturnCodeModel(returnCode: '654321'));
 
     final result = await repo.getReturnCode('bid-3');
 

@@ -73,8 +73,8 @@ class DeliveryNoShowCtaCell extends StatelessWidget {
               "L'autre partie aura 24 h pour contester. Le paiement reste "
               'gelé le temps de l\'instruction — aucun versement automatique.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ],
         ),

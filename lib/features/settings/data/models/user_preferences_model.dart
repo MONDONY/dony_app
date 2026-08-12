@@ -37,43 +37,43 @@ class UserPreferencesModel {
     bool? hidePhoneNumber,
     bool? biometricEnabled,
     bool? appLockBiometricEnabled,
-  }) => UserPreferencesModel(
-    themeMode: themeMode ?? this.themeMode,
-    languageCode: languageCode ?? this.languageCode,
-    favDestinations: favDestinations ?? this.favDestinations,
-    weightUnit: weightUnit ?? this.weightUnit,
-    currencyCode: currencyCode ?? this.currencyCode,
-    pickupRadiusKm: pickupRadiusKm ?? this.pickupRadiusKm,
-    profileVisibility: profileVisibility ?? this.profileVisibility,
-    hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
-    biometricEnabled: biometricEnabled ?? this.biometricEnabled,
-    appLockBiometricEnabled:
-        appLockBiometricEnabled ?? this.appLockBiometricEnabled,
-  );
+  }) =>
+      UserPreferencesModel(
+        themeMode: themeMode ?? this.themeMode,
+        languageCode: languageCode ?? this.languageCode,
+        favDestinations: favDestinations ?? this.favDestinations,
+        weightUnit: weightUnit ?? this.weightUnit,
+        currencyCode: currencyCode ?? this.currencyCode,
+        pickupRadiusKm: pickupRadiusKm ?? this.pickupRadiusKm,
+        profileVisibility: profileVisibility ?? this.profileVisibility,
+        hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
+        biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+        appLockBiometricEnabled:
+            appLockBiometricEnabled ?? this.appLockBiometricEnabled,
+      );
 
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
-    themeMode:
-        box.get(HiveService.kThemeMode, defaultValue: 'system') as String,
-    languageCode:
-        box.get(HiveService.kLanguageCode, defaultValue: 'fr') as String,
-    favDestinations: List<String>.from(
-      box.get(HiveService.kFavDestinations, defaultValue: <String>[]) as List,
-    ),
-    weightUnit: box.get(HiveService.kWeightUnit, defaultValue: 'kg') as String,
-    currencyCode:
-        box.get(HiveService.kCurrencyCode, defaultValue: 'EUR') as String,
-    pickupRadiusKm:
-        box.get(HiveService.kPickupRadiusKm, defaultValue: 10) as int,
-    profileVisibility:
-        box.get(HiveService.kProfileVisibility, defaultValue: 'public')
-            as String,
-    hidePhoneNumber:
-        box.get(HiveService.kHidePhoneNumber, defaultValue: false) as bool,
-    biometricEnabled:
-        box.get(HiveService.kBiometricEnabled, defaultValue: false) as bool,
-    appLockBiometricEnabled:
-        box.get(HiveService.kAppLockBiometric, defaultValue: true) as bool,
-  );
+        themeMode:
+            box.get(HiveService.kThemeMode, defaultValue: 'system') as String,
+        languageCode:
+            box.get(HiveService.kLanguageCode, defaultValue: 'fr') as String,
+        favDestinations: List<String>.from(box.get(HiveService.kFavDestinations,
+            defaultValue: <String>[]) as List),
+        weightUnit:
+            box.get(HiveService.kWeightUnit, defaultValue: 'kg') as String,
+        currencyCode:
+            box.get(HiveService.kCurrencyCode, defaultValue: 'EUR') as String,
+        pickupRadiusKm:
+            box.get(HiveService.kPickupRadiusKm, defaultValue: 10) as int,
+        profileVisibility: box.get(HiveService.kProfileVisibility,
+            defaultValue: 'public') as String,
+        hidePhoneNumber:
+            box.get(HiveService.kHidePhoneNumber, defaultValue: false) as bool,
+        biometricEnabled: box.get(HiveService.kBiometricEnabled,
+            defaultValue: false) as bool,
+        appLockBiometricEnabled: box.get(HiveService.kAppLockBiometric,
+            defaultValue: true) as bool,
+      );
 
   void writeToHive(Box box) {
     box.put(HiveService.kThemeMode, themeMode);

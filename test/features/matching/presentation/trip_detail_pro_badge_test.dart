@@ -86,9 +86,8 @@ void main() {
       expect(find.text('PRO'), findsOneWidget);
     });
 
-    testWidgets('does NOT show PRO badge when isProAccount is false', (
-      tester,
-    ) async {
+    testWidgets('does NOT show PRO badge when isProAccount is false',
+        (tester) async {
       final announcement = _makeAnnouncement(isProAccount: false);
 
       await tester.pumpWidget(_wrap(announcement, cubit));
@@ -121,13 +120,14 @@ void main() {
       cubit.close();
     });
 
-    testWidgets('shows success snackbar when trip is added to favorites', (
-      tester,
-    ) async {
+    testWidgets('shows success snackbar when trip is added to favorites',
+        (tester) async {
       final announcement = _makeAnnouncement(isProAccount: false);
       when(() => mockRepo.add('trip', 'ann-001')).thenAnswer((_) async {});
 
-      await tester.pumpWidget(_wrap(announcement, cubit, consultOnly: false));
+      await tester.pumpWidget(
+        _wrap(announcement, cubit, consultOnly: false),
+      );
       await tester.pump(_kSettle);
 
       // Tap the FavoriteHeartButton
@@ -139,15 +139,16 @@ void main() {
       expect(find.text('Trajet ajouté aux favoris'), findsOneWidget);
     });
 
-    testWidgets('shows info snackbar when trip is removed from favorites', (
-      tester,
-    ) async {
+    testWidgets('shows info snackbar when trip is removed from favorites',
+        (tester) async {
       final announcement = _makeAnnouncement(isProAccount: false);
       // Seed as already favorite
       cubit.emitSeed(trips: {'ann-001'}, requests: {});
       when(() => mockRepo.remove('trip', 'ann-001')).thenAnswer((_) async {});
 
-      await tester.pumpWidget(_wrap(announcement, cubit, consultOnly: false));
+      await tester.pumpWidget(
+        _wrap(announcement, cubit, consultOnly: false),
+      );
       await tester.pump(_kSettle);
 
       // Tap to remove
@@ -160,11 +161,12 @@ void main() {
 
     testWidgets('shows error snackbar when toggle throws', (tester) async {
       final announcement = _makeAnnouncement(isProAccount: false);
-      when(
-        () => mockRepo.add('trip', 'ann-001'),
-      ).thenThrow(Exception('network error'));
+      when(() => mockRepo.add('trip', 'ann-001'))
+          .thenThrow(Exception('network error'));
 
-      await tester.pumpWidget(_wrap(announcement, cubit, consultOnly: false));
+      await tester.pumpWidget(
+        _wrap(announcement, cubit, consultOnly: false),
+      );
       await tester.pump(_kSettle);
 
       await tester.tap(find.byType(FavoriteHeartButton));

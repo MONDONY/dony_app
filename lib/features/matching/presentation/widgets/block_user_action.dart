@@ -66,13 +66,18 @@ void showBlockConfirmDialog(
 }) {
   showDialog<void>(
     context: context,
-    builder: (_) =>
-        _BlockConfirmDialog(userId: userId, displayName: displayName),
+    builder: (_) => _BlockConfirmDialog(
+      userId: userId,
+      displayName: displayName,
+    ),
   );
 }
 
 class _BlockConfirmDialog extends StatefulWidget {
-  const _BlockConfirmDialog({required this.userId, required this.displayName});
+  const _BlockConfirmDialog({
+    required this.userId,
+    required this.displayName,
+  });
 
   final String userId;
   final String displayName;
@@ -169,9 +174,8 @@ class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _loading
-                        ? null
-                        : () => Navigator.of(context).pop(),
+                    onPressed:
+                        _loading ? null : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

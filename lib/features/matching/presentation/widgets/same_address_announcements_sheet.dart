@@ -36,9 +36,8 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(DonyRadius.sheet),
-        ),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -92,8 +91,8 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
                       const SizedBox(height: DonySpacing.md),
                   itemBuilder: (_, i) {
                     final a = announcements[i];
-                    final isOwn =
-                        currentUserId != null && a.travelerId == currentUserId;
+                    final isOwn = currentUserId != null &&
+                        a.travelerId == currentUserId;
                     final existingBid = activeBids[a.id];
                     return TravelerCard(
                       announcement: a,
@@ -104,14 +103,15 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
                       onTap: isOwn
                           ? null
                           : existingBid != null
-                          ? () {
-                              Navigator.of(context, rootNavigator: true).pop();
-                              context.push(
-                                '/bids/${existingBid.id}',
-                                extra: existingBid,
-                              );
-                            }
-                          : () => onTap(a),
+                              ? () {
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop();
+                                  context.push(
+                                    '/bids/${existingBid.id}',
+                                    extra: existingBid,
+                                  );
+                                }
+                              : () => onTap(a),
                     );
                   },
                 );

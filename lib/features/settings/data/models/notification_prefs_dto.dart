@@ -47,7 +47,7 @@ class NotificationPrefsDto {
   /// `boolean` primitifs : un champ omis y arrive à `false`, ce qui couperait
   /// silencieusement une catégorie que l'utilisateur n'a jamais touchée.
   Map<String, dynamic> toJson() => {
-    for (final entry in uiKeyToJsonKey.entries)
-      entry.value: values[entry.key] ?? defaults[entry.key]!,
-  };
+        for (final entry in uiKeyToJsonKey.entries)
+          entry.value: values[entry.key] ?? defaults[entry.key]!,
+      };
 }

@@ -8,8 +8,7 @@ class ConversationOpenBloc
     extends Bloc<ConversationOpenEvent, ConversationOpenState> {
   final ConversationRepository _repository;
 
-  ConversationOpenBloc(this._repository)
-    : super(const ConversationOpenInitial()) {
+  ConversationOpenBloc(this._repository) : super(const ConversationOpenInitial()) {
     on<ConversationOpenRequested>(_onOpen);
   }
 

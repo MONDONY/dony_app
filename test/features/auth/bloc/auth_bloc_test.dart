@@ -492,7 +492,9 @@ void main() {
           DioException(
             requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
             response: Response(
-              requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
+              requestOptions: RequestOptions(
+                path: '/auth/sms-otp/verify',
+              ),
               statusCode: 400,
               data: {'code': 'phone-otp-invalid', 'detail': 'Code invalide'},
             ),

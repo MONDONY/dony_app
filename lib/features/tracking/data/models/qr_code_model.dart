@@ -10,8 +10,8 @@ class QrCodeModel {
   });
 
   factory QrCodeModel.fromJson(Map<String, dynamic> json) => QrCodeModel(
-    bidId: json['bidId'] as String,
-    scanUrl: json['scanUrl'] as String,
-    qrCodeBase64: json['qrCodeBase64'] as String,
-  );
+        bidId: json['bidId'] as String,
+        scanUrl: json['scanUrl'] as String,
+        qrCodeBase64: json['qrCodeBase64'] as String,
+      );
 }

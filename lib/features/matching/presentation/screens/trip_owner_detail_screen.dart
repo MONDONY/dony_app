@@ -116,35 +116,27 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               context.read<AnnouncementBloc>().add(
                 AnnouncementDetailRequested(widget.announcementId),
               );
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (routeContext) => DonySuccessScreen(
-                    mascotteType: DonyMascotteType.succes,
-                    title: 'Trajet publié !',
-                    subtitle:
-                        'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',
-                    ctaLabel: 'Continuer',
-                    ctaVariant: DonyButtonVariant.accent,
-                    onCta: () => Navigator.of(
-                      routeContext,
-                    ).pop(), // revient au détail, déjà rafraîchi
-                    analyticsContext: 'trip_draft_published',
-                    secondaryLabel: 'Partager mon trajet',
-                    onSecondary: () => unawaited(
-                      Share.share(
-                        '✈️ Je voyage ${state.announcement.departureCity} → '
-                        '${state.announcement.arrivalCity} le '
-                        '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
-                        'avec de la place dans mes bagages !\n'
-                        'Réserve tes kilos sur Yadony 📦',
-                        sharePositionOrigin: sharePositionOriginFor(
-                          routeContext,
-                        ),
-                      ),
-                    ),
-                  ),
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (routeContext) => DonySuccessScreen(
+                  mascotteType: DonyMascotteType.succes,
+                  title: 'Trajet publié !',
+                  subtitle:
+                      'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',
+                  ctaLabel: 'Continuer',
+                  ctaVariant: DonyButtonVariant.accent,
+                  onCta: () => Navigator.of(routeContext).pop(), // revient au détail, déjà rafraîchi
+                  analyticsContext: 'trip_draft_published',
+                  secondaryLabel: 'Partager mon trajet',
+                  onSecondary: () => unawaited(Share.share(
+                    '✈️ Je voyage ${state.announcement.departureCity} → '
+                    '${state.announcement.arrivalCity} le '
+                    '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
+                    'avec de la place dans mes bagages !\n'
+                    'Réserve tes kilos sur Yadony 📦',
+                    sharePositionOrigin: sharePositionOriginFor(routeContext),
+                  )),
                 ),
-              );
+              ));
             } else if (state is AnnouncementKycRequired) {
               DonySnackbar.show(
                 context,
@@ -196,7 +188,10 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   ],
                   AnnouncementDetailBody(a: a),
                   const SizedBox(height: DonySpacing.lg),
-                  OwnerActionGrid(a: a, isOwner: isOwner),
+                  OwnerActionGrid(
+                    a: a,
+                    isOwner: isOwner,
+                  ),
                   const SizedBox(height: DonySpacing.lg),
                   const TripParcelsSection(),
                 ],

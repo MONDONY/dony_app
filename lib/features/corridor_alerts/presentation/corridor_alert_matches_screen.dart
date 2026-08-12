@@ -88,8 +88,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
             case CorridorAlertMatchesStatus.initial:
             case CorridorAlertMatchesStatus.loading:
               return Center(
-                child: CircularProgressIndicator(color: cs.primary),
-              );
+                  child: CircularProgressIndicator(color: cs.primary));
             case CorridorAlertMatchesStatus.error:
               return DonyEmptyState(
                 mascotte: DonyMascotteType.erreurLegere,
@@ -103,9 +102,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
             case CorridorAlertMatchesStatus.empty:
               return Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.huge,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: DonySpacing.huge),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -119,9 +117,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                             ? 'Aucun trajet pour l\'instant'
                             : 'Aucun colis pour l\'instant',
                         textAlign: TextAlign.center,
-                        style: tt.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style:
+                            tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: DonySpacing.sm),
                       Text(
@@ -129,9 +126,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                             ? 'Aucun trajet ne correspond à cette alerte pour l\'instant.'
                             : 'Aucun colis ne correspond à cette alerte pour l\'instant.',
                         textAlign: TextAlign.center,
-                        style: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                        style: tt.bodyMedium
+                            ?.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -152,9 +148,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                       ),
                       child: Text(
                         '${trips.length} trajet${trips.length != 1 ? 's' : ''}',
-                        style: tt.labelMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                        style: tt.labelMedium
+                            ?.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ),
                     Expanded(
@@ -174,8 +169,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                             key: ValueKey(trip.announcementId),
                             match: trip,
                             index: i,
-                            onTap: () =>
-                                lCtx.push('/traveler/${trip.announcementId}'),
+                            onTap: () => lCtx
+                                .push('/traveler/${trip.announcementId}'),
                           );
                         },
                       ),
@@ -197,9 +192,8 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                     ),
                     child: Text(
                       '${packages.length} colis',
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.labelMedium
+                          ?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),
                   Expanded(
@@ -216,12 +210,12 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                       itemBuilder: (lCtx, i) {
                         final m = packages[i];
                         return MatchingRequestCard(
-                              key: ValueKey(m.id),
-                              match: m,
-                              index: i,
-                              onTap: () =>
-                                  lCtx.push('/package-requests/${m.id}/public'),
-                            )
+                          key: ValueKey(m.id),
+                          match: m,
+                          index: i,
+                          onTap: () =>
+                              lCtx.push('/package-requests/${m.id}/public'),
+                        )
                             .animate()
                             .fadeIn(
                               delay: Duration(milliseconds: 60 * i),

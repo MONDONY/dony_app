@@ -83,8 +83,7 @@ class UserModel extends Equatable {
         : null,
     bio: json['bio'] as String?,
     avatarUrl: json['avatarUrl'] as String?,
-    languages:
-        (json['languages'] as List<dynamic>?)
+    languages: (json['languages'] as List<dynamic>?)
             ?.map((e) => e as String)
             .toList() ??
         const [],
@@ -236,7 +235,8 @@ class UserModel extends Equatable {
     return steps;
   }
 
-  static int profileTotalSteps({bool countPhone = true}) => countPhone ? 8 : 7;
+  static int profileTotalSteps({bool countPhone = true}) =>
+      countPhone ? 8 : 7;
 
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');

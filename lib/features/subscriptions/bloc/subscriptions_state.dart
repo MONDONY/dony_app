@@ -16,9 +16,10 @@ class SubscriptionsState {
     SubscriptionsStatus? status,
     List<SubscriptionItem>? items,
     String? error,
-  }) => SubscriptionsState(
-    status: status ?? this.status,
-    items: items ?? this.items,
-    error: error,
-  );
+  }) =>
+      SubscriptionsState(
+        status: status ?? this.status,
+        items: items ?? this.items,
+        error: error,
+      );
 }

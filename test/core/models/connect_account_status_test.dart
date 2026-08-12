@@ -63,10 +63,7 @@ void main() {
     });
 
     test('fromJson parses isProAccount: true', () {
-      final json = {
-        'stripeAccountStatus': 'ONBOARDING_COMPLETE',
-        'isProAccount': true,
-      };
+      final json = {'stripeAccountStatus': 'ONBOARDING_COMPLETE', 'isProAccount': true};
       final s = ConnectAccountStatus.fromJson(json);
       expect(s.isProAccount, isTrue);
     });

@@ -16,13 +16,16 @@ void main() {
     // Ce parcours était entièrement inaccessible : cinq zones tappables muettes,
     // sans valeur ni état annoncés. Noter un voyageur exigeait de voir l'écran.
     Future<void> pump(WidgetTester tester, int selected) => tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: StarSelector(selected: selected, onSelect: (_) {}),
-        ),
-      ),
-    );
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: Scaffold(
+              body: StarSelector(
+                selected: selected,
+                onSelect: (_) {},
+              ),
+            ),
+          ),
+        );
 
     testWidgets('chaque étoile annonce sa valeur', (tester) async {
       final handle = tester.ensureSemantics();
@@ -37,31 +40,21 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('seule la note choisie est marquée sélectionnée', (
-      tester,
-    ) async {
+    testWidgets('seule la note choisie est marquée sélectionnée',
+        (tester) async {
       final handle = tester.ensureSemantics();
       await pump(tester, 3);
       expect(
-        _nodeWithLabel(
-          tester,
-          'Noter 3 sur 5',
-        ).hasFlag(SemanticsFlag.isSelected),
+        _nodeWithLabel(tester, 'Noter 3 sur 5').hasFlag(SemanticsFlag.isSelected),
         isTrue,
       );
       // Pas « toutes les étoiles jusqu'à 3 » : on choisit une note, pas trois.
       expect(
-        _nodeWithLabel(
-          tester,
-          'Noter 2 sur 5',
-        ).hasFlag(SemanticsFlag.isSelected),
+        _nodeWithLabel(tester, 'Noter 2 sur 5').hasFlag(SemanticsFlag.isSelected),
         isFalse,
       );
       expect(
-        _nodeWithLabel(
-          tester,
-          'Noter 4 sur 5',
-        ).hasFlag(SemanticsFlag.isSelected),
+        _nodeWithLabel(tester, 'Noter 4 sur 5').hasFlag(SemanticsFlag.isSelected),
         isFalse,
       );
       handle.dispose();
@@ -71,10 +64,8 @@ void main() {
       final handle = tester.ensureSemantics();
       await pump(tester, 2);
       expect(
-        _nodeWithLabel(
-          tester,
-          'Noter 2 sur 5',
-        ).hasFlag(SemanticsFlag.isInMutuallyExclusiveGroup),
+        _nodeWithLabel(tester, 'Noter 2 sur 5')
+            .hasFlag(SemanticsFlag.isInMutuallyExclusiveGroup),
         isTrue,
         reason: 'sinon le lecteur d\'écran présente cinq boutons indépendants',
       );
@@ -90,7 +81,10 @@ void main() {
         MaterialApp(
           theme: AppTheme.light(),
           home: Scaffold(
-            body: StarSelector(selected: 0, onSelect: (v) => choisi = v),
+            body: StarSelector(
+              selected: 0,
+              onSelect: (v) => choisi = v,
+            ),
           ),
         ),
       );

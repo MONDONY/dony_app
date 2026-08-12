@@ -178,7 +178,10 @@ void main() {
         await tester.pump();
 
         expect(user.phoneNumber, isNull);
-        expect(user.isProfileComplete(countPhone: false), isTrue);
+        expect(
+          user.isProfileComplete(countPhone: false),
+          isTrue,
+        );
         expect(
           find.text('100% complété · Compléter maintenant'),
           findsOneWidget,

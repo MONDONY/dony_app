@@ -314,10 +314,7 @@ void main() {
     final fallback = image.errorWidget!(tester.element(imageFinder));
 
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(body: fallback),
-      ),
+      MaterialApp(theme: AppTheme.light(), home: Scaffold(body: fallback)),
     );
 
     expect(

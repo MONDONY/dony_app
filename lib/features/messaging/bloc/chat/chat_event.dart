@@ -66,3 +66,4 @@ class ChatConversationDeleteRequested extends ChatEvent {
     required this.firestoreConversationId,
   });
 }
+

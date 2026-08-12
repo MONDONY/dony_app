@@ -1,15 +1,9 @@
 class RequestSample {
   final String method, path;
   final int status, durationMs, reqBytes, respBytes, startTsMs;
-  const RequestSample({
-    required this.method,
-    required this.path,
-    required this.status,
-    required this.durationMs,
-    required this.reqBytes,
-    required this.respBytes,
-    required this.startTsMs,
-  });
+  const RequestSample({required this.method, required this.path, required this.status,
+      required this.durationMs, required this.reqBytes, required this.respBytes,
+      required this.startTsMs});
 }
 
 class EndpointStats {
@@ -17,26 +11,13 @@ class EndpointStats {
   final int count, p50, p95, maxMs, totalBytes;
   final double errorRate;
   final bool burst;
-  const EndpointStats({
-    required this.key,
-    required this.count,
-    required this.p50,
-    required this.p95,
-    required this.maxMs,
-    required this.totalBytes,
-    required this.errorRate,
-    required this.burst,
-  });
+  const EndpointStats({required this.key, required this.count, required this.p50,
+      required this.p95, required this.maxMs, required this.totalBytes,
+      required this.errorRate, required this.burst});
   Map<String, dynamic> toJson() => {
-    'key': key,
-    'count': count,
-    'p50': p50,
-    'p95': p95,
-    'maxMs': maxMs,
-    'totalBytes': totalBytes,
-    'errorRate': errorRate,
-    'burst': burst,
-  };
+        'key': key, 'count': count, 'p50': p50, 'p95': p95, 'maxMs': maxMs,
+        'totalBytes': totalBytes, 'errorRate': errorRate, 'burst': burst,
+      };
 }
 
 class NetworkMetricsCollector {
@@ -78,33 +59,19 @@ class NetworkMetricsCollector {
           break;
         }
       }
-      out.add(
-        EndpointStats(
-          key: key,
-          count: list.length,
-          p50: _pct(durs, 0.50),
-          p95: _pct(durs, 0.95),
-          maxMs: durs.isEmpty ? 0 : durs.last,
-          totalBytes: list.fold(0, (a, e) => a + e.reqBytes + e.respBytes),
-          errorRate: list.isEmpty ? 0 : errs / list.length,
-          burst: burst,
-        ),
-      );
+      out.add(EndpointStats(
+        key: key, count: list.length, p50: _pct(durs, 0.50), p95: _pct(durs, 0.95),
+        maxMs: durs.isEmpty ? 0 : durs.last,
+        totalBytes: list.fold(0, (a, e) => a + e.reqBytes + e.respBytes),
+        errorRate: list.isEmpty ? 0 : errs / list.length, burst: burst,
+      ));
     });
     return out;
   }
 
-  Map<String, dynamic> toJson() => {
-    'endpoints': aggregate().map((e) => e.toJson()).toList(),
-  };
+  Map<String, dynamic> toJson() => {'endpoints': aggregate().map((e) => e.toJson()).toList()};
 
   List<Map<String, dynamic>> rawSamplesJson() => _samples
-      .map(
-        (s) => {
-          'path': normalizePath(s.path),
-          'startTsMs': s.startTsMs,
-          'durationMs': s.durationMs,
-        },
-      )
+      .map((s) => {'path': normalizePath(s.path), 'startTsMs': s.startTsMs, 'durationMs': s.durationMs})
       .toList();
 }

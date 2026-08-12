@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
-
 class MockDio extends Mock implements Dio {}
 
 void main() {
@@ -33,20 +32,13 @@ void main() {
   group('NotificationRemoteDatasource', () {
     group('fetchNotifications', () {
       test('returns list of NotificationModel on success', () async {
-        when(
-          () => dio.get(
-            '/notifications',
-            queryParameters: {'page': 0, 'size': 30},
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            data: {
-              'content': [_notifJson],
-            },
-            statusCode: 200,
-            requestOptions: RequestOptions(path: '/notifications'),
-          ),
-        );
+        when(() => dio.get('/notifications',
+                queryParameters: {'page': 0, 'size': 30}))
+            .thenAnswer((_) async => Response(
+                  data: {'content': [_notifJson]},
+                  statusCode: 200,
+                  requestOptions: RequestOptions(path: '/notifications'),
+                ));
 
         final result = await datasource.fetchNotifications();
 
@@ -57,18 +49,13 @@ void main() {
       });
 
       test('returns empty list when content is empty', () async {
-        when(
-          () => dio.get(
-            '/notifications',
-            queryParameters: {'page': 0, 'size': 30},
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            data: {'content': []},
-            statusCode: 200,
-            requestOptions: RequestOptions(path: '/notifications'),
-          ),
-        );
+        when(() => dio.get('/notifications',
+                queryParameters: {'page': 0, 'size': 30}))
+            .thenAnswer((_) async => Response(
+                  data: {'content': []},
+                  statusCode: 200,
+                  requestOptions: RequestOptions(path: '/notifications'),
+                ));
 
         final result = await datasource.fetchNotifications();
 
@@ -76,17 +63,11 @@ void main() {
       });
 
       test('throws on API error', () async {
-        when(
-          () => dio.get(
-            '/notifications',
-            queryParameters: {'page': 0, 'size': 30},
-          ),
-        ).thenThrow(
-          DioException(
-            requestOptions: RequestOptions(path: '/notifications'),
-            type: DioExceptionType.connectionTimeout,
-          ),
-        );
+        when(() => dio.get('/notifications',
+                queryParameters: {'page': 0, 'size': 30}))
+            .thenThrow(DioException(
+                requestOptions: RequestOptions(path: '/notifications'),
+                type: DioExceptionType.connectionTimeout));
 
         expect(datasource.fetchNotifications(), throwsA(isA<DioException>()));
       });
@@ -94,13 +75,12 @@ void main() {
 
     group('fetchUnreadCount', () {
       test('returns count from API', () async {
-        when(() => dio.get('/notifications/unread-count')).thenAnswer(
-          (_) async => Response(
-            data: {'count': 5},
-            statusCode: 200,
-            requestOptions: RequestOptions(path: '/notifications/unread-count'),
-          ),
-        );
+        when(() => dio.get('/notifications/unread-count'))
+            .thenAnswer((_) async => Response(
+                  data: {'count': 5},
+                  statusCode: 200,
+                  requestOptions: RequestOptions(path: '/notifications/unread-count'),
+                ));
 
         final count = await datasource.fetchUnreadCount();
 
@@ -108,13 +88,12 @@ void main() {
       });
 
       test('returns 0 when count field is null', () async {
-        when(() => dio.get('/notifications/unread-count')).thenAnswer(
-          (_) async => Response(
-            data: {'count': null},
-            statusCode: 200,
-            requestOptions: RequestOptions(path: '/notifications/unread-count'),
-          ),
-        );
+        when(() => dio.get('/notifications/unread-count'))
+            .thenAnswer((_) async => Response(
+                  data: {'count': null},
+                  statusCode: 200,
+                  requestOptions: RequestOptions(path: '/notifications/unread-count'),
+                ));
 
         final count = await datasource.fetchUnreadCount();
 
@@ -124,12 +103,11 @@ void main() {
 
     group('markRead', () {
       test('calls PATCH /notifications/{id}/read', () async {
-        when(() => dio.patch('/notifications/notif-1/read')).thenAnswer(
-          (_) async => Response(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: '/notifications/notif-1/read'),
-          ),
-        );
+        when(() => dio.patch('/notifications/notif-1/read'))
+            .thenAnswer((_) async => Response(
+                  statusCode: 204,
+                  requestOptions: RequestOptions(path: '/notifications/notif-1/read'),
+                ));
 
         await datasource.markRead('notif-1');
 
@@ -139,12 +117,11 @@ void main() {
 
     group('markAllRead', () {
       test('calls PATCH /notifications/read-all', () async {
-        when(() => dio.patch('/notifications/read-all')).thenAnswer(
-          (_) async => Response(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: '/notifications/read-all'),
-          ),
-        );
+        when(() => dio.patch('/notifications/read-all'))
+            .thenAnswer((_) async => Response(
+                  statusCode: 204,
+                  requestOptions: RequestOptions(path: '/notifications/read-all'),
+                ));
 
         await datasource.markAllRead();
 
@@ -154,12 +131,11 @@ void main() {
 
     group('deleteNotification', () {
       test('calls DELETE /notifications/{id}', () async {
-        when(() => dio.delete('/notifications/notif-1')).thenAnswer(
-          (_) async => Response(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: '/notifications/notif-1'),
-          ),
-        );
+        when(() => dio.delete('/notifications/notif-1'))
+            .thenAnswer((_) async => Response(
+                  statusCode: 204,
+                  requestOptions: RequestOptions(path: '/notifications/notif-1'),
+                ));
 
         await datasource.deleteNotification('notif-1');
 
@@ -169,12 +145,11 @@ void main() {
 
     group('ack', () {
       test('calls POST /notifications/{id}/ack', () async {
-        when(() => dio.post('/notifications/notif-1/ack')).thenAnswer(
-          (_) async => Response(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: '/notifications/notif-1/ack'),
-          ),
-        );
+        when(() => dio.post('/notifications/notif-1/ack'))
+            .thenAnswer((_) async => Response(
+                  statusCode: 204,
+                  requestOptions: RequestOptions(path: '/notifications/notif-1/ack'),
+                ));
 
         await datasource.ack('notif-1');
 

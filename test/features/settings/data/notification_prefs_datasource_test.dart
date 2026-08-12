@@ -32,65 +32,55 @@ void main() {
       datasource = NotificationPrefsRemoteDatasource(mockApi);
     });
 
-    test(
-      'fetchPrefs appelle GET /notifications/preferences et parse le DTO',
-      () async {
-        when(() => mockDio.get('/notifications/preferences')).thenAnswer(
-          (_) async => Response(
-            data: {
-              'pushActivityBids': false,
-              'pushActivityNegotiations': true,
-              'pushMessages': false,
-              'pushTripReminder': true,
-              'pushPromo': true,
-              'pushCorridorAlerts': false,
-            },
-            requestOptions: RequestOptions(path: ''),
-            statusCode: 200,
-          ),
-        );
+    test('fetchPrefs appelle GET /notifications/preferences et parse le DTO',
+        () async {
+      when(() => mockDio.get('/notifications/preferences')).thenAnswer(
+        (_) async => Response(
+          data: {
+            'pushActivityBids': false,
+            'pushActivityNegotiations': true,
+            'pushMessages': false,
+            'pushTripReminder': true,
+            'pushPromo': true,
+            'pushCorridorAlerts': false,
+          },
+          requestOptions: RequestOptions(path: ''),
+          statusCode: 200,
+        ),
+      );
 
-        final dto = await datasource.fetchPrefs();
+      final dto = await datasource.fetchPrefs();
 
-        expect(dto.values['push_activity_bids'], isFalse);
-        expect(dto.values['push_activity_negotiations'], isTrue);
-        expect(dto.values['push_messages'], isFalse);
-        expect(dto.values['push_trip_reminder'], isTrue);
-        expect(dto.values['push_promo'], isTrue);
-        expect(dto.values['push_corridor_alerts'], isFalse);
-      },
-    );
+      expect(dto.values['push_activity_bids'], isFalse);
+      expect(dto.values['push_activity_negotiations'], isTrue);
+      expect(dto.values['push_messages'], isFalse);
+      expect(dto.values['push_trip_reminder'], isTrue);
+      expect(dto.values['push_promo'], isTrue);
+      expect(dto.values['push_corridor_alerts'], isFalse);
+    });
 
-    test(
-      'updatePrefs appelle PUT /notifications/preferences avec les six champs',
-      () async {
-        const dto = NotificationPrefsDto({'push_messages': false});
-        when(
-          () => mockDio.put(
+    test('updatePrefs appelle PUT /notifications/preferences avec les six champs',
+        () async {
+      const dto = NotificationPrefsDto({'push_messages': false});
+      when(() => mockDio.put(
             '/notifications/preferences',
             data: any(named: 'data'),
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            requestOptions: RequestOptions(path: ''),
-            statusCode: 200,
-          ),
-        );
+          )).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: ''),
+          statusCode: 200,
+        ),
+      );
 
-        await datasource.updatePrefs(dto);
+      await datasource.updatePrefs(dto);
 
-        final data =
-            verify(
-                  () => mockDio.put(
-                    '/notifications/preferences',
-                    data: captureAny(named: 'data'),
-                  ),
-                ).captured.single
-                as Map<String, dynamic>;
-        expect(data.keys, hasLength(6));
-        expect(data['pushMessages'], isFalse);
-      },
-    );
+      final data = verify(() => mockDio.put(
+            '/notifications/preferences',
+            data: captureAny(named: 'data'),
+          )).captured.single as Map<String, dynamic>;
+      expect(data.keys, hasLength(6));
+      expect(data['pushMessages'], isFalse);
+    });
   });
 
   group('NotificationPrefsRepository', () {
@@ -103,9 +93,8 @@ void main() {
     });
 
     test('fetchPrefs délègue au datasource', () async {
-      when(() => datasource.fetchPrefs()).thenAnswer(
-        (_) async => const NotificationPrefsDto({'push_promo': true}),
-      );
+      when(() => datasource.fetchPrefs())
+          .thenAnswer((_) async => const NotificationPrefsDto({'push_promo': true}));
 
       final dto = await repository.fetchPrefs();
 

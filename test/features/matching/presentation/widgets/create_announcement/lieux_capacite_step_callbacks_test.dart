@@ -40,18 +40,14 @@ Widget _host({
 
 void main() {
   group('LieuxCapaciteStep callbacks', () {
-    testWidgets('se construit correctement avec tous les callbacks', (
-      tester,
-    ) async {
+    testWidgets('se construit correctement avec tous les callbacks', (tester) async {
       AddressData? capturedPickup;
       AddressData? capturedDelivery;
 
-      await tester.pumpWidget(
-        _host(
-          onPickupChanged: (addr) => capturedPickup = addr,
-          onDeliveryChanged: (addr) => capturedDelivery = addr,
-        ),
-      );
+      await tester.pumpWidget(_host(
+        onPickupChanged: (addr) => capturedPickup = addr,
+        onDeliveryChanged: (addr) => capturedDelivery = addr,
+      ));
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
 
@@ -66,12 +62,14 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
 
-      expect(find.textContaining("Précisez l'endroit exact"), findsOneWidget);
+      expect(
+        find.textContaining("Précisez l'endroit exact"),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('les deux AddressSelectorField sont présents et cliquables', (
-      tester,
-    ) async {
+    testWidgets('les deux AddressSelectorField sont présents et cliquables',
+        (tester) async {
       await tester.pumpWidget(_host());
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
@@ -81,87 +79,71 @@ void main() {
     });
 
     testWidgets(
-      'AddressSelectorField remise affiche le prompt quand value est null',
-      (tester) async {
-        await tester.pumpWidget(_host());
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.pump();
+        'AddressSelectorField remise affiche le prompt quand value est null',
+        (tester) async {
+      await tester.pumpWidget(_host());
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
 
-        expect(find.text('Choisir une adresse de remise'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'AddressSelectorField livraison affiche le prompt quand value est null',
-      (tester) async {
-        await tester.pumpWidget(_host());
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.pump();
-
-        expect(find.text('Choisir une adresse de livraison'), findsOneWidget);
-      },
-    );
+      expect(find.text('Choisir une adresse de remise'), findsOneWidget);
+    });
 
     testWidgets(
-      'onPickupChanged et onPickupSaved sont appelés via le onChanged du widget',
-      (tester) async {
-        AddressData? capturedChanged;
-        AddressData? capturedSaved;
-        const address = AddressData(
-          label: 'Paris, France',
-          lat: 48.85,
-          lng: 2.35,
-        );
+        'AddressSelectorField livraison affiche le prompt quand value est null',
+        (tester) async {
+      await tester.pumpWidget(_host());
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
 
-        await tester.pumpWidget(
-          _host(
-            onPickupChanged: (addr) => capturedChanged = addr,
-            onPickupSaved: (addr) => capturedSaved = addr,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.pump();
+      expect(find.text('Choisir une adresse de livraison'), findsOneWidget);
+    });
 
-        // Invoquer directement le onChanged du premier AddressSelectorField (remise)
-        final fields = tester
-            .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
-            .toList();
-        fields.first.onChanged(address);
+    testWidgets('onPickupChanged et onPickupSaved sont appelés via le onChanged du widget',
+        (tester) async {
+      AddressData? capturedChanged;
+      AddressData? capturedSaved;
+      const address =
+          AddressData(label: 'Paris, France', lat: 48.85, lng: 2.35);
 
-        expect(capturedChanged?.label, equals('Paris, France'));
-        expect(capturedSaved?.label, equals('Paris, France'));
-      },
-    );
+      await tester.pumpWidget(_host(
+        onPickupChanged: (addr) => capturedChanged = addr,
+        onPickupSaved: (addr) => capturedSaved = addr,
+      ));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
 
-    testWidgets(
-      'onDeliveryChanged et onDeliverySaved sont appelés via le onChanged du widget',
-      (tester) async {
-        AddressData? capturedChanged;
-        AddressData? capturedSaved;
-        const address = AddressData(
-          label: 'Dakar, Sénégal',
-          lat: 14.69,
-          lng: -17.44,
-        );
+      // Invoquer directement le onChanged du premier AddressSelectorField (remise)
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      fields.first.onChanged(address);
 
-        await tester.pumpWidget(
-          _host(
-            onDeliveryChanged: (addr) => capturedChanged = addr,
-            onDeliverySaved: (addr) => capturedSaved = addr,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 200));
-        await tester.pump();
+      expect(capturedChanged?.label, equals('Paris, France'));
+      expect(capturedSaved?.label, equals('Paris, France'));
+    });
 
-        // Invoquer directement le onChanged du second AddressSelectorField (livraison)
-        final fields = tester
-            .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
-            .toList();
-        fields.last.onChanged(address);
+    testWidgets('onDeliveryChanged et onDeliverySaved sont appelés via le onChanged du widget',
+        (tester) async {
+      AddressData? capturedChanged;
+      AddressData? capturedSaved;
+      const address =
+          AddressData(label: 'Dakar, Sénégal', lat: 14.69, lng: -17.44);
 
-        expect(capturedChanged?.label, equals('Dakar, Sénégal'));
-        expect(capturedSaved?.label, equals('Dakar, Sénégal'));
-      },
-    );
+      await tester.pumpWidget(_host(
+        onDeliveryChanged: (addr) => capturedChanged = addr,
+        onDeliverySaved: (addr) => capturedSaved = addr,
+      ));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      // Invoquer directement le onChanged du second AddressSelectorField (livraison)
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      fields.last.onChanged(address);
+
+      expect(capturedChanged?.label, equals('Dakar, Sénégal'));
+      expect(capturedSaved?.label, equals('Dakar, Sénégal'));
+    });
   });
 }

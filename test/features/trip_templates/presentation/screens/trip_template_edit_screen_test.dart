@@ -39,8 +39,10 @@ Widget _wrap(Widget child, TripTemplateBloc bloc) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) =>
-            BlocProvider<TripTemplateBloc>.value(value: bloc, child: child),
+        builder: (_, __) => BlocProvider<TripTemplateBloc>.value(
+          value: bloc,
+          child: child,
+        ),
       ),
     ],
   );

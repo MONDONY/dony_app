@@ -38,31 +38,24 @@ void main() {
 
   group('createConnectAccount', () {
     test('returns result from datasource on success', () async {
-      when(
-        () => mockDs.createConnectAccount(),
-      ).thenAnswer((_) async => account);
+      when(() => mockDs.createConnectAccount())
+          .thenAnswer((_) async => account);
       final result = await repo.createConnectAccount();
       expect(result.stripeAccountId, 'acct_test');
     });
 
     test('rethrows AppException as-is', () async {
-      when(
-        () => mockDs.createConnectAccount(),
-      ).thenThrow(const NetworkException('timeout'));
-      expect(
-        () => repo.createConnectAccount(),
-        throwsA(isA<NetworkException>()),
-      );
+      when(() => mockDs.createConnectAccount())
+          .thenThrow(const NetworkException('timeout'));
+      expect(() => repo.createConnectAccount(),
+          throwsA(isA<NetworkException>()));
     });
 
     test('wraps generic exception in NetworkException', () async {
-      when(
-        () => mockDs.createConnectAccount(),
-      ).thenThrow(Exception('generic error'));
-      expect(
-        () => repo.createConnectAccount(),
-        throwsA(isA<NetworkException>()),
-      );
+      when(() => mockDs.createConnectAccount())
+          .thenThrow(Exception('generic error'));
+      expect(() => repo.createConnectAccount(),
+          throwsA(isA<NetworkException>()));
     });
   });
 
@@ -70,31 +63,24 @@ void main() {
 
   group('createOnboardingLink', () {
     test('returns URL from datasource', () async {
-      when(
-        () => mockDs.createOnboardingLink(),
-      ).thenAnswer((_) async => 'https://connect.stripe.com/setup');
+      when(() => mockDs.createOnboardingLink())
+          .thenAnswer((_) async => 'https://connect.stripe.com/setup');
       final url = await repo.createOnboardingLink();
       expect(url, contains('stripe.com'));
     });
 
     test('rethrows AppException', () async {
-      when(
-        () => mockDs.createOnboardingLink(),
-      ).thenThrow(const ServerException('503'));
-      expect(
-        () => repo.createOnboardingLink(),
-        throwsA(isA<ServerException>()),
-      );
+      when(() => mockDs.createOnboardingLink())
+          .thenThrow(const ServerException('503'));
+      expect(() => repo.createOnboardingLink(),
+          throwsA(isA<ServerException>()));
     });
 
     test('wraps generic exception in NetworkException', () async {
-      when(
-        () => mockDs.createOnboardingLink(),
-      ).thenThrow(Exception('DNS failure'));
-      expect(
-        () => repo.createOnboardingLink(),
-        throwsA(isA<NetworkException>()),
-      );
+      when(() => mockDs.createOnboardingLink())
+          .thenThrow(Exception('DNS failure'));
+      expect(() => repo.createOnboardingLink(),
+          throwsA(isA<NetworkException>()));
     });
   });
 
@@ -102,31 +88,24 @@ void main() {
 
   group('createPayment', () {
     test('returns PaymentModel from datasource', () async {
-      when(
-        () => mockDs.createPayment('bid-1'),
-      ).thenAnswer((_) async => payment);
+      when(() => mockDs.createPayment('bid-1'))
+          .thenAnswer((_) async => payment);
       final result = await repo.createPayment('bid-1');
       expect(result.id, 'pay-1');
     });
 
     test('rethrows ValidationException', () async {
-      when(
-        () => mockDs.createPayment(any()),
-      ).thenThrow(const ValidationException('Invalid bid'));
-      expect(
-        () => repo.createPayment('bid-x'),
-        throwsA(isA<ValidationException>()),
-      );
+      when(() => mockDs.createPayment(any()))
+          .thenThrow(const ValidationException('Invalid bid'));
+      expect(() => repo.createPayment('bid-x'),
+          throwsA(isA<ValidationException>()));
     });
 
     test('wraps Exception in NetworkException', () async {
-      when(
-        () => mockDs.createPayment(any()),
-      ).thenThrow(Exception('Stripe unreachable'));
-      expect(
-        () => repo.createPayment('bid-1'),
-        throwsA(isA<NetworkException>()),
-      );
+      when(() => mockDs.createPayment(any()))
+          .thenThrow(Exception('Stripe unreachable'));
+      expect(() => repo.createPayment('bid-1'),
+          throwsA(isA<NetworkException>()));
     });
   });
 
@@ -134,27 +113,24 @@ void main() {
 
   group('getPaymentForBid', () {
     test('returns PaymentModel when found', () async {
-      when(
-        () => mockDs.getPaymentForBid('bid-1'),
-      ).thenAnswer((_) async => payment);
+      when(() => mockDs.getPaymentForBid('bid-1'))
+          .thenAnswer((_) async => payment);
       final result = await repo.getPaymentForBid('bid-1');
       expect(result?.bidId, 'bid-1');
     });
 
     test('returns null when datasource returns null', () async {
-      when(() => mockDs.getPaymentForBid(any())).thenAnswer((_) async => null);
+      when(() => mockDs.getPaymentForBid(any()))
+          .thenAnswer((_) async => null);
       final result = await repo.getPaymentForBid('bid-x');
       expect(result, isNull);
     });
 
     test('wraps Exception in NetworkException', () async {
-      when(
-        () => mockDs.getPaymentForBid(any()),
-      ).thenThrow(Exception('network error'));
-      expect(
-        () => repo.getPaymentForBid('bid-1'),
-        throwsA(isA<NetworkException>()),
-      );
+      when(() => mockDs.getPaymentForBid(any()))
+          .thenThrow(Exception('network error'));
+      expect(() => repo.getPaymentForBid('bid-1'),
+          throwsA(isA<NetworkException>()));
     });
   });
 
@@ -173,10 +149,10 @@ void main() {
     });
 
     test('wraps Exception in NetworkException', () async {
-      when(
-        () => mockDs.createEphemeralKey(),
-      ).thenThrow(Exception('network error'));
-      expect(() => repo.createEphemeralKey(), throwsA(isA<NetworkException>()));
+      when(() => mockDs.createEphemeralKey())
+          .thenThrow(Exception('network error'));
+      expect(() => repo.createEphemeralKey(),
+          throwsA(isA<NetworkException>()));
     });
   });
 }

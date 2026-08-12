@@ -3,8 +3,7 @@ import 'package:dony/features/settings/data/repositories/blocked_users_repositor
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockBlockedUsersRepository extends Mock
-    implements BlockedUsersRepository {}
+class MockBlockedUsersRepository extends Mock implements BlockedUsersRepository {}
 
 void main() {
   late MockBlockedUsersRepository mockRepo;
@@ -21,22 +20,19 @@ void main() {
       verify(() => mockRepo.blockUser('user-123')).called(1);
     });
 
-    test(
-      'propage ConflictException quand la transaction est en cours',
-      () async {
-        when(() => mockRepo.blockUser(any())).thenAnswer(
-          (_) async => throw const ConflictException(
-            'Termine d\'abord la transaction en cours',
-            code: 'active-transaction',
-          ),
-        );
+    test('propage ConflictException quand la transaction est en cours', () async {
+      when(() => mockRepo.blockUser(any())).thenAnswer(
+        (_) async => throw const ConflictException(
+          'Termine d\'abord la transaction en cours',
+          code: 'active-transaction',
+        ),
+      );
 
-        await expectLater(
-          mockRepo.blockUser('user-456'),
-          throwsA(isA<ConflictException>()),
-        );
-      },
-    );
+      await expectLater(
+        mockRepo.blockUser('user-456'),
+        throwsA(isA<ConflictException>()),
+      );
+    });
 
     test('ConflictException est une AppException', () {
       const e = ConflictException('msg', code: 'CODE');
@@ -46,15 +42,12 @@ void main() {
   });
 
   group('Affichage numéro masqué — logique', () {
-    test(
-      'phoneNumber null signifie numéro non révélé (bid pas encore accepté)',
-      () {
-        // La règle : le backend renvoie null jusqu\'à acceptation du bid.
-        // Le front affiche un placeholder. Ce test documente le comportement attendu.
-        const String? phone = null;
-        expect(phone, isNull);
-      },
-    );
+    test('phoneNumber null signifie numéro non révélé (bid pas encore accepté)', () {
+      // La règle : le backend renvoie null jusqu\'à acceptation du bid.
+      // Le front affiche un placeholder. Ce test documente le comportement attendu.
+      const String? phone = null;
+      expect(phone, isNull);
+    });
 
     test('phoneNumber non null signifie numéro révélé (bid accepté)', () {
       const String? phone = '+33612345678';

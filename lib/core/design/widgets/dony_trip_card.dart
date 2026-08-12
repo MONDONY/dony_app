@@ -89,7 +89,10 @@ class DonyTripCard extends StatelessWidget {
                     if (rating != null)
                       Row(
                         children: [
-                          DonyIcon('star', size: 13, color: cs.warning),
+                          DonyIcon('star',
+                            size: 13,
+                            color: cs.warning,
+                          ),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
                             '${rating!.toStringAsFixed(1)}/5',
@@ -103,7 +106,8 @@ class DonyTripCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (badge != null) Flexible(child: badge!),
+              if (badge != null)
+                Flexible(child: badge!),
             ],
           ),
 
@@ -112,7 +116,10 @@ class DonyTripCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.base),
 
           // — Route avec flèche animée
-          _RouteDisplay(origin: route.$1, destination: route.$2),
+          _RouteDisplay(
+            origin: route.$1,
+            destination: route.$2,
+          ),
 
           const SizedBox(height: DonySpacing.base),
           Container(height: 1, color: cs.outline),
@@ -121,7 +128,10 @@ class DonyTripCard extends StatelessWidget {
           // — Pied : date + prix
           Row(
             children: [
-              DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
+              DonyIcon('calendar',
+                size: 13,
+                color: cs.onSurfaceVariant,
+              ),
               const SizedBox(width: DonySpacing.xs),
               Flexible(
                 child: Text(
@@ -138,7 +148,11 @@ class DonyTripCard extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(width: DonySpacing.sm),
-                Container(width: 1, height: 12, color: cs.outline),
+                Container(
+                  width: 1,
+                  height: 12,
+                  color: cs.outline,
+                ),
                 const SizedBox(width: DonySpacing.sm),
               ],
               Flexible(
@@ -162,11 +176,7 @@ class DonyTripCard extends StatelessWidget {
       return card
           .animate(delay: animationDelay)
           .fadeIn(duration: DonyDuration.slow, curve: DonyCurve.enter)
-          .slideY(
-            begin: 0.04,
-            duration: DonyDuration.slow,
-            curve: DonyCurve.enter,
-          );
+          .slideY(begin: 0.04, duration: DonyDuration.slow, curve: DonyCurve.enter);
     }
     return card;
   }
@@ -197,14 +207,9 @@ class _RouteDisplay extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: cs.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
+              Container(width: 6, height: 6, decoration: BoxDecoration(
+                color: cs.primary, shape: BoxShape.circle,
+              )),
               Container(
                 width: 32,
                 height: 1.5,
@@ -216,14 +221,9 @@ class _RouteDisplay extends StatelessWidget {
                 height: 1.5,
                 color: cs.primary.withValues(alpha: 0.3),
               ),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: cs.secondary,
-                  shape: BoxShape.circle,
-                ),
-              ),
+              Container(width: 6, height: 6, decoration: BoxDecoration(
+                color: cs.secondary, shape: BoxShape.circle,
+              )),
             ],
           ),
         ),

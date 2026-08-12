@@ -19,9 +19,9 @@ class DonyIconContainer extends StatelessWidget {
     this.iconColor,
     this.borderRadius,
   }) : assert(
-         icon != null || iconAsset != null,
-         'DonyIconContainer requiert icon ou iconAsset',
-       );
+          icon != null || iconAsset != null,
+          'DonyIconContainer requiert icon ou iconAsset',
+        );
 
   final IconData? icon;
   final String? iconAsset;
@@ -35,10 +35,10 @@ class DonyIconContainer extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final (containerSize, iconSize) = switch (size) {
-      DonyIconContainerSize.sm => (32.0, 16.0),
-      DonyIconContainerSize.md => (DonySpacing.icon, DonySpacing.iconSm),
-      DonyIconContainerSize.lg => (56.0, 28.0),
-      DonyIconContainerSize.xl => (72.0, 36.0),
+      DonyIconContainerSize.sm  => (32.0, 16.0),
+      DonyIconContainerSize.md  => (DonySpacing.icon, DonySpacing.iconSm),
+      DonyIconContainerSize.lg  => (56.0, 28.0),
+      DonyIconContainerSize.xl  => (72.0, 36.0),
       DonyIconContainerSize.xxl => (80.0, 44.0),
     };
 

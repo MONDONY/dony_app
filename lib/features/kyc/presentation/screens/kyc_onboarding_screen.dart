@@ -38,12 +38,7 @@ class KycOnboardingScreen extends StatelessWidget {
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(
-                        h,
-                        DonySpacing.huge,
-                        h,
-                        DonySpacing.xl,
-                      ),
+                      padding: EdgeInsets.fromLTRB(h, DonySpacing.huge, h, DonySpacing.xl),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -59,12 +54,7 @@ class KycOnboardingScreen extends StatelessWidget {
                       color: Theme.of(context).scaffoldBackgroundColor,
                       border: Border(top: BorderSide(color: cs.outline)),
                     ),
-                    padding: EdgeInsets.fromLTRB(
-                      h,
-                      DonySpacing.base,
-                      h,
-                      DonySpacing.base + bottom,
-                    ),
+                    padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, DonySpacing.base + bottom),
                     child: _buildButton(context, state),
                   ),
                 ],
@@ -85,7 +75,10 @@ class KycOnboardingScreen extends StatelessWidget {
           size: DonyMascotteSize.lg,
         ),
         const SizedBox(height: DonySpacing.xl),
-        Text('Vérification d\'identité', style: tt.headlineLarge),
+        Text(
+          'Vérification d\'identité',
+          style: tt.headlineLarge,
+        ),
         const SizedBox(height: DonySpacing.sm),
         Text(
           'Pour accéder à toutes les fonctionnalités, nous devons vérifier votre identité. Ce processus prend moins de 5 minutes.',
@@ -147,20 +140,18 @@ class KycOnboardingScreen extends StatelessWidget {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: DonyIcon(iconAsset, color: cs.primary, size: 22),
-            ),
+            decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
+            child: Center(child: DonyIcon(iconAsset, color: cs.primary, size: 22)),
           ),
           const SizedBox(width: DonySpacing.base),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: tt.titleLarge),
+                Text(
+                  title,
+                  style: tt.titleLarge,
+                ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   description,

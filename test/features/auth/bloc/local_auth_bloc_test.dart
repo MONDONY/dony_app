@@ -26,29 +26,20 @@ void main() {
     mockUserPrefs = MockBox();
 
     // Default: no lockout, full attempts.
-    when(
-      () => mockStorage.read(key: 'pin_lockout_until'),
-    ).thenAnswer((_) async => null);
-    when(
-      () => mockStorage.read(key: 'pin_attempts_left'),
-    ).thenAnswer((_) async => '3');
-    when(
-      () => mockStorage.write(
-        key: any(named: 'key'),
-        value: any(named: 'value'),
-      ),
-    ).thenAnswer((_) async {});
-    when(
-      () => mockStorage.delete(key: any(named: 'key')),
-    ).thenAnswer((_) async {});
+    when(() => mockStorage.read(key: 'pin_lockout_until'))
+        .thenAnswer((_) async => null);
+    when(() => mockStorage.read(key: 'pin_attempts_left'))
+        .thenAnswer((_) async => '3');
+    when(() => mockStorage.write(key: any(named: 'key'), value: any(named: 'value')))
+        .thenAnswer((_) async {});
+    when(() => mockStorage.delete(key: any(named: 'key')))
+        .thenAnswer((_) async {});
 
     // Default: appLockBiometric = true (biometric enabled by default)
-    when(
-      () => mockUserPrefs.get(
-        HiveService.kAppLockBiometric,
-        defaultValue: any(named: 'defaultValue'),
-      ),
-    ).thenReturn(true);
+    when(() => mockUserPrefs.get(
+          HiveService.kAppLockBiometric,
+          defaultValue: any(named: 'defaultValue'),
+        )).thenReturn(true);
   });
 
   LocalAuthBloc buildBloc() =>
@@ -64,7 +55,10 @@ void main() {
         when(() => mockService.isPinSet()).thenAnswer((_) async => false);
       },
       act: (b) => b.add(const LocalAuthStarted()),
-      expect: () => [const LocalAuthChecking(), const LocalAuthNoPinSet()],
+      expect: () => [
+        const LocalAuthChecking(),
+        const LocalAuthNoPinSet(),
+      ],
     );
   });
 
@@ -74,15 +68,16 @@ void main() {
       build: buildBloc,
       setUp: () {
         when(() => mockService.isPinSet()).thenAnswer((_) async => true);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => true);
-        when(
-          () => mockService.authenticateWithBiometric(),
-        ).thenAnswer((_) async => true);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => mockService.authenticateWithBiometric())
+            .thenAnswer((_) async => true);
       },
       act: (b) => b.add(const LocalAuthStarted()),
-      expect: () => [const LocalAuthChecking(), const LocalAuthSuccess()],
+      expect: () => [
+        const LocalAuthChecking(),
+        const LocalAuthSuccess(),
+      ],
     );
   });
 
@@ -92,12 +87,10 @@ void main() {
       build: buildBloc,
       setUp: () {
         when(() => mockService.isPinSet()).thenAnswer((_) async => true);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => true);
-        when(
-          () => mockService.authenticateWithBiometric(),
-        ).thenAnswer((_) async => false);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => mockService.authenticateWithBiometric())
+            .thenAnswer((_) async => false);
       },
       act: (b) => b.add(const LocalAuthStarted()),
       expect: () => [
@@ -115,18 +108,14 @@ void main() {
       build: buildBloc,
       setUp: () {
         when(() => mockService.isPinSet()).thenAnswer((_) async => true);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => false);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => false);
       },
       act: (b) => b.add(const LocalAuthStarted()),
       expect: () => [
         const LocalAuthChecking(),
-        isA<LocalAuthPinRequired>().having(
-          (s) => s.biometricAvailable,
-          'biometricAvailable',
-          false,
-        ),
+        isA<LocalAuthPinRequired>()
+            .having((s) => s.biometricAvailable, 'biometricAvailable', false),
       ],
     );
   });
@@ -137,18 +126,14 @@ void main() {
       build: buildBloc,
       setUp: () {
         final future = DateTime.now().add(const Duration(seconds: 25));
-        when(
-          () => mockStorage.read(key: 'pin_lockout_until'),
-        ).thenAnswer((_) async => future.toIso8601String());
+        when(() => mockStorage.read(key: 'pin_lockout_until'))
+            .thenAnswer((_) async => future.toIso8601String());
       },
       act: (b) => b.add(const LocalAuthStarted()),
       expect: () => [
         const LocalAuthChecking(),
-        isA<LocalAuthLocked>().having(
-          (s) => s.secondsLeft,
-          'secondsLeft',
-          greaterThan(0),
-        ),
+        isA<LocalAuthLocked>()
+            .having((s) => s.secondsLeft, 'secondsLeft', greaterThan(0)),
       ],
     );
   });
@@ -160,9 +145,8 @@ void main() {
       'emits [Success] when biometric succeeds',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockService.authenticateWithBiometric(),
-        ).thenAnswer((_) async => true);
+        when(() => mockService.authenticateWithBiometric())
+            .thenAnswer((_) async => true);
       },
       act: (b) => b.add(const LocalAuthBiometricRequested()),
       expect: () => [const LocalAuthSuccess()],
@@ -172,9 +156,8 @@ void main() {
       'emits nothing when biometric fails',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockService.authenticateWithBiometric(),
-        ).thenAnswer((_) async => false);
+        when(() => mockService.authenticateWithBiometric())
+            .thenAnswer((_) async => false);
       },
       act: (b) => b.add(const LocalAuthBiometricRequested()),
       expect: () => [],
@@ -188,9 +171,8 @@ void main() {
       'emits [Success] when PIN is correct',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockService.validatePin('1234'),
-        ).thenAnswer((_) async => true);
+        when(() => mockService.validatePin('1234'))
+            .thenAnswer((_) async => true);
       },
       act: (b) => b.add(const LocalAuthPinSubmitted('1234')),
       expect: () => [const LocalAuthSuccess()],
@@ -200,20 +182,15 @@ void main() {
       'emits [PinRequired with attemptsLeft=2] when PIN is wrong once',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockService.validatePin(any()),
-        ).thenAnswer((_) async => false);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => false);
+        when(() => mockService.validatePin(any()))
+            .thenAnswer((_) async => false);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => false);
       },
       act: (b) => b.add(const LocalAuthPinSubmitted('0000')),
       expect: () => [
-        isA<LocalAuthPinRequired>().having(
-          (s) => s.attemptsLeft,
-          'attemptsLeft',
-          2,
-        ),
+        isA<LocalAuthPinRequired>()
+            .having((s) => s.attemptsLeft, 'attemptsLeft', 2),
       ],
     );
 
@@ -221,12 +198,10 @@ void main() {
       'emits [Locked] when PIN is wrong 3 times',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockService.validatePin(any()),
-        ).thenAnswer((_) async => false);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => false);
+        when(() => mockService.validatePin(any()))
+            .thenAnswer((_) async => false);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => false);
       },
       act: (b) async {
         b.add(const LocalAuthPinSubmitted('0000'));
@@ -236,16 +211,8 @@ void main() {
         b.add(const LocalAuthPinSubmitted('0000'));
       },
       expect: () => [
-        isA<LocalAuthPinRequired>().having(
-          (s) => s.attemptsLeft,
-          'attemptsLeft',
-          2,
-        ),
-        isA<LocalAuthPinRequired>().having(
-          (s) => s.attemptsLeft,
-          'attemptsLeft',
-          1,
-        ),
+        isA<LocalAuthPinRequired>().having((s) => s.attemptsLeft, 'attemptsLeft', 2),
+        isA<LocalAuthPinRequired>().having((s) => s.attemptsLeft, 'attemptsLeft', 1),
         isA<LocalAuthLocked>().having((s) => s.secondsLeft, 'secondsLeft', 30),
       ],
     );
@@ -254,12 +221,10 @@ void main() {
       'persists lockout timestamp when PIN is wrong 3 times',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockService.validatePin(any()),
-        ).thenAnswer((_) async => false);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => false);
+        when(() => mockService.validatePin(any()))
+            .thenAnswer((_) async => false);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => false);
       },
       act: (b) async {
         b.add(const LocalAuthPinSubmitted('0000'));
@@ -270,15 +235,14 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 50));
       },
       verify: (_) {
-        verify(
-          () => mockStorage.write(
-            key: 'pin_lockout_until',
-            value: any(named: 'value'),
-          ),
-        ).called(1);
-        verify(
-          () => mockStorage.write(key: 'pin_attempts_left', value: '0'),
-        ).called(1);
+        verify(() => mockStorage.write(
+              key: 'pin_lockout_until',
+              value: any(named: 'value'),
+            )).called(1);
+        verify(() => mockStorage.write(
+              key: 'pin_attempts_left',
+              value: '0',
+            )).called(1);
       },
     );
   });
@@ -291,11 +255,8 @@ void main() {
       build: buildBloc,
       act: (b) => b.add(const LocalAuthLockExpired()),
       expect: () => [
-        isA<LocalAuthPinRequired>().having(
-          (s) => s.attemptsLeft,
-          'attemptsLeft',
-          3,
-        ),
+        isA<LocalAuthPinRequired>()
+            .having((s) => s.attemptsLeft, 'attemptsLeft', 3),
       ],
     );
 
@@ -304,9 +265,10 @@ void main() {
       build: buildBloc,
       act: (b) => b.add(const LocalAuthLockExpired()),
       verify: (_) {
-        verify(
-          () => mockStorage.write(key: 'pin_attempts_left', value: '3'),
-        ).called(1);
+        verify(() => mockStorage.write(
+              key: 'pin_attempts_left',
+              value: '3',
+            )).called(1);
         verify(() => mockStorage.delete(key: 'pin_lockout_until')).called(1);
       },
     );
@@ -320,36 +282,27 @@ void main() {
     setUp(() {
       userPrefsBox = MockBox();
       // Par défaut: pas de lockout, 3 tentatives
-      when(
-        () => mockStorage.read(key: 'pin_lockout_until'),
-      ).thenAnswer((_) async => null);
-      when(
-        () => mockStorage.read(key: 'pin_attempts_left'),
-      ).thenAnswer((_) async => '3');
-      when(
-        () => mockStorage.write(
-          key: any(named: 'key'),
-          value: any(named: 'value'),
-        ),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockStorage.delete(key: any(named: 'key')),
-      ).thenAnswer((_) async {});
+      when(() => mockStorage.read(key: 'pin_lockout_until'))
+          .thenAnswer((_) async => null);
+      when(() => mockStorage.read(key: 'pin_attempts_left'))
+          .thenAnswer((_) async => '3');
+      when(() => mockStorage.write(
+              key: any(named: 'key'), value: any(named: 'value')))
+          .thenAnswer((_) async {});
+      when(() => mockStorage.delete(key: any(named: 'key')))
+          .thenAnswer((_) async {});
       when(() => mockService.isPinSet()).thenAnswer((_) async => true);
     });
 
     blocTest<LocalAuthBloc, LocalAuthState>(
       'skips biometric quand appLockBiometric = false',
       build: () {
-        when(
-          () => userPrefsBox.get(
-            HiveService.kAppLockBiometric,
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn(false);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => true);
+        when(() => userPrefsBox.get(
+              HiveService.kAppLockBiometric,
+              defaultValue: any(named: 'defaultValue'),
+            )).thenReturn(false);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
         return LocalAuthBloc(
           mockService,
           userPrefsBox,
@@ -357,7 +310,10 @@ void main() {
         );
       },
       act: (bloc) => bloc.add(const LocalAuthStarted()),
-      expect: () => [isA<LocalAuthChecking>(), isA<LocalAuthPinRequired>()],
+      expect: () => [
+        isA<LocalAuthChecking>(),
+        isA<LocalAuthPinRequired>(),
+      ],
       verify: (_) {
         verifyNever(() => mockService.authenticateWithBiometric());
       },
@@ -366,18 +322,14 @@ void main() {
     blocTest<LocalAuthBloc, LocalAuthState>(
       'tente biometric quand appLockBiometric = true et biometric disponible',
       build: () {
-        when(
-          () => userPrefsBox.get(
-            HiveService.kAppLockBiometric,
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn(true);
-        when(
-          () => mockService.isBiometricAvailable(),
-        ).thenAnswer((_) async => true);
-        when(
-          () => mockService.authenticateWithBiometric(),
-        ).thenAnswer((_) async => true);
+        when(() => userPrefsBox.get(
+              HiveService.kAppLockBiometric,
+              defaultValue: any(named: 'defaultValue'),
+            )).thenReturn(true);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => mockService.authenticateWithBiometric())
+            .thenAnswer((_) async => true);
         return LocalAuthBloc(
           mockService,
           userPrefsBox,
@@ -385,7 +337,10 @@ void main() {
         );
       },
       act: (bloc) => bloc.add(const LocalAuthStarted()),
-      expect: () => [isA<LocalAuthChecking>(), isA<LocalAuthSuccess>()],
+      expect: () => [
+        isA<LocalAuthChecking>(),
+        isA<LocalAuthSuccess>(),
+      ],
     );
   });
 }

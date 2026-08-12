@@ -24,8 +24,7 @@ class ParticipantModel {
     this.kycVerified = false,
   });
 
-  factory ParticipantModel.fromJson(Map<String, dynamic> json) =>
-      ParticipantModel(
+  factory ParticipantModel.fromJson(Map<String, dynamic> json) => ParticipantModel(
         id: json['id'] as String,
         name: json['name'] as String? ?? '',
         avatarUrl: json['avatarUrl'] as String?,
@@ -78,10 +77,8 @@ class ConversationModel {
   String? get tripLabel {
     if (tripOrigin == null || tripDestination == null) return null;
     final parts = <String>['$tripOrigin → $tripDestination'];
-    if (tripDate != null)
-      parts.add(DateFormat('d MMM', 'fr').format(tripDate!));
-    if (tripWeightKg != null)
-      parts.add('${tripWeightKg!.toStringAsFixed(0)} kg');
+    if (tripDate != null) parts.add(DateFormat('d MMM', 'fr').format(tripDate!));
+    if (tripWeightKg != null) parts.add('${tripWeightKg!.toStringAsFixed(0)} kg');
     return parts.join(' · ');
   }
 
@@ -91,31 +88,30 @@ class ConversationModel {
     String? lastMessagePreview,
     DateTime? lastMessageAt,
     bool? readOnly,
-  }) => ConversationModel(
-    id: id,
-    bidId: bidId,
-    firestoreConversationId: firestoreConversationId,
-    otherParticipant: otherParticipant,
-    lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
-    lastMessageAt: lastMessageAt ?? this.lastMessageAt,
-    hasUnread: hasUnread ?? this.hasUnread,
-    unreadCount: unreadCount ?? this.unreadCount,
-    tripOrigin: tripOrigin,
-    tripDestination: tripDestination,
-    tripDate: tripDate,
-    tripWeightKg: tripWeightKg,
-    bidStatus: bidStatus,
-    readOnly: readOnly ?? this.readOnly,
-  );
-
-  factory ConversationModel.fromJson(Map<String, dynamic> json) =>
+  }) =>
       ConversationModel(
+        id: id,
+        bidId: bidId,
+        firestoreConversationId: firestoreConversationId,
+        otherParticipant: otherParticipant,
+        lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
+        lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+        hasUnread: hasUnread ?? this.hasUnread,
+        unreadCount: unreadCount ?? this.unreadCount,
+        tripOrigin: tripOrigin,
+        tripDestination: tripDestination,
+        tripDate: tripDate,
+        tripWeightKg: tripWeightKg,
+        bidStatus: bidStatus,
+        readOnly: readOnly ?? this.readOnly,
+      );
+
+  factory ConversationModel.fromJson(Map<String, dynamic> json) => ConversationModel(
         id: json['id'] as String,
         bidId: json['bidId'] as String,
         firestoreConversationId: json['firestoreConversationId'] as String,
-        otherParticipant: ParticipantModel.fromJson(
-          json['otherParticipant'] as Map<String, dynamic>,
-        ),
+        otherParticipant:
+            ParticipantModel.fromJson(json['otherParticipant'] as Map<String, dynamic>),
         lastMessagePreview: json['lastMessagePreview'] as String?,
         lastMessageAt: json['lastMessageAt'] != null
             ? DateTime.tryParse(json['lastMessageAt'] as String)

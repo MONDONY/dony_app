@@ -44,20 +44,17 @@ void main() {
       expect(model.travelerRating, 5.0);
     });
 
-    test(
-      'leaves traveler enrichment fields null when absent (back not yet deployed)',
-      () {
-        final model = RematchSuggestionModel.fromJson(baseJson);
+    test('leaves traveler enrichment fields null when absent (back not yet deployed)', () {
+      final model = RematchSuggestionModel.fromJson(baseJson);
 
-        expect(model.travelerFirstName, isNull);
-        expect(model.travelerRating, isNull);
-        expect(model.travelerRatingCount, isNull);
-        expect(model.travelerAvatarUrl, isNull);
-        // Existing fields still parse correctly.
-        expect(model.departureCity, 'Paris');
-        expect(model.availableKg, 5.0);
-      },
-    );
+      expect(model.travelerFirstName, isNull);
+      expect(model.travelerRating, isNull);
+      expect(model.travelerRatingCount, isNull);
+      expect(model.travelerAvatarUrl, isNull);
+      // Existing fields still parse correctly.
+      expect(model.departureCity, 'Paris');
+      expect(model.availableKg, 5.0);
+    });
   });
 
   group('CancellationModel.fromJson', () {

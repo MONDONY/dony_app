@@ -124,9 +124,8 @@ void main() {
   group('PackageRequestSearchItem urgent', () {
     test('urgent depuis le JSON prime sur le calcul local (true)', () {
       final json = _baseJson()
-        ..['desiredDate'] = DateTime.now()
-            .add(const Duration(days: 30))
-            .toIso8601String()
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 30)).toIso8601String()
         ..['urgent'] = true;
       final item = PackageRequestSearchItem.fromJson(json);
       expect(item.isUrgent, isTrue);
@@ -134,9 +133,8 @@ void main() {
 
     test('urgent depuis le JSON prime sur le calcul local (false)', () {
       final json = _baseJson()
-        ..['desiredDate'] = DateTime.now()
-            .add(const Duration(days: 1))
-            .toIso8601String()
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 1)).toIso8601String()
         ..['urgent'] = false;
       final item = PackageRequestSearchItem.fromJson(json);
       expect(item.isUrgent, isFalse);
@@ -144,9 +142,8 @@ void main() {
 
     test('urgent absent → repli sur la date (proche → urgent)', () {
       final json = _baseJson()
-        ..['desiredDate'] = DateTime.now()
-            .add(const Duration(days: 1))
-            .toIso8601String();
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 1)).toIso8601String();
       final item = PackageRequestSearchItem.fromJson(json);
       expect(item.urgent, isNull);
       expect(item.isUrgent, isTrue);
@@ -154,9 +151,8 @@ void main() {
 
     test('urgent absent → repli sur la date (lointaine → pas urgent)', () {
       final json = _baseJson()
-        ..['desiredDate'] = DateTime.now()
-            .add(const Duration(days: 30))
-            .toIso8601String();
+        ..['desiredDate'] =
+            DateTime.now().add(const Duration(days: 30)).toIso8601String();
       final item = PackageRequestSearchItem.fromJson(json);
       expect(item.urgent, isNull);
       expect(item.isUrgent, isFalse);
@@ -164,7 +160,8 @@ void main() {
 
     test('isUrgent match isUrgentDate quand urgent absent', () {
       final desiredDate = DateTime.now().add(const Duration(days: 2));
-      final json = _baseJson()..['desiredDate'] = desiredDate.toIso8601String();
+      final json = _baseJson()
+        ..['desiredDate'] = desiredDate.toIso8601String();
       final item = PackageRequestSearchItem.fromJson(json);
       expect(item.isUrgent, isUrgentDate(item.desiredDate));
     });

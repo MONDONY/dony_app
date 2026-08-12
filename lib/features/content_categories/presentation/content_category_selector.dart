@@ -347,8 +347,7 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     // En mode [alwaysAllowCustom] : dès qu'on tape un contenu hors catalogue,
     // même si des items matchent encore — l'expéditeur peut toujours saisir
     // un élément libre.
-    final showAddRow =
-        query.isNotEmpty &&
+    final showAddRow = query.isNotEmpty &&
         !hasExactMatch &&
         (filtered.isEmpty || widget.alwaysAllowCustom);
     final maxHeight = _dropdownMaxHeight(context);
@@ -579,7 +578,8 @@ class _ComboItem extends StatelessWidget {
                     style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   ),
                 ),
-                if (selected) DonyIcon('check', size: 16, color: cs.primary),
+                if (selected)
+                  DonyIcon('check', size: 16, color: cs.primary),
               ],
             ),
           ),
@@ -691,16 +691,16 @@ class _ComboTag extends StatelessWidget {
             excludeSemantics: true,
             label: 'Retirer cette catégorie',
             child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onRemove,
-              child: SizedBox(
-                width: 32,
-                height: 32,
-                child: Center(
-                  child: DonyIcon('x', size: 12, color: cs.primary),
-                ),
+            behavior: HitTestBehavior.opaque,
+            onTap: onRemove,
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Center(
+                child: DonyIcon('x', size: 12, color: cs.primary),
               ),
             ),
+          )
           ),
         ],
       ),

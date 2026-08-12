@@ -42,7 +42,6 @@ void primeReducedMotionDuration(
     AccessibilityMode.off => false,
     _ => systemReducesMotion,
   };
-  Animate.defaultDuration = reduce
-      ? Duration.zero
-      : const Duration(milliseconds: 300);
+  Animate.defaultDuration =
+      reduce ? Duration.zero : const Duration(milliseconds: 300);
 }

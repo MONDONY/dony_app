@@ -4,7 +4,7 @@ import 'popular_corridor_model.dart';
 
 class CityRepository {
   const CityRepository({required CityDatasource datasource})
-    : _datasource = datasource;
+      : _datasource = datasource;
 
   final CityDatasource _datasource;
 

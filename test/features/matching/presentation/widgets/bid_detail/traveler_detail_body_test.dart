@@ -24,16 +24,16 @@ class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
 
 BidModel _bid(String status) => BidModel(
-  id: 'b1',
-  announcementId: 'a1',
-  senderId: 's1',
-  status: status,
-  weightKg: 5,
-  totalAmountEur: 48,
-  senderName: 'Mariama D.',
-  createdAt: DateTime(2026, 5),
-  updatedAt: DateTime(2026, 5),
-);
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      status: status,
+      weightKg: 5,
+      totalAmountEur: 48,
+      senderName: 'Mariama D.',
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+    );
 
 Future<void> _pump(WidgetTester tester, BidModel bid) async {
   final conv = _MockConvBloc();
@@ -65,9 +65,8 @@ void main() {
     expect(find.byType(TravelerGainCard), findsOneWidget);
   });
 
-  testWidgets('PENDING → pas de carte contact (statut non actif)', (
-    tester,
-  ) async {
+  testWidgets('PENDING → pas de carte contact (statut non actif)',
+      (tester) async {
     await _pump(tester, _bid('PENDING'));
     expect(find.byType(ExpediteurContactCard), findsNothing);
     expect(find.byType(TravelerGainCard), findsOneWidget);

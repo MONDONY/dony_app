@@ -90,15 +90,17 @@ class SenderStickyBar extends StatelessWidget {
     final action = _buildAction(context);
 
     // Determine whether to show the escrow badge
-    final showBadge =
-        (bid.status == 'PENDING' || bid.status == 'ACCEPTED') &&
+    final showBadge = (bid.status == 'PENDING' || bid.status == 'ACCEPTED') &&
         existingPayment != null;
 
     final content = showBadge
         ? Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              EscrowBadge(payment: existingPayment!, bidStatus: bid.status),
+              EscrowBadge(
+                payment: existingPayment!,
+                bidStatus: bid.status,
+              ),
               if (action != null) ...[
                 const SizedBox(height: DonySpacing.sm),
                 action,
@@ -158,13 +160,12 @@ class SenderStickyBar extends StatelessWidget {
             onPressed: isLoading
                 ? null
                 : () => _showDeleteDialog(
-                    context,
-                    title: 'Annuler la demande de transport ?',
-                    body:
-                        "Aucun paiement n'a été effectué. La demande sera retirée.",
-                    confirmLabel: 'Oui, annuler',
-                    dismissLabel: 'Retour',
-                  ),
+                      context,
+                      title: 'Annuler la demande de transport ?',
+                      body: "Aucun paiement n'a été effectué. La demande sera retirée.",
+                      confirmLabel: 'Oui, annuler',
+                      dismissLabel: 'Retour',
+                    ),
           ),
         ],
       );
@@ -198,8 +199,7 @@ class SenderStickyBar extends StatelessWidget {
     }
 
     // 3. Needs payment: (PENDING || ACCEPTED) && stripe && paymentLoaded && not yet paid
-    final needsPayment =
-        (status == 'PENDING' || status == 'ACCEPTED') &&
+    final needsPayment = (status == 'PENDING' || status == 'ACCEPTED') &&
         bid.paymentMethod == BidPaymentMethod.stripe &&
         paymentLoaded &&
         existingPayment == null;
@@ -209,9 +209,7 @@ class SenderStickyBar extends StatelessWidget {
         label: 'Payer mon envoi',
         iconAsset: 'lock',
         isLoading: isLoading,
-        onPressed: isLoading
-            ? null
-            : () => context.push('/payments/pay', extra: bid),
+        onPressed: isLoading ? null : () => context.push('/payments/pay', extra: bid),
       );
     }
 
@@ -230,15 +228,18 @@ class SenderStickyBar extends StatelessWidget {
     if (status == 'HANDED_OVER' || status == 'IN_TRANSIT') {
       final dep = bid.departureCity ?? '';
       final arr = bid.arrivalCity ?? '';
-      final corridor = (dep.isNotEmpty && arr.isNotEmpty)
-          ? '$dep → $arr'
-          : 'Suivi du colis';
+      final corridor =
+          (dep.isNotEmpty && arr.isNotEmpty) ? '$dep → $arr' : 'Suivi du colis';
       return DonyButton(
         label: 'Suivi du colis',
         iconAsset: 'package',
         onPressed: () {
           HapticFeedback.lightImpact();
-          showTrackingTimelineSheet(context, bidId: bid.id, corridor: corridor);
+          showTrackingTimelineSheet(
+            context,
+            bidId: bid.id,
+            corridor: corridor,
+          );
         },
       );
     }

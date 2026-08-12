@@ -15,8 +15,7 @@ class _FakeNotifEvent extends Fake implements NotificationPrefsEvent {}
 Widget _wrap({Map<String, bool>? prefs}) {
   final mockBloc = MockNotificationPrefsBloc();
   final state = NotificationPrefsState(
-    prefs:
-        prefs ??
+    prefs: prefs ??
         {
           'push_activity_bids': true,
           'push_activity_negotiations': true,
@@ -27,11 +26,8 @@ Widget _wrap({Map<String, bool>? prefs}) {
         },
   );
   when(() => mockBloc.state).thenReturn(state);
-  whenListen<NotificationPrefsState>(
-    mockBloc,
-    const Stream.empty(),
-    initialState: state,
-  );
+  whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
+      initialState: state);
 
   return MaterialApp(
     home: BlocProvider<NotificationPrefsBloc>.value(
@@ -56,27 +52,22 @@ MockNotificationPrefsBloc _buildMockBloc([
   String? errorMessage,
 ]) {
   final mockBloc = MockNotificationPrefsBloc();
-  final prefs =
-      customPrefs ??
-      {
-        'push_activity_bids': true,
-        'push_activity_negotiations': true,
-        'push_messages': true,
-        'push_trip_reminder': true,
-        'push_corridor_alerts': true,
-        'push_promo': false,
-      };
+  final prefs = customPrefs ?? {
+    'push_activity_bids': true,
+    'push_activity_negotiations': true,
+    'push_messages': true,
+    'push_trip_reminder': true,
+    'push_corridor_alerts': true,
+    'push_promo': false,
+  };
   final state = NotificationPrefsState(
     prefs: prefs,
     packageMatchAlert: packageMatchAlert,
     errorMessage: errorMessage,
   );
   when(() => mockBloc.state).thenReturn(state);
-  whenListen<NotificationPrefsState>(
-    mockBloc,
-    const Stream.empty(),
-    initialState: state,
-  );
+  whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
+      initialState: state);
   return mockBloc;
 }
 
@@ -109,9 +100,7 @@ void main() {
       );
     });
 
-    testWidgets('tap sur tile critique ne dispatche aucun event', (
-      tester,
-    ) async {
+    testWidgets('tap sur tile critique ne dispatche aucun event', (tester) async {
       final mockBloc = _buildMockBloc();
       addTearDown(mockBloc.close);
 
@@ -154,101 +143,73 @@ void main() {
 
     // La préférence `push_corridor_alerts` existait côté serveur et gouvernait
     // déjà les alertes corridor, mais aucune tuile ne permettait de l'atteindre.
-    testWidgets(
-      'tap Nouveaux trajets dispatche NotifPrefToggled(push_corridor_alerts)',
-      (tester) async {
-        final mockBloc = _buildMockBloc();
-        addTearDown(mockBloc.close);
+    testWidgets('tap Nouveaux trajets dispatche NotifPrefToggled(push_corridor_alerts)',
+        (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
 
-        await tester.pumpWidget(_wrapWithBloc(mockBloc));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
 
-        await tester.scrollUntilVisible(
-          find.text('Nouveaux trajets'),
-          100,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Nouveaux trajets'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Nouveaux trajets'));
-        await tester.pump();
+      await tester.tap(find.text('Nouveaux trajets'));
+      await tester.pump();
 
-        verify(
-          () => mockBloc.add(
-            any(
-              that: isA<NotifPrefToggled>().having(
-                (e) => e.key,
-                'key',
-                'push_corridor_alerts',
-              ),
-            ),
-          ),
-        ).called(1);
-      },
-    );
+      verify(() => mockBloc.add(
+            any(that: isA<NotifPrefToggled>()
+                .having((e) => e.key, 'key', 'push_corridor_alerts')),
+          )).called(1);
+    });
 
-    testWidgets(
-      'tap Matchs & enchères dispatche NotifPrefToggled(push_activity_bids)',
-      (tester) async {
-        final mockBloc = _buildMockBloc();
-        addTearDown(mockBloc.close);
+    testWidgets('tap Matchs & enchères dispatche NotifPrefToggled(push_activity_bids)',
+        (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
 
-        await tester.pumpWidget(_wrapWithBloc(mockBloc));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Matchs & enchères'));
-        await tester.pump();
+      await tester.tap(find.text('Matchs & enchères'));
+      await tester.pump();
 
-        verify(
-          () => mockBloc.add(
-            any(
-              that: isA<NotifPrefToggled>().having(
-                (e) => e.key,
-                'key',
-                'push_activity_bids',
-              ),
-            ),
-          ),
-        ).called(1);
-      },
-    );
+      verify(() => mockBloc.add(
+            any(that: isA<NotifPrefToggled>()
+                .having((e) => e.key, 'key', 'push_activity_bids')),
+          )).called(1);
+    });
 
-    testWidgets(
-      'tap Négociations dispatche NotifPrefToggled(push_activity_negotiations)',
-      (tester) async {
-        final mockBloc = _buildMockBloc();
-        addTearDown(mockBloc.close);
+    testWidgets('tap Négociations dispatche NotifPrefToggled(push_activity_negotiations)',
+        (tester) async {
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
 
-        await tester.pumpWidget(_wrapWithBloc(mockBloc));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
 
-        await tester.scrollUntilVisible(
-          find.text('Discussions de prix'),
-          100,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Discussions de prix'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Discussions de prix'));
-        await tester.pump();
+      await tester.tap(find.text('Discussions de prix'));
+      await tester.pump();
 
-        verify(
-          () => mockBloc.add(
-            any(
-              that: isA<NotifPrefToggled>().having(
-                (e) => e.key,
-                'key',
-                'push_activity_negotiations',
-              ),
-            ),
-          ),
-        ).called(1);
-      },
-    );
+      verify(() => mockBloc.add(
+            any(that: isA<NotifPrefToggled>()
+                .having((e) => e.key, 'key', 'push_activity_negotiations')),
+          )).called(1);
+    });
 
-    testWidgets('tap Messages dispatche NotifPrefToggled(push_messages)', (
-      tester,
-    ) async {
+    testWidgets('tap Messages dispatche NotifPrefToggled(push_messages)',
+        (tester) async {
       final mockBloc = _buildMockBloc();
       addTearDown(mockBloc.close);
 
@@ -265,25 +226,18 @@ void main() {
       await tester.tap(find.text('Messages'));
       await tester.pump();
 
-      verify(
-        () => mockBloc.add(
-          any(
-            that: isA<NotifPrefToggled>().having(
-              (e) => e.key,
-              'key',
-              'push_messages',
-            ),
-          ),
-        ),
-      ).called(1);
+      verify(() => mockBloc.add(
+            any(that: isA<NotifPrefToggled>()
+                .having((e) => e.key, 'key', 'push_messages')),
+          )).called(1);
     });
+
   });
 
   // ─── Synchronisation serveur ───────────────────────────────────────────────
   group('NotificationSettingsScreen — synchronisation serveur', () {
-    testWidgets('l\'écran relit les préférences du serveur à l\'ouverture', (
-      tester,
-    ) async {
+    testWidgets('l\'écran relit les préférences du serveur à l\'ouverture',
+        (tester) async {
       final mockBloc = _buildMockBloc();
       addTearDown(mockBloc.close);
 
@@ -321,7 +275,10 @@ void main() {
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Impossible de synchroniser'), findsNothing);
+      expect(
+        find.textContaining('Impossible de synchroniser'),
+        findsNothing,
+      );
     });
   });
 
@@ -329,28 +286,25 @@ void main() {
   group('NotificationSettingsScreen — colis compatibles', () {
     const label = 'Nouveaux colis compatibles';
 
-    testWidgets(
-      'la ligne vit dans la section ACTIVITÉ, sous Matchs & enchères',
-      (tester) async {
-        final mockBloc = _buildMockBloc(null, true);
-        addTearDown(mockBloc.close);
+    testWidgets('la ligne vit dans la section ACTIVITÉ, sous Matchs & enchères',
+        (tester) async {
+      final mockBloc = _buildMockBloc(null, true);
+      addTearDown(mockBloc.close);
 
-        await tester.pumpWidget(_wrapWithBloc(mockBloc));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
 
-        expect(find.text(label), findsOneWidget);
-        // Juste sous « Matchs & enchères » : c'est la section qu'elle complète.
-        final matchs = tester.getTopLeft(find.text('Matchs & enchères')).dy;
-        final compat = tester.getTopLeft(find.text(label)).dy;
-        final autre = tester.getTopLeft(find.text('Discussions de prix')).dy;
-        expect(compat, greaterThan(matchs));
-        expect(compat, lessThan(autre));
-      },
-    );
+      expect(find.text(label), findsOneWidget);
+      // Juste sous « Matchs & enchères » : c'est la section qu'elle complète.
+      final matchs = tester.getTopLeft(find.text('Matchs & enchères')).dy;
+      final compat = tester.getTopLeft(find.text(label)).dy;
+      final autre = tester.getTopLeft(find.text('Discussions de prix')).dy;
+      expect(compat, greaterThan(matchs));
+      expect(compat, lessThan(autre));
+    });
 
-    testWidgets('l\'écran demande la valeur serveur à l\'ouverture', (
-      tester,
-    ) async {
+    testWidgets('l\'écran demande la valeur serveur à l\'ouverture',
+        (tester) async {
       final mockBloc = _buildMockBloc();
       addTearDown(mockBloc.close);
 
@@ -358,8 +312,9 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(
-        () =>
-            mockBloc.add(any(that: isA<NotifPackageMatchAlertLoadRequested>())),
+        () => mockBloc.add(
+          any(that: isA<NotifPackageMatchAlertLoadRequested>()),
+        ),
       ).called(1);
     });
 
@@ -424,9 +379,8 @@ void main() {
       );
     });
 
-    testWidgets('la cible tactile fait au moins 44 points de haut', (
-      tester,
-    ) async {
+    testWidgets('la cible tactile fait au moins 44 points de haut',
+        (tester) async {
       final mockBloc = _buildMockBloc(null, true);
       addTearDown(mockBloc.close);
 

@@ -18,8 +18,7 @@ class NegotiationQuote {
   final bool promoApplied;
   final String? promoLabel;
 
-  factory NegotiationQuote.fromJson(Map<String, dynamic> json) =>
-      NegotiationQuote(
+  factory NegotiationQuote.fromJson(Map<String, dynamic> json) => NegotiationQuote(
         netEur: (json['netEur'] as num).toDouble(),
         rate: (json['rate'] as num).toDouble(),
         commissionEur: (json['commissionEur'] as num).toDouble(),

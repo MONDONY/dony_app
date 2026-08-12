@@ -21,10 +21,10 @@ void main() {
   });
 
   Response<dynamic> resp(Object? data) => Response<dynamic>(
-    data: data,
-    requestOptions: RequestOptions(path: '/auth/me/analytics-consent'),
-    statusCode: 200,
-  );
+        data: data,
+        requestOptions: RequestOptions(path: '/auth/me/analytics-consent'),
+        statusCode: 200,
+      );
 
   group('fetch', () {
     test('GET /auth/me/analytics-consent returns granted=true', () async {
@@ -43,26 +43,27 @@ void main() {
     });
 
     test('returns false when backend says granted=false', () async {
-      when(
-        () => mockDio.get('/auth/me/analytics-consent'),
-      ).thenAnswer((_) async => resp({'granted': false}));
+      when(() => mockDio.get('/auth/me/analytics-consent'))
+          .thenAnswer((_) async => resp({'granted': false}));
 
       expect(await remote.fetch(), isFalse);
     });
 
     test('returns null when backend has never recorded a response', () async {
       when(() => mockDio.get('/auth/me/analytics-consent')).thenAnswer(
-        (_) async =>
-            resp({'granted': null, 'consentAt': null, 'policyVersion': null}),
+        (_) async => resp({
+          'granted': null,
+          'consentAt': null,
+          'policyVersion': null,
+        }),
       );
 
       expect(await remote.fetch(), isNull);
     });
 
     test('returns null when payload is not a map', () async {
-      when(
-        () => mockDio.get('/auth/me/analytics-consent'),
-      ).thenAnswer((_) async => resp('unexpected'));
+      when(() => mockDio.get('/auth/me/analytics-consent'))
+          .thenAnswer((_) async => resp('unexpected'));
 
       expect(await remote.fetch(), isNull);
     });
@@ -70,24 +71,30 @@ void main() {
 
   group('push', () {
     test('PUT /auth/me/analytics-consent sends the full body', () async {
-      when(
-        () =>
-            mockDio.put('/auth/me/analytics-consent', data: any(named: 'data')),
-      ).thenAnswer(
+      when(() => mockDio.put(
+            '/auth/me/analytics-consent',
+            data: any(named: 'data'),
+          )).thenAnswer(
         (_) async => Response<dynamic>(
           requestOptions: RequestOptions(path: '/auth/me/analytics-consent'),
           statusCode: 204,
         ),
       );
 
-      await remote.push(granted: true, policyVersion: '1.0', source: 'manual');
+      await remote.push(
+        granted: true,
+        policyVersion: '1.0',
+        source: 'manual',
+      );
 
-      verify(
-        () => mockDio.put(
-          '/auth/me/analytics-consent',
-          data: {'granted': true, 'policyVersion': '1.0', 'source': 'manual'},
-        ),
-      ).called(1);
+      verify(() => mockDio.put(
+            '/auth/me/analytics-consent',
+            data: {
+              'granted': true,
+              'policyVersion': '1.0',
+              'source': 'manual',
+            },
+          )).called(1);
     });
   });
 }

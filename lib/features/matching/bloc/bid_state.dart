@@ -54,8 +54,11 @@ class BidListLoaded extends BidState {
   final DateTime fetchedAt;
   final bool isRefreshing;
 
-  BidListLoaded(this.bids, {DateTime? fetchedAt, this.isRefreshing = false})
-    : fetchedAt = fetchedAt ?? DateTime.now();
+  BidListLoaded(
+    this.bids, {
+    DateTime? fetchedAt,
+    this.isRefreshing = false,
+  }) : fetchedAt = fetchedAt ?? DateTime.now();
 }
 
 class BidDetailLoaded extends BidState {

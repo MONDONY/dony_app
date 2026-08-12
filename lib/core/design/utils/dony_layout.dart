@@ -27,7 +27,7 @@ abstract final class DonyLayout {
   static double hPadding(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     if (width >= 840) return DonySpacing.huge; // expanded: 48pt
-    if (width >= 600) return DonySpacing.xxl; // medium: 32pt
+    if (width >= 600) return DonySpacing.xxl;  // medium: 32pt
     return DonySpacing.lg; // compact: 20pt
   }
 

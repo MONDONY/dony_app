@@ -15,10 +15,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
 
   final String kycStatus;
 
-  static Future<void> show(
-    BuildContext context, {
-    required String kycStatus,
-  }) async {
+  static Future<void> show(BuildContext context, {required String kycStatus}) async {
     if (kycStatus == 'PENDING') {
       bool openStatus = false;
       await DonyBottomSheet.show<void>(
@@ -67,15 +64,13 @@ class KycRequiredBottomSheet extends StatelessWidget {
                 isLoading: isLoading,
                 onPressed: isLoading
                     ? null
-                    : () =>
-                          ctx.read<KycBloc>().add(const KycSessionRequested()),
+                    : () => ctx.read<KycBloc>().add(const KycSessionRequested()),
               ),
               const SizedBox(height: DonySpacing.sm),
               DonyButton(
                 label: 'Plus tard',
                 variant: DonyButtonVariant.ghost,
-                onPressed: () =>
-                    Navigator.of(context, rootNavigator: true).pop(),
+                onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
               ),
             ],
           );
@@ -108,7 +103,8 @@ class KycRequiredBottomSheet extends StatelessWidget {
         'Votre vérification a échoué. Réessayez pour pouvoir envoyer un colis.',
       'PENDING' =>
         'Votre vérification est en cours. Vous pourrez envoyer une fois votre identité validée.',
-      _ => 'Pour envoyer un colis, votre identité doit être vérifiée.',
+      _ =>
+        'Pour envoyer un colis, votre identité doit être vérifiée.',
     };
 
     return Padding(
@@ -125,9 +121,7 @@ class KycRequiredBottomSheet extends StatelessWidget {
                 color: cs.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Center(
-                child: DonyIcon('shield', color: cs.primary, size: 48),
-              ),
+              child: Center(child: DonyIcon('shield', color: cs.primary, size: 48)),
             ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
           ),
           const SizedBox(height: DonySpacing.xxl),

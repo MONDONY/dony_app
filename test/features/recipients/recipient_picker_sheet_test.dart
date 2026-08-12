@@ -207,13 +207,7 @@ void main() {
     expect(results, [_r4Default]);
     verify(
       () => bloc.add(
-        any(
-          that: isA<RecipientPicked>().having(
-            (e) => e.source,
-            'source',
-            'saved',
-          ),
-        ),
+        any(that: isA<RecipientPicked>().having((e) => e.source, 'source', 'saved')),
       ),
     ).called(1);
   });
@@ -349,11 +343,8 @@ void main() {
       verify(
         () => bloc.add(
           any(
-            that: isA<RecipientPicked>().having(
-              (e) => e.source,
-              'source',
-              'new',
-            ),
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'new'),
           ),
         ),
       ).called(1);
@@ -405,11 +396,8 @@ void main() {
       verify(
         () => bloc.add(
           any(
-            that: isA<RecipientPicked>().having(
-              (e) => e.source,
-              'source',
-              'saved',
-            ),
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'saved'),
           ),
         ),
       ).called(1);
@@ -460,11 +448,8 @@ void main() {
       verify(
         () => bloc.add(
           any(
-            that: isA<RecipientPicked>().having(
-              (e) => e.source,
-              'source',
-              'new',
-            ),
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'new'),
           ),
         ),
       ).called(1);
@@ -487,10 +472,8 @@ void main() {
         ),
       );
       when(() => contactPicker.pick()).thenAnswer(
-        (_) async => const PickedContact(
-          fullName: 'Awa Contact',
-          phone: '+221770009988',
-        ),
+        (_) async =>
+            const PickedContact(fullName: 'Awa Contact', phone: '+221770009988'),
       );
       final results = <Recipient?>[];
 
@@ -521,11 +504,8 @@ void main() {
       verify(
         () => bloc.add(
           any(
-            that: isA<RecipientPicked>().having(
-              (e) => e.source,
-              'source',
-              'phone_contact',
-            ),
+            that: isA<RecipientPicked>()
+                .having((e) => e.source, 'source', 'phone_contact'),
           ),
         ),
       ).called(1);
@@ -565,9 +545,8 @@ void main() {
     tester,
   ) async {
     final bloc = MockRecipientBloc();
-    when(
-      () => bloc.state,
-    ).thenReturn(const RecipientState(status: RecipientStatus.loading));
+    when(() => bloc.state)
+        .thenReturn(const RecipientState(status: RecipientStatus.loading));
     final results = <Recipient?>[];
 
     await pumpSheet(tester, bloc, resultHolder: results, settle: false);
@@ -578,7 +557,10 @@ void main() {
   testWidgets('close button pops the sheet with null', (tester) async {
     final bloc = MockRecipientBloc();
     when(() => bloc.state).thenReturn(
-      const RecipientState(status: RecipientStatus.success, recipients: [_r1]),
+      const RecipientState(
+        status: RecipientStatus.success,
+        recipients: [_r1],
+      ),
     );
     final results = <Recipient?>[];
 

@@ -306,7 +306,9 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
       final context = tester.element(find.text('HOME'));
-      unawaited(GoRouter.of(context).push('/complete/pr-1', extra: thread));
+      unawaited(
+        GoRouter.of(context).push('/complete/pr-1', extra: thread),
+      );
       await tester.pumpAndSettle();
     }
 
@@ -325,8 +327,14 @@ void main() {
         // for this thread only carries CASH — the picker must follow the SET.
         expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
         expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
-        expect(find.byKey(const Key('complete-pay-cash')), findsOneWidget);
-        expect(find.byKey(const Key('complete-pay-stripe')), findsNothing);
+        expect(
+          find.byKey(const Key('complete-pay-cash')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('complete-pay-stripe')),
+          findsNothing,
+        );
       },
     );
 
@@ -349,19 +357,22 @@ void main() {
       },
     );
 
-    testWidgets('legacy thread (availablePaymentMethods null) falls back to '
-        'request.acceptedPaymentMethods', (tester) async {
-      await pumpLoadedWithThread(
-        tester,
-        thread: _fakeThread(), // availablePaymentMethods left null
-        acceptedPaymentMethods: const {PaymentMethod.cash},
-      );
+    testWidgets(
+      'legacy thread (availablePaymentMethods null) falls back to '
+      'request.acceptedPaymentMethods',
+      (tester) async {
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(), // availablePaymentMethods left null
+          acceptedPaymentMethods: const {PaymentMethod.cash},
+        );
 
-      // No server-computed SET on this thread — the picker falls back to
-      // the request's acceptedPaymentMethods (single method here, so it
-      // renders as the collapsed, preselected choice).
-      expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
-      expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
-    });
+        // No server-computed SET on this thread — the picker falls back to
+        // the request's acceptedPaymentMethods (single method here, so it
+        // renders as the collapsed, preselected choice).
+        expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
+        expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
+      },
+    );
   });
 }

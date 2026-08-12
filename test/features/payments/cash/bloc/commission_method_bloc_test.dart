@@ -32,10 +32,7 @@ void main() {
       return CommissionMethodBloc(repo);
     },
     act: (b) => b.add(CommissionMethodLoadRequested()),
-    expect: () => [
-      isA<CommissionMethodLoading>(),
-      isA<CommissionMethodLoaded>(),
-    ],
+    expect: () => [isA<CommissionMethodLoading>(), isA<CommissionMethodLoaded>()],
   );
 
   blocTest<CommissionMethodBloc, CommissionMethodState>(
@@ -45,10 +42,7 @@ void main() {
       return CommissionMethodBloc(repo);
     },
     act: (b) => b.add(CommissionMethodLoadRequested()),
-    expect: () => [
-      isA<CommissionMethodLoading>(),
-      isA<CommissionMethodNotConfigured>(),
-    ],
+    expect: () => [isA<CommissionMethodLoading>(), isA<CommissionMethodNotConfigured>()],
   );
 
   blocTest<CommissionMethodBloc, CommissionMethodState>(
@@ -58,10 +52,7 @@ void main() {
       return CommissionMethodBloc(repo);
     },
     act: (b) => b.add(CommissionMethodLoadRequested()),
-    expect: () => [
-      isA<CommissionMethodLoading>(),
-      isA<CommissionMethodError>(),
-    ],
+    expect: () => [isA<CommissionMethodLoading>(), isA<CommissionMethodError>()],
   );
 
   blocTest<CommissionMethodBloc, CommissionMethodState>(
@@ -86,10 +77,7 @@ void main() {
       return CommissionMethodBloc(repo);
     },
     act: (b) => b.add(CommissionMethodSetupCompleted('pm_test_123')),
-    expect: () => [
-      isA<CommissionMethodLoading>(),
-      isA<CommissionMethodLoaded>(),
-    ],
+    expect: () => [isA<CommissionMethodLoading>(), isA<CommissionMethodLoaded>()],
   );
 
   blocTest<CommissionMethodBloc, CommissionMethodState>(
@@ -99,10 +87,7 @@ void main() {
       return CommissionMethodBloc(repo);
     },
     act: (b) => b.add(CommissionMethodSetupCancelled()),
-    expect: () => [
-      isA<CommissionMethodLoading>(),
-      isA<CommissionMethodNotConfigured>(),
-    ],
+    expect: () => [isA<CommissionMethodLoading>(), isA<CommissionMethodNotConfigured>()],
   );
 
   blocTest<CommissionMethodBloc, CommissionMethodState>(
@@ -113,9 +98,6 @@ void main() {
       return CommissionMethodBloc(repo);
     },
     act: (b) => b.add(CommissionMethodDeleteRequested()),
-    expect: () => [
-      isA<CommissionMethodLoading>(),
-      isA<CommissionMethodNotConfigured>(),
-    ],
+    expect: () => [isA<CommissionMethodLoading>(), isA<CommissionMethodNotConfigured>()],
   );
 }

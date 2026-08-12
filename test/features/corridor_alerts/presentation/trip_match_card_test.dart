@@ -7,17 +7,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 TripMatchModel _trip() => TripMatchModel(
-  announcementId: 'ann-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 7, 10),
-  travelerId: 't-1',
-  travelerName: 'Awa S.',
-  travelerInitials: 'AS',
-  travelerRating: 4.7,
-  availableKg: 12.0,
-  pricePerKg: 9.5,
-);
+      announcementId: 'ann-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 7, 10),
+      travelerId: 't-1',
+      travelerName: 'Awa S.',
+      travelerInitials: 'AS',
+      travelerRating: 4.7,
+      availableKg: 12.0,
+      pricePerKg: 9.5,
+    );
 
 void main() {
   setUpAll(() async {
@@ -28,18 +28,16 @@ void main() {
 
   testWidgets('renders corridor, traveler, kg and price', (tester) async {
     var tapped = false;
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: TripMatchCard(
-            match: _trip(),
-            index: 0,
-            onTap: () => tapped = true,
-          ),
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: TripMatchCard(
+          match: _trip(),
+          index: 0,
+          onTap: () => tapped = true,
         ),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
     expect(find.textContaining('Paris'), findsWidgets);
     expect(find.textContaining('Dakar'), findsWidgets);
@@ -50,12 +48,15 @@ void main() {
   });
 
   testWidgets('renders price per kg', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(body: TripMatchCard(match: _trip(), index: 0)),
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: TripMatchCard(
+          match: _trip(),
+          index: 0,
+        ),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
     // pricePerKg = 9.5 → '9 €/kg'
     expect(find.textContaining('€/kg'), findsWidgets);
@@ -73,23 +74,23 @@ void main() {
       travelerRating: 4.2,
       availableKg: 8.0,
     );
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(body: TripMatchCard(match: trip, index: 1)),
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: TripMatchCard(match: trip, index: 1),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
     expect(find.text('Prix libre'), findsOneWidget);
   });
 
   testWidgets('renders traveler rating', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(body: TripMatchCard(match: _trip(), index: 0)),
+    await tester.pumpWidget(MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: TripMatchCard(match: _trip(), index: 0),
       ),
-    );
+    ));
     await tester.pumpAndSettle();
     expect(find.textContaining('4.7'), findsWidgets);
   });

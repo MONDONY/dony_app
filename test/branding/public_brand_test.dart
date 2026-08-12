@@ -4,9 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('les manifestes exposent Yadony comme nom public', () {
-    final android = File(
-      'android/app/src/main/AndroidManifest.xml',
-    ).readAsStringSync();
+    final android =
+        File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
     final ios = File('ios/Runner/Info.plist').readAsStringSync();
     final web = File('web/index.html').readAsStringSync();
 

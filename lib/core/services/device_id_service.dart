@@ -8,12 +8,12 @@ class DeviceIdService {
   String? _cached;
   Future<String>? _ongoingInit;
 
-  DeviceIdService({FlutterSecureStorage? storage})
-    : _storage =
-          storage ??
-          const FlutterSecureStorage(
-            aOptions: AndroidOptions(encryptedSharedPreferences: true),
-          );
+  DeviceIdService({
+    FlutterSecureStorage? storage,
+  }) : _storage = storage ??
+            const FlutterSecureStorage(
+              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+            );
 
   Future<String> getDeviceId() {
     if (_cached != null) {

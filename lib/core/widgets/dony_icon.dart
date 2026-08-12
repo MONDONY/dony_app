@@ -46,9 +46,8 @@ class DonyIcon extends StatelessWidget {
         'assets/icons/$name.svg',
         width: size,
         height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color!, BlendMode.srcIn)
-            : null,
+        colorFilter:
+            color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
         semanticsLabel: semanticLabel,
         // Fond transparent pendant le décodage → pas de flash.
         placeholderBuilder: (_) => SizedBox(width: size, height: size),
@@ -64,7 +63,12 @@ class DonyIcon extends StatelessWidget {
 ///
 /// Pas de teinte : ces icônes gardent toujours leurs couleurs d'origine.
 class DonyIcon3d extends StatelessWidget {
-  const DonyIcon3d(this.name, {super.key, this.size = 48, this.semanticLabel});
+  const DonyIcon3d(
+    this.name, {
+    super.key,
+    this.size = 48,
+    this.semanticLabel,
+  });
 
   /// Nom du fichier sans extension ni dossier. Ex: `'plane'`.
   final String name;

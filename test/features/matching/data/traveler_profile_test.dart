@@ -43,13 +43,10 @@ void main() {
       expect(p.resolvedName, 'user1785153600');
     });
 
-    test(
-      'returns "Voyageur" when both displayName and phoneNumber are null',
-      () {
-        const p = TravelerProfile(id: 't4', kiloPro: false);
-        expect(p.resolvedName, 'Voyageur');
-      },
-    );
+    test('returns "Voyageur" when both displayName and phoneNumber are null', () {
+      const p = TravelerProfile(id: 't4', kiloPro: false);
+      expect(p.resolvedName, 'Voyageur');
+    });
 
     test('returns "Voyageur" when both are empty strings', () {
       const p = TravelerProfile(
@@ -95,18 +92,15 @@ void main() {
       expect(p.resolvedInitials, '?');
     });
 
-    test(
-      'returns "?" when displayName empty and phoneNumber has no digits',
-      () {
-        const p = TravelerProfile(
-          id: 't5',
-          displayName: '',
-          phoneNumber: '+++',
-          kiloPro: false,
-        );
-        expect(p.resolvedInitials, '?');
-      },
-    );
+    test('returns "?" when displayName empty and phoneNumber has no digits', () {
+      const p = TravelerProfile(
+        id: 't5',
+        displayName: '',
+        phoneNumber: '+++',
+        kiloPro: false,
+      );
+      expect(p.resolvedInitials, '?');
+    });
 
     test('initiale du username quand il tient lieu de displayName', () {
       const p = TravelerProfile(
@@ -178,10 +172,7 @@ void main() {
         'avatarUrl': 'https://cdn.dony.app/avatars/tp-102.jpg',
       };
       final p = TravelerProfile.fromJson(json);
-      expect(
-        p.toJson()['avatarUrl'],
-        'https://cdn.dony.app/avatars/tp-102.jpg',
-      );
+      expect(p.toJson()['avatarUrl'], 'https://cdn.dony.app/avatars/tp-102.jpg');
     });
   });
 }

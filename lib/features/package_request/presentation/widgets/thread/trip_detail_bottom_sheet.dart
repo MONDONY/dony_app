@@ -226,10 +226,15 @@ class TripDetailBottomSheet extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Note du voyageur',
-            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+            style: tt.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: DonySpacing.xs),
-          Text(trip.description!, style: tt.bodyMedium),
+          Text(
+            trip.description!,
+            style: tt.bodyMedium,
+          ),
         ],
       ],
     );
@@ -252,19 +257,8 @@ class TripDetailBottomSheet extends StatelessWidget {
     try {
       final d = DateTime.parse(isoDate);
       const months = [
-        '',
-        'jan',
-        'fév',
-        'mar',
-        'avr',
-        'mai',
-        'juin',
-        'juil',
-        'août',
-        'sep',
-        'oct',
-        'nov',
-        'déc',
+        '', 'jan', 'fév', 'mar', 'avr', 'mai', 'juin',
+        'juil', 'août', 'sep', 'oct', 'nov', 'déc',
       ];
       return '${d.day} ${months[d.month]} ${d.year}';
     } catch (_) {
@@ -302,11 +296,15 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+                  style: tt.labelMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   value,
-                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

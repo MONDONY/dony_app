@@ -195,42 +195,40 @@ class _HomeFakeBox extends Fake implements Box<dynamic> {
 }
 
 UserModel _homeMakeUser() => UserModel(
-  id: 'uid-1',
-  phoneNumber: '+33600000000',
-  firstName: 'Ibrahima',
-  lastName: 'Diallo',
-  roles: const ['SENDER', 'TRAVELER'],
-  kycStatus: 'VERIFIED',
-  status: 'ACTIVE',
-);
+      id: 'uid-1',
+      phoneNumber: '+33600000000',
+      firstName: 'Ibrahima',
+      lastName: 'Diallo',
+      roles: const ['SENDER', 'TRAVELER'],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
 
 AnnouncementModel _homeMakeAnn(String id) => AnnouncementModel(
-  id: id,
-  travelerId: 'traveler-1',
-  departureCity: 'Paris · CDG, ORY',
-  arrivalCity: 'Dakar · DKR',
-  departureDate: DateTime(2026, 6, 15),
-  availableKg: 10,
-  totalKg: 20,
-  pricePerKg: 7,
-  status: 'ACTIVE',
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
-);
+      id: id,
+      travelerId: 'traveler-1',
+      departureCity: 'Paris · CDG, ORY',
+      arrivalCity: 'Dakar · DKR',
+      departureDate: DateTime(2026, 6, 15),
+      availableKg: 10,
+      totalKg: 20,
+      pricePerKg: 7,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 5, 1),
+      updatedAt: DateTime(2026, 5, 1),
+    );
 
 Widget _buildHomeHarness() {
   final hive = _HomeMockHiveService();
   final box = _HomeFakeBox();
   when(() => hive.userPrefs).thenReturn(box);
-  when(
-    () => hive.listenUserPrefs(keys: any(named: 'keys')),
-  ).thenReturn(ValueNotifier<Box>(box));
+  when(() => hive.listenUserPrefs(keys: any(named: 'keys')))
+      .thenReturn(ValueNotifier<Box>(box));
   getIt.registerSingleton<HiveService>(hive);
 
   final analytics = _HomeMockAnalyticsService();
-  when(
-    () => analytics.logEvent(any(), properties: any(named: 'properties')),
-  ).thenAnswer((_) async {});
+  when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
+      .thenAnswer((_) async {});
   getIt.registerSingleton<AnalyticsService>(analytics);
 
   final cityRepo = _HomeMockCityRepository();
@@ -256,14 +254,10 @@ Widget _buildHomeHarness() {
     const TripsSummaryModel(activeTrips: 2, kgSold: 0, revenue: 0),
   );
   when(() => summaryCubit.state).thenReturn(summaryState);
-  whenListen(
-    summaryCubit,
-    const Stream<TripsSummaryState>.empty(),
-    initialState: summaryState,
-  );
-  when(
-    () => summaryCubit.load(period: any(named: 'period')),
-  ).thenAnswer((_) async {});
+  whenListen(summaryCubit, const Stream<TripsSummaryState>.empty(),
+      initialState: summaryState);
+  when(() => summaryCubit.load(period: any(named: 'period')))
+      .thenAnswer((_) async {});
   getIt.registerFactory<TripsSummaryCubit>(() => summaryCubit);
 
   const prSearchState = PackageRequestSearchState();
@@ -373,54 +367,50 @@ _TripMockStripeAccountBloc _tripMakeStripeBloc() {
 }
 
 UserModel _tripMakeUser() => UserModel(
-  id: 'user-test-1',
-  roles: const ['TRAVELER'],
-  kycStatus: 'VERIFIED',
-  status: 'ACTIVE',
-);
+      id: 'user-test-1',
+      roles: const ['TRAVELER'],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+    );
 
 /// Reprend `_makeFullAnnouncement()` du test existant : une annonce complète
 /// qui passe toute la validation de l'étape 0 et permet d'atteindre l'étape 2
 /// (celle qui porte le plus de contenu — chips de moyens de paiement, etc.).
 AnnouncementModel _tripMakeFullAnnouncement() => AnnouncementModel(
-  id: 'ann-full-1',
-  travelerId: 'trav-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 8, 1),
-  departureTime: '22:00',
-  arrivalTime: '10:30',
-  availableKg: 10.0,
-  totalKg: 23.0,
-  pricePerKg: 8.0,
-  status: 'ACTIVE',
-  bidsCount: 0,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
-  handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-  handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
-  pickupAddress: const AddressData(
-    label: 'Tour Eiffel',
-    lat: 48.858,
-    lng: 2.294,
-  ),
-  deliveryAddress: const AddressData(
-    label: 'Dakar Centre',
-    lat: 14.716,
-    lng: -17.467,
-  ),
-  transportMode: TransportMode.plane,
-  acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
-  acceptedContentTypes: const ['Vêtements', 'Médicaments'],
-  refusedTypes: const ['Produits dangereux'],
-);
+      id: 'ann-full-1',
+      travelerId: 'trav-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 8, 1),
+      departureTime: '22:00',
+      arrivalTime: '10:30',
+      availableKg: 10.0,
+      totalKg: 23.0,
+      pricePerKg: 8.0,
+      status: 'ACTIVE',
+      bidsCount: 0,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+      handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
+      handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+      pickupAddress:
+          const AddressData(label: 'Tour Eiffel', lat: 48.858, lng: 2.294),
+      deliveryAddress: const AddressData(
+        label: 'Dakar Centre',
+        lat: 14.716,
+        lng: -17.467,
+      ),
+      transportMode: TransportMode.plane,
+      acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+      acceptedContentTypes: const ['Vêtements', 'Médicaments'],
+      refusedTypes: const ['Produits dangereux'],
+    );
 
 void _tripRegisterDependencies() {
   if (!getIt.isRegistered<AnalyticsService>()) {
     final analytics = _TripMockAnalyticsService();
-    when(
-      () => analytics.logEvent(any(), properties: any(named: 'properties')),
-    ).thenAnswer((_) async {});
+    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
+        .thenAnswer((_) async {});
     getIt.registerSingleton<AnalyticsService>(analytics);
   }
   if (!getIt.isRegistered<PriceGridRepository>()) {
@@ -482,9 +472,8 @@ Widget _wrapCreateTripScreen(Widget child) {
             BlocProvider<AuthBloc>.value(
               value: () {
                 final b = _TripMockAuthBloc();
-                when(
-                  () => b.state,
-                ).thenReturn(AuthAuthenticated(_tripMakeUser()));
+                when(() => b.state)
+                    .thenReturn(AuthAuthenticated(_tripMakeUser()));
                 when(() => b.stream).thenAnswer((_) => const Stream.empty());
                 return b;
               }(),
@@ -502,14 +491,10 @@ Widget _wrapCreateTripScreen(Widget child) {
           child: child,
         ),
       ),
-      GoRoute(
-        path: '/',
-        builder: (_, __) => const Scaffold(body: SizedBox()),
-      ),
+      GoRoute(path: '/', builder: (_, __) => const Scaffold(body: SizedBox())),
       GoRoute(
         path: '/connect/onboarding/intro',
-        builder: (_, __) =>
-            const Scaffold(body: Text('stripe-onboarding-intro')),
+        builder: (_, __) => const Scaffold(body: Text('stripe-onboarding-intro')),
       ),
       GoRoute(
         path: '/payments/commission-method',
@@ -566,18 +551,18 @@ class _BidFakeContentCategoryRepository implements IContentCategoryRepository {
 }
 
 AnnouncementModel _bidMakeAnnouncement() => AnnouncementModel(
-  id: 'ann-1',
-  travelerId: 'trav-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 8, 15),
-  availableKg: 10,
-  totalKg: 10,
-  pricePerKg: 8,
-  status: 'ACTIVE',
-  createdAt: DateTime(2026),
-  updatedAt: DateTime(2026),
-);
+      id: 'ann-1',
+      travelerId: 'trav-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 8, 15),
+      availableKg: 10,
+      totalKg: 10,
+      pricePerKg: 8,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
 
 Widget _buildBidHarness(AnnouncementModel announcement) {
   final router = GoRouter(
@@ -648,31 +633,25 @@ final _paymentTestBid = BidModel(
   updatedAt: DateTime(2025, 5, 1),
 );
 
-Widget _wrapPaymentScreen(
-  Widget child,
-  PaymentBloc bloc,
-  ConfigBloc configBloc,
-) {
+Widget _wrapPaymentScreen(Widget child, PaymentBloc bloc, ConfigBloc configBloc) {
   return MaterialApp.router(
-    routerConfig: GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, __) => MultiBlocProvider(
-            providers: [
-              BlocProvider<PaymentBloc>.value(value: bloc),
-              BlocProvider<ConfigBloc>.value(value: configBloc),
-              _smokeHelpCenterProvider(),
-            ],
-            child: child,
-          ),
+    routerConfig: GoRouter(routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, __) => MultiBlocProvider(
+          providers: [
+            BlocProvider<PaymentBloc>.value(value: bloc),
+            BlocProvider<ConfigBloc>.value(value: configBloc),
+            _smokeHelpCenterProvider(),
+          ],
+          child: child,
         ),
-        GoRoute(
-          path: '/auth/local',
-          builder: (context, __) => const SizedBox.shrink(),
-        ),
-      ],
-    ),
+      ),
+      GoRoute(
+        path: '/auth/local',
+        builder: (context, __) => const SizedBox.shrink(),
+      ),
+    ]),
   );
 }
 
@@ -699,35 +678,33 @@ class _ScanFakePathProviderPlatform extends PathProviderPlatform {
   @override
   Future<String?> getLibraryPath() async => '.dart_tool/test_hive_a11y';
   @override
-  Future<String?> getExternalStoragePath() async => '.dart_tool/test_hive_a11y';
+  Future<String?> getExternalStoragePath() async =>
+      '.dart_tool/test_hive_a11y';
   @override
-  Future<List<String>?> getExternalCachePaths() async => [
-    '.dart_tool/test_hive_a11y',
-  ];
+  Future<List<String>?> getExternalCachePaths() async =>
+      ['.dart_tool/test_hive_a11y'];
   @override
-  Future<List<String>?> getExternalStoragePaths({
-    StorageDirectory? type,
-  }) async => ['.dart_tool/test_hive_a11y'];
+  Future<List<String>?> getExternalStoragePaths({StorageDirectory? type}) async =>
+      ['.dart_tool/test_hive_a11y'];
   @override
   Future<String?> getDownloadsPath() async => '.dart_tool/test_hive_a11y';
 }
 
 AnnouncementModel _scanTrip(String id) => AnnouncementModel(
-  id: id,
-  travelerId: 'traveler-1',
-  status: 'IN_PROGRESS',
-  departureDate: DateTime(2026, 6, 22),
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  availableKg: 10,
-  totalKg: 20,
-  pricePerKg: 5,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
-);
+      id: id,
+      travelerId: 'traveler-1',
+      status: 'IN_PROGRESS',
+      departureDate: DateTime(2026, 6, 22),
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      availableKg: 10,
+      totalKg: 20,
+      pricePerKg: 5,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
 
-BidModel _scanBid(String id, String status, {String? recipientName}) =>
-    BidModel(
+BidModel _scanBid(String id, String status, {String? recipientName}) => BidModel(
       id: id,
       announcementId: 'trip-1',
       senderId: 's',
@@ -738,36 +715,36 @@ BidModel _scanBid(String id, String status, {String? recipientName}) =>
     );
 
 GoRouter _scanRouter(ScanHubCubit cubit) => GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (_, __) => MultiBlocProvider(
-        providers: [
-          BlocProvider<ScanHubCubit>.value(value: cubit),
-          _smokeHelpCenterProvider(),
-        ],
-        child: const ScanHubView(),
-      ),
-    ),
-    GoRoute(
-      path: '/tracking/scan/identify',
-      builder: (_, __) => const Scaffold(body: Text('identify')),
-    ),
-    GoRoute(
-      path: '/tracking/offline-queue',
-      builder: (_, __) => const Scaffold(body: Text('offline-queue')),
-    ),
-    GoRoute(
-      path: '/announcements/trips',
-      builder: (_, __) => const Scaffold(body: Text('mes-trajets')),
-    ),
-    GoRoute(
-      path: '/bids/:id',
-      builder: (_, state) =>
-          Scaffold(body: Text('bid-${state.pathParameters['id']}')),
-    ),
-  ],
-);
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => MultiBlocProvider(
+            providers: [
+              BlocProvider<ScanHubCubit>.value(value: cubit),
+              _smokeHelpCenterProvider(),
+            ],
+            child: const ScanHubView(),
+          ),
+        ),
+        GoRoute(
+          path: '/tracking/scan/identify',
+          builder: (_, __) => const Scaffold(body: Text('identify')),
+        ),
+        GoRoute(
+          path: '/tracking/offline-queue',
+          builder: (_, __) => const Scaffold(body: Text('offline-queue')),
+        ),
+        GoRoute(
+          path: '/announcements/trips',
+          builder: (_, __) => const Scaffold(body: Text('mes-trajets')),
+        ),
+        GoRoute(
+          path: '/bids/:id',
+          builder: (_, state) =>
+              Scaffold(body: Text('bid-${state.pathParameters['id']}')),
+        ),
+      ],
+    );
 
 Widget _wrapScanHub(ScanHubCubit cubit) =>
     MaterialApp.router(routerConfig: _scanRouter(cubit));
@@ -842,23 +819,16 @@ void main() {
 
       final authService = _BidMockLocalAuthService();
       final userPrefsBox = _BidMockBox();
-      when(
-        () => userPrefsBox.get(
-          HiveService.kBiometricEnabled,
-          defaultValue: any(named: 'defaultValue'),
-        ),
-      ).thenReturn(true);
-      when(
-        () => authService.isBiometricAvailable(),
-      ).thenAnswer((_) async => true);
-      when(
-        () => authService.authenticateWithBiometric(),
-      ).thenAnswer((_) async => true);
+      when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
+      when(() => authService.isBiometricAvailable())
+          .thenAnswer((_) async => true);
+      when(() => authService.authenticateWithBiometric())
+          .thenAnswer((_) async => true);
 
       final paymentGateway = _BidMockPaymentGateway();
-      when(
-        () => paymentGateway.isPlatformPaySupported(),
-      ).thenAnswer((_) async => false);
+      when(() => paymentGateway.isPlatformPaySupported())
+          .thenAnswer((_) async => false);
 
       final paymentRepository = _BidMockPaymentRepository();
 
@@ -874,9 +844,7 @@ void main() {
       register<WalletBloc>(() => walletBloc);
       register<BidPhotosCubit>(() => photosCubit);
       register<RecipientBloc>(() => recipientBloc);
-      register<IContentCategoryRepository>(
-        _BidFakeContentCategoryRepository.new,
-      );
+      register<IContentCategoryRepository>(_BidFakeContentCategoryRepository.new);
       register<LocalAuthService>(() => authService);
       register<HiveService>(() => _BidFakeHiveService(userPrefsBox));
       register<PaymentGateway>(() => paymentGateway);
@@ -912,18 +880,13 @@ void main() {
         Stream.value(const ConfigLoaded(0.12)),
         initialState: const ConfigLoaded(0.12),
       );
-      when(
-        () => mockLocalAuth.isBiometricAvailable(),
-      ).thenAnswer((_) async => true);
+      when(() => mockLocalAuth.isBiometricAvailable())
+          .thenAnswer((_) async => true);
       when(mockLocalAuth.isPinSet).thenAnswer((_) async => true);
 
       final userPrefsBox = _PayMockBox();
-      when(
-        () => userPrefsBox.get(
-          HiveService.kBiometricEnabled,
-          defaultValue: any(named: 'defaultValue'),
-        ),
-      ).thenReturn(true);
+      when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
 
       await pumpAt200(
         tester,
@@ -969,18 +932,14 @@ void main() {
       when(() => cubit.selectTrip(any())).thenAnswer((_) async {});
 
       final trip = _scanTrip('trip-1');
-      when(() => cubit.state).thenReturn(
-        ScanHubLoaded(
-          trips: [trip],
-          selectedTripId: trip.id,
-          bidsByTrip: {
-            trip.id: [
-              _scanBid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye'),
-            ],
-          },
-          scanHistory: const [],
-        ),
-      );
+      when(() => cubit.state).thenReturn(ScanHubLoaded(
+        trips: [trip],
+        selectedTripId: trip.id,
+        bidsByTrip: {
+          trip.id: [_scanBid('bid-1', 'ACCEPTED', recipientName: 'Awa Ndiaye')],
+        },
+        scanHistory: const [],
+      ));
 
       await pumpAt200(tester, _wrapScanHub(cubit));
 

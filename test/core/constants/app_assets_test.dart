@@ -29,15 +29,11 @@ void main() {
 
     test('all constants point to assets/logos/ and are non-empty', () {
       final constants = {
-        'logoBlueOrange': AppAssets.logoBlueOrange,
+        'logoBlueOrange':  AppAssets.logoBlueOrange,
         'logoWhiteOrange': AppAssets.logoWhiteOrange,
       };
       for (final entry in constants.entries) {
-        expect(
-          entry.value,
-          isNotEmpty,
-          reason: '${entry.key} must not be empty',
-        );
+        expect(entry.value, isNotEmpty, reason: '${entry.key} must not be empty');
         expect(
           entry.value,
           startsWith('assets/logos/'),

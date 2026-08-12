@@ -5,23 +5,18 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('coche un statut et applique -> retourne le Set', (tester) async {
     Set<String>? result;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () async {
-                result = await ShipmentStatusFilterSheet.show(
-                  context,
-                  const {},
-                );
-              },
-              child: const Text('open'),
-            ),
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () async {
+              result = await ShipmentStatusFilterSheet.show(context, const {});
+            },
+            child: const Text('open'),
           ),
         ),
       ),
-    );
+    ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
@@ -34,27 +29,21 @@ void main() {
     expect(result, contains('COMPLETED'));
   });
 
-  testWidgets('pré-coche depuis initial + libellé Appliquer (n)', (
-    tester,
-  ) async {
+  testWidgets('pré-coche depuis initial + libellé Appliquer (n)', (tester) async {
     Set<String>? result;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () async {
-                result = await ShipmentStatusFilterSheet.show(context, const {
-                  'COMPLETED',
-                  'ACCEPTED',
-                });
-              },
-              child: const Text('open'),
-            ),
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () async {
+              result = await ShipmentStatusFilterSheet.show(
+                  context, const {'COMPLETED', 'ACCEPTED'});
+            },
+            child: const Text('open'),
           ),
         ),
       ),
-    );
+    ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
@@ -73,19 +62,16 @@ void main() {
   });
 
   testWidgets('expose le statut PARCEL_REFUSED (Colis refusé)', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () =>
-                  ShipmentStatusFilterSheet.show(context, const {}),
-              child: const Text('open'),
-            ),
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => ElevatedButton(
+            onPressed: () => ShipmentStatusFilterSheet.show(context, const {}),
+            child: const Text('open'),
           ),
         ),
       ),
-    );
+    ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 

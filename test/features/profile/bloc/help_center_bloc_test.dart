@@ -424,7 +424,10 @@ void main() {
       var fallbackCalls = 0;
       final source = _ControlledSource(
         activatedJson: '',
-        fetchedResults: [Future.value(_remoteJson), Future.value(_remoteJson)],
+        fetchedResults: [
+          Future.value(_remoteJson),
+          Future.value(_remoteJson),
+        ],
       );
       final bloc = HelpCenterBloc(
         _repository(
@@ -449,9 +452,8 @@ void main() {
       bloc.add(const HelpCenterLoadRequested());
       await initialLoad;
 
-      final loading = bloc.stream.firstWhere(
-        (state) => state is HelpCenterLoading,
-      );
+      final loading =
+          bloc.stream.firstWhere((state) => state is HelpCenterLoading);
       bloc.add(const HelpCenterLoadRequested());
       await loading;
 

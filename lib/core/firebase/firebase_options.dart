@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 
 const _projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
 const _messagingSenderId = String.fromEnvironment(
@@ -18,8 +17,8 @@ class DefaultFirebaseOptions {
       TargetPlatform.android => android,
       TargetPlatform.iOS => ios,
       _ => throw UnsupportedError(
-        'DefaultFirebaseOptions are not supported for this platform.',
-      ),
+          'DefaultFirebaseOptions are not supported for this platform.',
+        ),
     };
   }
 

@@ -440,8 +440,10 @@ void main() {
         () => bloc.state,
       ).thenReturn(const RecipientState(status: RecipientStatus.success));
       when(() => contactPicker.pick()).thenAnswer(
-        (_) async =>
-            const PickedContact(fullName: 'Awa Ndiaye', phone: '+221701234567'),
+        (_) async => const PickedContact(
+          fullName: 'Awa Ndiaye',
+          phone: '+221701234567',
+        ),
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 300));

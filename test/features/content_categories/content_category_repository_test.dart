@@ -86,7 +86,9 @@ void main() {
     test(
       'getCategories returns fallbackCatalog on network failure — never throws',
       () async {
-        when(() => mockDio.get('/config/content-categories')).thenThrow(
+        when(
+          () => mockDio.get('/config/content-categories'),
+        ).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/config/content-categories'),
             message: 'Network error',

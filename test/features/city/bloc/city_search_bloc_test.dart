@@ -34,14 +34,16 @@ void main() {
     blocTest<CitySearchBloc, CitySearchState>(
       'émet [Loading, Loaded] sur recherche réussie',
       build: () {
-        when(
-          () => mockRepo.searchCities('Dak'),
-        ).thenAnswer((_) async => [fakeCity]);
+        when(() => mockRepo.searchCities('Dak'))
+            .thenAnswer((_) async => [fakeCity]);
         return CitySearchBloc(mockRepo);
       },
       act: (bloc) => bloc.add(const CitySearchQueryChanged('Dak')),
       wait: const Duration(milliseconds: 400),
-      expect: () => [isA<CitySearchLoading>(), isA<CitySearchLoaded>()],
+      expect: () => [
+        isA<CitySearchLoading>(),
+        isA<CitySearchLoaded>(),
+      ],
       verify: (bloc) {
         final loaded = bloc.state as CitySearchLoaded;
         expect(loaded.cities.first.name, 'Dakar');
@@ -59,9 +61,8 @@ void main() {
     blocTest<CitySearchBloc, CitySearchState>(
       'émet [Error] en cas d\'erreur réseau',
       build: () {
-        when(
-          () => mockRepo.searchCities(any()),
-        ).thenThrow(Exception('network error'));
+        when(() => mockRepo.searchCities(any()))
+            .thenThrow(Exception('network error'));
         return CitySearchBloc(mockRepo);
       },
       act: (bloc) => bloc.add(const CitySearchQueryChanged('Paris')),

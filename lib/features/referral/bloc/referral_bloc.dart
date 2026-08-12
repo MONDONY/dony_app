@@ -14,8 +14,7 @@ export 'referral_event.dart';
 export 'referral_state.dart';
 
 class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
-  ReferralBloc(this._repository, this._analytics)
-    : super(const ReferralInitial()) {
+  ReferralBloc(this._repository, this._analytics) : super(const ReferralInitial()) {
     on<ReferralLoadRequested>(_onLoadRequested);
     on<ReferralCodeCopied>(_onCodeCopied);
     on<ReferralShared>(_onShared);
@@ -59,12 +58,10 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
       await Share.share(
         'Salut ! Utilise mon code Yadony : ${current.info.code} et reçois ton 1er envoi avec 5€ de réduction. ${current.info.shareUrl}',
       );
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.referralShared,
-          properties: {'channel': 'share_sheet'},
-        ),
-      );
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.referralShared,
+        properties: {'channel': 'share_sheet'},
+      ));
     }
   }
 

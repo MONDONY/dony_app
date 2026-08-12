@@ -772,46 +772,39 @@ void main() {
           '/package-requests/quote',
           queryParameters: {'budgetEur': 40.0},
         ),
-      ).thenAnswer(
-        (_) async => _ok({
-          'netEur': 38.10,
-          'rate': 0.05,
-          'commissionEur': 1.90,
-          'totalEur': 40.0,
-          'promoApplied': false,
-        }, '/package-requests/quote'),
-      );
+      ).thenAnswer((_) async => _ok({
+            'netEur': 38.10,
+            'rate': 0.05,
+            'commissionEur': 1.90,
+            'totalEur': 40.0,
+            'promoApplied': false,
+          }, '/package-requests/quote'));
 
       final quote = await repo.quote(40.0);
       expect(quote.netEur, 38.10);
       expect(quote.promoApplied, false);
     });
 
-    test(
-      'sends promoCode as query param and reflects the promo boost',
-      () async {
-        when(
-          () => mockDio.get<Map<String, dynamic>>(
-            '/package-requests/quote',
-            queryParameters: {'budgetEur': 40.0, 'promoCode': 'WELCOME6'},
-          ),
-        ).thenAnswer(
-          (_) async => _ok({
+    test('sends promoCode as query param and reflects the promo boost', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests/quote',
+          queryParameters: {'budgetEur': 40.0, 'promoCode': 'WELCOME6'},
+        ),
+      ).thenAnswer((_) async => _ok({
             'netEur': 38.74,
             'rate': 0.12,
             'commissionEur': 4.29,
             'totalEur': 40.0,
             'promoApplied': true,
             'promoLabel': 'Code WELCOME6 : 6 % de réduction',
-          }, '/package-requests/quote'),
-        );
+          }, '/package-requests/quote'));
 
-        final quote = await repo.quote(40.0, promoCode: 'WELCOME6');
-        expect(quote.promoApplied, true);
-        expect(quote.netEur, 38.74);
-        expect(quote.promoLabel, 'Code WELCOME6 : 6 % de réduction');
-      },
-    );
+      final quote = await repo.quote(40.0, promoCode: 'WELCOME6');
+      expect(quote.promoApplied, true);
+      expect(quote.netEur, 38.74);
+      expect(quote.promoLabel, 'Code WELCOME6 : 6 % de réduction');
+    });
   });
 
   group('photos parsing', () {

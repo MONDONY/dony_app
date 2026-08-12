@@ -29,17 +29,20 @@ void main() {
     blocTest<DataExportBloc, DataExportState>(
       'DataExportRequested émet Loading puis Success si API OK',
       build: () {
-        when(() => mockDio.get('/users/me/export')).thenAnswer(
-          (_) async => Response(
-            requestOptions: RequestOptions(path: '/users/me/export'),
-            statusCode: 200,
-          ),
-        );
+        when(() => mockDio.get('/users/me/export'))
+            .thenAnswer((_) async => Response(
+                  requestOptions: RequestOptions(path: '/users/me/export'),
+                  statusCode: 200,
+                ));
         return DataExportBloc(mockApiClient);
       },
       act: (bloc) => bloc.add(const DataExportRequested()),
-      expect: () => [isA<DataExportLoading>(), isA<DataExportSuccess>()],
-      verify: (_) => verify(() => mockDio.get('/users/me/export')).called(1),
+      expect: () => [
+        isA<DataExportLoading>(),
+        isA<DataExportSuccess>(),
+      ],
+      verify: (_) =>
+          verify(() => mockDio.get('/users/me/export')).called(1),
     );
 
     blocTest<DataExportBloc, DataExportState>(
@@ -55,33 +58,41 @@ void main() {
         return DataExportBloc(mockApiClient);
       },
       act: (bloc) => bloc.add(const DataExportRequested()),
-      expect: () => [isA<DataExportLoading>(), isA<DataExportError>()],
+      expect: () => [
+        isA<DataExportLoading>(),
+        isA<DataExportError>(),
+      ],
     );
 
     blocTest<DataExportBloc, DataExportState>(
       'DataExportRequested émet Loading puis Error si exception générique',
       build: () {
-        when(
-          () => mockDio.get('/users/me/export'),
-        ).thenThrow(Exception('network error'));
-        return DataExportBloc(mockApiClient);
-      },
-      act: (bloc) => bloc.add(const DataExportRequested()),
-      expect: () => [isA<DataExportLoading>(), isA<DataExportError>()],
-    );
-
-    blocTest<DataExportBloc, DataExportState>(
-      'DataExportError contient le message de l\'exception',
-      build: () {
-        when(
-          () => mockDio.get('/users/me/export'),
-        ).thenThrow(Exception('custom error message'));
+        when(() => mockDio.get('/users/me/export'))
+            .thenThrow(Exception('network error'));
         return DataExportBloc(mockApiClient);
       },
       act: (bloc) => bloc.add(const DataExportRequested()),
       expect: () => [
         isA<DataExportLoading>(),
-        isA<DataExportError>().having((s) => s.message, 'message', isNotEmpty),
+        isA<DataExportError>(),
+      ],
+    );
+
+    blocTest<DataExportBloc, DataExportState>(
+      'DataExportError contient le message de l\'exception',
+      build: () {
+        when(() => mockDio.get('/users/me/export'))
+            .thenThrow(Exception('custom error message'));
+        return DataExportBloc(mockApiClient);
+      },
+      act: (bloc) => bloc.add(const DataExportRequested()),
+      expect: () => [
+        isA<DataExportLoading>(),
+        isA<DataExportError>().having(
+          (s) => s.message,
+          'message',
+          isNotEmpty,
+        ),
       ],
     );
   });

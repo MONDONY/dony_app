@@ -36,13 +36,11 @@ void main() {
     // Les lectures à valeur par défaut doivent être stubbées séparément :
     // mocktail traite `get(key)` et `get(key, defaultValue: x)` comme deux
     // invocations distinctes, et un null non stubbé casserait le cast en bool.
-    when(
-      () => mockBox.get(any(), defaultValue: any(named: 'defaultValue')),
-    ).thenAnswer((i) => i.namedArguments[const Symbol('defaultValue')]);
+    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
+        .thenAnswer((i) => i.namedArguments[const Symbol('defaultValue')]);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
-    when(
-      () => mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
-    ).thenAnswer((_) async {});
+    when(() => mockAnalytics.logEvent(any(),
+        properties: any(named: 'properties'))).thenAnswer((_) async {});
   });
 
   PrivacySettingsBloc buildBloc() =>
@@ -58,57 +56,32 @@ void main() {
       bloc.close();
     });
 
-    test(
-      'état initial est PrivacySettingsLoaded(true) quand Hive contient true',
-      () {
-        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
-        final bloc = buildBloc();
-        expect(
-          bloc.state,
-          isA<PrivacySettingsLoaded>().having(
-            (s) => s.contactKycOnly,
-            'contactKycOnly',
-            true,
-          ),
-        );
-        bloc.close();
-      },
-    );
+    test('état initial est PrivacySettingsLoaded(true) quand Hive contient true', () {
+      when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
+      final bloc = buildBloc();
+      expect(bloc.state,
+          isA<PrivacySettingsLoaded>()
+              .having((s) => s.contactKycOnly, 'contactKycOnly', true));
+      bloc.close();
+    });
 
-    test(
-      'état initial est PrivacySettingsLoaded(false) quand Hive contient false',
-      () {
-        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(false);
-        final bloc = buildBloc();
-        expect(
-          bloc.state,
-          isA<PrivacySettingsLoaded>().having(
-            (s) => s.contactKycOnly,
-            'contactKycOnly',
-            false,
-          ),
-        );
-        bloc.close();
-      },
-    );
+    test('état initial est PrivacySettingsLoaded(false) quand Hive contient false', () {
+      when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(false);
+      final bloc = buildBloc();
+      expect(bloc.state,
+          isA<PrivacySettingsLoaded>()
+              .having((s) => s.contactKycOnly, 'contactKycOnly', false));
+      bloc.close();
+    });
 
     test('état initial relit aussi le masquage du numéro depuis Hive', () {
       when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
-      when(
-        () => mockBox.get(
-          HiveService.kHidePhoneNumber,
-          defaultValue: any(named: 'defaultValue'),
-        ),
-      ).thenReturn(true);
+      when(() => mockBox.get(HiveService.kHidePhoneNumber,
+          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
       final bloc = buildBloc();
-      expect(
-        bloc.state,
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.hidePhoneNumber,
-          'hidePhoneNumber',
-          true,
-        ),
-      );
+      expect(bloc.state,
+          isA<PrivacySettingsLoaded>()
+              .having((s) => s.hidePhoneNumber, 'hidePhoneNumber', true));
       bloc.close();
     });
 
@@ -118,28 +91,20 @@ void main() {
       'LoadRequested sans cache : émet Loading puis Loaded et écrit Hive',
       setUp: () {
         when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(null);
-        when(() => mockRepo.fetch()).thenAnswer(
-          (_) async => const PrivacySettingsModel(
-            contactKycOnly: true,
-            hidePhoneNumber: false,
-          ),
-        );
+        when(() => mockRepo.fetch()).thenAnswer((_) async =>
+            const PrivacySettingsModel(
+                contactKycOnly: true, hidePhoneNumber: false));
       },
       build: buildBloc,
       act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
       expect: () => [
         isA<PrivacySettingsLoading>(),
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.contactKycOnly,
-          'contactKycOnly',
-          true,
-        ),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true),
       ],
       verify: (_) {
         verify(() => mockBox.put(HiveService.kContactKycOnly, true)).called(1);
-        verify(
-          () => mockBox.put(HiveService.kHidePhoneNumber, false),
-        ).called(1);
+        verify(() => mockBox.put(HiveService.kHidePhoneNumber, false)).called(1);
       },
     );
 
@@ -147,22 +112,16 @@ void main() {
       'LoadRequested rapatrie le masquage décidé sur un autre appareil',
       setUp: () {
         when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(null);
-        when(() => mockRepo.fetch()).thenAnswer(
-          (_) async => const PrivacySettingsModel(
-            contactKycOnly: true,
-            hidePhoneNumber: true,
-          ),
-        );
+        when(() => mockRepo.fetch()).thenAnswer((_) async =>
+            const PrivacySettingsModel(
+                contactKycOnly: true, hidePhoneNumber: true));
       },
       build: buildBloc,
       act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
       expect: () => [
         isA<PrivacySettingsLoading>(),
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.hidePhoneNumber,
-          'hidePhoneNumber',
-          true,
-        ),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.hidePhoneNumber, 'hidePhoneNumber', true),
       ],
       verify: (_) {
         verify(() => mockBox.put(HiveService.kHidePhoneNumber, true)).called(1);
@@ -175,22 +134,16 @@ void main() {
       'LoadRequested avec cache Hive : pas de Loading, reconcilie silencieusement',
       setUp: () {
         when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(false);
-        when(() => mockRepo.fetch()).thenAnswer(
-          (_) async => const PrivacySettingsModel(
-            contactKycOnly: true,
-            hidePhoneNumber: false,
-          ),
-        );
+        when(() => mockRepo.fetch()).thenAnswer((_) async =>
+            const PrivacySettingsModel(
+                contactKycOnly: true, hidePhoneNumber: false));
       },
       build: buildBloc,
       act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
       // Pas de PrivacySettingsLoading car Hive a déjà une valeur
       expect: () => [
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.contactKycOnly,
-          'contactKycOnly',
-          true,
-        ),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true),
       ],
       verify: (_) {
         verify(() => mockBox.put(HiveService.kContactKycOnly, true)).called(1);
@@ -243,22 +196,13 @@ void main() {
       seed: () => const PrivacySettingsLoaded(contactKycOnly: true),
       act: (bloc) => bloc.add(const ContactKycOnlyToggled(false)),
       expect: () => [
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.contactKycOnly,
-          'contactKycOnly',
-          false,
-        ),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', false),
       ],
       verify: (_) {
         verify(() => mockBox.put(HiveService.kContactKycOnly, false)).called(1);
-        verify(
-          () => mockRepo.update(
-            const PrivacySettingsModel(
-              contactKycOnly: false,
-              hidePhoneNumber: false,
-            ),
-          ),
-        ).called(1);
+        verify(() => mockRepo.update(const PrivacySettingsModel(
+            contactKycOnly: false, hidePhoneNumber: false))).called(1);
       },
     );
 
@@ -268,24 +212,17 @@ void main() {
       'Toggle(false) erreur backend : rollback Hive + état',
       setUp: () {
         when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
-        when(
-          () => mockRepo.update(any()),
-        ).thenAnswer((_) async => throw Exception('Server error'));
+        when(() => mockRepo.update(any()))
+            .thenAnswer((_) async => throw Exception('Server error'));
       },
       build: buildBloc,
       seed: () => const PrivacySettingsLoaded(contactKycOnly: true),
       act: (bloc) => bloc.add(const ContactKycOnlyToggled(false)),
       expect: () => [
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.contactKycOnly,
-          'contactKycOnly',
-          false,
-        ),
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.contactKycOnly,
-          'contactKycOnly',
-          true,
-        ),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', false),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true),
       ],
       verify: (_) {
         // Hive écrit false (optimiste) puis rollback à true
@@ -315,44 +252,29 @@ void main() {
         verify(() => mockBox.put(HiveService.kHidePhoneNumber, true)).called(1);
         // Le PUT porte les deux préférences : masquer son numéro ne doit pas
         // emporter avec lui le réglage « profils vérifiés uniquement ».
-        verify(
-          () => mockRepo.update(
-            const PrivacySettingsModel(
-              contactKycOnly: true,
-              hidePhoneNumber: true,
-            ),
-          ),
-        ).called(1);
-        verify(
-          () => mockAnalytics.logEvent(
-            AnalyticsEvents.phoneVisibilityToggled,
-            properties: {'hidden': true},
-          ),
-        ).called(1);
+        verify(() => mockRepo.update(const PrivacySettingsModel(
+            contactKycOnly: true, hidePhoneNumber: true))).called(1);
+        verify(() => mockAnalytics.logEvent(
+              AnalyticsEvents.phoneVisibilityToggled,
+              properties: {'hidden': true},
+            )).called(1);
       },
     );
 
     blocTest<PrivacySettingsBloc, PrivacySettingsState>(
       'masquage refusé par le backend : rollback, et rien n\'est tracké',
       setUp: () {
-        when(
-          () => mockRepo.update(any()),
-        ).thenAnswer((_) async => throw Exception('Server error'));
+        when(() => mockRepo.update(any()))
+            .thenAnswer((_) async => throw Exception('Server error'));
       },
       build: buildBloc,
       seed: () => const PrivacySettingsLoaded(contactKycOnly: true),
       act: (bloc) => bloc.add(const HidePhoneNumberToggled(true)),
       expect: () => [
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.hidePhoneNumber,
-          'hidePhoneNumber',
-          true,
-        ),
-        isA<PrivacySettingsLoaded>().having(
-          (s) => s.hidePhoneNumber,
-          'hidePhoneNumber',
-          false,
-        ),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.hidePhoneNumber, 'hidePhoneNumber', true),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.hidePhoneNumber, 'hidePhoneNumber', false),
       ],
       verify: (_) {
         verifyInOrder([
@@ -361,12 +283,10 @@ void main() {
         ]);
         // Un réglage qui n'a pas pris ne doit pas apparaître dans les stats
         // comme une décision de l'utilisateur.
-        verifyNever(
-          () => mockAnalytics.logEvent(
-            AnalyticsEvents.phoneVisibilityToggled,
-            properties: any(named: 'properties'),
-          ),
-        );
+        verifyNever(() => mockAnalytics.logEvent(
+              AnalyticsEvents.phoneVisibilityToggled,
+              properties: any(named: 'properties'),
+            ));
       },
     );
 
@@ -377,9 +297,7 @@ void main() {
       },
       build: buildBloc,
       seed: () => const PrivacySettingsLoaded(
-        contactKycOnly: false,
-        hidePhoneNumber: true,
-      ),
+          contactKycOnly: false, hidePhoneNumber: true),
       act: (bloc) => bloc.add(const HidePhoneNumberToggled(false)),
       expect: () => [
         isA<PrivacySettingsLoaded>()
@@ -387,12 +305,10 @@ void main() {
             .having((s) => s.contactKycOnly, 'contactKycOnly', false),
       ],
       verify: (_) {
-        verify(
-          () => mockAnalytics.logEvent(
-            AnalyticsEvents.phoneVisibilityToggled,
-            properties: {'hidden': false},
-          ),
-        ).called(1);
+        verify(() => mockAnalytics.logEvent(
+              AnalyticsEvents.phoneVisibilityToggled,
+              properties: {'hidden': false},
+            )).called(1);
       },
     );
 
@@ -403,9 +319,8 @@ void main() {
     blocTest<PrivacySettingsBloc, PrivacySettingsState>(
       'échec du PUT : le rollback porte saveFailed pour que l\'écran prévienne',
       setUp: () {
-        when(
-          () => mockRepo.update(any()),
-        ).thenAnswer((_) async => throw Exception('offline'));
+        when(() => mockRepo.update(any()))
+            .thenAnswer((_) async => throw Exception('offline'));
       },
       build: buildBloc,
       seed: () => const PrivacySettingsLoaded(contactKycOnly: false),
@@ -426,8 +341,8 @@ void main() {
         when(() => mockRepo.update(any())).thenAnswer((_) async {});
       },
       build: buildBloc,
-      seed: () =>
-          const PrivacySettingsLoaded(contactKycOnly: false, saveFailed: true),
+      seed: () => const PrivacySettingsLoaded(
+          contactKycOnly: false, saveFailed: true),
       act: (bloc) => bloc.add(const ContactKycOnlyToggled(true)),
       expect: () => [
         isA<PrivacySettingsLoaded>()
@@ -442,10 +357,7 @@ void main() {
       const a = PrivacySettingsLoaded(contactKycOnly: true);
       const b = PrivacySettingsLoaded(contactKycOnly: true);
       const c = PrivacySettingsLoaded(contactKycOnly: false);
-      const d = PrivacySettingsLoaded(
-        contactKycOnly: true,
-        hidePhoneNumber: true,
-      );
+      const d = PrivacySettingsLoaded(contactKycOnly: true, hidePhoneNumber: true);
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
       expect(a, isNot(equals(d)));
@@ -461,39 +373,24 @@ void main() {
 
     test('copyWith ne touche que le champ fourni', () {
       const base = PrivacySettingsLoaded(contactKycOnly: true);
-      expect(
-        base.copyWith(hidePhoneNumber: true),
-        const PrivacySettingsLoaded(
-          contactKycOnly: true,
-          hidePhoneNumber: true,
-        ),
-      );
+      expect(base.copyWith(hidePhoneNumber: true),
+          const PrivacySettingsLoaded(contactKycOnly: true, hidePhoneNumber: true));
       expect(base.copyWith(), base);
     });
 
     test('equality des events est correcte', () {
-      expect(
-        const HidePhoneNumberToggled(true),
-        equals(const HidePhoneNumberToggled(true)),
-      );
-      expect(
-        const HidePhoneNumberToggled(true).hashCode,
-        equals(const HidePhoneNumberToggled(true).hashCode),
-      );
-      expect(
-        const HidePhoneNumberToggled(true),
-        isNot(equals(const HidePhoneNumberToggled(false))),
-      );
+      expect(const HidePhoneNumberToggled(true),
+          equals(const HidePhoneNumberToggled(true)));
+      expect(const HidePhoneNumberToggled(true).hashCode,
+          equals(const HidePhoneNumberToggled(true).hashCode));
+      expect(const HidePhoneNumberToggled(true),
+          isNot(equals(const HidePhoneNumberToggled(false))));
       // Deux events distincts portant la même valeur ne doivent pas se confondre :
       // `MockBloc.add` les vérifie par égalité dans les tests d'écran.
-      expect(
-        const HidePhoneNumberToggled(true),
-        isNot(equals(const ContactKycOnlyToggled(true))),
-      );
-      expect(
-        const ContactKycOnlyToggled(true).hashCode,
-        equals(const ContactKycOnlyToggled(true).hashCode),
-      );
+      expect(const HidePhoneNumberToggled(true),
+          isNot(equals(const ContactKycOnlyToggled(true))));
+      expect(const ContactKycOnlyToggled(true).hashCode,
+          equals(const ContactKycOnlyToggled(true).hashCode));
     });
   });
 }

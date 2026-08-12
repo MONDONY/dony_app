@@ -15,27 +15,27 @@ class _FakeConnectedDevicesEvent extends Fake
     implements ConnectedDevicesEvent {}
 
 DeviceModel _dev({bool current = false}) => DeviceModel(
-  deviceId: current ? 'cur' : 'other',
-  deviceName: current ? 'iPhone 14' : 'Galaxy S22',
-  platform: current ? 'ios' : 'android',
-  lastSeenAt: DateTime(2026, 5, 22),
-  isCurrent: current,
-);
+      deviceId: current ? 'cur' : 'other',
+      deviceName: current ? 'iPhone 14' : 'Galaxy S22',
+      platform: current ? 'ios' : 'android',
+      lastSeenAt: DateTime(2026, 5, 22),
+      isCurrent: current,
+    );
 
 DeviceModel _webDev() => DeviceModel(
-  deviceId: 'web-123',
-  deviceName: 'Chrome sur Windows',
-  platform: 'web',
-  lastSeenAt: DateTime(2026, 5, 22),
-  isCurrent: false,
-);
+      deviceId: 'web-123',
+      deviceName: 'Chrome sur Windows',
+      platform: 'web',
+      lastSeenAt: DateTime(2026, 5, 22),
+      isCurrent: false,
+    );
 
 Widget _wrap(ConnectedDevicesBloc bloc) => MaterialApp(
-  home: BlocProvider<ConnectedDevicesBloc>.value(
-    value: bloc,
-    child: const ConnectedDevicesScreen(),
-  ),
-);
+      home: BlocProvider<ConnectedDevicesBloc>.value(
+        value: bloc,
+        child: const ConnectedDevicesScreen(),
+      ),
+    );
 
 void main() {
   setUpAll(() {
@@ -53,12 +53,11 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('Loaded → liste avec badge appareil courant et bouton Révoquer', (
-    tester,
-  ) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(ConnectedDevicesLoaded([_dev(current: true), _dev()]));
+  testWidgets(
+      'Loaded → liste avec badge appareil courant et bouton Révoquer',
+      (tester) async {
+    when(() => bloc.state)
+        .thenReturn(ConnectedDevicesLoaded([_dev(current: true), _dev()]));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('iPhone 14'), findsOneWidget);
@@ -69,24 +68,22 @@ void main() {
   });
 
   testWidgets(
-    'Loaded avec un seul appareil courant → pas de bouton déconnexion globale',
-    (tester) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(ConnectedDevicesLoaded([_dev(current: true)]));
-      await tester.pumpWidget(_wrap(bloc));
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.text('Déconnecter tous les autres appareils'), findsNothing);
-    },
-  );
+      'Loaded avec un seul appareil courant → pas de bouton déconnexion globale',
+      (tester) async {
+    when(() => bloc.state)
+        .thenReturn(ConnectedDevicesLoaded([_dev(current: true)]));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Déconnecter tous les autres appareils'), findsNothing);
+  });
 
   testWidgets('Error → message + bouton Réessayer', (tester) async {
     when(() => bloc.state).thenReturn(
-      const ConnectedDevicesError('Impossible de charger les appareils'),
-    );
+        const ConnectedDevicesError('Impossible de charger les appareils'));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump();
-    expect(find.text('Impossible de charger les appareils'), findsOneWidget);
+    expect(
+        find.text('Impossible de charger les appareils'), findsOneWidget);
     expect(find.text('Réessayer'), findsOneWidget);
   });
 
@@ -97,12 +94,11 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('bouton Réessayer dispatche DevicesLoadRequested en état Error', (
-    tester,
-  ) async {
+  testWidgets(
+      'bouton Réessayer dispatche DevicesLoadRequested en état Error',
+      (tester) async {
     when(() => bloc.state).thenReturn(
-      const ConnectedDevicesError('Impossible de charger les appareils'),
-    );
+        const ConnectedDevicesError('Impossible de charger les appareils'));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump();
     await tester.tap(find.text('Réessayer'));
@@ -118,12 +114,11 @@ void main() {
     expect(find.text('Réessayer'), findsNothing);
   });
 
-  testWidgets('Loaded avec appareil web → tile affiché avec le nom correct', (
-    tester,
-  ) async {
-    when(
-      () => bloc.state,
-    ).thenReturn(ConnectedDevicesLoaded([_dev(current: true), _webDev()]));
+  testWidgets(
+      'Loaded avec appareil web → tile affiché avec le nom correct',
+      (tester) async {
+    when(() => bloc.state).thenReturn(
+        ConnectedDevicesLoaded([_dev(current: true), _webDev()]));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Chrome sur Windows'), findsOneWidget);

@@ -33,35 +33,31 @@ class BusinessPrefsState extends Equatable {
     int? Function()? responseDelayHoursGetter,
     bool? isSyncing,
     String? Function()? errorMessageGetter,
-  }) => BusinessPrefsState(
-    weightUnit: weightUnit ?? this.weightUnit,
-    currencyCode: currencyCode ?? this.currencyCode,
-    pickupRadiusKm: pickupRadiusKm ?? this.pickupRadiusKm,
-    defaultPackageWeightKg:
-        defaultPackageWeightKg ?? this.defaultPackageWeightKg,
-    minBidPriceEur: minBidPriceEur ?? this.minBidPriceEur,
-    contactMode: contactModeGetter != null
-        ? contactModeGetter()
-        : this.contactMode,
-    responseDelayHours: responseDelayHoursGetter != null
-        ? responseDelayHoursGetter()
-        : this.responseDelayHours,
-    isSyncing: isSyncing ?? this.isSyncing,
-    errorMessage: errorMessageGetter != null
-        ? errorMessageGetter()
-        : this.errorMessage,
-  );
+  }) =>
+      BusinessPrefsState(
+        weightUnit: weightUnit ?? this.weightUnit,
+        currencyCode: currencyCode ?? this.currencyCode,
+        pickupRadiusKm: pickupRadiusKm ?? this.pickupRadiusKm,
+        defaultPackageWeightKg: defaultPackageWeightKg ?? this.defaultPackageWeightKg,
+        minBidPriceEur: minBidPriceEur ?? this.minBidPriceEur,
+        contactMode: contactModeGetter != null ? contactModeGetter() : this.contactMode,
+        responseDelayHours: responseDelayHoursGetter != null
+            ? responseDelayHoursGetter()
+            : this.responseDelayHours,
+        isSyncing: isSyncing ?? this.isSyncing,
+        errorMessage: errorMessageGetter != null ? errorMessageGetter() : this.errorMessage,
+      );
 
   @override
   List<Object?> get props => [
-    weightUnit,
-    currencyCode,
-    pickupRadiusKm,
-    defaultPackageWeightKg,
-    minBidPriceEur,
-    contactMode,
-    responseDelayHours,
-    isSyncing,
-    errorMessage,
-  ];
+        weightUnit,
+        currencyCode,
+        pickupRadiusKm,
+        defaultPackageWeightKg,
+        minBidPriceEur,
+        contactMode,
+        responseDelayHours,
+        isSyncing,
+        errorMessage,
+      ];
 }

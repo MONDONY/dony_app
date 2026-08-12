@@ -60,9 +60,9 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
       }
       // Load subscribe status only if we should show the button
       if (widget.showSubscribe && _effectiveUserId.isNotEmpty) {
-        context.read<TravelerSubscribeBloc>().add(
-          LoadSubscribeStatus(_effectiveUserId),
-        );
+        context
+            .read<TravelerSubscribeBloc>()
+            .add(LoadSubscribeStatus(_effectiveUserId));
       }
     });
   }
@@ -88,7 +88,8 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
   Widget build(BuildContext context) {
     final currentUserId = _currentUserId(context);
     final viewedUserId = _effectiveUserId;
-    final isOwnProfile = currentUserId != null && currentUserId == viewedUserId;
+    final isOwnProfile =
+        currentUserId != null && currentUserId == viewedUserId;
     final showButton = widget.showSubscribe && !isOwnProfile;
 
     return BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
@@ -113,9 +114,9 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
         } else if (state is ProfilePublicError) {
           body = _ErrorView(
             message: state.message,
-            onRetry: () => context.read<ProfilePublicBloc>().add(
-              ProfilePublicRequested(viewedUserId),
-            ),
+            onRetry: () => context
+                .read<ProfilePublicBloc>()
+                .add(ProfilePublicRequested(viewedUserId)),
           );
         } else if (state is ProfilePublicLoaded) {
           body = _LoadedView(
@@ -200,16 +201,14 @@ class _LoadedView extends StatelessWidget {
       slivers: [
         // ── Hero — flat, centered ───────────────────────────────────────────────
         SliverToBoxAdapter(
-          child:
-              _ProfileHero(
-                    profile: profile,
-                    subscribeAction: showSubscribeButton
-                        ? const _SubscribeAction()
-                        : null,
-                  )
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          child: _ProfileHero(
+            profile: profile,
+            subscribeAction:
+                showSubscribeButton ? const _SubscribeAction() : null,
+          )
+              .animate()
+              .fadeIn(duration: 300.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
         // ── Stats section ─────────────────────────────────────────────────────
@@ -275,7 +274,10 @@ class _LoadedView extends StatelessWidget {
 // ─── Flat section wrapper — hairline top border, horizontal padding ───────────
 
 class _FlatSection extends StatelessWidget {
-  const _FlatSection({required this.child, this.topBorder = true});
+  const _FlatSection({
+    required this.child,
+    this.topBorder = true,
+  });
 
   final Widget child;
   final bool topBorder;
@@ -345,9 +347,7 @@ class _ProfileHero extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          if (profile.kycVerified ||
-              profile.isProAccount ||
-              profile.isKiloPro) ...[
+          if (profile.kycVerified || profile.isProAccount || profile.isKiloPro) ...[
             const SizedBox(height: DonySpacing.xs),
             Wrap(
               alignment: WrapAlignment.center,
@@ -422,10 +422,7 @@ class _HeroAvatar extends StatelessWidget {
           height: size + 4,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: cs.primary.withValues(alpha: 0.35),
-              width: 2,
-            ),
+            border: Border.all(color: cs.primary.withValues(alpha: 0.35), width: 2),
           ),
           child: Padding(
             padding: const EdgeInsets.all(1),
@@ -447,11 +444,7 @@ class _HeroAvatar extends StatelessWidget {
               alignment: Alignment.center,
               child: const Text(
                 '✓',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w800),
               ),
             ),
           ),
@@ -485,11 +478,7 @@ class _HeroAvatar extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         initials,
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
+        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
       ),
     );
   }
@@ -505,20 +494,14 @@ class _HeroPill extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 3),
       decoration: BoxDecoration(
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         label,
-        style: tt.labelSmall?.copyWith(
-          color: cs.primary,
-          fontWeight: FontWeight.w800,
-        ),
+        style: tt.labelSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -655,7 +638,10 @@ class _AboutSection extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         Text(
           bio,
-          style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.55),
+          style: tt.bodyMedium?.copyWith(
+            color: cs.onSurface,
+            height: 1.55,
+          ),
         ),
       ],
     );
@@ -713,9 +699,8 @@ class _TravelerInfoSection extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: cs.primaryContainer,
-                            borderRadius: BorderRadius.circular(
-                              DonyRadius.full,
-                            ),
+                            borderRadius:
+                                BorderRadius.circular(DonyRadius.full),
                           ),
                           child: Text(
                             lang,
@@ -895,7 +880,10 @@ class _InfoChip extends StatelessWidget {
 // ─── Avis récents section — flat rows with hairline dividers ─────────────────
 
 class _RecentReviewsSection extends StatelessWidget {
-  const _RecentReviewsSection({required this.summary, required this.userId});
+  const _RecentReviewsSection({
+    required this.summary,
+    required this.userId,
+  });
 
   final RatingSummary summary;
   final String userId;
@@ -949,7 +937,8 @@ class _RecentReviewsSection extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             child: Padding(
               // Ensure min 44pt touch area
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+              padding:
+                  const EdgeInsets.symmetric(vertical: DonySpacing.sm),
               child: Text(
                 'Voir tous les avis (${summary.ratingCount}) ›',
                 style: tt.bodyMedium?.copyWith(
@@ -1175,8 +1164,7 @@ class _SubscribeAction extends StatelessWidget {
 
     return BlocBuilder<TravelerSubscribeBloc, TravelerSubscribeState>(
       builder: (context, state) {
-        final isLoading =
-            state.status == TravelerSubscribeStatus.loading ||
+        final isLoading = state.status == TravelerSubscribeStatus.loading ||
             state.status == TravelerSubscribeStatus.initial;
 
         if (state.subscribed) {
@@ -1188,9 +1176,8 @@ class _SubscribeAction extends StatelessWidget {
                 variant: DonyButtonVariant.secondary,
                 fullWidth: false,
                 isLoading: isLoading,
-                onPressed: isLoading
-                    ? null
-                    : () => _confirmUnsubscribe(context),
+                onPressed:
+                    isLoading ? null : () => _confirmUnsubscribe(context),
               ),
               const SizedBox(width: DonySpacing.sm),
               IconButton(
@@ -1203,9 +1190,9 @@ class _SubscribeAction extends StatelessWidget {
                 ),
                 onPressed: isLoading
                     ? null
-                    : () => context.read<TravelerSubscribeBloc>().add(
-                        TogglePushPressed(!state.pushEnabled),
-                      ),
+                    : () => context
+                        .read<TravelerSubscribeBloc>()
+                        .add(TogglePushPressed(!state.pushEnabled)),
               ),
             ],
           );
@@ -1218,9 +1205,8 @@ class _SubscribeAction extends StatelessWidget {
           isLoading: isLoading,
           onPressed: isLoading
               ? null
-              : () => context.read<TravelerSubscribeBloc>().add(
-                  const SubscribePressed(),
-                ),
+              : () =>
+                  context.read<TravelerSubscribeBloc>().add(const SubscribePressed()),
         );
       },
     );

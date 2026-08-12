@@ -8,7 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockDiagnosticsBloc extends MockBloc<DiagnosticsEvent, DiagnosticsState>
+class MockDiagnosticsBloc
+    extends MockBloc<DiagnosticsEvent, DiagnosticsState>
     implements DiagnosticsBloc {}
 
 class _FakeDiagnosticsEvent extends Fake implements DiagnosticsEvent {}
@@ -27,11 +28,8 @@ Widget _wrap({
     apiOk: apiOk,
   );
   when(() => mockBloc.state).thenReturn(state);
-  whenListen<DiagnosticsState>(
-    mockBloc,
-    const Stream.empty(),
-    initialState: state,
-  );
+  whenListen<DiagnosticsState>(mockBloc, const Stream.empty(),
+      initialState: state);
 
   return MaterialApp(
     home: BlocProvider<DiagnosticsBloc>.value(
@@ -65,9 +63,8 @@ void main() {
       expect(find.text('SUPPORT'), findsOneWidget);
     });
 
-    testWidgets('uses SettingsSectionHeader for all three sections', (
-      tester,
-    ) async {
+    testWidgets('uses SettingsSectionHeader for all three sections',
+        (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
       expect(find.byType(SettingsSectionHeader), findsNWidgets(3));

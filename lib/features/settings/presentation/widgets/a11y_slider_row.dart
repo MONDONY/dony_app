@@ -51,7 +51,10 @@ class A11ySliderRow extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(percent, style: tt.titleMedium?.copyWith(color: cs.primary)),
+              Text(
+                percent,
+                style: tt.titleMedium?.copyWith(color: cs.primary),
+              ),
             ],
           ),
           Semantics(
@@ -72,14 +75,8 @@ class A11ySliderRow extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '85 %',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              Text(
-                '200 %',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
+              Text('85 %', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+              Text('200 %', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
             ],
           ),
         ],

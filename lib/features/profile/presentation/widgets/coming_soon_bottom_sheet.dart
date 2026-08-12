@@ -119,7 +119,11 @@ class ComingSoonBottomSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  DonyIcon('clock', color: cs.onSurfaceVariant, size: 18),
+                  DonyIcon(
+                    'clock',
+                    color: cs.onSurfaceVariant,
+                    size: 18,
+                  ),
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Text(

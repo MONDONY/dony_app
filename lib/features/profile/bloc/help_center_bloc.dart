@@ -13,7 +13,10 @@ part 'help_center_state.dart';
 final class HelpCenterBloc extends Bloc<HelpCenterEvent, HelpCenterState> {
   HelpCenterBloc(this._repository, this._analytics)
     : super(const HelpCenterInitial()) {
-    on<HelpCenterLoadRequested>(_onLoadRequested, transformer: _sequential());
+    on<HelpCenterLoadRequested>(
+      _onLoadRequested,
+      transformer: _sequential(),
+    );
     on<HelpCenterOpenRequested>(_onOpenRequested);
     on<HelpTutorialOpenRequested>(_onTutorialOpenRequested);
     on<HelpTutorialPlaybackRequested>(_onPlaybackRequested);

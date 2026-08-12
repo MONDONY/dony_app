@@ -25,11 +25,12 @@ class CorridorAlertMatchesState extends Equatable {
     CorridorAlertMatchesStatus? status,
     CorridorAlertMatches? result,
     String? errorMessage,
-  }) => CorridorAlertMatchesState(
-    status: status ?? this.status,
-    result: result ?? this.result,
-    errorMessage: errorMessage ?? this.errorMessage,
-  );
+  }) =>
+      CorridorAlertMatchesState(
+        status: status ?? this.status,
+        result: result ?? this.result,
+        errorMessage: errorMessage ?? this.errorMessage,
+      );
 
   @override
   List<Object?> get props => [status, result, errorMessage];
@@ -53,33 +54,25 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
     try {
       final matches = await _repository.getMatches(alertId, direction);
       if (matches.isEmpty) {
-        emit(
-          state.copyWith(
-            status: CorridorAlertMatchesStatus.empty,
-            result: CorridorAlertMatches(direction: direction),
-          ),
-        );
+        emit(state.copyWith(
+          status: CorridorAlertMatchesStatus.empty,
+          result: CorridorAlertMatches(direction: direction),
+        ));
       } else {
-        emit(
-          state.copyWith(
-            status: CorridorAlertMatchesStatus.loaded,
-            result: matches,
-          ),
-        );
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.corridorAlertMatchesViewed,
-            properties: {'count': matches.length},
-          ),
-        );
+        emit(state.copyWith(
+          status: CorridorAlertMatchesStatus.loaded,
+          result: matches,
+        ));
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.corridorAlertMatchesViewed,
+          properties: {'count': matches.length},
+        ));
       }
     } catch (err) {
-      emit(
-        state.copyWith(
-          status: CorridorAlertMatchesStatus.error,
-          errorMessage: err.toString(),
-        ),
-      );
+      emit(state.copyWith(
+        status: CorridorAlertMatchesStatus.error,
+        errorMessage: err.toString(),
+      ));
     }
   }
 }

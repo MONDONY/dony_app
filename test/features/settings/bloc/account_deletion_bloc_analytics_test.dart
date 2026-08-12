@@ -17,9 +17,7 @@ void main() {
   });
 
   AccountDeletionBloc makeBloc({bool enabled = true}) {
-    final a = enabled
-        ? makeEnabledAnalytics(backend)
-        : makeDisabledAnalytics(backend);
+    final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
     a.onConfigured();
     return AccountDeletionBloc(repo, a);
   }
@@ -30,8 +28,6 @@ void main() {
     bloc.add(RequestDeletion());
     await bloc.stream.firstWhere((s) => s is AccountDeletionRequested);
     await Future<void>.delayed(Duration.zero);
-    verify(
-      () => backend.capture(AnalyticsEvents.accountDeletionRequested, any()),
-    ).called(1);
+    verify(() => backend.capture(AnalyticsEvents.accountDeletionRequested, any())).called(1);
   });
 }

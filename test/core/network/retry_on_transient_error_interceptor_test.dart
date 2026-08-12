@@ -61,7 +61,8 @@ void main() {
     return dio;
   }
 
-  test('GET : 500 puis 200 → retente et résout avec la 2e tentative', () async {
+  test('GET : 500 puis 200 → retente et résout avec la 2e tentative',
+      () async {
     final d = buildDio([500, 200]);
 
     final response = await d.get<Map<String, dynamic>>('/x');
@@ -79,28 +80,26 @@ void main() {
     expect(adapter.callCount, 2);
   });
 
-  test(
-    'GET : 500 persistant au-delà de maxRetries → propage l\'erreur',
-    () async {
-      final d = buildDio([500, 500, 500, 500]);
+  test('GET : 500 persistant au-delà de maxRetries → propage l\'erreur',
+      () async {
+    final d = buildDio([500, 500, 500, 500]);
 
-      await expectLater(
-        () => d.get<Map<String, dynamic>>('/x'),
-        throwsA(
-          isA<DioException>().having(
-            (e) => e.response?.statusCode,
-            'statusCode',
-            500,
-          ),
+    await expectLater(
+      () => d.get<Map<String, dynamic>>('/x'),
+      throwsA(
+        isA<DioException>().having(
+          (e) => e.response?.statusCode,
+          'statusCode',
+          500,
         ),
-      );
-      // 1 tentative initiale + maxRetries(3) = 4 appels réseau au total.
-      expect(
-        adapter.callCount,
-        RetryOnTransientErrorInterceptor.maxRetries + 1,
-      );
-    },
-  );
+      ),
+    );
+    // 1 tentative initiale + maxRetries(3) = 4 appels réseau au total.
+    expect(
+      adapter.callCount,
+      RetryOnTransientErrorInterceptor.maxRetries + 1,
+    );
+  });
 
   test('GET : 404 → jamais retenté (pas transitoire)', () async {
     final d = buildDio([404]);
@@ -122,21 +121,19 @@ void main() {
     expect(adapter.callCount, 1);
   });
 
-  test(
-    'GET avec skipTransientRetry : erreur transitoire → jamais retenté',
-    () async {
-      final d = buildDio([const _ConnError(), 200]);
+  test('GET avec skipTransientRetry : erreur transitoire → jamais retenté',
+      () async {
+    final d = buildDio([const _ConnError(), 200]);
 
-      await expectLater(
-        () => d.get<Map<String, dynamic>>(
-          '/x',
-          options: Options(extra: {'skipTransientRetry': true}),
-        ),
-        throwsA(isA<DioException>()),
-      );
-      // L'appelant gère son propre retry (ex. splash screen) — un seul appel
-      // réseau ici, pas de cumul avec la boucle de retry de l'appelant.
-      expect(adapter.callCount, 1);
-    },
-  );
+    await expectLater(
+      () => d.get<Map<String, dynamic>>(
+        '/x',
+        options: Options(extra: {'skipTransientRetry': true}),
+      ),
+      throwsA(isA<DioException>()),
+    );
+    // L'appelant gère son propre retry (ex. splash screen) — un seul appel
+    // réseau ici, pas de cumul avec la boucle de retry de l'appelant.
+    expect(adapter.callCount, 1);
+  });
 }

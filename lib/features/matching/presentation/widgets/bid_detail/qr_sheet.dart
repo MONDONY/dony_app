@@ -148,7 +148,9 @@ class _QrSheetStickyBottom extends StatelessWidget {
             label: 'Réessayer',
             variant: DonyButtonVariant.secondary,
             onPressed: () {
-              context.read<TrackingBloc>().add(TrackingQrCodeRequested(bidId));
+              context
+                  .read<TrackingBloc>()
+                  .add(TrackingQrCodeRequested(bidId));
             },
           );
         }
@@ -207,10 +209,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
     );
   }
 
-  Future<void> _saveToGallery(
-    BuildContext context,
-    Uint8List imageBytes,
-  ) async {
+  Future<void> _saveToGallery(BuildContext context, Uint8List imageBytes) async {
     saving.value = true;
     try {
       await Gal.putImageBytes(imageBytes, name: 'qr_dony.png');
@@ -356,19 +355,18 @@ class _QrLoadedView extends StatelessWidget {
               border: Border.all(color: cs.outline),
             ),
             padding: const EdgeInsets.all(DonySpacing.md),
-            child:
-                Image.memory(
-                      imageBytes,
-                      width: 240,
-                      height: 240,
-                      fit: BoxFit.contain,
-                    )
-                    .animate()
-                    .fadeIn(duration: 250.ms)
-                    .scale(
-                      begin: const Offset(0.95, 0.95),
-                      curve: Curves.easeOutCubic,
-                    ),
+            child: Image.memory(
+              imageBytes,
+              width: 240,
+              height: 240,
+              fit: BoxFit.contain,
+            )
+                .animate()
+                .fadeIn(duration: 250.ms)
+                .scale(
+                  begin: const Offset(0.95, 0.95),
+                  curve: Curves.easeOutCubic,
+                ),
           ),
         ),
 

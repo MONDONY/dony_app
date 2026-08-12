@@ -59,19 +59,18 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
       final code = _codeCtrl.text.trim();
       if (code.length != 6) return;
       context.read<TrackingBloc>().add(
-        ConfirmDeliveryRequested(bidId: widget.bidId, code: code),
-      );
+            ConfirmDeliveryRequested(bidId: widget.bidId, code: code),
+          );
     } else {
-      final photo = widget.photoPath != null ? XFile(widget.photoPath!) : null;
-      context.read<TrackingBloc>().add(
-        QrScanSubmitRequested(
-          bidId: widget.bidId,
-          eventType: widget.etape,
-          photo: photo,
-          gpsLat: widget.gpsLat,
-          gpsLon: widget.gpsLon,
-        ),
-      );
+      final photo =
+          widget.photoPath != null ? XFile(widget.photoPath!) : null;
+      context.read<TrackingBloc>().add(QrScanSubmitRequested(
+            bidId: widget.bidId,
+            eventType: widget.etape,
+            photo: photo,
+            gpsLat: widget.gpsLat,
+            gpsLon: widget.gpsLon,
+          ));
     }
   }
 
@@ -130,17 +129,9 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     alignment: Alignment.centerLeft,
                     child: Chip(
                       avatar: switch (etapeInfo.$3) {
-                        'plane-takeoff' => const DonyEmoji.planeTakeoff(
-                          size: 14,
-                        ),
-                        'plane-landing' => const DonyEmoji.planeLanding(
-                          size: 14,
-                        ),
-                        _ => DonyIcon(
-                          etapeInfo.$2!,
-                          size: 14,
-                          color: cs.primary,
-                        ),
+                        'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 14),
+                        'plane-landing' => const DonyEmoji.planeLanding(size: 14),
+                        _ => DonyIcon(etapeInfo.$2!, size: 14, color: cs.primary),
                       },
                       label: Text('${etapeInfo.$1} enregistrée'),
                       labelStyle: tt.labelSmall?.copyWith(
@@ -201,18 +192,14 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: cs.primaryContainer,
-                                  borderRadius: BorderRadius.circular(
-                                    DonyRadius.sm,
-                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(DonyRadius.sm),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    DonyIcon(
-                                      'map-pin',
-                                      color: cs.primary,
-                                      size: 13,
-                                    ),
+                                    DonyIcon('map-pin',
+                                        color: cs.primary, size: 13),
                                     const SizedBox(width: DonySpacing.xs),
                                     Text(
                                       '${widget.gpsLat!.toStringAsFixed(4)}, ${widget.gpsLon!.toStringAsFixed(4)}',
@@ -245,7 +232,8 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        DonyIcon('info', color: cs.primary, size: 15),
+                        DonyIcon('info',
+                            color: cs.primary, size: 15),
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
                           child: Text(
@@ -294,9 +282,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
 
                 // Bouton principal
                 DonyButton(
-                  label: _isArrivee
-                      ? 'Confirmer la livraison'
-                      : 'Valider la lecture',
+                  label: _isArrivee ? 'Confirmer la livraison' : 'Valider la lecture',
                   iconAsset: _isArrivee ? 'badge-check' : 'check',
                   onPressed: isSubmitting ? null : () => _submit(context),
                   isLoading: isSubmitting,
@@ -308,15 +294,11 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                 if (widget.photoPath != null)
                   TextButton.icon(
                     onPressed: isSubmitting ? null : () => context.pop(),
-                    icon: DonyIcon(
-                      'refresh-cw',
-                      size: 16,
-                      color: cs.onSurfaceVariant,
-                    ),
+                    icon: DonyIcon('refresh-cw',
+                        size: 16, color: cs.onSurfaceVariant),
                     label: const Text('Reprendre la photo'),
                     style: TextButton.styleFrom(
-                      foregroundColor: cs.onSurfaceVariant,
-                    ),
+                        foregroundColor: cs.onSurfaceVariant),
                   ),
 
                 // Message d'erreur
@@ -326,12 +308,10 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                     state is QrScanError
                         ? ErrorPresenter.resolve(state.error).message
                         : ErrorPresenter.resolve(
-                            (state as DeliveryConfirmError).error,
-                          ).message,
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.error,
-                      fontWeight: FontWeight.w500,
-                    ),
+                                (state as DeliveryConfirmError).error)
+                            .message,
+                    style: tt.bodySmall
+                        ?.copyWith(color: cs.error, fontWeight: FontWeight.w500),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -367,8 +347,8 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ],
         ),
@@ -399,29 +379,27 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     String label, {
     required String finalBidId,
   }) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => DonySuccessScreen(
-          mascotteType: DonyMascotteType.succes,
-          title: 'Colis livré !',
-          subtitle: label,
-          ctaLabel: 'Terminer',
-          ctaVariant: DonyButtonVariant.success,
-          onCta: () async {
-            await RatingBottomSheet.show(
-              context,
-              bidId: finalBidId,
-              travelerName: "l'expéditeur",
-              isTravelerRating: true,
-            );
-            if (!context.mounted) return;
-            context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
-            context.go('/tracking');
-          },
-          analyticsContext: 'delivery_confirmed',
-        ),
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => DonySuccessScreen(
+        mascotteType: DonyMascotteType.succes,
+        title: 'Colis livré !',
+        subtitle: label,
+        ctaLabel: 'Terminer',
+        ctaVariant: DonyButtonVariant.success,
+        onCta: () async {
+          await RatingBottomSheet.show(
+            context,
+            bidId: finalBidId,
+            travelerName: "l'expéditeur",
+            isTravelerRating: true,
+          );
+          if (!context.mounted) return;
+          context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+          context.go('/tracking');
+        },
+        analyticsContext: 'delivery_confirmed',
       ),
-    );
+    ));
   }
 
   void _showQueued(BuildContext context) {
@@ -454,9 +432,9 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
               'Pas de connexion. La lecture sera synchronisée dès que vous serez en ligne.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                height: 1.4,
-              ),
+                    color: cs.onSurfaceVariant,
+                    height: 1.4,
+                  ),
             ),
           ],
         ),
@@ -492,7 +470,8 @@ class _PhotoPlaceholder extends StatelessWidget {
       height: 100,
       color: cs.surfaceContainerHighest,
       child: Center(
-        child: DonyIcon('camera', color: cs.onSurfaceVariant, size: 32),
+        child: DonyIcon('camera',
+            color: cs.onSurfaceVariant, size: 32),
       ),
     );
   }
@@ -509,7 +488,8 @@ class _MetaRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Text(label, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+        Text(label,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
         const SizedBox(width: DonySpacing.sm),
         Flexible(
           child: Text(

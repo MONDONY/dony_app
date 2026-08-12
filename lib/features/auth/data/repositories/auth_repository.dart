@@ -41,10 +41,8 @@ class AuthRepository {
   Future<String> verifyEmailOtp(String email, String code) =>
       _datasource.verifyEmailOtp(email, code);
 
-  Future<UserModel> attachEmail({
-    required String email,
-    required String code,
-  }) => _datasource.attachEmail(email: email, code: code);
+  Future<UserModel> attachEmail({required String email, required String code}) =>
+      _datasource.attachEmail(email: email, code: code);
 
   Future<UserModel> registerWithEmail({required String email}) =>
       _datasource.registerWithEmail(email: email);

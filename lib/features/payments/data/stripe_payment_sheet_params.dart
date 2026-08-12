@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
-const _stripePublishableKeyDefault = String.fromEnvironment(
-  'STRIPE_PUBLISHABLE_KEY',
-);
+const _stripePublishableKeyDefault =
+    String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
 
 /// Params uniques de la PaymentSheet Stripe pour Yadony (Approche A).
 ///

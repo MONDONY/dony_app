@@ -11,17 +11,15 @@ class PriceGridRepository {
   Future<PriceGridItemModel> addItem({
     required String label,
     required double unitPriceNet,
-  }) => _datasource.addItem(label: label, unitPriceNet: unitPriceNet);
+  }) =>
+      _datasource.addItem(label: label, unitPriceNet: unitPriceNet);
 
   Future<PriceGridItemModel> updateItem({
     required String itemId,
     required String label,
     required double unitPriceNet,
-  }) => _datasource.updateItem(
-    itemId: itemId,
-    label: label,
-    unitPriceNet: unitPriceNet,
-  );
+  }) =>
+      _datasource.updateItem(itemId: itemId, label: label, unitPriceNet: unitPriceNet);
 
   Future<void> deleteItem(String itemId) => _datasource.deleteItem(itemId);
 

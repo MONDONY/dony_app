@@ -40,38 +40,30 @@ void main() {
     blocTest<AccountDeletionBloc, AccountDeletionState>(
       'emits [Loading, AccountDeletionError(isEscrowBlocked)] si 422 active-transactions',
       build: () {
-        when(
-          () => mockRepo.deleteImmediately(),
-        ).thenThrow(const ValidationException('active-transactions'));
+        when(() => mockRepo.deleteImmediately())
+            .thenThrow(const ValidationException('active-transactions'));
         return bloc;
       },
       act: (b) => b.add(const ConfirmImmediateDeletion()),
       expect: () => [
         isA<AccountDeletionLoading>(),
-        isA<AccountDeletionError>().having(
-          (s) => s.isEscrowBlocked,
-          'isEscrowBlocked',
-          isTrue,
-        ),
+        isA<AccountDeletionError>()
+            .having((s) => s.isEscrowBlocked, 'isEscrowBlocked', isTrue),
       ],
     );
 
     blocTest<AccountDeletionBloc, AccountDeletionState>(
       'emits [Loading, AccountDeletionError] sur une erreur générique',
       build: () {
-        when(
-          () => mockRepo.deleteImmediately(),
-        ).thenThrow(const NetworkException('Erreur réseau'));
+        when(() => mockRepo.deleteImmediately())
+            .thenThrow(const NetworkException('Erreur réseau'));
         return bloc;
       },
       act: (b) => b.add(const ConfirmImmediateDeletion()),
       expect: () => [
         isA<AccountDeletionLoading>(),
-        isA<AccountDeletionError>().having(
-          (s) => s.isEscrowBlocked,
-          'isEscrowBlocked',
-          isFalse,
-        ),
+        isA<AccountDeletionError>()
+            .having((s) => s.isEscrowBlocked, 'isEscrowBlocked', isFalse),
       ],
     );
   });

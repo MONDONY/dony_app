@@ -18,10 +18,7 @@ class DonyStepPill extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.md,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: 6),
       decoration: BoxDecoration(
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.full),

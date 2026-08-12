@@ -17,20 +17,8 @@ void main() {
       });
 
       test('returns city for all 7 known ids', () {
-        for (final id in [
-          'paris',
-          'lyon',
-          'marseille',
-          'dakar',
-          'abidjan',
-          'bamako',
-          'douala',
-        ]) {
-          expect(
-            CityConstants.findById(id),
-            isNotNull,
-            reason: '$id should be found',
-          );
+        for (final id in ['paris', 'lyon', 'marseille', 'dakar', 'abidjan', 'bamako', 'douala']) {
+          expect(CityConstants.findById(id), isNotNull, reason: '$id should be found');
         }
       });
     });

@@ -39,8 +39,7 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
   final conversationId = field('conversationId');
 
   return switch (type) {
-    'BID_CREATED' when _isUuid(announcementId) =>
-      '/announcements/$announcementId/bids',
+    'BID_CREATED' when _isUuid(announcementId) => '/announcements/$announcementId/bids',
 
     'BID_ACCEPTED' when _isUuid(bidId) => '/bids/$bidId',
     'HANDOVER_DEFINED' when _isUuid(bidId) => '/bids/$bidId',
@@ -54,53 +53,42 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'MM_PAYMENT_PENDING' when _isUuid(bidId) => '/bids/$bidId',
 
     // Offre refusée → alternatives rematch si le back en a trouvé
-    'BID_REJECTED' when _isUuid(cancellationId) =>
-      '/cancellations/$cancellationId/rematch',
+    'BID_REJECTED' when _isUuid(cancellationId) => '/cancellations/$cancellationId/rematch',
     'BID_REJECTED' when _isUuid(bidId) => '/bids/$bidId',
 
     // Trajet annulé → rematch si dispo, sinon le bid concerné, sinon (pur
     // remboursement, aucun id) l'historique des envois
-    'TRIP_CANCELLED' when _isUuid(cancellationId) =>
-      '/cancellations/$cancellationId/rematch',
+    'TRIP_CANCELLED' when _isUuid(cancellationId) => '/cancellations/$cancellationId/rematch',
     'TRIP_CANCELLED' when _isUuid(bidId) => '/bids/$bidId',
     'TRIP_CANCELLED' => '/profile/shipments/history',
 
     // Négociation — les deux parties naviguent vers le thread
     'negotiation_started' when _isUuid(threadId) => '/negotiations/$threadId',
     'negotiation_counter' when _isUuid(threadId) => '/negotiations/$threadId',
-    'negotiation_awaiting_trip' when _isUuid(threadId) =>
-      '/negotiations/$threadId',
-    'negotiation_awaiting_payment' when _isUuid(threadId) =>
-      '/negotiations/$threadId',
+    'negotiation_awaiting_trip' when _isUuid(threadId) => '/negotiations/$threadId',
+    'negotiation_awaiting_payment' when _isUuid(threadId) => '/negotiations/$threadId',
     'negotiation_expired' when _isUuid(threadId) => '/negotiations/$threadId',
     'negotiation' when _isUuid(threadId) => '/negotiations/$threadId',
     'request_accepted' when _isUuid(threadId) => '/negotiations/$threadId',
 
     // Demande expirée avant toute négociation → pas de thread, retour à la demande
-    'request_expired' when _isUuid(packageRequestId) =>
-      '/package-requests/$packageRequestId',
+    'request_expired' when _isUuid(packageRequestId) => '/package-requests/$packageRequestId',
 
     // Voyageur invité à répondre à une demande → même écran que PACKAGE_MATCH
-    'TRAVELER_INVITE' when _isUuid(requestId) =>
-      '/package-requests/$requestId/public',
+    'TRAVELER_INVITE' when _isUuid(requestId) => '/package-requests/$requestId/public',
 
     // Voyageur abonné → détail de l'annonce publiée
-    'TRAVELER_NEW_ANNOUNCEMENT' when _isUuid(announcementId) =>
-      '/traveler/$announcementId',
+    'TRAVELER_NEW_ANNOUNCEMENT' when _isUuid(announcementId) => '/traveler/$announcementId',
     // Expéditeur → détail du trajet qui matche son alerte
-    'CORRIDOR_ALERT' when _isUuid(announcementId) =>
-      '/traveler/$announcementId',
+    'CORRIDOR_ALERT' when _isUuid(announcementId) => '/traveler/$announcementId',
     // Voyageur → détail du colis qui matche un de ses trajets
-    'PACKAGE_MATCH' when _isUuid(requestId) =>
-      '/package-requests/$requestId/public',
+    'PACKAGE_MATCH' when _isUuid(requestId) => '/package-requests/$requestId/public',
 
     // Voyageur → rappel sur son propre trajet en cours
-    'TRIP_IN_PROGRESS' when _isUuid(announcementId) =>
-      '/announcements/$announcementId/trip',
+    'TRIP_IN_PROGRESS' when _isUuid(announcementId) => '/announcements/$announcementId/trip',
 
     // Nouveau message → conversation précise ; repli sur la liste si l'id manque
-    'NEW_MESSAGE' when _isUuid(conversationId) =>
-      '/conversations/$conversationId',
+    'NEW_MESSAGE' when _isUuid(conversationId) => '/conversations/$conversationId',
     'NEW_MESSAGE' => '/messages',
 
     'ACCOUNT_SUSPENDED' => '/account/disabled',

@@ -14,8 +14,14 @@ class FavoriteIdsState {
 
   int get count => tripIds.length + requestIds.length;
 
-  FavoriteIdsState copyWith({Set<String>? tripIds, Set<String>? requestIds}) =>
-      FavoriteIdsState(tripIds ?? this.tripIds, requestIds ?? this.requestIds);
+  FavoriteIdsState copyWith({
+    Set<String>? tripIds,
+    Set<String>? requestIds,
+  }) =>
+      FavoriteIdsState(
+        tripIds ?? this.tripIds,
+        requestIds ?? this.requestIds,
+      );
 }
 
 // ---------------------------------------------------------------------------
@@ -25,7 +31,8 @@ class FavoriteIdsState {
 class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
   final FavoriteRepository _repo;
 
-  FavoriteIdsCubit(this._repo) : super(const FavoriteIdsState({}, {}));
+  FavoriteIdsCubit(this._repo)
+      : super(const FavoriteIdsState({}, {}));
 
   // ---- Queries -------------------------------------------------------
 
@@ -51,20 +58,20 @@ class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
   /// Optimistically toggles a trip favorite.
   /// Rolls back and rethrows on backend error so the UI can show a snackbar.
   Future<void> toggleTrip(String id) => _toggle(
-    id,
-    () => state.tripIds,
-    (s) => state.copyWith(tripIds: s),
-    'trip',
-  );
+        id,
+        () => state.tripIds,
+        (s) => state.copyWith(tripIds: s),
+        'trip',
+      );
 
   /// Optimistically toggles a package-request favorite.
   /// Rolls back and rethrows on backend error so the UI can show a snackbar.
   Future<void> toggleRequest(String id) => _toggle(
-    id,
-    () => state.requestIds,
-    (s) => state.copyWith(requestIds: s),
-    'package-request',
-  );
+        id,
+        () => state.requestIds,
+        (s) => state.copyWith(requestIds: s),
+        'package-request',
+      );
 
   // ---- Private helpers -----------------------------------------------
 
@@ -100,7 +107,10 @@ class FavoriteIdsCubit extends Cubit<FavoriteIdsState> {
   /// Seeds the cubit with known IDs without hitting the network.
   /// Use only in tests.
   @visibleForTesting
-  void emitSeed({required Set<String> trips, required Set<String> requests}) {
+  void emitSeed({
+    required Set<String> trips,
+    required Set<String> requests,
+  }) {
     emit(FavoriteIdsState(Set<String>.from(trips), Set<String>.from(requests)));
   }
 }

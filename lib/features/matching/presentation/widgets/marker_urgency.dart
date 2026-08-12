@@ -6,17 +6,12 @@ class MarkerUrgencyColor {
 
   static const _orange = DonyColors.urgencyOrange;
 
-  static Color fromDeparture(
-    DateTime departureDate, {
-    Brightness brightness = Brightness.light,
-  }) {
+  static Color fromDeparture(DateTime departureDate,
+      {Brightness brightness = Brightness.light}) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final depDay = DateTime(
-      departureDate.year,
-      departureDate.month,
-      departureDate.day,
-    );
+        departureDate.year, departureDate.month, departureDate.day);
     final diff = depDay.difference(today).inDays;
     final isLight = brightness == Brightness.light;
 

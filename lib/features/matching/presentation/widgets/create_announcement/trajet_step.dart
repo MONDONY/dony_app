@@ -140,10 +140,7 @@ class TrajetStep extends StatelessWidget {
   }
 
   List<Widget> _buildWidgets(
-    BuildContext context,
-    TextTheme tt,
-    ColorScheme cs,
-  ) {
+      BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       // ── Corridor preview ──────────────────────────────────────────────────
       ListenableBuilder(
@@ -200,7 +197,8 @@ class TrajetStep extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(DonyRadius.full),
+                          borderRadius:
+                              BorderRadius.circular(DonyRadius.full),
                         ),
                         child: Text(
                           'Confirmé',
@@ -246,11 +244,8 @@ class TrajetStep extends StatelessWidget {
                   label: 'Ville de départ',
                   value: departureCityNotifier.value,
                   prefixWidget: const DonyEmoji.planeTakeoff(size: 20),
-                  trailing: DonyIcon(
-                    'lock',
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  trailing:
+                      DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
                   onTap: () {},
                 ),
                 const SizedBox(height: DonySpacing.sm),
@@ -259,11 +254,8 @@ class TrajetStep extends StatelessWidget {
                   label: 'Ville d\'arrivée',
                   value: arrivalCityNotifier.value,
                   prefixWidget: const DonyEmoji.planeLanding(size: 20),
-                  trailing: DonyIcon(
-                    'lock',
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  trailing:
+                      DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
                   onTap: () {},
                 ),
               ] else
@@ -329,7 +321,7 @@ class TrajetStep extends StatelessWidget {
                 prefixIconColor: Theme.of(context).colorScheme.secondary,
                 trailing: arrivalTimeNotifier.value != null
                     ? IconButton(
-                        tooltip: "Effacer l'heure d'arrivée",
+                      tooltip: "Effacer l'heure d'arrivée",
                         icon: Icon(
                           DonyIcons.close,
                           size: 18,
@@ -355,10 +347,8 @@ class TrajetStep extends StatelessWidget {
                 key: const Key('departureDateField'),
                 label: 'Date de départ',
                 value: departureDateNotifier.value != null
-                    ? DateFormat(
-                        'EEE d MMM yyyy',
-                        'fr',
-                      ).format(departureDateNotifier.value!)
+                    ? DateFormat('EEE d MMM yyyy', 'fr')
+                        .format(departureDateNotifier.value!)
                     : null,
                 prefixIcon: DonyIcons.date,
                 prefixIconColor: Theme.of(context).colorScheme.primary,
@@ -383,9 +373,9 @@ class TrajetStep extends StatelessWidget {
                     padding: const EdgeInsets.only(top: DonySpacing.xs),
                     child: Text(
                       '🔥 Départ proche — ce trajet sera signalé urgent',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: cs.error),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: cs.error,
+                          ),
                     ),
                   );
                 },
@@ -397,7 +387,10 @@ class TrajetStep extends StatelessWidget {
       const SizedBox(height: DonySpacing.xxl),
 
       // ── MODE DE TRANSPORT ─────────────────────────────────────────────────
-      const CaSectionLabel(label: 'Mode de transport', iconAsset: 'route'),
+      const CaSectionLabel(
+        label: 'Mode de transport',
+        iconAsset: 'route',
+      ),
       const SizedBox(height: DonySpacing.sm),
       ValueListenableBuilder<TransportMode?>(
         valueListenable: transportModeNotifier,

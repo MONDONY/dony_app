@@ -101,7 +101,10 @@ class DonyUserCard extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             trailing!,
           ] else if (onTap != null)
-            DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
+            DonyIcon('chevron-right',
+              size: 20,
+              color: cs.onSurfaceVariant,
+            ),
         ],
       ),
     );

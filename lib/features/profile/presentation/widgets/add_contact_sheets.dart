@@ -53,13 +53,9 @@ class EditPhoneScreen extends StatelessWidget {
                 valueListenable: stepNotifier,
                 builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
                   builder: (ctx, state) => DonyButton(
-                    label: step == _ContactStep.input
-                        ? 'Envoyer le code'
-                        : 'Vérifier',
+                    label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
                     isLoading: state is AuthLoading,
-                    onPressed: state is AuthLoading
-                        ? null
-                        : () => submit?.call(),
+                    onPressed: state is AuthLoading ? null : () => submit?.call(),
                   ),
                 ),
               ),
@@ -101,13 +97,9 @@ class EditEmailScreen extends StatelessWidget {
                 valueListenable: stepNotifier,
                 builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
                   builder: (ctx, state) => DonyButton(
-                    label: step == _ContactStep.input
-                        ? 'Envoyer le code'
-                        : 'Vérifier',
+                    label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
                     isLoading: state is AuthLoading,
-                    onPressed: state is AuthLoading
-                        ? null
-                        : () => submit?.call(),
+                    onPressed: state is AuthLoading ? null : () => submit?.call(),
                   ),
                 ),
               ),

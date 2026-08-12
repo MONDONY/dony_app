@@ -5,7 +5,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockHiveService extends Mock implements HiveService {}
-
 class MockBox extends Mock implements Box {}
 
 void main() {

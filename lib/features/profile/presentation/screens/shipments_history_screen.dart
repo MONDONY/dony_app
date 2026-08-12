@@ -37,9 +37,10 @@ class ShipmentsHistoryScreen extends StatelessWidget {
           if (state is BidListLoaded) {
             // Statut terminal back-end d'une livraison réussie = COMPLETED
             // (le back n'émet jamais DELIVERED).
-            final delivered =
-                state.bids.where((b) => b.status == 'COMPLETED').toList()
-                  ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
+            final delivered = state.bids
+                .where((b) => b.status == 'COMPLETED')
+                .toList()
+              ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
 
             if (delivered.isEmpty) {
               return const DonyEmptyState(
@@ -109,8 +110,8 @@ class _DeliveryCard extends StatelessWidget {
     final price = bid.totalSenderAmountEur != null
         ? '${bid.totalSenderAmountEur!.toStringAsFixed(0)} €'
         : bid.pricePerKg != null
-        ? '${netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
-        : null;
+            ? '${netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
+            : null;
 
     return GestureDetector(
       onTap: () => context.push('/bids/${bid.id}', extra: bid),
@@ -126,11 +127,7 @@ class _DeliveryCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                DonyAvatar(
-                  name: travelerName,
-                  imageUrl: bid.travelerAvatarUrl,
-                  size: DonyAvatarSize.sm,
-                ),
+                DonyAvatar(name: travelerName, imageUrl: bid.travelerAvatarUrl, size: DonyAvatarSize.sm),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Column(
@@ -145,7 +142,11 @@ class _DeliveryCard extends StatelessWidget {
                       if (bid.travelerAverageRating != null)
                         Row(
                           children: [
-                            DonyIcon('star', size: 14, color: cs.tertiary),
+                            DonyIcon(
+                              'star',
+                              size: 14,
+                              color: cs.tertiary,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               bid.travelerAverageRating!.toStringAsFixed(1),

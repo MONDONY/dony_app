@@ -34,9 +34,8 @@ void main() {
   setUp(() {
     mockRepo = MockRatingRepository();
     analytics = _MockAnalyticsService();
-    when(
-      () => analytics.logEvent(any(), properties: any(named: 'properties')),
-    ).thenAnswer((_) async {});
+    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
+        .thenAnswer((_) async {});
   });
 
   MyReviewsBloc buildBloc() => MyReviewsBloc(mockRepo, analytics);
@@ -50,49 +49,52 @@ void main() {
   blocTest<MyReviewsBloc, MyReviewsState>(
     'emits [MyReviewsLoading, MyReviewsLoaded] on success',
     setUp: () {
-      when(() => mockRepo.findMineReceived(page: 0)).thenAnswer(
-        (_) async => const RatingSummary(
-          averageRating: 4.5,
-          ratingCount: 8,
-          distribution: {1: 0, 2: 0, 3: 1, 4: 3, 5: 4},
-          ratings: [],
-          page: 0,
-          totalPages: 1,
-        ),
-      );
+      when(() => mockRepo.findMineReceived(page: 0))
+          .thenAnswer((_) async => const RatingSummary(
+                averageRating: 4.5,
+                ratingCount: 8,
+                distribution: {1: 0, 2: 0, 3: 1, 4: 3, 5: 4},
+                ratings: [],
+                page: 0,
+                totalPages: 1,
+              ));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const MyReviewsRequested()),
-    expect: () => [isA<MyReviewsLoading>(), isA<MyReviewsLoaded>()],
+    expect: () => [
+      isA<MyReviewsLoading>(),
+      isA<MyReviewsLoaded>(),
+    ],
   );
 
   // 3. MyReviewsRequested → [MyReviewsLoading, MyReviewsError] si exception
   blocTest<MyReviewsBloc, MyReviewsState>(
     'emits [MyReviewsLoading, MyReviewsError] on failure',
     setUp: () {
-      when(
-        () => mockRepo.findMineReceived(page: 0),
-      ).thenThrow(Exception('Erreur réseau'));
+      when(() => mockRepo.findMineReceived(page: 0))
+          .thenThrow(Exception('Erreur réseau'));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const MyReviewsRequested()),
-    expect: () => [isA<MyReviewsLoading>(), isA<MyReviewsError>()],
+    expect: () => [
+      isA<MyReviewsLoading>(),
+      isA<MyReviewsError>(),
+    ],
   );
 
   // 4. MyReviewsLoaded contient le bon summary
   blocTest<MyReviewsBloc, MyReviewsState>(
     'MyReviewsLoaded contains correct summary data',
     setUp: () {
-      when(() => mockRepo.findMineReceived(page: 0)).thenAnswer(
-        (_) async => const RatingSummary(
-          averageRating: 4.7,
-          ratingCount: 12,
-          distribution: {1: 0, 2: 0, 3: 1, 4: 4, 5: 7},
-          ratings: [],
-          page: 0,
-          totalPages: 1,
-        ),
-      );
+      when(() => mockRepo.findMineReceived(page: 0))
+          .thenAnswer((_) async => const RatingSummary(
+                averageRating: 4.7,
+                ratingCount: 12,
+                distribution: {1: 0, 2: 0, 3: 1, 4: 4, 5: 7},
+                ratings: [],
+                page: 0,
+                totalPages: 1,
+              ));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const MyReviewsRequested()),
@@ -108,26 +110,22 @@ void main() {
   blocTest<MyReviewsBloc, MyReviewsState>(
     'emits MyReviewsLoaded with ratingCount 0 when no reviews',
     setUp: () {
-      when(() => mockRepo.findMineReceived(page: 0)).thenAnswer(
-        (_) async => const RatingSummary(
-          averageRating: 0.0,
-          ratingCount: 0,
-          distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
-          ratings: [],
-          page: 0,
-          totalPages: 0,
-        ),
-      );
+      when(() => mockRepo.findMineReceived(page: 0))
+          .thenAnswer((_) async => const RatingSummary(
+                averageRating: 0.0,
+                ratingCount: 0,
+                distribution: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+                ratings: [],
+                page: 0,
+                totalPages: 0,
+              ));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const MyReviewsRequested()),
     expect: () => [
       isA<MyReviewsLoading>(),
-      isA<MyReviewsLoaded>().having(
-        (s) => s.summary.ratingCount,
-        'ratingCount',
-        0,
-      ),
+      isA<MyReviewsLoaded>()
+          .having((s) => s.summary.ratingCount, 'ratingCount', 0),
     ],
   );
 
@@ -135,9 +133,8 @@ void main() {
   blocTest<MyReviewsBloc, MyReviewsState>(
     'star filter keeps only ratings of selected stars',
     setUp: () {
-      when(
-        () => mockRepo.findMineReceived(),
-      ).thenAnswer((_) async => _summaryWithRatings);
+      when(() => mockRepo.findMineReceived())
+          .thenAnswer((_) async => _summaryWithRatings);
     },
     build: buildBloc,
     act: (bloc) async {
@@ -147,19 +144,16 @@ void main() {
     },
     expect: () => [
       isA<MyReviewsLoading>(),
-      isA<MyReviewsLoaded>().having(
-        (s) => s.selectedStars,
-        'selectedStars',
-        null,
-      ),
+      isA<MyReviewsLoaded>().having((s) => s.selectedStars, 'selectedStars', null),
       isA<MyReviewsLoaded>()
           .having((s) => s.selectedStars, 'selectedStars', 5)
           .having((s) => s.visibleRatings.length, 'visible', 2),
     ],
     verify: (_) {
-      verify(
-        () => analytics.logEvent('reviews_filtered', properties: {'stars': 5}),
-      ).called(1);
+      verify(() => analytics.logEvent(
+            'reviews_filtered',
+            properties: {'stars': 5},
+          )).called(1);
     },
   );
 
@@ -167,9 +161,8 @@ void main() {
   blocTest<MyReviewsBloc, MyReviewsState>(
     're-tapping the active star clears the filter',
     setUp: () {
-      when(
-        () => mockRepo.findMineReceived(),
-      ).thenAnswer((_) async => _summaryWithRatings);
+      when(() => mockRepo.findMineReceived())
+          .thenAnswer((_) async => _summaryWithRatings);
     },
     build: buildBloc,
     act: (bloc) async {
@@ -180,11 +173,7 @@ void main() {
     },
     expect: () => [
       isA<MyReviewsLoading>(),
-      isA<MyReviewsLoaded>().having(
-        (s) => s.selectedStars,
-        'selectedStars',
-        null,
-      ),
+      isA<MyReviewsLoaded>().having((s) => s.selectedStars, 'selectedStars', null),
       isA<MyReviewsLoaded>().having((s) => s.selectedStars, 'selectedStars', 5),
       isA<MyReviewsLoaded>()
           .having((s) => s.selectedStars, 'selectedStars', null)

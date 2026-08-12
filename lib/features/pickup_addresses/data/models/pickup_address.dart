@@ -26,32 +26,32 @@ class PickupAddress {
   });
 
   factory PickupAddress.fromJson(Map<String, dynamic> json) => PickupAddress(
-    id: json['id'] as String,
-    label: json['label'] as String,
-    street: json['street'] as String,
-    postalCode: json['postalCode'] as String,
-    city: json['city'] as String,
-    country: json['country'] as String,
-    floorApartment: json['floorApartment'] as String?,
-    instructions: json['instructions'] as String?,
-    latitude: (json['latitude'] as num?)?.toDouble(),
-    longitude: (json['longitude'] as num?)?.toDouble(),
-    isDefault: json['isDefault'] as bool? ?? false,
-  );
+        id: json['id'] as String,
+        label: json['label'] as String,
+        street: json['street'] as String,
+        postalCode: json['postalCode'] as String,
+        city: json['city'] as String,
+        country: json['country'] as String,
+        floorApartment: json['floorApartment'] as String?,
+        instructions: json['instructions'] as String?,
+        latitude: (json['latitude'] as num?)?.toDouble(),
+        longitude: (json['longitude'] as num?)?.toDouble(),
+        isDefault: json['isDefault'] as bool? ?? false,
+      );
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'label': label,
-    'street': street,
-    'postalCode': postalCode,
-    'city': city,
-    'country': country,
-    if (floorApartment != null) 'floorApartment': floorApartment,
-    if (instructions != null) 'instructions': instructions,
-    if (latitude != null) 'latitude': latitude,
-    if (longitude != null) 'longitude': longitude,
-    'isDefault': isDefault,
-  };
+        'id': id,
+        'label': label,
+        'street': street,
+        'postalCode': postalCode,
+        'city': city,
+        'country': country,
+        if (floorApartment != null) 'floorApartment': floorApartment,
+        if (instructions != null) 'instructions': instructions,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+        'isDefault': isDefault,
+      };
 
   PickupAddress copyWith({
     String? id,
@@ -65,17 +65,18 @@ class PickupAddress {
     double? latitude,
     double? longitude,
     bool? isDefault,
-  }) => PickupAddress(
-    id: id ?? this.id,
-    label: label ?? this.label,
-    street: street ?? this.street,
-    postalCode: postalCode ?? this.postalCode,
-    city: city ?? this.city,
-    country: country ?? this.country,
-    floorApartment: floorApartment ?? this.floorApartment,
-    instructions: instructions ?? this.instructions,
-    latitude: latitude ?? this.latitude,
-    longitude: longitude ?? this.longitude,
-    isDefault: isDefault ?? this.isDefault,
-  );
+  }) =>
+      PickupAddress(
+        id: id ?? this.id,
+        label: label ?? this.label,
+        street: street ?? this.street,
+        postalCode: postalCode ?? this.postalCode,
+        city: city ?? this.city,
+        country: country ?? this.country,
+        floorApartment: floorApartment ?? this.floorApartment,
+        instructions: instructions ?? this.instructions,
+        latitude: latitude ?? this.latitude,
+        longitude: longitude ?? this.longitude,
+        isDefault: isDefault ?? this.isDefault,
+      );
 }

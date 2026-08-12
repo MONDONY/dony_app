@@ -8,7 +8,10 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 enum HelpCenterRepositoryFailure { fetch, parse }
 
 final class HelpCenterRepositoryResult {
-  const HelpCenterRepositoryResult({required this.config, this.failure});
+  const HelpCenterRepositoryResult({
+    required this.config,
+    this.failure,
+  });
 
   final HelpCenterConfig config;
   final HelpCenterRepositoryFailure? failure;

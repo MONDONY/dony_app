@@ -83,9 +83,7 @@ class Step2DetailsState extends State<Step2Details> {
     _customCats
       ..clear()
       ..addAll(labels.where((l) => !catalogLabels.contains(l)));
-    _catError = _allCategories.isEmpty
-        ? 'Choisis au moins une catégorie'
-        : null;
+    _catError = _allCategories.isEmpty ? 'Choisis au moins une catégorie' : null;
     _sync(markTouched: true);
     // « Autre » seul ne dit rien au voyageur : on propose tout de suite une
     // précision libre, sans l'imposer (bottom sheet annulable).
@@ -162,8 +160,8 @@ class Step2DetailsState extends State<Step2Details> {
   void _onWeightChanged() => _sync();
 
   Future<void> _loadCatalog() async {
-    final categories = await getIt<IContentCategoryRepository>()
-        .getCategories();
+    final categories =
+        await getIt<IContentCategoryRepository>().getCategories();
     if (!mounted) return;
     setState(() => _predefined = categories);
   }
@@ -439,3 +437,4 @@ class _WeightInput extends StatelessWidget {
     );
   }
 }
+

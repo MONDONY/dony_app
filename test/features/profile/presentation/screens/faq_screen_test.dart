@@ -275,7 +275,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(_wrap(textScaler: const TextScaler.linear(2)));
+    await tester.pumpWidget(
+      _wrap(textScaler: const TextScaler.linear(2)),
+    );
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

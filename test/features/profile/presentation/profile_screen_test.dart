@@ -133,7 +133,10 @@ Widget _buildTestHarness({
     GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
     GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
     GoRoute(path: '/profile/help/faq', builder: (_, _) => stub('FAQ')),
-    GoRoute(path: '/profile/community', builder: (_, _) => stub('Community')),
+    GoRoute(
+      path: '/profile/community',
+      builder: (_, _) => stub('Community'),
+    ),
     GoRoute(path: '/profile/help/contact', builder: (_, _) => stub('Contact')),
     GoRoute(
       path: '/payments/onboarding',
@@ -415,7 +418,9 @@ void main() {
       });
     }
 
-    testWidgets('« Solde » (carte portefeuille) ouvre Wallet', (tester) async {
+    testWidgets('« Solde » (carte portefeuille) ouvre Wallet', (
+      tester,
+    ) async {
       await pumpWith(tester, _dualRoleUser);
       await _scrollTo(tester, find.byType(WalletBalanceCard));
 

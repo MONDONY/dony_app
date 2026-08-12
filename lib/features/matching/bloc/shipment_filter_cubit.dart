@@ -10,39 +10,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum ShipmentPeriodBasis { departure, creation }
 
-enum ShipmentPeriodPreset {
-  all,
-  thisWeek,
-  thisMonth,
-  last3Months,
-  thisYear,
-  custom,
-}
+enum ShipmentPeriodPreset { all, thisWeek, thisMonth, last3Months, thisYear, custom }
 
 /// Groupes de statuts pour les puces rapides (miroir de _populateLists).
 const kEnvoisEnCours = <String>{'ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT'};
-const kEnvoisAVenir = <String>{
-  'PENDING',
-  'AWAITING_PAYMENT',
-  'PAYMENT_ESCROWED',
-};
+const kEnvoisAVenir = <String>{'PENDING', 'AWAITING_PAYMENT', 'PAYMENT_ESCROWED'};
 const kEnvoisPasses = <String>{
-  'COMPLETED',
-  'REJECTED',
-  'CANCELLED',
-  'NO_SHOW',
-  'EXPIRED',
-  'PARCEL_REFUSED',
+  'COMPLETED', 'REJECTED', 'CANCELLED', 'NO_SHOW', 'EXPIRED', 'PARCEL_REFUSED'
 };
 
 const _statusPriority = {
-  'IN_TRANSIT': 6,
-  'HANDED_OVER': 5,
-  'ACCEPTED': 4,
-  'PAYMENT_ESCROWED': 3,
-  'AWAITING_PAYMENT': 2,
-  'PENDING': 1,
-  'COMPLETED': 0,
+  'IN_TRANSIT': 6, 'HANDED_OVER': 5, 'ACCEPTED': 4,
+  'PAYMENT_ESCROWED': 3, 'AWAITING_PAYMENT': 2, 'PENDING': 1, 'COMPLETED': 0,
 };
 
 class ShipmentFilterState extends Equatable {
@@ -77,13 +56,7 @@ class ShipmentFilterState extends Equatable {
   // `statuses` (Set) est comparé sans tenir compte de l'ordre : Equatable utilise
   // DeepCollectionEquality, pas Set.== (qui dépend de l'ordre d'insertion).
   @override
-  List<Object?> get props => [
-    query,
-    statuses,
-    periodBasis,
-    periodPreset,
-    customRange,
-  ];
+  List<Object?> get props => [query, statuses, periodBasis, periodPreset, customRange];
 }
 
 bool shipmentMatchesQuery(BidModel b, String query) {
@@ -98,22 +71,15 @@ bool shipmentMatchesQuery(BidModel b, String query) {
 }
 
 DateTime shipmentDateFor(BidModel b, ShipmentPeriodBasis basis) =>
-    basis == ShipmentPeriodBasis.departure
-    ? (b.departureDate ?? b.createdAt)
-    : b.createdAt;
+    basis == ShipmentPeriodBasis.departure ? (b.departureDate ?? b.createdAt) : b.createdAt;
 
 DateTimeRange? rangeForPreset(
-  ShipmentPeriodPreset preset,
-  DateTimeRange? custom,
-  DateTime now,
-) {
+    ShipmentPeriodPreset preset, DateTimeRange? custom, DateTime now) {
   switch (preset) {
     case ShipmentPeriodPreset.all:
       return null;
     case ShipmentPeriodPreset.thisWeek:
-      final monday = DateUtils.dateOnly(
-        now,
-      ).subtract(Duration(days: now.weekday - 1));
+      final monday = DateUtils.dateOnly(now).subtract(Duration(days: now.weekday - 1));
       return DateTimeRange(start: monday, end: now);
     case ShipmentPeriodPreset.thisMonth:
       return DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
@@ -130,14 +96,7 @@ DateTimeRange? rangeForPreset(
       if (custom == null) return null;
       return DateTimeRange(
         start: DateUtils.dateOnly(custom.start),
-        end: DateTime(
-          custom.end.year,
-          custom.end.month,
-          custom.end.day,
-          23,
-          59,
-          59,
-        ),
+        end: DateTime(custom.end.year, custom.end.month, custom.end.day, 23, 59, 59),
       );
   }
 }
@@ -155,15 +114,10 @@ List<BidModel> _sortShipments(List<BidModel> bids) {
 }
 
 List<BidModel> applyShipmentFilters(
-  List<BidModel> bids,
-  ShipmentFilterState f,
-  DateTime now,
-) {
+    List<BidModel> bids, ShipmentFilterState f, DateTime now) {
   Iterable<BidModel> out = bids;
-  if (f.statuses.isNotEmpty)
-    out = out.where((b) => f.statuses.contains(b.status));
-  if (f.query.trim().isNotEmpty)
-    out = out.where((b) => shipmentMatchesQuery(b, f.query));
+  if (f.statuses.isNotEmpty) out = out.where((b) => f.statuses.contains(b.status));
+  if (f.query.trim().isNotEmpty) out = out.where((b) => shipmentMatchesQuery(b, f.query));
   final range = rangeForPreset(f.periodPreset, f.customRange, now);
   if (range != null) {
     out = out.where((b) {
@@ -195,31 +149,27 @@ class ShipmentFilterCubit extends Cubit<ShipmentFilterState> {
     required ShipmentPeriodPreset preset,
     DateTimeRange? range,
   }) {
-    emit(
-      ShipmentFilterState(
-        query: state.query,
-        statuses: state.statuses,
-        periodBasis: basis,
-        periodPreset: preset,
-        customRange: preset == ShipmentPeriodPreset.custom ? range : null,
-      ),
-    );
+    emit(ShipmentFilterState(
+      query: state.query,
+      statuses: state.statuses,
+      periodBasis: basis,
+      periodPreset: preset,
+      customRange: preset == ShipmentPeriodPreset.custom ? range : null,
+    ));
     _track();
   }
 
   void reset() => emit(const ShipmentFilterState());
 
   void _track() {
-    unawaited(
-      _analytics.logEvent(
-        AnalyticsEvents.shipmentFilterApplied,
-        properties: {
-          'has_query': state.query.trim().isNotEmpty,
-          'status_count': state.statuses.length,
-          'period_preset': state.periodPreset.name,
-          'period_basis': state.periodBasis.name,
-        },
-      ),
-    );
+    unawaited(_analytics.logEvent(
+      AnalyticsEvents.shipmentFilterApplied,
+      properties: {
+        'has_query': state.query.trim().isNotEmpty,
+        'status_count': state.statuses.length,
+        'period_preset': state.periodPreset.name,
+        'period_basis': state.periodBasis.name,
+      },
+    ));
   }
 }
