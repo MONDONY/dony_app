@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
@@ -97,6 +98,14 @@ void main() {
     }
     getIt.registerSingleton<AnalyticsService>(
       makeEnabledAnalytics(MockAnalyticsBackend()),
+    );
+
+    // Résolu par DonyPaymentSheet.show pour construire PaymentSheetBloc.
+    if (getIt.isRegistered<ErrorReportingService>()) {
+      getIt.unregister<ErrorReportingService>();
+    }
+    getIt.registerSingleton<ErrorReportingService>(
+      ErrorReportingService(_NoopErrorSink()),
     );
   });
 
@@ -237,4 +246,14 @@ void main() {
       expect(topupResult, isTrue);
     },
   );
+}
+
+/// Sink inerte : ces tests vérifient la navigation, pas la remontée d'erreurs.
+class _NoopErrorSink implements ErrorReportingSink {
+  @override
+  Future<void> capture(
+    Object error, {
+    StackTrace? stackTrace,
+    required Map<String, Object> context,
+  }) async {}
 }
