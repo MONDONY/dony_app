@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:dony/core/services/analytics_bloc_observer.dart';
 import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../helpers/mock_analytics_backend.dart';
@@ -8,6 +9,19 @@ import '../../helpers/mock_analytics_backend.dart';
 class _FakeBloc extends Fake implements BlocBase<Object?> {
   @override
   Type get runtimeType => _FakeBloc;
+}
+
+class _Sink implements ErrorReportingSink {
+  int calls = 0;
+
+  @override
+  Future<void> capture(
+    Object error, {
+    StackTrace? stackTrace,
+    required Map<String, Object> context,
+  }) async {
+    calls++;
+  }
 }
 
 void main() {
@@ -51,5 +65,20 @@ void main() {
 
     await Future<void>.delayed(Duration.zero);
     verifyNever(() => backend.capture(any(), any()));
+  });
+
+  test('reports uncaught bloc errors without depending on PostHog', () async {
+    final analytics = makeDisabledAnalytics(backend);
+    await analytics.onConfigured();
+    final sink = _Sink();
+    final observer = AnalyticsBlocObserver(
+      analytics,
+      ErrorReportingService(sink),
+    );
+
+    observer.onError(_FakeBloc(), StateError('secret'), StackTrace.current);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(sink.calls, 1);
   });
 }

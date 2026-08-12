@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,6 +9,7 @@ import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
 import 'package:dony/core/network/retry_on_transient_error_interceptor.dart';
 import 'package:dony/core/services/device_id_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -24,7 +26,8 @@ class ApiClient {
   ApiClient({
     required String baseUrl,
     required DeviceIdService deviceIdService,
-  }) {
+    ErrorReportingService? errorReporter,
+  }) : _errorReporter = errorReporter {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
@@ -78,6 +81,11 @@ class ApiClient {
       );
     }
 
+    // Added before retry interceptors: report only after their final attempt.
+    final errorReporter = _errorReporter;
+    if (errorReporter != null) {
+      _dio.interceptors.add(_SentryErrorReportingInterceptor(errorReporter));
+    }
     // Ajouté en dernier : dans le sens onError (inverse de l'ajout), c'est le
     // premier à voir l'erreur brute — avant que _AuthInterceptor ne la
     // convertisse en RateLimitException — donc le mieux placé pour retenter
@@ -92,6 +100,7 @@ class ApiClient {
   }
 
   late final Dio _dio;
+  final ErrorReportingService? _errorReporter;
 
   Dio get dio => _dio;
 
@@ -110,6 +119,43 @@ class ApiClient {
         ..setTrustedCertificatesBytes(const Utf8Encoder().convert(_tlsCertPem));
       return HttpClient(context: context);
     };
+  }
+}
+
+class _SentryErrorReportingInterceptor extends Interceptor {
+  const _SentryErrorReportingInterceptor(this._reporter);
+
+  final ErrorReportingService _reporter;
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    unawaited(
+      _reporter.report(
+        err,
+        operation: 'http.${err.requestOptions.method.toUpperCase()}',
+        stackTrace: err.stackTrace,
+        statusCode: err.response?.statusCode,
+        context: {
+          'method': err.requestOptions.method.toUpperCase(),
+          'endpoint': err.requestOptions.uri.path,
+          'feature': _featureForPath(err.requestOptions.uri.path),
+        },
+      ),
+    );
+    handler.next(err);
+  }
+
+  static String _featureForPath(String path) {
+    for (final feature in const [
+      'payments',
+      'kyc',
+      'tracking',
+      'notifications',
+      'auth',
+    ]) {
+      if (path.contains('/$feature')) return feature;
+    }
+    return 'network';
   }
 }
 

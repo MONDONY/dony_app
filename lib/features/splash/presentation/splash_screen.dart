@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -17,7 +18,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -103,9 +103,10 @@ class _SplashScreenState extends State<SplashScreen> {
     // n'avait donc aucune donnée pour diagnostiquer ce cas en prod.
     if (lastError != null) {
       unawaited(
-        Sentry.captureException(
+        getIt<ErrorReportingService>().report(
           lastError,
-          hint: Hint.withMap({'context': 'splash_health_check_exhausted'}),
+          operation: 'splash.health_check',
+          context: {'feature': 'splash'},
         ),
       );
     }

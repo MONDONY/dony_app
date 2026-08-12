@@ -1,17 +1,20 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 class OfflineSyncService {
   final HiveService _hive;
   final TrackingRepository _repository;
+  final ErrorReportingService? _errorReporter;
 
   StreamSubscription<List<ConnectivityResult>>? _sub;
   bool _syncing = false;
 
-  OfflineSyncService(this._hive, this._repository);
+  OfflineSyncService(this._hive, this._repository, [this._errorReporter]);
 
   void startListening() {
     _sub = Connectivity().onConnectivityChanged.listen((results) {
@@ -45,6 +48,9 @@ class OfflineSyncService {
   Future<void> syncAll() async {
     if (_syncing || _hive.offlineQueue.isEmpty) return;
     _syncing = true;
+    var failedCount = 0;
+    Object? lastError;
+    StackTrace? lastStackTrace;
     try {
       final keys = _hive.offlineQueue.keys.toList();
       for (final key in keys) {
@@ -71,9 +77,26 @@ class OfflineSyncService {
             ),
           );
           await _hive.offlineQueue.delete(key);
-        } catch (_) {
+        } catch (error, stackTrace) {
           // leave in queue for next retry
+          failedCount++;
+          lastError = error;
+          lastStackTrace = stackTrace;
         }
+      }
+      if (failedCount > 0 && lastError is! DioException) {
+        unawaited(
+          _errorReporter?.report(
+            lastError!,
+            operation: 'tracking.offline_sync',
+            stackTrace: lastStackTrace,
+            context: {
+              'feature': 'tracking',
+              'channel': 'offline',
+              'retry_count': failedCount,
+            },
+          ),
+        );
       }
     } finally {
       _syncing = false;

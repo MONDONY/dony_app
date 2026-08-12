@@ -5,7 +5,7 @@ import 'package:dony/app/reduced_motion_priming.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/app_log.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
@@ -105,7 +105,14 @@ class _DonyAppState extends State<DonyApp> {
       onError: (Object error, StackTrace stack) {
         // On log dans Sentry sans laisser l'erreur tuer l'abonnement (sinon
         // les deep links suivants ne seraient plus reçus).
-        AppLog.error('Deep link stream error', error: error, stackTrace: stack);
+        unawaited(
+          getIt<ErrorReportingService>().report(
+            error,
+            operation: 'navigation.deep_link_stream',
+            stackTrace: stack,
+            context: {'feature': 'navigation'},
+          ),
+        );
       },
     );
   }

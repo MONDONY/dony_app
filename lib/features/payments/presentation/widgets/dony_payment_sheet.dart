@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
@@ -35,6 +36,7 @@ abstract final class DonyPaymentSheet {
                     gateway: getIt<PaymentGateway>(),
                     repository: getIt<PaymentRepository>(),
                     config: config,
+                    errorReporter: getIt<ErrorReportingService>(),
                   ))
               ..add(const PaymentSheetStarted()),
         child: child,

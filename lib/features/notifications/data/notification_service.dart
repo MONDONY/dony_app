@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -26,8 +28,14 @@ class NotificationService {
   final ApiClient _apiClient;
   final NotificationRepository _repository;
   final DeviceIdService _deviceIdService;
+  final ErrorReportingService? _errorReporter;
 
-  NotificationService(this._apiClient, this._repository, this._deviceIdService);
+  NotificationService(
+    this._apiClient,
+    this._repository,
+    this._deviceIdService, [
+    this._errorReporter,
+  ]);
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -120,8 +128,18 @@ class NotificationService {
         },
       );
       if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] Token upload failed: $e');
+      if (e is! DioException) {
+        unawaited(
+          _errorReporter?.report(
+            e,
+            operation: 'notifications.upload_fcm_token',
+            stackTrace: stackTrace,
+            context: {'feature': 'notifications', 'channel': 'fcm'},
+          ),
+        );
+      }
     }
   }
 
@@ -173,8 +191,18 @@ class NotificationService {
     try {
       await _repository.ack(notificationId);
       if (kDebugMode) debugPrint('[FCM] ACK sent for $type / $notificationId');
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] ACK failed: $e');
+      if (e is! DioException) {
+        unawaited(
+          _errorReporter?.report(
+            e,
+            operation: 'notifications.ack_critical',
+            stackTrace: stackTrace,
+            context: {'feature': 'notifications', 'channel': 'fcm'},
+          ),
+        );
+      }
     }
   }
 

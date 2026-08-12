@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
@@ -46,14 +49,17 @@ class PaymentSheetConfig extends Equatable {
 class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   final PaymentGateway _gateway;
   final PaymentRepository _repository;
+  final ErrorReportingService? _errorReporter;
   final PaymentSheetConfig config;
 
   PaymentSheetBloc({
     required PaymentGateway gateway,
     required PaymentRepository repository,
     required this.config,
+    ErrorReportingService? errorReporter,
   }) : _gateway = gateway,
        _repository = repository,
+       _errorReporter = errorReporter,
        super(const PaymentSheetLoading()) {
     on<PaymentSheetStarted>(_onStarted);
     on<PaymentSheetWalletPressed>(_onWalletPressed);
@@ -132,7 +138,15 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     try {
       ephemeralKey = await (_ephemeralKeyFuture ??= _repository
           .createEphemeralKey());
-    } catch (_) {
+    } catch (error, stackTrace) {
+      unawaited(
+        _errorReporter?.report(
+          error,
+          operation: 'payment.ephemeral_key',
+          stackTrace: stackTrace,
+          context: {'feature': 'payments', 'method': 'card'},
+        ),
+      );
       _ephemeralKeyFuture = null; // ne pas mémoïser un échec
       throw const PaymentConfirmationException(cardUnavailableMessage);
     }
@@ -166,9 +180,17 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     } on PaymentConfirmationException catch (e) {
       emit(PaymentSheetFailure(message: e.message, ready: ready));
       emit(ready); // failure transitoire (snackbar) puis bouton ré-armé
-    } catch (_) {
+    } catch (error, stackTrace) {
       // Dernier filet : une erreur non mappée par le gateway n'a pas de
       // message montrable (toString technique), on reste générique.
+      unawaited(
+        _errorReporter?.report(
+          error,
+          operation: 'payment.confirm',
+          stackTrace: stackTrace,
+          context: {'feature': 'payments', 'method': method.name},
+        ),
+      );
       emit(PaymentSheetFailure(message: genericFailureMessage, ready: ready));
       emit(ready);
     }

@@ -83,6 +83,7 @@ import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/data/connectivity_repository.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/media_service.dart';
@@ -182,6 +183,9 @@ final getIt = GetIt.instance;
 Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Core
   getIt.registerLazySingleton<HiveService>(() => HiveService());
+  getIt.registerLazySingleton<ErrorReportingService>(
+    () => ErrorReportingService(const SentryErrorReportingSink()),
+  );
   getIt.registerLazySingleton<AnalyticsConsentRemote>(
     () => ApiAnalyticsConsentRemote(getIt<ApiClient>()),
   );
@@ -204,6 +208,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ApiClient(
       baseUrl: apiBaseUrl,
       deviceIdService: getIt<DeviceIdService>(),
+      errorReporter: getIt<ErrorReportingService>(),
     ),
   );
 
@@ -228,6 +233,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<ApiClient>(),
       getIt<NotificationRepository>(),
       getIt<DeviceIdService>(),
+      getIt<ErrorReportingService>(),
     ),
     dispose: (s) => s.dispose(),
   );
@@ -284,7 +290,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => KycRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<KycBloc>(
-    () => KycBloc(getIt<KycRepository>(), getIt<AnalyticsService>()),
+    () => KycBloc(
+      getIt<KycRepository>(),
+      getIt<AnalyticsService>(),
+      getIt<ErrorReportingService>(),
+    ),
   );
 
   // Matching — Announcements
@@ -649,7 +659,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => TrackingRepository(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<OfflineSyncService>(
-    () => OfflineSyncService(getIt<HiveService>(), getIt<TrackingRepository>()),
+    () => OfflineSyncService(
+      getIt<HiveService>(),
+      getIt<TrackingRepository>(),
+      getIt<ErrorReportingService>(),
+    ),
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<TrackingBloc>(
