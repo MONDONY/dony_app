@@ -923,6 +923,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         dotColor: DonyColors.terra500,
         brightness: Theme.of(context).brightness,
         prefix: '📦',
+        currencyCode: item.currency,
       );
       markers.add(
         Marker(
