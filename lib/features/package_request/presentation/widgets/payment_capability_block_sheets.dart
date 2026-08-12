@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
@@ -56,10 +57,9 @@ Future<void> showCardCapabilityRequiredSheet(BuildContext context) async {
     child: Text(
       'L\'expéditeur n\'accepte que le paiement par carte pour ce colis. '
       'Active les paiements par carte pour pouvoir lier ce trajet.',
-      style: Theme.of(context)
-          .textTheme
-          .bodyMedium
-          ?.copyWith(color: cs.onSurface),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
     ),
     stickyBottom: DonyButton(
       key: const Key('activate-card-payment-cta'),
@@ -84,6 +84,7 @@ Future<void> showCashInsufficientSheet(
   BuildContext context, {
   required double netPriceEur,
   double? grossPriceEur,
+  String? currency,
   required void Function({required bool useCard}) onResubmit,
 }) async {
   final net = netPriceEur;
@@ -108,28 +109,25 @@ Future<void> showCashInsufficientSheet(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Commission à régler : ${commission.toStringAsFixed(2)} €',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: cs.onSurface),
+          'Commission à régler : ${formatPriceIn(commission, currency)}',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
         ),
         const SizedBox(height: 4),
         Text(
-          'Solde du portefeuille : ${balance.toStringAsFixed(2)} €',
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: cs.onSurfaceVariant),
+          'Solde du portefeuille : ${formatPriceIn(balance, currency)}',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.sm),
         Text(
           'Recharge ton portefeuille, ou accepte que la commission soit prélevée sur '
           'ta carte à la remise du colis.',
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: cs.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     ),
@@ -140,8 +138,9 @@ Future<void> showCashInsufficientSheet(
           label: 'Recharger mon portefeuille',
           onPressed: () async {
             Navigator.of(context, rootNavigator: true).pop();
-            final recharged =
-                await context.push<bool>('/payments/wallet/topup/method');
+            final recharged = await context.push<bool>(
+              '/payments/wallet/topup/method',
+            );
             if ((recharged ?? false) && context.mounted) {
               onResubmit(useCard: false);
             }
@@ -179,6 +178,7 @@ Future<void> showNoPaymentMethodAvailableSheet(
   BuildContext context, {
   required double netPriceEur,
   double? grossPriceEur,
+  String? currency,
   required void Function({required bool useCard}) onResubmit,
 }) async {
   final cs = Theme.of(context).colorScheme;
@@ -188,10 +188,9 @@ Future<void> showNoPaymentMethodAvailableSheet(
     child: Text(
       'Tu ne peux pas encore honorer la carte ni les espèces pour ce colis. '
       'Active le paiement carte, ou débloque le paiement en espèces.',
-      style: Theme.of(context)
-          .textTheme
-          .bodyMedium
-          ?.copyWith(color: cs.onSurface),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
     ),
     stickyBottom: Column(
       mainAxisSize: MainAxisSize.min,
@@ -215,6 +214,7 @@ Future<void> showNoPaymentMethodAvailableSheet(
               context,
               netPriceEur: netPriceEur,
               grossPriceEur: grossPriceEur,
+              currency: currency,
               onResubmit: onResubmit,
             );
           },

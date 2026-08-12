@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockPaymentSheetBloc extends MockBloc<PaymentSheetEvent, PaymentSheetState>
+class MockPaymentSheetBloc
+    extends MockBloc<PaymentSheetEvent, PaymentSheetState>
     implements PaymentSheetBloc {
   MockPaymentSheetBloc(this.config);
 
@@ -29,22 +30,24 @@ void main() {
   /// [settle] : false pour les états qui animent en continu (spinner du
   /// bouton Carte) — pumpAndSettle ne convergerait jamais, on borne les pumps.
   Future<void> openSheet(WidgetTester tester, {bool settle = true}) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () => DonyPaymentSheet.show(
-              ctx,
-              config: _config,
-              contextLabel: 'Envoi vers Dakar',
-              onSuccess: () {},
-              bloc: bloc,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => DonyPaymentSheet.show(
+                ctx,
+                config: _config,
+                contextLabel: 'Envoi vers Dakar',
+                onSuccess: () {},
+                bloc: bloc,
+              ),
+              child: const Text('Ouvrir'),
             ),
-            child: const Text('Ouvrir'),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('Ouvrir'));
     if (settle) {
       await tester.pumpAndSettle();
@@ -56,12 +59,13 @@ void main() {
   }
 
   group('Vue principale — boutons conditionnels', () {
-    testWidgets('sans wallet ni PayPal : seul le bouton Carte',
-        (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: false,
-      ));
+    testWidgets('sans wallet ni PayPal : seul le bouton Carte', (tester) async {
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        ),
+      );
 
       await openSheet(tester);
 
@@ -71,12 +75,15 @@ void main() {
       expect(find.text('Carte'), findsOneWidget);
     });
 
-    testWidgets('avec PayPal disponible : bouton PayPal affiché',
-        (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: true,
-      ));
+    testWidgets('avec PayPal disponible : bouton PayPal affiché', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: true,
+        ),
+      );
 
       await openSheet(tester);
 
@@ -85,12 +92,15 @@ void main() {
       expect(find.byKey(const Key('paymentSheetCardButton')), findsOneWidget);
     });
 
-    testWidgets('plus de section « Cartes enregistrées » ni de saisie inline',
-        (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: false,
-      ));
+    testWidgets('plus de section « Cartes enregistrées » ni de saisie inline', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        ),
+      );
 
       await openSheet(tester);
 
@@ -102,10 +112,12 @@ void main() {
 
   group('Bouton Carte', () {
     testWidgets('tap dispatch PaymentSheetCardPressed', (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: false,
-      ));
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        ),
+      );
 
       await openSheet(tester);
       await tester.tap(find.byKey(const Key('paymentSheetCardButton')));
@@ -113,60 +125,77 @@ void main() {
       verify(() => bloc.add(const PaymentSheetCardPressed())).called(1);
     });
 
-    testWidgets('désactivé pendant le traitement d\'un autre moyen',
-        (tester) async {
+    testWidgets('désactivé pendant le traitement d\'un autre moyen', (
+      tester,
+    ) async {
       const ready = PaymentSheetResolved(
         walletAvailable: false,
         paypalAvailable: true,
       );
-      when(() => bloc.state).thenReturn(const PaymentSheetProcessing(
-        ready: ready,
-        method: PaymentMethodKind.paypal,
-      ));
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.paypal,
+        ),
+      );
 
       await openSheet(tester);
 
-      final button = tester.widget<ElevatedButton>(find.descendant(
-        of: find.byKey(const Key('paymentSheetCardButton')),
-        matching: find.byType(ElevatedButton),
-      ));
+      final button = tester.widget<ElevatedButton>(
+        find.descendant(
+          of: find.byKey(const Key('paymentSheetCardButton')),
+          matching: find.byType(ElevatedButton),
+        ),
+      );
       expect(button.onPressed, isNull);
       // Le spinner n'apparaît que quand c'est le flux carte qui tourne.
-      expect(find.byKey(const Key('paymentSheetCardButtonSpinner')),
-          findsNothing);
+      expect(
+        find.byKey(const Key('paymentSheetCardButtonSpinner')),
+        findsNothing,
+      );
     });
 
-    testWidgets('spinner + désactivé pendant le vol du flux carte',
-        (tester) async {
+    testWidgets('spinner + désactivé pendant le vol du flux carte', (
+      tester,
+    ) async {
       const ready = PaymentSheetResolved(
         walletAvailable: false,
         paypalAvailable: false,
       );
-      when(() => bloc.state).thenReturn(const PaymentSheetProcessing(
-        ready: ready,
-        method: PaymentMethodKind.card,
-      ));
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetProcessing(
+          ready: ready,
+          method: PaymentMethodKind.card,
+        ),
+      );
 
       await openSheet(tester, settle: false);
 
-      expect(find.byKey(const Key('paymentSheetCardButtonSpinner')),
-          findsOneWidget);
+      expect(
+        find.byKey(const Key('paymentSheetCardButtonSpinner')),
+        findsOneWidget,
+      );
       expect(find.text('Carte'), findsNothing);
-      final button = tester.widget<ElevatedButton>(find.descendant(
-        of: find.byKey(const Key('paymentSheetCardButton')),
-        matching: find.byType(ElevatedButton),
-      ));
+      final button = tester.widget<ElevatedButton>(
+        find.descendant(
+          of: find.byKey(const Key('paymentSheetCardButton')),
+          matching: find.byType(ElevatedButton),
+        ),
+      );
       expect(button.onPressed, isNull);
     });
   });
 
   group('Sticky bottom — plus de bouton « Payer »', () {
-    testWidgets('aucun bouton Payer générique, uniquement la note sécurité',
-        (tester) async {
-      when(() => bloc.state).thenReturn(const PaymentSheetResolved(
-        walletAvailable: false,
-        paypalAvailable: false,
-      ));
+    testWidgets('aucun bouton Payer générique, uniquement la note sécurité', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(
+        const PaymentSheetResolved(
+          walletAvailable: false,
+          paypalAvailable: false,
+        ),
+      );
 
       await openSheet(tester);
 
@@ -176,10 +205,12 @@ void main() {
   });
 
   group('Vue succès', () {
-    testWidgets('affiche l\'encart escrow et le bouton de sortie',
-        (tester) async {
-      when(() => bloc.state)
-          .thenReturn(const PaymentSheetSuccess(method: PaymentMethodKind.card));
+    testWidgets('affiche l\'encart escrow et le bouton de sortie', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const PaymentSheetSuccess(method: PaymentMethodKind.card));
 
       await openSheet(tester);
 
@@ -205,22 +236,24 @@ void main() {
 
       // pumpAndSettle avancerait le temps virtuel jusqu'à la disparition de la
       // snackbar (durée par défaut 4s) — on pompe image par image à la place.
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (ctx) => TextButton(
-              onPressed: () => DonyPaymentSheet.show(
-                ctx,
-                config: _config,
-                contextLabel: 'Envoi vers Dakar',
-                onSuccess: () {},
-                bloc: bloc,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => TextButton(
+                onPressed: () => DonyPaymentSheet.show(
+                  ctx,
+                  config: _config,
+                  contextLabel: 'Envoi vers Dakar',
+                  onSuccess: () {},
+                  bloc: bloc,
+                ),
+                child: const Text('Ouvrir'),
               ),
-              child: const Text('Ouvrir'),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));

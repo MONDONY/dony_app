@@ -594,8 +594,12 @@ final appRouter = GoRouter(
     // ── Wallet (hors shell) ──────────────────────────────────────────────
     GoRoute(
       path: '/payments/wallet',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+          ),
+        ],
         child: const WalletScreen(),
       ),
     ),
@@ -1109,10 +1113,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'preferences',
-          builder: (context, state) => BlocProvider.value(
-            value: getIt<BusinessPrefsBloc>(),
-            child: const BusinessPrefsScreen(),
-          ),
+          builder: (context, state) => const BusinessPrefsScreen(),
         ),
         GoRoute(
           path: 'accessibility',

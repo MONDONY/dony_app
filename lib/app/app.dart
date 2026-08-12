@@ -35,6 +35,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -144,200 +145,206 @@ class _DonyAppState extends State<DonyApp> {
 
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
-        providers: [
-          BlocProvider<AppPreferencesBloc>.value(
-            value: getIt<AppPreferencesBloc>(),
-          ),
-          BlocProvider<AccessibilityBloc>.value(
-            value: getIt<AccessibilityBloc>(),
-          ),
-          BlocProvider<ConnectivityCubit>.value(
-            value: getIt<ConnectivityCubit>(),
-          ),
-        ],
-        child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
-          builder: (context, prefsState) {
-            final themeMode = switch (prefsState.preferences.themeMode) {
-              'light' => ThemeMode.light,
-              'dark' => ThemeMode.dark,
-              _ => ThemeMode.system,
-            };
-            return BlocConsumer<AccessibilityBloc, AccessibilityState>(
-              listenWhen: (a, b) => a.reduceMotion != b.reduceMotion,
-              listener: (context, a11y) {
-                // Statique global de flutter_animate : il ne peut pas être posé
-                // dans un build, et doit être remis à sa valeur d'origine dans
-                // le tearDown des tests, sinon un test qui active la réduction
-                // contamine tous les suivants.
-                final reduce = _resolveMotion(context, a11y);
-                Animate.defaultDuration =
-                    reduce ? Duration.zero : const Duration(milliseconds: 300);
-              },
-              builder: (context, a11y) {
-                final reduceMotion = _resolveMotion(context, a11y);
-                final highContrast = _resolveContrast(context, a11y);
-                final themeOptions = A11yThemeOptions(
-                  highContrast: highContrast,
-                  reduceMotion: reduceMotion,
-                  underlineLinks: a11y.underlineLinks,
-                );
-                // Le `MultiBlocProvider` existant (ActiveRoleCubit, AuthBloc,
-                // KycBloc, etc.), son `BlocListener<AuthBloc>` et son
-                // `AnnotatedRegion` sont imbriqués ici tels quels, sans aucune
-                // modification. Seul le `MaterialApp.router` qu'ils
-                // contiennent change, à l'étape suivante.
-                return MultiBlocProvider(
-                  providers: [
-                    BlocProvider<ActiveRoleCubit>(
-                      create: (_) => getIt<ActiveRoleCubit>(),
-                    ),
-                    BlocProvider<AuthBloc>(
-                      create: (_) => getIt<AuthBloc>(),
-                    ),
-                    BlocProvider<LocalAuthBloc>(
-                      create: (_) => getIt<LocalAuthBloc>(),
-                    ),
-                    BlocProvider<KycBloc>(
-                      create: (_) => getIt<KycBloc>(),
-                    ),
-                    BlocProvider<AnnouncementBloc>(
-                      create: (_) => getIt<AnnouncementBloc>(),
-                    ),
-                    BlocProvider<BidBloc>(
-                      create: (_) => getIt<BidBloc>(),
-                    ),
-                    BlocProvider<PaymentBloc>(
-                      create: (_) => getIt<PaymentBloc>(),
-                    ),
-                    BlocProvider<NotificationBloc>(
-                      create: (_) => getIt<NotificationBloc>(),
-                    ),
-                    BlocProvider<RatingBloc>(
-                      create: (_) => getIt<RatingBloc>(),
-                    ),
-                    BlocProvider<StripeAccountBloc>(
-                      create: (_) => getIt<StripeAccountBloc>(),
-                    ),
-                    BlocProvider<HelpCenterBloc>(
-                      lazy: false,
-                      create: (_) => getIt<HelpCenterBloc>()
+    providers: [
+      BlocProvider<AppPreferencesBloc>.value(
+        value: getIt<AppPreferencesBloc>(),
+      ),
+      BlocProvider<AccessibilityBloc>.value(value: getIt<AccessibilityBloc>()),
+      BlocProvider<ConnectivityCubit>.value(value: getIt<ConnectivityCubit>()),
+    ],
+    child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+      builder: (context, prefsState) {
+        final themeMode = switch (prefsState.preferences.themeMode) {
+          'light' => ThemeMode.light,
+          'dark' => ThemeMode.dark,
+          _ => ThemeMode.system,
+        };
+        return BlocConsumer<AccessibilityBloc, AccessibilityState>(
+          listenWhen: (a, b) => a.reduceMotion != b.reduceMotion,
+          listener: (context, a11y) {
+            // Statique global de flutter_animate : il ne peut pas être posé
+            // dans un build, et doit être remis à sa valeur d'origine dans
+            // le tearDown des tests, sinon un test qui active la réduction
+            // contamine tous les suivants.
+            final reduce = _resolveMotion(context, a11y);
+            Animate.defaultDuration = reduce
+                ? Duration.zero
+                : const Duration(milliseconds: 300);
+          },
+          builder: (context, a11y) {
+            final reduceMotion = _resolveMotion(context, a11y);
+            final highContrast = _resolveContrast(context, a11y);
+            final themeOptions = A11yThemeOptions(
+              highContrast: highContrast,
+              reduceMotion: reduceMotion,
+              underlineLinks: a11y.underlineLinks,
+            );
+            // Le `MultiBlocProvider` existant (ActiveRoleCubit, AuthBloc,
+            // KycBloc, etc.), son `BlocListener<AuthBloc>` et son
+            // `AnnotatedRegion` sont imbriqués ici tels quels, sans aucune
+            // modification. Seul le `MaterialApp.router` qu'ils
+            // contiennent change, à l'étape suivante.
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider<ActiveRoleCubit>(
+                  create: (_) => getIt<ActiveRoleCubit>(),
+                ),
+                BlocProvider<AuthBloc>(create: (_) => getIt<AuthBloc>()),
+                BlocProvider<LocalAuthBloc>(
+                  create: (_) => getIt<LocalAuthBloc>(),
+                ),
+                BlocProvider<KycBloc>(create: (_) => getIt<KycBloc>()),
+                BlocProvider<AnnouncementBloc>(
+                  create: (_) => getIt<AnnouncementBloc>(),
+                ),
+                BlocProvider<BidBloc>(create: (_) => getIt<BidBloc>()),
+                BlocProvider<PaymentBloc>(create: (_) => getIt<PaymentBloc>()),
+                BlocProvider<NotificationBloc>(
+                  create: (_) => getIt<NotificationBloc>(),
+                ),
+                BlocProvider<RatingBloc>(create: (_) => getIt<RatingBloc>()),
+                BlocProvider<StripeAccountBloc>(
+                  create: (_) => getIt<StripeAccountBloc>(),
+                ),
+                BlocProvider<HelpCenterBloc>(
+                  lazy: false,
+                  create: (_) =>
+                      getIt<HelpCenterBloc>()
                         ..add(const HelpCenterLoadRequested()),
-                    ),
-                    // Singletons partagés — alimentent le point d'attention de
-                    // l'onglet Activités (bottom nav) même hors du hub.
-                    BlocProvider<TravelerBidsBloc>.value(
-                      value: getIt<TravelerBidsBloc>(),
-                    ),
-                    BlocProvider<NegotiationListBloc>.value(
-                      value: getIt<NegotiationListBloc>(),
-                    ),
-                    // Global FavoriteIdsCubit — provides heart buttons across all screens.
-                    // load() is triggered after AuthAuthenticated so it only hits the API
-                    // when the user is logged in. The cubit swallows errors silently.
-                    BlocProvider<FavoriteIdsCubit>.value(
-                      value: getIt<FavoriteIdsCubit>(),
-                    ),
-                  ],
-                  child: BlocListener<AuthBloc, AuthState>(
-                    listener: (context, state) {
-                      if (state is AuthAuthenticated) {
-                        context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
-                        // One-shot migration: push legacy Hive-saved trips to server,
-                        // then reload favorites so migrated items appear immediately.
-                        // Capture cubit ref before the async gap to avoid
-                        // use_build_context_synchronously lint.
-                        final favCubit = context.read<FavoriteIdsCubit>();
-                        unawaited(
-                          getIt<FavoritesMigration>()
-                              .run()
-                              .then((_) => favCubit.load()),
-                        );
-                        // Réconciliation des préférences de confidentialité depuis le
-                        // backend vers le cache Hive local (utile après un changement
-                        // fait sur un autre appareil).
-                        unawaited(
-                          getIt<PrivacySettingsRepository>().fetch().then((s) {
+                ),
+                // Singletons partagés — alimentent le point d'attention de
+                // l'onglet Activités (bottom nav) même hors du hub.
+                BlocProvider<TravelerBidsBloc>.value(
+                  value: getIt<TravelerBidsBloc>(),
+                ),
+                BlocProvider<NegotiationListBloc>.value(
+                  value: getIt<NegotiationListBloc>(),
+                ),
+                // Préférences métier (dont la devise active) : singleton exposé
+                // une fois ici, pour que toute surface offrant un changement de
+                // devise puisse le lire sans re-déclarer un provider.
+                BlocProvider<BusinessPrefsBloc>.value(
+                  value: getIt<BusinessPrefsBloc>(),
+                ),
+                // Global FavoriteIdsCubit — provides heart buttons across all screens.
+                // load() is triggered after AuthAuthenticated so it only hits the API
+                // when the user is logged in. The cubit swallows errors silently.
+                BlocProvider<FavoriteIdsCubit>.value(
+                  value: getIt<FavoriteIdsCubit>(),
+                ),
+              ],
+              child: BlocListener<AuthBloc, AuthState>(
+                listener: (context, state) {
+                  if (state is AuthAuthenticated) {
+                    context.read<ActiveRoleCubit>().syncWithRoles(
+                      state.user.roles,
+                    );
+                    // One-shot migration: push legacy Hive-saved trips to server,
+                    // then reload favorites so migrated items appear immediately.
+                    // Capture cubit ref before the async gap to avoid
+                    // use_build_context_synchronously lint.
+                    final favCubit = context.read<FavoriteIdsCubit>();
+                    unawaited(
+                      getIt<FavoritesMigration>().run().then(
+                        (_) => favCubit.load(),
+                      ),
+                    );
+                    // Réconciliation des préférences de confidentialité depuis le
+                    // backend vers le cache Hive local (utile après un changement
+                    // fait sur un autre appareil).
+                    unawaited(
+                      getIt<PrivacySettingsRepository>()
+                          .fetch()
+                          .then((s) {
                             final prefs = getIt<HiveService>().userPrefs;
-                            prefs.put(HiveService.kContactKycOnly, s.contactKycOnly);
                             prefs.put(
-                                HiveService.kHidePhoneNumber, s.hidePhoneNumber);
-                          }).catchError((_) {}),
-                        );
-                      } else if (state is AuthProfileUpdated) {
-                        context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
-                      }
-                    },
-                    child: AnnotatedRegion<SystemUiOverlayStyle>(
-                      value: const SystemUiOverlayStyle(
-                        systemNavigationBarColor: Colors.transparent,
-                        systemNavigationBarDividerColor: Colors.transparent,
-                        systemNavigationBarContrastEnforced: false,
-                        statusBarColor: Colors.transparent,
-                      ),
-                      child: MaterialApp.router(
-                        title: 'Yadony',
-                        theme: AppTheme.light(a11y: themeOptions),
-                        darkTheme: AppTheme.dark(a11y: themeOptions),
-                        themeMode: themeMode,
-                        locale: Locale(prefsState.preferences.languageCode),
-                        routerConfig: appRouter,
-                        debugShowCheckedModeBanner: false,
-                        builder: (context, child) {
-                          final mq = MediaQuery.of(context);
-                          return MediaQuery(
-                            data: mq.copyWith(
-                              textScaler: a11y.followSystemTextScale
-                                  ? mq.textScaler
-                                      .clamp(maxScaleFactor: kA11yMaxTextScale)
-                                  : TextScaler.linear(a11y.textScaleFactor),
-                              boldText: a11y.boldText,
-                              disableAnimations: reduceMotion,
-                            ),
-                            child: AccessibilityScope(
-                              underlineLinks: a11y.underlineLinks,
-                              reinforceLabels: a11y.reinforceLabels,
-                              persistentMessages: a11y.persistentMessages,
-                              confirmImportantActions:
-                                  a11y.confirmImportantActions,
-                              highContrast: highContrast,
-                              // Monté sous le Navigator de MaterialApp → peut
-                              // présenter le bottom sheet de consentement
-                              // analytics + brancher identify/reset sur le
-                              // cycle d'authentification.
-                              child: Column(
-                                children: [
-                                  // Bandeau réseau global : au-dessus de
-                                  // TOUTE route (shell ou pushée), jamais
-                                  // seulement les onglets du shell.
-                                  const ConnectivityBanner(),
-                                  Expanded(
-                                    child: AnalyticsConsentGate(
-                                      child: child ?? const SizedBox.shrink(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                        localizationsDelegates: const [
-                          GlobalMaterialLocalizations.delegate,
-                          GlobalWidgetsLocalizations.delegate,
-                          GlobalCupertinoLocalizations.delegate,
-                        ],
-                        supportedLocales: const [
-                          Locale('fr', 'FR'),
-                          Locale('en', 'US'),
-                        ],
-                      ),
-                    ),
+                              HiveService.kContactKycOnly,
+                              s.contactKycOnly,
+                            );
+                            prefs.put(
+                              HiveService.kHidePhoneNumber,
+                              s.hidePhoneNumber,
+                            );
+                          })
+                          .catchError((_) {}),
+                    );
+                  } else if (state is AuthProfileUpdated) {
+                    context.read<ActiveRoleCubit>().syncWithRoles(
+                      state.user.roles,
+                    );
+                  }
+                },
+                child: AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: const SystemUiOverlayStyle(
+                    systemNavigationBarColor: Colors.transparent,
+                    systemNavigationBarDividerColor: Colors.transparent,
+                    systemNavigationBarContrastEnforced: false,
+                    statusBarColor: Colors.transparent,
                   ),
-                );
-              },
+                  child: MaterialApp.router(
+                    title: 'Yadony',
+                    theme: AppTheme.light(a11y: themeOptions),
+                    darkTheme: AppTheme.dark(a11y: themeOptions),
+                    themeMode: themeMode,
+                    locale: Locale(prefsState.preferences.languageCode),
+                    routerConfig: appRouter,
+                    debugShowCheckedModeBanner: false,
+                    builder: (context, child) {
+                      final mq = MediaQuery.of(context);
+                      return MediaQuery(
+                        data: mq.copyWith(
+                          textScaler: a11y.followSystemTextScale
+                              ? mq.textScaler.clamp(
+                                  maxScaleFactor: kA11yMaxTextScale,
+                                )
+                              : TextScaler.linear(a11y.textScaleFactor),
+                          boldText: a11y.boldText,
+                          disableAnimations: reduceMotion,
+                        ),
+                        child: AccessibilityScope(
+                          underlineLinks: a11y.underlineLinks,
+                          reinforceLabels: a11y.reinforceLabels,
+                          persistentMessages: a11y.persistentMessages,
+                          confirmImportantActions: a11y.confirmImportantActions,
+                          highContrast: highContrast,
+                          // Monté sous le Navigator de MaterialApp → peut
+                          // présenter le bottom sheet de consentement
+                          // analytics + brancher identify/reset sur le
+                          // cycle d'authentification.
+                          child: Column(
+                            children: [
+                              // Bandeau réseau global : au-dessus de
+                              // TOUTE route (shell ou pushée), jamais
+                              // seulement les onglets du shell.
+                              const ConnectivityBanner(),
+                              Expanded(
+                                child: AnalyticsConsentGate(
+                                  child: child ?? const SizedBox.shrink(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    localizationsDelegates: const [
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    supportedLocales: const [
+                      Locale('fr', 'FR'),
+                      Locale('en', 'US'),
+                    ],
+                  ),
+                ),
+              ),
             );
           },
-        ),
-      );
+        );
+      },
+    ),
+  );
 
   /// Résout le mode tri-état du mouvement contre le réglage système.
   static bool _resolveMotion(BuildContext context, AccessibilityState s) =>

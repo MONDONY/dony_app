@@ -35,14 +35,18 @@ void main() {
   group('MobileMoneyRemoteDatasource', () {
     group('getStatus', () {
       test('returns MobileMoneyPaymentModel on success', () async {
-        when(() => dio.get<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/status',
-            )).thenAnswer((_) async => Response(
-              data: _paymentJson,
-              statusCode: 200,
-              requestOptions:
-                  RequestOptions(path: '/bids/$bidId/mobile-money/status'),
-            ));
+        when(
+          () =>
+              dio.get<Map<String, dynamic>>('/bids/$bidId/mobile-money/status'),
+        ).thenAnswer(
+          (_) async => Response(
+            data: _paymentJson,
+            statusCode: 200,
+            requestOptions: RequestOptions(
+              path: '/bids/$bidId/mobile-money/status',
+            ),
+          ),
+        );
 
         final result = await datasource.getStatus(bidId);
 
@@ -52,87 +56,105 @@ void main() {
       });
 
       test('propagates DioException on network error', () async {
-        when(() => dio.get<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/status',
-            )).thenThrow(DioException(
-          requestOptions: RequestOptions(path: '/bids/$bidId/mobile-money/status'),
-          type: DioExceptionType.connectionTimeout,
-        ));
-
-        expect(
-          datasource.getStatus(bidId),
-          throwsA(isA<DioException>()),
+        when(
+          () =>
+              dio.get<Map<String, dynamic>>('/bids/$bidId/mobile-money/status'),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(
+              path: '/bids/$bidId/mobile-money/status',
+            ),
+            type: DioExceptionType.connectionTimeout,
+          ),
         );
+
+        expect(datasource.getStatus(bidId), throwsA(isA<DioException>()));
       });
 
       test('propagates DioException on 404', () async {
-        when(() => dio.get<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/status',
-            )).thenThrow(DioException(
-          requestOptions: RequestOptions(path: '/bids/$bidId/mobile-money/status'),
-          type: DioExceptionType.badResponse,
-          response: Response(
-            statusCode: 404,
-            requestOptions: RequestOptions(path: '/bids/$bidId/mobile-money/status'),
+        when(
+          () =>
+              dio.get<Map<String, dynamic>>('/bids/$bidId/mobile-money/status'),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(
+              path: '/bids/$bidId/mobile-money/status',
+            ),
+            type: DioExceptionType.badResponse,
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(
+                path: '/bids/$bidId/mobile-money/status',
+              ),
+            ),
           ),
-        ));
-
-        expect(
-          datasource.getStatus(bidId),
-          throwsA(isA<DioException>()),
         );
+
+        expect(datasource.getStatus(bidId), throwsA(isA<DioException>()));
       });
     });
 
     group('regenerateLink', () {
-      test('calls POST /bids/{bidId}/mobile-money/initiate and returns model',
-          () async {
-        final newPaymentJson = {
-          'id': 'payment-id-2',
-          'status': 'PENDING',
-          'amount': 50.0,
-          'currency': 'XOF',
-          'paymentLink': 'https://wave.test/pay?ref=wave_new',
-          'expiresAt': '2026-05-27T21:00:00.000',
-          'failureReason': null,
-        };
+      test(
+        'calls POST /bids/{bidId}/mobile-money/initiate and returns model',
+        () async {
+          final newPaymentJson = {
+            'id': 'payment-id-2',
+            'status': 'PENDING',
+            'amount': 50.0,
+            'currency': 'XOF',
+            'paymentLink': 'https://wave.test/pay?ref=wave_new',
+            'expiresAt': '2026-05-27T21:00:00.000',
+            'failureReason': null,
+          };
 
-        when(() => dio.post<Map<String, dynamic>>(
+          when(
+            () => dio.post<Map<String, dynamic>>(
               '/bids/$bidId/mobile-money/initiate',
-            )).thenAnswer((_) async => Response(
+            ),
+          ).thenAnswer(
+            (_) async => Response(
               data: newPaymentJson,
               statusCode: 201,
               requestOptions: RequestOptions(
-                  path: '/bids/$bidId/mobile-money/initiate'),
-            ));
+                path: '/bids/$bidId/mobile-money/initiate',
+              ),
+            ),
+          );
 
-        final result = await datasource.regenerateLink(bidId);
+          final result = await datasource.regenerateLink(bidId);
 
-        verify(() => dio.post<Map<String, dynamic>>(
+          verify(
+            () => dio.post<Map<String, dynamic>>(
               '/bids/$bidId/mobile-money/initiate',
-            )).called(1);
-        expect(result.id, 'payment-id-2');
-        expect(result.paymentLink, contains('ref=wave_new'));
-      });
+            ),
+          ).called(1);
+          expect(result.id, 'payment-id-2');
+          expect(result.paymentLink, contains('ref=wave_new'));
+        },
+      );
 
       test('propagates DioException on 403', () async {
-        when(() => dio.post<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/initiate',
-            )).thenThrow(DioException(
-          requestOptions: RequestOptions(
-              path: '/bids/$bidId/mobile-money/initiate'),
-          type: DioExceptionType.badResponse,
-          response: Response(
-            statusCode: 403,
-            requestOptions: RequestOptions(
-                path: '/bids/$bidId/mobile-money/initiate'),
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            '/bids/$bidId/mobile-money/initiate',
           ),
-        ));
-
-        expect(
-          datasource.regenerateLink(bidId),
-          throwsA(isA<DioException>()),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(
+              path: '/bids/$bidId/mobile-money/initiate',
+            ),
+            type: DioExceptionType.badResponse,
+            response: Response(
+              statusCode: 403,
+              requestOptions: RequestOptions(
+                path: '/bids/$bidId/mobile-money/initiate',
+              ),
+            ),
+          ),
         );
+
+        expect(datasource.regenerateLink(bidId), throwsA(isA<DioException>()));
       });
     });
   });

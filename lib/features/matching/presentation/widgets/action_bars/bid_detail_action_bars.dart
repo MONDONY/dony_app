@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -135,10 +136,7 @@ class TravelerPendingBar extends StatelessWidget {
           final reason = reasonNotifier.value.trim();
           context.pop();
           context.read<BidBloc>().add(
-            BidRejectRequested(
-              bid.id,
-              reason: reason.isEmpty ? null : reason,
-            ),
+            BidRejectRequested(bid.id, reason: reason.isEmpty ? null : reason),
           );
         },
       ),
@@ -463,23 +461,19 @@ class EscrowBadge extends StatelessWidget {
   }
 
   (String, Color, String) _resolve(ColorScheme cs) {
-    final amount = payment.amount.toStringAsFixed(2);
+    final amount = formatPriceIn(payment.amount, payment.currency);
     return switch (payment.status) {
       PaymentStatus.released => (
         'circle-check',
         cs.success,
-        'Voyageur payé · $amount €',
+        'Voyageur payé · $amount',
       ),
       PaymentStatus.refunded => (
         'refresh-cw',
         cs.onSurfaceVariant,
-        'Remboursé · $amount €',
+        'Remboursé · $amount',
       ),
-      PaymentStatus.failed => (
-        'circle-alert',
-        cs.error,
-        'Paiement échoué',
-      ),
+      PaymentStatus.failed => ('circle-alert', cs.error, 'Paiement échoué'),
       _ when bidStatus == 'PENDING' => (
         'clock',
         cs.warning,
@@ -488,9 +482,9 @@ class EscrowBadge extends StatelessWidget {
       _ when bidStatus == 'ACCEPTED' => (
         'lock',
         cs.success,
-        'Paiement sécurisé · $amount €',
+        'Paiement sécurisé · $amount',
       ),
-      _ => ('lock', cs.success, 'Paiement sécurisé · $amount €'),
+      _ => ('lock', cs.success, 'Paiement sécurisé · $amount'),
     };
   }
 }
@@ -816,8 +810,8 @@ class _SenderOptionsSheet extends StatelessWidget {
             onPressed: () {
               ctx.pop();
               context.read<CancellationBloc>().add(
-                    CancelAfterHandoverRequested(bid.id, actor: 'sender'),
-                  );
+                CancelAfterHandoverRequested(bid.id, actor: 'sender'),
+              );
             },
             style: FilledButton.styleFrom(
               backgroundColor: cs.error,
@@ -927,11 +921,7 @@ class _OptionTile extends StatelessWidget {
                 ],
               ),
             ),
-            DonyIcon(
-              'chevron-right',
-              color: cs.onSurfaceVariant,
-              size: 18,
-            ),
+            DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
           ],
         ),
       ),

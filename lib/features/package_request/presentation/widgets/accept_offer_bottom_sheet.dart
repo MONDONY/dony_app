@@ -32,16 +32,20 @@ class AcceptOfferBottomSheet {
     required String threadId,
     required double priceEur,
     double? grossPriceEur,
+
     /// Whether the current viewer is the traveler (receives net).
     /// Sender (isTraveler=false) sees gross price they pay.
     bool isTraveler = false,
+
     /// If true, this is the FINAL payment step (status was AWAITING_PAYMENT).
     /// If false, this is the initial price acceptance (status was OPEN → AWAITING_TRIP).
     bool isCheckout = false,
+
     /// Whether the thread already has a traveler trip linked. Drives the
     /// success-screen copy: a traveler accepting with a linked trip skips the
     /// AWAITING_TRIP step (backend goes straight to AWAITING_PAYMENT).
     bool hasLinkedTrip = false,
+    String currency = 'EUR',
   }) async {
     // Garde anti-double-tap : le bouton n'était pas désactivé pendant le flux
     // asynchrone (auth + Stripe), donc un 2e tap relançait l'action (double
@@ -58,8 +62,9 @@ class AcceptOfferBottomSheet {
 
     Future<void> loadQuote() async {
       try {
-        quoteNotifier.value =
-            await getIt<NegotiationRepository>().quote(threadId);
+        quoteNotifier.value = await getIt<NegotiationRepository>().quote(
+          threadId,
+        );
       } catch (_) {
         // Silencieux : échec réseau → l'UI retombe sur l'estimation locale.
       }
@@ -79,25 +84,25 @@ class AcceptOfferBottomSheet {
         // application d'un code promo (le total réel n'apparaissait qu'à
         // l'ouverture de la sheet Stripe, jamais dans le libellé "Payer (…)").
         listenable: Listenable.merge([processing, quoteNotifier]),
-        builder: (ctx0, _) =>
-            BlocBuilder<NegotiationBloc, NegotiationState>(
+        builder: (ctx0, _) => BlocBuilder<NegotiationBloc, NegotiationState>(
           bloc: bloc,
           builder: (ctx, state) {
             final busy = processing.value;
-            final loading = busy ||
+            final loading =
+                busy ||
                 state is NegotiationActionInProgress ||
                 state is NegotiationLoading;
             final quote = quoteNotifier.value;
             final displayPrice = isTraveler
                 ? priceEur
                 : (quote?.totalEur ??
-                    (grossPriceEur ?? PriceDisplay.grossFromNet(priceEur)));
+                      (grossPriceEur ?? PriceDisplay.grossFromNet(priceEur)));
             return DonyButton(
               label: loading
                   ? 'Traitement…'
                   : isCheckout
-                      ? 'Payer (${PriceDisplay.eur(displayPrice)})'
-                      : 'Confirmer (${PriceDisplay.eur(displayPrice)})',
+                  ? 'Payer (${PriceDisplay.money(displayPrice, currency)})'
+                  : 'Confirmer (${PriceDisplay.money(displayPrice, currency)})',
               isLoading: loading,
               onPressed: loading
                   ? null
@@ -147,31 +152,38 @@ class AcceptOfferBottomSheet {
                                 ? 'Paiement de l\'offre acceptée'
                                 : 'Paiement de votre offre',
                             onSuccess: () {
-                              bloc.add(NegotiationCheckoutRequested(
-                                threadId: threadId,
-                                paymentIntentId: init.paymentIntentId,
-                              ));
+                              bloc.add(
+                                NegotiationCheckoutRequested(
+                                  threadId: threadId,
+                                  paymentIntentId: init.paymentIntentId,
+                                ),
+                              );
                               if (ctx.mounted) {
                                 Navigator.of(ctx, rootNavigator: true).pop();
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (routeContext) => DonySuccessScreen(
-                                    mascotteType: DonyMascotteType.securise,
-                                    title: 'Offre acceptée et payée !',
-                                    subtitle:
-                                        'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
-                                    ctaLabel: 'Voir le suivi',
-                                    onCta: () => routeContext
-                                        .go('/negotiations/$threadId'),
-                                    analyticsContext: 'negotiation_payment',
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (routeContext) => DonySuccessScreen(
+                                      mascotteType: DonyMascotteType.securise,
+                                      title: 'Offre acceptée et payée !',
+                                      subtitle:
+                                          'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
+                                      ctaLabel: 'Voir le suivi',
+                                      onCta: () => routeContext.go(
+                                        '/negotiations/$threadId',
+                                      ),
+                                      analyticsContext: 'negotiation_payment',
+                                    ),
                                   ),
-                                ));
+                                );
                               }
                             },
                           );
                           // Sheet fermée sans paiement (swipe) → réarmer le bouton.
                           processing.value = false;
                         } else {
-                          bloc.add(NegotiationAcceptRequested(threadId: threadId));
+                          bloc.add(
+                            NegotiationAcceptRequested(threadId: threadId),
+                          );
                           // Copy selon le rôle et l'étape suivante réelle : le
                           // moyen de paiement n'est choisi qu'au moment de
                           // finaliser les détails, donc aucune mention
@@ -189,17 +201,20 @@ class AcceptOfferBottomSheet {
                           }
                           if (ctx.mounted) {
                             Navigator.of(ctx, rootNavigator: true).pop();
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (routeContext) => DonySuccessScreen(
-                                mascotteType: DonyMascotteType.succes,
-                                title: 'Accord confirmé !',
-                                subtitle: subtitle,
-                                ctaLabel: 'Voir le suivi',
-                                onCta: () =>
-                                    routeContext.go('/negotiations/$threadId'),
-                                analyticsContext: 'negotiation_agreement',
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (routeContext) => DonySuccessScreen(
+                                  mascotteType: DonyMascotteType.succes,
+                                  title: 'Accord confirmé !',
+                                  subtitle: subtitle,
+                                  ctaLabel: 'Voir le suivi',
+                                  onCta: () => routeContext.go(
+                                    '/negotiations/$threadId',
+                                  ),
+                                  analyticsContext: 'negotiation_agreement',
+                                ),
                               ),
-                            ));
+                            );
                           }
                         }
                       } catch (e) {
@@ -207,7 +222,8 @@ class AcceptOfferBottomSheet {
                         if (ctx.mounted) {
                           DonySnackbar.show(
                             ctx,
-                            message: 'Une erreur est survenue. Veuillez réessayer.',
+                            message:
+                                'Une erreur est survenue. Veuillez réessayer.',
                             type: DonySnackbarType.error,
                           );
                         }
@@ -242,13 +258,14 @@ class AcceptOfferBottomSheet {
                     totalEur: totalEur,
                     promoApplied: promoApplied,
                     originalTotal: promoApplied ? netEur + commissionEur : null,
+                    currency: currency,
                   );
                 },
               ),
               const SizedBox(height: DonySpacing.base),
               Text(
                 isTraveler
-                    ? 'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras ${PriceDisplay.eur(priceEur)} à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.'
+                    ? 'En acceptant, l\'expéditeur effectuera le paiement. Tu recevras ${PriceDisplay.money(priceEur, currency)} à la livraison validée, quel que soit un éventuel code promo utilisé par l\'expéditeur.'
                     : 'En confirmant, le paiement est bloqué et sécurisé. Le voyageur reçoit le montant à la livraison validée.',
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
@@ -282,6 +299,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
     required this.totalEur,
     required this.promoApplied,
     this.originalTotal,
+    this.currency = 'EUR',
   });
 
   final bool isTraveler;
@@ -291,6 +309,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
   final double totalEur;
   final bool promoApplied;
   final double? originalTotal;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -299,23 +318,52 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
     // Une remise n'est réelle que si le total avec promo est strictement
     // inférieur au total sans promo — un promo au même taux que le taux
     // courant ne ferait gagner aucune remise réelle (cf. régression WELCOME05).
-    final savings =
-        (promoApplied && originalTotal != null) ? originalTotal! - totalEur : 0.0;
+    final savings = (promoApplied && originalTotal != null)
+        ? originalTotal! - totalEur
+        : 0.0;
     final hasRealSavings = savings > 0.005;
     final ratePct = _ratePercentLabel(rate);
 
     final rows = <Widget>[];
     if (isTraveler) {
-      rows.add(_line(tt, cs, 'Prix payé par l\'expéditeur', PriceDisplay.eur(totalEur)));
-      rows.add(_line(tt, cs, 'Commission Yadony ($ratePct %)',
-          '−${PriceDisplay.eur(commissionEur)}'));
-    } else {
-      rows.add(_line(tt, cs, 'Net voyageur', PriceDisplay.eur(netEur)));
       rows.add(
-          _line(tt, cs, 'Commission Yadony ($ratePct %)', PriceDisplay.eur(commissionEur)));
+        _line(
+          tt,
+          cs,
+          'Prix payé par l\'expéditeur',
+          PriceDisplay.money(totalEur, currency),
+        ),
+      );
+      rows.add(
+        _line(
+          tt,
+          cs,
+          'Commission Yadony ($ratePct %)',
+          '−${PriceDisplay.money(commissionEur, currency)}',
+        ),
+      );
+    } else {
+      rows.add(
+        _line(tt, cs, 'Net voyageur', PriceDisplay.money(netEur, currency)),
+      );
+      rows.add(
+        _line(
+          tt,
+          cs,
+          'Commission Yadony ($ratePct %)',
+          PriceDisplay.money(commissionEur, currency),
+        ),
+      );
       if (hasRealSavings) {
-        rows.add(_line(tt, cs, 'Réduction code promo', '−${PriceDisplay.eur(savings)}',
-            valueColor: const Color(0xFF16A34A)));
+        rows.add(
+          _line(
+            tt,
+            cs,
+            'Réduction code promo',
+            '−${PriceDisplay.money(savings, currency)}',
+            valueColor: const Color(0xFF16A34A),
+          ),
+        );
       }
     }
 
@@ -345,16 +393,20 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(totalLabel,
-                        style: tt.bodyMedium?.copyWith(
-                          fontSize: 13,
-                          color: kGreenDark,
-                        )),
+                    Text(
+                      totalLabel,
+                      style: tt.bodyMedium?.copyWith(
+                        fontSize: 13,
+                        color: kGreenDark,
+                      ),
+                    ),
                     if (!isTraveler && hasRealSavings) ...[
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: cs.surface,
                           borderRadius: BorderRadius.circular(8),
@@ -376,7 +428,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
                   children: [
                     if (!isTraveler && hasRealSavings) ...[
                       Text(
-                        PriceDisplay.eur(originalTotal!),
+                        PriceDisplay.money(originalTotal!, currency),
                         style: tt.bodySmall?.copyWith(
                           color: kGreenDark.withValues(alpha: 0.6),
                           decoration: TextDecoration.lineThrough,
@@ -385,7 +437,7 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
                       const SizedBox(width: 6),
                     ],
                     Text(
-                      PriceDisplay.eur(totalValue),
+                      PriceDisplay.money(totalValue, currency),
                       style: tt.bodyMedium?.copyWith(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -402,21 +454,27 @@ class _NegotiationPriceBreakdown extends StatelessWidget {
     );
   }
 
-  Widget _line(TextTheme tt, ColorScheme cs, String label, String value,
-          {Color? valueColor}) =>
-      Row(
-        children: [
-          Expanded(
-              child: Text(label,
-                  style: tt.bodyMedium?.copyWith(color: kGreenDark))),
-          const SizedBox(width: DonySpacing.sm),
-          Text(value,
-              style: tt.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: valueColor ?? kGreenDark,
-              )),
-        ],
-      );
+  Widget _line(
+    TextTheme tt,
+    ColorScheme cs,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) => Row(
+    children: [
+      Expanded(
+        child: Text(label, style: tt.bodyMedium?.copyWith(color: kGreenDark)),
+      ),
+      const SizedBox(width: DonySpacing.sm),
+      Text(
+        value,
+        style: tt.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: valueColor ?? kGreenDark,
+        ),
+      ),
+    ],
+  );
 
   /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR.
   String _ratePercentLabel(double rate) {

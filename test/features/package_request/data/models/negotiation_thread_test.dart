@@ -3,9 +3,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Map<String, dynamic> _baseJson({
-  Map<String, dynamic>? overrides,
-}) {
+Map<String, dynamic> _baseJson({Map<String, dynamic>? overrides}) {
   final base = <String, dynamic>{
     'id': 't-1',
     'packageRequestId': 'pr-1',
@@ -27,7 +25,7 @@ Map<String, dynamic> _baseJson({
         'proposedPriceEur': 30.0,
         'body': null,
         'createdAt': '2026-05-10T10:00:00Z',
-      }
+      },
     ],
     'paymentIntentClientSecret': null,
   };
@@ -47,29 +45,34 @@ void main() {
     expect(t.messages.first.kind, NegotiationMessageKind.proposal);
   });
 
-  test('NegotiationThread.fromJson parses nouveaux champs optionnels du profil voyageur',
-      () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'travelerName': 'Mamadou Diallo',
-      'travelerRating': 4.8,
-      'travelerTripsCount': 12,
-      'travelerPhotoUrl': 'https://example.com/photo.jpg',
-      'departureCity': 'Paris',
-      'arrivalCity': 'Dakar',
-      'weightKg': 5.0,
-    }));
+  test(
+    'NegotiationThread.fromJson parses nouveaux champs optionnels du profil voyageur',
+    () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(
+          overrides: {
+            'travelerName': 'Mamadou Diallo',
+            'travelerRating': 4.8,
+            'travelerTripsCount': 12,
+            'travelerPhotoUrl': 'https://example.com/photo.jpg',
+            'departureCity': 'Paris',
+            'arrivalCity': 'Dakar',
+            'weightKg': 5.0,
+          },
+        ),
+      );
 
-    expect(t.travelerName, 'Mamadou Diallo');
-    expect(t.travelerRating, 4.8);
-    expect(t.travelerTripsCount, 12);
-    expect(t.travelerPhotoUrl, 'https://example.com/photo.jpg');
-    expect(t.departureCity, 'Paris');
-    expect(t.arrivalCity, 'Dakar');
-    expect(t.weightKg, 5.0);
-  });
+      expect(t.travelerName, 'Mamadou Diallo');
+      expect(t.travelerRating, 4.8);
+      expect(t.travelerTripsCount, 12);
+      expect(t.travelerPhotoUrl, 'https://example.com/photo.jpg');
+      expect(t.departureCity, 'Paris');
+      expect(t.arrivalCity, 'Dakar');
+      expect(t.weightKg, 5.0);
+    },
+  );
 
-  test('NegotiationThread.fromJson retourne null pour les champs absents',
-      () {
+  test('NegotiationThread.fromJson retourne null pour les champs absents', () {
     final t = NegotiationThread.fromJson(_baseJson());
 
     expect(t.travelerName, isNull);
@@ -81,21 +84,25 @@ void main() {
     expect(t.weightKg, isNull);
   });
 
-  test('NegotiationThread.fromJson parse le statut AWAITING_TRIP correctement',
-      () {
-    final t = NegotiationThread.fromJson(
-      _baseJson(overrides: {'status': 'AWAITING_TRIP'}),
-    );
-    expect(t.status, NegotiationThreadStatus.awaitingTrip);
-  });
+  test(
+    'NegotiationThread.fromJson parse le statut AWAITING_TRIP correctement',
+    () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(overrides: {'status': 'AWAITING_TRIP'}),
+      );
+      expect(t.status, NegotiationThreadStatus.awaitingTrip);
+    },
+  );
 
-  test('NegotiationThread.fromJson parse le statut AWAITING_PAYMENT correctement',
-      () {
-    final t = NegotiationThread.fromJson(
-      _baseJson(overrides: {'status': 'AWAITING_PAYMENT'}),
-    );
-    expect(t.status, NegotiationThreadStatus.awaitingPayment);
-  });
+  test(
+    'NegotiationThread.fromJson parse le statut AWAITING_PAYMENT correctement',
+    () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(overrides: {'status': 'AWAITING_PAYMENT'}),
+      );
+      expect(t.status, NegotiationThreadStatus.awaitingPayment);
+    },
+  );
 
   test('NegotiationThread.fromJson parse le statut REJECTED correctement', () {
     final t = NegotiationThread.fromJson(
@@ -112,13 +119,17 @@ void main() {
   });
 
   test('fromJson parses grossPriceEur + paymentMethod', () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'status': 'AWAITING_PAYMENT',
-      'currentPriceEur': 35,
-      'grossPriceEur': 39.20,
-      'roundsCount': 2,
-      'paymentMethod': 'CASH',
-    }));
+    final t = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {
+          'status': 'AWAITING_PAYMENT',
+          'currentPriceEur': 35,
+          'grossPriceEur': 39.20,
+          'roundsCount': 2,
+          'paymentMethod': 'CASH',
+        },
+      ),
+    );
     expect(t.currentPriceEur, 35);
     expect(t.grossPriceEur, 39.20);
     expect(t.paymentMethod, PaymentMethod.cash);
@@ -130,14 +141,16 @@ void main() {
     expect(t.paymentMethod, isNull);
   });
 
-  test('fromJson parses travelerCapacityUnit and isTravelerKgFree for KG_FREE',
-      () {
-    final t = NegotiationThread.fromJson(
-      _baseJson(overrides: {'travelerCapacityUnit': 'KG_FREE'}),
-    );
-    expect(t.travelerCapacityUnit, 'KG_FREE');
-    expect(t.isTravelerKgFree, isTrue);
-  });
+  test(
+    'fromJson parses travelerCapacityUnit and isTravelerKgFree for KG_FREE',
+    () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(overrides: {'travelerCapacityUnit': 'KG_FREE'}),
+      );
+      expect(t.travelerCapacityUnit, 'KG_FREE');
+      expect(t.isTravelerKgFree, isTrue);
+    },
+  );
 
   test('isTravelerKgFree is false for SUITCASE_23KG', () {
     final t = NegotiationThread.fromJson(
@@ -154,10 +167,11 @@ void main() {
   });
 
   test('fromJson parses materializedBidId when present', () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'status': 'ACCEPTED',
-      'materializedBidId': 'bid-123',
-    }));
+    final t = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {'status': 'ACCEPTED', 'materializedBidId': 'bid-123'},
+      ),
+    );
     expect(t.materializedBidId, 'bid-123');
   });
 
@@ -167,9 +181,13 @@ void main() {
   });
 
   test('fromJson parses senderPhotoUrl when present', () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
-    }));
+    final t = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {
+          'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
+        },
+      ),
+    );
     expect(t.senderPhotoUrl, 'https://cdn.dony.app/avatars/sender-42.jpg');
   });
 
@@ -180,20 +198,28 @@ void main() {
 
   test('senderPhotoUrl participates in props/equality', () {
     final t1 = NegotiationThread.fromJson(_baseJson());
-    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {
-      'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
-    }));
+    final t2 = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {
+          'senderPhotoUrl': 'https://cdn.dony.app/avatars/sender-42.jpg',
+        },
+      ),
+    );
     expect(t1, isNot(equals(t2)));
   });
 
   test('parse availablePaymentMethods depuis le JSON', () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'availablePaymentMethods': ['STRIPE', 'CASH'],
-    }));
-    expect(
-      t.availablePaymentMethods,
-      {PaymentMethod.stripe, PaymentMethod.cash},
+    final t = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {
+          'availablePaymentMethods': ['STRIPE', 'CASH'],
+        },
+      ),
     );
+    expect(t.availablePaymentMethods, {
+      PaymentMethod.stripe,
+      PaymentMethod.cash,
+    });
   });
 
   test('availablePaymentMethods null quand absent', () {
@@ -203,9 +229,13 @@ void main() {
 
   test('availablePaymentMethods participates in props/equality', () {
     final t1 = NegotiationThread.fromJson(_baseJson());
-    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {
-      'availablePaymentMethods': ['STRIPE'],
-    }));
+    final t2 = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {
+          'availablePaymentMethods': ['STRIPE'],
+        },
+      ),
+    );
     expect(t1, isNot(equals(t2)));
   });
 
@@ -213,46 +243,65 @@ void main() {
   // An unknown wire value here must be skipped, not fail the whole thread
   // parse (unlike PaymentMethod.fromWire/setFromJson elsewhere, left as-is).
 
-  test(
-      'availablePaymentMethods ignore une valeur wire inconnue au lieu de '
+  test('availablePaymentMethods ignore une valeur wire inconnue au lieu de '
       'faire échouer tout le parse', () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'availablePaymentMethods': ['STRIPE', 'BITCOIN', 'CASH'],
-    }));
-    expect(
-      t.availablePaymentMethods,
-      {PaymentMethod.stripe, PaymentMethod.cash},
+    final t = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {
+          'availablePaymentMethods': ['STRIPE', 'BITCOIN', 'CASH'],
+        },
+      ),
     );
+    expect(t.availablePaymentMethods, {
+      PaymentMethod.stripe,
+      PaymentMethod.cash,
+    });
   });
 
-  test(
-      'availablePaymentMethods vide (Set vide, pas null) quand toutes les '
+  test('availablePaymentMethods vide (Set vide, pas null) quand toutes les '
       'valeurs sont inconnues', () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'availablePaymentMethods': ['BITCOIN', 'GOLD'],
-    }));
+    final t = NegotiationThread.fromJson(
+      _baseJson(
+        overrides: {
+          'availablePaymentMethods': ['BITCOIN', 'GOLD'],
+        },
+      ),
+    );
     expect(t.availablePaymentMethods, isNotNull);
     expect(t.availablePaymentMethods, isEmpty);
   });
 
-  test('le reste du thread parse normalement malgré une valeur wire inconnue',
-      () {
-    final t = NegotiationThread.fromJson(_baseJson(overrides: {
-      'status': 'AWAITING_PAYMENT',
-      'availablePaymentMethods': ['BITCOIN'],
-    }));
-    expect(t.id, 't-1');
-    expect(t.status, NegotiationThreadStatus.awaitingPayment);
-  });
+  test(
+    'le reste du thread parse normalement malgré une valeur wire inconnue',
+    () {
+      final t = NegotiationThread.fromJson(
+        _baseJson(
+          overrides: {
+            'status': 'AWAITING_PAYMENT',
+            'availablePaymentMethods': ['BITCOIN'],
+          },
+        ),
+      );
+      expect(t.id, 't-1');
+      expect(t.status, NegotiationThreadStatus.awaitingPayment);
+    },
+  );
 
   test('parse canNudge (true / défaut false)', () {
-    expect(NegotiationThread.fromJson(_baseJson(overrides: {'canNudge': true})).canNudge, isTrue);
+    expect(
+      NegotiationThread.fromJson(
+        _baseJson(overrides: {'canNudge': true}),
+      ).canNudge,
+      isTrue,
+    );
     expect(NegotiationThread.fromJson(_baseJson()).canNudge, isFalse);
   });
 
   test('canNudge participates in props/equality', () {
     final t1 = NegotiationThread.fromJson(_baseJson());
-    final t2 = NegotiationThread.fromJson(_baseJson(overrides: {'canNudge': true}));
+    final t2 = NegotiationThread.fromJson(
+      _baseJson(overrides: {'canNudge': true}),
+    );
     expect(t1, isNot(equals(t2)));
   });
 }

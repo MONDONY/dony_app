@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
@@ -363,7 +364,7 @@ class _Budget extends StatelessWidget {
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         Text(
-          '${item.targetPriceEur!.toStringAsFixed(0)} €',
+          formatPriceIn(item.targetPriceEur!, item.currency),
           style: tt.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
             color: cs.primary,
@@ -448,9 +449,7 @@ class _PlaceholderBox extends StatelessWidget {
       color: cs.primaryContainer.withValues(alpha: 0.45),
       child: Center(
         child: Text(
-          emojiForLabel(
-            item.categories.isEmpty ? null : item.categories.first,
-          ),
+          emojiForLabel(item.categories.isEmpty ? null : item.categories.first),
           style: const TextStyle(fontSize: 30),
         ),
       ),
@@ -624,7 +623,8 @@ class MatchingRequestCard extends StatelessWidget {
                                 const SizedBox(width: DonySpacing.sm),
                                 Expanded(
                                   child: Text(
-                                    match.tripCorridor != null && dateStr.isNotEmpty
+                                    match.tripCorridor != null &&
+                                            dateStr.isNotEmpty
                                         ? '${match.tripCorridor} · $dateStr'
                                         : match.tripCorridor ?? dateStr,
                                     overflow: TextOverflow.ellipsis,
@@ -661,7 +661,7 @@ class MatchingRequestCard extends StatelessWidget {
                                       const SizedBox(height: DonySpacing.xs),
                                       Text(
                                         match.budgetPerKg != null
-                                            ? 'Budget ${match.budgetPerKg!.toStringAsFixed(0)} €/kg'
+                                            ? 'Budget ${formatPriceIn(match.budgetPerKg!, match.currency)}/kg'
                                             : 'Budget libre',
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.primary,
@@ -697,12 +697,16 @@ class MatchingRequestCard extends StatelessWidget {
                                       ),
                                       Row(
                                         children: [
-                                          DonyIcon('star',
-                                              size: 12, color: cs.warning),
+                                          DonyIcon(
+                                            'star',
+                                            size: 12,
+                                            color: cs.warning,
+                                          ),
                                           const SizedBox(width: 2),
                                           Text(
-                                            match.senderRating
-                                                .toStringAsFixed(1),
+                                            match.senderRating.toStringAsFixed(
+                                              1,
+                                            ),
                                             style: tt.bodySmall?.copyWith(
                                               fontWeight: FontWeight.w600,
                                               color: cs.onSurface,
@@ -719,10 +723,13 @@ class MatchingRequestCard extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                DonyIcon('chevron-right',
-                                    size: 16,
-                                    color: cs.onSurfaceVariant
-                                        .withValues(alpha: 0.5)),
+                                DonyIcon(
+                                  'chevron-right',
+                                  size: 16,
+                                  color: cs.onSurfaceVariant.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -736,7 +743,10 @@ class MatchingRequestCard extends StatelessWidget {
           ),
         )
         .animate()
-        .fadeIn(delay: Duration(milliseconds: 60 * index), duration: 280.ms)
+        .fadeIn(
+          delay: Duration(milliseconds: 60 * index),
+          duration: 280.ms,
+        )
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }
@@ -751,7 +761,9 @@ class _ScoreBadge extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.sm),
@@ -801,7 +813,7 @@ class _MatchThumbnail extends StatelessWidget {
   }
 
   Widget _matchPlaceholder(ColorScheme cs) => Container(
-        color: cs.primaryContainer.withValues(alpha: 0.45),
-        child: const Center(child: Text('📦', style: TextStyle(fontSize: 30))),
-      );
+    color: cs.primaryContainer.withValues(alpha: 0.45),
+    child: const Center(child: Text('📦', style: TextStyle(fontSize: 30))),
+  );
 }

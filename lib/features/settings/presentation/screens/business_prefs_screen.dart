@@ -1,17 +1,19 @@
+import 'dart:async';
+
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/currency_picker.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class BusinessPrefsScreen extends StatefulWidget {
   const BusinessPrefsScreen({super.key});
@@ -83,8 +85,7 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                               color: cs.onSurfaceVariant,
                             ),
                           ),
-                          onTap: () =>
-                              _showCurrencyPicker(context, state.currencyCode),
+                          onTap: () => unawaited(CurrencyPicker.show(context)),
                         ),
                       ],
                     ),
@@ -151,83 +152,6 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                   duration: 280.ms,
                   curve: Curves.easeOutCubic,
                 ),
-      ),
-    );
-  }
-
-  void _showCurrencyPicker(BuildContext context, String current) {
-    final rateFormatter = NumberFormat.decimalPattern('fr_FR');
-    DonyBottomSheet.show(
-      context,
-      title: 'Devise d\'affichage',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final currency in SupportedCurrency.values)
-            ListTile(
-              leading: _CurrencyBadge(currency: currency),
-              title: Text('${currency.displayName} (${currency.code})'),
-              subtitle: Text(
-                '1 EUR ≈ ${rateFormatter.format(currency.unitsPerEur)} ${currency.code}',
-              ),
-              trailing: current == currency.code
-                  ? DonyIcon(
-                      'check',
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  : null,
-              onTap: () async {
-                if (current == currency.code) {
-                  context.pop();
-                  return;
-                }
-                context.pop();
-                final confirmed = await DonyDialog.show(
-                  context,
-                  title: 'Changer de devise',
-                  message:
-                      'Tes trajets/colis en $current resteront visibles pour '
-                      'toi mais plus pour les autres. Ton solde $current '
-                      'reste récupérable en revenant sur cette devise plus '
-                      'tard.',
-                  confirmLabel: 'Changer pour ${currency.code}',
-                );
-                if (confirmed == true && context.mounted) {
-                  context.read<BusinessPrefsBloc>().add(
-                    CurrencyChanged(currency.code),
-                  );
-                }
-              },
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CurrencyBadge extends StatelessWidget {
-  const _CurrencyBadge({required this.currency});
-
-  final SupportedCurrency currency;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Container(
-      width: 42,
-      height: 42,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: colors.primaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        currency.code,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: colors.onPrimaryContainer,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.2,
-        ),
       ),
     );
   }
@@ -408,11 +332,15 @@ class _TravelerSectionState extends State<_TravelerSection> {
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
               label: 'Prix minimum',
-              subtitle: '0 € = aucun filtre',
+              subtitle:
+                  '0 ${SupportedCurrency.symbolOf(state.currencyCode)} = aucun filtre',
               trailing: Text(
                 state.minBidPriceEur == 0
                     ? 'Aucun'
-                    : '${state.minBidPriceEur} €',
+                    : formatPriceIn(
+                        state.minBidPriceEur.toDouble(),
+                        state.currencyCode,
+                      ),
                 style: tt.labelMedium?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w700,

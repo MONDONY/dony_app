@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -49,9 +50,9 @@ class BidCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final amount = bid.totalAmountEur != null
-        ? '${bid.totalAmountEur!.toStringAsFixed(0)} €'
+        ? formatPriceIn(bid.totalAmountEur!, bid.currency)
         : bid.pricePerKg != null
-        ? '${((bid.weightKg ?? 0) * bid.pricePerKg!).toStringAsFixed(0)} €'
+        ? formatPriceIn((bid.weightKg ?? 0) * bid.pricePerKg!, bid.currency)
         : '-';
     final content = bid.contentCategory ?? bid.description;
     // Catégories déclarées, découpées : on n'affiche que la première + un
@@ -197,12 +198,22 @@ class _HighlightedText extends StatelessWidget {
   Widget build(BuildContext context) {
     final q = normalizeSearch(query.trim());
     if (q.isEmpty) {
-      return Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+      return Text(
+        text,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
     }
     // normalizeSearch préserve la longueur → les index sont valides sur `text`.
     final idx = normalizeSearch(text).indexOf(q);
     if (idx < 0 || idx + q.length > text.length) {
-      return Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+      return Text(
+        text,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
     }
     final cs = Theme.of(context).colorScheme;
     final highlight = (style ?? const TextStyle()).copyWith(

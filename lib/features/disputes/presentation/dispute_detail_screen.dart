@@ -27,10 +27,12 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
   @override
   void initState() {
     super.initState();
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.disputeDetailOpened,
-      properties: {'status': widget.dispute.status},
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.disputeDetailOpened,
+        properties: {'status': widget.dispute.status},
+      ),
+    );
   }
 
   String _euro(int cents) =>
@@ -43,7 +45,8 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
     final tt = Theme.of(context).textTheme;
     final dep = d.departureCity;
     final arr = d.arrivalCity;
-    final showAmount = d.resolutionType == 'GUARANTEE_PAID' &&
+    final showAmount =
+        d.resolutionType == 'GUARANTEE_PAID' &&
         d.isBeneficiary &&
         d.guaranteeAmountCents != null;
 
@@ -74,9 +77,12 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(disputeTypeLabel(d.type),
-                            style: tt.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w700)),
+                        child: Text(
+                          disputeTypeLabel(d.type),
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                       DisputeStatusChip(status: d.status),
                     ],
@@ -86,8 +92,9 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
                     Text(
                       '${cityFlag(dep) ?? ''} $dep → $arr ${cityFlag(arr) ?? ''}'
                           .trim(),
-                      style:
-                          tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 6),
@@ -100,8 +107,7 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
                       if (d.weightKg != null)
                         'Envoi ${d.weightKg!.toStringAsFixed(d.weightKg! % 1 == 0 ? 0 : 1)} kg',
                     ].join(' · '),
-                    style:
-                        tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -112,45 +118,60 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: cs.primaryContainer.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Row(children: [
-                  Icon(Icons.lock_outline_rounded,
-                      size: 16, color: cs.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Remboursement gelé le temps de l\'instruction — l\'équipe Yadony tranche sous 72 h ouvrées.',
-                      style: tt.bodySmall?.copyWith(
-                          color: cs.primary, fontWeight: FontWeight.w600),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 16,
+                      color: cs.primary,
                     ),
-                  ),
-                ]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Remboursement gelé le temps de l\'instruction — l\'équipe Yadony tranche sous 72 h ouvrées.',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
 
             // ── Timeline ───────────────────────────────────────────
             const SizedBox(height: 20),
-            Text('SUIVI',
-                style: tt.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1)),
+            Text(
+              'SUIVI',
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+              ),
+            ),
             const SizedBox(height: 8),
             DisputeTimeline(dispute: d),
 
             // ── Décision (résolu seulement) ────────────────────────
             if (d.isResolved) ...[
               const SizedBox(height: 20),
-              Text('DÉCISION',
-                  style: tt.labelSmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.1)),
+              Text(
+                'DÉCISION',
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                ),
+              ),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -174,8 +195,9 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
                                 ? 'Résolu en votre faveur'
                                 : 'Litige résolu',
                             style: tt.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: cs.success),
+                              fontWeight: FontWeight.w800,
+                              color: cs.success,
+                            ),
                           ),
                           if (d.resolutionNote != null) ...[
                             const SizedBox(height: 10),
@@ -183,26 +205,33 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .scaffoldBackgroundColor,
+                                color: Theme.of(
+                                  context,
+                                ).scaffoldBackgroundColor,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text(d.resolutionNote!,
-                                  style: tt.bodySmall?.copyWith(height: 1.5)),
+                              child: Text(
+                                d.resolutionNote!,
+                                style: tt.bodySmall?.copyWith(height: 1.5),
+                              ),
                             ),
                           ],
                           if (showAmount) ...[
                             const SizedBox(height: 12),
                             Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Indemnisation versée',
-                                    style: tt.bodyMedium),
-                                Text(_euro(d.guaranteeAmountCents!),
-                                    style: tt.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                        color: cs.success)),
+                                Text(
+                                  'Indemnisation versée',
+                                  style: tt.bodyMedium,
+                                ),
+                                Text(
+                                  _euro(d.guaranteeAmountCents!),
+                                  style: tt.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: cs.success,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -225,10 +254,7 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
               ),
             ),
           ],
-        )
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
       ),
     );
   }

@@ -41,104 +41,114 @@ class _NotificationSettingsScreenState
       appBar: const DonyAppBar(title: 'Notifications'),
       body: BlocBuilder<NotificationPrefsBloc, NotificationPrefsState>(
         builder: (context, state) {
-
           return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              DonySpacing.huge,
-            ),
-            children: [
-              if (state.errorMessage != null) ...[
-                _SyncErrorBanner(message: state.errorMessage!),
-                const SizedBox(height: DonySpacing.lg),
-              ],
-              // ── Section 1 : Protections critiques ──────────────────────
-              SettingsSectionHeader(
-                'PROTECTIONS CRITIQUES',
-                color: Theme.of(context).colorScheme.error,
-              ),
-              SettingsFlatGroup(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  DonySpacing.huge,
+                ),
                 children: [
-                  _buildLockedTile(context,
-                    iconAsset: 'badge-check',
-                    label: 'Livraison confirmée',
-                    subtitle: 'SMS automatique si push non reçu',
+                  if (state.errorMessage != null) ...[
+                    _SyncErrorBanner(message: state.errorMessage!),
+                    const SizedBox(height: DonySpacing.lg),
+                  ],
+                  // ── Section 1 : Protections critiques ──────────────────────
+                  SettingsSectionHeader(
+                    'PROTECTIONS CRITIQUES',
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                  _buildLockedTile(context,
-                    iconAsset: 'banknote',
-                    label: 'Paiement reçu',
-                    subtitle: 'SMS automatique si push non reçu',
+                  SettingsFlatGroup(
+                    children: [
+                      _buildLockedTile(
+                        context,
+                        iconAsset: 'badge-check',
+                        label: 'Livraison confirmée',
+                        subtitle: 'SMS automatique si push non reçu',
+                      ),
+                      _buildLockedTile(
+                        context,
+                        iconAsset: 'banknote',
+                        label: 'Paiement reçu',
+                        subtitle: 'SMS automatique si push non reçu',
+                      ),
+                      _buildLockedTile(
+                        context,
+                        iconAsset: 'gavel',
+                        label: 'Litige ouvert',
+                        subtitle: 'SMS automatique si push non reçu',
+                      ),
+                    ],
                   ),
-                  _buildLockedTile(context,
-                    iconAsset: 'gavel',
-                    label: 'Litige ouvert',
-                    subtitle: 'SMS automatique si push non reçu',
+                  const SizedBox(height: DonySpacing.sm),
+                  _buildCriticalBanner(context),
+                  const SizedBox(height: DonySpacing.xl),
+                  // ── Section 2 : Activité ────────────────────────────────────
+                  SettingsSectionHeader(
+                    'ACTIVITÉ',
+                    color: Theme.of(context).colorScheme.warning,
+                  ),
+                  SettingsFlatGroup(
+                    children: [
+                      _buildTile(
+                        context,
+                        label: 'Matchs & enchères',
+                        subtitle: 'Demandes, acceptations, remise, annulation…',
+                        key: 'push_activity_bids',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      // Cloche rapatriée de l'écran « Colis sur mes trajets »,
+                      // supprimé avec sa route : le réglage reste, son écran non.
+                      _buildPackageMatchTile(context, state.packageMatchAlert),
+                      // Préférence serveur qui existait déjà et gouvernait les alertes
+                      // corridor, sans qu'aucune tuile ne permette de l'atteindre.
+                      _buildTile(
+                        context,
+                        label: 'Nouveaux trajets',
+                        subtitle: 'Alertes corridor et voyageurs suivis',
+                        key: 'push_corridor_alerts',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      _buildTile(
+                        context,
+                        label: 'Discussions de prix',
+                        subtitle: 'Propositions, contre-offres, paiements…',
+                        key: 'push_activity_negotiations',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      _buildTile(
+                        context,
+                        label: 'Messages',
+                        subtitle: 'Nouveaux messages reçus',
+                        key: 'push_messages',
+                        prefs: state.prefs,
+                        onToggle: (key) => _toggle(context, key),
+                      ),
+                      // Trois lignes retirées ici, toutes sans effet possible :
+                      //
+                      // « Rappel trajet J-1 » ne gouvernait rien. Aucun scheduler J-1 n'existe
+                      // côté serveur ; la préférence ne filtrait en réalité que « Bon voyage ! »,
+                      // désormais in-app, donc plus jamais soumis à une préférence de push.
+                      //
+                      // « Actus Yadony » (Push et E-mail) n'a aucun émetteur : aucun code n'envoie
+                      // de notification de type PROMO, et `email_promo` n'a même pas de champ
+                      // correspondant côté serveur. La préférence `pushPromo` reste en base et
+                      // dans le contrat, à `false` par défaut : le jour où des actus existeront,
+                      // la ligne reviendra sans que personne ait été abonné à son insu.
+                    ],
                   ),
                 ],
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              _buildCriticalBanner(context),
-              const SizedBox(height: DonySpacing.xl),
-              // ── Section 2 : Activité ────────────────────────────────────
-              SettingsSectionHeader(
-                'ACTIVITÉ',
-                color: Theme.of(context).colorScheme.warning,
-              ),
-              SettingsFlatGroup(
-                children: [
-                  _buildTile(context,
-                    label: 'Matchs & enchères',
-                    subtitle: 'Demandes, acceptations, remise, annulation…',
-                    key: 'push_activity_bids',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                  // Cloche rapatriée de l'écran « Colis sur mes trajets »,
-                  // supprimé avec sa route : le réglage reste, son écran non.
-                  _buildPackageMatchTile(context, state.packageMatchAlert),
-                  // Préférence serveur qui existait déjà et gouvernait les alertes
-                  // corridor, sans qu'aucune tuile ne permette de l'atteindre.
-                  _buildTile(context,
-                    label: 'Nouveaux trajets',
-                    subtitle: 'Alertes corridor et voyageurs suivis',
-                    key: 'push_corridor_alerts',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                  _buildTile(context,
-                    label: 'Discussions de prix',
-                    subtitle: 'Propositions, contre-offres, paiements…',
-                    key: 'push_activity_negotiations',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                  _buildTile(context,
-                    label: 'Messages',
-                    subtitle: 'Nouveaux messages reçus',
-                    key: 'push_messages',
-                    prefs: state.prefs,
-                    onToggle: (key) => _toggle(context, key),
-                  ),
-                  // Trois lignes retirées ici, toutes sans effet possible :
-                  //
-                  // « Rappel trajet J-1 » ne gouvernait rien. Aucun scheduler J-1 n'existe
-                  // côté serveur ; la préférence ne filtrait en réalité que « Bon voyage ! »,
-                  // désormais in-app, donc plus jamais soumis à une préférence de push.
-                  //
-                  // « Actus Yadony » (Push et E-mail) n'a aucun émetteur : aucun code n'envoie
-                  // de notification de type PROMO, et `email_promo` n'a même pas de champ
-                  // correspondant côté serveur. La préférence `pushPromo` reste en base et
-                  // dans le contrat, à `false` par défaut : le jour où des actus existeront,
-                  // la ligne reviendra sans que personne ait été abonné à son insu.
-                ],
-              ),
-            ],
-          )
+              )
               .animate()
               .fadeIn(duration: 280.ms, curve: Curves.easeOutCubic)
-              .slideY(begin: 0.04, duration: 280.ms, curve: Curves.easeOutCubic);
+              .slideY(
+                begin: 0.04,
+                duration: 280.ms,
+                curve: Curves.easeOutCubic,
+              );
         },
       ),
     );
@@ -166,9 +176,9 @@ class _NotificationSettingsScreenState
         child: Text(
           'Toujours actif',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: cs.onErrorContainer,
-                fontWeight: FontWeight.w600,
-              ),
+            color: cs.onErrorContainer,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -193,8 +203,8 @@ class _NotificationSettingsScreenState
               'Ces notifications protègent vos transactions. '
               'Elles ne peuvent pas être désactivées.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: cs.onSurface.withValues(alpha: 0.7),
-                  ),
+                color: cs.onSurface.withValues(alpha: 0.7),
+              ),
             ),
           ),
         ],
@@ -222,9 +232,9 @@ class _NotificationSettingsScreenState
       trailing: IgnorePointer(
         child: Switch(value: isOn, onChanged: isKnown ? (_) {} : null),
       ),
-      onTap: () => context
-          .read<NotificationPrefsBloc>()
-          .add(NotifPackageMatchAlertToggled(!isOn)),
+      onTap: () => context.read<NotificationPrefsBloc>().add(
+        NotifPackageMatchAlertToggled(!isOn),
+      ),
     );
   }
 

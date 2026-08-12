@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('affiche le budget de l’aperçu en CAD sans conversion', (tester) async {
+  testWidgets('affiche le budget de l’aperçu en CAD sans conversion', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light(),
@@ -37,38 +39,42 @@ void main() {
     VoidCallback? onSaveDraft,
     required VoidCallback onConfirm,
   }) async {
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => TextButton(
-            onPressed: () => PackageRequestPreviewSheet.show(
-              context,
-              formState: const PackageRequestFormState(
-                departureCity: 'Paris',
-                arrivalCity: 'Dakar',
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => PackageRequestPreviewSheet.show(
+                context,
+                formState: const PackageRequestFormState(
+                  departureCity: 'Paris',
+                  arrivalCity: 'Dakar',
+                ),
+                onConfirm: onConfirm,
+                onSaveDraft: onSaveDraft,
               ),
-              onConfirm: onConfirm,
-              onSaveDraft: onSaveDraft,
+              child: const Text('open'),
             ),
-            child: const Text('open'),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('sans onSaveDraft, seul le bouton Publier est affiché',
-      (tester) async {
+  testWidgets('sans onSaveDraft, seul le bouton Publier est affiché', (
+    tester,
+  ) async {
     await pumpAndOpen(tester, onConfirm: () {});
     expect(find.byKey(const Key('preview-publish')), findsOneWidget);
     expect(find.byKey(const Key('preview-save-draft')), findsNothing);
   });
 
-  testWidgets('avec onSaveDraft, les deux boutons sont affichés',
-      (tester) async {
+  testWidgets('avec onSaveDraft, les deux boutons sont affichés', (
+    tester,
+  ) async {
     await pumpAndOpen(tester, onConfirm: () {}, onSaveDraft: () {});
     expect(find.byKey(const Key('preview-publish')), findsOneWidget);
     expect(find.byKey(const Key('preview-save-draft')), findsOneWidget);
@@ -81,10 +87,15 @@ void main() {
     expect(confirmed, isTrue);
   });
 
-  testWidgets('tap sur Enregistrer en brouillon appelle onSaveDraft',
-      (tester) async {
+  testWidgets('tap sur Enregistrer en brouillon appelle onSaveDraft', (
+    tester,
+  ) async {
     var drafted = false;
-    await pumpAndOpen(tester, onConfirm: () {}, onSaveDraft: () => drafted = true);
+    await pumpAndOpen(
+      tester,
+      onConfirm: () {},
+      onSaveDraft: () => drafted = true,
+    );
     await tester.tap(find.byKey(const Key('preview-save-draft')));
     expect(drafted, isTrue);
   });

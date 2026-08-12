@@ -239,7 +239,7 @@ void main() {
     testWidgets(
       'récap expéditeur : seul le brut (total + tarif/kg), jamais le net ni la commission',
       (tester) async {
-        // bid = 5 kg × 6 €/kg NET. Brut = 30 × 1,12 = 33,60 €. Tarif/kg brut = 6,72.
+        // bid = 5 kg × 6 €/kg NET. Brut = 30 × 1,12 = 33,60 €. Tarif/kg brut = 6,72.
         await tester.pumpWidget(
           _wrap(
             PaymentScreen(
@@ -270,42 +270,41 @@ void main() {
       },
     );
 
-    testWidgets(
-      'tarif/kg affiché dans la devise du bid, pas toujours en EUR',
-      (tester) async {
-        final cadBid = BidModel(
-          id: 'bid-cad-1',
-          announcementId: 'ann-1',
-          senderId: 'sender-1',
-          weightKg: 5.0,
-          pricePerKg: 6.0,
-          description: 'Vêtements',
-          status: 'ACCEPTED',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2025, 6, 1),
-          createdAt: DateTime(2025, 5, 1),
-          updatedAt: DateTime(2025, 5, 1),
-          currency: 'CAD',
-        );
+    testWidgets('tarif/kg affiché dans la devise du bid, pas toujours en EUR', (
+      tester,
+    ) async {
+      final cadBid = BidModel(
+        id: 'bid-cad-1',
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        weightKg: 5.0,
+        pricePerKg: 6.0,
+        description: 'Vêtements',
+        status: 'ACCEPTED',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2025, 6, 1),
+        createdAt: DateTime(2025, 5, 1),
+        updatedAt: DateTime(2025, 5, 1),
+        currency: 'CAD',
+      );
 
-        await tester.pumpWidget(
-          _wrap(
-            PaymentScreen(
-              bid: cadBid,
-              localAuthService: mockLocalAuth,
-              userPrefs: _mockUserPrefs(biometricEnabled: true),
-            ),
-            mockBloc,
-            configBloc: mockConfigBloc,
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: cadBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
           ),
-        );
-        await tester.pumpAndSettle();
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.textContaining('CA\$'), findsWidgets);
-        expect(find.textContaining('€'), findsNothing);
-      },
-    );
+      expect(find.textContaining('CA\$'), findsWidgets);
+      expect(find.textContaining('€'), findsNothing);
+    });
 
     testWidgets('dispatches PaymentInitiated after successful biometric', (
       tester,

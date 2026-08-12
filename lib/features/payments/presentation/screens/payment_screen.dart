@@ -25,7 +25,8 @@ import 'package:hive/hive.dart';
 class PaymentScreen extends StatelessWidget {
   final BidModel bid;
   final LocalAuthService? localAuthService;
-  @visibleForTesting final Box? userPrefs;
+  @visibleForTesting
+  final Box? userPrefs;
 
   const PaymentScreen({
     super.key,
@@ -44,7 +45,10 @@ class PaymentScreen extends StatelessWidget {
       },
       builder: (context, state) {
         if (state is PaymentEscrowPending) {
-          return _EscrowConfirmedView(amount: state.amount, currency: bid.currency);
+          return _EscrowConfirmedView(
+            amount: state.amount,
+            currency: bid.currency,
+          );
         }
         return BlocBuilder<ConfigBloc, ConfigState>(
           builder: (context, configState) {
@@ -66,7 +70,9 @@ class PaymentScreen extends StatelessWidget {
   }
 
   Future<void> _presentPaymentSheet(
-      BuildContext context, PaymentSheetReady state) async {
+    BuildContext context,
+    PaymentSheetReady state,
+  ) async {
     final total = state.amount + state.commissionAmount;
     await DonyPaymentSheet.show(
       context,
@@ -105,7 +111,8 @@ class _PaymentSummaryView extends StatelessWidget {
   // _amount = NET du voyageur (totalNetAmountEur côté backend). L'expéditeur paie
   // ce net + la commission Yadony : _total = net × (1 + taux), aligné sur le montant
   // réellement facturé par le backend (PaymentService : amount = net × (1 + taux)).
-  double get _amount => bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
+  double get _amount =>
+      bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
   double get _commission => _amount * commissionRate;
   // Total payé par l'expéditeur = BRUT fourni par le backend (qui ne renvoie
   // jamais le net au sender) ; repli sur la dérivation net × (1 + taux).
@@ -126,10 +133,12 @@ class _PaymentSummaryView extends StatelessWidget {
       );
       return;
     }
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.paymentInitiated,
-      properties: {'method': 'card', 'amount': _total},
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.paymentInitiated,
+        properties: {'method': 'card', 'amount': _total},
+      ),
+    );
     context.read<PaymentBloc>().add(PaymentInitiated(bid.id));
   }
 
@@ -142,55 +151,62 @@ class _PaymentSummaryView extends StatelessWidget {
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Payer mon envoi'),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const ContextualTutorialCard(
-                  context: TutorialContext.payment,
-                ),
-                const SizedBox(height: DonySpacing.lg),
-                _SummaryCard(
-                  bid: bid,
-                  amount: _amount,
-                  commission: _commission,
-                  total: _total,
-                  commissionRate: commissionRate,
-                ),
-                const SizedBox(height: DonySpacing.lg),
-                const DonyStatusBanner(
-                  type: DonyStatusBannerType.info,
-                  iconAsset: 'lock',
-                  message:
-                      'Votre paiement est sécurisé, libéré uniquement après confirmation de livraison par le destinataire.',
-                ),
-                const SizedBox(height: DonySpacing.xl),
-                if (error != null) ...[
-                  DonyStatusBanner(
-                    type: DonyStatusBannerType.error,
-                    message: error,
-                  ),
-                  const SizedBox(height: DonySpacing.lg),
-                ],
-                DonyButton(
-                  label: 'Payer ${formatPriceIn(_total, bid.currency)}',
-                  onPressed: isLoading ? null : () => _pay(context),
-                  isLoading: isLoading,
-                  iconAsset: 'lock',
-                ),
-              ],
-            )
-                .animate()
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          ),
-        );
-      }),
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              h,
+              DonySpacing.xl,
+              h,
+              DonySpacing.huge,
+            ),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ContextualTutorialCard(
+                        context: TutorialContext.payment,
+                      ),
+                      const SizedBox(height: DonySpacing.lg),
+                      _SummaryCard(
+                        bid: bid,
+                        amount: _amount,
+                        commission: _commission,
+                        total: _total,
+                        commissionRate: commissionRate,
+                      ),
+                      const SizedBox(height: DonySpacing.lg),
+                      const DonyStatusBanner(
+                        type: DonyStatusBannerType.info,
+                        iconAsset: 'lock',
+                        message:
+                            'Votre paiement est sécurisé, libéré uniquement après confirmation de livraison par le destinataire.',
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
+                      if (error != null) ...[
+                        DonyStatusBanner(
+                          type: DonyStatusBannerType.error,
+                          message: error,
+                        ),
+                        const SizedBox(height: DonySpacing.lg),
+                      ],
+                      DonyButton(
+                        label: 'Payer ${formatPriceIn(_total, bid.currency)}',
+                        onPressed: isLoading ? null : () => _pay(context),
+                        isLoading: isLoading,
+                        iconAsset: 'lock',
+                      ),
+                    ],
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -222,24 +238,28 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              DonySpacing.base, DonySpacing.base, DonySpacing.base, DonySpacing.md,
+              DonySpacing.base,
+              DonySpacing.base,
+              DonySpacing.base,
+              DonySpacing.md,
             ),
-            child: Text(
-              'Récapitulatif',
-              style: tt.titleLarge,
-            ),
+            child: Text('Récapitulatif', style: tt.titleLarge),
           ),
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base, vertical: DonySpacing.xs,
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.xs,
             ),
             child: Column(
               children: [
-                if (bid.pricingMode == BidPricingMode.kg || bid.pricingMode == BidPricingMode.mixed) ...[
+                if (bid.pricingMode == BidPricingMode.kg ||
+                    bid.pricingMode == BidPricingMode.mixed) ...[
                   DonyInfoRow(
                     label: 'Poids',
-                    value: bid.weightKg != null ? '${bid.weightKg!.toStringAsFixed(1)} kg' : '-',
+                    value: bid.weightKg != null
+                        ? '${bid.weightKg!.toStringAsFixed(1)} kg'
+                        : '-',
                   ),
                   const DonyInfoRow.divider(),
                   DonyInfoRow(
@@ -251,10 +271,7 @@ class _SummaryCard extends StatelessWidget {
                         : '-',
                   ),
                 ] else if (bid.pricingMode == BidPricingMode.grid) ...[
-                  DonyInfoRow(
-                    label: 'Type',
-                    value: 'Forfait articles',
-                  ),
+                  DonyInfoRow(label: 'Type', value: 'Forfait articles'),
                 ],
               ],
             ),
@@ -265,10 +282,7 @@ class _SummaryCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Vous payez',
-                  style: tt.titleMedium,
-                ),
+                Text('Vous payez', style: tt.titleMedium),
                 Text(
                   formatPriceIn(total, bid.currency),
                   style: tt.headlineMedium?.copyWith(color: cs.primary),

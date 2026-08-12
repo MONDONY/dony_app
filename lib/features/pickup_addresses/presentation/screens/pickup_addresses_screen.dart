@@ -45,8 +45,9 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
         context.read<PickupAddressBloc>().add(const PickupAddressLoaded());
       }
     } else {
-      final changed =
-          await context.push<bool>('/profile/addresses/delivery/new');
+      final changed = await context.push<bool>(
+        '/profile/addresses/delivery/new',
+      );
       if (!mounted) {
         return;
       }
@@ -75,7 +76,8 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
               : 'Ajouter une adresse de remise',
           color: activeColor,
           style: IconButton.styleFrom(
-              backgroundColor: activeColor.withValues(alpha: 0.1)),
+            backgroundColor: activeColor.withValues(alpha: 0.1),
+          ),
           onPressed: _onAdd,
         ),
       ],
@@ -95,10 +97,7 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
       ),
       body: TabBarView(
         controller: _tab,
-        children: const [
-          _RemiseTab(),
-          _LivraisonTab(),
-        ],
+        children: const [_RemiseTab(), _LivraisonTab()],
       ),
     );
   }
@@ -116,7 +115,9 @@ class _RemiseTab extends StatelessWidget {
         if (state.status == PickupAddressStatus.loading &&
             state.addresses.isEmpty) {
           return const DonyEmptyState(
-              type: DonyEmptyStateType.loading, title: '');
+            type: DonyEmptyStateType.loading,
+            title: '',
+          );
         }
         if (state.status == PickupAddressStatus.error &&
             state.addresses.isEmpty) {
@@ -127,9 +128,9 @@ class _RemiseTab extends StatelessWidget {
             title: 'Erreur de chargement',
             description: state.error ?? 'Une erreur est survenue.',
             actionLabel: 'Réessayer',
-            onAction: () => context
-                .read<PickupAddressBloc>()
-                .add(const PickupAddressLoaded()),
+            onAction: () => context.read<PickupAddressBloc>().add(
+              const PickupAddressLoaded(),
+            ),
           );
         }
         if (state.addresses.isEmpty) {
@@ -140,12 +141,13 @@ class _RemiseTab extends StatelessWidget {
                 'Ajoute l\'adresse où tu souhaites recevoir les colis des expéditeurs.',
             actionLabel: 'Ajouter une adresse',
             onAction: () async {
-              final changed =
-                  await context.push<bool>('/profile/addresses/new');
+              final changed = await context.push<bool>(
+                '/profile/addresses/new',
+              );
               if ((changed ?? false) && context.mounted) {
-                context
-                    .read<PickupAddressBloc>()
-                    .add(const PickupAddressLoaded());
+                context.read<PickupAddressBloc>().add(
+                  const PickupAddressLoaded(),
+                );
               }
             },
           );
@@ -185,7 +187,9 @@ class _LivraisonTab extends StatelessWidget {
         if (state.status == DeliveryAddressStatus.loading &&
             state.addresses.isEmpty) {
           return const DonyEmptyState(
-              type: DonyEmptyStateType.loading, title: '');
+            type: DonyEmptyStateType.loading,
+            title: '',
+          );
         }
         if (state.status == DeliveryAddressStatus.error &&
             state.addresses.isEmpty) {
@@ -196,9 +200,9 @@ class _LivraisonTab extends StatelessWidget {
             title: 'Erreur de chargement',
             description: state.error ?? 'Une erreur est survenue.',
             actionLabel: 'Réessayer',
-            onAction: () => context
-                .read<DeliveryAddressBloc>()
-                .add(const DeliveryAddressLoaded()),
+            onAction: () => context.read<DeliveryAddressBloc>().add(
+              const DeliveryAddressLoaded(),
+            ),
           );
         }
         if (state.addresses.isEmpty) {
@@ -209,12 +213,13 @@ class _LivraisonTab extends StatelessWidget {
                 'Ajoute les adresses où tu déposes habituellement les colis.',
             actionLabel: 'Ajouter une adresse',
             onAction: () async {
-              final changed = await context
-                  .push<bool>('/profile/addresses/delivery/new');
+              final changed = await context.push<bool>(
+                '/profile/addresses/delivery/new',
+              );
               if ((changed ?? false) && context.mounted) {
-                context
-                    .read<DeliveryAddressBloc>()
-                    .add(const DeliveryAddressLoaded());
+                context.read<DeliveryAddressBloc>().add(
+                  const DeliveryAddressLoaded(),
+                );
               }
             },
           );
@@ -259,18 +264,18 @@ class _PickupAddressCard extends StatelessWidget {
         color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         border: Border.all(
-          color:
-              address.isDefault ? cs.primary.withValues(alpha: 0.4) : cs.outline,
+          color: address.isDefault
+              ? cs.primary.withValues(alpha: 0.4)
+              : cs.outline,
         ),
       ),
       child: InkWell(
         onTap: () async {
-          final changed =
-              await context.push<bool>('/profile/addresses/${address.id}');
+          final changed = await context.push<bool>(
+            '/profile/addresses/${address.id}',
+          );
           if ((changed ?? false) && context.mounted) {
-            context
-                .read<PickupAddressBloc>()
-                .add(const PickupAddressLoaded());
+            context.read<PickupAddressBloc>().add(const PickupAddressLoaded());
           }
         },
         borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -285,8 +290,7 @@ class _PickupAddressCard extends StatelessWidget {
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
-                child:
-                    DonyIcon('download', color: cs.primary, size: 20),
+                child: DonyIcon('download', color: cs.primary, size: 20),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -296,40 +300,55 @@ class _PickupAddressCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(address.label,
-                              style: tt.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700)),
+                          child: Text(
+                            address.label,
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                         if (address.isDefault)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.sm, vertical: 2),
+                              horizontal: DonySpacing.sm,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: cs.success.withValues(alpha: 0.12),
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.full),
+                              borderRadius: BorderRadius.circular(
+                                DonyRadius.full,
+                              ),
                               border: Border.all(
-                                  color: cs.success.withValues(alpha: 0.4)),
+                                color: cs.success.withValues(alpha: 0.4),
+                              ),
                             ),
-                            child: Text('Par défaut',
-                                style: tt.labelSmall?.copyWith(
-                                    color: cs.success,
-                                    fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Par défaut',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                       ],
                     ),
                     const SizedBox(height: DonySpacing.xs),
                     Text(
-                      [address.street, address.postalCode, address.city]
-                          .join(', '),
-                      style:
-                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      [
+                        address.street,
+                        address.postalCode,
+                        address.city,
+                      ].join(', '),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                     if (address.floorApartment != null) ...[
                       const SizedBox(height: 2),
-                      Text(address.floorApartment!,
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant)),
+                      Text(
+                        address.floorApartment!,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -367,12 +386,13 @@ class _DeliveryAddressCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () async {
-          final changed = await context
-              .push<bool>('/profile/addresses/delivery/${address.id}');
+          final changed = await context.push<bool>(
+            '/profile/addresses/delivery/${address.id}',
+          );
           if ((changed ?? false) && context.mounted) {
-            context
-                .read<DeliveryAddressBloc>()
-                .add(const DeliveryAddressLoaded());
+            context.read<DeliveryAddressBloc>().add(
+              const DeliveryAddressLoaded(),
+            );
           }
         },
         borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -387,8 +407,7 @@ class _DeliveryAddressCard extends StatelessWidget {
                   color: cs.secondaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
-                child:
-                    DonyIcon('upload', color: cs.secondary, size: 20),
+                child: DonyIcon('upload', color: cs.secondary, size: 20),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -398,25 +417,35 @@ class _DeliveryAddressCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(address.label,
-                              style: tt.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700)),
+                          child: Text(
+                            address.label,
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                         if (address.isDefault)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.sm, vertical: 2),
+                              horizontal: DonySpacing.sm,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: cs.success.withValues(alpha: 0.12),
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.full),
+                              borderRadius: BorderRadius.circular(
+                                DonyRadius.full,
+                              ),
                               border: Border.all(
-                                  color: cs.success.withValues(alpha: 0.4)),
+                                color: cs.success.withValues(alpha: 0.4),
+                              ),
                             ),
-                            child: Text('Par défaut',
-                                style: tt.labelSmall?.copyWith(
-                                    color: cs.success,
-                                    fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Par défaut',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -426,16 +455,18 @@ class _DeliveryAddressCard extends StatelessWidget {
                         if (address.street != null) address.street!,
                         address.city,
                       ].join(', '),
-                      style:
-                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                     if (address.instructions != null) ...[
                       const SizedBox(height: 2),
-                      Text(address.instructions!,
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
+                      Text(
+                        address.instructions!,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ],
                 ),
@@ -462,23 +493,24 @@ class _PickupKebabMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return PopupMenuButton<_AddressAction>(
-      icon: DonyIcon('ellipsis-vertical',
-          color: cs.onSurfaceVariant, size: 20),
+      icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md)),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
       onSelected: (action) async {
         switch (action) {
           case _AddressAction.setDefault:
-            context
-                .read<PickupAddressBloc>()
-                .add(PickupAddressSetDefault(address.id));
+            context.read<PickupAddressBloc>().add(
+              PickupAddressSetDefault(address.id),
+            );
           case _AddressAction.edit:
-            final changed =
-                await context.push<bool>('/profile/addresses/${address.id}');
+            final changed = await context.push<bool>(
+              '/profile/addresses/${address.id}',
+            );
             if ((changed ?? false) && context.mounted) {
-              context
-                  .read<PickupAddressBloc>()
-                  .add(const PickupAddressLoaded());
+              context.read<PickupAddressBloc>().add(
+                const PickupAddressLoaded(),
+              );
             }
           case _AddressAction.delete:
             final confirmed = await DonyDialog.show(
@@ -491,9 +523,9 @@ class _PickupKebabMenu extends StatelessWidget {
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
-              context
-                  .read<PickupAddressBloc>()
-                  .add(PickupAddressDeleted(address.id));
+              context.read<PickupAddressBloc>().add(
+                PickupAddressDeleted(address.id),
+              );
             }
         }
       },
@@ -501,30 +533,40 @@ class _PickupKebabMenu extends StatelessWidget {
         if (!address.isDefault)
           const PopupMenuItem(
             value: _AddressAction.setDefault,
-            child: Row(children: [
-              DonyIcon('circle-check', size: 18),
-              SizedBox(width: DonySpacing.sm),
-              Text('Définir par défaut'),
-            ]),
+            child: Row(
+              children: [
+                DonyIcon('circle-check', size: 18),
+                SizedBox(width: DonySpacing.sm),
+                Text('Définir par défaut'),
+              ],
+            ),
           ),
         const PopupMenuItem(
           value: _AddressAction.edit,
-          child: Row(children: [
-            DonyIcon('square-pen', size: 18),
-            SizedBox(width: DonySpacing.sm),
-            Text('Modifier'),
-          ]),
+          child: Row(
+            children: [
+              DonyIcon('square-pen', size: 18),
+              SizedBox(width: DonySpacing.sm),
+              Text('Modifier'),
+            ],
+          ),
         ),
         PopupMenuItem(
           value: _AddressAction.delete,
-          child: Row(children: [
-            DonyIcon('trash-2',
-                size: 18, color: Theme.of(context).colorScheme.error),
-            const SizedBox(width: DonySpacing.sm),
-            Text('Supprimer',
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.error)),
-          ]),
+          child: Row(
+            children: [
+              DonyIcon(
+                'trash-2',
+                size: 18,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Text(
+                'Supprimer',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -540,23 +582,24 @@ class _DeliveryKebabMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return PopupMenuButton<_AddressAction>(
-      icon: DonyIcon('ellipsis-vertical',
-          color: cs.onSurfaceVariant, size: 20),
+      icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant, size: 20),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md)),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
       onSelected: (action) async {
         switch (action) {
           case _AddressAction.setDefault:
-            context
-                .read<DeliveryAddressBloc>()
-                .add(DeliveryAddressSetDefault(address.id));
+            context.read<DeliveryAddressBloc>().add(
+              DeliveryAddressSetDefault(address.id),
+            );
           case _AddressAction.edit:
-            final changed = await context
-                .push<bool>('/profile/addresses/delivery/${address.id}');
+            final changed = await context.push<bool>(
+              '/profile/addresses/delivery/${address.id}',
+            );
             if ((changed ?? false) && context.mounted) {
-              context
-                  .read<DeliveryAddressBloc>()
-                  .add(const DeliveryAddressLoaded());
+              context.read<DeliveryAddressBloc>().add(
+                const DeliveryAddressLoaded(),
+              );
             }
           case _AddressAction.delete:
             final confirmed = await DonyDialog.show(
@@ -569,9 +612,9 @@ class _DeliveryKebabMenu extends StatelessWidget {
               variant: DonyDialogVariant.destructive,
             );
             if ((confirmed ?? false) && context.mounted) {
-              context
-                  .read<DeliveryAddressBloc>()
-                  .add(DeliveryAddressDeleted(address.id));
+              context.read<DeliveryAddressBloc>().add(
+                DeliveryAddressDeleted(address.id),
+              );
             }
         }
       },
@@ -579,30 +622,40 @@ class _DeliveryKebabMenu extends StatelessWidget {
         if (!address.isDefault)
           const PopupMenuItem(
             value: _AddressAction.setDefault,
-            child: Row(children: [
-              DonyIcon('circle-check', size: 18),
-              SizedBox(width: DonySpacing.sm),
-              Text('Définir par défaut'),
-            ]),
+            child: Row(
+              children: [
+                DonyIcon('circle-check', size: 18),
+                SizedBox(width: DonySpacing.sm),
+                Text('Définir par défaut'),
+              ],
+            ),
           ),
         const PopupMenuItem(
           value: _AddressAction.edit,
-          child: Row(children: [
-            DonyIcon('square-pen', size: 18),
-            SizedBox(width: DonySpacing.sm),
-            Text('Modifier'),
-          ]),
+          child: Row(
+            children: [
+              DonyIcon('square-pen', size: 18),
+              SizedBox(width: DonySpacing.sm),
+              Text('Modifier'),
+            ],
+          ),
         ),
         PopupMenuItem(
           value: _AddressAction.delete,
-          child: Row(children: [
-            DonyIcon('trash-2',
-                size: 18, color: Theme.of(context).colorScheme.error),
-            const SizedBox(width: DonySpacing.sm),
-            Text('Supprimer',
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.error)),
-          ]),
+          child: Row(
+            children: [
+              DonyIcon(
+                'trash-2',
+                size: 18,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Text(
+                'Supprimer',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
         ),
       ],
     );

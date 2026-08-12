@@ -71,11 +71,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    DonyIcon(
-                      'wifi-off',
-                      size: 12,
-                      color: cs.secondary,
-                    ),
+                    DonyIcon('wifi-off', size: 12, color: cs.secondary),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
                       'Hors-ligne',
@@ -88,60 +84,71 @@ class OfflineScanQueueScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-            _AlertBanner(count: count),
-            const SizedBox(height: DonySpacing.xl),
-
-            Text(
-              "FILE D'ATTENTE ($count)",
-              style: tt.labelMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-                letterSpacing: 0.8,
-              ),
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              h,
+              DonySpacing.xl,
+              h,
+              DonySpacing.huge,
             ),
-            const SizedBox(height: DonySpacing.base),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _AlertBanner(count: count),
+                  const SizedBox(height: DonySpacing.xl),
 
-            if (entries.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(DonySpacing.xxl),
-                  child: Text(
-                    'Aucune lecture en attente.',
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-              )
-            else
-              ...entries.map((entry) => Padding(
-                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-                    child: _QueueItemCard(
-                      bidId: entry['bidId'] as String? ?? '',
-                      eventType: entry['eventType'] as String? ?? '',
-                      timestamp: entry['offlineTimestamp'] as String? ?? '',
+                  Text(
+                    "FILE D'ATTENTE ($count)",
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 0.8,
                     ),
-                  )),
+                  ),
+                  const SizedBox(height: DonySpacing.base),
 
-            const SizedBox(height: DonySpacing.xxl),
-            Center(
-              child: Text(
-                'Continuez les lectures même sans réseau.',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                textAlign: TextAlign.center,
+                  if (entries.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(DonySpacing.xxl),
+                        child: Text(
+                          'Aucune lecture en attente.',
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ...entries.map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                        child: _QueueItemCard(
+                          bidId: entry['bidId'] as String? ?? '',
+                          eventType: entry['eventType'] as String? ?? '',
+                          timestamp: entry['offlineTimestamp'] as String? ?? '',
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: DonySpacing.xxl),
+                  Center(
+                    child: Text(
+                      'Continuez les lectures même sans réseau.',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-            ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 }
@@ -166,11 +173,7 @@ class _AlertBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DonyIcon(
-            'shield',
-            color: cs.secondary,
-            size: DonySpacing.iconSm,
-          ),
+          DonyIcon('shield', color: cs.secondary, size: DonySpacing.iconSm),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Column(
@@ -183,7 +186,9 @@ class _AlertBanner extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   '$count lectures en attente. On les enverra dès que vous récupérez du réseau.',
-                  style: tt.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  style: tt.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -245,8 +250,9 @@ class _QueueItemCard extends StatelessWidget {
                   children: [
                     Text(
                       'colis $_shortCode',
-                      style: tt.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(width: DonySpacing.xs),
                     _EventChip(label: label),
@@ -260,11 +266,7 @@ class _QueueItemCard extends StatelessWidget {
               ],
             ),
           ),
-          DonyIcon(
-            'clock',
-            size: 16,
-            color: cs.onSurfaceVariant,
-          ),
+          DonyIcon('clock', size: 16, color: cs.onSurfaceVariant),
         ],
       ),
     );

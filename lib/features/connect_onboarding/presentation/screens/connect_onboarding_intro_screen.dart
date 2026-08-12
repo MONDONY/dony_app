@@ -19,7 +19,8 @@ class ConnectOnboardingIntroScreen extends StatefulWidget {
 }
 
 class _ConnectOnboardingIntroScreenState
-    extends State<ConnectOnboardingIntroScreen> with WidgetsBindingObserver {
+    extends State<ConnectOnboardingIntroScreen>
+    with WidgetsBindingObserver {
   bool _hasLaunchedBrowser = false;
 
   @override
@@ -105,75 +106,79 @@ class _IntroView extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final isLoading = state is ConnectOnboardingLoading;
     final error = state is ConnectOnboardingError
-        ? ErrorPresenter.resolve((state as ConnectOnboardingError).error).message
+        ? ErrorPresenter.resolve(
+            (state as ConnectOnboardingError).error,
+          ).message
         : null;
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Compte Stripe Connect'),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            h,
-            DonySpacing.xxl,
-            h,
-            MediaQuery.of(context).padding.bottom + 100,
-          ),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Hero mascotte
-                DonyMascotteAnimated(
-                  type: DonyMascotteType.securise,
-                  size: DonyMascotteSize.lg,
-                ),
-                const SizedBox(height: DonySpacing.xl),
-
-                // Title
-                Text(
-                  'Complète ton\ncompte Stripe',
-                  style: tt.displayLarge?.copyWith(height: 1.2),
-                ).animate().fadeIn(delay: 60.ms),
-                const SizedBox(height: DonySpacing.md),
-
-                // Description
-                Text(
-                  'Pour publier ton trajet et recevoir des paiements, complète ton compte Stripe. Cela prend environ 5 minutes.',
-                  style: tt.bodyLarge?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    height: 1.55,
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              h,
+              DonySpacing.xxl,
+              h,
+              MediaQuery.of(context).padding.bottom + 100,
+            ),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Hero mascotte
+                  DonyMascotteAnimated(
+                    type: DonyMascotteType.securise,
+                    size: DonyMascotteSize.lg,
                   ),
-                ).animate().fadeIn(delay: 100.ms),
-                const SizedBox(height: DonySpacing.xxl),
+                  const SizedBox(height: DonySpacing.xl),
 
-                // Benefits
-                _BenefitsList().animate().fadeIn(delay: 140.ms),
-                const SizedBox(height: DonySpacing.xxl),
+                  // Title
+                  Text(
+                    'Complète ton\ncompte Stripe',
+                    style: tt.displayLarge?.copyWith(height: 1.2),
+                  ).animate().fadeIn(delay: 60.ms),
+                  const SizedBox(height: DonySpacing.md),
 
-                // Info banner
-                const DonyStatusBanner(
-                  type: DonyStatusBannerType.info,
-                  iconAsset: 'shield',
-                  message:
-                      'Tes données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à tes informations bancaires.',
-                ).animate().fadeIn(delay: 180.ms),
-                const SizedBox(height: DonySpacing.xl),
+                  // Description
+                  Text(
+                    'Pour publier ton trajet et recevoir des paiements, complète ton compte Stripe. Cela prend environ 5 minutes.',
+                    style: tt.bodyLarge?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.55,
+                    ),
+                  ).animate().fadeIn(delay: 100.ms),
+                  const SizedBox(height: DonySpacing.xxl),
 
-                // Error banner
-                if (error != null) ...[
-                  DonyStatusBanner(
-                    type: DonyStatusBannerType.error,
-                    message: error,
-                  ),
-                  const SizedBox(height: DonySpacing.lg),
+                  // Benefits
+                  _BenefitsList().animate().fadeIn(delay: 140.ms),
+                  const SizedBox(height: DonySpacing.xxl),
+
+                  // Info banner
+                  const DonyStatusBanner(
+                    type: DonyStatusBannerType.info,
+                    iconAsset: 'shield',
+                    message:
+                        'Tes données sont chiffrées et gérées directement par Stripe : Yadony n\'a jamais accès à tes informations bancaires.',
+                  ).animate().fadeIn(delay: 180.ms),
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // Error banner
+                  if (error != null) ...[
+                    DonyStatusBanner(
+                      type: DonyStatusBannerType.error,
+                      message: error,
+                    ),
+                    const SizedBox(height: DonySpacing.lg),
+                  ],
                 ],
-              ],
-            ).animate().slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          ),
-        );
-      }),
+              ).animate().slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ),
+          );
+        },
+      ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -187,9 +192,9 @@ class _IntroView extends StatelessWidget {
             iconAsset: 'arrow-right',
             onPressed: isLoading
                 ? null
-                : () => context
-                    .read<ConnectOnboardingBloc>()
-                    .add(const ConnectOnboardingLinkRequested()),
+                : () => context.read<ConnectOnboardingBloc>().add(
+                    const ConnectOnboardingLinkRequested(),
+                  ),
             isLoading: isLoading,
           ),
         ),
@@ -206,10 +211,16 @@ class _BenefitsList extends StatelessWidget {
 
     const items = [
       ('timer', '5 minutes', 'Rapide et guidé pas à pas'),
-      ('zap', 'Virement automatique',
-          'Reçu sur ton compte après chaque livraison confirmée'),
-      ('shield-check', 'Sécurisé par Stripe',
-          'Leader mondial des paiements en ligne'),
+      (
+        'zap',
+        'Virement automatique',
+        'Reçu sur ton compte après chaque livraison confirmée',
+      ),
+      (
+        'shield-check',
+        'Sécurisé par Stripe',
+        'Leader mondial des paiements en ligne',
+      ),
     ];
 
     return DonyCard(

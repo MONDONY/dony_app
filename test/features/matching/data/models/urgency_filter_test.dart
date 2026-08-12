@@ -5,23 +5,17 @@ void main() {
   group('UrgencyFilter.matches', () {
     test('veryUrgent matches departure in 0–2 days', () {
       final today = DateTime.now();
+      expect(UrgencyFilter.veryUrgent.matches(today), isTrue);
       expect(
-        UrgencyFilter.veryUrgent.matches(today),
+        UrgencyFilter.veryUrgent.matches(today.add(const Duration(days: 1))),
         isTrue,
       );
       expect(
-        UrgencyFilter.veryUrgent
-            .matches(today.add(const Duration(days: 1))),
+        UrgencyFilter.veryUrgent.matches(today.add(const Duration(days: 2))),
         isTrue,
       );
       expect(
-        UrgencyFilter.veryUrgent
-            .matches(today.add(const Duration(days: 2))),
-        isTrue,
-      );
-      expect(
-        UrgencyFilter.veryUrgent
-            .matches(today.add(const Duration(days: 3))),
+        UrgencyFilter.veryUrgent.matches(today.add(const Duration(days: 3))),
         isFalse,
       );
     });
@@ -104,10 +98,14 @@ void main() {
         today.add(const Duration(days: 14)),
       ];
       for (final date in dates) {
-        final matchingFilters =
-            UrgencyFilter.values.where((f) => f.matches(date)).toList();
-        expect(matchingFilters, hasLength(1),
-            reason: 'Exactly one filter should match date $date');
+        final matchingFilters = UrgencyFilter.values
+            .where((f) => f.matches(date))
+            .toList();
+        expect(
+          matchingFilters,
+          hasLength(1),
+          reason: 'Exactly one filter should match date $date',
+        );
       }
     });
   });

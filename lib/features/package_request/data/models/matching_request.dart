@@ -22,6 +22,7 @@ class MatchingRequestModel extends Equatable {
     this.messageExcerpt,
     required this.matchScore,
     required this.requestedAt,
+    this.currency = 'EUR',
   });
 
   final String id;
@@ -41,6 +42,7 @@ class MatchingRequestModel extends Equatable {
   final String? messageExcerpt;
   final int matchScore;
   final DateTime requestedAt;
+  final String currency;
 
   factory MatchingRequestModel.fromJson(Map<String, dynamic> json) =>
       MatchingRequestModel(
@@ -63,6 +65,7 @@ class MatchingRequestModel extends Equatable {
         messageExcerpt: json['messageExcerpt'] as String?,
         matchScore: (json['matchScore'] as num).toInt(),
         requestedAt: DateTime.parse(json['requestedAt'] as String),
+        currency: json['currency'] as String? ?? 'EUR',
       );
 
   @override
@@ -84,5 +87,6 @@ class MatchingRequestModel extends Equatable {
     messageExcerpt,
     matchScore,
     requestedAt,
+    currency,
   ];
 }

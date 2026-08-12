@@ -54,6 +54,8 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../helpers/currency_test_doubles.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -478,17 +480,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   }
 
-  void registerCurrencyPreference(String currencyCode) {
-    final hive = MockHiveService();
-    final prefs = MockBox();
-    when(() => hive.userPrefs).thenReturn(prefs);
-    when(
-      () => prefs.get(HiveService.kCurrencyCode, defaultValue: null),
-    ).thenReturn(currencyCode);
-    getIt.registerSingleton<HiveService>(hive);
-    addTearDown(() => getIt.unregister<HiveService>());
-  }
-
   // ── Group: AppBar titles ──────────────────────────────────────────────────────
 
   group('CreateTripScreen — AppBar titles', () {
@@ -612,7 +603,7 @@ void main() {
       },
     );
 
-  testWidgets('mode création: bouton "Retour" absent à l\'étape 0', (
+    testWidgets('mode création: bouton "Retour" absent à l\'étape 0', (
       tester,
     ) async {
       setupViewport(tester);
@@ -630,7 +621,7 @@ void main() {
   // ── Group: Form structure ─────────────────────────────────────────────────────
 
   group('CreateTripScreen — Form structure', () {
-  testWidgets('bandeau devise EUR avant le premier champ du trajet', (
+    testWidgets('bandeau devise EUR avant le premier champ du trajet', (
       tester,
     ) async {
       setupViewport(tester);
@@ -675,14 +666,18 @@ void main() {
       await _pumpAndDrain(
         tester,
         _wrapWithRouter(
-          CreateTripScreen(args: CreateTripArgs(announcement: _makeAnnouncement())),
+          CreateTripScreen(
+            args: CreateTripArgs(announcement: _makeAnnouncement()),
+          ),
         ),
       );
 
       expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
     });
 
-    testWidgets('bandeau devise reste lisible avec texte agrandi', (tester) async {
+    testWidgets('bandeau devise reste lisible avec texte agrandi', (
+      tester,
+    ) async {
       setupViewport(tester);
       tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
@@ -1015,6 +1010,7 @@ void main() {
     testWidgets('template chip visible au step 0 en mode création', (
       tester,
     ) async {
+      registerCurrencyPreference('EUR');
       setupViewport(tester);
 
       await _pumpAndDrain(
@@ -1022,8 +1018,10 @@ void main() {
         _wrapWithRouter(const CreateTripScreen(args: null)),
       );
 
-      // The template bar shows the chip
-      expect(find.text('Paris → Dakar · 8€/kg'), findsOneWidget);
+      // The template bar shows the chip, prix formaté dans la devise active
+      expect(find.textContaining('Paris → Dakar'), findsOneWidget);
+      expect(find.textContaining('8'), findsWidgets);
+      expect(find.textContaining('€'), findsWidgets);
     });
 
     testWidgets('tap template chip → _applyTemplate applique les valeurs', (

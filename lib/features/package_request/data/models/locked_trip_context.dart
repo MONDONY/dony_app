@@ -18,6 +18,7 @@ class LockedTripContext extends Equatable {
     required this.transportMode,
     required this.agreedPriceEur,
     this.paymentMethod = PaymentMethod.stripe,
+    this.currency = 'EUR',
   });
 
   final String threadId;
@@ -29,18 +30,27 @@ class LockedTripContext extends Equatable {
   final double weightKg;
   final TransportMode transportMode;
   final double agreedPriceEur;
+
   /// The payment method selected by the traveler in the link-trip screen.
   final PaymentMethod paymentMethod;
+  final String currency;
 
-  DateTime get earliestDate => desiredDate.subtract(Duration(days: dateToleranceDays));
+  DateTime get earliestDate =>
+      desiredDate.subtract(Duration(days: dateToleranceDays));
   DateTime get latestDate => desiredDate.add(Duration(days: dateToleranceDays));
 
   @override
   List<Object?> get props => [
-        threadId, packageRequestId,
-        departureCity, arrivalCity,
-        desiredDate, dateToleranceDays,
-        weightKg, transportMode, agreedPriceEur,
-        paymentMethod,
-      ];
+    threadId,
+    packageRequestId,
+    departureCity,
+    arrivalCity,
+    desiredDate,
+    dateToleranceDays,
+    weightKg,
+    transportMode,
+    agreedPriceEur,
+    paymentMethod,
+    currency,
+  ];
 }

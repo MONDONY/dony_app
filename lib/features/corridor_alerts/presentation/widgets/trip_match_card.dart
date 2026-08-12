@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
 import 'package:flutter/material.dart';
@@ -28,8 +29,10 @@ class TripMatchCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final accent = cs.primary;
 
-    final dateStr =
-        DateFormat('d MMM', 'fr').format(match.departureDate).toLowerCase();
+    final dateStr = DateFormat(
+      'd MMM',
+      'fr',
+    ).format(match.departureDate).toLowerCase();
 
     return Material(
           color: cs.surface,
@@ -66,8 +69,7 @@ class TripMatchCard extends StatelessWidget {
                             // ── Micro-label Trajet ─────────────────────────────
                             Row(
                               children: [
-                                DonyIcon('plane',
-                                    size: 13, color: accent),
+                                DonyIcon('plane', size: 13, color: accent),
                                 const SizedBox(width: DonySpacing.xxs),
                                 Expanded(
                                   child: Text(
@@ -109,10 +111,14 @@ class TripMatchCard extends StatelessWidget {
                                       const SizedBox(height: DonySpacing.xs),
                                       Row(
                                         children: [
-                                          Icon(Icons.flight_rounded,
-                                              size: 13,
-                                              color: cs.onSurfaceVariant),
-                                          const SizedBox(width: DonySpacing.xxs),
+                                          Icon(
+                                            Icons.flight_rounded,
+                                            size: 13,
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(
+                                            width: DonySpacing.xxs,
+                                          ),
                                           Text(
                                             dateStr,
                                             style: tt.bodySmall?.copyWith(
@@ -146,19 +152,17 @@ class TripMatchCard extends StatelessWidget {
                                                 Text(
                                                   'Prix ',
                                                   style: tt.bodySmall?.copyWith(
-                                                      color:
-                                                          cs.onSurfaceVariant),
+                                                    color: cs.onSurfaceVariant,
+                                                  ),
                                                 ),
                                                 Text(
-                                                  '${match.pricePerKg!.toStringAsFixed(0)} €/kg',
-                                                  style:
-                                                      tt.titleMedium?.copyWith(
+                                                  '${formatPriceIn(match.pricePerKg!, match.currency)}/kg',
+                                                  style: tt.titleMedium?.copyWith(
                                                     fontWeight: FontWeight.w800,
                                                     color: cs.primary,
                                                     letterSpacing: -0.3,
                                                     fontFeatures: const [
-                                                      FontFeature
-                                                          .tabularFigures(),
+                                                      FontFeature.tabularFigures(),
                                                     ],
                                                   ),
                                                 ),
@@ -201,8 +205,11 @@ class TripMatchCard extends StatelessWidget {
                                       ),
                                       Row(
                                         children: [
-                                          DonyIcon('star',
-                                              size: 12, color: cs.warning),
+                                          DonyIcon(
+                                            'star',
+                                            size: 12,
+                                            color: cs.warning,
+                                          ),
                                           const SizedBox(width: 2),
                                           Text(
                                             match.travelerRating
@@ -223,8 +230,9 @@ class TripMatchCard extends StatelessWidget {
                                 DonyIcon(
                                   'chevron-right',
                                   size: 16,
-                                  color: cs.onSurfaceVariant
-                                      .withValues(alpha: 0.5),
+                                  color: cs.onSurfaceVariant.withValues(
+                                    alpha: 0.5,
+                                  ),
                                 ),
                               ],
                             ),
@@ -280,9 +288,7 @@ class _TripThumbnail extends StatelessWidget {
   }
 
   Widget _placeholder(ColorScheme cs) => Container(
-        color: cs.primaryContainer.withValues(alpha: 0.45),
-        child: const Center(
-          child: Text('✈️', style: TextStyle(fontSize: 30)),
-        ),
-      );
+    color: cs.primaryContainer.withValues(alpha: 0.45),
+    child: const Center(child: Text('✈️', style: TextStyle(fontSize: 30))),
+  );
 }

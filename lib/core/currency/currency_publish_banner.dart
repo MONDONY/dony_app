@@ -1,7 +1,6 @@
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:flutter/material.dart';
 
 /// Explique la devise immuable appliquée par le serveur à une publication.
@@ -11,15 +10,11 @@ import 'package:flutter/material.dart';
 class CurrencyPublishBanner extends StatelessWidget {
   const CurrencyPublishBanner({super.key, required this.currency});
 
-  factory CurrencyPublishBanner.fromHive({
-    Key? key,
-    HiveService? hiveService,
-  }) => CurrencyPublishBanner(key: key, currency: resolveCurrency(hiveService));
+  /// Bannière alimentée par la devise active en cache.
+  factory CurrencyPublishBanner.active({Key? key}) =>
+      CurrencyPublishBanner(key: key, currency: ActiveCurrency.current);
 
   final SupportedCurrency? currency;
-
-  static SupportedCurrency? resolveCurrency(HiveService? hiveService) =>
-      ActiveCurrency.fromHive(hiveService);
 
   @override
   Widget build(BuildContext context) {

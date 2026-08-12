@@ -43,10 +43,12 @@ class ExpediteurContactCard extends StatelessWidget {
   }
 
   void _requestCall(BuildContext context) {
-    unawaited(getItSafe<AnalyticsService>()?.logEvent(
-      AnalyticsEvents.senderCallInitiated,
-      properties: {'status': bid.status},
-    ));
+    unawaited(
+      getItSafe<AnalyticsService>()?.logEvent(
+        AnalyticsEvents.senderCallInitiated,
+        properties: {'status': bid.status},
+      ),
+    );
     context.read<ContactRevealBloc>().add(ContactRevealRequested(bid.id));
   }
 
@@ -60,12 +62,12 @@ class ExpediteurContactCard extends StatelessWidget {
     return InkWell(
       onTap: canOpenProfile
           ? () => context.push(
-                '/profile/public',
-                extra: ProfilePublicArgs(
-                  userId: bid.senderId,
-                  showSubscribe: false,
-                ),
-              )
+              '/profile/public',
+              extra: ProfilePublicArgs(
+                userId: bid.senderId,
+                showSubscribe: false,
+              ),
+            )
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
@@ -179,8 +181,8 @@ class ExpediteurContactCard extends StatelessWidget {
                       onTap: isOpening
                           ? null
                           : () => context.read<ConversationOpenBloc>().add(
-                                ConversationOpenRequested(bid.id),
-                              ),
+                              ConversationOpenRequested(bid.id),
+                            ),
                     );
                   },
                 ),
@@ -229,24 +231,24 @@ class _IconActionButton extends StatelessWidget {
       enabled: onTap != null,
       label: semanticLabel,
       child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(color: cs.primary),
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+            border: Border.all(color: cs.primary),
+          ),
+          child: isLoading
+              ? Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: CircularProgressIndicator(
+                    color: cs.primary,
+                    strokeWidth: 2,
+                  ),
+                )
+              : DonyIcon(iconAsset, color: cs.primary, size: 18),
         ),
-        child: isLoading
-            ? Padding(
-                padding: const EdgeInsets.all(10),
-                child: CircularProgressIndicator(
-                  color: cs.primary,
-                  strokeWidth: 2,
-                ),
-              )
-            : DonyIcon(iconAsset, color: cs.primary, size: 18),
-      ),
       ),
     );
   }

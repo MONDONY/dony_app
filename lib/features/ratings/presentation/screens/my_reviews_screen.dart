@@ -21,7 +21,8 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<MyReviewsBloc>().add(const MyReviewsRequested());
+      if (mounted)
+        context.read<MyReviewsBloc>().add(const MyReviewsRequested());
     });
   }
 
@@ -33,9 +34,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
       body: BlocBuilder<MyReviewsBloc, MyReviewsState>(
         builder: (context, state) {
           if (state is MyReviewsLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
           if (state is MyReviewsError) {
             return _ErrorView(message: state.message);
@@ -46,9 +45,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
             }
             return _LoadedView(state: state);
           }
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );
@@ -111,18 +108,22 @@ class _LoadedView extends StatelessWidget {
       slivers: [
         // ── Hero éditorial — gros score + distribution filtrante ──────────
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              DonySpacing.base,
-            ),
-            child: _HeaderSummary(summary: state.summary, selected: selected),
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          child:
+              Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.xl,
+                      DonySpacing.lg,
+                      DonySpacing.base,
+                    ),
+                    child: _HeaderSummary(
+                      summary: state.summary,
+                      selected: selected,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
         // Section label + filtre actif
@@ -150,13 +151,15 @@ class _LoadedView extends StatelessWidget {
                 ),
                 if (selected != null)
                   GestureDetector(
-                    onTap: () => context
-                        .read<MyReviewsBloc>()
-                        .add(MyReviewsStarFilterToggled(selected)),
+                    onTap: () => context.read<MyReviewsBloc>().add(
+                      MyReviewsStarFilterToggled(selected),
+                    ),
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.xs, vertical: DonySpacing.xs),
+                        horizontal: DonySpacing.xs,
+                        vertical: DonySpacing.xs,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -263,9 +266,9 @@ class _HeaderSummary extends StatelessWidget {
             // Pas d'avis pour cette note → ligne non cliquable.
             onTap: count == 0
                 ? null
-                : () => context
-                    .read<MyReviewsBloc>()
-                    .add(MyReviewsStarFilterToggled(star)),
+                : () => context.read<MyReviewsBloc>().add(
+                    MyReviewsStarFilterToggled(star),
+                  ),
           );
         }),
       ],
@@ -310,7 +313,9 @@ class _RatingBar extends StatelessWidget {
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.sm, vertical: DonySpacing.xs + 2),
+              horizontal: DonySpacing.sm,
+              vertical: DonySpacing.xs + 2,
+            ),
             decoration: BoxDecoration(
               color: selected ? DonyColors.primarySoft : Colors.transparent,
               borderRadius: BorderRadius.circular(DonyRadius.sm),
@@ -323,8 +328,7 @@ class _RatingBar extends StatelessWidget {
                     '$stars★',
                     style: tt.labelMedium?.copyWith(
                       color: selected ? cs.primary : cs.onSurfaceVariant,
-                      fontWeight:
-                          selected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                     ),
                   ),
                 ),
@@ -383,102 +387,108 @@ class _ReviewItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final dateStr =
-        DateFormat('d MMM yyyy', 'fr').format(item.createdAt).toUpperCase();
+    final dateStr = DateFormat(
+      'd MMM yyyy',
+      'fr',
+    ).format(item.createdAt).toUpperCase();
     final name = (item.authorName?.trim().isNotEmpty ?? false)
         ? item.authorName!.trim()
         : 'Utilisateur Yadony';
     final corridor = _corridor;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // En-tête : avatar + nom/corridor + étoiles
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DonyAvatar(
-                name: name,
-                imageUrl: item.authorAvatarUrl,
-                size: DonyAvatarSize.md,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      name,
-                      style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (corridor != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        corridor,
-                        style: tt.labelMedium?.copyWith(
-                          color: cs.secondary,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.4,
+              // En-tête : avatar + nom/corridor + étoiles
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  DonyAvatar(
+                    name: name,
+                    imageUrl: item.authorAvatarUrl,
+                    size: DonyAvatarSize.md,
+                  ),
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          name,
+                          style: tt.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
+                        if (corridor != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            corridor,
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.secondary,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(5, (i) {
+                      return DonyIcon(
+                        'star',
+                        size: 15,
+                        color: i < item.stars
+                            ? DonyColors.warning500
+                            : cs.outline,
+                      );
+                    }),
+                  ),
+                ],
+              ),
+              // Commentaire
+              if (item.comment != null && item.comment!.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  '« ${item.comment!} »',
+                  style: tt.bodyLarge?.copyWith(
+                    color: cs.onSurface,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+              // Date
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                dateStr,
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
                 ),
               ),
-              const SizedBox(width: DonySpacing.sm),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(5, (i) {
-                  return DonyIcon(
-                    'star',
-                    size: 15,
-                    color: i < item.stars
-                        ? DonyColors.warning500
-                        : cs.outline,
-                  );
-                }),
-              ),
+              // Avis exclu
+              if (item.excluded) ...[
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  'Avis exclu du calcul',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
             ],
           ),
-          // Commentaire
-          if (item.comment != null && item.comment!.isNotEmpty) ...[
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              '« ${item.comment!} »',
-              style: tt.bodyLarge?.copyWith(color: cs.onSurface, height: 1.5),
-            ),
-          ],
-          // Date
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            dateStr,
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.6,
-            ),
-          ),
-          // Avis exclu
-          if (item.excluded) ...[
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              'Avis exclu du calcul',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ],
-      ),
-    )
+        )
         .animate()
         .fadeIn(delay: (index * 70).ms, duration: 300.ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }
-

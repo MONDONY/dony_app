@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
@@ -296,7 +297,7 @@ class _PublicRequestCard extends StatelessWidget {
               if (request.targetPriceEur != null) ...[
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  'Budget: ${request.targetPriceEur!.toStringAsFixed(0)} €',
+                  'Budget: ${formatPriceIn(request.targetPriceEur!, request.currency)}',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -327,9 +328,10 @@ class _Pill extends StatelessWidget {
         const SizedBox(width: DonySpacing.xs),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium!.copyWith(fontSize: 12, color: cs.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            fontSize: 12,
+            color: cs.onSurfaceVariant,
+          ),
         ),
       ],
     );

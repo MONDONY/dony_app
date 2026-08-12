@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
@@ -29,6 +31,7 @@ class MakeOfferBottomSheet {
     required String arrivalCity,
     DateTime? initialDate,
     bool isFirmPrice = false,
+    String currency = 'EUR',
   }) async {
     PriceEstimate? estimate;
     try {
@@ -36,6 +39,7 @@ class MakeOfferBottomSheet {
         from: departureCity,
         to: arrivalCity,
         weight: weightKg,
+        currency: currency,
       );
     } catch (_) {
       // estimate optional
@@ -57,10 +61,8 @@ class MakeOfferBottomSheet {
       // confirmation. La barrière et la croix, elles, passent par
       // `maybePop` et honorent donc le garde.
       enableDrag: false,
-      wrapper: (child) => BlocProvider(
-        create: (_) => getIt<NegotiationBloc>(),
-        child: child,
-      ),
+      wrapper: (child) =>
+          BlocProvider(create: (_) => getIt<NegotiationBloc>(), child: child),
       child: _MakeOfferContent(
         packageRequestId: packageRequestId,
         targetPriceEur: targetPriceEur,
@@ -70,6 +72,7 @@ class MakeOfferBottomSheet {
         onSubmitReady: (fn) => submitFn = fn,
         initialDate: initialDate,
         isFirmPrice: isFirmPrice,
+        currency: currency,
       ),
       stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
         builder: (ctx, state) {
@@ -79,7 +82,7 @@ class MakeOfferBottomSheet {
             label = 'Envoi…';
           } else if (isFirmPrice) {
             label = targetPriceEur != null
-                ? 'Prendre à ${PriceDisplay.eur(targetPriceEur)}'
+                ? 'Prendre à ${PriceDisplay.money(targetPriceEur, currency)}'
                 : 'Prendre ce colis';
           } else {
             label = 'Envoyer l\'offre';
@@ -105,6 +108,7 @@ class _MakeOfferContent extends StatefulWidget {
     required this.onSubmitReady,
     this.initialDate,
     this.isFirmPrice = false,
+    this.currency = 'EUR',
   });
 
   final String packageRequestId;
@@ -115,6 +119,7 @@ class _MakeOfferContent extends StatefulWidget {
   final void Function(VoidCallback) onSubmitReady;
   final DateTime? initialDate;
   final bool isFirmPrice;
+  final String currency;
 
   @override
   State<_MakeOfferContent> createState() => _MakeOfferContentState();
@@ -137,11 +142,11 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   bool _confirmingExit = false;
 
   String get _formSignature => [
-        _priceCtrl.text,
-        _kgCtrl.text,
-        _bodyCtrl.text,
-        _dateNotifier.value,
-      ].join('|');
+    _priceCtrl.text,
+    _kgCtrl.text,
+    _bodyCtrl.text,
+    _dateNotifier.value,
+  ].join('|');
 
   /// Saleté observable : `PopScope.canPop` est lu au build, or taper dans un
   /// `TextFormField` ne provoque aucun rebuild. Sans ce notifier, le garde-fou
@@ -231,19 +236,20 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
       );
       return;
     }
-    context.read<NegotiationBloc>().add(NegotiationStartRequested(
-          packageRequestId: widget.packageRequestId,
-          // Prix ferme : on envoie la valeur exacte (le champ est verrouillé),
-          // jamais le texte arrondi → match garanti côté backend.
-          proposedPriceEur: widget.isFirmPrice && widget.targetPriceEur != null
-              ? widget.targetPriceEur!
-              : double.parse(_priceCtrl.text.replaceAll(',', '.')),
-          travelerTravelDate: _dateNotifier.value!,
-          travelerAvailableKg:
-              double.parse(_kgCtrl.text.replaceAll(',', '.')),
-          body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
-          isFirmPrice: widget.isFirmPrice,
-        ));
+    context.read<NegotiationBloc>().add(
+      NegotiationStartRequested(
+        packageRequestId: widget.packageRequestId,
+        // Prix ferme : on envoie la valeur exacte (le champ est verrouillé),
+        // jamais le texte arrondi → match garanti côté backend.
+        proposedPriceEur: widget.isFirmPrice && widget.targetPriceEur != null
+            ? widget.targetPriceEur!
+            : double.parse(_priceCtrl.text.replaceAll(',', '.')),
+        travelerTravelDate: _dateNotifier.value!,
+        travelerAvailableKg: double.parse(_kgCtrl.text.replaceAll(',', '.')),
+        body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
+        isFirmPrice: widget.isFirmPrice,
+      ),
+    );
   }
 
   @override
@@ -261,177 +267,186 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
         child: child!,
       ),
       child: BlocListener<NegotiationBloc, NegotiationState>(
-      listener: (ctx, state) {
-        if (state is NegotiationLoaded) {
-          DonySnackbar.show(
-            ctx,
-            message: 'Offre envoyée',
-            type: DonySnackbarType.success,
-          );
-          Navigator.of(ctx, rootNavigator: true).pop();
-          widget.rootRouter.push('/negotiations/${state.thread.id}');
-        } else if (state is NegotiationError) {
-          ErrorPresenter.show(ctx, state.error);
-        }
-      },
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Banner estimation ─────────────────────────────────────────
-            if (estimate != null && estimate.lowEur != null) ...[
-              _EstimationBanner(estimate: estimate),
-              const SizedBox(height: DonySpacing.base),
-            ],
+        listener: (ctx, state) {
+          if (state is NegotiationLoaded) {
+            DonySnackbar.show(
+              ctx,
+              message: 'Offre envoyée',
+              type: DonySnackbarType.success,
+            );
+            Navigator.of(ctx, rootNavigator: true).pop();
+            widget.rootRouter.push('/negotiations/${state.thread.id}');
+          } else if (state is NegotiationError) {
+            ErrorPresenter.show(ctx, state.error);
+          }
+        },
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Banner estimation ─────────────────────────────────────────
+              if (estimate != null && estimate.lowEur != null) ...[
+                _EstimationBanner(estimate: estimate),
+                const SizedBox(height: DonySpacing.base),
+              ],
 
-            // ── Prix + Capacité (2 colonnes) ──────────────────────────────
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _FieldTile(
-                      label: widget.isFirmPrice ? 'PRIX FERME' : 'VOTRE PRIX',
-                      iconAsset: widget.isFirmPrice ? 'lock' : 'banknote',
-                      iconBgKey: _TileColor.blue,
-                      suffix: '€',
-                      child: TextFormField(
-                        controller: _priceCtrl,
-                        // Prix ferme : non négociable → champ verrouillé.
-                        readOnly: widget.isFirmPrice,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'[\d,.]')),
-                        ],
-                        style: _fieldTextStyle(context),
-                        decoration: _fieldDecoration(context),
-                        validator: (v) {
-                          final d = double.tryParse(
-                              (v ?? '').replaceAll(',', '.'));
-                          if (d == null) return 'Invalide';
-                          if (d <= 0 || d > 500) return '0–500 €';
-                          return null;
-                        },
+              // ── Prix + Capacité (2 colonnes) ──────────────────────────────
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _FieldTile(
+                        label: widget.isFirmPrice ? 'PRIX FERME' : 'VOTRE PRIX',
+                        iconAsset: widget.isFirmPrice ? 'lock' : 'banknote',
+                        iconBgKey: _TileColor.blue,
+                        suffix: SupportedCurrency.symbolOf(widget.currency),
+                        child: TextFormField(
+                          controller: _priceCtrl,
+                          // Prix ferme : non négociable → champ verrouillé.
+                          readOnly: widget.isFirmPrice,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[\d,.]'),
+                            ),
+                          ],
+                          style: _fieldTextStyle(context),
+                          decoration: _fieldDecoration(context),
+                          validator: (v) {
+                            final d = double.tryParse(
+                              (v ?? '').replaceAll(',', '.'),
+                            );
+                            if (d == null) return 'Invalide';
+                            if (d <= 0 || d > 500) {
+                              return '0–500 ${SupportedCurrency.symbolOf(widget.currency)}';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  Expanded(
-                    child: _FieldTile(
-                      label: 'CAPACITÉ',
-                      iconAsset: 'scale',
-                      iconBgKey: _TileColor.green,
-                      suffix: 'kg',
-                      child: TextFormField(
-                        controller: _kgCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'[\d,.]')),
-                        ],
-                        style: _fieldTextStyle(context),
-                        decoration: _fieldDecoration(context),
-                        validator: (v) {
-                          final d = double.tryParse(
-                              (v ?? '').replaceAll(',', '.'));
-                          if (d == null || d <= 0) return '> 0 kg';
-                          return null;
-                        },
+                    const SizedBox(width: DonySpacing.sm),
+                    Expanded(
+                      child: _FieldTile(
+                        label: 'CAPACITÉ',
+                        iconAsset: 'scale',
+                        iconBgKey: _TileColor.green,
+                        suffix: 'kg',
+                        child: TextFormField(
+                          controller: _kgCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[\d,.]'),
+                            ),
+                          ],
+                          style: _fieldTextStyle(context),
+                          decoration: _fieldDecoration(context),
+                          validator: (v) {
+                            final d = double.tryParse(
+                              (v ?? '').replaceAll(',', '.'),
+                            );
+                            if (d == null || d <= 0) return '> 0 kg';
+                            return null;
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: DonySpacing.md),
+              const SizedBox(height: DonySpacing.md),
 
-            // ── Date ──────────────────────────────────────────────────────
-            ValueListenableBuilder<DateTime?>(
-              valueListenable: _dateNotifier,
-              builder: (ctx, date, _) => _FieldTile(
-                label: 'DATE DE VOYAGE',
-                iconAsset: 'calendar',
-                iconBgKey: _TileColor.amber,
-                suffix: null,
-                child: InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: ctx,
-                      initialDate: _clampDate(
-                          date ?? DateTime.now().add(const Duration(days: 7))),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now()
-                          .add(const Duration(days: 90)),
-                    );
-                    if (picked != null) _dateNotifier.value = picked;
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 18, horizontal: 2),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            date == null
-                                ? 'Sélectionner…'
-                                : DateFormat('EEE d MMM yyyy', 'fr')
-                                    .format(date),
-                            style: _fieldTextStyle(context).copyWith(
-                              color: date == null
-                                  ? Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant
-                                  : null,
+              // ── Date ──────────────────────────────────────────────────────
+              ValueListenableBuilder<DateTime?>(
+                valueListenable: _dateNotifier,
+                builder: (ctx, date, _) => _FieldTile(
+                  label: 'DATE DE VOYAGE',
+                  iconAsset: 'calendar',
+                  iconBgKey: _TileColor.amber,
+                  suffix: null,
+                  child: InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: ctx,
+                        initialDate: _clampDate(
+                          date ?? DateTime.now().add(const Duration(days: 7)),
+                        ),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 90)),
+                      );
+                      if (picked != null) _dateNotifier.value = picked;
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 18,
+                        horizontal: 2,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              date == null
+                                  ? 'Sélectionner…'
+                                  : DateFormat(
+                                      'EEE d MMM yyyy',
+                                      'fr',
+                                    ).format(date),
+                              style: _fieldTextStyle(context).copyWith(
+                                color: date == null
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant
+                                    : null,
+                              ),
                             ),
                           ),
-                        ),
-                        DonyIcon(
-                          'chevron-right',
-                          size: 18,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                        ),
-                      ],
+                          DonyIcon(
+                            'chevron-right',
+                            size: 18,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: DonySpacing.md),
+              const SizedBox(height: DonySpacing.md),
 
-            // ── Message ───────────────────────────────────────────────────
-            _FieldTile(
-              label: 'MESSAGE',
-              iconAsset: 'message-circle',
-              iconBgKey: _TileColor.violet,
-              suffix: null,
-              sublabel: 'optionnel',
-              alignIconTop: true,
-              child: TextFormField(
-                controller: _bodyCtrl,
-                maxLines: 3,
-                maxLength: 280,
-                style: _fieldTextStyle(context),
-                decoration: _fieldDecoration(context).copyWith(
-                  hintText: 'Je voyage exactement ce jour-là…',
-                  counterStyle: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant),
+              // ── Message ───────────────────────────────────────────────────
+              _FieldTile(
+                label: 'MESSAGE',
+                iconAsset: 'message-circle',
+                iconBgKey: _TileColor.violet,
+                suffix: null,
+                sublabel: 'optionnel',
+                alignIconTop: true,
+                child: TextFormField(
+                  controller: _bodyCtrl,
+                  maxLines: 3,
+                  maxLength: 280,
+                  style: _fieldTextStyle(context),
+                  decoration: _fieldDecoration(context).copyWith(
+                    hintText: 'Je voyage exactement ce jour-là…',
+                    counterStyle: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -466,7 +481,8 @@ class _EstimationBanner extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final confidenceColor = switch (estimate.confidence.wireName.toLowerCase()) {
+    final confidenceColor = switch (estimate.confidence.wireName
+        .toLowerCase()) {
       'high' => cs.success,
       'medium' => cs.warning,
       _ => cs.primary,
@@ -482,8 +498,7 @@ class _EstimationBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.primaryContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(
-            color: cs.primary.withValues(alpha: 0.18)),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.18)),
       ),
       child: Row(
         children: [
@@ -494,8 +509,7 @@ class _EstimationBanner extends StatelessWidget {
               color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.sm),
             ),
-            child: DonyIcon('trending-up',
-                color: cs.primary, size: 18),
+            child: DonyIcon('trending-up', color: cs.primary, size: 18),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -511,7 +525,7 @@ class _EstimationBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${estimate.lowEur!.toStringAsFixed(0)} – ${estimate.highEur!.toStringAsFixed(0)} €',
+                  '${formatPriceIn(estimate.lowEur!, estimate.currency)} – ${formatPriceIn(estimate.highEur!, estimate.currency)}',
                   style: tt.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cs.primary,
@@ -522,7 +536,9 @@ class _EstimationBanner extends StatelessWidget {
           ),
           Container(
             padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+              horizontal: DonySpacing.sm,
+              vertical: DonySpacing.xs,
+            ),
             decoration: BoxDecoration(
               color: confidenceBg,
               borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -594,8 +610,9 @@ class _FieldTile extends StatelessWidget {
               const SizedBox(width: DonySpacing.xs),
               Text(
                 '· $sublabel',
-                style: tt.labelSmall
-                    ?.copyWith(color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                ),
               ),
             ],
           ],
@@ -635,7 +652,8 @@ class _FieldTile extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.sm),
+                    horizontal: DonySpacing.sm,
+                  ),
                   child: child,
                 ),
               ),

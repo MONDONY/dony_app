@@ -23,6 +23,7 @@ class ThreadMessageBubble extends StatelessWidget {
     this.highlight = false,
     required this.isTraveler,
     this.grossPriceEur,
+    this.currency = 'EUR',
   });
 
   final NegotiationMessage message;
@@ -41,6 +42,8 @@ class ThreadMessageBubble extends StatelessWidget {
   /// from the net using [PriceDisplay.grossFromNet].
   final double? grossPriceEur;
 
+  final String currency;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -52,8 +55,9 @@ class ThreadMessageBubble extends StatelessWidget {
     );
     final bg = mine ? DonyColors.primary : cs.surface;
     final textColor = mine ? Colors.white : cs.onSurface;
-    final labelColor =
-        mine ? Colors.white.withValues(alpha: 0.85) : cs.onSurfaceVariant;
+    final labelColor = mine
+        ? Colors.white.withValues(alpha: 0.85)
+        : cs.onSurfaceVariant;
     final priceColor = mine ? Colors.white : cs.primary;
 
     return Align(
@@ -74,9 +78,7 @@ class ThreadMessageBubble extends StatelessWidget {
                 border: mine
                     ? null
                     : Border.all(
-                        color: highlight
-                            ? DonyColors.warning
-                            : cs.outline,
+                        color: highlight ? DonyColors.warning : cs.outline,
                         width: highlight ? 1.5 : 1,
                       ),
               ),
@@ -99,6 +101,7 @@ class ThreadMessageBubble extends StatelessWidget {
                         message.proposedPriceEur!,
                         grossPriceEur,
                         isTraveler,
+                        currency,
                       ),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 20,
@@ -139,8 +142,10 @@ class ThreadMessageBubble extends StatelessWidget {
                 right: -6,
                 top: -6,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: DonyColors.warning,
                     borderRadius: BorderRadius.circular(DonyRadius.xl),
@@ -163,9 +168,9 @@ class ThreadMessageBubble extends StatelessWidget {
   }
 
   String _kindLabel(NegotiationMessageKind k) => switch (k) {
-        NegotiationMessageKind.proposal => 'PROPOSITION',
-        NegotiationMessageKind.counter => 'CONTRE-OFFRE',
-        NegotiationMessageKind.accept => 'ACCEPTÉE',
-        NegotiationMessageKind.reject => 'REJETÉE',
-      };
+    NegotiationMessageKind.proposal => 'PROPOSITION',
+    NegotiationMessageKind.counter => 'CONTRE-OFFRE',
+    NegotiationMessageKind.accept => 'ACCEPTÉE',
+    NegotiationMessageKind.reject => 'REJETÉE',
+  };
 }

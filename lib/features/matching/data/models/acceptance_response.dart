@@ -8,6 +8,7 @@ class AcceptanceResponse {
   final double? availableBalance;
   final double? requiredCommission;
   final bool? hasCard;
+  final String? currency;
 
   const AcceptanceResponse({
     required this.status,
@@ -17,6 +18,7 @@ class AcceptanceResponse {
     this.availableBalance,
     this.requiredCommission,
     this.hasCard,
+    this.currency,
   });
 
   factory AcceptanceResponse.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,7 @@ class AcceptanceResponse {
       availableBalance: (json['availableBalance'] as num?)?.toDouble(),
       requiredCommission: (json['requiredCommission'] as num?)?.toDouble(),
       hasCard: json['hasCard'] as bool?,
+      currency: json['currency'] as String?,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -36,10 +37,8 @@ abstract final class OpenSurplusBottomSheet {
       context,
       title: 'Ouvrir les kg restants',
       subtitle: 'Mettez votre capacité libre à disposition du public',
-      wrapper: (child) => BlocProvider(
-        create: (_) => getIt<AnnouncementBloc>(),
-        child: child,
-      ),
+      wrapper: (child) =>
+          BlocProvider(create: (_) => getIt<AnnouncementBloc>(), child: child),
       stickyBottom: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
           final loading = state is AnnouncementLoading;
@@ -103,13 +102,14 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
     super.dispose();
   }
 
-  bool get _isCustomPrice =>
-      _priceOptionNotifier.value == kPriceOptions.length;
+  bool get _isCustomPrice => _priceOptionNotifier.value == kPriceOptions.length;
 
   double get _pricePerKg => _isCustomPrice
       ? (double.tryParse(_customPriceCtrl.text.replaceAll(',', '.')) ?? 0)
-      : kPriceOptions[
-          _priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
+      : kPriceOptions[_priceOptionNotifier.value.clamp(
+          0,
+          kPriceOptions.length - 1,
+        )];
 
   double get _surplusKg =>
       double.tryParse(_kgCtrl.text.replaceAll(',', '.')) ?? 0;
@@ -128,11 +128,13 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
     if (!widget.canSubmit.value) {
       return;
     }
-    context.read<AnnouncementBloc>().add(AnnouncementSurplusOpenRequested(
-          announcementId: widget.announcement.id,
-          surplusKg: _surplusKg,
-          pricePerKg: _pricePerKg,
-        ));
+    context.read<AnnouncementBloc>().add(
+      AnnouncementSurplusOpenRequested(
+        announcementId: widget.announcement.id,
+        surplusKg: _surplusKg,
+        pricePerKg: _pricePerKg,
+      ),
+    );
   }
 
   @override
@@ -160,9 +162,9 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Contexte : capacité réservée + caractère public ────────────
-            _ReservedBanner(reservedKg: a.reservedKg)
-                .animate()
-                .fadeIn(duration: 250.ms),
+            _ReservedBanner(
+              reservedKg: a.reservedKg,
+            ).animate().fadeIn(duration: 250.ms),
             const SizedBox(height: DonySpacing.lg),
 
             // ── Capacité supplémentaire ────────────────────────────────────
@@ -205,8 +207,10 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
                               ),
                               child: _PriceChip(
                                 key: Key('surplus-price-chip-$i'),
-                                label:
-                                    '${kPriceOptions[i].toStringAsFixed(0)}€',
+                                label: formatPriceIn(
+                                  kPriceOptions[i],
+                                  widget.announcement.currency,
+                                ),
                                 selected: selected,
                                 onTap: () => _priceOptionNotifier.value = i,
                               ),
@@ -226,7 +230,10 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
                     ),
                     if (_isCustomPrice) ...[
                       const SizedBox(height: DonySpacing.sm),
-                      _CustomPriceField(controller: _customPriceCtrl),
+                      _CustomPriceField(
+                        controller: _customPriceCtrl,
+                        currency: widget.announcement.currency,
+                      ),
                     ],
                   ],
                 );
@@ -245,6 +252,7 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
               builder: (context, _) => _PublicPricePreview(
                 netPricePerKg: _pricePerKg,
                 senderPricePerKg: netToSenderPrice(_pricePerKg),
+                currency: widget.announcement.currency,
               ),
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -362,9 +370,7 @@ class _KgField extends StatelessWidget {
         key: const Key('surplus-kg-field'),
         controller: controller,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-        ],
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
         validator: validator,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         style: tt.bodyLarge?.copyWith(
@@ -389,8 +395,9 @@ class _KgField extends StatelessWidget {
 }
 
 class _CustomPriceField extends StatelessWidget {
-  const _CustomPriceField({required this.controller});
+  const _CustomPriceField({required this.controller, this.currency = 'EUR'});
   final TextEditingController controller;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -406,9 +413,7 @@ class _CustomPriceField extends StatelessWidget {
         key: const Key('surplus-custom-price-field'),
         controller: controller,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-        ],
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
         autovalidateMode: AutovalidateMode.onUserInteraction,
         validator: (v) {
           final d = double.tryParse((v ?? '').replaceAll(',', '.'));
@@ -426,7 +431,7 @@ class _CustomPriceField extends StatelessWidget {
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
           hintText: 'Votre prix',
-          suffixText: '€/kg',
+          suffixText: '${SupportedCurrency.symbolOf(currency)}/kg',
           suffixStyle: tt.bodyMedium?.copyWith(
             color: cs.onSurfaceVariant,
             fontWeight: FontWeight.w600,
@@ -485,10 +490,12 @@ class _PublicPricePreview extends StatelessWidget {
   const _PublicPricePreview({
     required this.netPricePerKg,
     required this.senderPricePerKg,
+    this.currency = 'EUR',
   });
 
   final double netPricePerKg;
   final double senderPricePerKg;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -513,9 +520,7 @@ class _PublicPricePreview extends StatelessWidget {
             ),
           ),
           Text(
-            hasPrice
-                ? '${senderPricePerKg.toStringAsFixed(senderPricePerKg % 1 == 0 ? 0 : 1)} €/kg'
-                : '-',
+            hasPrice ? '${formatPriceIn(senderPricePerKg, currency)}/kg' : '-',
             style: tt.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: cs.success,

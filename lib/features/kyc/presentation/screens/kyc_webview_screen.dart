@@ -32,56 +32,60 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
     super.initState();
     // Only grant camera access — Stripe Identity needs it for the selfie step.
     // Blanket grant() would also allow microphone/other sensors unnecessarily.
-    _controller = WebViewController(
-      onPermissionRequest: (request) {
-        if (request.types.contains(WebViewPermissionResourceType.camera)) {
-          request.grant();
-        }
-      },
-    )
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (_) => _isLoading.value = true,
-          onPageFinished: (_) => _isLoading.value = false,
-          onWebResourceError: (error) {
-            if (mounted) {
-              _isLoading.value = false;
-              DonySnackbar.show(
-                context,
-                message: 'Impossible de charger la page de vérification',
-                type: DonySnackbarType.error,
-              );
-            }
-          },
-          onNavigationRequest: (request) {
-            // Intercept Stripe's return_url (https://yadony.com/kyc/complete —
-            // dony.store/dony.app kept as legacy fallback for older backend configs).
-            if (request.url.startsWith('https://yadony.com/kyc/complete') ||
-                request.url.startsWith('https://dony.store/kyc/complete') ||
-                request.url.startsWith('https://dony.app/kyc/complete')) {
-              if (mounted) {
-                context.go('/kyc/status');
+    _controller =
+        WebViewController(
+            onPermissionRequest: (request) {
+              if (request.types.contains(
+                WebViewPermissionResourceType.camera,
+              )) {
+                request.grant();
               }
-              return NavigationDecision.prevent;
-            }
-            // Allow only Stripe-hosted pages. Reject any other navigation
-            // (phishing, open redirect, file://, intent://, ...).
-            final uri = Uri.tryParse(request.url);
-            if (uri == null || uri.scheme != 'https') {
-              return NavigationDecision.prevent;
-            }
-            final host = uri.host;
-            final isStripe = host == 'verify.stripe.com' ||
-                host == 'stripe.com' ||
-                host.endsWith('.stripe.com');
-            return isStripe
-                ? NavigationDecision.navigate
-                : NavigationDecision.prevent;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(widget.stripeUrl));
+            },
+          )
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..setNavigationDelegate(
+            NavigationDelegate(
+              onPageStarted: (_) => _isLoading.value = true,
+              onPageFinished: (_) => _isLoading.value = false,
+              onWebResourceError: (error) {
+                if (mounted) {
+                  _isLoading.value = false;
+                  DonySnackbar.show(
+                    context,
+                    message: 'Impossible de charger la page de vérification',
+                    type: DonySnackbarType.error,
+                  );
+                }
+              },
+              onNavigationRequest: (request) {
+                // Intercept Stripe's return_url (https://yadony.com/kyc/complete —
+                // dony.store/dony.app kept as legacy fallback for older backend configs).
+                if (request.url.startsWith('https://yadony.com/kyc/complete') ||
+                    request.url.startsWith('https://dony.store/kyc/complete') ||
+                    request.url.startsWith('https://dony.app/kyc/complete')) {
+                  if (mounted) {
+                    context.go('/kyc/status');
+                  }
+                  return NavigationDecision.prevent;
+                }
+                // Allow only Stripe-hosted pages. Reject any other navigation
+                // (phishing, open redirect, file://, intent://, ...).
+                final uri = Uri.tryParse(request.url);
+                if (uri == null || uri.scheme != 'https') {
+                  return NavigationDecision.prevent;
+                }
+                final host = uri.host;
+                final isStripe =
+                    host == 'verify.stripe.com' ||
+                    host == 'stripe.com' ||
+                    host.endsWith('.stripe.com');
+                return isStripe
+                    ? NavigationDecision.navigate
+                    : NavigationDecision.prevent;
+              },
+            ),
+          )
+          ..loadRequest(Uri.parse(widget.stripeUrl));
   }
 
   @override

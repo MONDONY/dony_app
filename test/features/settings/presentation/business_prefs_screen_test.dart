@@ -8,12 +8,10 @@ import 'package:dony/features/settings/presentation/screens/business_prefs_scree
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/currency_test_doubles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-
-class MockBusinessPrefsBloc
-    extends MockBloc<BusinessPrefsEvent, BusinessPrefsState>
-    implements BusinessPrefsBloc {}
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -36,7 +34,7 @@ void main() {
   setUp(() {
     mockPrefsBloc = MockBusinessPrefsBloc();
     mockAuthBloc = MockAuthBloc();
-    when(() => mockPrefsBloc.state).thenReturn(const BusinessPrefsState());
+    mockPrefsBloc = stubBusinessPrefsBloc();
   });
 
   Widget buildScreen() => MaterialApp.router(
@@ -151,7 +149,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Changer de devise'), findsOneWidget);
-      verifyNever(() => mockPrefsBloc.add(any(that: isA<CurrencyChanged>())));
+      verifyNever(() => mockPrefsBloc.changeCurrency(any()));
     },
   );
 
@@ -169,44 +167,40 @@ void main() {
       await tester.tap(find.text('Changer pour CAD'));
       await tester.pumpAndSettle();
 
-      verify(
-        () => mockPrefsBloc.add(const CurrencyChanged('CAD')),
-      ).called(1);
+      verify(() => mockPrefsBloc.changeCurrency('CAD')).called(1);
     },
   );
 
-  testWidgets(
-    'annuler le dialogue n\'envoie jamais CurrencyChanged',
-    (tester) async {
-      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+  testWidgets('annuler le dialogue n\'envoie jamais CurrencyChanged', (
+    tester,
+  ) async {
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('EUR'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Dollar canadien (CAD)'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('EUR'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dollar canadien (CAD)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
 
-      verifyNever(() => mockPrefsBloc.add(any(that: isA<CurrencyChanged>())));
-    },
-  );
+    verifyNever(() => mockPrefsBloc.changeCurrency(any()));
+  });
 
-  testWidgets(
-    'taper la devise déjà active ferme le picker sans dialogue',
-    (tester) async {
-      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+  testWidgets('taper la devise déjà active ferme le picker sans dialogue', (
+    tester,
+  ) async {
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('EUR'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Euro (EUR)'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('EUR'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Euro (EUR)'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Changer de devise'), findsNothing);
-      verifyNever(() => mockPrefsBloc.add(any(that: isA<CurrencyChanged>())));
-    },
-  );
+    expect(find.text('Changer de devise'), findsNothing);
+    verifyNever(() => mockPrefsBloc.changeCurrency(any()));
+  });
 }

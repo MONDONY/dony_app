@@ -26,30 +26,32 @@ void main() {
     mockBloc = MockAccountDeletionBloc();
     when(() => mockBloc.state).thenReturn(const AccountDeletionInitial());
     mockEligibilityCubit = MockDeletionEligibilityCubit();
-    when(() => mockEligibilityCubit.state)
-        .thenReturn(const DeletionEligibilityState(isLoading: false));
+    when(
+      () => mockEligibilityCubit.state,
+    ).thenReturn(const DeletionEligibilityState(isLoading: false));
     when(() => mockEligibilityCubit.check()).thenAnswer((_) async {});
   });
 
   Widget buildWidget() => MaterialApp(
-        home: BlocProvider<AccountDeletionBloc>.value(
-          value: mockBloc,
-          child: Builder(
-            builder: (context) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => DeleteAccountBottomSheet.show(
-                  context,
-                  eligibilityCubit: mockEligibilityCubit,
-                ),
-                child: const Text('Open'),
-              ),
+    home: BlocProvider<AccountDeletionBloc>.value(
+      value: mockBloc,
+      child: Builder(
+        builder: (context) => Scaffold(
+          body: ElevatedButton(
+            onPressed: () => DeleteAccountBottomSheet.show(
+              context,
+              eligibilityCubit: mockEligibilityCubit,
             ),
+            child: const Text('Open'),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
-  testWidgets('bouton Continuer grisé si aucune carte sélectionnée',
-      (tester) async {
+  testWidgets('bouton Continuer grisé si aucune carte sélectionnée', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
@@ -58,17 +60,16 @@ void main() {
     // Avec mode == null, onTap est null → le bouton est désactivé.
     final inkWells = tester
         .widgetList<InkWell>(
-          find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+          find.descendant(
+            of: find.byType(DonyButton),
+            matching: find.byType(InkWell),
+          ),
         )
         .toList();
-    expect(
-      inkWells.where((w) => w.onTap == null).isNotEmpty,
-      isTrue,
-    );
+    expect(inkWells.where((w) => w.onTap == null).isNotEmpty, isTrue);
   });
 
-  testWidgets('sélectionner carte hard → label Continuer →',
-      (tester) async {
+  testWidgets('sélectionner carte hard → label Continuer →', (tester) async {
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
@@ -79,8 +80,9 @@ void main() {
     expect(find.text('Continuer →'), findsOneWidget);
   });
 
-  testWidgets('sélectionner carte soft → label Confirmer la pause',
-      (tester) async {
+  testWidgets('sélectionner carte soft → label Confirmer la pause', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
@@ -128,7 +130,8 @@ void main() {
 
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.text('Open'));
-    await tester.pump(); // don't pumpAndSettle — CircularProgressIndicator animates forever
+    await tester
+        .pump(); // don't pumpAndSettle — CircularProgressIndicator animates forever
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
@@ -184,101 +187,107 @@ void main() {
   });
 
   testWidgets(
-      'BlocListener: AccountDeletionRequested ferme la sheet et affiche snackbar',
-      (tester) async {
-    // Use a delayed stream so the state emits after the sheet opens
-    final controller = StreamController<AccountDeletionState>();
-    whenListen<AccountDeletionState>(
-      mockBloc,
-      controller.stream,
-      initialState: const AccountDeletionInitial(),
-    );
+    'BlocListener: AccountDeletionRequested ferme la sheet et affiche snackbar',
+    (tester) async {
+      // Use a delayed stream so the state emits after the sheet opens
+      final controller = StreamController<AccountDeletionState>();
+      whenListen<AccountDeletionState>(
+        mockBloc,
+        controller.stream,
+        initialState: const AccountDeletionInitial(),
+      );
 
-    await tester.pumpWidget(buildWidget());
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
 
-    // Confirm sheet is open
-    expect(find.text('Supprimer mon compte'), findsOneWidget);
+      // Confirm sheet is open
+      expect(find.text('Supprimer mon compte'), findsOneWidget);
 
-    // Now emit state
-    controller.add(const AccountDeletionRequested());
-    await tester.pump();
-    await tester.pump();
+      // Now emit state
+      controller.add(const AccountDeletionRequested());
+      await tester.pump();
+      await tester.pump();
 
-    // Sheet should be closed (Navigator.pop was called), snackbar shown
-    // The "Supprimer mon compte" title should be gone (sheet closed) or snackbar present
-    final hasSnackbar = find.byType(SnackBar).evaluate().isNotEmpty;
-    final sheetGone = find.text('Supprimer mon compte').evaluate().isEmpty;
-    expect(hasSnackbar || sheetGone, isTrue);
+      // Sheet should be closed (Navigator.pop was called), snackbar shown
+      // The "Supprimer mon compte" title should be gone (sheet closed) or snackbar present
+      final hasSnackbar = find.byType(SnackBar).evaluate().isNotEmpty;
+      final sheetGone = find.text('Supprimer mon compte').evaluate().isEmpty;
+      expect(hasSnackbar || sheetGone, isTrue);
 
-    await controller.close();
-  });
-
-  testWidgets('BlocListener: AccountDeletionError(isEscrowBlocked) shows dialog',
-      (tester) async {
-    final controller = StreamController<AccountDeletionState>();
-    whenListen<AccountDeletionState>(
-      mockBloc,
-      controller.stream,
-      initialState: const AccountDeletionInitial(),
-    );
-
-    await tester.pumpWidget(buildWidget());
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
-
-    // Emit escrow blocked error
-    controller.add(AccountDeletionError(
-      error: const ValidationException('test', code: 'escrow'),
-      isEscrowBlocked: true,
-    ));
-    await tester.pump();
-    await tester.pump();
-
-    // EscrowBlockDialog (DonyDialog) should appear
-    expect(find.text('Suppression impossible pour l\'instant'), findsOneWidget);
-
-    await controller.close();
-  });
+      await controller.close();
+    },
+  );
 
   testWidgets(
-      'suppression bloquée (escrow) → bouton grisé et message affiché à côté',
-      (tester) async {
-    when(() => mockEligibilityCubit.state).thenReturn(
-      const DeletionEligibilityState(
-        isLoading: false,
-        blockedReasonMessage:
-            'Vous avez un envoi en cours de livraison, avec des fonds '
-            'bloqués en séquestre. Vous pourrez supprimer votre compte dès '
-            'que la livraison sera confirmée.',
-      ),
-    );
+    'BlocListener: AccountDeletionError(isEscrowBlocked) shows dialog',
+    (tester) async {
+      final controller = StreamController<AccountDeletionState>();
+      whenListen<AccountDeletionState>(
+        mockBloc,
+        controller.stream,
+        initialState: const AccountDeletionInitial(),
+      );
 
-    await tester.pumpWidget(buildWidget());
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
 
-    // Le message explicatif est affiché.
-    expect(
-      find.textContaining('fonds bloqués en séquestre'),
-      findsOneWidget,
-    );
+      // Emit escrow blocked error
+      controller.add(
+        AccountDeletionError(
+          error: const ValidationException('test', code: 'escrow'),
+          isEscrowBlocked: true,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
 
-    // Même en sélectionnant un mode, le bouton reste désactivé.
-    await tester.tap(find.text('Supprimer définitivement'));
-    await tester.pumpAndSettle();
+      // EscrowBlockDialog (DonyDialog) should appear
+      expect(
+        find.text('Suppression impossible pour l\'instant'),
+        findsOneWidget,
+      );
 
-    final submitInkWells = tester
-        .widgetList<InkWell>(
-          find.descendant(
-            of: find.widgetWithText(DonyButton, 'Continuer →'),
-            matching: find.byType(InkWell),
-          ),
-        )
-        .toList();
-    expect(submitInkWells.every((w) => w.onTap == null), isTrue);
-  });
+      await controller.close();
+    },
+  );
+
+  testWidgets(
+    'suppression bloquée (escrow) → bouton grisé et message affiché à côté',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          blockedReasonMessage:
+              'Vous avez un envoi en cours de livraison, avec des fonds '
+              'bloqués en séquestre. Vous pourrez supprimer votre compte dès '
+              'que la livraison sera confirmée.',
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Le message explicatif est affiché.
+      expect(find.textContaining('fonds bloqués en séquestre'), findsOneWidget);
+
+      // Même en sélectionnant un mode, le bouton reste désactivé.
+      await tester.tap(find.text('Supprimer définitivement'));
+      await tester.pumpAndSettle();
+
+      final submitInkWells = tester
+          .widgetList<InkWell>(
+            find.descendant(
+              of: find.widgetWithText(DonyButton, 'Continuer →'),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .toList();
+      expect(submitInkWells.every((w) => w.onTap == null), isTrue);
+    },
+  );
 
   testWidgets('éligible → pas de message de blocage affiché', (tester) async {
     await tester.pumpWidget(buildWidget());

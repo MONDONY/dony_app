@@ -40,8 +40,9 @@ void showTravelerAnnouncementSheet(
   // Capture la référence au BidBloc du parent (carousel / liste) pour pouvoir
   // déclencher un refresh après la fermeture de CreateBidBottomSheet, même
   // quand useRootNavigator: true sort du BlocProvider tree.
-  final BidBloc? parentBidBloc =
-      context.mounted ? context.read<BidBloc>() : null;
+  final BidBloc? parentBidBloc = context.mounted
+      ? context.read<BidBloc>()
+      : null;
 
   // Détecte un colis existant du viewer sur ce trajet — même si l'appelant n'a
   // pas passé existingBid (certains points d'entrée — carte, accueil — ne le
@@ -51,15 +52,20 @@ void showTravelerAnnouncementSheet(
   BidModel? resolvedBid = existingBid;
   if (resolvedBid == null && context.mounted) {
     try {
-      resolvedBid =
-          context.read<BidBloc>().state.activeBidsByAnnouncement()[announcement.id];
-    } catch (_) {/* BidBloc indisponible dans ce contexte — on ignore */}
+      resolvedBid = context
+          .read<BidBloc>()
+          .state
+          .activeBidsByAnnouncement()[announcement.id];
+    } catch (_) {
+      /* BidBloc indisponible dans ce contexte — on ignore */
+    }
   }
   final resolvedStatus = resolvedBid?.status ?? existingBidStatus;
 
   // « A déjà un colis sur ce trajet » couvre tout colis en cours, demande
   // jusqu'à livraison (EN ROUTE / LIVRÉ inclus) — pas seulement en attente/accepté.
-  final hasActiveBid = resolvedStatus != null &&
+  final hasActiveBid =
+      resolvedStatus != null &&
       MyActiveBidsLookup.ongoingBidStatuses.contains(resolvedStatus);
 
   DonyBottomSheet.show<void>(
@@ -80,14 +86,15 @@ void showTravelerAnnouncementSheet(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    DonyIcon('info',
-                        size: 16, color: cs.onSurfaceVariant),
+                    DonyIcon('info', size: 16, color: cs.onSurfaceVariant),
                     const SizedBox(width: DonySpacing.xs),
                     Flexible(
                       child: Text(
                         'Vous avez déjà un colis sur ce trajet',
                         textAlign: TextAlign.center,
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -102,8 +109,10 @@ void showTravelerAnnouncementSheet(
                     : () {
                         Navigator.of(innerCtx, rootNavigator: true).pop();
                         if (context.mounted) {
-                          context.push('/bids/${resolvedBid!.id}',
-                              extra: resolvedBid);
+                          context.push(
+                            '/bids/${resolvedBid!.id}',
+                            extra: resolvedBid,
+                          );
                         }
                       },
               ),
@@ -118,12 +127,15 @@ void showTravelerAnnouncementSheet(
             final rootCtx = navigator.context;
             navigator.pop();
             if (canSendRequest) {
-              await CreateBidBottomSheet.show(rootCtx,
-                  announcement: announcement);
+              await CreateBidBottomSheet.show(
+                rootCtx,
+                announcement: announcement,
+              );
               // Refresh silencieux du BidBloc parent pour que la liste
               // affiche immédiatement le chip "Demande en attente".
-              parentBidBloc
-                  ?.add(const BidMyListAutoRefreshRequested(force: true));
+              parentBidBloc?.add(
+                const BidMyListAutoRefreshRequested(force: true),
+              );
             } else {
               await KycStatusBottomSheet.show(rootCtx);
             }
@@ -146,7 +158,10 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final traveler = announcement.traveler;
     final rating = traveler?.averageRating;
-    final dateStr = DateFormat('EEEE d MMMM yyyy', 'fr').format(announcement.departureDate);
+    final dateStr = DateFormat(
+      'EEEE d MMMM yyyy',
+      'fr',
+    ).format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
 
     final totalTrips = traveler?.totalTrips ?? 0;
@@ -162,12 +177,12 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           onTap: traveler == null
               ? null
               : () => context.push(
-                    '/profile/public',
-                    extra: ProfilePublicArgs(
-                      userId: traveler.id,
-                      showSubscribe: true,
-                    ),
+                  '/profile/public',
+                  extra: ProfilePublicArgs(
+                    userId: traveler.id,
+                    showSubscribe: true,
                   ),
+                ),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
             child: Row(
@@ -205,7 +220,9 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                           DonyIcon('star', size: 14, color: cs.warning),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
-                            rating != null ? '${rating.toStringAsFixed(1)}/5' : 'Nouveau',
+                            rating != null
+                                ? '${rating.toStringAsFixed(1)}/5'
+                                : 'Nouveau',
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
@@ -214,18 +231,16 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                           const SizedBox(width: DonySpacing.xs),
                           Text(
                             '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
-                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                DonyIcon(
-                  'chevron-right',
-                  size: 20,
-                  color: cs.onSurfaceVariant,
-                ),
+                DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
               ],
             ),
           ),
@@ -250,11 +265,33 @@ class _TravelerAnnouncementContent extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(width: 6, height: 6, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)),
-                  Container(width: 28, height: 1.5, color: cs.primary.withValues(alpha: 0.3)),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Container(
+                    width: 28,
+                    height: 1.5,
+                    color: cs.primary.withValues(alpha: 0.3),
+                  ),
                   const DonyEmoji.planeTakeoff(size: 16),
-                  Container(width: 28, height: 1.5, color: cs.primary.withValues(alpha: 0.3)),
-                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: DonyColors.accent, shape: BoxShape.circle)),
+                  Container(
+                    width: 28,
+                    height: 1.5,
+                    color: cs.primary.withValues(alpha: 0.3),
+                  ),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: DonyColors.accent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -294,14 +331,19 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
             iconAsset: 'clock',
-            label: 'Remise : '
+            label:
+                'Remise : '
                 '${_handoverRangeLabel(announcement.handoverWindowStart!.toLocal(), announcement.handoverWindowEnd!.toLocal())}',
           ),
         ],
 
-        if (announcement.pricingMode == 'MIXED' && announcement.priceGridItems.isNotEmpty) ...[
+        if (announcement.pricingMode == 'MIXED' &&
+            announcement.priceGridItems.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
-          Text('Tarif par article', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+          Text(
+            'Tarif par article',
+            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
           const SizedBox(height: DonySpacing.sm),
           Container(
             decoration: BoxDecoration(
@@ -310,37 +352,50 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
             child: Column(
-              children: announcement.priceGridItems.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base, vertical: DonySpacing.xs),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.bodyMedium,
+              children: announcement.priceGridItems
+                  .map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.xs,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: tt.bodyMedium,
+                            ),
+                          ),
+                          const SizedBox(width: DonySpacing.sm),
+                          Text(
+                            formatPriceIn(
+                              item.unitPriceDisplay,
+                              announcement.currency,
+                            ),
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: cs.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Text(
-                      formatPriceIn(item.unitPriceDisplay, announcement.currency),
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: cs.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              )).toList(),
+                  )
+                  .toList(),
             ),
           ),
         ],
 
         if (categories.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
-          Text('Types de colis acceptés', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+          Text(
+            'Types de colis acceptés',
+            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
           const SizedBox(height: DonySpacing.sm),
           Wrap(
             spacing: DonySpacing.xs,
@@ -349,9 +404,13 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           ),
         ],
 
-        if (announcement.description != null && announcement.description!.isNotEmpty) ...[
+        if (announcement.description != null &&
+            announcement.description!.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
-          Text('Message du voyageur', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+          Text(
+            'Message du voyageur',
+            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
           const SizedBox(height: DonySpacing.sm),
           Text(announcement.description!, style: tt.bodyMedium),
         ],
@@ -366,7 +425,8 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 /// jours différents → « date heure → date heure » (la date de fin est affichée
 /// quand elle diffère, car la fenêtre peut s'étaler sur plusieurs jours).
 String _handoverRangeLabel(DateTime start, DateTime end) {
-  final sameDay = start.year == end.year &&
+  final sameDay =
+      start.year == end.year &&
       start.month == end.month &&
       start.day == end.day;
   final startStr = DateFormat('EEE d MMM, HH:mm', 'fr').format(start);
@@ -377,7 +437,11 @@ String _handoverRangeLabel(DateTime start, DateTime end) {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.iconAsset, required this.label, this.labelStyle});
+  const _InfoRow({
+    required this.iconAsset,
+    required this.label,
+    this.labelStyle,
+  });
   final String iconAsset;
   final String label;
   final TextStyle? labelStyle;
@@ -410,13 +474,19 @@ class _CategoryChip extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
         border: Border.all(color: cs.outline),
       ),
-      child: Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+      child: Text(
+        label,
+        style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
     );
   }
 }
@@ -441,11 +511,7 @@ class _KycVerifiedBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon(
-            'badge-check',
-            size: 11,
-            color: cs.success,
-          ),
+          DonyIcon('badge-check', size: 11, color: cs.success),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             'Identité',

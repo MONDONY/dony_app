@@ -442,7 +442,10 @@ class _NegoCard extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    PriceDisplay.eur(displayPrice),
+                                    PriceDisplay.money(
+                                      displayPrice,
+                                      thread.currency,
+                                    ),
                                     style: tt.headlineMedium?.copyWith(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w800,

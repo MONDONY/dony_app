@@ -63,8 +63,11 @@ String formatKgPrice(double value) =>
 /// où la devise du trajet/bid/annonce est connue, à la place de
 /// [formatKgPrice] + un « € » codé en dur. Repli EUR si absente/inconnue.
 String formatPriceIn(double value, String? currencyCode) {
-  final currency = SupportedCurrency.fromCode(currencyCode) ?? SupportedCurrency.eur;
-  return CurrencyFormatter.format(value, currency, compact: true);
+  return CurrencyFormatter.format(
+    value,
+    SupportedCurrency.fromCodeOrDefault(currencyCode),
+    compact: true,
+  );
 }
 
 /// Plafond de remboursement Yadony en cas de perte de colis (€), source unique

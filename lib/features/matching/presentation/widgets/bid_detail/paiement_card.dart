@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
@@ -20,10 +21,7 @@ class PaiementCard extends StatelessWidget {
 
   const PaiementCard({super.key, required this.bid});
 
-  static const _terminalStatuses = {
-    'COMPLETED',
-    'DELIVERED',
-  };
+  static const _terminalStatuses = {'COMPLETED', 'DELIVERED'};
 
   static const _cancelledStatuses = {
     'CANCELLED',
@@ -38,7 +36,10 @@ class PaiementCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     // senderLabel : ce que paie l'expéditeur (brut séquestré/remboursé, ou net
     // en cash). On n'affiche jamais le net du voyageur à l'expéditeur.
-    final senderLabel = _fmt(bid.totalSenderAmountEur ?? bid.totalAmountEur);
+    final senderLabel = _fmt(
+      bid.totalSenderAmountEur ?? bid.totalAmountEur,
+      bid.currency,
+    );
 
     Widget body;
 
@@ -94,11 +95,7 @@ class PaiementCard extends StatelessWidget {
       // L'expéditeur récupère ce qu'il a payé = net + commission.
       return Row(
         children: [
-          DonyIcon(
-            'refresh-cw',
-            color: cs.onSurfaceVariant,
-            size: 20,
-          ),
+          DonyIcon('refresh-cw', color: cs.onSurfaceVariant, size: 20),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
@@ -125,5 +122,6 @@ class PaiementCard extends StatelessWidget {
     );
   }
 
-  static String _fmt(double? v) => v != null ? '${v.toStringAsFixed(2)} €' : '-';
+  static String _fmt(double? v, String currency) =>
+      v != null ? formatPriceIn(v, currency) : '-';
 }

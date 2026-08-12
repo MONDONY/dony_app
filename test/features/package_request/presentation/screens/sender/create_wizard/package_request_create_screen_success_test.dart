@@ -20,6 +20,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../../../helpers/currency_test_doubles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -234,17 +236,6 @@ void main() {
     }
     unregisterFakeRecentCityStore();
   });
-
-  void registerCurrencyPreference(Object? currencyCode) {
-    final hive = MockHiveService();
-    final prefs = MockBox();
-    when(() => hive.userPrefs).thenReturn(prefs);
-    when(
-      () => prefs.get(HiveService.kCurrencyCode, defaultValue: null),
-    ).thenReturn(currencyCode);
-    getIt.registerSingleton<HiveService>(hive);
-    addTearDown(() => getIt.unregister<HiveService>());
-  }
 
   Widget buildHarness({String helpConfigJson = _emptyHelpConfigJson}) {
     final router = GoRouter(

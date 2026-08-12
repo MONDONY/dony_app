@@ -62,14 +62,18 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
   @override
   void initState() {
     super.initState();
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.rematchAlternativesOpened,
-      properties: {'source': widget.cancellation != null ? 'in_app' : 'deep_link'},
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.rematchAlternativesOpened,
+        properties: {
+          'source': widget.cancellation != null ? 'in_app' : 'deep_link',
+        },
+      ),
+    );
     if (widget.cancellation == null) {
-      context
-          .read<CancellationBloc>()
-          .add(RematchSuggestionsRequested(widget.cancellationId));
+      context.read<CancellationBloc>().add(
+        RematchSuggestionsRequested(widget.cancellationId),
+      );
     }
   }
 
@@ -87,7 +91,10 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
   /// `TravelerProfileScreen`). Un stub ne doit jamais atteindre
   /// `showTravelerAnnouncementSheet` : `travelerId`/`pricingMode`/
   /// `priceGridItems`/`acceptedPaymentMethods` doivent venir du back.
-  void _onSuggestionTap(RematchSuggestionModel suggestion, int suggestionsCount) {
+  void _onSuggestionTap(
+    RematchSuggestionModel suggestion,
+    int suggestionsCount,
+  ) {
     // Ignore un second tap tant qu'un fetch est déjà en vol (évite une
     // double requête / une race entre deux résolutions concurrentes).
     if (_loadingSuggestionId.value != null) {
@@ -95,9 +102,9 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
     }
     _pendingSuggestionsCount = suggestionsCount;
     _loadingSuggestionId.value = suggestion.suggestionId;
-    context
-        .read<AnnouncementBloc>()
-        .add(AnnouncementDetailRequested(suggestion.announcementId));
+    context.read<AnnouncementBloc>().add(
+      AnnouncementDetailRequested(suggestion.announcementId),
+    );
   }
 
   void _onAnnouncementState(BuildContext context, AnnouncementState state) {
@@ -105,14 +112,13 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
       _loadingSuggestionId.value = null;
       // Analytics tirée juste avant l'ouverture de la sheet — même point
       // que l'ancien code, désormais gaté par le succès du fetch.
-      unawaited(getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.rematchAccepted,
-        properties: {'count': _pendingSuggestionsCount},
-      ));
-      showTravelerAnnouncementSheet(
-        context,
-        announcement: state.announcement,
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.rematchAccepted,
+          properties: {'count': _pendingSuggestionsCount},
+        ),
       );
+      showTravelerAnnouncementSheet(context, announcement: state.announcement);
     } else if (state is AnnouncementNotFound || state is AnnouncementError) {
       _loadingSuggestionId.value = null;
       DonySnackbar.show(
@@ -137,44 +143,46 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
         body: RepaintBoundary(
           key: _boundaryKey,
           child: cancellation != null
-            ? _RematchBody(
-                suggestions: cancellation.rematchSuggestions,
-                affectedBidsCount: cancellation.affectedBidsCount,
-                loadingSuggestionId: _loadingSuggestionId,
-                onSuggestionTap: _onSuggestionTap,
-              )
-            : BlocBuilder<CancellationBloc, CancellationState>(
-                builder: (context, state) {
-                  if (state is RematchSuggestionsLoaded) {
-                    return _RematchBody(
-                      suggestions: state.suggestions,
-                      affectedBidsCount: null,
-                      loadingSuggestionId: _loadingSuggestionId,
-                      onSuggestionTap: _onSuggestionTap,
+              ? _RematchBody(
+                  suggestions: cancellation.rematchSuggestions,
+                  affectedBidsCount: cancellation.affectedBidsCount,
+                  loadingSuggestionId: _loadingSuggestionId,
+                  onSuggestionTap: _onSuggestionTap,
+                )
+              : BlocBuilder<CancellationBloc, CancellationState>(
+                  builder: (context, state) {
+                    if (state is RematchSuggestionsLoaded) {
+                      return _RematchBody(
+                        suggestions: state.suggestions,
+                        affectedBidsCount: null,
+                        loadingSuggestionId: _loadingSuggestionId,
+                        onSuggestionTap: _onSuggestionTap,
+                      );
+                    }
+                    if (state is CancellationError) {
+                      return DonyEmptyState(
+                        type: DonyEmptyStateType.error,
+                        mascotte: DonyMascotteType.erreurLegere,
+                        title: 'Erreur de chargement',
+                        description: ErrorPresenter.resolve(
+                          state.error,
+                        ).message,
+                        actionLabel: 'Réessayer',
+                        onAction: () => context.read<CancellationBloc>().add(
+                          RematchSuggestionsRequested(widget.cancellationId),
+                        ),
+                      );
+                    }
+                    // CancellationInitial / CancellationLoading / tout autre état
+                    // transitoire du même bloc (registerFactory → instance dédiée
+                    // à cette route).
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     );
-                  }
-                  if (state is CancellationError) {
-                    return DonyEmptyState(
-                      type: DonyEmptyStateType.error,
-                      mascotte: DonyMascotteType.erreurLegere,
-                      title: 'Erreur de chargement',
-                      description: ErrorPresenter.resolve(state.error).message,
-                      actionLabel: 'Réessayer',
-                      onAction: () => context.read<CancellationBloc>().add(
-                            RematchSuggestionsRequested(widget.cancellationId),
-                          ),
-                    );
-                  }
-                  // CancellationInitial / CancellationLoading / tout autre état
-                  // transitoire du même bloc (registerFactory → instance dédiée
-                  // à cette route).
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  );
-                },
-              ),
+                  },
+                ),
         ),
       ),
     );
@@ -196,7 +204,7 @@ class _RematchBody extends StatelessWidget {
   final ValueListenable<String?> loadingSuggestionId;
 
   final void Function(RematchSuggestionModel suggestion, int suggestionsCount)
-      onSuggestionTap;
+  onSuggestionTap;
 
   const _RematchBody({
     required this.suggestions,
@@ -252,7 +260,8 @@ class _RematchBody extends StatelessWidget {
                             ignoring: loadingId != null,
                             child: TravelerCard(
                               key: Key(
-                                  'rematch-traveler-card-${suggestion.suggestionId}'),
+                                'rematch-traveler-card-${suggestion.suggestionId}',
+                              ),
                               announcement: _toAnnouncementModel(suggestion),
                               index: e.key,
                               isOwnAnnouncement: false,
@@ -362,7 +371,8 @@ class _ConfirmationBanner extends StatelessWidget {
 /// un voyageur de confiance. `travelerRatingCount` reste dans le modèle mais
 /// n'est actuellement rendu nulle part sur cet écran.
 AnnouncementModel _toAnnouncementModel(RematchSuggestionModel suggestion) {
-  final hasTravelerInfo = suggestion.travelerFirstName != null ||
+  final hasTravelerInfo =
+      suggestion.travelerFirstName != null ||
       suggestion.travelerRating != null ||
       suggestion.travelerAvatarUrl != null;
 

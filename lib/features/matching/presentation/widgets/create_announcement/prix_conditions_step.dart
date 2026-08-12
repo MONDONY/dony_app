@@ -89,8 +89,10 @@ class PrixConditionsStep extends StatelessWidget {
 
   double get _pricePerKg => _isCustomPrice
       ? customPriceNotifier.value
-      : kPriceOptions[
-          priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
+      : kPriceOptions[priceOptionNotifier.value.clamp(
+          0,
+          kPriceOptions.length - 1,
+        )];
 
   @override
   Widget build(BuildContext context) {
@@ -108,387 +110,408 @@ class PrixConditionsStep extends StatelessWidget {
         if (lockPrice)
           lockedTotalPriceEur != null
               ? _LockedAgreedPriceCard(
-                  amount: lockedTotalPriceEur!, currency: currency)
+                  amount: lockedTotalPriceEur!,
+                  currency: currency,
+                )
               : const _LockedPriceNote(),
         if (!lockPrice) ...[
-        // ── MODE DE TARIFICATION ──────────────────────────────────────────────
-        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-          buildWhen: (p, c) => p.pricingMode != c.pricingMode,
-          builder: (context, formState) {
-            return Container(
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-              ),
-              padding: const EdgeInsets.all(3),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _ModeToggleOption(
-                      label: 'Au kilo',
-                      active: formState.pricingMode == PricingMode.kg,
-                      onTap: () => context.read<AnnouncementFormBloc>().add(
-                            const AnnouncementPricingModeSetRequested(
-                                PricingMode.kg),
+          // ── MODE DE TARIFICATION ──────────────────────────────────────────────
+          BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+            buildWhen: (p, c) => p.pricingMode != c.pricingMode,
+            builder: (context, formState) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
+                padding: const EdgeInsets.all(3),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _ModeToggleOption(
+                        label: 'Au kilo',
+                        active: formState.pricingMode == PricingMode.kg,
+                        onTap: () => context.read<AnnouncementFormBloc>().add(
+                          const AnnouncementPricingModeSetRequested(
+                            PricingMode.kg,
                           ),
+                        ),
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: _ModeToggleOption(
-                      label: 'Grille + kilo',
-                      active: formState.pricingMode == PricingMode.mixed,
-                      onTap: () => context.read<AnnouncementFormBloc>().add(
-                            const AnnouncementPricingModeSetRequested(
-                                PricingMode.mixed),
+                    Expanded(
+                      child: _ModeToggleOption(
+                        label: 'Grille + kilo',
+                        active: formState.pricingMode == PricingMode.mixed,
+                        onTap: () => context.read<AnnouncementFormBloc>().add(
+                          const AnnouncementPricingModeSetRequested(
+                            PricingMode.mixed,
                           ),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ).animate().fadeIn(delay: 50.ms),
-        const SizedBox(height: DonySpacing.md),
+                  ],
+                ),
+              );
+            },
+          ).animate().fadeIn(delay: 50.ms),
+          const SizedBox(height: DonySpacing.md),
 
-        // ── PRIX PAR KG ───────────────────────────────────────────────────────
-        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-          buildWhen: (p, c) => p.pricingMode != c.pricingMode,
-          builder: (context, formState) {
-            final isMixed = formState.pricingMode == PricingMode.mixed;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const CaSectionLabel(
-                    label: 'Prix par kg', iconAsset: 'tag'),
-                const SizedBox(height: DonySpacing.md),
-                // ── Toggle "Tarif au kilo" (MIXED uniquement) ─────────────
-                if (isMixed)
+          // ── PRIX PAR KG ───────────────────────────────────────────────────────
+          BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+            buildWhen: (p, c) => p.pricingMode != c.pricingMode,
+            builder: (context, formState) {
+              final isMixed = formState.pricingMode == PricingMode.mixed;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CaSectionLabel(label: 'Prix par kg', iconAsset: 'tag'),
+                  const SizedBox(height: DonySpacing.md),
+                  // ── Toggle "Tarif au kilo" (MIXED uniquement) ─────────────
+                  if (isMixed)
+                    ValueListenableBuilder<bool>(
+                      valueListenable: kgPriceEnabledNotifier,
+                      builder: (context, kgEnabled, _) {
+                        return SwitchListTile(
+                          key: const Key('kg-price-toggle'),
+                          value: kgEnabled,
+                          onChanged: (v) => kgPriceEnabledNotifier.value = v,
+                          activeColor: cs.primary,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            'Tarif au kilo',
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Optionnel en mode grille',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  // ── Chips (cachées si toggle OFF) ─────────────────────────
                   ValueListenableBuilder<bool>(
                     valueListenable: kgPriceEnabledNotifier,
                     builder: (context, kgEnabled, _) {
-                      return SwitchListTile(
-                        key: const Key('kg-price-toggle'),
-                        value: kgEnabled,
-                        onChanged: (v) => kgPriceEnabledNotifier.value = v,
-                        activeColor: cs.primary,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          'Tarif au kilo',
-                          style: tt.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          'Optionnel en mode grille',
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      );
-                    },
-                  ),
-                // ── Chips (cachées si toggle OFF) ─────────────────────────
-                ValueListenableBuilder<bool>(
-                  valueListenable: kgPriceEnabledNotifier,
-                  builder: (context, kgEnabled, _) {
-                    if (!kgEnabled) return const SizedBox.shrink();
-                    return ListenableBuilder(
-                      listenable: Listenable.merge([
-                        priceOptionNotifier,
-                        customPriceNotifier,
-                        availableKgNotifier,
-                      ]),
-                      builder: (context, _) {
-                        final selectedIdx = priceOptionNotifier.value;
-                        final isCustom = _isCustomPrice;
-                        final pricePerKg = _pricePerKg;
-                        final kg = availableKgNotifier.value;
-                        final travelerNet = kg * pricePerKg;
-                        final senderTotal = netToSenderPrice(travelerNet);
+                      if (!kgEnabled) return const SizedBox.shrink();
+                      return ListenableBuilder(
+                        listenable: Listenable.merge([
+                          priceOptionNotifier,
+                          customPriceNotifier,
+                          availableKgNotifier,
+                        ]),
+                        builder: (context, _) {
+                          final selectedIdx = priceOptionNotifier.value;
+                          final isCustom = _isCustomPrice;
+                          final pricePerKg = _pricePerKg;
+                          final kg = availableKgNotifier.value;
+                          final travelerNet = kg * pricePerKg;
+                          final senderTotal = netToSenderPrice(travelerNet);
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ── Chips preset ──────────────────────────
-                            Row(
-                              children: List.generate(kPriceOptions.length, (i) {
-                                final selected = selectedIdx == i;
-                                return Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      left: i == 0 ? 0 : DonySpacing.xs,
-                                      right: DonySpacing.xs,
-                                    ),
-                                    child: GestureDetector(
-                                      onTap: () =>
-                                          priceOptionNotifier.value = i,
-                                      child: AnimatedContainer(
-                                        duration: 180.ms,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: DonySpacing.md,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: selected
-                                              ? cs.successLight
-                                              : cs.surface,
-                                          borderRadius: BorderRadius.circular(
-                                              DonyRadius.lg),
-                                          border: Border.all(
-                                            color: selected
-                                                ? cs.success
-                                                : cs.outline,
-                                            width: selected ? 1.5 : 1,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // ── Chips preset ──────────────────────────
+                              Row(
+                                children: List.generate(kPriceOptions.length, (
+                                  i,
+                                ) {
+                                  final selected = selectedIdx == i;
+                                  return Expanded(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: i == 0 ? 0 : DonySpacing.xs,
+                                        right: DonySpacing.xs,
+                                      ),
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            priceOptionNotifier.value = i,
+                                        child: AnimatedContainer(
+                                          duration: 180.ms,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: DonySpacing.md,
                                           ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            CurrencyFormatter.formatOrPlain(
-                                              kPriceOptions[i], currency),
-                                            style: tt.titleMedium?.copyWith(
+                                          decoration: BoxDecoration(
+                                            color: selected
+                                                ? cs.successLight
+                                                : cs.surface,
+                                            borderRadius: BorderRadius.circular(
+                                              DonyRadius.lg,
+                                            ),
+                                            border: Border.all(
                                               color: selected
                                                   ? cs.success
-                                                  : cs.onSurface,
-                                              fontWeight: FontWeight.w700,
+                                                  : cs.outline,
+                                              width: selected ? 1.5 : 1,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              CurrencyFormatter.formatOrPlain(
+                                                kPriceOptions[i],
+                                                currency,
+                                              ),
+                                              style: tt.titleMedium?.copyWith(
+                                                color: selected
+                                                    ? cs.success
+                                                    : cs.onSurface,
+                                                fontWeight: FontWeight.w700,
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
+                                  );
+                                }),
+                              ),
+                              const SizedBox(height: DonySpacing.xs),
+                              // ── Chip "Autre" ──────────────────────────
+                              GestureDetector(
+                                onTap: () {
+                                  priceOptionNotifier.value =
+                                      kPriceOptions.length;
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    FocusScope.of(context).unfocus();
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: 180.ms,
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: DonySpacing.sm,
+                                    horizontal: DonySpacing.base,
                                   ),
-                                );
-                              }),
-                            ),
-                            const SizedBox(height: DonySpacing.xs),
-                            // ── Chip "Autre" ──────────────────────────
-                            GestureDetector(
-                              onTap: () {
-                                priceOptionNotifier.value =
-                                    kPriceOptions.length;
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  FocusScope.of(context).unfocus();
-                                });
-                              },
-                              child: AnimatedContainer(
-                                duration: 180.ms,
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: DonySpacing.sm,
-                                  horizontal: DonySpacing.base,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isCustom ? cs.successLight : cs.surface,
-                                  borderRadius:
-                                      BorderRadius.circular(DonyRadius.lg),
-                                  border: Border.all(
-                                    color: isCustom ? cs.success : cs.outline,
-                                    width: isCustom ? 1.5 : 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    DonyIcon(
-                                      'square-pen',
-                                      size: 16,
-                                      color: isCustom
-                                          ? cs.success
-                                          : cs.onSurfaceVariant,
+                                  decoration: BoxDecoration(
+                                    color: isCustom
+                                        ? cs.successLight
+                                        : cs.surface,
+                                    borderRadius: BorderRadius.circular(
+                                      DonyRadius.lg,
                                     ),
-                                    const SizedBox(width: DonySpacing.xs),
-                                    Flexible(
-                                      child: Text(
-                                        'Autre prix',
-                                        style: tt.bodyMedium?.copyWith(
-                                          color: isCustom
-                                              ? cs.success
-                                              : cs.onSurfaceVariant,
-                                          fontWeight: isCustom
-                                              ? FontWeight.w600
-                                              : FontWeight.normal,
+                                    border: Border.all(
+                                      color: isCustom ? cs.success : cs.outline,
+                                      width: isCustom ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      DonyIcon(
+                                        'square-pen',
+                                        size: 16,
+                                        color: isCustom
+                                            ? cs.success
+                                            : cs.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: DonySpacing.xs),
+                                      Flexible(
+                                        child: Text(
+                                          'Autre prix',
+                                          style: tt.bodyMedium?.copyWith(
+                                            color: isCustom
+                                                ? cs.success
+                                                : cs.onSurfaceVariant,
+                                            fontWeight: isCustom
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            // ── Champ prix custom ─────────────────────
-                            if (isCustom) ...[
-                              const SizedBox(height: DonySpacing.sm),
-                              DonyTextField(
-                                label: 'Prix par kg',
-                                hint: 'ex: 12',
-                                controller: customPriceCtrl,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                suffixIcon: Padding(
-                                  padding: const EdgeInsets.only(
-                                      right: DonySpacing.md),
-                                  child: Text('${currency?.symbol ?? ''}/kg',
+                              // ── Champ prix custom ─────────────────────
+                              if (isCustom) ...[
+                                const SizedBox(height: DonySpacing.sm),
+                                DonyTextField(
+                                  label: 'Prix par kg',
+                                  hint: 'ex: 12',
+                                  controller: customPriceCtrl,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  suffixIcon: Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: DonySpacing.md,
+                                    ),
+                                    child: Text(
+                                      '${currency?.symbol ?? ''}/kg',
                                       style: tt.bodyMedium?.copyWith(
-                                          color: cs.onSurfaceVariant)),
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                  onChanged: (v) {
+                                    final parsed = double.tryParse(
+                                      v.replaceAll(',', '.'),
+                                    );
+                                    if (parsed != null && parsed > 0) {
+                                      customPriceNotifier.value = parsed;
+                                    }
+                                  },
                                 ),
-                                onChanged: (v) {
-                                  final parsed =
-                                      double.tryParse(v.replaceAll(',', '.'));
-                                  if (parsed != null && parsed > 0) {
-                                    customPriceNotifier.value = parsed;
-                                  }
-                                },
+                              ],
+                              const SizedBox(height: DonySpacing.sm),
+                              Text(
+                                selectedIdx == -1
+                                    ? 'Sélectionnez un prix pour voir l\'estimation'
+                                    : kg == 0
+                                    ? 'Capacité illimitée : estimation selon la demande'
+                                    : 'Vous touchez ${CurrencyFormatter.formatOrPlain(travelerNet, currency)} · l\'expéditeur paie ${CurrencyFormatter.formatOrPlain(senderTotal, currency)}',
+                                style: tt.bodySmall?.copyWith(
+                                  color: selectedIdx == -1
+                                      ? cs.error.withValues(alpha: 0.7)
+                                      : cs.onSurfaceVariant,
+                                ),
                               ),
                             ],
-                            const SizedBox(height: DonySpacing.sm),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ).animate().fadeIn(delay: 100.ms),
+          // ── Price hint (masqué si toggle OFF) ────────────────────────────────
+          ValueListenableBuilder<bool>(
+            valueListenable: kgPriceEnabledNotifier,
+            builder: (context, kgEnabled, _) {
+              if (!kgEnabled) return const SizedBox.shrink();
+              return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+                buildWhen: (p, c) =>
+                    p.priceWarning != c.priceWarning ||
+                    p.pricePerKg != c.pricePerKg ||
+                    p.departureCity != c.departureCity ||
+                    p.arrivalCity != c.arrivalCity,
+                builder: (context, formState) {
+                  final dep = formState.departureCity;
+                  final arr = formState.arrivalCity;
+                  final corridor = (dep != null && arr != null)
+                      ? '$dep – $arr'
+                      : null;
+                  return PriceHintWidget(
+                    marketMedianPrice: 8.0,
+                    warning: formState.priceWarning,
+                    corridor: corridor,
+                    currency: currency,
+                  );
+                },
+              );
+            },
+          ),
+
+          // ── APERÇU GRILLE (mode MIXED) ────────────────────────────────────────
+          BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+            buildWhen: (p, c) =>
+                p.pricingMode != c.pricingMode ||
+                p.gridPreviewItems != c.gridPreviewItems,
+            builder: (context, formState) {
+              if (formState.pricingMode != PricingMode.mixed) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: DonySpacing.md),
+                  Container(
+                    padding: const EdgeInsets.all(DonySpacing.md),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                      border: Border.all(color: cs.outline),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
                             Text(
-                              selectedIdx == -1
-                                  ? 'Sélectionnez un prix pour voir l\'estimation'
-                                  : kg == 0
-                                      ? 'Capacité illimitée : estimation selon la demande'
-                                      : 'Vous touchez ${CurrencyFormatter.formatOrPlain(travelerNet, currency)} · l\'expéditeur paie ${CurrencyFormatter.formatOrPlain(senderTotal, currency)}',
-                              style: tt.bodySmall?.copyWith(
-                                color: selectedIdx == -1
-                                    ? cs.error.withValues(alpha: 0.7)
-                                    : cs.onSurfaceVariant,
+                              'Ma grille · ${formState.gridPreviewItems.length} article${formState.gridPreviewItems.length == 1 ? '' : 's'}',
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => context.push('/profile/price-grid'),
+                              child: Text(
+                                'Modifier →',
+                                style: tt.labelSmall?.copyWith(
+                                  color: cs.primary,
+                                ),
                               ),
                             ),
                           ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            );
-          },
-        ).animate().fadeIn(delay: 100.ms),
-        // ── Price hint (masqué si toggle OFF) ────────────────────────────────
-        ValueListenableBuilder<bool>(
-          valueListenable: kgPriceEnabledNotifier,
-          builder: (context, kgEnabled, _) {
-            if (!kgEnabled) return const SizedBox.shrink();
-            return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-              buildWhen: (p, c) =>
-                  p.priceWarning != c.priceWarning ||
-                  p.pricePerKg != c.pricePerKg ||
-                  p.departureCity != c.departureCity ||
-                  p.arrivalCity != c.arrivalCity,
-              builder: (context, formState) {
-                final dep = formState.departureCity;
-                final arr = formState.arrivalCity;
-                final corridor =
-                    (dep != null && arr != null) ? '$dep – $arr' : null;
-                return PriceHintWidget(
-                  marketMedianPrice: 8.0,
-                  warning: formState.priceWarning,
-                  corridor: corridor,
-                  currency: currency,
-                );
-              },
-            );
-          },
-        ),
-
-        // ── APERÇU GRILLE (mode MIXED) ────────────────────────────────────────
-        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-          buildWhen: (p, c) =>
-              p.pricingMode != c.pricingMode ||
-              p.gridPreviewItems != c.gridPreviewItems,
-          builder: (context, formState) {
-            if (formState.pricingMode != PricingMode.mixed) {
-              return const SizedBox.shrink();
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: DonySpacing.md),
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.md),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    border: Border.all(color: cs.outline),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Ma grille · ${formState.gridPreviewItems.length} article${formState.gridPreviewItems.length == 1 ? '' : 's'}',
-                            style: tt.labelSmall?.copyWith(
-                                color: cs.onSurfaceVariant),
+                        ),
+                        if (formState.gridPreviewItems.isNotEmpty) ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          ...formState.gridPreviewItems.map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.label,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: tt.bodySmall,
+                                    ),
+                                  ),
+                                  const SizedBox(width: DonySpacing.sm),
+                                  Text(
+                                    CurrencyFormatter.formatOrPlain(
+                                      item.unitPriceDisplay,
+                                      currency,
+                                    ),
+                                    style: tt.labelSmall?.copyWith(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          GestureDetector(
-                            onTap: () =>
-                                context.push('/profile/price-grid'),
-                            child: Text(
-                              'Modifier →',
-                              style: tt.labelSmall
-                                  ?.copyWith(color: cs.primary),
+                        ] else ...[
+                          const SizedBox(height: DonySpacing.sm),
+                          Text(
+                            'Aucun article configuré',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
-                      ),
-                      if (formState.gridPreviewItems.isNotEmpty) ...[
-                        const SizedBox(height: DonySpacing.sm),
-                        ...formState.gridPreviewItems.map(
-                          (item) => Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 3),
-                            child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.label,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: tt.bodySmall,
-                                  ),
-                                ),
-                                const SizedBox(width: DonySpacing.sm),
-                                Text(
-                                  CurrencyFormatter.formatOrPlain(
-                                    item.unitPriceDisplay, currency),
-                                  style: tt.labelSmall?.copyWith(
-                                    color: cs.primary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ] else ...[
-                        const SizedBox(height: DonySpacing.sm),
-                        Text(
-                          'Aucun article configuré',
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.08),
-                    borderRadius:
-                        BorderRadius.circular(DonyRadius.sm),
+                  const SizedBox(height: DonySpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.all(DonySpacing.sm),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    ),
+                    child: Text(
+                      'Yadony ajoute $donyCommissionPercentLabel % sur chaque article et sur le prix au kilo',
+                      style: tt.bodySmall?.copyWith(color: cs.primary),
+                    ),
                   ),
-                  child: Text(
-                    'Yadony ajoute $donyCommissionPercentLabel % sur chaque article et sur le prix au kilo',
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.primary),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+                ],
+              );
+            },
+          ),
         ], // fin du bloc prix (masqué quand lockPrice)
         const SizedBox(height: DonySpacing.xxl),
 
@@ -496,137 +519,142 @@ class PrixConditionsStep extends StatelessWidget {
         // Masqué dans le flux trajet dédié : le mode de paiement est déjà fixé
         // par la négociation (lockContext.paymentMethod).
         if (showPaymentMethods) ...[
-        const CaSectionLabel(
-          label: 'Modes de paiement acceptés',
-          iconAsset: 'banknote',
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        BlocBuilder<StripeAccountBloc, StripeAccountState>(
-          builder: (ctx, stripeState) {
-            final isStripeConfigured = stripeState is StripeAccountReady &&
-                stripeState.accountStatus.isComplete;
+          const CaSectionLabel(
+            label: 'Modes de paiement acceptés',
+            iconAsset: 'banknote',
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          BlocBuilder<StripeAccountBloc, StripeAccountState>(
+            builder: (ctx, stripeState) {
+              final isStripeConfigured =
+                  stripeState is StripeAccountReady &&
+                  stripeState.accountStatus.isComplete;
 
-            if (!isStripeConfigured) {
-              // Sans Stripe configuré, les espèces sont la seule méthode
-              // disponible : on force le notifier à ON (au moins une méthode
-              // de paiement est requise pour publier). Post-frame pour éviter
-              // toute mutation d'état pendant la phase de build.
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                cashEnabledNotifier.value = true;
-              });
-              return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);
-            }
+              if (!isStripeConfigured) {
+                // Sans Stripe configuré, les espèces sont la seule méthode
+                // disponible : on force le notifier à ON (au moins une méthode
+                // de paiement est requise pour publier). Post-frame pour éviter
+                // toute mutation d'état pendant la phase de build.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  cashEnabledNotifier.value = true;
+                });
+                return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);
+              }
 
-            return CaSectionCard(
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        key: const Key('payment-method-stripe'),
-                        value: true,
-                        onChanged: null,
-                        activeThumbColor: cs.primary,
-                        title: Row(
-                          children: [
-                            const DonyIcon('credit-card', size: 18),
-                            const SizedBox(width: DonySpacing.sm),
-                            Flexible(
-                              child: Text(
-                                'Carte bancaire (Stripe)',
-                                style: tt.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: cs.onSurface,
-                                ),
+              return CaSectionCard(
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      key: const Key('payment-method-stripe'),
+                      value: true,
+                      onChanged: null,
+                      activeThumbColor: cs.primary,
+                      title: Row(
+                        children: [
+                          const DonyIcon('credit-card', size: 18),
+                          const SizedBox(width: DonySpacing.sm),
+                          Flexible(
+                            child: Text(
+                              'Carte bancaire (Stripe)',
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSurface,
                               ),
                             ),
-                            const SizedBox(width: DonySpacing.xs),
-                            DonyIcon('lock',
-                                size: 14, color: cs.onSurfaceVariant),
-                          ],
-                        ),
-                        subtitle: Text(
-                          'Paiement sécurisé par défaut',
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.base,
-                          vertical: DonySpacing.xs,
+                          ),
+                          const SizedBox(width: DonySpacing.xs),
+                          DonyIcon(
+                            'lock',
+                            size: 14,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(
+                        'Paiement sécurisé par défaut',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
-                      const CaRowDivider(),
-                      // La carte de commission n'est plus requise à la création d'annonce.
-                      // La vérification (wallet ou carte) est reportée à l'acceptation du bid.
-                      ValueListenableBuilder<bool>(
-                        valueListenable: cashEnabledNotifier,
-                        builder: (context, cashEnabled, _) {
-                          return Column(
-                            children: [
-                              SwitchListTile(
-                                key: const Key('payment-method-cash'),
-                                value: cashEnabled,
-                                onChanged: (val) =>
-                                    cashEnabledNotifier.value = val,
-                                activeThumbColor: cs.primary,
-                                title: Row(
-                                  children: [
-                                    const DonyIcon('banknote',
-                                        size: 18),
-                                    const SizedBox(width: DonySpacing.sm),
-                                    Flexible(
-                                      child: Text(
-                                        'Espèces',
-                                        style: tt.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: cs.onSurface,
-                                        ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.xs,
+                      ),
+                    ),
+                    const CaRowDivider(),
+                    // La carte de commission n'est plus requise à la création d'annonce.
+                    // La vérification (wallet ou carte) est reportée à l'acceptation du bid.
+                    ValueListenableBuilder<bool>(
+                      valueListenable: cashEnabledNotifier,
+                      builder: (context, cashEnabled, _) {
+                        return Column(
+                          children: [
+                            SwitchListTile(
+                              key: const Key('payment-method-cash'),
+                              value: cashEnabled,
+                              onChanged: (val) =>
+                                  cashEnabledNotifier.value = val,
+                              activeThumbColor: cs.primary,
+                              title: Row(
+                                children: [
+                                  const DonyIcon('banknote', size: 18),
+                                  const SizedBox(width: DonySpacing.sm),
+                                  Flexible(
+                                    child: Text(
+                                      'Espèces',
+                                      style: tt.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: cs.onSurface,
                                       ),
                                     ),
-                                  ],
-                                ),
-                                subtitle: Text(
-                                  'Commission prélevée au voyageur à la remise',
-                                  style: tt.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: DonySpacing.base,
-                                  vertical: DonySpacing.xs,
+                                  ),
+                                ],
+                              ),
+                              subtitle: Text(
+                                'Commission prélevée au voyageur à la remise',
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
                                 ),
                               ),
-                              AnimatedSize(
-                                duration: 200.ms,
-                                curve: Curves.easeOutCubic,
-                                alignment: Alignment.topCenter,
-                                child: cashEnabled
-                                    ? Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                          DonySpacing.base,
-                                          0,
-                                          DonySpacing.base,
-                                          DonySpacing.md,
-                                        ),
-                                        child: const CashCommissionNotice()
-                                            .animate()
-                                            .fadeIn(duration: 200.ms),
-                                      )
-                                    : const SizedBox(width: double.infinity),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.base,
+                                vertical: DonySpacing.xs,
                               ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                );
-          },
-        ).animate().fadeIn(delay: 180.ms),
-        const SizedBox(height: DonySpacing.xxl),
+                            ),
+                            AnimatedSize(
+                              duration: 200.ms,
+                              curve: Curves.easeOutCubic,
+                              alignment: Alignment.topCenter,
+                              child: cashEnabled
+                                  ? Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        DonySpacing.base,
+                                        0,
+                                        DonySpacing.base,
+                                        DonySpacing.md,
+                                      ),
+                                      child: const CashCommissionNotice()
+                                          .animate()
+                                          .fadeIn(duration: 200.ms),
+                                    )
+                                  : const SizedBox(width: double.infinity),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ).animate().fadeIn(delay: 180.ms),
+          const SizedBox(height: DonySpacing.xxl),
         ], // fin de la section paiement (masquée quand !showPaymentMethods)
-
         // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
         const CaSectionLabel(
-            label: 'Ce que j\'accepte',
-            iconAsset: 'circle-check'),
+          label: 'Ce que j\'accepte',
+          iconAsset: 'circle-check',
+        ),
         const SizedBox(height: DonySpacing.sm),
         ListenableBuilder(
           listenable: Listenable.merge([
@@ -637,11 +665,13 @@ class PrixConditionsStep extends StatelessWidget {
           builder: (context, _) {
             final catalogLabels = catalogLabelsNotifier.value;
             final catalog = catalogLabels
-                .map((label) => ContentCategory(
-                      code: label,
-                      label: label,
-                      emoji: emojiForLabel(label),
-                    ))
+                .map(
+                  (label) => ContentCategory(
+                    code: label,
+                    label: label,
+                    emoji: emojiForLabel(label),
+                  ),
+                )
                 .toList();
             final catalogSet = catalogLabels.toSet();
             final combinedSelected = <String>{
@@ -658,8 +688,9 @@ class PrixConditionsStep extends StatelessWidget {
                   selected: combinedSelected,
                   onChanged: (labels) {
                     final labelSet = labels.toSet();
-                    selectedContentNotifier.value =
-                        labelSet.where(catalogSet.contains).toSet();
+                    selectedContentNotifier.value = labelSet
+                        .where(catalogSet.contains)
+                        .toSet();
                     customAcceptedNotifier.value = labelSet
                         .where((l) => !catalogSet.contains(l))
                         .toSet();
@@ -672,8 +703,7 @@ class PrixConditionsStep extends StatelessWidget {
         const SizedBox(height: DonySpacing.xxl),
 
         // ── CE QUE JE REFUSE ──────────────────────────────────────────────────
-        const CaSectionLabel(
-            label: 'Ce que je refuse', iconAsset: 'ban'),
+        const CaSectionLabel(label: 'Ce que je refuse', iconAsset: 'ban'),
         const SizedBox(height: DonySpacing.sm),
         ListenableBuilder(
           listenable: Listenable.merge([
@@ -683,11 +713,13 @@ class PrixConditionsStep extends StatelessWidget {
           builder: (context, _) {
             final catalogLabels = catalogLabelsNotifier.value;
             final catalog = catalogLabels
-                .map((label) => ContentCategory(
-                      code: label,
-                      label: label,
-                      emoji: emojiForLabel(label),
-                    ))
+                .map(
+                  (label) => ContentCategory(
+                    code: label,
+                    label: label,
+                    emoji: emojiForLabel(label),
+                  ),
+                )
                 .toList();
 
             return CaSectionCard(
@@ -709,7 +741,9 @@ class PrixConditionsStep extends StatelessWidget {
 
         // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────────────
         const CaSectionLabel(
-            label: 'Note aux expéditeurs', iconAsset: 'notebook-pen'),
+          label: 'Note aux expéditeurs',
+          iconAsset: 'notebook-pen',
+        ),
         const SizedBox(height: DonySpacing.sm),
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: descriptionCtrl,
@@ -728,17 +762,20 @@ class PrixConditionsStep extends StatelessWidget {
                       maxLines: 4,
                       maxLength: 500,
                       scrollPadding: const EdgeInsets.only(bottom: 120),
-                      buildCounter: (_,
-                              {required currentLength,
-                              required isFocused,
-                              maxLength}) =>
-                          null,
+                      buildCounter:
+                          (
+                            _, {
+                            required currentLength,
+                            required isFocused,
+                            maxLength,
+                          }) => null,
                       style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                       decoration: InputDecoration(
                         hintText:
                             'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.',
-                        hintStyle: tt.bodyMedium
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                        hintStyle: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: DonySpacing.md,
@@ -753,8 +790,7 @@ class PrixConditionsStep extends StatelessWidget {
                     ),
                     child: Text(
                       '${value.text.length}/500',
-                      style:
-                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),
                 ],
@@ -832,8 +868,11 @@ class PrixConditionsStep extends StatelessWidget {
                     MediaQuery.textScalerOf(bannerCtx).scale(14) / 14;
                 final stacked = textScale > 1.0;
 
-                final icon =
-                    DonyIcon('circle-check', color: cs.success, size: 18);
+                final icon = DonyIcon(
+                  'circle-check',
+                  color: cs.success,
+                  size: 18,
+                );
                 final explanation = Expanded(
                   child: Text(
                     'Publiez en espèces dès maintenant. Connectez Stripe '
@@ -916,8 +955,7 @@ class PrixConditionsStep extends StatelessWidget {
             onChanged: null,
             title: Row(
               children: [
-                DonyIcon('credit-card',
-                    size: 18, color: cs.onSurfaceVariant),
+                DonyIcon('credit-card', size: 18, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.sm),
                 Flexible(
                   child: Text(
@@ -980,8 +1018,8 @@ class PrixConditionsStep extends StatelessWidget {
               DonySpacing.md,
             ),
             child: const CashCommissionNotice().animate().fadeIn(
-                  duration: 200.ms,
-                ),
+              duration: 200.ms,
+            ),
           ),
         ],
       ),
@@ -1019,7 +1057,7 @@ class _ModeToggleOption extends StatelessWidget {
                     color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -1066,8 +1104,10 @@ class _LockedPriceNote extends StatelessWidget {
               children: [
                 Text(
                   'Prix fixé par la négociation',
-                  style: tt.bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface),
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -1117,7 +1157,11 @@ class _LockedAgreedPriceCard extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 Text(
-                  CurrencyFormatter.formatOrPlain(amount, currency),
+                  CurrencyFormatter.formatOrPlain(
+                    amount,
+                    currency,
+                    compact: true,
+                  ),
                   style: tt.headlineSmall?.copyWith(
                     color: cs.success,
                     fontWeight: FontWeight.w800,

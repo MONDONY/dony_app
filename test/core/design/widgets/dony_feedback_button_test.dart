@@ -32,13 +32,20 @@ void main() {
 
   testWidgets('icône 🐞 visible avec tooltip', (tester) async {
     await tester.pumpWidget(subject());
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      findsOneWidget,
+    );
     expect(find.byTooltip('Signaler un problème'), findsOneWidget);
   });
 
-  testWidgets('tap ouvre le sheet avec champ texte et bouton désactivé', (tester) async {
+  testWidgets('tap ouvre le sheet avec champ texte et bouton désactivé', (
+    tester,
+  ) async {
     await tester.pumpWidget(subject());
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Un problème sur cet écran ?'), findsOneWidget);
@@ -49,13 +56,20 @@ void main() {
     expect(btn.onPressed, isNull);
   });
 
-  testWidgets('saisie active le bouton et l\'envoi appelle onSubmit', (tester) async {
+  testWidgets('saisie active le bouton et l\'envoi appelle onSubmit', (
+    tester,
+  ) async {
     String? submitted;
     await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+    );
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'Le code retrait ne s\'affiche pas');
+    await tester.enterText(
+      find.byType(TextField),
+      'Le code retrait ne s\'affiche pas',
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
@@ -66,11 +80,15 @@ void main() {
     expect(find.textContaining('Merci'), findsOneWidget);
   });
 
-  testWidgets('échec onSubmit garde le texte et montre une erreur', (tester) async {
+  testWidgets('échec onSubmit garde le texte et montre une erreur', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       subject(onSubmit: (_) async => throw Exception('network')),
     );
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+    );
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'bug');
     await tester.pumpAndSettle();
@@ -83,48 +101,52 @@ void main() {
 
   // ── Fallback path: resolveRoute retourne 'unknown' hors GoRouter ───────────
 
-  testWidgets(
-      'resolveRoute retourne "unknown" dans un contexte sans GoRouter',
-      (tester) async {
+  testWidgets('resolveRoute retourne "unknown" dans un contexte sans GoRouter', (
+    tester,
+  ) async {
     // GoRouterState.of(context) lève une exception dans un plain MaterialApp —
     // resolveRoute() doit capturer l'erreur et retourner 'unknown'.
     late BuildContext capturedContext;
     await tester.pumpWidget(
       MaterialApp(
-        home: Builder(builder: (ctx) {
-          capturedContext = ctx;
-          return const SizedBox();
-        }),
+        home: Builder(
+          builder: (ctx) {
+            capturedContext = ctx;
+            return const SizedBox();
+          },
+        ),
       ),
     );
     expect(DonyFeedbackButton.resolveRoute(capturedContext), 'unknown');
   });
 
   testWidgets(
-      'submit via onSubmitOverride dans un plain MaterialApp (sans GoRouter) '
-      'ne lève pas d\'exception — chemin resolveRoute "unknown" exercé',
-      (tester) async {
-    // Ce test vérifie que la soumission complète fonctionne lorsqu'il n'y a
-    // pas de GoRouter ancêtre. resolveRoute() retourne 'unknown' silencieusement.
-    String? submitted;
-    await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
-    await tester.pumpAndSettle();
+    'submit via onSubmitOverride dans un plain MaterialApp (sans GoRouter) '
+    'ne lève pas d\'exception — chemin resolveRoute "unknown" exercé',
+    (tester) async {
+      // Ce test vérifie que la soumission complète fonctionne lorsqu'il n'y a
+      // pas de GoRouter ancêtre. resolveRoute() retourne 'unknown' silencieusement.
+      String? submitted;
+      await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'test sans GoRouter');
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'test sans GoRouter');
+      await tester.pumpAndSettle();
 
-    // Ne doit pas lancer d'exception même sans GoRouter dans l'arbre.
-    await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
-    await tester.pumpAndSettle();
+      // Ne doit pas lancer d'exception même sans GoRouter dans l'arbre.
+      await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
+      await tester.pumpAndSettle();
 
-    expect(submitted, 'test sans GoRouter');
-  });
+      expect(submitted, 'test sans GoRouter');
+    },
+  );
 
   // ── Fallback path: repaintBoundaryKey null → capture ignorée ──────────────
 
-  testWidgets(
-      'submit réussit sans crash quand repaintBoundaryKey est null '
+  testWidgets('submit réussit sans crash quand repaintBoundaryKey est null '
       '(chemin _captureScreen → null exercé)', (tester) async {
     // DonyFeedbackButton sans repaintBoundaryKey (valeur par défaut = null) :
     // _captureScreen() doit retourner null sans exception, et la soumission
@@ -132,7 +154,9 @@ void main() {
     String? submitted;
     // subject() ne passe pas de repaintBoundaryKey → null par défaut.
     await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'bug sans capture');
@@ -148,58 +172,67 @@ void main() {
 
   // ── analyticsResolver registration ────────────────────────────────────────
 
-  testWidgets(
-      'registerAnalyticsResolver + resetAnalyticsResolver sans crash',
-      (tester) async {
+  testWidgets('registerAnalyticsResolver + resetAnalyticsResolver sans crash', (
+    tester,
+  ) async {
     // Couvre les lignes 42-43 (registerAnalyticsResolver) et 47-48
     // (resetAnalyticsResolver) du source.
     DonyFeedbackButton.registerAnalyticsResolver(() => _FakeAnalytics());
     DonyFeedbackButton.resetAnalyticsResolver();
     await tester.pumpWidget(subject(onSubmit: (_) async {}));
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      findsOneWidget,
+    );
   });
 
   // ── _captureScreen avec RepaintBoundary réel ───────────────────────────────
 
   testWidgets(
-      'repaintBoundaryKey fourni avec RepaintBoundary réel → submit sans crash',
-      (tester) async {
-    // Couvre les lignes 65-77 (_captureScreen avec boundary non-null).
-    // La capture peut retourner null dans l'environnement de test (renderer
-    // headless) mais ne doit pas lever d'exception.
-    final key = GlobalKey();
-    String? submitted;
+    'repaintBoundaryKey fourni avec RepaintBoundary réel → submit sans crash',
+    (tester) async {
+      // Couvre les lignes 65-77 (_captureScreen avec boundary non-null).
+      // La capture peut retourner null dans l'environnement de test (renderer
+      // headless) mais ne doit pas lever d'exception.
+      final key = GlobalKey();
+      String? submitted;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: RepaintBoundary(
-          key: key,
-          child: Scaffold(
-            appBar: AppBar(
-              actions: [
-                DonyFeedbackButton(
-                  repaintBoundaryKey: key,
-                  onSubmitOverride: (m) async => submitted = m,
-                ),
-              ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RepaintBoundary(
+            key: key,
+            child: Scaffold(
+              appBar: AppBar(
+                actions: [
+                  DonyFeedbackButton(
+                    repaintBoundaryKey: key,
+                    onSubmitOverride: (m) async => submitted = m,
+                  ),
+                ],
+              ),
+              body: const SizedBox(),
             ),
-            body: const SizedBox(),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'test avec repaint boundary');
-    await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byType(TextField),
+        'test avec repaint boundary',
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
+      await tester.pumpAndSettle();
 
-    expect(submitted, 'test avec repaint boundary');
-  });
+      expect(submitted, 'test avec repaint boundary');
+    },
+  );
 
   // ── _submitToSentry path (sans onSubmitOverride) ───────────────────────────
   //
@@ -213,66 +246,82 @@ void main() {
   //   65-66 : _captureScreen null guard (repaintBoundaryKey=null → return null)
 
   testWidgets(
-      '_submitToSentry exercé sans onSubmitOverride → lignes 85-90, 65-66 couvertes '
-      '(Sentry SDK en attente — pump() utilisé)', (tester) async {
-    // Sans onSubmitOverride, _handleSubmit (l.302) appelle _submitToSentry.
-    // _submitToSentry appelle _captureScreen (repaintBoundaryKey=null → null),
-    // puis Sentry.captureMessage qui ne se résout jamais en test headless.
-    // On utilise pump() à durée fixe pour avancer sans attendre la résolution.
-    await tester.pumpWidget(subject()); // pas d'onSubmitOverride
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
-    await tester.pumpAndSettle();
+    '_submitToSentry exercé sans onSubmitOverride → lignes 85-90, 65-66 couvertes '
+    '(Sentry SDK en attente — pump() utilisé)',
+    (tester) async {
+      // Sans onSubmitOverride, _handleSubmit (l.302) appelle _submitToSentry.
+      // _submitToSentry appelle _captureScreen (repaintBoundaryKey=null → null),
+      // puis Sentry.captureMessage qui ne se résout jamais en test headless.
+      // On utilise pump() à durée fixe pour avancer sans attendre la résolution.
+      await tester.pumpWidget(subject()); // pas d'onSubmitOverride
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'test sentry path');
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'test sentry path');
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
-    // pump() avec durée fixe — pumpAndSettle() timeouterait car Sentry ne résout pas
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    // Le widget est en état "loading" (sending=true) car Sentry est en attente.
-    // On vérifie juste que l'arbre est stable et le sheet toujours présent.
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
-  });
+      await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
+      // pump() avec durée fixe — pumpAndSettle() timeouterait car Sentry ne résout pas
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      // Le widget est en état "loading" (sending=true) car Sentry est en attente.
+      // On vérifie juste que l'arbre est stable et le sheet toujours présent.
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets(
-      '_submitToSentry avec repaintBoundaryKey non-null → lignes 70-77 (_captureScreen) couvertes',
-      (tester) async {
-    // Avec un vrai RepaintBoundary ET sans onSubmitOverride, _submitToSentry
-    // appelle _captureScreen qui trouve le boundary (l.70-71) et appelle
-    // boundary.toImage() (l.75). En test headless toImage() peut retourner
-    // normalement ou lancer — les deux cas retournent null via le catch (l.78).
-    // Ensuite Sentry.captureMessage ne se résout jamais → pump() requis.
-    final key = GlobalKey();
+    '_submitToSentry avec repaintBoundaryKey non-null → lignes 70-77 (_captureScreen) couvertes',
+    (tester) async {
+      // Avec un vrai RepaintBoundary ET sans onSubmitOverride, _submitToSentry
+      // appelle _captureScreen qui trouve le boundary (l.70-71) et appelle
+      // boundary.toImage() (l.75). En test headless toImage() peut retourner
+      // normalement ou lancer — les deux cas retournent null via le catch (l.78).
+      // Ensuite Sentry.captureMessage ne se résout jamais → pump() requis.
+      final key = GlobalKey();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: RepaintBoundary(
-          key: key,
-          child: Scaffold(
-            appBar: AppBar(
-              actions: [DonyFeedbackButton(repaintBoundaryKey: key)],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RepaintBoundary(
+            key: key,
+            child: Scaffold(
+              appBar: AppBar(
+                actions: [DonyFeedbackButton(repaintBoundaryKey: key)],
+              ),
+              body: const SizedBox(),
             ),
-            body: const SizedBox(),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'test boundary sentry path');
-    await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byType(TextField),
+        'test boundary sentry path',
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    // Sheet toujours présent (Sentry en attente indéfinie)
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'), findsOneWidget);
-  });
+      await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      // Sheet toujours présent (Sentry en attente indéfinie)
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+        findsOneWidget,
+      );
+    },
+  );
 
   // Lignes documentées comme inatteignables en test :
   //   92-119 : Sentry.captureMessage / captureFeedback / analytics → Future jamais résolu
@@ -288,39 +337,43 @@ void main() {
   // 42, 47) et confirme qu'aucune exception n'est levée pendant un submit normal.
 
   testWidgets(
-      'analyticsResolver enregistré — register + reset sans interférence sur submit',
-      (tester) async {
-    final analytics = _MockAnalyticsService();
-    when(() => analytics.logEvent(
-          any(),
-          properties: any(named: 'properties'),
-        )).thenAnswer((_) async {});
+    'analyticsResolver enregistré — register + reset sans interférence sur submit',
+    (tester) async {
+      final analytics = _MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
 
-    DonyFeedbackButton.registerAnalyticsResolver(() => analytics);
-    addTearDown(DonyFeedbackButton.resetAnalyticsResolver);
+      DonyFeedbackButton.registerAnalyticsResolver(() => analytics);
+      addTearDown(DonyFeedbackButton.resetAnalyticsResolver);
 
-    String? submitted;
-    await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'));
-    await tester.pumpAndSettle();
+      String? submitted;
+      await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'test analytics');
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'test analytics');
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(DonyButton, 'Envoyer le rapport'));
+      await tester.pumpAndSettle();
 
-    // onSubmitOverride est utilisé → _submitToSentry n'est PAS appelé →
-    // logEvent ne sera PAS appelé (analytics est dans _submitToSentry).
-    // Ce test confirme seulement qu'un resolver enregistré ne perturbe pas
-    // le chemin onSubmitOverride.
-    expect(submitted, 'test analytics');
+      // onSubmitOverride est utilisé → _submitToSentry n'est PAS appelé →
+      // logEvent ne sera PAS appelé (analytics est dans _submitToSentry).
+      // Ce test confirme seulement qu'un resolver enregistré ne perturbe pas
+      // le chemin onSubmitOverride.
+      expect(submitted, 'test analytics');
 
-    // Aucun appel à logEvent attendu via le chemin override — confirmer
-    // l'absence d'interactions non prévues.
-    verifyNever(() => analytics.logEvent(
+      // Aucun appel à logEvent attendu via le chemin override — confirmer
+      // l'absence d'interactions non prévues.
+      verifyNever(
+        () => analytics.logEvent(
           AnalyticsEvents.screenFeedbackSubmitted,
           properties: any(named: 'properties'),
-        ));
-  });
+        ),
+      );
+    },
+  );
 }

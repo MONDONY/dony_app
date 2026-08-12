@@ -95,9 +95,10 @@ class _PackageRequestCreateScreenState
   final _step2Key = GlobalKey<Step2DetailsState>();
   final _step3Key = GlobalKey<Step3RecapBudgetState>();
 
-  SupportedCurrency? get _activeCurrency => ActiveCurrency.fromHive(
-        getIt.isRegistered<HiveService>() ? getIt<HiveService>() : null,
-      );
+  /// Résolue une fois : la devise active ne peut pas changer pendant qu'un
+  /// formulaire de publication est ouvert, et ce getter était réévalué
+  /// jusque dans un `itemBuilder` (lookup GetIt + lecture Hive par ligne).
+  late final SupportedCurrency? _activeCurrency = ActiveCurrency.current;
 
   /// Vrai quand l'étape courante a tous ses champs obligatoires renseignés.
   ///
@@ -406,11 +407,7 @@ class _PackageRequestCreateScreenState
                           DonySpacing.base,
                           0,
                         ),
-                        child: CurrencyPublishBanner.fromHive(
-                          hiveService: getIt.isRegistered<HiveService>()
-                              ? getIt<HiveService>()
-                              : null,
-                        ),
+                        child: CurrencyPublishBanner.active(),
                       ),
                     Expanded(
                       child: Step1TrajetColis(
@@ -459,7 +456,8 @@ class _PackageRequestCreateScreenState
             Navigator.of(context, rootNavigator: true).pop();
             _step3Key.currentState?.submit();
           },
-          onSaveDraft: widget.initial == null ||
+          onSaveDraft:
+              widget.initial == null ||
                   widget.initial!.status == PackageRequestStatus.draft
               ? () {
                   Navigator.of(context, rootNavigator: true).pop();

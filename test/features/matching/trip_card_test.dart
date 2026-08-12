@@ -27,8 +27,9 @@ AnnouncementModel _announcement({
     'arrivalCity': arrivalCity,
     if (departureFlag != null) 'departureFlag': departureFlag,
     if (arrivalFlag != null) 'arrivalFlag': arrivalFlag,
-    'departureDate':
-        DateTime.now().add(const Duration(days: 3)).toIso8601String(),
+    'departureDate': DateTime.now()
+        .add(const Duration(days: 3))
+        .toIso8601String(),
     'totalKg': totalKg,
     'availableKg': availableKg,
     'pricePerKg': pricePerKg,
@@ -50,11 +51,9 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
   testWidgets('affiche route, drapeaux, progression et prix', (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(),
-      onTap: () {},
-      index: 0,
-    )));
+    await tester.pumpWidget(
+      _wrap(TripCard(announcement: _announcement(), onTap: () {}, index: 0)),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Paris'), findsOneWidget);
@@ -68,43 +67,53 @@ void main() {
     expect(find.text('Actif'), findsOneWidget);
   });
 
-  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(currency: 'CAD'),
-      onTap: () {},
-      index: 0,
-    )));
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(currency: 'CAD'),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.textContaining('CA\$'), findsOneWidget);
     expect(find.textContaining('8 €'), findsNothing);
   });
 
-  testWidgets('mode grille (MIXED) : affiche "dès X €", jamais "0 € / kg"',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(
-        pricingMode: 'MIXED',
-        pricePerKg: 0,
-        priceGridItems: const [
-          {
-            'id': 'g1',
-            'label': '1 valise 23kg',
-            'unitPriceNet': 25.0,
-            'unitPriceDisplay': 28.0,
-          },
-          {
-            'id': 'g2',
-            'label': '1 valise 32kg',
-            'unitPriceNet': 35.0,
-            'unitPriceDisplay': 39.0,
-          },
-        ],
+  testWidgets('mode grille (MIXED) : affiche "dès X €", jamais "0 € / kg"', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(
+            pricingMode: 'MIXED',
+            pricePerKg: 0,
+            priceGridItems: const [
+              {
+                'id': 'g1',
+                'label': '1 valise 23kg',
+                'unitPriceNet': 25.0,
+                'unitPriceDisplay': 28.0,
+              },
+              {
+                'id': 'g2',
+                'label': '1 valise 32kg',
+                'unitPriceNet': 35.0,
+                'unitPriceDisplay': 39.0,
+              },
+            ],
+          ),
+          onTap: () {},
+          index: 0,
+        ),
       ),
-      onTap: () {},
-      index: 0,
-    )));
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.textContaining('dès 25'), findsOneWidget);
@@ -112,50 +121,65 @@ void main() {
     expect(find.textContaining('/ kg'), findsNothing);
   });
 
-  testWidgets('mode grille sans items : libellé "Grille tarifaire"',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(pricingMode: 'MIXED', pricePerKg: 0),
-      onTap: () {},
-      index: 0,
-    )));
+  testWidgets('mode grille sans items : libellé "Grille tarifaire"', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(pricingMode: 'MIXED', pricePerKg: 0),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Grille tarifaire'), findsOneWidget);
     expect(find.textContaining('0 €'), findsNothing);
   });
 
-  testWidgets('utilise le drapeau backend pour une ville hors map (New York)',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(
-        departureCity: 'New York',
-        arrivalCity: 'Tokyo',
-        departureFlag: '🇺🇸',
-        arrivalFlag: '🇯🇵',
+  testWidgets('utilise le drapeau backend pour une ville hors map (New York)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(
+            departureCity: 'New York',
+            arrivalCity: 'Tokyo',
+            departureFlag: '🇺🇸',
+            arrivalFlag: '🇯🇵',
+          ),
+          onTap: () {},
+          index: 0,
+        ),
       ),
-      onTap: () {},
-      index: 0,
-    )));
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('🇺🇸'), findsOneWidget);
     expect(find.text('🇯🇵'), findsOneWidget);
   });
 
-  testWidgets('le drapeau backend prime sur la map hardcodée des villes',
-      (tester) async {
+  testWidgets('le drapeau backend prime sur la map hardcodée des villes', (
+    tester,
+  ) async {
     // Paris est dans la map → 🇫🇷, mais le backend renvoie 🇺🇸 : on doit
     // afficher la valeur backend, pas celle de la map.
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        departureFlag: '🇺🇸',
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            departureFlag: '🇺🇸',
+          ),
+          onTap: () {},
+          index: 0,
+        ),
       ),
-      onTap: () {},
-      index: 0,
-    )));
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('🇺🇸'), findsOneWidget);
@@ -164,13 +188,18 @@ void main() {
     expect(find.text('🇸🇳'), findsOneWidget);
   });
 
-  testWidgets('carte terminée : footer condensé, pas de progression',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(status: 'COMPLETED', availableKg: 0),
-      onTap: () {},
-      index: 0,
-    )));
+  testWidgets('carte terminée : footer condensé, pas de progression', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(status: 'COMPLETED', availableKg: 0),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Terminé'), findsOneWidget);
@@ -183,114 +212,150 @@ void main() {
   // ── KG_FREE tests ──────────────────────────────────────────────────────────
 
   testWidgets(
-      'KG_FREE actif : affiche "Kg libre", cache la barre de progression et vendus sur',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
-      onTap: () {},
-      index: 0,
-    )));
-    await tester.pump(const Duration(milliseconds: 600));
+    'KG_FREE actif : affiche "Kg libre", cache la barre de progression et vendus sur',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TripCard(
+            announcement: _announcement(
+              capacityUnit: 'KG_FREE',
+              availableKg: 1,
+            ),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-    // Should show "Kg libre" instead of raw kg numbers
-    expect(find.text('Kg libre'), findsOneWidget);
+      // Should show "Kg libre" instead of raw kg numbers
+      expect(find.text('Kg libre'), findsOneWidget);
 
-    // Must NOT show the "vendus sur" progress label
-    expect(find.textContaining('vendus sur'), findsNothing);
+      // Must NOT show the "vendus sur" progress label
+      expect(find.textContaining('vendus sur'), findsNothing);
 
-    // Must NOT show "1 kg disponibles" (raw availableKg)
-    expect(find.textContaining('1 kg disponibles'), findsNothing);
-  });
+      // Must NOT show "1 kg disponibles" (raw availableKg)
+      expect(find.textContaining('1 kg disponibles'), findsNothing);
+    },
+  );
 
   testWidgets(
-      'KG_FREE terminé : footer condensé affiche "Kg libre" au lieu de vendus',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(
-        status: 'COMPLETED',
-        capacityUnit: 'KG_FREE',
-        availableKg: 0,
-        totalKg: 1,
-      ),
-      onTap: () {},
-      index: 0,
-    )));
-    await tester.pump(const Duration(milliseconds: 600));
+    'KG_FREE terminé : footer condensé affiche "Kg libre" au lieu de vendus',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TripCard(
+            announcement: _announcement(
+              status: 'COMPLETED',
+              capacityUnit: 'KG_FREE',
+              availableKg: 0,
+              totalKg: 1,
+            ),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Terminé'), findsOneWidget);
-    // Must NOT show "{kg} vendus" for KG_FREE past trips
-    expect(find.textContaining('vendus'), findsNothing);
-    // Should show "Kg libre" instead
-    expect(find.text('Kg libre'), findsOneWidget);
-  });
+      expect(find.text('Terminé'), findsOneWidget);
+      // Must NOT show "{kg} vendus" for KG_FREE past trips
+      expect(find.textContaining('vendus'), findsNothing);
+      // Should show "Kg libre" instead
+      expect(find.text('Kg libre'), findsOneWidget);
+    },
+  );
 
   // ── Demandes stats row ───────────────────────────────────────────────────
 
   testWidgets(
-      'trajet actif : affiche les chips acceptées + en attente (pluriel)',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(confirmedParcelCount: 2, pendingBidCount: 3),
-      onTap: () {},
-      index: 0,
-    )));
-    await tester.pump(const Duration(milliseconds: 600));
+    'trajet actif : affiche les chips acceptées + en attente (pluriel)',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TripCard(
+            announcement: _announcement(
+              confirmedParcelCount: 2,
+              pendingBidCount: 3,
+            ),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('2 acceptées'), findsOneWidget);
-    expect(find.text('3 en attente'), findsOneWidget);
-  });
+      expect(find.text('2 acceptées'), findsOneWidget);
+      expect(find.text('3 en attente'), findsOneWidget);
+    },
+  );
 
-  testWidgets('trajet actif : aucun chip quand les deux compteurs sont à 0',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(),
-      onTap: () {},
-      index: 0,
-    )));
+  testWidgets('trajet actif : aucun chip quand les deux compteurs sont à 0', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(TripCard(announcement: _announcement(), onTap: () {}, index: 0)),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.textContaining('acceptée'), findsNothing);
     expect(find.textContaining('en attente'), findsNothing);
   });
 
-  testWidgets('trajet actif : singulier "1 acceptée" (pas "acceptées")',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(confirmedParcelCount: 1),
-      onTap: () {},
-      index: 0,
-    )));
+  testWidgets('trajet actif : singulier "1 acceptée" (pas "acceptées")', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(confirmedParcelCount: 1),
+          onTap: () {},
+          index: 0,
+        ),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('1 acceptée'), findsOneWidget);
     expect(find.text('1 acceptées'), findsNothing);
   });
 
-  testWidgets('trajet terminé : la ligne de stats est absente même si compteurs > 0',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(
-        status: 'COMPLETED',
-        availableKg: 0,
-        confirmedParcelCount: 2,
-        pendingBidCount: 3,
+  testWidgets(
+    'trajet terminé : la ligne de stats est absente même si compteurs > 0',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          TripCard(
+            announcement: _announcement(
+              status: 'COMPLETED',
+              availableKg: 0,
+              confirmedParcelCount: 2,
+              pendingBidCount: 3,
+            ),
+            onTap: () {},
+            index: 0,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.textContaining('acceptée'), findsNothing);
+      expect(find.textContaining('en attente'), findsNothing);
+    },
+  );
+
+  testWidgets('affiche le badge Brouillon pour un trajet DRAFT', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(status: 'DRAFT'),
+          onTap: () {},
+          index: 0,
+        ),
       ),
-      onTap: () {},
-      index: 0,
-    )));
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.textContaining('acceptée'), findsNothing);
-    expect(find.textContaining('en attente'), findsNothing);
-  });
-
-  testWidgets('affiche le badge Brouillon pour un trajet DRAFT',
-      (tester) async {
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(status: 'DRAFT'),
-      onTap: () {},
-      index: 0,
-    )));
+    );
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Brouillon'), findsOneWidget);
@@ -298,11 +363,15 @@ void main() {
 
   testWidgets('onTap déclenché', (tester) async {
     var tapped = false;
-    await tester.pumpWidget(_wrap(TripCard(
-      announcement: _announcement(),
-      onTap: () => tapped = true,
-      index: 0,
-    )));
+    await tester.pumpWidget(
+      _wrap(
+        TripCard(
+          announcement: _announcement(),
+          onTap: () => tapped = true,
+          index: 0,
+        ),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.byType(TripCard));
     expect(tapped, isTrue);

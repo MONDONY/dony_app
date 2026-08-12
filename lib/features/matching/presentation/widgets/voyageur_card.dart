@@ -36,12 +36,12 @@ class VoyageurCard extends StatelessWidget {
     return InkWell(
       onTap: canOpenProfile
           ? () => context.push(
-                '/profile/public',
-                extra: ProfilePublicArgs(
-                  userId: bid.travelerId,
-                  showSubscribe: true,
-                ),
-              )
+              '/profile/public',
+              extra: ProfilePublicArgs(
+                userId: bid.travelerId,
+                showSubscribe: true,
+              ),
+            )
           : null,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
@@ -117,8 +117,11 @@ class VoyageurCard extends StatelessWidget {
                   ),
                 ),
                 // Actions
-                _IconActionButton(iconAsset: 'phone',
-                        semanticLabel: 'Appeler', onTap: () {}),
+                _IconActionButton(
+                  iconAsset: 'phone',
+                  semanticLabel: 'Appeler',
+                  onTap: () {},
+                ),
                 const SizedBox(width: DonySpacing.sm),
                 BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
                   builder: (context, openState) {
@@ -182,26 +185,26 @@ class _IconActionButton extends StatelessWidget {
       enabled: onTap != null,
       label: semanticLabel,
       child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(color: cs.primary),
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+            border: Border.all(color: cs.primary),
+          ),
+          child: isLoading
+              ? Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: CircularProgressIndicator(
+                    color: cs.primary,
+                    strokeWidth: 2,
+                  ),
+                )
+              : iconAsset != null
+              ? DonyIcon(iconAsset!, color: cs.primary, size: 18)
+              : Icon(icon, color: cs.primary, size: 18),
         ),
-        child: isLoading
-            ? Padding(
-                padding: const EdgeInsets.all(10),
-                child: CircularProgressIndicator(
-                  color: cs.primary,
-                  strokeWidth: 2,
-                ),
-              )
-            : iconAsset != null
-                ? DonyIcon(iconAsset!, color: cs.primary, size: 18)
-                : Icon(icon, color: cs.primary, size: 18),
-      ),
       ),
     );
   }

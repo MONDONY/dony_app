@@ -18,6 +18,7 @@ class PriceEstimate extends Equatable {
     this.highEur,
     required this.confidence,
     required this.sampleSize,
+    this.currency = 'EUR',
   });
 
   final double? lowEur;
@@ -25,13 +26,24 @@ class PriceEstimate extends Equatable {
   final PriceEstimateConfidence confidence;
   final int sampleSize;
 
+  /// Devise du sample ayant servi à calculer l'estimation. `EUR` par défaut
+  /// pour les anciens payloads sans ce champ.
+  final String currency;
+
   factory PriceEstimate.fromJson(Map<String, dynamic> json) => PriceEstimate(
-        lowEur: (json['lowEur'] as num?)?.toDouble(),
-        highEur: (json['highEur'] as num?)?.toDouble(),
-        confidence: PriceEstimateConfidence.fromJson(json['confidence'] as String),
-        sampleSize: json['sampleSize'] as int,
-      );
+    lowEur: (json['lowEur'] as num?)?.toDouble(),
+    highEur: (json['highEur'] as num?)?.toDouble(),
+    confidence: PriceEstimateConfidence.fromJson(json['confidence'] as String),
+    sampleSize: json['sampleSize'] as int,
+    currency: json['currency'] as String? ?? 'EUR',
+  );
 
   @override
-  List<Object?> get props => [lowEur, highEur, confidence, sampleSize];
+  List<Object?> get props => [
+    lowEur,
+    highEur,
+    confidence,
+    sampleSize,
+    currency,
+  ];
 }

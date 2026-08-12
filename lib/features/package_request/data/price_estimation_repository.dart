@@ -10,10 +10,16 @@ class PriceEstimationRepository {
     required String from,
     required String to,
     required double weight,
+    String currency = 'EUR',
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests/estimate',
-      queryParameters: {'from': from, 'to': to, 'weight': weight},
+      queryParameters: {
+        'from': from,
+        'to': to,
+        'weight': weight,
+        'currency': currency,
+      },
     );
     return PriceEstimate.fromJson(response.data!);
   }

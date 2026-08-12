@@ -9,20 +9,20 @@ class MockLocalAuthService extends Mock implements LocalAuthService {}
 
 /// Router avec une route parente pour permettre context.pop() depuis /change-pin.
 GoRouter _router(MockLocalAuthService svc) => GoRouter(
-      initialLocation: '/change-pin',
+  initialLocation: '/change-pin',
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (_, __) => const Scaffold(body: Text('Parent')),
       routes: [
         GoRoute(
-          path: '/',
-          builder: (_, __) => const Scaffold(body: Text('Parent')),
-          routes: [
-            GoRoute(
-              path: 'change-pin',
-              builder: (_, __) => ChangePinScreen(authService: svc),
-            ),
-          ],
+          path: 'change-pin',
+          builder: (_, __) => ChangePinScreen(authService: svc),
         ),
       ],
-    );
+    ),
+  ],
+);
 
 void main() {
   late MockLocalAuthService svc;
@@ -68,7 +68,9 @@ void main() {
     expect(find.text('Code incorrect'), findsOneWidget);
   });
 
-  testWidgets('transition à l\'étape 2 après PIN actuel valide', (tester) async {
+  testWidgets('transition à l\'étape 2 après PIN actuel valide', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(390 * 3, 844 * 3);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -130,7 +132,9 @@ void main() {
     verify(() => svc.savePin('987654')).called(1);
   });
 
-  testWidgets('affiche erreur si confirmation PIN ne correspond pas', (tester) async {
+  testWidgets('affiche erreur si confirmation PIN ne correspond pas', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(390 * 3, 844 * 3);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);

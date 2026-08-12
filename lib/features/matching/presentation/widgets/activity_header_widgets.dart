@@ -52,15 +52,15 @@ class HeaderPill extends StatelessWidget {
     final (Color bg, Color fg, Color? borderColor) = switch (style) {
       HeaderPillStyle.primary => (cs.primary, cs.onPrimary, null),
       HeaderPillStyle.warm => (
-          cs.surfaceWarm,
-          DonyColors.terra600,
-          DonyColors.sand200,
-        ),
+        cs.surfaceWarm,
+        DonyColors.terra600,
+        DonyColors.sand200,
+      ),
       HeaderPillStyle.soft => (
-          DonyColors.primarySoft,
-          DonyColors.primaryHover,
-          DonyColors.blue100,
-        ),
+        DonyColors.primarySoft,
+        DonyColors.primaryHover,
+        DonyColors.blue100,
+      ),
     };
 
     final pill = Material(
@@ -198,41 +198,41 @@ class _StatTile extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: DonySpacing.md,
-        horizontal: DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: tt.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: valueColor ?? cs.onSurface,
-              height: 1.1,
-            ),
+          padding: const EdgeInsets.symmetric(
+            vertical: DonySpacing.md,
+            horizontal: DonySpacing.sm,
           ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: tt.bodySmall?.copyWith(
-              fontSize: 10,
-              color: cs.onSurfaceVariant,
-              height: 1.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.outline),
           ),
-        ],
-      ),
-    )
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: tt.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: valueColor ?? cs.onSurface,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: tt.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: cs.onSurfaceVariant,
+                  height: 1.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        )
         .animate(delay: (index * 60).ms)
         .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
         .slideY(
@@ -298,7 +298,8 @@ class StatusChipsRow<T> extends StatelessWidget {
   /// Widget optionnel en fin de rangée (ex. bouton filtre période).
   final Widget? trailing;
 
-  bool _isActive(T value) => equals?.call(value, selected) ?? (value == selected);
+  bool _isActive(T value) =>
+      equals?.call(value, selected) ?? (value == selected);
 
   @override
   Widget build(BuildContext context) {
@@ -338,8 +339,9 @@ class _ChipItem<T> extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final label =
-        data.count != null ? '${data.label} · ${data.count}' : data.label;
+    final label = data.count != null
+        ? '${data.label} · ${data.count}'
+        : data.label;
 
     // Active : fond ink800 (quasi-noir texturé), texte blanc pour contraste max.
     // Inactive : fond surface, bordure outline standard.
@@ -431,9 +433,9 @@ class ActivitySearchField extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     OutlineInputBorder border(Color color) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          borderSide: BorderSide(color: color),
-        );
+      borderRadius: BorderRadius.circular(DonyRadius.full),
+      borderSide: BorderSide(color: color),
+    );
 
     return TextField(
       controller: controller,
@@ -442,11 +444,7 @@ class ActivitySearchField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-        prefixIcon: DonyIcon(
-          'search',
-          size: 18,
-          color: cs.onSurfaceVariant,
-        ),
+        prefixIcon: DonyIcon('search', size: 18, color: cs.onSurfaceVariant),
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(
           vertical: DonySpacing.md - 2,

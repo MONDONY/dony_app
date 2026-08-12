@@ -28,37 +28,35 @@ ThemeData _testTheme(Brightness brightness) {
     primary: isLight ? DonyColors.primary : DonyColors.blueDark500,
     onPrimary: DonyColors.textOnBrand,
     primaryContainer: isLight ? DonyColors.primarySoft : DonyColors.blueDark50,
-    onPrimaryContainer:
-        isLight ? DonyColors.primaryHover : DonyColors.blueDark500,
+    onPrimaryContainer: isLight
+        ? DonyColors.primaryHover
+        : DonyColors.blueDark500,
     secondary: isLight ? DonyColors.accent : DonyColors.terraDark500,
     onSecondary: DonyColors.textOnBrand,
-    secondaryContainer:
-        isLight ? DonyColors.accentSoft : DonyColors.terraDark50,
-    onSecondaryContainer:
-        isLight ? DonyColors.terra700 : DonyColors.terraDark500,
+    secondaryContainer: isLight
+        ? DonyColors.accentSoft
+        : DonyColors.terraDark50,
+    onSecondaryContainer: isLight
+        ? DonyColors.terra700
+        : DonyColors.terraDark500,
     surface: isLight ? DonyColors.surface : DonyColors.neutralDark100,
     onSurface: isLight ? DonyColors.textPrimary : DonyColors.neutralDark700,
-    onSurfaceVariant:
-        isLight ? DonyColors.textMuted : DonyColors.neutralDark500,
-    surfaceContainerHighest:
-        isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
-    surfaceContainerLow:
-        isLight ? DonyColors.bgApp : DonyColors.neutralDark50,
-    outline:
-        isLight ? DonyColors.borderDefault : DonyColors.neutralDark300,
-    outlineVariant:
-        isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
+    onSurfaceVariant: isLight
+        ? DonyColors.textMuted
+        : DonyColors.neutralDark500,
+    surfaceContainerHighest: isLight
+        ? DonyColors.neutral100
+        : DonyColors.neutralDark200,
+    surfaceContainerLow: isLight ? DonyColors.bgApp : DonyColors.neutralDark50,
+    outline: isLight ? DonyColors.borderDefault : DonyColors.neutralDark300,
+    outlineVariant: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
     error: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
     onError: DonyColors.textOnBrand,
-    errorContainer:
-        isLight ? DonyColors.danger50 : DonyColors.dangerDark50,
-    onErrorContainer:
-        isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
+    errorContainer: isLight ? DonyColors.danger50 : DonyColors.dangerDark50,
+    onErrorContainer: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
     shadow: isLight ? DonyColors.shadow : DonyColors.shadowDark,
-    inverseSurface:
-        isLight ? DonyColors.ink800 : DonyColors.neutral0,
-    onInverseSurface:
-        isLight ? DonyColors.neutral0 : DonyColors.textPrimary,
+    inverseSurface: isLight ? DonyColors.ink800 : DonyColors.neutral0,
+    onInverseSurface: isLight ? DonyColors.neutral0 : DonyColors.textPrimary,
   );
 
   // Use system text theme (Roboto) — identical structure to DonyTypography
@@ -69,12 +67,10 @@ ThemeData _testTheme(Brightness brightness) {
     useMaterial3: true,
     brightness: brightness,
     colorScheme: cs,
-    scaffoldBackgroundColor:
-        isLight ? DonyColors.bgApp : DonyColors.neutralDark0,
-    textTheme: tt.apply(
-      bodyColor: cs.onSurface,
-      displayColor: cs.onSurface,
-    ),
+    scaffoldBackgroundColor: isLight
+        ? DonyColors.bgApp
+        : DonyColors.neutralDark0,
+    textTheme: tt.apply(bodyColor: cs.onSurface, displayColor: cs.onSurface),
     appBarTheme: AppBarTheme(
       backgroundColor: cs.surface,
       foregroundColor: cs.onSurface,
@@ -84,8 +80,7 @@ ThemeData _testTheme(Brightness brightness) {
       systemOverlayStyle: SystemUiOverlayStyle(
         systemNavigationBarColor: Colors.transparent,
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isLight ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
       ),
     ),
     cardTheme: CardThemeData(
@@ -143,29 +138,20 @@ ThemeData _testTheme(Brightness brightness) {
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: cs.primary,
-      ),
+      style: TextButton.styleFrom(foregroundColor: cs.primary),
     ),
-    dividerTheme: DividerThemeData(
-      color: cs.outline,
-      space: 1,
-      thickness: 1,
-    ),
+    dividerTheme: DividerThemeData(color: cs.outline, space: 1, thickness: 1),
   );
 }
 
 Widget _wrap(Widget child, {required Brightness brightness}) => MaterialApp(
-      theme: _testTheme(brightness),
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: child,
-          ),
-        ),
-      ),
-    );
+  theme: _testTheme(brightness),
+  home: Scaffold(
+    body: Center(
+      child: Padding(padding: const EdgeInsets.all(16), child: child),
+    ),
+  ),
+);
 
 void main() {
   for (final brightness in Brightness.values) {
@@ -173,7 +159,10 @@ void main() {
 
     testWidgets('DonyCard — $suffix', (tester) async {
       await tester.pumpWidget(
-        _wrap(const DonyCard(child: Text('Carte de test')), brightness: brightness),
+        _wrap(
+          const DonyCard(child: Text('Carte de test')),
+          brightness: brightness,
+        ),
       );
       await tester.pump();
       await expectLater(
@@ -184,7 +173,10 @@ void main() {
 
     testWidgets('DonyButton primary — $suffix', (tester) async {
       await tester.pumpWidget(
-        _wrap(DonyButton(label: 'Action', onPressed: () {}), brightness: brightness),
+        _wrap(
+          DonyButton(label: 'Action', onPressed: () {}),
+          brightness: brightness,
+        ),
       );
       await tester.pump();
       await expectLater(
@@ -213,7 +205,10 @@ void main() {
 
     testWidgets('DonyChip selected — $suffix', (tester) async {
       await tester.pumpWidget(
-        _wrap(DonyChip(label: 'Paris', selected: true, onTap: () {}), brightness: brightness),
+        _wrap(
+          DonyChip(label: 'Paris', selected: true, onTap: () {}),
+          brightness: brightness,
+        ),
       );
       await tester.pump();
       await expectLater(

@@ -40,69 +40,80 @@ void main() {
     await initializeDateFormatting('fr');
   });
 
-  group('TravelerProfileScreen — bannière pas de séquestre (D5, vue expéditeur)', () {
-    testWidgets(
+  group(
+    'TravelerProfileScreen — bannière pas de séquestre (D5, vue expéditeur)',
+    () {
+      testWidgets(
         'trajet cash-only — bannière pas de séquestre affichée avec texte exact',
         (tester) async {
-      final a = _announcement(
-        acceptedPaymentMethods: {BidPaymentMethod.cash},
-      );
+          final a = _announcement(
+            acceptedPaymentMethods: {BidPaymentMethod.cash},
+          );
 
-      await tester.pumpWidget(_wrap(a));
-      await tester.pumpAndSettle();
+          await tester.pumpWidget(_wrap(a));
+          await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining(
-          'Le paiement se fait en main propre au voyageur, '
-          'Yadony ne séquestre pas votre argent et ne peut pas le rembourser '
-          'automatiquement en cas de litige.',
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('trajet avec carte acceptée — pas de bannière',
-        (tester) async {
-      final a = _announcement(
-        acceptedPaymentMethods: {
-          BidPaymentMethod.cash,
-          BidPaymentMethod.stripe,
+          expect(
+            find.textContaining(
+              'Le paiement se fait en main propre au voyageur, '
+              'Yadony ne séquestre pas votre argent et ne peut pas le rembourser '
+              'automatiquement en cas de litige.',
+            ),
+            findsOneWidget,
+          );
         },
       );
 
-      await tester.pumpWidget(_wrap(a));
-      await tester.pumpAndSettle();
+      testWidgets('trajet avec carte acceptée — pas de bannière', (
+        tester,
+      ) async {
+        final a = _announcement(
+          acceptedPaymentMethods: {
+            BidPaymentMethod.cash,
+            BidPaymentMethod.stripe,
+          },
+        );
 
-      expect(
-          find.textContaining('ne séquestre pas votre argent'), findsNothing);
-    });
+        await tester.pumpWidget(_wrap(a));
+        await tester.pumpAndSettle();
 
-    testWidgets('trajet carte uniquement — pas de bannière', (tester) async {
-      final a = _announcement(
-        acceptedPaymentMethods: {BidPaymentMethod.stripe},
-      );
+        expect(
+          find.textContaining('ne séquestre pas votre argent'),
+          findsNothing,
+        );
+      });
 
-      await tester.pumpWidget(_wrap(a));
-      await tester.pumpAndSettle();
+      testWidgets('trajet carte uniquement — pas de bannière', (tester) async {
+        final a = _announcement(
+          acceptedPaymentMethods: {BidPaymentMethod.stripe},
+        );
 
-      expect(
-          find.textContaining('ne séquestre pas votre argent'), findsNothing);
-    });
-  });
+        await tester.pumpWidget(_wrap(a));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('ne séquestre pas votre argent'),
+          findsNothing,
+        );
+      });
+    },
+  );
 
   group('TravelerProfileScreen — devise', () {
-    testWidgets('affiche le prix/kg dans la devise du trajet, pas toujours en EUR',
-        (tester) async {
-      final a = _announcement(
-        acceptedPaymentMethods: {BidPaymentMethod.stripe},
-        currency: 'CAD',
-      );
+    testWidgets(
+      'affiche le prix/kg dans la devise du trajet, pas toujours en EUR',
+      (tester) async {
+        final a = _announcement(
+          acceptedPaymentMethods: {BidPaymentMethod.stripe},
+          currency: 'CAD',
+        );
 
-      await tester.pumpWidget(_wrap(a));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(a));
+        await tester.pumpAndSettle();
 
-      expect(find.textContaining('CA\$'), findsOneWidget);
-      expect(find.textContaining('€/kg'), findsNothing);
-    });
+        expect(find.textContaining('CA\$'), findsOneWidget);
+        expect(find.textContaining('€/kg'), findsNothing);
+      },
+    );
   });
 }

@@ -34,6 +34,7 @@ class PackageRequestSearchItem extends Equatable {
     this.matchScore,
     this.matchedTripId,
     this.matchedTripDepartureDate,
+    this.currency = 'EUR',
   });
 
   final String id;
@@ -95,6 +96,10 @@ class PackageRequestSearchItem extends Equatable {
   /// son badge de compatibilité.
   bool get hasMatchScore => matchScore != null;
 
+  /// Devise de la demande, figée à la création. `EUR` par défaut pour les
+  /// anciens payloads sans ce champ.
+  final String currency;
+
   factory PackageRequestSearchItem.fromJson(Map<String, dynamic> json) =>
       PackageRequestSearchItem(
         id: json['id'] as String,
@@ -135,6 +140,7 @@ class PackageRequestSearchItem extends Equatable {
           final String d => DateTime.parse(d),
           _ => null,
         },
+        currency: json['currency'] as String? ?? 'EUR',
       );
 
   @override
@@ -164,6 +170,7 @@ class PackageRequestSearchItem extends Equatable {
     matchScore,
     matchedTripId,
     matchedTripDepartureDate,
+    currency,
   ];
 }
 

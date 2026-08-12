@@ -22,70 +22,69 @@ enum ThreadStatusVariant {
         NegotiationThreadStatus.rejected ||
         NegotiationThreadStatus.autoRejected ||
         NegotiationThreadStatus.expired ||
-        NegotiationThreadStatus.cancelled =>
-          terminal,
+        NegotiationThreadStatus.cancelled => terminal,
       };
 
   /// Couleur du bas de la shadow et du glow
   Color get shadowColor => switch (this) {
-        open => const Color(0xFF0B5FFF),
-        awaitingTrip => DonyColors.threadStatusAmber,
-        awaitingPayment => DonyColors.threadStatusViolet,
-        accepted => DonyColors.threadStatusGreen,
-        terminal => const Color(0xFF374151),
-      };
+    open => const Color(0xFF0B5FFF),
+    awaitingTrip => DonyColors.threadStatusAmber,
+    awaitingPayment => DonyColors.threadStatusViolet,
+    accepted => DonyColors.threadStatusGreen,
+    terminal => const Color(0xFF374151),
+  };
 
   LinearGradient get gradient => switch (this) {
-        open => const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0A2540), Color(0xFF1A3A6B)],
-          ),
-        awaitingTrip => const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF78350F), Color(0xFFB5781E)],
-          ),
-        awaitingPayment => const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF4C1D95), Color(0xFF5B21B6)],
-          ),
-        accepted => const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF14532D), Color(0xFF15803D)],
-          ),
-        terminal => const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1F2937), Color(0xFF6B7280)],
-          ),
-      };
+    open => const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF0A2540), Color(0xFF1A3A6B)],
+    ),
+    awaitingTrip => const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF78350F), Color(0xFFB5781E)],
+    ),
+    awaitingPayment => const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF4C1D95), Color(0xFF5B21B6)],
+    ),
+    accepted => const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF14532D), Color(0xFF15803D)],
+    ),
+    terminal => const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF1F2937), Color(0xFF6B7280)],
+    ),
+  };
 
   String get badge => switch (this) {
-        open => 'EN COURS',
-        awaitingTrip => 'ATT. TRAJET',
-        awaitingPayment => 'PAIEMENT',
-        accepted => 'ACCEPTÉE',
-        terminal => 'TERMINÉ',
-      };
+    open => 'EN COURS',
+    awaitingTrip => 'ATT. TRAJET',
+    awaitingPayment => 'PAIEMENT',
+    accepted => 'ACCEPTÉE',
+    terminal => 'TERMINÉ',
+  };
 
   String get priceLabel => switch (this) {
-        open => 'PRIX ACTUEL',
-        awaitingTrip => 'ACCORD TROUVÉ',
-        awaitingPayment => 'À RÉGLER',
-        accepted => 'DEMANDE ACCEPTÉE',
-        terminal => 'PRIX FINAL',
-      };
+    open => 'PRIX ACTUEL',
+    awaitingTrip => 'ACCORD TROUVÉ',
+    awaitingPayment => 'À RÉGLER',
+    accepted => 'DEMANDE ACCEPTÉE',
+    terminal => 'PRIX FINAL',
+  };
 
   String get iconAsset => switch (this) {
-        open => 'handshake',
-        awaitingTrip => 'hourglass',
-        awaitingPayment => 'credit-card',
-        accepted => 'circle-check',
-        terminal => 'circle-x',
-      };
+    open => 'handshake',
+    awaitingTrip => 'hourglass',
+    awaitingPayment => 'credit-card',
+    accepted => 'circle-check',
+    terminal => 'circle-x',
+  };
 }
 
 /// Hero card du thread de négociation — gradient status, prix, badge, progress.
@@ -109,7 +108,11 @@ class ThreadHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(
-          DonySpacing.base, DonySpacing.md, DonySpacing.base, DonySpacing.sm),
+        DonySpacing.base,
+        DonySpacing.md,
+        DonySpacing.base,
+        DonySpacing.sm,
+      ),
       decoration: BoxDecoration(
         gradient: statusVariant.gradient,
         borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -151,8 +154,11 @@ class ThreadHeroCard extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: DonyIcon(statusVariant.iconAsset,
-                          color: Colors.white, size: 20),
+                      child: DonyIcon(
+                        statusVariant.iconAsset,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: DonySpacing.md),
                     Expanded(
@@ -161,13 +167,13 @@ class ThreadHeroCard extends StatelessWidget {
                         children: [
                           Text(
                             statusVariant.priceLabel,
-                            style:
-                                Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white.withValues(alpha: 0.70),
-                              letterSpacing: 0.8,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white.withValues(alpha: 0.70),
+                                  letterSpacing: 0.8,
+                                ),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -175,18 +181,19 @@ class ThreadHeroCard extends StatelessWidget {
                               thread.currentPriceEur,
                               thread.grossPriceEur,
                               isTraveler,
+                              thread.currency,
                             ),
-                            style:
-                                Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.5,
-                              height: 1.1,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures()
-                              ],
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                  height: 1.1,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
                           ),
                         ],
                       ),
@@ -201,7 +208,9 @@ class ThreadHeroCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.20),
                       // Concentric with parent card (DonyRadius.card - padding)
@@ -209,8 +218,7 @@ class ThreadHeroCard extends StatelessWidget {
                     ),
                     child: Text(
                       '⚠ Dernier round : Accepter ou Refuser uniquement',
-                      style:
-                          Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: Colors.amber.shade200,

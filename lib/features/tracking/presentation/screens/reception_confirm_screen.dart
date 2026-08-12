@@ -20,8 +20,7 @@ class ReceptionConfirmScreen extends StatefulWidget {
   final String travelerName;
 
   @override
-  State<ReceptionConfirmScreen> createState() =>
-      _ReceptionConfirmScreenState();
+  State<ReceptionConfirmScreen> createState() => _ReceptionConfirmScreenState();
 }
 
 class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
@@ -73,10 +72,12 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
   }
 
   void _confirm(BuildContext context) {
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.deliveryConfirmed,
-      properties: {'bid_id': widget.bidId},
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.deliveryConfirmed,
+        properties: {'bid_id': widget.bidId},
+      ),
+    );
     context.push('/bids/${widget.bidId}');
   }
 
@@ -88,96 +89,105 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const DonyAppBar(title: 'Confirmation'),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.xs, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-            // ── Mascotte ─────────────────────────────────────────────────
-            const Center(
-              child: DonyMascotteAnimated(
-                type: DonyMascotteType.confiant,
-                size: DonyMascotteSize.md,
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              h,
+              DonySpacing.xs,
+              h,
+              DonySpacing.huge,
+            ),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Mascotte ─────────────────────────────────────────────────
+                  const Center(
+                    child: DonyMascotteAnimated(
+                      type: DonyMascotteType.confiant,
+                      size: DonyMascotteSize.md,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.base),
+
+                  // ── Caveat title ─────────────────────────────────────────────
+                  Text(
+                    'Confirmer la réception',
+                    style: DonyTypography.caveat(
+                      fontSize: 28,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.xs),
+                  Text(
+                    'Devant ${widget.travelerName}, choisissez :',
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: DonySpacing.lg),
+
+                  // ── Tab toggle ───────────────────────────────────────────────
+                  ValueListenableBuilder<int>(
+                    valueListenable: _tabIndex,
+                    builder: (context, tab, _) => _TabToggle(
+                      selected: tab,
+                      onTap: (i) {
+                        _tabIndex.value = i;
+                        if (i == 1) {
+                          _focusNode.requestFocus();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── Tab content ──────────────────────────────────────────────
+                  ValueListenableBuilder<int>(
+                    valueListenable: _tabIndex,
+                    builder: (context, tab, _) {
+                      if (tab == 0) {
+                        return const _QrTabContent();
+                      }
+                      return _CodeTabContent(
+                        codeController: _codeController,
+                        focusNode: _focusNode,
+                        secondsLeft: _secondsLeft,
+                        formatTime: _formatTime,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── CTA ──────────────────────────────────────────────────────
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _codeComplete,
+                    builder: (context, complete, _) =>
+                        ValueListenableBuilder<int>(
+                          valueListenable: _tabIndex,
+                          builder: (context, tab, _) => DonyButton(
+                            label: 'Confirmer la réception',
+                            iconAsset: 'check',
+                            onPressed: (tab == 1 && complete)
+                                ? () => _confirm(context)
+                                : null,
+                          ),
+                        ),
+                  ),
+                  const SizedBox(height: DonySpacing.lg),
+
+                  // ── Legal note ───────────────────────────────────────────────
+                  _LegalNote(
+                    travelerName: widget.travelerName,
+                    bidId: widget.bidId,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: DonySpacing.base),
-
-            // ── Caveat title ─────────────────────────────────────────────
-            Text(
-              'Confirmer la réception',
-              style: DonyTypography.caveat(
-                fontSize: 28,
-                color: cs.onSurface,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              'Devant ${widget.travelerName}, choisissez :',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: DonySpacing.lg),
-
-            // ── Tab toggle ───────────────────────────────────────────────
-            ValueListenableBuilder<int>(
-              valueListenable: _tabIndex,
-              builder: (context, tab, _) => _TabToggle(
-                selected: tab,
-                onTap: (i) {
-                  _tabIndex.value = i;
-                  if (i == 1) {
-                    _focusNode.requestFocus();
-                  }
-                },
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xl),
-
-            // ── Tab content ──────────────────────────────────────────────
-            ValueListenableBuilder<int>(
-              valueListenable: _tabIndex,
-              builder: (context, tab, _) {
-                if (tab == 0) {
-                  return const _QrTabContent();
-                }
-                return _CodeTabContent(
-                  codeController: _codeController,
-                  focusNode: _focusNode,
-                  secondsLeft: _secondsLeft,
-                  formatTime: _formatTime,
-                );
-              },
-            ),
-            const SizedBox(height: DonySpacing.xl),
-
-            // ── CTA ──────────────────────────────────────────────────────
-            ValueListenableBuilder<bool>(
-              valueListenable: _codeComplete,
-              builder: (context, complete, _) => ValueListenableBuilder<int>(
-                valueListenable: _tabIndex,
-                builder: (context, tab, _) => DonyButton(
-                  label: 'Confirmer la réception',
-                  iconAsset: 'check',
-                  onPressed:
-                      (tab == 1 && complete) ? () => _confirm(context) : null,
-                ),
-              ),
-            ),
-            const SizedBox(height: DonySpacing.lg),
-
-            // ── Legal note ───────────────────────────────────────────────
-            _LegalNote(
-              travelerName: widget.travelerName,
-              bidId: widget.bidId,
-            ),
-          ],
-            ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 }
@@ -201,8 +211,20 @@ class _TabToggle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _TabItem(label: 'Lire le QR', selected: selected == 0, onTap: () => onTap(0))),
-          Expanded(child: _TabItem(label: 'Taper le code', selected: selected == 1, onTap: () => onTap(1))),
+          Expanded(
+            child: _TabItem(
+              label: 'Lire le QR',
+              selected: selected == 0,
+              onTap: () => onTap(0),
+            ),
+          ),
+          Expanded(
+            child: _TabItem(
+              label: 'Taper le code',
+              selected: selected == 1,
+              onTap: () => onTap(1),
+            ),
+          ),
         ],
       ),
     );
@@ -242,7 +264,7 @@ class _TabItem extends StatelessWidget {
                     color: DonyColors.shadow,
                     blurRadius: 8,
                     offset: Offset(0, 2),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -277,11 +299,7 @@ class _QrTabContent extends StatelessWidget {
       ),
       child: Column(
         children: [
-          DonyIcon(
-            'scan-line',
-            size: 48,
-            color: cs.primary,
-          ),
+          DonyIcon('scan-line', size: 48, color: cs.primary),
           const SizedBox(height: DonySpacing.base),
           Text(
             'Lire le QR code',
@@ -373,7 +391,9 @@ class _CodeTabContent extends StatelessWidget {
             return Center(
               child: Text.rich(
                 TextSpan(
-                  style: tt.bodySmall?.copyWith(color: innerCs.onSurfaceVariant),
+                  style: tt.bodySmall?.copyWith(
+                    color: innerCs.onSurfaceVariant,
+                  ),
                   children: [
                     const TextSpan(text: 'Reçu par SMS · expire dans '),
                     TextSpan(

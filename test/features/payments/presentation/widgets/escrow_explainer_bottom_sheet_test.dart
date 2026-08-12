@@ -4,16 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('affiche le montant et le nom du voyageur', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(builder: (ctx) => TextButton(
-        onPressed: () => EscrowExplainerBottomSheet.show(
-          ctx,
-          amount: 150.0,
-          travelerName: 'Amadou Diallo',
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => EscrowExplainerBottomSheet.show(
+              ctx,
+              amount: 150.0,
+              travelerName: 'Amadou Diallo',
+            ),
+            child: const Text('Ouvrir'),
+          ),
         ),
-        child: const Text('Ouvrir'),
-      )),
-    ));
+      ),
+    );
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
@@ -26,22 +30,41 @@ void main() {
   });
 
   testWidgets('affiche les trois explications escrow', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(builder: (ctx) => TextButton(
-        onPressed: () => EscrowExplainerBottomSheet.show(
-          ctx,
-          amount: 100.0,
-          travelerName: 'Fatou',
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => EscrowExplainerBottomSheet.show(
+              ctx,
+              amount: 100.0,
+              travelerName: 'Fatou',
+            ),
+            child: const Text('Ouvrir'),
+          ),
         ),
-        child: const Text('Ouvrir'),
-      )),
-    ));
+      ),
+    );
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    expect(find.text("Votre paiement est bloqué en séquestre jusqu'à confirmation de livraison par le destinataire."), findsOneWidget);
-    expect(find.text('Libération automatique 48h après la date de livraison prévue si aucune confirmation.'), findsOneWidget);
-    expect(find.text('En cas de litige, Yadony intervient pour arbitrer et protéger les deux parties.'), findsOneWidget);
+    expect(
+      find.text(
+        "Votre paiement est bloqué en séquestre jusqu'à confirmation de livraison par le destinataire.",
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'Libération automatique 48h après la date de livraison prévue si aucune confirmation.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'En cas de litige, Yadony intervient pour arbitrer et protéger les deux parties.',
+      ),
+      findsOneWidget,
+    );
   });
 }

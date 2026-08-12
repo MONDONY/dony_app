@@ -419,7 +419,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                     context,
                     'banknote',
                     r.negotiable ? 'Budget' : 'Prix ferme',
-                    PriceDisplay.eur(r.targetPriceEur!),
+                    PriceDisplay.money(r.targetPriceEur!, r.currency),
                   ),
                 ]),
               ],
@@ -472,6 +472,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                     departureCity: r.departureCity,
                     arrivalCity: r.arrivalCity,
                     initialDate: announcement?.departureDate,
+                    currency: r.currency,
                   ),
                 )
               : _FirmPriceCta(request: r, announcement: announcement),
@@ -629,10 +630,7 @@ class _CategoryChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            emojiForLabel(label),
-            style: const TextStyle(fontSize: 13),
-          ),
+          Text(emojiForLabel(label), style: const TextStyle(fontSize: 13)),
           const SizedBox(width: 5),
           Text(
             label,
@@ -815,7 +813,7 @@ class _FirmPriceCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final price = request.targetPriceEur;
     final label = price != null
-        ? 'Prendre à ${PriceDisplay.eur(price)} · Prix ferme'
+        ? 'Prendre à ${PriceDisplay.money(price, request.currency)} · Prix ferme'
         : 'Prendre ce colis';
 
     return BlocProvider(
@@ -855,6 +853,7 @@ class _FirmPriceCta extends StatelessWidget {
                         arrivalCity: request.arrivalCity,
                         initialDate: announcement?.departureDate,
                         isFirmPrice: true,
+                        currency: request.currency,
                       );
                     },
             );

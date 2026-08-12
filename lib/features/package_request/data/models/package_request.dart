@@ -46,6 +46,7 @@ class PackageRequest extends Equatable {
     this.viewerThreadId,
     this.viewerThreadStatus,
     this.promoCode,
+    this.currency = 'EUR',
   });
 
   final String id;
@@ -98,6 +99,10 @@ class PackageRequest extends Equatable {
   /// Code promo saisi à la publication (brut, null si aucun) — pré-remplit l'édition.
   final String? promoCode;
 
+  /// Devise de la demande, figée à la création. `EUR` par défaut pour les
+  /// anciens payloads sans ce champ.
+  final String currency;
+
   /// Parse le tableau `photos` du wire en deux listes alignées (URLs
   /// présignées + clés S3) en un seul passage.
   static (List<String>, List<String>) _photosFromJson(List<dynamic>? raw) {
@@ -125,8 +130,9 @@ class PackageRequest extends Equatable {
       transportMode:
           transportModeFromWire(json['transportMode'] as String?) ??
           TransportMode.plane,
-      categories:
-          splitContentCategoryLabels(json['contentCategory'] as String?),
+      categories: splitContentCategoryLabels(
+        json['contentCategory'] as String?,
+      ),
       description: json['description'] as String?,
       targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
       photoUrl: json['photoUrl'] as String?,
@@ -143,6 +149,7 @@ class PackageRequest extends Equatable {
       viewerThreadId: json['viewerThreadId'] as String?,
       viewerThreadStatus: json['viewerThreadStatus'] as String?,
       promoCode: json['promoCode'] as String?,
+      currency: json['currency'] as String? ?? 'EUR',
     );
   }
 
@@ -172,5 +179,6 @@ class PackageRequest extends Equatable {
     viewerThreadId,
     viewerThreadStatus,
     promoCode,
+    currency,
   ];
 }

@@ -81,7 +81,8 @@ class PhotoSection extends StatelessWidget {
                 for (final p in photos)
                   _PhotoThumb(
                     upload: p,
-                    onRemove: () => context.read<BidPhotosCubit>().remove(p.localId),
+                    onRemove: () =>
+                        context.read<BidPhotosCubit>().remove(p.localId),
                   ),
                 if (canAdd)
                   Semantics(
@@ -90,18 +91,18 @@ class PhotoSection extends StatelessWidget {
                     excludeSemantics: true,
                     label: 'Ajouter une photo du colis',
                     child: GestureDetector(
-                    onTap: () => _showSourceSheet(context),
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        border: Border.all(color: cs.primary, width: 1.5),
+                      onTap: () => _showSourceSheet(context),
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          border: Border.all(color: cs.primary, width: 1.5),
+                        ),
+                        child: Icon(Icons.add_rounded, color: cs.primary),
                       ),
-                      child: Icon(Icons.add_rounded, color: cs.primary),
                     ),
-                  )
                   ),
               ],
             ),
@@ -179,28 +180,28 @@ class _PhotoThumb extends StatelessWidget {
               excludeSemantics: true,
               label: 'Supprimer cette photo',
               child: GestureDetector(
-              onTap: onRemove,
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: Center(
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: cs.onSurface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.close_rounded,
-                      size: 13,
-                      color: Colors.white,
+                onTap: onRemove,
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: cs.onSurface,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 13,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ),
-            )
             ),
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -402,9 +403,10 @@ class _OfferTile extends StatelessWidget {
             Text(
               // L'expéditeur voit TOUJOURS le prix qu'il paie (net + commission
               // = gross), montant exact — jamais le net touché par le voyageur.
-              PriceDisplay.eur(
+              PriceDisplay.money(
                 thread.grossPriceEur ??
                     PriceDisplay.grossFromNet(thread.currentPriceEur),
+                thread.currency,
               ),
               style: tt.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
@@ -583,7 +585,8 @@ class _CandidateCard extends StatelessWidget {
     final grossPrice =
         thread.grossPriceEur ??
         PriceDisplay.grossFromNet(thread.currentPriceEur);
-    final priceLabel = 'Tu paies ${PriceDisplay.eur(grossPrice)}';
+    final priceLabel =
+        'Tu paies ${PriceDisplay.money(grossPrice, thread.currency)}';
 
     // Toute la carte est tappable et ouvre la négociation (même cible que le
     // bouton « Choisir »), comme _OfferTile pour les demandes négociables.
@@ -704,7 +707,8 @@ String _buildDetails(PackageRequest r) {
     '$date ±${r.dateToleranceDays}j',
     '${r.weightKg.toStringAsFixed(0)} kg',
     if (r.categories.isNotEmpty) r.categories.first,
-    if (r.targetPriceEur != null) '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
+    if (r.targetPriceEur != null)
+      '≈${formatPriceIn(r.targetPriceEur!, r.currency)}',
   ];
   return parts.join(' · ');
 }

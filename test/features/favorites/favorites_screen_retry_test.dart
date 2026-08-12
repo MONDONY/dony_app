@@ -33,11 +33,15 @@ class _MockFavoriteRequestsCubit extends MockCubit<FavoriteRequestsState>
 class _MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
     implements FavoriteIdsCubit {}
 
-class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 class _FakeAnalyticsService extends Fake implements AnalyticsService {
   @override
-  Future<void> logEvent(String name, {Map<String, Object?>? properties}) async {}
+  Future<void> logEvent(
+    String name, {
+    Map<String, Object?>? properties,
+  }) async {}
 }
 
 // ---------------------------------------------------------------------------
@@ -45,11 +49,11 @@ class _FakeAnalyticsService extends Fake implements AnalyticsService {
 // ---------------------------------------------------------------------------
 
 UserModel _makeUser({required bool isTraveler}) => UserModel(
-      id: 'user-1',
-      roles: isTraveler ? ['TRAVELER', 'SENDER'] : ['SENDER'],
-      kycStatus: 'VERIFIED',
-      status: 'ACTIVE',
-    );
+  id: 'user-1',
+  roles: isTraveler ? ['TRAVELER', 'SENDER'] : ['SENDER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+);
 
 // ---------------------------------------------------------------------------
 // Helper
@@ -74,15 +78,15 @@ Widget _buildScreen({
   when(() => tripsCubit.load()).thenAnswer((_) async {});
   when(() => tripsCubit.refresh()).thenAnswer((_) async {});
 
-  final requestsCubit =
-      requestsCubitOverride ?? _MockFavoriteRequestsCubit();
+  final requestsCubit = requestsCubitOverride ?? _MockFavoriteRequestsCubit();
   when(() => requestsCubit.state).thenReturn(requestsState);
   when(() => requestsCubit.load()).thenAnswer((_) async {});
   when(() => requestsCubit.refresh()).thenAnswer((_) async {});
 
   final authBloc = _MockAuthBloc();
-  when(() => authBloc.state)
-      .thenReturn(AuthAuthenticated(_makeUser(isTraveler: isTraveler)));
+  when(
+    () => authBloc.state,
+  ).thenReturn(AuthAuthenticated(_makeUser(isTraveler: isTraveler)));
 
   return MaterialApp(
     home: MultiBlocProvider(
@@ -125,12 +129,14 @@ void main() {
       when(() => tripsCubit.state).thenReturn(FavoriteTripsError('err'));
       when(() => tripsCubit.load()).thenAnswer((_) async {});
 
-      await tester.pumpWidget(_buildScreen(
-        isTraveler: false,
-        tripsState: FavoriteTripsError('err'),
-        requestsState: FavoriteRequestsLoading(),
-        tripsCubitOverride: tripsCubit,
-      ));
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: false,
+          tripsState: FavoriteTripsError('err'),
+          requestsState: FavoriteRequestsLoading(),
+          tripsCubitOverride: tripsCubit,
+        ),
+      );
       await tester.pump();
 
       expect(find.text('Réessayer'), findsOneWidget);
@@ -141,20 +147,22 @@ void main() {
       verify(() => tripsCubit.load()).called(greaterThanOrEqualTo(1));
     });
 
-    testWidgets('tap Réessayer (requests tab) appelle requests.load()',
-        (tester) async {
+    testWidgets('tap Réessayer (requests tab) appelle requests.load()', (
+      tester,
+    ) async {
       final requestsCubit = _MockFavoriteRequestsCubit();
-      when(() => requestsCubit.state)
-          .thenReturn(FavoriteRequestsError('err'));
+      when(() => requestsCubit.state).thenReturn(FavoriteRequestsError('err'));
       when(() => requestsCubit.load()).thenAnswer((_) async {});
       when(() => requestsCubit.refresh()).thenAnswer((_) async {});
 
-      await tester.pumpWidget(_buildScreen(
-        isTraveler: true,
-        tripsState: FavoriteTripsLoading(),
-        requestsState: FavoriteRequestsError('err'),
-        requestsCubitOverride: requestsCubit,
-      ));
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: true,
+          tripsState: FavoriteTripsLoading(),
+          requestsState: FavoriteRequestsError('err'),
+          requestsCubitOverride: requestsCubit,
+        ),
+      );
       await tester.pump();
 
       // Navigate to the Demandes tab (index 1) and wait for animation
@@ -176,18 +184,17 @@ void main() {
   // ---------------------------------------------------------------------------
   group('FavoritesScreen — error state text', () {
     testWidgets('affiche "Une erreur est survenue"', (tester) async {
-      await tester.pumpWidget(_buildScreen(
-        isTraveler: false,
-        tripsState: FavoriteTripsError('something'),
-        requestsState: FavoriteRequestsLoading(),
-      ));
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: false,
+          tripsState: FavoriteTripsError('something'),
+          requestsState: FavoriteRequestsLoading(),
+        ),
+      );
       await tester.pump();
 
       expect(find.text('Une erreur est survenue'), findsOneWidget);
-      expect(
-        find.text('Impossible de charger vos favoris.'),
-        findsOneWidget,
-      );
+      expect(find.text('Impossible de charger vos favoris.'), findsOneWidget);
     });
   });
 
@@ -195,24 +202,27 @@ void main() {
   // FavoriteHeartButton animation — _handleToggle triggers _controller.forward
   // ---------------------------------------------------------------------------
   group('FavoriteHeartButton — animation plays on tap', () {
-    testWidgets('animation controller runs through on tap (no exception)',
-        (tester) async {
+    testWidgets('animation controller runs through on tap (no exception)', (
+      tester,
+    ) async {
       var toggleCount = 0;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: StatefulBuilder(
-            builder: (context, setState) {
-              return Center(
-                child: FavoriteHeartButton(
-                  isFavorite: toggleCount.isEven,
-                  onToggle: () => setState(() => toggleCount++),
-                ),
-              );
-            },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Center(
+                  child: FavoriteHeartButton(
+                    isFavorite: toggleCount.isEven,
+                    onToggle: () => setState(() => toggleCount++),
+                  ),
+                );
+              },
+            ),
           ),
         ),
-      ));
+      );
 
       // Initial state: unfavorited
       expect(find.byType(FavoriteHeartButton), findsOneWidget);
@@ -241,40 +251,44 @@ void main() {
     setUpAll(() => initializeDateFormatting('fr'));
 
     AnnouncementModel makeTrip() => AnnouncementModel.fromJson({
-          'id': 'trip-1',
-          'travelerId': 'tv1',
-          'departureCity': 'Paris',
-          'arrivalCity': 'Dakar',
-          'departureDate':
-              DateTime.now().add(const Duration(days: 5)).toIso8601String(),
-          'totalKg': 20.0,
-          'availableKg': 15.0,
-          'pricePerKg': 8.0,
-          'pricingMode': 'KG',
-          'status': 'ACTIVE',
-          'pendingBidCount': 0,
-          'confirmedParcelCount': 0,
-          'createdAt': '2024-01-01T00:00:00Z',
-          'updatedAt': '2024-01-01T00:00:00Z',
-        });
-
-    testWidgets('affiche RefreshIndicator et ListView quand FavoriteTripsLoaded',
-        (tester) async {
-      await tester.pumpWidget(
-        _buildScreen(
-          isTraveler: false,
-          tripsState: FavoriteTripsLoaded([makeTrip()]),
-          requestsState: FavoriteRequestsLoading(),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.byType(RefreshIndicator), findsOneWidget);
-      expect(find.byType(ListView), findsOneWidget);
+      'id': 'trip-1',
+      'travelerId': 'tv1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureDate': DateTime.now()
+          .add(const Duration(days: 5))
+          .toIso8601String(),
+      'totalKg': 20.0,
+      'availableKg': 15.0,
+      'pricePerKg': 8.0,
+      'pricingMode': 'KG',
+      'status': 'ACTIVE',
+      'pendingBidCount': 0,
+      'confirmedParcelCount': 0,
+      'createdAt': '2024-01-01T00:00:00Z',
+      'updatedAt': '2024-01-01T00:00:00Z',
     });
 
-    testWidgets('état vide pour les trajets : message spécifique visible',
-        (tester) async {
+    testWidgets(
+      'affiche RefreshIndicator et ListView quand FavoriteTripsLoaded',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildScreen(
+            isTraveler: false,
+            tripsState: FavoriteTripsLoaded([makeTrip()]),
+            requestsState: FavoriteRequestsLoading(),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.byType(RefreshIndicator), findsOneWidget);
+        expect(find.byType(ListView), findsOneWidget);
+      },
+    );
+
+    testWidgets('état vide pour les trajets : message spécifique visible', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildScreen(
           isTraveler: false,
@@ -284,10 +298,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(
-        find.text("Aucun trajet favori pour l'instant"),
-        findsOneWidget,
-      );
+      expect(find.text("Aucun trajet favori pour l'instant"), findsOneWidget);
     });
   });
 
@@ -298,74 +309,77 @@ void main() {
     setUpAll(() => initializeDateFormatting('fr'));
 
     PackageRequestSearchItem makeRequest() => PackageRequestSearchItem(
-          id: 'req-1',
-          departureCity: 'Lyon',
-          arrivalCity: 'Abidjan',
-          desiredDate: DateTime(2025, 7),
-          dateToleranceDays: 3,
-          weightKg: 4.0,
-          parcelSize: ParcelSize.medium,
-          sender: const SenderPublicProfile(
-            id: 's1',
-            displayName: 'Moussa',
-            averageRating: 4.5,
-            totalRatings: 8,
-            kycVerified: true,
+      id: 'req-1',
+      departureCity: 'Lyon',
+      arrivalCity: 'Abidjan',
+      desiredDate: DateTime(2025, 7),
+      dateToleranceDays: 3,
+      weightKg: 4.0,
+      parcelSize: ParcelSize.medium,
+      sender: const SenderPublicProfile(
+        id: 's1',
+        displayName: 'Moussa',
+        averageRating: 4.5,
+        totalRatings: 8,
+        kycVerified: true,
+      ),
+    );
+
+    testWidgets(
+      'FavoriteRequestsLoaded : affiche ListView dans l\'onglet Demandes',
+      (tester) async {
+        final requestsCubit = _MockFavoriteRequestsCubit();
+        when(
+          () => requestsCubit.state,
+        ).thenReturn(FavoriteRequestsLoaded([makeRequest()]));
+        when(() => requestsCubit.load()).thenAnswer((_) async {});
+        when(() => requestsCubit.refresh()).thenAnswer((_) async {});
+
+        await tester.pumpWidget(
+          _buildScreen(
+            isTraveler: true,
+            tripsState: FavoriteTripsLoading(),
+            requestsState: FavoriteRequestsLoaded([makeRequest()]),
+            requestsCubitOverride: requestsCubit,
           ),
         );
 
-    testWidgets(
-        'FavoriteRequestsLoaded : affiche ListView dans l\'onglet Demandes',
-        (tester) async {
-      final requestsCubit = _MockFavoriteRequestsCubit();
-      when(() => requestsCubit.state)
-          .thenReturn(FavoriteRequestsLoaded([makeRequest()]));
-      when(() => requestsCubit.load()).thenAnswer((_) async {});
-      when(() => requestsCubit.refresh()).thenAnswer((_) async {});
+        // Navigate to the Demandes tab so it actually renders
+        await tester.tap(find.text('Demandes'));
+        await tester.pumpAndSettle();
 
-      await tester.pumpWidget(
-        _buildScreen(
-          isTraveler: true,
-          tripsState: FavoriteTripsLoading(),
-          requestsState: FavoriteRequestsLoaded([makeRequest()]),
-          requestsCubitOverride: requestsCubit,
-        ),
-      );
-
-      // Navigate to the Demandes tab so it actually renders
-      await tester.tap(find.text('Demandes'));
-      await tester.pumpAndSettle();
-
-      // The tab must render the loaded list
-      expect(find.byType(RefreshIndicator), findsAtLeastNWidgets(1));
-      expect(find.byType(PackageRequestListCard), findsOneWidget);
-    });
+        // The tab must render the loaded list
+        expect(find.byType(RefreshIndicator), findsAtLeastNWidgets(1));
+        expect(find.byType(PackageRequestListCard), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'FavoriteRequestsEmpty : affiche message vide dans l\'onglet Demandes',
-        (tester) async {
-      final requestsCubit = _MockFavoriteRequestsCubit();
-      when(() => requestsCubit.state).thenReturn(FavoriteRequestsEmpty());
-      when(() => requestsCubit.load()).thenAnswer((_) async {});
-      when(() => requestsCubit.refresh()).thenAnswer((_) async {});
+      'FavoriteRequestsEmpty : affiche message vide dans l\'onglet Demandes',
+      (tester) async {
+        final requestsCubit = _MockFavoriteRequestsCubit();
+        when(() => requestsCubit.state).thenReturn(FavoriteRequestsEmpty());
+        when(() => requestsCubit.load()).thenAnswer((_) async {});
+        when(() => requestsCubit.refresh()).thenAnswer((_) async {});
 
-      await tester.pumpWidget(
-        _buildScreen(
-          isTraveler: true,
-          tripsState: FavoriteTripsLoading(),
-          requestsState: FavoriteRequestsEmpty(),
-          requestsCubitOverride: requestsCubit,
-        ),
-      );
+        await tester.pumpWidget(
+          _buildScreen(
+            isTraveler: true,
+            tripsState: FavoriteTripsLoading(),
+            requestsState: FavoriteRequestsEmpty(),
+            requestsCubitOverride: requestsCubit,
+          ),
+        );
 
-      // Navigate to the Demandes tab so it actually renders
-      await tester.tap(find.text('Demandes'));
-      await tester.pumpAndSettle();
+        // Navigate to the Demandes tab so it actually renders
+        await tester.tap(find.text('Demandes'));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.text("Aucune demande favorite pour l'instant"),
-        findsOneWidget,
-      );
-    });
+        expect(
+          find.text("Aucune demande favorite pour l'instant"),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

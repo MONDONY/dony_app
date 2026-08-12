@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
@@ -128,7 +129,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
             infoWindow: InfoWindow(
               title: '${it.departureCity} → ${it.arrivalCity}',
               snippet: it.targetPriceEur != null
-                  ? '${it.targetPriceEur!.toStringAsFixed(0)} €'
+                  ? formatPriceIn(it.targetPriceEur!, it.currency)
                   : 'Libre',
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(

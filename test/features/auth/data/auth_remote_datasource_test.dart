@@ -30,15 +30,20 @@ void main() {
 
   group('register', () {
     test('returns UserModel on success', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-              '/auth/register',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              Response(data: _userJson, statusCode: 200, requestOptions: RequestOptions(path: '/auth/register')));
-
-      final result = await datasource.register(
-        phoneNumber: '+33612345678',
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/register',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: _userJson,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/register'),
+        ),
       );
+
+      final result = await datasource.register(phoneNumber: '+33612345678');
 
       expect(result.id, 'user-123');
       expect(result.roles, ['SENDER']);
@@ -47,9 +52,13 @@ void main() {
 
   group('getProfile', () {
     test('returns UserModel for current user', () async {
-      when(() => mockDio.get<Map<String, dynamic>>('/auth/me'))
-          .thenAnswer((_) async =>
-              Response(data: _userJson, statusCode: 200, requestOptions: RequestOptions(path: '/auth/me')));
+      when(() => mockDio.get<Map<String, dynamic>>('/auth/me')).thenAnswer(
+        (_) async => Response(
+          data: _userJson,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/me'),
+        ),
+      );
 
       final result = await datasource.getProfile();
 
@@ -59,45 +68,70 @@ void main() {
 
   group('deleteAccount', () {
     test('calls DELETE and completes', () async {
-      when(() => mockDio.delete<void>('/auth/me'))
-          .thenAnswer((_) async =>
-              Response(data: null, statusCode: 204, requestOptions: RequestOptions(path: '/auth/me')));
+      when(() => mockDio.delete<void>('/auth/me')).thenAnswer(
+        (_) async => Response(
+          data: null,
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/auth/me'),
+        ),
+      );
 
       await expectLater(datasource.deleteAccount(), completes);
     });
   });
 
   group('attachEmail', () {
-    test('POST /auth/email-otp/attach avec email+code, renvoie le profil', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-              '/auth/email-otp/attach',
-              data: any(named: 'data')))
-          .thenAnswer((_) async => Response(
-              data: _userJson,
-              statusCode: 200,
-              requestOptions: RequestOptions(path: '/auth/email-otp/attach')));
+    test(
+      'POST /auth/email-otp/attach avec email+code, renvoie le profil',
+      () async {
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/auth/email-otp/attach',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            data: _userJson,
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/auth/email-otp/attach'),
+          ),
+        );
 
-      final result = await datasource.attachEmail(
-        email: 'amadou@dony.app',
-        code: '123456',
-      );
+        final result = await datasource.attachEmail(
+          email: 'amadou@dony.app',
+          code: '123456',
+        );
 
-      expect(result.id, 'user-123');
-      verify(() => mockDio.post<Map<String, dynamic>>(
+        expect(result.id, 'user-123');
+        verify(
+          () => mockDio.post<Map<String, dynamic>>(
             '/auth/email-otp/attach',
             data: {'email': 'amadou@dony.app', 'code': '123456'},
-          )).called(1);
-    });
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('updateProfile', () {
     test('returns updated UserModel', () async {
-      final updated = {..._userJson, 'firstName': 'Amadou', 'lastName': 'Diallo'};
-      when(() => mockDio.patch<Map<String, dynamic>>(
-              '/auth/me',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              Response(data: updated, statusCode: 200, requestOptions: RequestOptions(path: '/auth/me')));
+      final updated = {
+        ..._userJson,
+        'firstName': 'Amadou',
+        'lastName': 'Diallo',
+      };
+      when(
+        () => mockDio.patch<Map<String, dynamic>>(
+          '/auth/me',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: updated,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/me'),
+        ),
+      );
 
       final result = await datasource.updateProfile(
         firstName: 'Amadou',
@@ -110,11 +144,18 @@ void main() {
     });
 
     test('handles null optional fields', () async {
-      when(() => mockDio.patch<Map<String, dynamic>>(
-              '/auth/me',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              Response(data: _userJson, statusCode: 200, requestOptions: RequestOptions(path: '/auth/me')));
+      when(
+        () => mockDio.patch<Map<String, dynamic>>(
+          '/auth/me',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: _userJson,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/me'),
+        ),
+      );
 
       final result = await datasource.updateProfile();
       expect(result.id, 'user-123');
@@ -123,116 +164,166 @@ void main() {
 
   group('sendEmailOtp', () {
     test('calls POST /auth/email-otp/send and completes', () async {
-      when(() => mockDio.post<void>(
-              '/auth/email-otp/send',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              Response(data: null, statusCode: 204, requestOptions: RequestOptions(path: '/auth/email-otp/send')));
+      when(
+        () => mockDio.post<void>(
+          '/auth/email-otp/send',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: null,
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/auth/email-otp/send'),
+        ),
+      );
 
       await expectLater(datasource.sendEmailOtp('user@example.com'), completes);
-      verify(() => mockDio.post<void>(
-            '/auth/email-otp/send',
-            data: {'email': 'user@example.com'},
-          )).called(1);
+      verify(
+        () => mockDio.post<void>(
+          '/auth/email-otp/send',
+          data: {'email': 'user@example.com'},
+        ),
+      ).called(1);
     });
   });
 
   group('verifyEmailOtp', () {
     test('calls POST /auth/email-otp/verify and returns customToken', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-              '/auth/email-otp/verify',
-              data: any(named: 'data')))
-          .thenAnswer((_) async => Response(
-                data: {'customToken': 'fake_token_123'},
-                statusCode: 200,
-                requestOptions: RequestOptions(path: '/auth/email-otp/verify'),
-              ));
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/email-otp/verify',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: {'customToken': 'fake_token_123'},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/email-otp/verify'),
+        ),
+      );
 
-      final token = await datasource.verifyEmailOtp('user@example.com', '123456');
+      final token = await datasource.verifyEmailOtp(
+        'user@example.com',
+        '123456',
+      );
       expect(token, 'fake_token_123');
-      verify(() => mockDio.post<Map<String, dynamic>>(
-            '/auth/email-otp/verify',
-            data: {'email': 'user@example.com', 'code': '123456'},
-          )).called(1);
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/email-otp/verify',
+          data: {'email': 'user@example.com', 'code': '123456'},
+        ),
+      ).called(1);
     });
   });
 
   group('sendPhoneOtp', () {
     test('calls POST /auth/sms-otp/send and completes', () async {
-      when(() => mockDio.post<void>(
-              '/auth/sms-otp/send',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              Response(data: null, statusCode: 204, requestOptions: RequestOptions(path: '/auth/sms-otp/send')));
+      when(
+        () =>
+            mockDio.post<void>('/auth/sms-otp/send', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => Response(
+          data: null,
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/auth/sms-otp/send'),
+        ),
+      );
 
       await expectLater(datasource.sendPhoneOtp('+221701234567'), completes);
-      verify(() => mockDio.post<void>(
-            '/auth/sms-otp/send',
-            data: {'phoneNumber': '+221701234567'},
-          )).called(1);
+      verify(
+        () => mockDio.post<void>(
+          '/auth/sms-otp/send',
+          data: {'phoneNumber': '+221701234567'},
+        ),
+      ).called(1);
     });
   });
 
   group('verifyPhoneOtp', () {
     test('calls POST /auth/sms-otp/verify and returns customToken', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-              '/auth/sms-otp/verify',
-              data: any(named: 'data')))
-          .thenAnswer((_) async => Response(
-                data: {'customToken': 'fake_token_123'},
-                statusCode: 200,
-                requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
-              ));
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/sms-otp/verify',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: {'customToken': 'fake_token_123'},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
+        ),
+      );
 
       final token = await datasource.verifyPhoneOtp('+221701234567', '123456');
       expect(token, 'fake_token_123');
-      verify(() => mockDio.post<Map<String, dynamic>>(
-            '/auth/sms-otp/verify',
-            data: {'phoneNumber': '+221701234567', 'code': '123456'},
-          )).called(1);
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/sms-otp/verify',
+          data: {'phoneNumber': '+221701234567', 'code': '123456'},
+        ),
+      ).called(1);
     });
   });
 
   group('attachPhone', () {
-    test('POST /auth/sms-otp/attach avec phoneNumber+code, renvoie le profil', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-              '/auth/sms-otp/attach',
-              data: any(named: 'data')))
-          .thenAnswer((_) async => Response(
-              data: _userJson,
-              statusCode: 200,
-              requestOptions: RequestOptions(path: '/auth/sms-otp/attach')));
+    test(
+      'POST /auth/sms-otp/attach avec phoneNumber+code, renvoie le profil',
+      () async {
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/auth/sms-otp/attach',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            data: _userJson,
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/auth/sms-otp/attach'),
+          ),
+        );
 
-      final result = await datasource.attachPhone(
-        phoneNumber: '+221701234567',
-        code: '123456',
-      );
+        final result = await datasource.attachPhone(
+          phoneNumber: '+221701234567',
+          code: '123456',
+        );
 
-      expect(result.id, 'user-123');
-      verify(() => mockDio.post<Map<String, dynamic>>(
+        expect(result.id, 'user-123');
+        verify(
+          () => mockDio.post<Map<String, dynamic>>(
             '/auth/sms-otp/attach',
             data: {'phoneNumber': '+221701234567', 'code': '123456'},
-          )).called(1);
-    });
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('registerWithEmail', () {
     test('returns UserModel on success', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-              '/auth/register',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              Response(data: _userJson, statusCode: 200, requestOptions: RequestOptions(path: '/auth/register')));
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/register',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          data: _userJson,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/register'),
+        ),
+      );
 
       final result = await datasource.registerWithEmail(
         email: 'user@example.com',
       );
 
       expect(result.id, 'user-123');
-      verify(() => mockDio.post<Map<String, dynamic>>(
-            '/auth/register',
-            data: {'email': 'user@example.com'},
-          )).called(1);
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/auth/register',
+          data: {'email': 'user@example.com'},
+        ),
+      ).called(1);
     });
   });
 }
