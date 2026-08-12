@@ -87,12 +87,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     try {
       switch (event.paymentMethod) {
         case 'STRIPE':
-          final clientSecret = event.currencyCode.toUpperCase() == 'EUR'
-              ? await _repository.topupStripe(amount: event.amount)
-              : await _repository.topupStripe(
-                  amount: event.amount,
-                  currencyCode: event.currencyCode,
-                );
+          final clientSecret = await _repository.topupStripe(
+            amount: event.amount,
+            currencyCode: event.currencyCode,
+          );
           if (clientSecret != null) {
             emit(WalletTopupStripeReady(clientSecret));
             unawaited(

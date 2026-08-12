@@ -40,7 +40,7 @@ class PaymentSheetConfig extends Equatable {
   ];
 
   SupportedCurrency get currency =>
-      SupportedCurrency.fromCode(currencyCode) ?? SupportedCurrency.eur;
+      SupportedCurrency.fromCodeOrDefault(currencyCode);
 }
 
 class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
@@ -86,16 +86,11 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
   ) => _confirm(
     emit,
     PaymentMethodKind.wallet,
-    () => config.currencyCode.toUpperCase() == 'EUR'
-        ? _gateway.confirmPlatformPay(
-            clientSecret: config.clientSecret,
-            amountEur: config.amountEur,
-          )
-        : _gateway.confirmPlatformPay(
-            clientSecret: config.clientSecret,
-            amountEur: config.amountEur,
-            currencyCode: config.currencyCode,
-          ),
+    () => _gateway.confirmPlatformPay(
+      clientSecret: config.clientSecret,
+      amountEur: config.amountEur,
+      currencyCode: config.currencyCode,
+    ),
   );
 
   Future<void> _onPayPalPressed(

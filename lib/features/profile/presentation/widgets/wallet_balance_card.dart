@@ -1,11 +1,13 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/currency_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 /// Carte « Solde » de la section ARGENT — remplace l'ancienne tuile
 /// « Mon portefeuille » (sous-titre statique « Solde & recharges ») par le
@@ -48,14 +50,17 @@ class _LoadedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final amountFmt = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: '',
-      decimalDigits: 2,
-    );
 
     return _CardShell(
-      onTap: () => context.push('/payments/wallet'),
+      onTap: () async {
+        // L'écran portefeuille permet de recharger : au retour, le solde a
+        // pu changer sans que ce BLoC (propre au shell profil) en soit
+        // informé — on rafraîchit systématiquement.
+        await context.push('/payments/wallet');
+        if (context.mounted) {
+          context.read<WalletBloc>().add(WalletLoadRequested());
+        }
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -80,22 +85,25 @@ class _LoadedCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.md),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                amountFmt.format(balance).trim(),
-                style: tt.displayLarge?.copyWith(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(width: DonySpacing.xs),
-              _CurrencyBadge(currency: currency, style: tt.titleMedium),
-            ],
-          )
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    CurrencyFormatter.formatAmountOnly(
+                      balance,
+                      SupportedCurrency.fromCodeOrDefault(currency),
+                    ),
+                    style: tt.displayLarge?.copyWith(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                  _CurrencyBadge(currency: currency, style: tt.titleMedium),
+                ],
+              )
               .animate()
               .fadeIn(duration: 250.ms)
               .slideY(begin: 0.08, curve: Curves.easeOutCubic),
@@ -115,32 +123,53 @@ class _CurrencyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.white.withValues(alpha: 0.45),
+    return Semantics(
+      button: true,
+      label: 'Changer de devise, actuellement $currency',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+        onTap: () async {
+          // Le solde est libellé dans la devise active : il n'est périmé que
+          // si la bascule a réellement eu lieu.
+          final changed = await CurrencyPicker.show(context);
+          if (changed && context.mounted) {
+            context.read<WalletBloc>().add(WalletLoadRequested());
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.xxs,
+            vertical: DonySpacing.xxs,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ),
+                child: Text(
+                  currency,
+                  style: style?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.70),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            ),
-          ),
-          child: Text(
-            currency,
-            style: style?.copyWith(
-              color: Colors.white.withValues(alpha: 0.70),
-              fontWeight: FontWeight.w700,
-            ),
+              const SizedBox(width: 2),
+              DonyIcon(
+                'chevron-down',
+                color: Colors.white.withValues(alpha: 0.55),
+                size: 11,
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 2),
-        DonyIcon(
-          'chevron-down',
-          color: Colors.white.withValues(alpha: 0.55),
-          size: 11,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -207,7 +236,7 @@ class _LoadingCard extends StatelessWidget {
     return _CardShell(
       onTap: () => context.push('/payments/wallet'),
       child: const SizedBox(
-        height: 88,
+        height: 88, // pas de solde chargé ici : rien à rafraîchir au retour
         child: Center(
           child: SizedBox(
             width: 22,
@@ -263,35 +292,35 @@ class _CardShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [DonyColors.blue700, DonyColors.blue500],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          boxShadow: [
-            BoxShadow(
-              color: DonyColors.blue500.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+          color: Colors.transparent,
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [DonyColors.blue700, DonyColors.blue500],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              boxShadow: [
+                BoxShadow(
+                  color: DonyColors.blue500.withValues(alpha: 0.28),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          splashColor: Colors.white.withValues(alpha: 0.12),
-          highlightColor: Colors.white.withValues(alpha: 0.06),
-          child: Padding(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            child: child,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              splashColor: Colors.white.withValues(alpha: 0.12),
+              highlightColor: Colors.white.withValues(alpha: 0.06),
+              child: Padding(
+                padding: const EdgeInsets.all(DonySpacing.base),
+                child: child,
+              ),
+            ),
           ),
-        ),
-      ),
-    )
+        )
         .animate()
         .fadeIn(duration: 300.ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);

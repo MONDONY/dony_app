@@ -14,36 +14,6 @@ void main() {
     });
 
     test(
-      'résout la devise par défaut selon le pays, jamais selon la nationalité',
-      () {
-        expect(
-          SupportedCurrency.defaultForCountry('US'),
-          SupportedCurrency.usd,
-        );
-        expect(
-          SupportedCurrency.defaultForCountry('CA'),
-          SupportedCurrency.cad,
-        );
-        expect(
-          SupportedCurrency.defaultForCountry('FR'),
-          SupportedCurrency.eur,
-        );
-        expect(
-          SupportedCurrency.defaultForCountry('SN'),
-          SupportedCurrency.xof,
-        );
-        expect(
-          SupportedCurrency.defaultForCountry('CM'),
-          SupportedCurrency.xaf,
-        );
-        expect(
-          SupportedCurrency.defaultForCountry('ZZ'),
-          SupportedCurrency.eur,
-        );
-      },
-    );
-
-    test(
       'accepte les codes API insensibles à la casse et refuse les autres',
       () {
         expect(SupportedCurrency.fromCode('cad'), SupportedCurrency.cad);

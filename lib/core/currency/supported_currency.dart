@@ -91,36 +91,15 @@ class SupportedCurrency {
     return null;
   }
 
-  static SupportedCurrency defaultForCountry(String? countryCode) {
-    switch (countryCode?.trim().toUpperCase()) {
-      case 'US':
-        return usd;
-      case 'CA':
-        return cad;
-      case 'GB':
-        return gbp;
-      case 'CH':
-        return chf;
-      case 'SN':
-      case 'CI':
-      case 'ML':
-      case 'BF':
-      case 'BJ':
-      case 'TG':
-      case 'NE':
-      case 'GW':
-        return xof;
-      case 'CM':
-      case 'GA':
-      case 'CG':
-      case 'TD':
-      case 'CF':
-      case 'GQ':
-        return xaf;
-      default:
-        return eur;
-    }
-  }
+  /// Repli EUR quand le code est absent ou hors catalogue. Politique de repli
+  /// unique : ne jamais réécrire `fromCode(x) ?? eur` sur les sites d'appel.
+  static SupportedCurrency fromCodeOrDefault(String? value) =>
+      fromCode(value) ?? eur;
+
+  /// Symbole d'un code ISO, repli EUR — pour les libellés courts (suffixe de
+  /// champ, message de validation) où formater un montant complet n'a pas
+  /// de sens.
+  static String symbolOf(String? value) => fromCodeOrDefault(value).symbol;
 
   @override
   bool operator ==(Object other) =>

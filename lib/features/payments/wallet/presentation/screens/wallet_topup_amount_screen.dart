@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -9,7 +10,6 @@ import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,13 +17,8 @@ import 'package:go_router/go_router.dart';
 
 class WalletTopupAmountScreen extends StatefulWidget {
   final String paymentMethod;
-  final String? currencyCode;
 
-  const WalletTopupAmountScreen({
-    super.key,
-    required this.paymentMethod,
-    this.currencyCode,
-  });
+  const WalletTopupAmountScreen({super.key, required this.paymentMethod});
 
   @override
   State<WalletTopupAmountScreen> createState() =>
@@ -57,20 +52,8 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     _ => widget.paymentMethod,
   };
 
-  String get _currencyCode {
-    if (widget.currencyCode != null) return widget.currencyCode!;
-    if (getIt.isRegistered<HiveService>()) {
-      return getIt<HiveService>().userPrefs.get(
-            HiveService.kCurrencyCode,
-            defaultValue: 'EUR',
-          )
-          as String;
-    }
-    return 'EUR';
-  }
-
   SupportedCurrency get _currency =>
-      SupportedCurrency.fromCode(_currencyCode) ?? SupportedCurrency.eur;
+      ActiveCurrency.current ?? SupportedCurrency.eur;
 
   void _onDigit(String d) {
     // Max 6 chiffres, pas de 0 en tête
@@ -222,7 +205,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                     const SizedBox(height: DonySpacing.xl),
 
                     Text(
-                      'Le solde Yadony sera crédité en EUR après confirmation.',
+                      'Le solde Yadony sera crédité en ${_currency.code} après confirmation.',
                       textAlign: TextAlign.center,
                       style: tt.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,

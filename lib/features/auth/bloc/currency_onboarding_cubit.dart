@@ -64,15 +64,7 @@ class CurrencyOnboardingCubit extends Cubit<CurrencyOnboardingState> {
     try {
       final current = await _repository.fetchPrefs();
       await _repository.updatePrefs(
-        UserBusinessPrefsDto(
-          weightUnit: current.weightUnit,
-          currencyCode: currencyCode,
-          pickupRadiusKm: current.pickupRadiusKm,
-          defaultPackageWeightKg: current.defaultPackageWeightKg,
-          minBidPriceEur: current.minBidPriceEur,
-          contactMode: current.contactMode,
-          responseDelayHours: current.responseDelayHours,
-        ),
+        current.copyWith(currencyCode: currencyCode),
       );
       await _prefs.put(HiveService.kCurrencyCode, currencyCode);
       await _prefs.put(HiveService.kCurrencyOnboardingSeen, true);
