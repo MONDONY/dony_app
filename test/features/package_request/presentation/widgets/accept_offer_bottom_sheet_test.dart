@@ -16,6 +16,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/error_reporting_test_doubles.dart';
+
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
@@ -77,6 +79,9 @@ void main() {
   late _MockNegotiationBloc bloc;
 
   setUp(() {
+    // DonyPaymentSheet.show resout ErrorReportingService via GetIt.
+    registerNoopErrorReporting();
+
     bloc = _MockNegotiationBloc();
     when(() => bloc.state).thenReturn(const NegotiationInitial());
     when(

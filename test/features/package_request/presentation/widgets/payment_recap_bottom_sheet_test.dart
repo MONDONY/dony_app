@@ -18,6 +18,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/error_reporting_test_doubles.dart';
+
 /// Widget test for `PaymentRecapBottomSheet.show()` — the static sheet
 /// launcher itself, NOT `PaymentRecapContent` (already covered in depth by
 /// `payment_recap_test.dart`, which pumps the content widget directly).
@@ -86,6 +88,9 @@ void main() {
   late _MockNegotiationBloc bloc;
 
   setUp(() {
+    // DonyPaymentSheet.show resout ErrorReportingService via GetIt.
+    registerNoopErrorReporting();
+
     bloc = _MockNegotiationBloc();
     when(() => bloc.state).thenReturn(const NegotiationInitial());
     when(
