@@ -1,4 +1,5 @@
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
 import 'package:dony/features/auth/presentation/screens/currency_selection_screen.dart';
 import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
@@ -129,13 +130,24 @@ void main() {
     },
   );
 
-  testWidgets('passer navigue sans appeler le backend', (tester) async {
-    await pumpScreen(tester);
+  testWidgets(
+    'passer n’impose aucune devise au serveur, mais adopte la sienne',
+    (tester) async {
+      await pumpScreen(tester);
 
-    await tester.tap(find.text('Passer pour l’instant'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Passer pour l’instant'));
+      await tester.pumpAndSettle();
 
-    verifyNever(() => repository.fetchPrefs());
-    expect(find.text('Referral route'), findsOneWidget);
-  });
+      // Passer, c'est ne rien choisir : aucune écriture des préférences.
+      verifyNever(() => repository.updatePrefs(any()));
+      // La devise n'est pour autant pas inventée côté client — on lit celle que
+      // le backend porte déjà et on la met en cache local.
+      verify(() => repository.fetchPrefs()).called(1);
+      verify(() => prefs.put(HiveService.kCurrencyCode, 'EUR')).called(1);
+      verify(
+        () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
+      ).called(1);
+      expect(find.text('Referral route'), findsOneWidget);
+    },
+  );
 }
