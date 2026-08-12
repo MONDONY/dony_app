@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
@@ -15,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/error_reporting_test_doubles.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 /// Widget test of the wallet top-up success flow — exercises the real
@@ -101,12 +101,7 @@ void main() {
     );
 
     // Résolu par DonyPaymentSheet.show pour construire PaymentSheetBloc.
-    if (getIt.isRegistered<ErrorReportingService>()) {
-      getIt.unregister<ErrorReportingService>();
-    }
-    getIt.registerSingleton<ErrorReportingService>(
-      ErrorReportingService(_NoopErrorSink()),
-    );
+    registerNoopErrorReporting();
   });
 
   tearDown(() {
@@ -246,14 +241,4 @@ void main() {
       expect(topupResult, isTrue);
     },
   );
-}
-
-/// Sink inerte : ces tests vérifient la navigation, pas la remontée d'erreurs.
-class _NoopErrorSink implements ErrorReportingSink {
-  @override
-  Future<void> capture(
-    Object error, {
-    StackTrace? stackTrace,
-    required Map<String, Object> context,
-  }) async {}
 }

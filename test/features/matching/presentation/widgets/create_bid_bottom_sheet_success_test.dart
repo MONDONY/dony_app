@@ -28,6 +28,8 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/error_reporting_test_doubles.dart';
+
 /// Integration test of the LIVE bid-payment success flow.
 ///
 /// `lib/app/router.dart` routes `/bids/new` to the `CreateBidScreen` class
@@ -163,6 +165,8 @@ void main() {
   });
 
   setUp(() {
+    registerNoopErrorReporting();
+
     bidBloc = _MockBidBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
